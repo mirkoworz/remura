@@ -1,4 +1,4 @@
-/* REMURA v0.5: menu responsive ad albero + configurazione condivisa dei mercati. */
+/* REMURA v0.6: menu responsive ad albero + configurazione condivisa dei mercati. */
 (() => {
   "use strict";
   const FX_CODES={EUR:"099741",GBP:"096742",JPY:"097741",AUD:"232741",CAD:"090741",CHF:"092741",NZD:"112741"};
@@ -18,8 +18,8 @@
     {id:"indices",label:"Indici",icon:"▥",name:"Principali futures USA",items:[
       {s:"US500",n:"S&P 500"},{s:"NAS100",n:"Nasdaq 100"},{s:"US30",n:"Dow Jones"},{s:"US2000",n:"Russell 2000"},{s:"DXY",n:"Dollar Index"}]}
   ];
-  const detailUrl=s=>"./asset.html?symbol="+encodeURIComponent(s)+"&v=5";
-  const categoryUrl=id=>"./catalogo.html?categoria="+encodeURIComponent(id)+"&v=5";
+  const detailUrl=s=>"./asset.html?symbol="+encodeURIComponent(s)+"&v=6";
+  const categoryUrl=id=>"./catalogo.html?categoria="+encodeURIComponent(id)+"&v=6";
   window.REMURA_MARKETS={fxCodes:FX_CODES,fxPairs:FX_PAIRS,other:OTHER,groups,symbols:[...FX_PAIRS,...Object.keys(OTHER)],detailUrl,categoryUrl};
   function init(){
     if(document.getElementById("rm-menu-trigger"))return;
@@ -37,7 +37,7 @@
     const shade=document.createElement("div");shade.id="rm-menu-shade";shade.hidden=true;
     const drawer=document.createElement("aside");drawer.id="rm-menu";
     drawer.setAttribute("aria-label","Navigazione principale Remura");drawer.setAttribute("aria-hidden","true");drawer.inert=true;
-    drawer.innerHTML='<div class="rm-header"><a href="./index.html" class="rm-brand">REMURA<span>Segui le tracce istituzionali</span></a><button id="rm-close" type="button" aria-label="Chiudi menu">×</button></div><nav aria-label="Menu Remura" class="rm-nav"><div class="rm-shortcuts"><a href="./index.html" data-main="home">⌂ <span>Home</span></a><a href="./mercati.html?v=5" data-main="scanner">◎ <span>Scanner istituzionale</span></a></div><label class="rm-search-label" for="rm-search">Cerca tra 35 strumenti</label><input id="rm-search" type="search" autocomplete="off" placeholder="Gold, CADJPY, Nasdaq..." aria-label="Filtra strumenti e sottomenu"><div id="rm-menu-tree" class="rm-menu-tree"></div><div class="rm-menu-bottom"><a href="./forex.html?v=5">⌁ Radar Forex classico</a></div></nav><div class="rm-footer">COT: posizioni settimanali, non flussi in tempo reale. Sentiment retail in preparazione.</div>';
+    drawer.innerHTML='<div class="rm-header"><a href="./index.html" class="rm-brand">REMURA<span>Segui le tracce istituzionali</span></a><button id="rm-close" type="button" aria-label="Chiudi menu">×</button></div><nav aria-label="Menu Remura" class="rm-nav"><div class="rm-shortcuts"><a href="./index.html" data-main="home">⌂ <span>Home</span></a><a href="./mercati.html?v=6" data-main="scanner">◎ <span>Scanner istituzionale</span></a></div><label class="rm-search-label" for="rm-search">Cerca tra 35 strumenti</label><input id="rm-search" type="search" autocomplete="off" placeholder="Gold, CADJPY, Nasdaq..." aria-label="Filtra strumenti e sottomenu"><div id="rm-menu-tree" class="rm-menu-tree"></div><div class="rm-menu-bottom"><a href="./forex.html?v=6">⌁ Radar Forex classico</a></div></nav><div class="rm-footer">COT: posizioni settimanali, non flussi in tempo reale. Sentiment retail in preparazione.</div>';
     document.body.append(shade,drawer,trigger);
     document.body.classList.add("rm-has-nav");
     const tree=drawer.querySelector("#rm-menu-tree");
