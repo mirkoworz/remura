@@ -35,7 +35,7 @@
     @media(max-width:720px){.app{display:block}.sidebar{display:none}main{padding:21px 14px calc(99px + env(safe-area-inset-bottom));}.topbar{margin-bottom:25px}.intro{align-items:flex-start}.version{display:none}.actions{gap:7px}.status{padding:9px 10px;font-size:10px}.action-btn{padding:10px}.action-btn .action-text{display:none}.hero{padding:17px 15px}.hero-grid{grid-template-columns:1fr 1fr;gap:9px}.hero-block{padding:13px}.hero-block:last-child{grid-column:1/-1}.hero-block .value{font-size:27px}.hero-top{align-items:start}.pair-select{min-width:140px;font-size:17px}.asof{font-size:11px;max-width:125px}.chart,.ranking,.explain,.legs,.text-panel{padding:17px}.chart-wrap{min-height:195px}.rank-head,.rank-row{grid-template-columns:minmax(67px,1fr) 68px 68px 76px;gap:4px;padding-left:4px;padding-right:4px}.rank-head{font-size:9px}.rank-row{font-size:11px}.pill{font-size:9px;padding:5px 6px}.currency-grid{grid-template-columns:1fr}.source-grid{grid-template-columns:1fr}.alert{font-size:11px}.mobile-nav{position:fixed;z-index:10;bottom:0;left:0;right:0;display:flex;background:#0b1c26ee;backdrop-filter:blur(18px);border-top:1px solid #2b4750;padding:10px 10px calc(12px + env(safe-area-inset-bottom));justify-content:space-around}.mobile-nav .nav-btn{display:flex;flex-direction:column;gap:4px;font-size:10px;text-align:center;padding:8px 15px;border-radius:11px}.mobile-nav .nav-btn svg{height:19px;width:19px}.intro h1{font-size:32px}.panel-h{margin-bottom:14px}}
     @media(max-width:390px){main{padding-left:10px;padding-right:10px}.rank-head,.rank-row{grid-template-columns:minmax(64px,1fr) 59px 59px 74px}.panel-title{font-size:17px}.hero-block .value{font-size:23px}.status{max-width:165px}}
   </style>
-<link rel="stylesheet" href="./nav.css?v=5">
+<link rel="stylesheet" href="./nav.css?v=7">
 </head>
 <body>
   <div class="app">
@@ -241,5 +241,5 @@ $('export-csv').addEventListener('click',()=>{
 useData(makeDemo(),'demo');loadLive();
 if('serviceWorker' in navigator && location.protocol==='https:')navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
-<script src="./nav.js?v=5"></script>
+<script src="./nav.js?v=7"></script>
 </body></html>
