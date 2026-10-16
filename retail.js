@@ -4,7 +4,7 @@ const sym=(new URLSearchParams(location.search).get("symbol")||"XAUUSD").toUpper
 const map={US500:"CME_MINI:ES1!",NAS100:"CME_MINI:NQ1!",US30:"CBOT_MINI:YM1!",US2000:"CME_MINI:RTY1!",DXY:"TVC:DXY"};
 const ticker=map[sym]||"OANDA:"+sym;
 const $=id=>document.getElementById(id);
-const fmt=n=>Number.isFinite(+n)?new Intl.NumberFormat("it-IT",{maximumFractionDigits:2}).format(+n):"—";
+const fmt=n=>n!==null&&n!==undefined&&n!==""&&Number.isFinite(+n)?new Intl.NumberFormat("it-IT",{maximumFractionDigits:2}).format(+n):"—";
 let tf="15",mode="lots",history=[];
 $("r-tradingview").href="https://www.tradingview.com/chart/?symbol="+encodeURIComponent(ticker);
 $("r-myfxbook").href="https://www.myfxbook.com/community/outlook/"+encodeURIComponent(sym);
