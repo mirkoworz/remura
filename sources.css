@@ -1,0 +1,31 @@
+/* REMURA v0.8 · Multi-source positioning dashboard. */
+.rem-sources .ms-intro h2{margin:4px 0 8px;font-size:23px;letter-spacing:-.03em}
+.rem-sources .ms-intro p{margin:0 0 12px;color:#aec7cb;font-size:12px;line-height:1.75}
+.rem-sources .ms-summary{border-radius:12px;padding:13px 15px;font-size:12px;line-height:1.65;background:#163734;border:1px solid #397466;color:#c2eee1;margin:12px 0 18px}
+.rem-sources .ms-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.rem-sources .ms-card{background:linear-gradient(140deg,#102a34,#0c222d);border:1px solid #31515c;border-radius:16px;padding:17px;min-width:0}
+.rem-sources .ms-card-top{display:flex;gap:10px;align-items:start;justify-content:space-between;flex-wrap:wrap;margin-bottom:7px}
+.rem-sources .ms-card h3{margin:0;font-size:18px;letter-spacing:-.02em;color:#e4faf2}
+.rem-sources .ms-status{background:#25353a;color:#afc6c7;border:1px solid #476169;padding:5px 8px;border-radius:9px;font-size:10px;font-weight:800}
+.rem-sources .ms-status.ms-live{background:#17443d;color:#9ff0d4;border-color:#4e987c}
+.rem-sources .ms-status.ms-stale{background:#423625;color:#f2c58a;border-color:#775f41}
+.rem-sources .ms-measure{margin:8px 0 6px;font-weight:760;font-size:13px;color:#d0e8e4}
+.rem-sources .ms-note,.rem-sources .ms-coverage{font-size:11px;color:#a4c0c6;line-height:1.65;margin:5px 0}
+.rem-sources .ms-coverage{margin:11px 0;color:#93b3b6}
+.rem-sources .ms-actions{display:flex;flex-wrap:wrap;gap:8px;margin:13px 0 0}
+.rem-sources .ms-link,.rem-sources .ms-widget-button{font-family:inherit;display:inline-block;border-radius:10px;padding:9px 11px;font-size:11px;font-weight:790;cursor:pointer;background:#17433a;color:#a5f2d5;border:1px solid #4f907c;text-decoration:none}
+.rem-sources .ms-link:hover,.rem-sources .ms-widget-button:hover{background:#21564c}
+.rem-sources .ms-widget-button{background:#1b3441;border-color:#3d6781;color:#c1d9fd}
+.rem-sources .ms-widget{background:#fff;color:#263b43;border:1px solid #64817d;border-radius:11px;margin-top:13px;padding:12px;min-height:180px}
+.rem-sources .ms-widget[hidden]{display:none}
+.rem-sources .ms-widget-info{font-size:11px;margin-bottom:12px;line-height:1.65}
+.rem-sources .ms-widget-slot{min-height:160px}
+.rem-sources .ms-widget-loading{font-size:11px;color:#586f77;line-height:1.7}
+.rem-sources .ms-readings{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:11px 0}
+.rem-sources .ms-reading{background:#13383e;border:1px solid #32665f;padding:11px;border-radius:10px}
+.rem-sources .ms-reading small{color:#b0d9d0;font-size:10px;display:block}
+.rem-sources .ms-reading strong{font-size:24px;color:#79ebc2;font-variant-numeric:tabular-nums}
+.rem-sources .ms-data-time{color:#aac7cc;font-size:11px}
+.rem-sources .ms-legend{margin-top:16px;border-top:1px solid #2f5159;padding-top:14px;font-size:11px;line-height:1.8;color:#aac7c8}
+.rem-sources .ms-legend strong{color:#85edd1}
+@media(max-width:760px){.rem-sources .ms-list{grid-template-columns:1fr}.rem-sources .ms-card{padding:15px}}
