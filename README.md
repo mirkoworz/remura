@@ -1,14 +1,24 @@
-# REMURA v0.3 — Radar istituzionale multi-asset
+# REMURA v0.4 — Radar istituzionale multi-asset
 
 Web app gratuita per iPhone e PC, basata sui report settimanali ufficiali CFTC.
 
 ## Apri la web app
 - [Radar Forex (28 coppie principali)](https://mirkoworz.github.io/remura/)
-- [Radar multi-asset (Forex, oro, argento e indici USA)](https://mirkoworz.github.io/remura/mercati.html?v=3)
+- [Radar multi-asset (Forex, oro, argento e indici USA)](https://mirkoworz.github.io/remura/mercati.html?v=4)
 
 ## Fonti
 - Forex e indici finanziari: [CFTC TFF - Futures Only](https://publicreporting.cftc.gov/Commitments-of-Traders/TFF-Futures-Only/gpe5-46if), dataset `gpe5-46if`.
 - Oro e argento: [CFTC Disaggregated - Futures Only](https://publicreporting.cftc.gov/Commitments-of-Traders/Disaggregated-Futures-Only/72hh-3qpy), dataset `72hh-3qpy`.
+
+## Menu laterale e pagine dedicate (v0.4)
+- Pulsante ☰ comune su dashboard, scanner e pagine strumento.
+- Navigazione per gruppi Forex, metalli e indici, con ricerca testuale.
+- Ogni strumento ha URL dedicato, ad esempio [Gold](https://mirkoworz.github.io/remura/asset.html?symbol=XAUUSD&v=4) o [CADJPY](https://mirkoworz.github.io/remura/asset.html?symbol=CADJPY&v=4).
+- Scheda: net % degli operatori CFTC, variazioni settimanali, grafico storico, percentile del netto sulla serie disponibile, open interest e contratti long/short, ultime 6 settimane.
+- Sentiment retail solo predisposto, senza percentuali fittizie; integrazione futura tramite fonte autenticata sicura.
+- Le coppie Forex sono proxy sintetici. Open interest non è sommabile sui cross: nella scheda si mostrano le gambe.
+- Se API CFTC non risponde, mostra N/D e motivo invece di usare dati inventati.
+- Percorsi: `index.html`, `mercati.html`, `asset.html?symbol=...`; menu condiviso `nav.js`/`nav.css`.
 
 ## Mercati supportati
 - Tutte le 28 coppie **distinte** delle otto valute: EUR, GBP, AUD, NZD, USD, JPY, CAD, CHF (la selezione utilizza una sola direzione per ogni coppia: ad es. EURUSD, non USDEUR).
