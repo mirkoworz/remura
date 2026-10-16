@@ -10,6 +10,19 @@
 <title>REMURA v0.2 · Radar multi-asset</title>
 <style>
 :root{color-scheme:dark;--bg:#07121a;--panel:#101f2a;--panel2:#132b36;--border:#284451;--text:#eaf6f3;--muted:#9bb8be;--mint:#69edca;--red:#ff8a96;--blue:#8fb5ff;--amber:#f1c78e}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,select,input{font:inherit}button{cursor:pointer}a{color:var(--mint);text-decoration:none}button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--mint);outline-offset:3px}.shell{max-width:1280px;margin:auto;padding:25px 24px 80px}.top{display:flex;gap:15px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:34px}.logo{font-size:24px;letter-spacing:.13em;font-weight:850;color:var(--mint)}.logo small{display:block;letter-spacing:.08em;font-size:11px;font-weight:650;color:var(--muted)}.top-actions{display:flex;gap:9px;align-items:center}.back,.refresh{border:1px solid var(--border);border-radius:12px;padding:9px 14px;background:var(--panel2);color:var(--text);font-weight:700}.status{font-size:12px;color:var(--muted);font-weight:680}.status:before{content:"";display:inline-block;background:var(--amber);width:8px;height:8px;border-radius:99px;margin-right:8px}.status.live:before{background:var(--mint)}.status.warn:before{background:var(--red)}h1{font-size:clamp(32px,5vw,58px);line-height:1.08;letter-spacing:-.055em;margin:0 0 14px}h1 span{color:var(--mint)}.intro{color:var(--muted);max-width:820px;font-size:15px;margin-bottom:23px}.alert{background:#112e2d;border:1px solid #32665c;border-radius:14px;padding:14px 16px;color:#b9eadb;margin-bottom:18px;font-size:12px;line-height:1.65}.alert.warning{background:#2c241c;border-color:#634c35;color:#f5dbb4}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:17px 0 18px}.tab{border:1px solid var(--border);background:var(--panel);border-radius:12px;color:var(--muted);font-weight:800;padding:12px 17px}.tab.active{background:#174039;border-color:#378474;color:var(--mint)}.layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(290px,.8fr);gap:16px}.panel{border:1px solid var(--border);background:linear-gradient(160deg,#122a36,#0b1b26);border-radius:20px;padding:22px;min-width:0}.eyebrow{font-weight:820;font-size:11px;text-transform:uppercase;letter-spacing:.13em;color:var(--mint)}.section-title{font-weight:850;font-size:22px;letter-spacing:-.035em;margin:4px 0 12px}.meta{color:var(--muted);font-size:12px}.searchbar{width:100%;border:1px solid #365560;background:#0c202b;color:var(--text);border-radius:12px;padding:12px 15px;margin:10px 0 13px}.searchbar::placeholder{color:#819da7}.listing{max-height:680px;overflow:auto}.assetrow{border:1px solid #25404a;width:100%;display:grid;grid-template-columns:minmax(0,1.5fr) .9fr .9fr 62px;gap:8px;align-items:center;text-align:left;padding:14px 12px;border-radius:12px;margin-bottom:7px;background:#0e222d;color:var(--text)}.assetrow.active{background:#16373b;border-color:#4b9387}.assetrow:hover{background:#19343e}.assetrow b{font-size:13px}.assetrow small{color:var(--muted);display:block;font-size:10px;margin-top:2px}.num{font-variant-numeric:tabular-nums;font-weight:800}.pos{color:var(--mint)}.neg{color:var(--red)}.neu{color:var(--amber)}.empty{padding:18px 6px;color:var(--muted)}.details{position:sticky;top:15px;align-self:start}.detail-head{display:flex;justify-content:space-between;align-items:start;gap:15px}.detail-title{font-size:31px;letter-spacing:-.04em;font-weight:850}.value-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:17px 0}.value-box{padding:15px 13px;background:#102936;border:1px solid #2e5059;border-radius:14px;min-width:0}.value-box .label{font-size:11px;color:var(--muted);min-height:32px}.value-box strong{font-size:clamp(23px,3vw,35px);display:block;line-height:1.3;margin:4px 0}.value-box .delta{font-size:11px}.date{font-size:12px;color:var(--muted);margin:12px 0}.status-note{font-size:12px;background:#172e34;border-radius:12px;padding:12px;line-height:1.65}.status-note.alert-only{background:#35291f;color:#ffdfb2}.plot{min-height:210px;margin-top:12px}.plot svg{width:100%;height:auto;display:block}.legend{color:var(--muted);font-size:11px;display:flex;gap:17px;flex-wrap:wrap;margin-top:8px}.legend .one:before,.legend .two:before{content:"";display:inline-block;width:13px;height:4px;border-radius:5px;vertical-align:middle;margin-right:6px;background:var(--mint)}.legend .two:before{background:var(--blue)}.contracts{margin-top:18px;border-top:1px solid #294650;padding-top:14px;font-size:12px;color:var(--muted)}.source{margin-top:28px;line-height:1.7;font-size:12px;color:var(--muted)}.source a{overflow-wrap:anywhere}.footer{color:#76939c;font-size:11px;margin-top:27px;text-align:center}.small{font-size:11px}.counter{border:1px solid var(--border);background:#122932;border-radius:18px;padding:14px;display:flex;justify-content:space-between;gap:12px;margin-bottom:16px;color:var(--muted)}.counter strong{color:var(--text);font-size:17px}@media(max-width:820px){.layout{grid-template-columns:1fr}.details{position:static;order:-1}.listing{max-height:none}.shell{padding:18px 14px 95px}.panel{padding:16px}.top{margin-bottom:24px}h1{font-size:39px}.assetrow{grid-template-columns:minmax(0,1.5fr) .85fr .85fr 55px;gap:5px;padding:12px 8px}.assetrow b{font-size:12px}.assetrow small{font-size:9px}.tab{padding:10px 13px}.top-actions{width:100%;justify-content:space-between}.value-box{padding:12px 10px}.counter{flex-direction:column}.detail-title{font-size:27px}}@media(max-width:360px){.assetrow{font-size:10px}.assetrow b{font-size:11px}}
+
+.scan-panel{margin:0 0 17px;background:linear-gradient(140deg,#12363c,#0c1b26)}
+.scan-header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:13px}
+.scan-header h2{font-size:26px;line-height:1.15;letter-spacing:-.04em;margin:5px 0}
+.scan-description{color:var(--muted);font-size:12px;max-width:740px}
+.scan-count{color:var(--mint);font-size:12px;font-weight:800;padding:8px 12px;background:#143b3b;border-radius:10px}
+.scan-controls{margin:13px 0 15px}.scan-controls .tab{font-size:12px;padding:9px 13px}
+.scan-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.scan-card{min-width:0;display:grid;gap:6px;text-align:left;padding:14px;border:1px solid #305461;border-radius:13px;background:#102732;color:var(--text)}
+.scan-card:hover{background:#1a3b42;border-color:#55a394}.scan-top{display:flex;justify-content:space-between;gap:6px;align-items:center;flex-wrap:wrap}
+.scan-top b{font-size:15px}.scan-top strong{font-size:18px;font-variant-numeric:tabular-nums}
+.scan-reason{font-size:12px;color:#b8d5d8}.scan-foot{font-size:10px;color:var(--muted)}.scan-empty{grid-column:1/-1;color:var(--muted);font-size:12px;padding:9px}
+@media(max-width:700px){.scan-results{grid-template-columns:1fr}.scan-header h2{font-size:23px}}
 </style>
 </head>
 <body>
@@ -20,6 +33,13 @@
 <div class="alert" id="global-notice">Caricamento diretto dei report pubblici CFTC. Il COT è un'istantanea del martedì pubblicata con ritardo, non un flusso di ordini in tempo reale.</div>
 <div class="tabs" role="group" aria-label="Scegli un mercato"><button class="tab active" data-group="all">Tutti</button><button class="tab" data-group="forex">Forex</button><button class="tab" data-group="metals">Oro e metalli</button><button class="tab" data-group="indices">Indici</button></div>
 <div class="counter"><div><strong id="total-count">—</strong> strumenti nella lista</div><div><strong id="loaded-count">—</strong> con dati ufficiali · <span id="report-date">in attesa</span></div></div>
+
+<section class="panel scan-panel" id="institutional-scanner">
+<div class="scan-header"><div><div class="eyebrow">REMURA · RADAR AUTOMATICO</div><h2>Dove si muovono i grandi?</h2><p class="scan-description">Classifica dei cambiamenti nel posizionamento CFTC su tutti i mercati con dati validi. Inversione significa cambio del segno della posizione netta, non inversione del prezzo.</p></div><span class="scan-count" id="scan-count">In attesa della CFTC</span></div>
+<div class="tabs scan-controls" aria-label="Filtra i movimenti istituzionali"><button class="tab active" data-scan="moves">Movimenti maggiori</button><button class="tab" data-scan="reversals">Cambi net long/short</button><button class="tab" data-scan="accelerations">Accelerazioni</button></div>
+<div class="scan-results" id="scan-results" aria-live="polite"><div class="scan-empty">Connessione in corso…</div></div>
+<p class="source" style="margin:12px 0 0">Misura: variazione settimanale della posizione netta in punti percentuali di open interest (pp). Per Forex e indici: Leveraged Funds (TFF). Per metalli: Managed Money (Disaggregated). Metodologie non identiche; coppie Forex correlate fra loro. Report vecchi oltre 14 giorni esclusi. Nessuna indicazione di acquisto o vendita.</p>
+</section>
 <div class="layout">
 <section class="panel"><div class="eyebrow">SCANNER ISTITUZIONALE</div><h2 class="section-title">Dove si muovono i fondi</h2><div class="meta">Due gruppi di operatori per mercato. Ordinamento per movimento netto settimanale; i dati dei gruppi e delle famiglie COT non vanno confrontati direttamente come se fossero equivalenti.</div><input class="searchbar" id="search" placeholder="Cerca EURJPY, XAUUSD, NAS100…" aria-label="Cerca strumento">
 <div id="listing" class="listing" aria-live="polite"><div class="empty">Connessione in corso…</div></div></section>
@@ -123,6 +143,54 @@ notice.textContent=(!r?'Nessun dato ufficiale verificato per questo strumento. N
 $('contracts').textContent=meta.group==='forex'?'Codici base/quotata: '+(FX_CODES[activeSymbol.slice(0,3)]||'USD = riferimento 0')+' / '+(FX_CODES[activeSymbol.slice(3)]||'USD = riferimento 0'):'Contratto CFTC '+meta.code+' · Fonte '+(meta.dataset==='disagg'?'Disaggregated':'TFF')+' futures only'+(r?.v?.oi?' · Open interest '+new Intl.NumberFormat('it-IT').format(r.v.oi):'');
 drawChart(r);
 }
+
+let scanMode='moves';
+function scanSignal(sym){
+ const data=series(sym),meta=instrument(sym);
+ if(data.length<3)return null;
+ const n=data[data.length-1],p=data[data.length-2],b=data[data.length-3];
+ const days=(x,y)=>(Date.parse(x+'T00:00:00Z')-Date.parse(y+'T00:00:00Z'))/86400000;
+ const age=days(new Date().toISOString().slice(0,10),n.date);
+ if(age>14||age<0||days(n.date,p.date)>14||days(p.date,b.date)>14)return null;
+ const key=meta.group==='metals'?'a':'b';
+ const curr=n[key],prev=p[key],before=b[key];
+ const change=curr-prev,oldChange=prev-before;
+ if(![curr,prev,before,change,oldChange].every(Number.isFinite))return null;
+ const crossed=curr*prev<0&&Math.abs(curr)>=.5&&Math.abs(prev)>=.5;
+ const faster=change*oldChange>0&&Math.abs(change)-Math.abs(oldChange)>=1.5;
+ const assetDelta=n.a-p.a;
+ const confirmed=meta.group==='metals'||Math.abs(assetDelta)<.5||Math.abs(change)<.5?null:Math.sign(assetDelta)===Math.sign(change);
+ return {sym,meta,date:n.date,curr,prev,change,oldChange,crossed,faster,confirmed};
+}
+function renderScanner(){
+ const el=$('scan-results');el.textContent='';
+ const all=allSymbols.map(scanSignal).filter(Boolean);
+ $('scan-count').textContent=all.length+' strumenti con storico recente';
+ const items=all.filter(t=>scanMode==='moves'||(scanMode==='reversals'?t.crossed:t.faster))
+   .sort((x,y)=>scanMode==='accelerations'?(Math.abs(y.change)-Math.abs(y.oldChange))-(Math.abs(x.change)-Math.abs(x.oldChange)):Math.abs(y.change)-Math.abs(x.change)).slice(0,12);
+ if(!items.length){
+ const div=document.createElement('div');div.className='scan-empty';
+ div.textContent=!all.length?'Nessun report recente sufficiente. Verifica la fonte CFTC e riprova.':scanMode==='reversals'?'Nessun passaggio netto da long a short (o viceversa) nella settimana più recente.':scanMode==='accelerations'?'Nessuna accelerazione della variazione settimanale di almeno 1,5 pp.':'Nessun movimento disponibile.';
+ el.append(div);return;
+ }
+ for(const item of items){
+ const btn=document.createElement('button');btn.type='button';btn.className='scan-card';
+ const top=document.createElement('div');top.className='scan-top';
+ const name=document.createElement('b');name.textContent=item.sym;
+ const d=document.createElement('strong');d.className=color(item.change);d.textContent=pp(item.change);top.append(name,d);
+ const explain=document.createElement('div');explain.className='scan-reason';
+ explain.textContent=scanMode==='reversals'?'Posizione netta passata da '+dec(item.prev)+' a '+dec(item.curr):scanMode==='accelerations'?'Variazione settimanale da '+pp(item.oldChange)+' a '+pp(item.change):'Netto attuale '+dec(item.curr)+' · '+(item.change>=0?'aumento':'riduzione')+' del posizionamento';
+ const info=document.createElement('div');info.className='scan-foot';
+ info.textContent=(item.meta.group==='metals'?'Managed Money':'Leveraged Funds')+' · '+fdate(item.date)+(item.confirmed===true?' · Asset Manager stessa direzione':item.confirmed===false?' · Asset Manager divergenti':'');
+ btn.append(top,explain,info);btn.addEventListener('click',()=>{
+  activeSymbol=item.sym;activeGroup='all';$('search').value='';
+  document.querySelectorAll('[data-group]').forEach(b=>b.classList.toggle('active',b.dataset.group==='all'));
+  updateList();detail();document.querySelector('.details').scrollIntoView({block:'center',behavior:'smooth'});
+ });
+ el.append(btn);
+ }
+}
+
 function updateList(){
 const query=$('search').value.toUpperCase().trim();
 const candidates=allSymbols.filter(sym=>(activeGroup==='all'||instrument(sym).group===activeGroup)&& (sym.includes(query)||instrument(sym).name.toUpperCase().includes(query)));
@@ -193,13 +261,14 @@ $('global-status').className='status '+(count===2?'live':'warn');$('global-statu
 const problems=[];if(tffError)problems.push('TFF: '+tffError);if(disaggError)problems.push('Metalli: '+disaggError);
 const notice=$('global-notice');notice.className='alert'+(count!==2?' warning':'');
 notice.textContent=count===2?'Fonte ufficiale CFTC caricata per Forex, indici e metalli. I singoli strumenti non presenti nel report rimangono N/D. Ultima data e aggiornamento possono differire tra contratti.':'Caricamento parziale o fallito: '+problems.join(' · ')+'. Nessun valore artificiale viene mostrato per i dati mancanti.';
-updateList();detail();
+updateList();detail();renderScanner();
 }
 $('search').addEventListener('input',updateList);
 document.querySelectorAll('[data-group]').forEach(btn=>btn.addEventListener('click',()=>{
 activeGroup=btn.dataset.group;document.querySelectorAll('[data-group]').forEach(b=>b.classList.toggle('active',b===btn));updateList();
 }));
+document.querySelectorAll('[data-scan]').forEach(btn=>btn.addEventListener('click',()=>{scanMode=btn.dataset.scan;document.querySelectorAll('[data-scan]').forEach(b=>b.classList.toggle('active',b===btn));renderScanner();}));
 $('refresh').addEventListener('click',refresh);
-updateList();detail();refresh();
+updateList();detail();renderScanner();refresh();
 </script>
 </body></html>
