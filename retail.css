@@ -1,0 +1,43 @@
+/* REMURA sentiment / prices v0.6: separate price provider and retail samples. */
+#retail-module{--retail-green:#6ee1b0;--retail-red:#ff8d99;--retail-ink:#e8f7f4;min-width:0}
+#retail-module .rt-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+#retail-module .rt-sub{color:#9bb8be;font-size:12px;max-width:850px;line-height:1.6}
+#retail-module .rt-tag{font-size:11px;letter-spacing:.06em;font-weight:800;border:1px solid #40665e;background:#153c37;color:#92eecf;padding:7px 10px;border-radius:10px}
+#retail-module .rt-tag.warn{background:#362b25;border-color:#816044;color:#ffd6ae}
+#retail-module .rt-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:17px 0}
+#retail-module .rt-stat{border:1px solid #355960;background:#0b2630;border-radius:13px;padding:12px;min-width:0}
+#retail-module .rt-stat span{display:block;font-size:10px;font-weight:700;color:#aac4c7;margin-bottom:5px}
+#retail-module .rt-stat strong{display:block;font-size:clamp(18px,3vw,27px);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+#retail-module .rt-stat small{font-size:10px;color:#9db9bd}
+#retail-module .rt-green{color:var(--retail-green)}#retail-module .rt-red{color:var(--retail-red)}
+#retail-module .rt-split{width:100%;height:14px;display:flex;overflow:hidden;border-radius:10px;background:#324852;margin:8px 0 8px}
+#retail-module .rt-split i{height:100%;transition:width .25s}
+#retail-module .rt-split .long{background:#48c78b}#retail-module .rt-split .short{background:#f77885}
+#retail-module .rt-section{margin-top:20px;border-top:1px solid #2d5059;padding-top:19px}
+#retail-module .rt-section-head{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+#retail-module .rt-section-head h3{font-size:17px;letter-spacing:-.02em;margin:0}
+#retail-module .rt-tfs{display:flex;gap:5px;flex-wrap:wrap}
+#retail-module .rt-tfs button,#retail-module .rt-toggle button{border:1px solid #3d5861;border-radius:9px;padding:7px 9px;color:#cadcdd;background:#19333b;font-size:11px;font-weight:780;cursor:pointer}
+#retail-module .rt-tfs button[aria-pressed=true],#retail-module .rt-toggle button[aria-pressed=true]{border-color:#70e3bd;background:#235047;color:#c3ffe7}
+#retail-module .rt-price{background:#0b1b25;border:1px solid #284852;border-radius:13px;overflow:hidden;width:100%;height:390px;position:relative}
+#retail-module .rt-price .tradingview-widget-container{height:100%;width:100%}
+#retail-module .rt-price .tradingview-widget-container__widget{height:100%;width:100%}
+#retail-module .rt-empty{color:#9eb5bb;display:flex;align-items:center;justify-content:center;min-height:180px;text-align:center;padding:17px;border:1px dashed #3a5962;border-radius:12px;line-height:1.65}
+#retail-module .rt-lots-plot{min-height:208px;position:relative;background:#0b1e29;border:1px solid #294650;border-radius:12px;padding:8px}
+#retail-module .rt-lots-plot svg{width:100%;display:block;height:auto}
+#retail-module .rt-legend{display:flex;align-items:center;gap:15px;flex-wrap:wrap;font-size:11px;margin:10px 0;color:#b3cfd1}
+#retail-module .rt-legend b{width:12px;height:4px;border-radius:3px;display:inline-block;vertical-align:middle;margin-right:4px}
+#retail-module .rt-legend .lg{background:#48c78b}#retail-module .rt-legend .sh{background:#f77885}
+#retail-module .rt-raw{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+#retail-module .rt-line{font-size:12px;display:flex;justify-content:space-between;gap:9px;border-bottom:1px solid #2a4851;padding:7px 0}
+#retail-module .rt-line span{color:#a4c1c5}#retail-module .rt-line b{font-variant-numeric:tabular-nums}
+#retail-module .rt-disclaimer{font-size:11px;color:#9eb9bd;margin-top:12px;line-height:1.6}
+#retail-module .rt-disclaimer a{text-decoration:underline;text-underline-offset:2px;color:#92eacb}
+@media(max-width:720px){
+ #retail-module .rt-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ #retail-module .rt-stat{padding:11px 9px}
+ #retail-module .rt-section-head{align-items:flex-start}
+ #retail-module .rt-price{height:355px}
+ #retail-module .rt-raw{grid-template-columns:1fr}
+ #retail-module .rt-tfs button{padding:8px 10px}
+}
