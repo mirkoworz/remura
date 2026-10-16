@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="./icon.svg">
-<link rel="stylesheet" href="./nav.css?v=4">
+<link rel="stylesheet" href="./nav.css?v=5">
 <title>Remura · Scheda strumento</title>
 <style>
 :root{color-scheme:dark;--bg:#07121a;--panel:#10242f;--panel2:#122e38;--line:#2b4b55;--text:#e8f7f4;--muted:#9bb8be;--mint:#69edca;--red:#ff8d99;--blue:#8db6ff;--amber:#f6c47e}
@@ -78,7 +78,7 @@ th:first-child,td:first-child{text-align:left}
 </head>
 <body>
 <div class="shell">
-<header class="top"><div class="brand">REMURA<small>SCHEDA ISTITUZIONALE · v0.4</small></div><div class="topright"><a class="btn" href="./mercati.html?v=4">← Scanner</a><span class="status" id="state">Connessione…</span><button class="btn" id="refresh" type="button" aria-label="Aggiorna i dati">↻</button></div></header>
+<header class="top"><div class="brand">REMURA<small>SCHEDA ISTITUZIONALE · v0.5</small></div><div class="topright"><a class="btn" href="./index.html">Home</a><a class="btn" id="category-back" href="./catalogo.html?categoria=forex&v=5">Categoria</a><a class="btn" href="./mercati.html?v=5">Scanner</a><span class="status" id="state">Connessione…</span><button class="btn" id="refresh" type="button" aria-label="Aggiorna i dati">↻</button></div></header>
 <div class="eyebrow" id="category">MERCATO</div>
 <h1 id="heading">Gold <span>XAUUSD</span></h1>
 <p class="subtitle" id="description">Scheda dedicata: segui le posizioni istituzionali nel tempo e, quando disponibile, confrontale con il sentiment dei piccoli trader.</p>
@@ -98,9 +98,9 @@ th:first-child,td:first-child{text-align:left}
 <section class="panel"><div class="eyebrow">PROSSIMA INTEGRAZIONE</div><h2>Sentiment retail</h2><div class="sentiment"><span class="pending">NON COLLEGATO</span><div class="sentiment-head">Cosa fa la folla?</div><p class="sentiment-note">Qui aggiungeremo la percentuale di trader retail long/short, la data dell'aggiornamento e il numero dei conti osservati quando disponibili. Non mostriamo dati fittizi.</p><div class="sentiment-grid"><div>Retail long<strong>—</strong></div><div>Retail short<strong>—</strong></div></div></div><p class="headnote">Obiettivo futuro: mostrare la concordanza o divergenza tra posizioni COT istituzionali e sentiment retail, mantenendo separate fonti, denominatori e aggiornamenti.</p></section>
 <section class="panel overview"><div class="eyebrow">FONTI & LIMITI</div><h2>Da dove arrivano questi numeri</h2><div class="source" id="source">I dati sono ricavati dai report governativi CFTC Futures Only. Forex e indici usano TFF, i metalli usano Disaggregated.</div></section>
 </div>
-<footer class="footer">REMURA v0.4 · Analisi delle posizioni COT · Non è consulenza finanziaria · Nessun dato realtime.</footer>
+<footer class="footer">REMURA v0.5 · Analisi delle posizioni COT · Non è consulenza finanziaria · Nessun dato realtime.</footer>
 </div>
-<script src="./nav.js?v=4"></script>
+<script src="./nav.js?v=5"></script>
 <script>
 "use strict";
 const conf=window.REMURA_MARKETS;
@@ -130,6 +130,7 @@ const datasetId=dataset==="tff"?"gpe5-46if":"72hh-3qpy";
 let chartData=[],rawByCode={},loading=false;
 function setup(){
  document.title="REMURA · "+symbol+" | COT istituzionale";
+ const back=$("category-back");const cat=isFX?"forex":isMetal?"metals":"indices";back.href="./catalogo.html?categoria="+cat+"&v=5";back.textContent=cat==="forex"?"← Forex":cat==="metals"?"← Metalli":"← Indici";
  $("category").textContent=isFX?"FOREX · COT TFF":isMetal?"METALLI · COT DISAGGREGATED":"INDICI · COT TFF";
  $("heading").textContent="";
  $("heading").append(document.createTextNode(isMetal?(symbol==="XAUUSD"?"Gold · Oro":"Silver · Argento"):isFX?base+"/"+quote:entry.name+" "));
