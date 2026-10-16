@@ -1,18 +1,33 @@
-# REMURA v0.1 — Radar degli istituzionali
+# REMURA v0.2 — Radar istituzionale multi-asset
 
-Web app gratuita, mobile-first, in italiano. Pubblicabile tramite GitHub Pages.
+Web app gratuita per iPhone e PC, basata sui report settimanali ufficiali CFTC.
 
-## Funzioni
-- Scanner di 16 coppie FX, incluso CADJPY.
-- Fonte primaria CFTC TFF Futures Only, con dati settimanali ritardati.
-- Confronto Asset Manager vs Leveraged Funds, serie storica ed export CSV.
-- Modalità DEMO etichettata quando i dati ufficiali non sono disponibili.
+## Apri la web app
+- [Radar Forex (28 coppie principali)](https://mirkoworz.github.io/remura/)
+- [Radar multi-asset (Forex, oro, argento e indici USA)](https://mirkoworz.github.io/remura/mercati.html?v=2)
 
-## Pubblicazione
-1. Repository pubblico su GitHub (Settings → General → Danger Zone → Change repository visibility → Public).
-2. Settings → Pages → Build and deployment: Deploy from a branch, main e /(root), quindi Save.
-3. Apri https://mirkoworz.github.io/remura/ e su Safari iPhone scegli Condividi → Aggiungi alla schermata Home.
+## Fonti
+- Forex e indici finanziari: [CFTC TFF - Futures Only](https://publicreporting.cftc.gov/Commitments-of-Traders/TFF-Futures-Only/gpe5-46if), dataset `gpe5-46if`.
+- Oro e argento: [CFTC Disaggregated - Futures Only](https://publicreporting.cftc.gov/Commitments-of-Traders/Disaggregated-Futures-Only/72hh-3qpy), dataset `72hh-3qpy`.
 
-Il collegamento live alla CFTC va verificato dal browser dopo la prima pubblicazione. Il dato COT non è un segnale realtime né un consiglio finanziario.
+## Mercati supportati
+- Tutte le 28 coppie **distinte** delle otto valute: EUR, GBP, AUD, NZD, USD, JPY, CAD, CHF (la selezione utilizza una sola direzione per ogni coppia: ad es. EURUSD, non USDEUR).
+- XAUUSD (future Gold COMEX) e XAGUSD (future Silver COMEX).
+- US500 (future E-mini S&P 500), NAS100 (future E-mini Nasdaq-100), US30 (future Mini Dow x5), US2000 (E-mini Russell 2000), DXY (US Dollar Index).
 
-Fonte ufficiale: https://publicreporting.cftc.gov/Commitments-of-Traders/TFF-Futures-Only/gpe5-46if
+## Metodologia e limiti
+- `Net % OI = (Long - Short) / Open Interest * 100`.
+- Per i cross Forex, il proxy è `Net% valuta base - Net% valuta quotata`; non è un contratto COT diretto sul cross.
+- Forex e indici mostrano categorie Asset Manager e Leveraged Funds della CFTC TFF.
+- Oro/argento mostrano invece **Managed Money** e **Producer/Merchant**, categorie *diverse* del report Disaggregated. Gli hedger possono assumere posizioni legate a copertura e non a una direzione di prezzo.
+- Il dato è settimanale, relativo alle posizioni del martedì e normalmente pubblicato venerdì: non è realtime.
+- Per i mercati senza righe CFTC riconosciute la vista multi-asset mostra **N/D** (non dati inventati).
+- La dashboard originale è ancora dotata di modalità **DEMO** chiaramente etichettata quando il caricamento Forex fallisce.
+
+## Installazione iPhone
+Apri il sito con Safari → Condividi → Aggiungi alla schermata Home.
+
+## Test
+Parser e calcoli Forex, Gold e indice S&P 500 testati su dati di esempio controllati. Il corretto caricamento *live* di oro e indici va confermato dal browser dell'utente; il passaggio non si deduce dalla compilazione del codice.
+
+Il progetto è sperimentale e non costituisce consulenza finanziaria.
