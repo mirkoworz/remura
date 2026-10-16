@@ -28,7 +28,7 @@ jobs:
         run: python scripts/update_myfxbook.py
       - name: Store publicly visible aggregates
         run: |
-          git add data/myfxbook/latest.json data/myfxbook/history/
+          git add -A data/myfxbook/
           if ! git diff --cached --quiet; then
             git config user.name "remura-data-bot"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
