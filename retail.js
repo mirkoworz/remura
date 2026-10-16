@@ -61,6 +61,8 @@ async function retail(){
  const text=new Date(at).toLocaleString("it-IT",{timeZone:"Europe/Rome"});
  $("r-updated").textContent=text;
  $("r-date").textContent="Myfxbook · "+text+" (ora italiana). "+(fresh?"Rilevazione recente.":"ATTENZIONE: rilevazione vecchia.");
+ const sampleCount=Number(p.lPos)+Number(p.sPos);
+ if(Number.isFinite(sampleCount)&&sampleCount>=0&&sampleCount<30){$("r-date").textContent+=" ATTENZIONE: solo "+sampleCount+" posizioni censite per questo simbolo. Il sentiment è poco rappresentativo.";}
  }catch(e){$("r-status").textContent="Myfxbook non collegato";$("r-date").textContent="Feed retail mancante o non ancora configurato. Nessuna percentuale inventata.";draw();}
 }
 price();draw();retail();
