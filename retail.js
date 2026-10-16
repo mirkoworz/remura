@@ -37,7 +37,9 @@ function draw(){
  const path=k=>records.map((r,i)=>(i?"L":"M")+X(i).toFixed(2)+","+Y(+r[k]).toFixed(2)).join(" ");
  let chart='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Storico Myfxbook lotti e posizioni long short">';
  for(let i=0;i<5;i++){let v=peak*i/4;chart+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="#35515b" stroke-dasharray="3 5"/><text x="'+(L-5)+'" y="'+(Y(v)+3)+'" text-anchor="end" font-size="10" fill="#9cb9bd">'+fmt(v)+'</text>';}
- chart+='<path d="'+path(keys[0])+'" fill="none" stroke="#48c78b" stroke-width="3"/><path d="'+path(keys[1])+'" fill="none" stroke="#f77885" stroke-width="2.7"/></svg>';
+ chart+='<path d="'+path(keys[0])+'" fill="none" stroke="#48c78b" stroke-width="3"/><path d="'+path(keys[1])+'" fill="none" stroke="#f77885" stroke-width="2.7"/>';
+ const label=t=>new Date(t).toLocaleDateString('it-IT',{day:'2-digit',month:'short',timeZone:'Europe/Rome'});
+ chart+='<text x="'+L+'" y="'+(H-6)+'" fill="#a9c2c8" font-size="11">'+label(first)+'</text><text x="'+(W-R)+'" y="'+(H-6)+'" text-anchor="end" fill="#a9c2c8" font-size="11">'+label(last)+'</text></svg>';
  node.innerHTML=chart;
 }
 async function retail(){
