@@ -1,53 +1,40 @@
-# REMURA v0.4 — Radar istituzionale multi-asset
+# REMURA v0.5 — Segui le tracce degli istituzionali
 
-Web app gratuita per iPhone e PC, basata sui report settimanali ufficiali CFTC.
+REMURA è una web app gratuita ottimizzata per iPhone, con radar COT ufficiali e percorsi per esplorare futures valutari, metalli e indici USA.
 
-## Apri la web app
-- [Radar Forex (28 coppie principali)](https://mirkoworz.github.io/remura/)
-- [Radar multi-asset (Forex, oro, argento e indici USA)](https://mirkoworz.github.io/remura/mercati.html?v=4)
+## Mappa del sito
+- [Home](https://mirkoworz.github.io/remura/) — esposizione, variazioni, spinta e decelerazione.
+- [Scanner completo](https://mirkoworz.github.io/remura/mercati.html?v=5) — movimenti maggiori, passaggi net long/short, accelerazioni e rallentamenti.
+- [Forex](https://mirkoworz.github.io/remura/catalogo.html?categoria=forex&v=5) — 28 coppie Forex.
+- [Radar Forex classico](https://mirkoworz.github.io/remura/forex.html?v=5) — il radar grafico originale.
+- [Metalli](https://mirkoworz.github.io/remura/catalogo.html?categoria=metals&v=5) — Gold e Silver.
+- [Indici](https://mirkoworz.github.io/remura/catalogo.html?categoria=indices&v=5) — S&P 500, Nasdaq 100, Dow, Russell 2000, DXY.
+- [Scheda GOLD](https://mirkoworz.github.io/remura/asset.html?symbol=XAUUSD&v=5).
+- [Scheda CADJPY](https://mirkoworz.github.io/remura/asset.html?symbol=CADJPY&v=5).
 
-## Fonti
-- Forex e indici finanziari: [CFTC TFF - Futures Only](https://publicreporting.cftc.gov/Commitments-of-Traders/TFF-Futures-Only/gpe5-46if), dataset `gpe5-46if`.
-- Oro e argento: [CFTC Disaggregated - Futures Only](https://publicreporting.cftc.gov/Commitments-of-Traders/Disaggregated-Futures-Only/72hh-3qpy), dataset `72hh-3qpy`.
+Menu hamburger con Home, Scanner e sottomenu apribili Forex → singole coppie, Metalli → Gold/Silver, Indici → 5 futures; ricerca integrata. Ogni strumento ha una scheda con URL proprio.
 
-## Menu laterale e pagine dedicate (v0.4)
-- Pulsante ☰ comune su dashboard, scanner e pagine strumento.
-- Navigazione per gruppi Forex, metalli e indici, con ricerca testuale.
-- Ogni strumento ha URL dedicato, ad esempio [Gold](https://mirkoworz.github.io/remura/asset.html?symbol=XAUUSD&v=4) o [CADJPY](https://mirkoworz.github.io/remura/asset.html?symbol=CADJPY&v=4).
-- Scheda: net % degli operatori CFTC, variazioni settimanali, grafico storico, percentile del netto sulla serie disponibile, open interest e contratti long/short, ultime 6 settimane.
-- Sentiment retail solo predisposto, senza percentuali fittizie; integrazione futura tramite fonte autenticata sicura.
-- Le coppie Forex sono proxy sintetici. Open interest non è sommabile sui cross: nella scheda si mostrano le gambe.
-- Se API CFTC non risponde, mostra N/D e motivo invece di usare dati inventati.
-- Percorsi: `index.html`, `mercati.html`, `asset.html?symbol=...`; menu condiviso `nav.js`/`nav.css`.
+## Dati e fonti
+- [CFTC Traders in Financial Futures Futures Only](https://publicreporting.cftc.gov/Commitments-of-Traders/TFF-Futures-Only/gpe5-46if): dataset gpe5-46if, Forex/indici, categorie Asset Manager e Leveraged Funds.
+- [CFTC Disaggregated Futures Only](https://publicreporting.cftc.gov/Commitments-of-Traders/Disaggregated-Futures-Only/72hh-3qpy): dataset 72hh-3qpy, oro/argento, categorie Managed Money e Producer/Merchant.
 
-## Mercati supportati
-- Tutte le 28 coppie **distinte** delle otto valute: EUR, GBP, AUD, NZD, USD, JPY, CAD, CHF (la selezione utilizza una sola direzione per ogni coppia: ad es. EURUSD, non USDEUR).
-- XAUUSD (future Gold COMEX) e XAGUSD (future Silver COMEX).
-- US500 (future E-mini S&P 500), NAS100 (future E-mini Nasdaq-100), US30 (future Mini Dow x5), US2000 (E-mini Russell 2000), DXY (US Dollar Index).
+I dati COT sono settimanali, NON in tempo reale. Le nuove schede mostrano N/D se i report mancano, senza inventare numeri. La vecchia pagina forex.html conserva la modalità DEMO ben etichettata in caso di mancata connessione.
 
-## Scanner istituzionale automatico
-- **Movimenti maggiori**: ordina i cambi di posizione netta (long-short)/open interest settimanali per ampiezza in punti percentuali.
-- **Cambi net long/short**: indica il passaggio netto da positivo a negativo o viceversa, con soglia minima ±0,5 pp. Non implica l'inversione di prezzo.
-- **Accelerazioni**: stessa direzione in due settimane consecutive, con incremento nell'ampiezza della variazione settimanale di almeno 1,5 pp.
-- Esclude report più vecchi di 14 giorni e intervalli consecutivi oltre 14 giorni. Per il Forex le coppie sono correlate tra loro.
-- Fonte primaria per movimento: Leveraged Funds nel TFF (FX/indici), Managed Money nel Disaggregated (metalli). La comparabilità tra categorie è limitata.
+## Come interpretare
+- Netto % OI = (contratti long - short) / open interest × 100.
+- Variazione settimanale: differenza in punti percentuali tra due rilevazioni.
+- Più netto long non vuol dire che qualcuno abbia solo comprato: può dipendere anche dalla chiusura di short.
+- Rallentamento = variazione dello stesso segno ma di ampiezza inferiore (nello scanner soglia 1,5 pp).
+- Inversione netta = cambio del segno da netto positivo a netto negativo o viceversa; non equivale a un'inversione di prezzo.
+- Cross Forex: differenza normalizzata tra due futures valutari contro USD. È un indicatore sintetico, non un COT diretto del cross.
+- Categorie TFF e Disaggregated non sono intercambiabili; operatori commerciali possono coprire rischi.
+- Schede: serie fino a 56 settimane, posizioni long/short, OI quando pertinente, variazioni, percentile relativo alla serie disponibile e sezione sentiment retail ancora non collegata.
 
-## Correzione metalli v0.3
-Socrata Disaggregated usa i campi `prod_merc_positions_long` e `prod_merc_positions_short` (senza `_all`). La correzione è nel codice pubblicato; caricamento dell'API dal browser da verificare.
-
-## Metodologia e limiti
-- `Net % OI = (Long - Short) / Open Interest * 100`.
-- Per i cross Forex, il proxy è `Net% valuta base - Net% valuta quotata`; non è un contratto COT diretto sul cross.
-- Forex e indici mostrano categorie Asset Manager e Leveraged Funds della CFTC TFF.
-- Oro/argento mostrano invece **Managed Money** e **Producer/Merchant**, categorie *diverse* del report Disaggregated. Gli hedger possono assumere posizioni legate a copertura e non a una direzione di prezzo.
-- Il dato è settimanale, relativo alle posizioni del martedì e normalmente pubblicato venerdì: non è realtime.
-- Per i mercati senza righe CFTC riconosciute la vista multi-asset mostra **N/D** (non dati inventati).
-- La dashboard originale è ancora dotata di modalità **DEMO** chiaramente etichettata quando il caricamento Forex fallisce.
+## Prossimi sviluppi
+Collegamento sentiment retail reale e sicuro, confronto con il prezzo, preferiti e alert esplicabili. Nessun rendimento garantito.
 
 ## Installazione iPhone
-Apri il sito con Safari → Condividi → Aggiungi alla schermata Home.
+Apri [REMURA](https://mirkoworz.github.io/remura/) in Safari → Condividi → Aggiungi alla schermata Home.
 
-## Test
-Parser e calcoli Forex, Gold e indice S&P 500 testati su dati di esempio controllati. Il corretto caricamento *live* di oro e indici va confermato dal browser dell'utente; il passaggio non si deduce dalla compilazione del codice.
-
-Il progetto è sperimentale e non costituisce consulenza finanziaria.
+## File principali
+Home index.html, panoramiche catalogo.html, schede asset.html, scanner mercati.html, radar storico forex.html, menu nav.js / nav.css, cache shell sw.js.
