@@ -1,4 +1,4 @@
-/* REMURA v0.6: menu responsive ad albero + configurazione condivisa dei mercati. */
+/* REMURA v0.7: menu responsive ad albero + configurazione condivisa dei mercati. */
 (() => {
   "use strict";
   const FX_CODES={EUR:"099741",GBP:"096742",JPY:"097741",AUD:"232741",CAD:"090741",CHF:"092741",NZD:"112741"};
@@ -18,8 +18,8 @@
     {id:"indices",label:"Indici",icon:"▥",name:"Principali futures USA",items:[
       {s:"US500",n:"S&P 500"},{s:"NAS100",n:"Nasdaq 100"},{s:"US30",n:"Dow Jones"},{s:"US2000",n:"Russell 2000"},{s:"DXY",n:"Dollar Index"}]}
   ];
-  const detailUrl=s=>"./asset.html?symbol="+encodeURIComponent(s)+"&v=6";
-  const categoryUrl=id=>"./catalogo.html?categoria="+encodeURIComponent(id)+"&v=6";
+  const detailUrl=s=>"./asset.html?symbol="+encodeURIComponent(s)+"&v=7";
+  const categoryUrl=id=>"./catalogo.html?categoria="+encodeURIComponent(id)+"&v=7";
   window.REMURA_MARKETS={fxCodes:FX_CODES,fxPairs:FX_PAIRS,other:OTHER,groups,symbols:[...FX_PAIRS,...Object.keys(OTHER)],detailUrl,categoryUrl};
   function init(){
     if(document.getElementById("rm-menu-trigger"))return;
