@@ -26,3 +26,8 @@
 .rm-no-match{color:#8aa6b0;font-size:12px}
 @media(min-width:850px){#rm-menu-trigger{top:20px;left:19px}}
 @media(prefers-reduced-motion:reduce){#rm-menu{transition:none}}
+
+@media(max-width:720px){
+  .rm-has-nav main>.topbar{padding-left:54px;flex-wrap:wrap;gap:9px}
+  .rm-has-nav main>.topbar .actions{margin-left:auto}
+}
