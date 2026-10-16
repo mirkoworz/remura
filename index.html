@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#09141d">
+  <meta name="description" content="Remura: radar delle posizioni istituzionali nei futures valutari usando i dati COT ufficiali CFTC.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Remura">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>Remura — Radar istituzionale</title>
+  <style>
+    :root { color-scheme: dark; --bg:#07121a; --sidebar:#0a1720; --panel:#101f2a; --panel2:#132531; --outline:#203642; --ink:#e8f4f3; --muted:#8ba7ae; --subtle:#587782; --aqua:#69edca; --aqua2:#2fb5ae; --blue:#7ca9ff; --orange:#e2b97c; --red:#fb8b95; --radius:19px; }
+    * {box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:14px;line-height:1.45}
+    button,select{font:inherit}button{cursor:pointer}a{color:var(--aqua)}button:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--aqua);outline-offset:3px}
+    .app{min-height:100vh;display:grid;grid-template-columns:240px minmax(0,1fr)}
+    .sidebar{background:var(--sidebar);border-right:1px solid var(--outline);height:100vh;position:sticky;top:0;padding:27px 17px;display:flex;flex-direction:column;gap:28px}
+    .brand{display:flex;align-items:center;gap:12px;padding:1px 12px}.brand-mark{width:43px;height:43px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(140deg,#163e45,#10303a);border:1px solid #2e6970}.brand-mark svg{width:28px;height:28px}.brand strong{font-size:21px;letter-spacing:.09em;font-weight:850}.brand small{display:block;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);font-size:9px;margin-top:0}
+    .side-eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--subtle);font-weight:800;margin:0 12px 9px}.nav{display:grid;gap:6px}.nav-btn{background:transparent;color:#a6bac0;border:0;text-align:left;padding:12px 13px;border-radius:12px;font-weight:650;display:flex;align-items:center;gap:11px}.nav-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.nav-btn:hover{background:#112733}.nav-btn.active{background:#17353d;color:var(--aqua)}
+    .side-footer{margin-top:auto;border:1px solid #264148;background:linear-gradient(150deg,#122a31,#0c1c25);border-radius:14px;padding:15px}.side-footer .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--aqua);margin-right:7px}.side-footer strong{font-size:12px}.side-footer p{font-size:11px;color:var(--muted);line-height:1.6;margin:7px 0 0}
+    main{min-width:0;max-width:1570px;width:100%;margin:0 auto;padding:27px 34px 60px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:29px}.bread{color:var(--muted);font-size:12px}.bread b{color:var(--ink)}.actions{display:flex;align-items:center;gap:10px}.status{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:11px;font-weight:750;padding:9px 11px;border:1px solid var(--outline);border-radius:100px;max-width:260px}.status::before{content:"";height:7px;width:7px;flex:none;border-radius:100%;background:var(--orange)}.status.live::before{background:var(--aqua);box-shadow:0 0 0 3px #69edca17}.status.loading::before{background:var(--blue)}.action-btn{background:#18313a;border:1px solid #2b4b55;color:#d6eff0;border-radius:12px;padding:10px 13px;font-weight:750;display:inline-flex;align-items:center;gap:8px}.action-btn:hover{background:#24444c}.action-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.action-btn:disabled{opacity:.6;cursor:wait}
+    h1,h2,h3,p{margin-top:0}h1{font-size:clamp(28px,3.4vw,42px);letter-spacing:-.045em;line-height:1.12;margin:0 0 10px;font-weight:830}h1 em{color:var(--aqua);font-style:normal}.subtitle{font-size:14px;color:var(--muted);max-width:650px;margin:0}.intro{display:flex;align-items:end;justify-content:space-between;gap:18px;margin-bottom:25px}.version{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--subtle);white-space:nowrap}.alert{padding:13px 16px;border-radius:13px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#2b241a;border:1px solid #695234;color:#f3d5a9;font-size:12px}.alert.live{background:#112c2c;border-color:#285d55;color:#a5e7d3}.alert.error{background:#35251d;border-color:#805845;color:#ffd2ad}.alert button{flex:none;padding:8px 11px;border:1px solid currentColor;background:transparent;color:inherit;border-radius:9px;font-weight:700;font-size:11px}
+    .panel{background:linear-gradient(180deg,#10222e,#101e29);border:1px solid var(--outline);border-radius:var(--radius);box-shadow:0 12px 34px #00000016}.panel-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:20px}.eyebrow{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--aqua);font-weight:800}.panel-title{font-weight:810;letter-spacing:-.02em;font-size:18px;margin:4px 0 0}.muted{color:var(--muted)}.tiny{font-size:11px}.mono{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+    .hero{padding:22px 24px;margin-bottom:18px;position:relative;overflow:hidden;background:radial-gradient(ellipse 50% 65% at 87% 9%,#1854496b,transparent 75%),linear-gradient(145deg,#132b36,#0d1b27)}.hero::after{content:"";position:absolute;right:-95px;top:-115px;width:290px;height:290px;border:1px solid #4eb8b825;border-radius:50%;box-shadow:0 0 0 35px #4eb8b80a,0 0 0 70px #4eb8b808;pointer-events:none}.hero-top{display:flex;justify-content:space-between;align-items:center;gap:15px;position:relative;z-index:1}.pair-switch{display:flex;align-items:center;gap:12px}.pair-select{appearance:none;border:1px solid #37606a;border-radius:13px;background:#102b35;color:var(--ink);padding:12px 34px 12px 13px;font-size:19px;font-weight:800;letter-spacing:-.02em;min-width:165px;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2369edca' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center}.asof{text-align:right;color:var(--muted);font-size:12px}.asof strong{display:block;color:var(--ink);font-size:13px}.hero-grid{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:15px;margin-top:23px}.hero-block{position:relative;z-index:1;padding:15px 17px;border:1px solid #31505b;background:#0d2330bb;border-radius:15px;min-width:0}.hero-block:first-child{background:#19383e70;border-color:#3a6868}.hero-block .k{font-size:11px;color:#abc3c5;font-weight:680}.hero-block .value{font-size:clamp(24px,2.5vw,36px);font-weight:850;letter-spacing:-.035em;margin:8px 0 5px}.hero-block .desc{font-size:11px;color:#9cb4b7}.delta{font-size:12px;font-weight:770}.positive{color:var(--aqua)!important}.negative{color:var(--red)!important}.neutral{color:var(--orange)!important}.align-badge{display:inline-block;font-weight:780;padding:6px 10px;border-radius:8px;background:#193c3d;color:var(--aqua);font-size:12px;margin:10px 0 7px}.align-badge.contrast{background:#3b2e33;color:#eebfc0}.smallnote{font-size:11px;color:var(--muted);margin:14px 0 0;position:relative;z-index:1}
+    .metrics{display:grid;grid-template-columns:1.55fr 1fr;gap:18px;margin-bottom:18px}.chart{padding:22px 22px 14px;min-width:0}.chart-wrap{width:100%;min-height:250px}.chart-wrap svg{width:100%;height:auto;overflow:visible;display:block}.legend{display:flex;gap:20px;flex-wrap:wrap;color:var(--muted);font-size:11px}.legend span{display:inline-flex;align-items:center;gap:7px}.swatch{width:17px;height:3px;border-radius:3px;display:inline-block;background:var(--aqua)}.swatch.blue{background:var(--blue)}.chart-caption{font-size:11px;color:var(--subtle);margin:10px 0 0}.explain{padding:22px}.flow-item{display:flex;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--outline)}.flow-item:last-child{border-bottom:0;padding-bottom:0}.flow-icon{width:38px;height:38px;flex:none;display:grid;place-items:center;border:1px solid #35595a;color:var(--aqua);border-radius:12px;font-size:18px;background:#1b393c}.flow-item b{font-size:13px}.flow-item p{margin:3px 0 0;color:var(--muted);font-size:11px}.microhead{font-size:11px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;font-weight:800}
+    .lower{display:grid;grid-template-columns:1.6fr 1fr;gap:18px}.ranking{padding:22px;min-width:0}.rank-head{display:grid;grid-template-columns:minmax(85px,1fr) 85px 85px 90px;gap:10px;align-items:center;border-bottom:1px solid var(--outline);color:var(--subtle);font-size:10px;padding:0 10px 12px;font-weight:800;text-transform:uppercase;letter-spacing:.055em}.rank-row{width:100%;display:grid;grid-template-columns:minmax(85px,1fr) 85px 85px 90px;gap:10px;text-align:left;align-items:center;border:1px solid transparent;border-bottom-color:#20333e;background:transparent;border-radius:8px;color:var(--ink);padding:12px 9px;font-size:12px}.rank-row:hover{background:#17313b}.rank-row.selected{border-color:#396a66;background:#14313a}.rank-row strong{font-size:13px}.rank-row small{display:block;color:var(--subtle);font-size:10px}.pill{border-radius:20px;white-space:nowrap;font-size:10px;font-weight:800;padding:5px 8px;display:inline-block;background:#223541;color:#bcd4d8}.pill.good{background:#1c443f;color:#8debd1}.pill.bad{background:#432b32;color:#fba8ac}.pill.mixed{background:#3e352b;color:#efc796}
+    .legs{padding:22px}.leg-row{padding:15px 0;border-bottom:1px solid var(--outline)}.leg-row:last-child{border:0;padding-bottom:0}.leg-head{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:7px}.leg-head strong{font-size:15px}.leg-head span{font-size:10px;color:var(--muted)}.leg-pair{display:flex;justify-content:space-between;font-size:12px;margin:5px 0;color:var(--muted)}.leg-pair strong{font-variant-numeric:tabular-nums}.bar{height:7px;border-radius:20px;background:#2f4250;position:relative;overflow:hidden;margin-top:8px}.bar > span{position:absolute;top:0;bottom:0;border-radius:20px;background:var(--aqua);left:50%;width:0;transition:width .2s}.bar > span.neg{right:50%;left:auto;background:var(--red)}.footnote{font-size:11px;color:var(--subtle);line-height:1.6;margin:18px 0 0}
+    .currency-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.currency-card{padding:21px}.cc-head{display:flex;justify-content:space-between;align-items:start;gap:10px}.cc-head strong{font-size:20px;letter-spacing:-.03em}.cc-head small{color:var(--subtle);font-size:10px}.cc-name{font-size:12px;color:var(--muted);margin:4px 0 20px}.cc-line{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted);margin:10px 0}.cc-line strong{font-size:16px}.screen{display:none}.screen.active{display:block}.source-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.text-panel{padding:24px}.text-panel p,.text-panel li{color:var(--muted);font-size:13px;line-height:1.78}.text-panel h3{font-size:17px;margin:0 0 12px}.text-panel ul{padding-left:18px}.text-panel li+li{margin-top:8px}.info-box{border:1px solid #3d575c;background:#142833;padding:15px;border-radius:13px;color:#cee1e1;font-size:12px;line-height:1.65}.info-box strong{display:block;color:var(--aqua);margin-bottom:5px}.mobile-nav{display:none}.sr-only{position:absolute;left:-9999px}.endline{font-size:11px;color:var(--subtle);margin-top:24px;text-align:center}
+    @media(max-width:1180px){.app{grid-template-columns:205px minmax(0,1fr)}main{padding:25px 22px}.metrics,.lower{grid-template-columns:1fr}.hero-grid{grid-template-columns:repeat(3,1fr)}.currency-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:720px){.app{display:block}.sidebar{display:none}main{padding:21px 14px calc(99px + env(safe-area-inset-bottom));}.topbar{margin-bottom:25px}.intro{align-items:flex-start}.version{display:none}.actions{gap:7px}.status{padding:9px 10px;font-size:10px}.action-btn{padding:10px}.action-btn .action-text{display:none}.hero{padding:17px 15px}.hero-grid{grid-template-columns:1fr 1fr;gap:9px}.hero-block{padding:13px}.hero-block:last-child{grid-column:1/-1}.hero-block .value{font-size:27px}.hero-top{align-items:start}.pair-select{min-width:140px;font-size:17px}.asof{font-size:11px;max-width:125px}.chart,.ranking,.explain,.legs,.text-panel{padding:17px}.chart-wrap{min-height:195px}.rank-head,.rank-row{grid-template-columns:minmax(67px,1fr) 68px 68px 76px;gap:4px;padding-left:4px;padding-right:4px}.rank-head{font-size:9px}.rank-row{font-size:11px}.pill{font-size:9px;padding:5px 6px}.currency-grid{grid-template-columns:1fr}.source-grid{grid-template-columns:1fr}.alert{font-size:11px}.mobile-nav{position:fixed;z-index:10;bottom:0;left:0;right:0;display:flex;background:#0b1c26ee;backdrop-filter:blur(18px);border-top:1px solid #2b4750;padding:10px 10px calc(12px + env(safe-area-inset-bottom));justify-content:space-around}.mobile-nav .nav-btn{display:flex;flex-direction:column;gap:4px;font-size:10px;text-align:center;padding:8px 15px;border-radius:11px}.mobile-nav .nav-btn svg{height:19px;width:19px}.intro h1{font-size:32px}.panel-h{margin-bottom:14px}}
+    @media(max-width:390px){main{padding-left:10px;padding-right:10px}.rank-head,.rank-row{grid-template-columns:minmax(64px,1fr) 59px 59px 74px}.panel-title{font-size:17px}.hero-block .value{font-size:23px}.status{max-width:165px}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="Navigazione Remura">
+      <div class="brand"><div class="brand-mark"><svg viewBox="0 0 32 32" fill="none" stroke="#7cf4d4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.15"><path d="M3 17c7-9 15-10 25-4-9 1-12 7-16 11-2-4-5-6-9-7Z"/><path d="M12 24c5-10 10-13 16-11"/><circle cx="21" cy="13" r="1" fill="#7cf4d4"/></svg></div><div><strong>REMURA</strong><small>Institutional radar</small></div></div>
+      <div><div class="side-eyebrow">Esplora</div><nav class="nav"><button type="button" class="nav-btn active" data-nav="radar"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12 18 6"/></svg> Radar coppie</button><button type="button" class="nav-btn" data-nav="valute"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m7 15 4-5 3 2 5-7"/></svg> Valute istituzionali</button><button type="button" class="nav-btn" data-nav="metodo"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.5"/></svg> Fonti e metodo</button></nav></div>
+      <div class="side-footer"><strong><span class="dot"></span> Prima missione</strong><p>Osservare le posizioni dei grandi operatori. Nessun segnale di trading automatico, nessuna promessa di rendimento.</p></div>
+    </aside>
+    <main>
+      <header class="topbar"><div class="bread">REMURA <span style="color:#42606a">/</span> <b id="breadcrumb">Radar istituzionale</b></div><div class="actions"><span class="status loading" id="feed-status" aria-live="polite">Connessione CFTC...</span><button class="action-btn" id="refresh" type="button" title="Ricarica i dati CFTC"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2 6"/><path d="M20 4v7h-7"/></svg><span class="action-text">Aggiorna</span></button></div></header>
+      <section id="screen-radar" class="screen active">
+        <div class="intro"><div><h1>Segui i grandi.<br><em>Leggi la corrente.</em></h1><p class="subtitle">Il posizionamento degli operatori istituzionali, tradotto in dati comparabili e confronti tra valute.</p></div><span class="version">VERSIONE 0.1 · COT TFF</span></div>
+        <div class="alert" id="notice" role="status"><span id="notice-text">Simulazione: dati di esempio inventati. Stiamo tentando il collegamento alla CFTC ufficiale.</span><button id="notice-action" type="button">Riprova</button></div>
+        <section class="panel hero" aria-label="Focus sulla coppia"><div class="hero-top"><div><div class="eyebrow">COPPIA IN OSSERVAZIONE</div><div class="pair-switch"><label class="sr-only" for="pair-select">Scegli una coppia</label><select id="pair-select" class="pair-select"></select></div></div><div class="asof">Posizioni rilevate al<strong id="asof-date">—</strong><span id="delay-note">COT settimanale · non live</span></div></div>
+          <div class="hero-grid"><div class="hero-block"><div class="k">Asset Manager · spread relativo</div><div class="value mono" id="asset-value">—</div><div class="desc"><span class="delta" id="asset-delta">—</span> rispetto alla settimana prima</div></div><div class="hero-block"><div class="k">Leveraged Funds · spread relativo</div><div class="value mono" id="lev-value">—</div><div class="desc"><span class="delta" id="lev-delta">—</span> rispetto alla settimana prima</div></div><div class="hero-block"><div class="k">Lettura congiunta</div><div class="align-badge" id="alignment">—</div><div class="desc" id="alignment-desc">Analisi delle due categorie</div></div></div><p class="smallnote" id="pair-explanation">Le percentuali sono posizioni nette normalizzate sull'open interest, non probabilità di rialzo.</p></section>
+        <div class="metrics"><section class="panel chart"><div class="panel-h"><div><div class="eyebrow">EVOLUZIONE DELLE POSIZIONI</div><h2 class="panel-title">Le tracce degli istituzionali</h2></div><div style="display:flex;align-items:center;gap:11px"><span class="tiny muted" id="history-length">Ultime settimane</span><button type="button" id="export-csv" class="action-btn" style="font-size:11px;padding:8px 10px" title="Esporta la serie COT selezionata in formato CSV">↓ CSV</button></div></div><div class="legend"><span><i class="swatch"></i>Asset Manager</span><span><i class="swatch blue"></i>Leveraged Funds</span></div><div id="chart" class="chart-wrap" role="img" aria-label="Grafico storico delle posizioni nette relative"></div><p class="chart-caption">Serie settimanale delle posizioni nette / open interest. Confronto sintetico per le coppie incrociate.</p></section>
+          <section class="panel explain"><div class="eyebrow">COME LEGGERE IL RADAR</div><h2 class="panel-title">Tre cose da osservare</h2><div class="flow-item"><span class="flow-icon">↗</span><div><b>Direzione del posizionamento</b><p>Valore positivo: maggiore esposizione netta long sulla valuta base rispetto alla valuta quotata.</p></div></div><div class="flow-item"><span class="flow-icon">⇄</span><div><b>Cambiamento settimanale</b><p>Misuriamo se lo sbilanciamento netto sta aumentando o diminuendo, in punti percentuali.</p></div></div><div class="flow-item"><span class="flow-icon">≋</span><div><b>Concordanza o divergenza</b><p>Asset Manager e fondi a leva possono prendere posizioni molto diverse: è informazione, non un difetto.</p></div></div></section></div>
+        <div class="lower"><section class="panel ranking"><div class="panel-h"><div><div class="eyebrow">SCANNER</div><h2 class="panel-title">Radar delle coppie</h2></div><span class="tiny muted">Ordinate per variazione recente</span></div><div class="rank-head"><span>Coppia</span><span>Asset Mgr</span><span>Lev. Funds</span><span>Accordo</span></div><div id="rank-list"></div><p class="footnote">Tocca una coppia per aprire il focus. I valori sono differenze percentuali tra valute, non contratti di un future sul cross.</p></section>
+          <section class="panel legs"><div class="eyebrow">DENTRO LA COPPIA</div><h2 class="panel-title">Le singole valute</h2><div id="leg-list"></div><p class="footnote">Il future CFTC di ciascuna valuta è espresso rispetto al dollaro. Per le coppie con USD, la lettura viene invertita quando USD è la valuta base.</p></section></div>
+      </section>
+      <section id="screen-valute" class="screen"><div class="intro"><div><h1>Le valute <em>sotto osservazione.</em></h1><p class="subtitle">Posizionamento dei contratti futures principali contro USD, suddiviso per operatore.</p></div></div><div class="alert" id="notice-valute"><span id="notice-text-valute">Modalità dimostrativa.</span></div><div class="currency-grid" id="currency-grid"></div><p class="footnote">Asset Manager e Leveraged Funds sono categorie CFTC differenti. Net % = (contratti long − contratti short) / open interest × 100.</p></section>
+      <section id="screen-metodo" class="screen"><div class="intro"><div><h1>Numeri ufficiali.<br><em>Interpretazioni trasparenti.</em></h1><p class="subtitle">Tutto quello che Remura usa, come lo calcola e cosa non può sapere.</p></div></div>
+        <div class="source-grid"><div class="panel text-panel"><div class="eyebrow">FONTE PRIMARIA</div><h3>CFTC · Traders in Financial Futures</h3><p>Dataset governativo pubblico: <strong>TFF — Futures Only</strong>. Contratti finanziari, inclusi i future sulle principali valute. Mostriamo separatamente Asset Manager, Leveraged Funds e — nei dati di origine — Dealers.</p><p><a href="https://publicreporting.cftc.gov/Commitments-of-Traders/TFF-Futures-Only/gpe5-46if" target="_blank" rel="noopener noreferrer">Apri il dataset CFTC ↗</a></p><p><a href="https://www.cftc.gov/MarketReports/CommitmentsofTraders/ReleaseSchedule/index.htm" target="_blank" rel="noopener noreferrer">Calendario pubblicazioni ufficiale ↗</a></p></div><div class="panel text-panel"><div class="eyebrow">METODOLOGIA</div><h3>Come calcoliamo il confronto</h3><ul><li><strong>Posizione netta</strong> = contratti long − contratti short della categoria.</li><li><strong>Net % OI</strong> = posizione netta ÷ open interest × 100.</li><li><strong>Spread della coppia</strong> = Net % valuta base − Net % valuta quotata.</li><li><strong>Variazione settimanale</strong> = spread attuale − spread precedente, in punti percentuali.</li><li>Con USD, impostiamo a zero la gamba USD come riferimento matematico, <strong>non</strong> perché conosciamo la posizione dei fondi sul dollaro.</li></ul></div><div class="panel text-panel"><div class="eyebrow">COSA NON È</div><h3>Niente flussi in tempo reale</h3><p>Il COT fotografa le posizioni del martedì e normalmente esce il venerdì pomeriggio negli Stati Uniti. Una posizione netta positiva non implica che il mercato salirà, e un cambiamento non descrive tutte le operazioni della settimana.</p><p>Per i cross come CADJPY il valore è un <strong>indicatore euristico sintetico</strong> costruito da due futures separati, non un posizionamento COT ufficiale sul contratto CADJPY. Non va considerato un segnale di acquisto o vendita.</p></div><div class="panel text-panel"><div class="eyebrow">FASE SUCCESSIVA</div><h3>Sentiment retail e conferme</h3><p>L'API ufficiale Myfxbook include il community outlook, ma richiede una sessione autenticata ed è soggetta a limiti d'uso. In Remura questa fonte verrà integrata soltanto dopo aver predisposto un collegamento sicuro: nessuna password inserita nel codice dell'app.</p><p><a href="https://www.myfxbook.com/api" target="_blank" rel="noopener noreferrer">Documentazione API Myfxbook ↗</a></p><div class="info-box"><strong>Regola Remura</strong>Se una fonte non è aggiornata o un valore non è verificabile, deve risultare chiaramente assente o in modalità DEMO. Mai inventare il sentiment o chiamare “live” un COT settimanale.</div></div></div>
+      </section>
+      <p class="endline">REMURA v0.1 · Studio del posizionamento · Non costituisce consulenza finanziaria</p>
+    </main>
+    <nav class="mobile-nav" aria-label="Navigazione mobile"><button type="button" class="nav-btn active" data-nav="radar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12 18 6"/></svg>Radar</button><button type="button" class="nav-btn" data-nav="valute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="m7 15 4-5 3 2 5-7"/></svg>Valute</button><button type="button" class="nav-btn" data-nav="metodo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.5"/></svg>Metodo</button></nav>
+  </div>
+<script>
+'use strict';
+const CURRENCIES = {
+  EUR:{code:'099741',name:'Euro',flag:'🇪🇺',bias:11}, GBP:{code:'096742',name:'Sterlina britannica',flag:'🇬🇧',bias:3},
+  JPY:{code:'097741',name:'Yen giapponese',flag:'🇯🇵',bias:-9}, AUD:{code:'232741',name:'Dollaro australiano',flag:'🇦🇺',bias:4},
+  CAD:{code:'090741',name:'Dollaro canadese',flag:'🇨🇦',bias:-3}, CHF:{code:'092741',name:'Franco svizzero',flag:'🇨🇭',bias:5},
+  NZD:{code:'112741',name:'Dollaro neozelandese',flag:'🇳🇿',bias:-2}
+};
+const PAIRS = ['EURUSD','GBPUSD','USDJPY','AUDUSD','USDCAD','USDCHF','NZDUSD','EURJPY','GBPJPY','CADJPY','AUDJPY','EURGBP','EURCAD','EURCHF','GBPCAD','AUDCAD'];
+const API_HOSTS = ['https://publicreporting.cftc.gov','https://publicreportinghub.cftc.gov'];
+const API_DATASET='gpe5-46if';
+const fmt = new Intl.NumberFormat('it-IT',{maximumFractionDigits:1,minimumFractionDigits:1});
+const getSavedPair=()=>{try{return localStorage.getItem('remura_pair')}catch(_){return null}};
+const savePair=pair=>{try{localStorage.setItem('remura_pair',pair)}catch(_){}};
+let selectedPair = getSavedPair() || 'CADJPY';
+if (!PAIRS.includes(selectedPair)) selectedPair='CADJPY';
+let currencyHistory={}, commonDates=[], sourceMode='demo', apiError='', isLoading=false;
+const $=id=>document.getElementById(id);
+const escapeHTML = value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const signed = (v,suffix='%') => Number.isFinite(v) ? `${v>0?'+':''}${fmt.format(v)}${suffix}` : '—';
+const cls = v => v > .4 ? 'positive' : v < -.4 ? 'negative' : 'neutral';
+const num = x=>Number(x);
+const netPct = (r,type)=> r && r.oi>0 ? ((r[type].long-r[type].short)/r.oi)*100 : 0;
+const legNet=(cur,date,type)=>cur==='USD'?0:netPct(currencyHistory[cur]?.get(date),type);
+const rowsFor=(pair,type)=>commonDates.map(date=>({date,val:legNet(pair.slice(0,3),date,type)-legNet(pair.slice(3,6),date,type)}));
+const last=a=>a[a.length-1];
+const dateFmt=date=>date?new Intl.DateTimeFormat('it-IT',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(date+'T12:00:00Z')):'—';
+const change=(a)=>a.length>=2?last(a).val-a[a.length-2].val:NaN;
+const groupTag=(a,l)=>{if(Math.abs(a)<2.5||Math.abs(l)<2.5)return {text:'Lettura parziale',className:'mixed',description:'Almeno un gruppo mostra un posizionamento netto contenuto.'};if(a*l<0)return {text:'Divergenza',className:'bad',description:'Le due categorie hanno un orientamento netto opposto.'};return a>0?{text:'Concordanza positiva',className:'good',description:'Entrambe le categorie sono orientate verso la valuta base.'}:{text:'Concordanza negativa',className:'bad',description:'Entrambe le categorie sono orientate verso la valuta quotata.'};};
+function makeDemo(){
+  // Dati artificiali deterministici; non derivati dal mercato né dalla CFTC.
+  const end=new Date('2026-10-06T12:00:00Z'); const dates=[];
+  for(let i=55;i>=0;i--){const d=new Date(end); d.setUTCDate(d.getUTCDate()-7*i);dates.push(d.toISOString().slice(0,10));}
+  const histories={}; Object.entries(CURRENCIES).forEach(([symbol,meta],k)=>{
+    const m=new Map();dates.forEach((date,i)=>{
+      const oi=Math.round(85000+(k+1)*15000+16000*Math.sin(i*.18+k));
+      const a=meta.bias + 13*Math.sin(i*.12+k*.7)+5*Math.cos(i*.31+k*.8);
+      const l=-meta.bias*.78 + 15*Math.sin(i*.18+k*.92+1.7)+4*Math.cos(i*.3-k);
+      const de=-a*.45-l*.45;
+      const book=net=>({long:Math.round(oi*(.32+net/200)),short:Math.round(oi*(.32-net/200))});
+      m.set(date,{date,oi,asset:book(a),lev:book(l),dealer:book(de)});
+    });histories[symbol]=m;
+  });return {histories,dates};
+}
+function useData(result,mode){
+  currencyHistory=result.histories;commonDates=result.dates;sourceMode=mode;renderAll();
+}
+function renderNotice(){
+  const status=$('feed-status'),notice=$('notice'),msg=$('notice-text');
+  const official=sourceMode==='live';
+  const latest=last(commonDates);
+  const lagDays=latest?Math.floor((Date.now()-Date.parse(latest+'T00:00:00Z'))/86400000):NaN;
+  const stale=official&&Number.isFinite(lagDays)&&lagDays>14;
+  if(isLoading){status.className='status loading';status.textContent='Connessione CFTC...';$('refresh').disabled=true;}
+  else{status.className='status '+(official&&!stale?'live':'');status.textContent=official?(stale?'CFTC · dati non aggiornati':'CFTC · dati ufficiali'):'DEMO · dati inventati';$('refresh').disabled=false;}
+  notice.className='alert '+(stale?'error':official?'live':apiError?'error':'');
+  if(stale)msg.textContent=`ATTENZIONE · dati CFTC ufficiali ma datati: posizioni al ${dateFmt(latest)} (${lagDays} giorni fa). Non considerarli attuali: controlla la pubblicazione più recente.`;
+  else if(official)msg.textContent=`Fonte CFTC ufficiale · posizioni al ${dateFmt(latest)}. Aggiornamento settimanale, non in tempo reale.`;
+  else msg.textContent=apiError?`DEMO · valori inventati e non utilizzabili per operare. Feed CFTC non raggiunto (${apiError}).`:'DEMO · tutti i numeri sono simulati, NON sono dati di mercato. Connessione CFTC in corso.';
+  $('notice-action').style.display=official&&!stale?'none':'';
+  $('notice-action').textContent=stale?'Riprova aggiornamento':'Riprova CFTC';
+  $('notice-text-valute').textContent=official?`Fonte CFTC · posizioni al ${dateFmt(latest)}${stale?' · ATTENZIONE: dati non aggiornati':''} · nessuna quotazione in tempo reale.`:'DEMO · valori artificiali non rappresentativi delle posizioni attuali.';
+  $('notice-valute').className='alert '+(stale?'error':official?'live':'');
+}
+function renderFocus(){
+  const as=rowsFor(selectedPair,'asset'),lv=rowsFor(selectedPair,'lev');
+  const av=last(as).val,lvv=last(lv).val,ac=change(as),lc=change(lv);
+  const tag=groupTag(av,lvv);
+  $('pair-select').value=selectedPair;
+  $('asof-date').textContent=dateFmt(last(commonDates));
+  $('asset-value').textContent=signed(av);$('lev-value').textContent=signed(lvv);
+  $('asset-value').className='value mono '+cls(av);$('lev-value').className='value mono '+cls(lvv);
+  $('asset-delta').textContent=signed(ac,' pp');$('lev-delta').textContent=signed(lc,' pp');
+  $('asset-delta').className='delta '+cls(ac);$('lev-delta').className='delta '+cls(lc);
+  $('alignment').textContent=tag.text;$('alignment').className='align-badge '+(tag.className==='bad'?'contrast':'');
+  $('alignment-desc').textContent=tag.description;
+  const base=selectedPair.slice(0,3),quote=selectedPair.slice(3);
+  $('pair-explanation').textContent=base!=='USD'&&quote!=='USD'?`Proxy sintetico ${base} − ${quote}: differenza tra due futuri valutari distinti, non una misura CFTC diretta del cross.`:`Posizionamento del future ${base==='USD'?quote:base} contro USD${base==='USD'?' (segno invertito per la coppia)':''}. Valore normalizzato sull'open interest.`;
+  $('history-length').textContent=`${as.length} settimane`;
+  renderChart(as,lv);
+}
+function renderChart(a,l){
+  const el=$('chart');if(!a.length){el.textContent='Nessun dato storico';return;}
+  const W=820,H=300,L=47,R=15,T=17,B=32,pw=W-L-R,ph=H-T-B;
+  let vals=[...a.map(x=>x.val),...l.map(x=>x.val),0],min=Math.min(...vals),max=Math.max(...vals);let pad=Math.max(3,(max-min)*.12);min-=pad;max+=pad;
+  const x=i=>L+(i/Math.max(1,a.length-1))*pw, y=v=>T+(max-v)/(max-min)*ph;
+  const path=arr=>arr.map((p,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(p.val).toFixed(1)).join(' ');
+  const ticks=Array.from({length:5},(_,i)=>min+(max-min)*i/4);
+  const labels=[0,Math.floor((a.length-1)/3),Math.floor(2*(a.length-1)/3),a.length-1];
+  let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Asset Manager e Leveraged Funds, differenza netta percentuale del COT nelle ultime ${a.length} settimane"><defs><linearGradient id="fillAsset" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#69edca" stop-opacity=".18"/><stop offset="1" stop-color="#69edca" stop-opacity="0"/></linearGradient></defs>`;
+  ticks.forEach(v=>{svg+=`<line x1="${L}" y1="${y(v)}" x2="${W-R}" y2="${y(v)}" stroke="#284451" stroke-width="1" stroke-dasharray="3 6"/><text x="${L-9}" y="${y(v)+4}" fill="#83a3ad" text-anchor="end" font-size="11">${fmt.format(v)}</text>`;});
+  if(min<0&&max>0)svg+=`<line x1="${L}" y1="${y(0)}" x2="${W-R}" y2="${y(0)}" stroke="#789aa7" stroke-width="1" stroke-dasharray="6 4"/>`;
+  labels.forEach(i=>{svg+=`<text x="${x(i)}" y="${H-7}" text-anchor="${i===0?'start':i===a.length-1?'end':'middle'}" font-size="11" fill="#7a9ba5">${dateFmt(a[i].date).replace(' 20',' ’')}</text>`;});
+  const baseY=y(Math.max(min,Math.min(max,0)));
+  svg+=`<path d="${path(a)} L${x(a.length-1)} ${baseY} L${x(0)} ${baseY} Z" fill="url(#fillAsset)"/><path d="${path(a)}" fill="none" stroke="#69edca" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/><path d="${path(l)}" fill="none" stroke="#7ca9ff" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"/>`;
+  svg+=`<circle cx="${x(a.length-1)}" cy="${y(last(a).val)}" r="5" fill="#69edca" stroke="#0e2430" stroke-width="3"/><circle cx="${x(l.length-1)}" cy="${y(last(l).val)}" r="5" fill="#7ca9ff" stroke="#0e2430" stroke-width="3"/>`;
+  svg+='</svg>';el.innerHTML=svg;
+}
+function renderRanking(){
+  const cards=PAIRS.map(pair=>{const a=rowsFor(pair,'asset'),l=rowsFor(pair,'lev'),av=last(a).val,lv=last(l).val;return {pair,av,lv,delta:Math.abs(change(a))+Math.abs(change(l)),tag:groupTag(av,lv)}}).sort((x,y)=>y.delta-x.delta);
+  $('rank-list').innerHTML=cards.map(item=>`<button type="button" class="rank-row ${item.pair===selectedPair?'selected':''}" data-pair="${item.pair}" aria-label="Visualizza ${item.pair}"><span><strong>${item.pair}</strong><small>${item.pair===selectedPair?'in osservazione':'vedi dettagli →'}</small></span><span class="mono ${cls(item.av)}">${signed(item.av)}</span><span class="mono ${cls(item.lv)}">${signed(item.lv)}</span><span><i class="pill ${item.tag.className}">${item.tag.className==='good'?'Positiva':item.tag.className==='bad'?item.tag.text==='Divergenza'?'Diverge':'Negativa':'Parziale'}</i></span></button>`).join('');
+}
+function renderLegs(){
+  const base=selectedPair.slice(0,3),quote=selectedPair.slice(3);
+  $('leg-list').innerHTML=[base,quote].map((cur,i)=>{
+    if(cur==='USD')return `<div class="leg-row"><div class="leg-head"><strong>🇺🇸 USD · Dollaro USA</strong><span>${i===0?'BASE':'QUOTATA'}</span></div><p class="tiny muted">Riferimento matematico = 0. Non è una posizione COT sul dollaro.</p></div>`;
+    const r=currencyHistory[cur].get(last(commonDates)),asset=netPct(r,'asset'),lev=netPct(r,'lev');
+    const barWidth=v=>Math.min(50,Math.abs(v)*1.25).toFixed(1);
+    const bar=v=>`<div class="bar"><span class="${v<0?'neg':''}" style="width:${barWidth(v)}%"></span></div>`;
+    return `<div class="leg-row"><div class="leg-head"><strong>${CURRENCIES[cur].flag} ${cur}</strong><span>${i===0?'BASE':'QUOTATA'} · CFTC ${CURRENCIES[cur].code}</span></div><div class="leg-pair">Asset Manager <strong class="${cls(asset)}">${signed(asset)}</strong></div>${bar(asset)}<div class="leg-pair" style="margin-top:14px">Leveraged Funds <strong class="${cls(lev)}">${signed(lev)}</strong></div>${bar(lev)}</div>`;
+  }).join('');
+}
+function renderCurrencies(){
+  $('currency-grid').innerHTML=Object.entries(CURRENCIES).map(([cur,meta])=>{
+    const r=currencyHistory[cur].get(last(commonDates)),a=netPct(r,'asset'),l=netPct(r,'lev');
+    const netA=r.asset.long-r.asset.short,netL=r.lev.long-r.lev.short;
+    return `<article class="panel currency-card"><div class="cc-head"><div><strong>${meta.flag} ${cur}</strong><div class="cc-name">${escapeHTML(meta.name)}</div></div><small>CFTC ${meta.code}</small></div><div class="cc-line"><span>Asset Manager · net %</span><strong class="${cls(a)} mono">${signed(a)}</strong></div><div class="cc-line"><span>Fondi a leva · net %</span><strong class="${cls(l)} mono">${signed(l)}</strong></div><div class="cc-line"><span>Asset Manager · contratti netti</span><b class="mono">${new Intl.NumberFormat('it-IT').format(netA)}</b></div><div class="cc-line"><span>Fondi a leva · contratti netti</span><b class="mono">${new Intl.NumberFormat('it-IT').format(netL)}</b></div><div class="cc-line"><span>Open interest complessivo</span><b class="mono">${new Intl.NumberFormat('it-IT').format(r.oi)}</b></div></article>`;
+  }).join('');
+}
+function renderAll(){renderNotice();renderFocus();renderRanking();renderLegs();renderCurrencies();}
+function switchScreen(screen){document.querySelectorAll('.screen').forEach(n=>n.classList.toggle('active',n.id==='screen-'+screen));document.querySelectorAll('[data-nav]').forEach(n=>n.classList.toggle('active',n.dataset.nav===screen));$('breadcrumb').textContent=({radar:'Radar istituzionale',valute:'Valute istituzionali',metodo:'Fonti e metodo'})[screen];window.scrollTo({top:0,behavior:'smooth'});}
+async function getEndpointData(host){
+  const cutoff=new Date();cutoff.setUTCDate(cutoff.getUTCDate()-405);
+  const date=cutoff.toISOString().slice(0,10)+'T00:00:00';
+  const codes=Object.values(CURRENCIES).map(x=>`'${x.code}'`).join(',');
+  const where=`report_date_as_yyyy_mm_dd >= '${date}' AND cftc_contract_market_code IN (${codes})`;
+  const select=['report_date_as_yyyy_mm_dd','cftc_contract_market_code','open_interest_all','asset_mgr_positions_long','asset_mgr_positions_short','lev_money_positions_long','lev_money_positions_short','dealer_positions_long_all','dealer_positions_short_all'].join(',');
+  const url=new URL(`/resource/${API_DATASET}.json`,host);
+  url.searchParams.set('$select',select);url.searchParams.set('$where',where);url.searchParams.set('$order','report_date_as_yyyy_mm_dd DESC');url.searchParams.set('$limit','1200');
+  const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),15000);
+  try{const res=await fetch(url.toString(),{signal:controller.signal,headers:{Accept:'application/json'},mode:'cors'});if(!res.ok)throw Error(`HTTP ${res.status}`);const data=await res.json();if(!Array.isArray(data))throw Error('Risposta API non valida');return data;}finally{clearTimeout(timer);}
+}
+function parseCFTC(data){
+  const codeToCur=Object.fromEntries(Object.entries(CURRENCIES).map(([cur,m])=>[m.code,cur]));
+  const histories=Object.fromEntries(Object.keys(CURRENCIES).map(cur=>[cur,new Map()]));
+  for(const r of data){
+    const cur=codeToCur[String(r.cftc_contract_market_code||'').padStart(6,'0')];if(!cur)continue;
+    const date=String(r.report_date_as_yyyy_mm_dd||'').slice(0,10);if(!/^\d{4}-\d{2}-\d{2}$/.test(date))continue;
+    const oi=num(r.open_interest_all);if(!Number.isFinite(oi)||oi<=0)continue;
+    const asset={long:num(r.asset_mgr_positions_long),short:num(r.asset_mgr_positions_short)};
+    const lev={long:num(r.lev_money_positions_long),short:num(r.lev_money_positions_short)};
+    const dealer={long:num(r.dealer_positions_long_all),short:num(r.dealer_positions_short_all)};
+    if(![...Object.values(asset),...Object.values(lev)].every(Number.isFinite))continue;
+    histories[cur].set(date,{date,oi,asset,lev,dealer});
+  }
+  const intersection=Object.values(histories).reduce((set,m)=>{const d=new Set(m.keys());return set?new Set([...set].filter(x=>d.has(x))):d;},null);
+  const dates=[...intersection].sort().slice(-56);
+  if(dates.length<10)throw Error('Dati insufficienti per tutte le valute');
+  return {histories,dates};
+}
+async function loadLive(){
+  if(isLoading)return;
+  isLoading=true;apiError='';renderNotice();let errors=[];
+  for(const host of API_HOSTS){
+    try{const raw=await getEndpointData(host);const result=parseCFTC(raw);useData(result,'live');isLoading=false;renderNotice();return;}
+    catch(e){errors.push(e.name==='AbortError'?'timeout':e.message||'errore rete');}
+  }
+  isLoading=false;apiError=errors.join(' / ');renderNotice();
+}
+$('pair-select').innerHTML=PAIRS.map(p=>`<option value="${p}">${p.slice(0,3)}/${p.slice(3)}</option>`).join('');
+$('pair-select').addEventListener('change',e=>{selectedPair=e.target.value;savePair(selectedPair);renderFocus();renderRanking();renderLegs();});
+$('rank-list').addEventListener('click',e=>{const btn=e.target.closest('[data-pair]');if(!btn)return;selectedPair=btn.dataset.pair;savePair(selectedPair);renderFocus();renderRanking();renderLegs();document.querySelector('.hero').scrollIntoView({behavior:'smooth',block:'start'});});
+document.querySelectorAll('[data-nav]').forEach(el=>el.addEventListener('click',()=>switchScreen(el.dataset.nav)));
+$('refresh').addEventListener('click',loadLive);$('notice-action').addEventListener('click',loadLive);
+$('export-csv').addEventListener('click',()=>{
+  const a=rowsFor(selectedPair,'asset'),l=rowsFor(selectedPair,'lev');
+  const rows=[['data_posizioni','coppia','asset_manager_spread_pct_oi','leveraged_funds_spread_pct_oi','fonte']];
+  a.forEach((r,i)=>rows.push([r.date,selectedPair,r.val.toFixed(4),l[i].val.toFixed(4),sourceMode==='live'?'CFTC_TFF_futures_only':'DEMO_DATI_SIMULATI']));
+  const csv='\ufeff'+rows.map(row=>row.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(';')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),link=document.createElement('a');
+  link.href=url;link.download=`REMURA_${selectedPair}_${sourceMode}_${last(commonDates)}.csv`;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+useData(makeDemo(),'demo');loadLive();
+if('serviceWorker' in navigator && location.protocol==='https:')navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
+</body></html>
