@@ -1,4 +1,4 @@
-# REMURA v0.7 — Segui le tracce degli istituzionali
+# REMURA v0.8 — Segui le tracce degli istituzionali
 
 REMURA è una web app gratuita ottimizzata per iPhone, con radar COT ufficiali e percorsi per esplorare futures valutari, metalli e indici USA.
 
@@ -13,6 +13,19 @@ REMURA è una web app gratuita ottimizzata per iPhone, con radar COT ufficiali e
 - [Scheda CADJPY](https://mirkoworz.github.io/remura/asset.html?symbol=CADJPY&v=5).
 
 Menu hamburger con Home, Scanner e sottomenu apribili Forex → singole coppie, Metalli → Gold/Silver, Indici → 5 futures; ricerca integrata. Ogni strumento ha una scheda con URL proprio.
+
+## Confronto multi-fonte sentiment (v0.8)
+- [Indice delle fonti](https://mirkoworz.github.io/remura/fonti.html?v=8) — 7 provider con stato d'integrazione e differenze tra metriche.
+- [Scheda CADJPY](https://mirkoworz.github.io/remura/asset.html?symbol=CADJPY&v=8) — nuovo modulo **Confronto sentiment multi-fonte** subito sotto la sezione prezzo/Myfxbook.
+- **Myfxbook**: unica fonte retail con numeri caricati automaticamente in Remura al momento. Il modulo distingue la quota del volume in lotti dalla quota delle posizioni; dataset `data/myfxbook/latest.json`.
+- **Dukascopy SWFX**: widget storico ufficiale incorporabile su coppie Forex; l'utente attiva manualmente il suo caricamento. Il caricamento effettivo nel browser e la copertura del simbolo devono essere verificati su Safari. I dati restano nel widget del provider e non vengono copiati nelle nostre analisi automatiche.
+- **IG Client Sentiment**: API ufficiale esistente ma non autenticata in Remura, link alla pagina di mercato. Richiede verifiche su chiavi e licenza.
+- **FX Blue**: conti reali net long/short, collegamento esterno; nessuna API di importazione attiva.
+- **OANDA Position Book**: livelli di prezzo degli ordini/posizioni aperte su mercati selezionati; link esterno.
+- **Forex Factory**: trader e lotti dei conti della community; link esterno alla sezione posizioni.
+- **FXCM SSI**: feed professionale disponibile commercialmente; non importato in Remura.
+
+**Non presentare come "7 fonti live"**: solo Myfxbook è numerica automatica. Widget esterno e link non sono assimilabili a feed acquisiti. Non creiamo una media/consenso artificiale fra lotti, posizioni, conti, transazioni o livelli di prezzo. Tutti i link ai provider sono ufficiali/verificati; la ripubblicazione di dati di terzi oltre i widget autorizzati è subordinata ai loro termini.
 
 ## Dati e fonti
 - [CFTC Traders in Financial Futures Futures Only](https://publicreporting.cftc.gov/Commitments-of-Traders/TFF-Futures-Only/gpe5-46if): dataset gpe5-46if, Forex/indici, categorie Asset Manager e Leveraged Funds.
@@ -32,7 +45,7 @@ I dati COT sono settimanali, NON in tempo reale. Le nuove schede mostrano N/D se
 
 ## Sentiment retail e grafico prezzi (v0.6)
 
-**Pagina:** `asset.html?symbol=CADJPY&v=7` (vale anche per XAUUSD e gli altri simboli).
+**Pagina:** `asset.html?symbol=CADJPY&v=8` (vale anche per XAUUSD e gli altri simboli).
 
 - Grafico a candele TradingView incorporato con pulsanti M1, M5, M15, M30, H1, H4, D1. L'intervallo si applica **solo al prezzo**, nel widget esterno.
 - Riquadro Myfxbook Community Outlook: long%, short%, lotti long/short, numero posizioni e prezzi medi di apertura. Se il dato manca si vede N/D, mai valori inventati.
