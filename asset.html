@@ -75,11 +75,11 @@ th:first-child,td:first-child{text-align:left}
 @media(max-width:800px){.layout{grid-template-columns:1fr}.shell{padding:15px 14px 60px}.panel{padding:16px}.top{margin-bottom:24px}.cards{gap:9px}.card{padding:14px 12px}.value{font-size:30px}.topright{justify-content:flex-end;margin-left:auto}.overview{grid-column:auto}}
 @media(max-width:360px){.card{padding:11px 9px}.value{font-size:26px}.topright .btn{padding:7px 9px}}
 </style>
-<link rel="stylesheet" href="./retail.css?v=6">
+<link rel="stylesheet" href="./retail.css?v=7">
 </head>
 <body>
 <div class="shell">
-<header class="top"><div class="brand">REMURA<small>SCHEDA ISTITUZIONALE · v0.6</small></div><div class="topright"><a class="btn" href="./index.html">Home</a><a class="btn" id="category-back" href="./catalogo.html?categoria=forex&v=6">Categoria</a><a class="btn" href="./mercati.html?v=6">Scanner</a><span class="status" id="state">Connessione…</span><button class="btn" id="refresh" type="button" aria-label="Aggiorna i dati">↻</button></div></header>
+<header class="top"><div class="brand">REMURA<small>SCHEDA ISTITUZIONALE · v0.7</small></div><div class="topright"><a class="btn" href="./index.html">Home</a><a class="btn" id="category-back" href="./catalogo.html?categoria=forex&v=6">Categoria</a><a class="btn" href="./mercati.html?v=6">Scanner</a><span class="status" id="state">Connessione…</span><button class="btn" id="refresh" type="button" aria-label="Aggiorna i dati">↻</button></div></header>
 <div class="eyebrow" id="category">MERCATO</div>
 <h1 id="heading">Gold <span>XAUUSD</span></h1>
 <p class="subtitle" id="description">Scheda dedicata: segui le posizioni istituzionali nel tempo e, quando disponibile, confrontale con il sentiment dei piccoli trader.</p>
@@ -105,8 +105,16 @@ th:first-child,td:first-child{text-align:left}
 <div class="rt-section"><div class="rt-section-head"><h3>Prezzo a candele</h3><div id="r-tf" class="rt-tfs" aria-label="Timeframe candele"></div></div>
 <div id="r-price" class="rt-price"></div><p class="rt-disclaimer">Timeframe M1–D1 delle candele, non delle rilevazioni retail. Fonte esterna TradingView. <a id="r-tradingview" target="_blank" rel="noopener noreferrer">Apri il grafico ↗</a></p></div>
 <div class="rt-section"><div class="rt-section-head"><h3>Come si muovono i trader retail</h3><div class="rt-tfs rt-toggle" id="r-modes"><button type="button" data-mode="lots" aria-pressed="true">Lotti</button><button type="button" data-mode="positions" aria-pressed="false">Posizioni</button></div></div>
+<div class="rt-window-heading"><div><strong>Storico dei lotti / delle posizioni</strong><small>Seleziona un periodo reale; non è il timeframe delle candele</small></div></div>
+<div class="rt-tfs rt-periods" id="r-windows" role="group" aria-label="Periodo dello storico retail">
+<button type="button" data-window="6h" aria-pressed="false">6 ore</button>
+<button type="button" data-window="1d" aria-pressed="false">24 ore</button>
+<button type="button" data-window="7d" aria-pressed="true">7 giorni</button>
+<button type="button" data-window="30d" aria-pressed="false">30 giorni</button>
+<button type="button" data-window="all" aria-pressed="false">Tutto</button></div>
 <div class="rt-legend"><span><b class="lg"></b>Long</span><span><b class="sh"></b>Short</span><span id="r-count">0 rilevazioni</span></div>
-<div id="r-chart" class="rt-lots-plot"></div><p class="rt-disclaimer">Storico da Myfxbook Community Outlook, campionato ogni ora solo dopo l'attivazione. Non possiamo ricostruire dati minuto per minuto retroattivamente.</p></div>
+<div id="r-change" class="rt-change">Andamento: in attesa di almeno due rilevazioni.</div>
+<div id="r-chart" class="rt-lots-plot"></div><p class="rt-disclaimer">Ogni punto è una rilevazione Myfxbook salvata da Remura. Frequenza programmata: circa 20 minuti (con possibili ritardi GitHub e della fonte). Il grafico non inventa barre M1/M5 e lascia interruzioni dove mancano rilevazioni.</p></div>
 <div class="rt-section"><h3>Fonte e aggiornamento</h3><div class="rt-line"><span>Myfxbook Community Outlook</span><b id="r-updated">Non collegato</b></div>
 <p class="rt-disclaimer">Myfxbook mostra soltanto gli account della propria community, non la totalità del Forex. <a id="r-myfxbook" rel="noopener noreferrer" target="_blank">Verifica su Myfxbook ↗</a></p></div>
 </section>
@@ -116,7 +124,7 @@ th:first-child,td:first-child{text-align:left}
 <section class="panel"><div class="eyebrow">ULTIME SETTIMANE</div><h2>Come cambiano le posizioni</h2><div class="table-overflow"><table><thead><tr><th>Data</th><th id="column-a">Gruppo 1</th><th id="column-b">Gruppo 2</th><th>Variazione 1</th></tr></thead><tbody id="history-rows"><tr><td colspan="4">In attesa…</td></tr></tbody></table></div><p class="headnote">Variazioni espresse in punti percentuali (pp) rispetto alla settimana precedente.</p></section>
 <section class="panel overview"><div class="eyebrow">FONTI & LIMITI</div><h2>Da dove arrivano questi numeri</h2><div class="source" id="source">I dati sono ricavati dai report governativi CFTC Futures Only. Forex e indici usano TFF, i metalli usano Disaggregated.</div></section>
 </div>
-<footer class="footer">REMURA v0.6 · Analisi delle posizioni COT · Non è consulenza finanziaria · Nessun dato realtime.</footer>
+<footer class="footer">REMURA v0.7 · Analisi delle posizioni COT · Non è consulenza finanziaria · Nessun dato realtime.</footer>
 </div>
 <script src="./nav.js?v=5"></script>
 <script>
@@ -306,6 +314,6 @@ async function load(){
 }
 setup();load();
 </script>
-<script src="./retail.js?v=6"></script>
+<script src="./retail.js?v=7"></script>
 </body>
 </html>
