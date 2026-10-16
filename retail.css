@@ -41,3 +41,23 @@
  #retail-module .rt-raw{grid-template-columns:1fr}
  #retail-module .rt-tfs button{padding:8px 10px}
 }
+
+
+/* v0.7: area bands, real observation windows and touch inspection. */
+#retail-module .rt-window-heading{display:flex;justify-content:space-between;align-items:start;margin:15px 0 8px}
+#retail-module .rt-window-heading strong{display:block;font-size:13px;color:#def8ef}
+#retail-module .rt-window-heading small{display:block;color:#9cb8bc;font-size:11px}
+#retail-module .rt-periods{margin:10px 0 12px}
+#retail-module .rt-periods button{white-space:nowrap}
+#retail-module .rt-lots-plot{min-height:240px;touch-action:pan-y}
+#retail-module .rt-lots-plot svg{min-height:205px}
+#retail-module .rt-change{padding:9px 12px;margin:10px 0 12px;background:#11303a;border:1px solid #31545f;border-radius:10px;color:#c1d7d9;font-size:11px;line-height:1.6}
+#retail-module .rt-tooltip{position:absolute;z-index:3;pointer-events:none;max-width:240px;min-width:170px;padding:10px 12px;border:1px solid #569d8e;background:#0a232c;color:#e4f6ef;border-radius:10px;box-shadow:0 7px 25px #000a;font-size:11px;line-height:1.6;white-space:pre-line}
+#retail-module .rt-tooltip[hidden]{display:none}
+#retail-module .rt-legend{margin-top:9px}
+#retail-module .rt-lots-plot .rt-area-green{fill:#4acb8d;fill-opacity:.26}
+#retail-module .rt-lots-plot .rt-area-red{fill:#ef6375;fill-opacity:.29}
+#retail-module .rt-lots-plot .rt-long-line{stroke:#66e2a8;stroke-width:3;fill:none;stroke-linejoin:round}
+#retail-module .rt-lots-plot .rt-short-line{stroke:#fd778a;stroke-width:2.7;fill:none;stroke-linejoin:round}
+#retail-module .rt-legend .lg,#retail-module .rt-legend .sh{width:13px;height:8px}
+@media(max-width:720px){#retail-module .rt-lots-plot{min-height:220px}#retail-module .rt-lots-plot svg{min-height:195px}#retail-module .rt-periods button{padding:7px 8px}}
