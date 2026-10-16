@@ -1,9 +1,9 @@
-/* REMURA navigation, shared across radar and single-market pages. No external dependencies. */
+/* REMURA v0.5: menu responsive ad albero + configurazione condivisa dei mercati. */
 (() => {
   "use strict";
-  const FX_CODES = {EUR:"099741",GBP:"096742",JPY:"097741",AUD:"232741",CAD:"090741",CHF:"092741",NZD:"112741"};
-  const FX_PAIRS = ["EURUSD","GBPUSD","AUDUSD","NZDUSD","USDJPY","USDCAD","USDCHF","EURGBP","EURJPY","EURCHF","EURCAD","EURAUD","EURNZD","GBPJPY","GBPCHF","GBPCAD","GBPAUD","GBPNZD","AUDJPY","AUDCAD","AUDCHF","AUDNZD","NZDJPY","NZDCAD","NZDCHF","CADJPY","CADCHF","CHFJPY"];
-  const OTHER = {
+  const FX_CODES={EUR:"099741",GBP:"096742",JPY:"097741",AUD:"232741",CAD:"090741",CHF:"092741",NZD:"112741"};
+  const FX_PAIRS=["EURUSD","GBPUSD","AUDUSD","NZDUSD","USDJPY","USDCAD","USDCHF","EURGBP","EURJPY","EURCHF","EURCAD","EURAUD","EURNZD","GBPJPY","GBPCHF","GBPCAD","GBPAUD","GBPNZD","AUDJPY","AUDCAD","AUDCHF","AUDNZD","NZDJPY","NZDCAD","NZDCHF","CADJPY","CADCHF","CHFJPY"];
+  const OTHER={
     XAUUSD:{group:"metals",name:"Gold · Oro COMEX",code:"088691",dataset:"disagg"},
     XAGUSD:{group:"metals",name:"Silver · Argento COMEX",code:"084691",dataset:"disagg"},
     US500:{group:"indices",name:"S&P 500 · E-mini",code:"13874A",dataset:"tff"},
@@ -12,62 +12,100 @@
     US2000:{group:"indices",name:"Russell 2000 · E-mini",code:"239742",dataset:"tff"},
     DXY:{group:"indices",name:"Dollar Index · ICE",code:"098662",dataset:"tff"}
   };
-  const config={fxCodes:FX_CODES,fxPairs:FX_PAIRS,other:OTHER,
-    symbols:[...FX_PAIRS,...Object.keys(OTHER)],
-    detailUrl:sym=>"./asset.html?symbol="+encodeURIComponent(sym)+"&v=4"};
-  window.REMURA_MARKETS=config;
-  function start(){
+  const groups=[
+    {id:"forex",label:"Forex",icon:"↔",name:"28 coppie principali",items:FX_PAIRS.map(s=>({s,n:s}))},
+    {id:"metals",label:"Metalli",icon:"◇",name:"Oro e argento",items:[{s:"XAUUSD",n:"Gold · Oro"},{s:"XAGUSD",n:"Silver · Argento"}]},
+    {id:"indices",label:"Indici",icon:"▥",name:"Principali futures USA",items:[
+      {s:"US500",n:"S&P 500"},{s:"NAS100",n:"Nasdaq 100"},{s:"US30",n:"Dow Jones"},{s:"US2000",n:"Russell 2000"},{s:"DXY",n:"Dollar Index"}]}
+  ];
+  const detailUrl=s=>"./asset.html?symbol="+encodeURIComponent(s)+"&v=5";
+  const categoryUrl=id=>"./catalogo.html?categoria="+encodeURIComponent(id)+"&v=5";
+  window.REMURA_MARKETS={fxCodes:FX_CODES,fxPairs:FX_PAIRS,other:OTHER,groups,symbols:[...FX_PAIRS,...Object.keys(OTHER)],detailUrl,categoryUrl};
+  function init(){
     if(document.getElementById("rm-menu-trigger"))return;
-    const active=new URLSearchParams(location.search).get("symbol")||"";
-    const open=document.createElement("button");open.type="button";open.id="rm-menu-trigger";
-    open.setAttribute("aria-label","Apri menu dei mercati");open.setAttribute("aria-expanded","false");open.setAttribute("aria-controls","rm-menu");
-    open.innerHTML='<svg viewBox="0 0 24 24" width="23" height="23" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-linecap="round" stroke-width="2" fill="none"/></svg>';
+    const page=location.pathname.split("/").pop()||"index.html";
+    const q=new URLSearchParams(location.search);
+    const activeSymbol=(q.get("symbol")||"").toUpperCase();
+    let activeGroup=q.get("categoria")||"";
+    if(page==="asset.html"&&activeSymbol){
+      activeGroup=OTHER[activeSymbol]?.group||"forex";
+    }else if(page==="forex.html")activeGroup="forex";
+    const trigger=document.createElement("button");
+    trigger.id="rm-menu-trigger";trigger.type="button";trigger.setAttribute("aria-label","Apri menu Remura");
+    trigger.setAttribute("aria-controls","rm-menu");trigger.setAttribute("aria-expanded","false");
+    trigger.innerHTML='<svg viewBox="0 0 24 24" width="23" height="23" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-linecap="round" stroke-width="2" fill="none"/></svg>';
     const shade=document.createElement("div");shade.id="rm-menu-shade";shade.hidden=true;
-    const drawer=document.createElement("aside");drawer.id="rm-menu";drawer.setAttribute("aria-label","Menu laterale REMURA");drawer.setAttribute("aria-hidden","true");drawer.inert=true;
-    drawer.innerHTML='<div class="rm-header"><div class="rm-wordmark">REMURA<span>Esplora i mercati</span></div><button id="rm-close" type="button" aria-label="Chiudi menu">×</button></div><div class="rm-links"><a href="./index.html">⌂ Dashboard Forex</a><a href="./mercati.html?v=4">◎ Scanner tutti i mercati</a><a href="./asset.html?symbol=XAUUSD&v=4">◇ GOLD · XAUUSD</a></div><label for="rm-search" class="rm-search-label">CERCA UNO STRUMENTO</label><input id="rm-search" type="search" autocomplete="off" placeholder="Gold, EURUSD, Nasdaq…" aria-label="Cerca mercato nel menu"><div class="rm-menu-list" id="rm-menu-list"></div><div class="rm-footer">I dati COT sono settimanali. Sentiment retail ancora da collegare.</div>';
-    document.body.append(shade,drawer,open);document.body.classList.add("rm-has-nav");
-    const list=drawer.querySelector("#rm-menu-list"),search=drawer.querySelector("#rm-search");
-    function build(){
-      const val=search.value.toUpperCase().trim();list.replaceChildren();
-      const groups=[["Forex",FX_PAIRS.map(s=>({s,n:s}))],["Metalli",[["XAUUSD","Oro · Gold"],["XAGUSD","Argento · Silver"]].map(([s,n])=>({s,n}))],["Indici USA",[["US500","S&P 500"],["NAS100","Nasdaq 100"],["US30","Dow Jones"],["US2000","Russell 2000"],["DXY","Dollar Index"]].map(([s,n])=>({s,n}))]];
-      for(const [title,items] of groups){
-        const match=items.filter(it=>it.s.includes(val)||it.n.toUpperCase().includes(val));if(!match.length)continue;
-        const group=document.createElement("section");group.className="rm-group";
-        const heading=document.createElement("h3");heading.textContent=title;group.append(heading);
-        for(const it of match){
-          const link=document.createElement("a");link.href=config.detailUrl(it.s);
-          if(it.s===active){link.className="selected";link.setAttribute("aria-current","page");}
-          const label=document.createElement("span");label.textContent=it.s;
-          const name=document.createElement("small");name.textContent=it.n===it.s?"Apri scheda":it.n;
-          link.append(label,name);group.append(link);
-        }list.append(group);
+    const drawer=document.createElement("aside");drawer.id="rm-menu";
+    drawer.setAttribute("aria-label","Navigazione principale Remura");drawer.setAttribute("aria-hidden","true");drawer.inert=true;
+    drawer.innerHTML='<div class="rm-header"><a href="./index.html" class="rm-brand">REMURA<span>Segui le tracce istituzionali</span></a><button id="rm-close" type="button" aria-label="Chiudi menu">×</button></div><nav aria-label="Menu Remura" class="rm-nav"><div class="rm-shortcuts"><a href="./index.html" data-main="home">⌂ <span>Home</span></a><a href="./mercati.html?v=5" data-main="scanner">◎ <span>Scanner istituzionale</span></a></div><label class="rm-search-label" for="rm-search">Cerca tra 35 strumenti</label><input id="rm-search" type="search" autocomplete="off" placeholder="Gold, CADJPY, Nasdaq..." aria-label="Filtra strumenti e sottomenu"><div id="rm-menu-tree" class="rm-menu-tree"></div><div class="rm-menu-bottom"><a href="./forex.html?v=5">⌁ Radar Forex classico</a></div></nav><div class="rm-footer">COT: posizioni settimanali, non flussi in tempo reale. Sentiment retail in preparazione.</div>';
+    document.body.append(shade,drawer,trigger);
+    document.body.classList.add("rm-has-nav");
+    const tree=drawer.querySelector("#rm-menu-tree");
+    const search=drawer.querySelector("#rm-search");
+    const isHome=page==="index.html",isScanner=page==="mercati.html";
+    const highlight=drawer.querySelector(isHome?'[data-main="home"]':isScanner?'[data-main="scanner"]':'[data-main="home"]');
+    if(highlight&&(isHome||isScanner))highlight.classList.add("rm-active");
+    function render(){
+      const v=search.value.trim().toUpperCase();
+      tree.replaceChildren();
+      let count=0;
+      for(const group of groups){
+        const matches=group.items.filter(it=>it.s.includes(v)||it.n.toUpperCase().includes(v));
+        if(v&&!matches.length&&!group.label.toUpperCase().includes(v))continue;
+        count+=matches.length;
+        const section=document.createElement("details");section.className="rm-submenu";
+        section.open=v.length>0||group.id===activeGroup;
+        const summary=document.createElement("summary");summary.className="rm-parent";
+        const icon=document.createElement("span");icon.className="rm-category-icon";icon.textContent=group.icon;
+        const label=document.createElement("span");label.className="rm-parent-name";
+        const name=document.createElement("strong");name.textContent=group.label;
+        const subtitle=document.createElement("small");subtitle.textContent=group.name;label.append(name,subtitle);
+        const caret=document.createElement("span");caret.className="rm-caret";caret.textContent="⌄";
+        summary.append(icon,label,caret);section.append(summary);
+        const inner=document.createElement("div");inner.className="rm-children";
+        const overview=document.createElement("a");overview.href=categoryUrl(group.id);
+        overview.textContent="Panoramica "+group.label+" →";overview.className="rm-overview";
+        if(page==="catalogo.html"&&activeGroup===group.id){overview.classList.add("rm-active");overview.setAttribute("aria-current","page");}
+        inner.append(overview);
+        for(const item of matches){
+          const anchor=document.createElement("a");anchor.href=detailUrl(item.s);anchor.className="rm-leaf";
+          if(page==="asset.html"&&activeSymbol===item.s){anchor.classList.add("rm-active");anchor.setAttribute("aria-current","page");}
+          const code=document.createElement("b");code.textContent=item.s;
+          const title=document.createElement("small");title.textContent=item.n===item.s?"Scheda COT":item.n;
+          anchor.append(code,title);inner.append(anchor);
+        }
+        section.append(inner);tree.append(section);
       }
-      if(!list.childElementCount){const p=document.createElement("p");p.className="rm-no-match";p.textContent="Nessun mercato trovato.";list.append(p);}
+      if(!tree.children.length){
+        const empty=document.createElement("p");empty.className="rm-no-match";empty.textContent="Nessuno strumento trovato.";tree.append(empty);
+      }
     }
-    let savedFocus=null;
-    function toggle(state){
-      const showing=!!state;
-      if(showing)savedFocus=document.activeElement;
-      drawer.classList.toggle("visible",showing);shade.hidden=!showing;
-      drawer.setAttribute("aria-hidden",showing?"false":"true");drawer.inert=!showing;open.setAttribute("aria-expanded",showing?"true":"false");
-      document.body.classList.toggle("rm-menu-open",showing);
-      if(showing){build();drawer.querySelector("#rm-close").focus();}
-      else if(savedFocus&&savedFocus.isConnected){savedFocus.focus();}
+    let priorFocus=null;
+    function toggle(on){
+      if(on)priorFocus=document.activeElement;
+      drawer.classList.toggle("visible",on);
+      shade.hidden=!on;drawer.inert=!on;
+      drawer.setAttribute("aria-hidden",on?"false":"true");
+      trigger.setAttribute("aria-expanded",on?"true":"false");
+      document.body.classList.toggle("rm-menu-open",on);
+      if(on){render();drawer.querySelector("#rm-close").focus();}
+      else if(priorFocus?.isConnected)priorFocus.focus();
     }
-    open.addEventListener("click",()=>toggle(true));shade.addEventListener("click",()=>toggle(false));
-    drawer.querySelector("#rm-close").addEventListener("click",()=>toggle(false));search.addEventListener("input",build);
+    trigger.addEventListener("click",()=>toggle(true));
+    shade.addEventListener("click",()=>toggle(false));
+    drawer.querySelector("#rm-close").addEventListener("click",()=>toggle(false));
+    search.addEventListener("input",render);
     document.addEventListener("keydown",e=>{
       if(!drawer.classList.contains("visible"))return;
-      if(e.key==="Escape"){e.preventDefault();toggle(false);}
+      if(e.key==="Escape"){e.preventDefault();toggle(false);return;}
       if(e.key==="Tab"){
-        const focusable=[...drawer.querySelectorAll('button:not([disabled]),a[href],input:not([disabled])')].filter(el=>el.getClientRects().length);
-        if(!focusable.length)return;
-        const first=focusable[0],last=focusable[focusable.length-1];
+        const all=[...drawer.querySelectorAll('button:not([disabled]),input:not([disabled]),a[href],summary')].filter(x=>x.getClientRects().length);
+        const first=all[0],last=all[all.length-1];
         if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
         else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
       }
     });
-    build();
+    render();
   }
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start,{once:true});else start();
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
 })();
