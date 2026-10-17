@@ -18,6 +18,7 @@ import math
 import os
 from pathlib import Path
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -209,7 +210,9 @@ def make_bundle(args, symbols: list[str], aliases: dict, now: dt.datetime | None
     now = now or utcnow()
     result = {"schema": "remura-price-v1", "generatedAt": iso(now), "purpose": "private-local-import",
               "intervalAlignment": "UTC", "markets": {}, "errors": {}}
-    for symbol in symbols:
+    for index, symbol in enumerate(symbols):
+        if index and args.provider == "twelve":
+            time.sleep(args.delay)
         try:
             if symbol not in MARKETS:
                 raise ValueError(f"Unknown Remura symbol: {symbol}")
@@ -239,6 +242,7 @@ def main() -> int:
     p.add_argument("--provider", choices=["twelve", "oanda", "csv"], required=True)
     p.add_argument("--symbols", nargs="+", default=["EURUSD", "XAUUSD", "US500"], help="Any subset of the 35 REMURA symbols")
     p.add_argument("--count", type=int, default=2400, help="Number of M15 bars: 100..5000")
+    p.add_argument("--delay", type=float, default=9.0, help="Seconds between Twelve Data calls (default 9s to respect Basic 8 credits/min)")
     p.add_argument("--oanda-environment", choices=["practice", "live"], default="practice")
     p.add_argument("--symbol-map", help="Private JSON mapping of REMURA symbols to broker/provider tickers")
     p.add_argument("--csv", help="Private CSV with UTC OHLC M15 bars")
@@ -246,6 +250,8 @@ def main() -> int:
     args = p.parse_args()
     if not 100 <= args.count <= 5000:
         p.error("--count must be 100..5000")
+    if not 0 <= args.delay <= 180:
+        p.error("--delay must be 0..180 seconds")
     symbols = [s.upper() for s in args.symbols]
     if args.provider == "csv" and len(symbols) != 1:
         p.error("CSV import needs exactly one symbol")
