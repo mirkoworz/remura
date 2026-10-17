@@ -1,4 +1,20 @@
-# REMURA v0.8 — Segui le tracce degli istituzionali
+# REMURA v0.9 — Segui le tracce degli istituzionali
+
+## Novità v0.9 — Interprete COT per tutti i 35 mercati
+Le **28 schede Forex**, le **2 schede metalli** e le **5 schede indici** condividono il nuovo pannello di analisi in `asset.html`: trend netto % open interest, variazione della settimana e delle 4 precedenti, persistenza della spinta, differenze fra le categorie e testo interpretativo in italiano.
+
+- Il pannello analizza realmente il dataset CFTC già acquisito da `asset.html`; non chiama servizi generativi e non inventa prezzi, percentuali di successo o ordini.
+- **Forex:** usa il differenziale dei due futures valutari normalizzati; USD=0 soltanto come riferimento. Nei grafici dei contratti si visualizza una valuta alla volta, mai una somma sintetica di contratti non omogenei.
+- **Metalli:** Managed Money è la categoria speculativa principale; Producer / Merchant sono spesso operatori in copertura e non vengono interpretati come avversari direzionali automatici.
+- **Indici:** analisi delle categorie TFF sul future relativo, separato dai prezzi CFD.
+- **Contratti verificabili:** per ogni categoria e future sono disponibili grafici settimanali separati di long, short e open interest, con periodi di 13, 26 e 52 settimane e differenze dal report precedente.
+- **Retail Myfxbook:** il modulo esistente inoltra al pannello snapshot e storico già disponibili; la lettura contrarian è soltanto contestuale, non equivale a conoscere il lato istituzionale delle posizioni retail. Campioni insufficienti, feed vecchi o assenti sono esclusi.
+- **Prezzi:** TradingView resta consultabile nella pagina, ma il suo widget non fornisce candele OHLC utilizzabili dal motore. Nessuna conferma automatica H4/H1, ingresso operativo o analisi tecnica del prezzo viene dichiarata finché non sarà integrato un feed programmatico.
+- **Sicurezza delle interpretazioni:** COT datato oltre 14 giorni viene marcato; osservazioni insufficienti producono N/D. Nessun motore d'ordine e nessuna credenziale esposta.
+- **Test:** `node --test tests/insights.test.js` con controllo di sintassi e wiring nel workflow `.github/workflows/insights-checks.yml`.
+
+Il pannello compare automaticamente in `asset.html?symbol=EURUSD`, `asset.html?symbol=XAUUSD`, `asset.html?symbol=US500` e tutti gli altri simboli definiti in `nav.js`. Per attivare analisi automatica **del prezzo** serve una fonte OHLC legalmente utilizzabile (in valutazione MetaApi), poi un backtest con timestamp di pubblicazione COT realistici.
+
 
 REMURA è una web app gratuita ottimizzata per iPhone, con radar COT ufficiali e percorsi per esplorare futures valutari, metalli e indici USA.
 
