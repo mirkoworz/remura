@@ -7,6 +7,10 @@ on:
       - 'insights.css'
       - 'asset.html'
       - 'retail.js'
+      - 'sources.js'
+      - 'sources.css'
+      - 'scripts/update_ig.py'
+      - '.github/workflows/ig-sentiment.yml'
       - 'tests/**'
       - '.github/workflows/insights-checks.yml'
   workflow_dispatch:
@@ -22,12 +26,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
       - name: Validate browser script syntax
         run: |
           node --check insights-core.js
           node --check insights.js
           node --check retail.js
+          node --check sources.js
           node --check nav.js
+      - name: Verify IG collector independently of the network
+        run: python -m unittest discover -s tests -p 'test_ig_sentiment.py'
       - name: Verify COT analysis rules
         run: node --test tests/insights.test.js
       - name: Verify wiring on all market detail pages
