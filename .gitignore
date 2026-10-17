@@ -1,0 +1,11 @@
+# Private user-generated price data and API configurations. Never publish these.
+local/
+data/prices/
+private/
+.env
+.env.*
+*.apikey
+*.pem
+__pycache__/
+*.pyc
+.DS_Store
