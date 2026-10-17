@@ -26,3 +26,7 @@
 .rm-price .rp-inline{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
 .rm-price .rp-inline span{font-size:11px;color:#b2cfd0}
 @media(max-width:700px){.rm-price{padding:16px 13px}.rm-price .rp-grid{grid-template-columns:1fr}.rm-price .rp-box{padding:12px}}
+
+.rm-price .rp-return{cursor:pointer;color:#a7edda;background:#173b46;border:1px solid #497a80;border-radius:9px;padding:8px 12px;font-size:12px;font-weight:750;margin-top:6px}
+.rm-price .rp-return:hover{background:#1d4b55}
+.rm-price #rp-auto{font-size:12px;font-weight:700;color:#8fe4cf;margin:11px 0}
