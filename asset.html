@@ -75,12 +75,13 @@ th:first-child,td:first-child{text-align:left}
 @media(max-width:800px){.layout{grid-template-columns:1fr}.shell{padding:15px 14px 60px}.panel{padding:16px}.top{margin-bottom:24px}.cards{gap:9px}.card{padding:14px 12px}.value{font-size:30px}.topright{justify-content:flex-end;margin-left:auto}.overview{grid-column:auto}}
 @media(max-width:360px){.card{padding:11px 9px}.value{font-size:26px}.topright .btn{padding:7px 9px}}
 </style>
+<link rel="stylesheet" href="./insights.css?v=9">
 <link rel="stylesheet" href="./retail.css?v=8">
 <link rel="stylesheet" href="./sources.css?v=8">
 </head>
 <body>
 <div class="shell">
-<header class="top"><div class="brand">REMURA<small>SCHEDA ISTITUZIONALE · v0.8</small></div><div class="topright"><a class="btn" href="./index.html">Home</a><a class="btn" id="category-back" href="./catalogo.html?categoria=forex&v=8">Categoria</a><a class="btn" href="./mercati.html?v=8">Scanner</a><span class="status" id="state">Connessione…</span><button class="btn" id="refresh" type="button" aria-label="Aggiorna i dati">↻</button></div></header>
+<header class="top"><div class="brand">REMURA<small>SCHEDA ISTITUZIONALE · v0.9</small></div><div class="topright"><a class="btn" href="./index.html">Home</a><a class="btn" id="category-back" href="./catalogo.html?categoria=forex&v=8">Categoria</a><a class="btn" href="./mercati.html?v=8">Scanner</a><span class="status" id="state">Connessione…</span><button class="btn" id="refresh" type="button" aria-label="Aggiorna i dati">↻</button></div></header>
 <div class="eyebrow" id="category">MERCATO</div>
 <h1 id="heading">Gold <span>XAUUSD</span></h1>
 <p class="subtitle" id="description">Scheda dedicata: segui le posizioni istituzionali nel tempo e, quando disponibile, confrontale con il sentiment dei piccoli trader.</p>
@@ -125,9 +126,11 @@ th:first-child,td:first-child{text-align:left}
 <section class="panel"><div class="eyebrow">ULTIME SETTIMANE</div><h2>Come cambiano le posizioni</h2><div class="table-overflow"><table><thead><tr><th>Data</th><th id="column-a">Gruppo 1</th><th id="column-b">Gruppo 2</th><th>Variazione 1</th></tr></thead><tbody id="history-rows"><tr><td colspan="4">In attesa…</td></tr></tbody></table></div><p class="headnote">Variazioni espresse in punti percentuali (pp) rispetto alla settimana precedente.</p></section>
 <section class="panel overview"><div class="eyebrow">FONTI & LIMITI</div><h2>Da dove arrivano questi numeri</h2><div class="source" id="source">I dati sono ricavati dai report governativi CFTC Futures Only. Forex e indici usano TFF, i metalli usano Disaggregated.</div></section>
 </div>
-<footer class="footer">REMURA v0.8 · Analisi delle posizioni COT · Non è consulenza finanziaria · Nessun dato realtime.</footer>
+<footer class="footer">REMURA v0.9 · Analisi delle posizioni COT · Non è consulenza finanziaria · Nessun dato realtime.</footer>
 </div>
 <script src="./nav.js?v=8"></script>
+<script src="./insights-core.js?v=9"></script>
+<script src="./insights.js?v=9"></script>
 <script>
 "use strict";
 const conf=window.REMURA_MARKETS;
@@ -167,7 +170,7 @@ function setup(){
  $("dataset-label").textContent=dataset==="tff"?"CFTC · TFF Futures Only":"CFTC · Disaggregated Futures Only";
  $("method-note").textContent=(isFX?"Cross valutario: differenza fra posizioni nette normalizzate di due futures. USD = zero solo come riferimento matematico. ":isMetal?"Managed Money = speculatori; Producer/Merchant = operatori commerciali spesso in copertura. ":"Asset Manager e Leveraged Funds possono avere obiettivi diversi. ")+"Net% = (Long − Short) ÷ Open Interest × 100. Non è un segnale di prezzo.";
  const a=document.createElement("a");a.href=sourceUrl;a.target="_blank";a.rel="noopener noreferrer";a.textContent=dataset==="tff"?"Apri TFF Futures Only ufficiale ↗":"Apri Disaggregated Futures Only ufficiale ↗";
- $("source").replaceChildren(document.createTextNode("Fonte dei contratti: "),a,document.createTextNode(". Il COT fotografa normalmente le posizioni del martedì e viene pubblicato di norma venerdì. I contratti non identificano ogni transazione istituzionale e non coprono tutto il Forex o i CFD. Questo strumento mostra esposizioni nette e loro variazioni, non ordini eseguiti in tempo reale. Il sentiment retail è una fonte diversa e per ora non è collegato."));
+ $("source").replaceChildren(document.createTextNode("Fonte dei contratti: "),a,document.createTextNode(". Il COT fotografa normalmente le posizioni del martedì e viene pubblicato di norma venerdì. I contratti non identificano ogni transazione istituzionale e non coprono tutto il Forex o i CFD. Questo strumento mostra esposizioni nette e loro variazioni, non ordini eseguiti in tempo reale. Il sentiment Myfxbook, quando disponibile, proviene da un campione distinto di conti retail e non misura gli istituzionali."));
  $("refresh").addEventListener("click",load);
 }
 function setState(t,kind=""){
@@ -181,6 +184,7 @@ function fail(message){
  $("chart").textContent="Dati non disponibili.";
  $("raw-contracts").textContent="N/D";
  $("history-rows").replaceChildren();
+ window.REMURA_INSIGHTS?.error(message);
  for(const id of ["value-a","value-b","change-a","change-b","pct-a","pct-b","oi","oi-delta"])$(id).textContent="—";
 }
 function parseRow(r){
@@ -286,6 +290,7 @@ function show(series){
  $("alert").className="alert"+(stale?" warning":"");
  $("alert").textContent=(stale?"ATTENZIONE · Report vecchio di "+age+" giorni. ":"Fonte CFTC ufficiale · ")+"Posizioni al "+dateText(r.date)+". Aggiornamento settimanale, non in tempo reale. Sentiment retail separato: controlla la sezione dedicata.";
  showContracts(r);showHistory(series);draw(series);chartData=series;
+ window.REMURA_INSIGHTS?.updateCOT({series,symbol,isFX,isMetal,labels});
 }
 async function request(){
  const cutoff=new Date();cutoff.setUTCDate(cutoff.getUTCDate()-411);

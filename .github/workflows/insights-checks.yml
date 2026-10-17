@@ -1,0 +1,51 @@
+name: REMURA insights checks
+on:
+  pull_request:
+    paths:
+      - 'insights-core.js'
+      - 'insights.js'
+      - 'insights.css'
+      - 'asset.html'
+      - 'retail.js'
+      - 'tests/**'
+      - '.github/workflows/insights-checks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate browser script syntax
+        run: |
+          node --check insights-core.js
+          node --check insights.js
+          node --check retail.js
+          node --check nav.js
+      - name: Verify COT analysis rules
+        run: node --test tests/insights.test.js
+      - name: Verify wiring on all market detail pages
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const html=fs.readFileSync('asset.html','utf8');
+          for(const s of ['insights-core.js','insights.js','insights.css','REMURA_INSIGHTS?.updateCOT','REMURA_INSIGHTS?.error']) {
+            if(!html.includes(s))throw new Error('Missing asset integration: '+s);
+          }
+          const retail=fs.readFileSync('retail.js','utf8');
+          if(!retail.includes('remura:retail'))throw new Error('Missing retail integration');
+          const nav=fs.readFileSync('nav.js','utf8');
+          const fx=nav.match(/const FX_PAIRS=\[([^\]]+)\]/);
+          const other=nav.match(/const OTHER=\{([\s\S]*?)\n  \};/);
+          if(!fx||!other)throw new Error('Cannot verify market definitions');
+          const fxCount=(fx[1].match(/"[A-Z]{6}"/g)||[]).length;
+          const others=(other[1].match(/^\s*[A-Z0-9]+:\{/gm)||[]).length;
+          if(fxCount!==28||others!==7)throw new Error('Expected 28 FX pairs and 7 other markets; got '+fxCount+'+'+others);
+          console.log('Verified shared asset page: '+(fxCount+others)+' markets');
+          NODE
