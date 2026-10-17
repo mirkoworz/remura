@@ -38,6 +38,8 @@ SAFE_ASSETS={
     "manifest.webmanifest","icon.svg",
 }
 STATUS_PATH="/private-api/health"
+RETAIL_LATEST="/private-api/retail/latest.json"
+RETAIL_HISTORY_RE=re.compile(r"^/private-api/retail/history/([A-Z0-9]{3,8})[.]json$")
 PRICE_RE=re.compile(r"^/private-api/prices/([A-Z0-9]{3,8})$")
 
 
@@ -55,6 +57,39 @@ def resolve_asset(url_path):
         return None
     candidate=ROOT/filename
     return candidate if candidate.is_file() else None
+
+
+def retail_document(db_path,path):
+    """Read only valid aggregate files inside private/myfxbook, never public repo files."""
+    db_path=Path(db_path).resolve()
+    source=db_path.parent/"myfxbook"/"data"/"myfxbook"
+    if path==RETAIL_LATEST:
+        filepath=source/"latest.json"
+        symbol=None
+    else:
+        match=RETAIL_HISTORY_RE.fullmatch(path)
+        if not match or match.group(1) not in MARKETS:
+            return None
+        symbol=match.group(1)
+        filepath=source/"history"/(symbol+".json")
+    if not filepath.is_file() or filepath.stat().st_size>3_000_000:
+        return None
+    try:
+        data=json.loads(filepath.read_text("utf-8"))
+    except (OSError,ValueError):
+        return None
+    if not isinstance(data,dict):
+        return None
+    if symbol is None:
+        if data.get("status")!="ok" or not isinstance(data.get("symbols"),dict):
+            return None
+        return {"status":"ok","source":"Myfxbook Community Outlook",
+                "updatedAt":data.get("updatedAt"),
+                "symbols":{s:v for s,v in data["symbols"].items() if s in MARKETS}}
+    if data.get("symbol")!=symbol or not isinstance(data.get("records"),list):
+        return None
+    return {"symbol":symbol,"source":"Myfxbook Community Outlook",
+            "records":data["records"][-2250:]}
 
 
 def http_handler(db_path):
@@ -93,6 +128,11 @@ def http_handler(db_path):
 
         def do_GET(self):
             path=urlsplit(self.path).path
+            if path==RETAIL_LATEST or RETAIL_HISTORY_RE.fullmatch(path):
+                data=retail_document(db_path,path)
+                if data is None:self.response(503,{"error":"retail_not_collected"})
+                else:self.response(200,data)
+                return
             if path==STATUS_PATH or PRICE_RE.fullmatch(path):
                 db=connect(db_path)
                 try:
@@ -104,6 +144,8 @@ def http_handler(db_path):
                             "lastSuccess":status.get("last_success"),
                             "lastAttempt":status.get("last_attempt"),
                             "lastError":status.get("last_error"),
+                            "retailStatus":status.get("retail_status","disabled"),
+                            "retailLastSuccess":status.get("retail_last_success"),
                             "instruments":symbols_available(db),
                             "serverTime":utcnow().isoformat(),
                         })
@@ -206,6 +248,52 @@ def collect_once(db_path, symbols, days=2, runner=subprocess.run, now=None):
             temp_path.unlink(missing_ok=True)
 
 
+def retail_once(db_path,runner=subprocess.run):
+    """Reuse the existing official Myfxbook API collector in a PRIVATE cwd.
+
+    No Git commits, no data writes to public repository, no credentials in stdout.
+    """
+    db=connect(db_path)
+    if not (os.environ.get("MYFXBOOK_EMAIL") and os.environ.get("MYFXBOOK_PASSWORD")):
+        try:set_status(db,retail_status="awaiting_credentials")
+        finally:db.close()
+        return False
+    try:set_status(db,retail_status="collecting")
+    finally:db.close()
+    target=Path(db_path).resolve().parent/"myfxbook"
+    target.mkdir(parents=True,exist_ok=True,mode=0o700)
+    command=[sys.executable,str(ROOT/"scripts"/"update_myfxbook.py")]
+    try:
+        run=runner(command,cwd=target,stdin=subprocess.DEVNULL,
+                   stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
+                   timeout=120,check=False)
+        latest_file=target/"data"/"myfxbook"/"latest.json"
+        data=retail_document(db_path,RETAIL_LATEST)
+        if run.returncode!=0 or data is None:
+            raise RuntimeError("Nessun aggiornamento Myfxbook convalidato.")
+        db=connect(db_path)
+        try:set_status(db,retail_status="running",retail_last_success=utcnow().isoformat(),
+                       retail_last_error="")
+        finally:db.close()
+        return True
+    except (OSError,ValueError,RuntimeError,subprocess.SubprocessError):
+        db=connect(db_path)
+        try:set_status(db,retail_status="failed",retail_last_error="Myfxbook non aggiornato.")
+        finally:db.close()
+        return False
+
+
+def next_cycle(interval_sec,grace_sec,now=None):
+    timestamp=(now or utcnow()).timestamp()
+    return max(2.0,((int(timestamp)//interval_sec)+1)*interval_sec+grace_sec-timestamp)
+
+
+def retail_loop(db_path,stop):
+    while not stop.is_set():
+        retail_once(db_path)
+        stop.wait(next_cycle(20*60,90))
+
+
 def seconds_to_next_quarter(now=None):
     now=now or utcnow()
     # Run shortly after UTC quarter closes so the M15 candle is final.
@@ -259,6 +347,9 @@ def main():
     if os.environ.get("REMURA_COLLECTOR_ENABLED","0")=="1":
         thread=threading.Thread(target=collector_loop,args=(db_path,stop),daemon=True)
         thread.start()
+    if os.environ.get("REMURA_RETAIL_ENABLED","0")=="1":
+        thread_retail=threading.Thread(target=retail_loop,args=(db_path,stop),daemon=True)
+        thread_retail.start()
     server=ThreadingHTTPServer((SERVER_HOST,args.port),http_handler(db_path))
     print("REMURA Private listening ONLY on http://127.0.0.1:"+str(args.port))
     print("Do NOT expose without authentication. Use Cloudflare Tunnel with a validated Access policy for the iPhone.")
