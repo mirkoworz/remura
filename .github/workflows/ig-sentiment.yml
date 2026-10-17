@@ -31,7 +31,7 @@ jobs:
         run: python scripts/update_ig.py
       - name: Store aggregated sentiment (if authorized)
         run: |
-          git add -A data/ig/
+          if [ -d data/ig ]; then git add -A data/ig/; fi
           if ! git diff --cached --quiet; then
             git config user.name "remura-data-bot"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
