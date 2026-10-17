@@ -1,4 +1,4 @@
-/* REMURA v1.0 — private file-only price analysis UI. No keys and no data uploads. */
+/* REMURA v1.0 — private automatic OHLC feed with optional local file fallback. */
 (() => {
   "use strict";
   const core=window.REMURA_PRICE_CORE, cfg=window.REMURA_MARKETS;
@@ -14,10 +14,10 @@
   el.innerHTML=
     '<div class="rp-top"><div><span class="rp-eyebrow">REMURA · Motore prezzi privato</span>'+
     '<h2 id="rp-title">Analisi del prezzo in attesa</h2>'+
-    '<p class="rp-muted">Candele chiuse M15 → H1 → H4. Lettura dei prezzi separata da TradingView: servono dati OHLC esportati da una fonte autorizzata.</p></div><span class="rp-flag" id="rp-state">Nessun feed caricato</span></div>'+
-    '<div class="rp-upload"><label for="rp-file">Importa il tuo file prezzi locale (.json, nessun upload a server)</label>'+
+    '<p class="rp-muted">Candele chiuse M15 → H1 → H4. Il servizio REMURA privato aggiorna i prezzi automaticamente ogni 15 minuti, quando è configurato.</p></div><span class="rp-flag" id="rp-state">Nessun feed caricato</span></div>'+
+    '<p class="rp-muted" id="rp-auto">Controllo del servizio prezzi privato…</p><div class="rp-upload"><label for="rp-file">In alternativa, importa un file locale (.json)</label>'+
     '<input id="rp-file" type="file" accept=".json,application/json" aria-describedby="rp-file-hint"/>'+
-    '<p id="rp-file-hint" class="rp-muted">Il file resta nella memoria di questa scheda; nessuna chiave API viene salvata nella pagina o su GitHub. Puoi usare lo stesso file multi-mercato su qualunque pagina.</p></div>'+
+    '<p id="rp-file-hint" class="rp-muted">Usalo solo se vuoi confrontare uno storico offline. Il file resta nel browser e non viene caricato sul server.</p><button type="button" class="rp-return" id="rp-return">Riprendi aggiornamento automatico</button></div>'+
     '<div class="rp-inline"><span id="rp-provider">Fonte: N/D</span><span id="rp-last">Ultima candela: N/D</span></div>'+
     '<div class="rp-grid">'+
     '<div class="rp-box"><h4>H4 · Struttura</h4><strong id="rp-h4">N/D</strong><p id="rp-h4-extra">In attesa del feed.</p><small id="rp-h4-age"></small></div>'+
@@ -32,7 +32,7 @@
   const get = id => document.getElementById(id);
   const set=(id,v)=>{get(id).textContent=String(v)};
   const sideName=n=>n>0?"Rialzista":n<0?"Ribassista":"Neutrale";
-  let priceResult=null;
+  let priceResult=null, manualSelected=false, fetching=false;
   function combined(){
     const insights=window.REMURA_INSIGHTS;
     const cot=insights && typeof insights.getAnalysis==="function"?insights.getAnalysis():null;
@@ -65,6 +65,8 @@
     combined();
   }
   get("rp-file").addEventListener("change",async()=>{
+    manualSelected=true;
+    set("rp-auto","Modalità manuale: file locale selezionato, aggiornamenti automatici sospesi.");
     const file=get("rp-file").files?.[0];
     if(!file)return;
     try{
@@ -84,6 +86,46 @@
       combined();
     }
   });
+  async function autoRefresh(){
+    if(manualSelected||fetching||document.visibilityState==="hidden")return;
+    fetching=true;
+    try {
+      const controller=new AbortController();
+      const timeout=setTimeout(()=>controller.abort(),15000);
+      let response;
+      try {
+        response=await fetch("./private-api/prices/"+encodeURIComponent(symbol),
+          {cache:"no-store",headers:{"Accept":"application/json"},signal:controller.signal});
+      } finally {clearTimeout(timeout);}
+      if(manualSelected)return;
+      if(!response.ok){
+        if(!priceResult){
+          set("rp-auto",response.status===503?
+            "Collettore non ancora disponibile: in attesa della connessione cTrader.":
+            "Feed privato non disponibile su questo indirizzo: avvia REMURA sul server protetto.");
+        }
+        return;
+      }
+      const obj=await response.json();
+      if(manualSelected)return;
+      const market=core.load(obj,symbol);
+      const result=core.analyze(market);
+      render(result,market);
+      const d=new Date().toLocaleString("it-IT",{timeZone:"Europe/Rome",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+      set("rp-auto","Automatico · ultimo controllo "+d+" · aggiornamenti server previsti ogni 15 minuti.");
+    }catch(e){
+      if(!priceResult&&!manualSelected)set("rp-auto","Feed automatico in attesa. Nessuna candela simulata.");
+    }finally{fetching=false;}
+  }
+  get("rp-return").addEventListener("click",()=>{
+    manualSelected=false;
+    get("rp-file").value="";
+    set("rp-auto","Ricollegamento al feed privato…");
+    autoRefresh();
+  });
+  window.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")autoRefresh();});
+  window.setInterval(autoRefresh,5*60*1000);
+  autoRefresh();
   window.addEventListener("remura:cot",combined);
   window.addEventListener("remura:retail",combined);
 })();
