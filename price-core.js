@@ -36,7 +36,7 @@
       });
     }
     const provider=String(data.provider||"sconosciuto");
-    if(!["twelve","oanda","csv"].includes(provider))throw Error("Fonte dati non riconosciuta.");
+    if(!["twelve","oanda","mt5","csv"].includes(provider))throw Error("Fonte dati non riconosciuta.");
     return {symbol,provider,providerSymbol:String(data.providerSymbol||symbol),generatedAt:bundle.generatedAt,frames};
   }
   function ema(values,length){
