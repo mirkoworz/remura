@@ -11,8 +11,12 @@ on:
       - 'scripts/ctrader_feed.py'
       - 'scripts/price_store.py'
       - 'scripts/private_server.py'
+      - 'scripts/ctrader_tokens.py'
+      - 'tests/test_ctrader_tokens.py'
       - 'tests/test_private_server.py'
       - 'PRIVATE-AUTOMATION.md'
+      - 'retail.js'
+      - 'sw.js'
       - 'tests/price.test.js'
       - 'tests/test_price_feed.py'
       - 'tests/test_ctrader_feed.py'
@@ -35,11 +39,12 @@ jobs:
         with:
           python-version: '3.11'
       - run: node --check price-core.js && node --check price.js && node --check insights.js
-      - run: python -m py_compile scripts/price_feed.py scripts/ctrader_feed.py scripts/price_store.py scripts/private_server.py
+      - run: python -m py_compile scripts/price_feed.py scripts/ctrader_feed.py scripts/ctrader_tokens.py scripts/price_store.py scripts/private_server.py
       - run: node --test tests/price.test.js tests/insights.test.js
       - run: python -m unittest discover -s tests -p 'test_price_feed.py' -v
       - run: python -m unittest discover -s tests -p 'test_ctrader_feed.py' -v
       - run: python -m unittest discover -s tests -p 'test_private_server.py' -v
+      - run: python -m unittest discover -s tests -p 'test_ctrader_tokens.py' -v
       - name: Verify no personal feed or API token is publicly embedded
         run: |
           node - <<'NODE'
