@@ -9,6 +9,7 @@ self.addEventListener("activate",event=>event.waitUntil(
 ));
 self.addEventListener("fetch",event=>{
   const url=new URL(event.request.url);
+  if(url.pathname.includes("/private-api/"))return; // NEVER cache authenticated price/health responses.
   if(event.request.method!=="GET"||url.origin!==self.location.origin)return;
   event.respondWith(fetch(event.request).catch(async()=>await caches.match(event.request,{ignoreSearch:true})||Response.error()));
 });
