@@ -85,6 +85,38 @@ Accetta colonne \`datetime\` oppure \`date\` + \`time\` e \`open,high,low,close\
 - **US500, NAS100, US30, US2000, DXY:** ticker e accessibilità sono legati a provider/contratto (future, CFD, indice); **non viene sostituito un asset con un altro** per completare artificialmente la copertura. Aggiungere alias verificati o importare CSV.
 - Il report COT rimane quello di futures ufficiali (TFF o Disaggregated); un grafico spot/CFD NON contiene le stesse transazioni del future e gli orari H4 UTC potrebbero differire dal tuo broker.
 
+
+## Opzione 4 — MetaTrader 5 (senza MetaApi, lettura automatica da PC Windows)
+
+Se hai MT5 installato su Windows, questa è la via più rapida per testare i prezzi del tuo broker. **Non occorre condividere le credenziali REMURA con ChatGPT:** apri MT5, connettiti al tuo account, quindi installa il modulo Python ufficiale localmente.
+
+\`\`\`powershell
+py -m pip install MetaTrader5
+py scripts/price_feed.py --provider mt5 --symbols EURUSD GBPJPY XAUUSD XAGUSD --output local/price-snapshot.json
+\`\`\`
+
+Il modulo chiama soltanto \`mt5.initialize\`, \`mt5.symbol_info\`, \`mt5.symbol_select\`, \`mt5.copy_rates_from_pos\` e \`mt5.shutdown\` — **nessun ordine, trading automatico, password o storico di operazioni**. L'indice zero corrisponde alla candela potenzialmente non chiusa e le candele vengono filtrate usando l'orario UTC della chiusura.
+
+Le coppie sono cercate con il loro nome esatto (es. \`EURUSD\`). Se il tuo broker usa suffissi come \`EURUSD.r\`, devi mappare i simboli reali in \`private/symbols.json\`. Per gli indici è obbligatoria una corrispondenza esplicita verificata dal tuo broker: non sostituire US500 con DXY o un future non corrispondente.
+
+Per avviare la lettura ripetuta mentre **il computer Windows e il terminale MT5 sono operativi**, usa l'Utilità di pianificazione di Windows e configura ogni 15 minuti il comando \`py\` con questi argomenti:
+
+\`\`\`text
+scripts/price_feed.py --provider mt5 --symbols EURUSD GBPJPY XAUUSD XAGUSD --output local/price-snapshot.json
+\`\`\`
+
+Imposta **Avvia in** sulla cartella REMURA del tuo computer e limita l'attività a **una sola istanza contemporanea**. Al primo avvio esegui il comando manualmente e controlla i simboli effettivamente disponibili. Lo script non deve essere copiato su GitHub Actions: la piattaforma GitHub non dispone del tuo terminale MT5.
+
+Questa automazione crea soltanto il file **locale**, non lo trasferisce automaticamente su iPhone. Per la visualizzazione privata completamente automatica in remoto serve un backend autenticato; cTrader Open API è la candidata principale.
+
+## Opzione 5 — cTrader Open API (fonte primaria per il cloud)
+
+La Open API ufficiale di cTrader consente la lettura storica e in tempo reale dei trendbar e funziona indipendentemente dal terminale desktop. Richiede però la **registrazione di una tua applicazione**, approvazione Spotware, client ID e OAuth. La voce \`scope=accounts\` concede sola lettura, mentre \`scope=trading\` abilita gli ordini: **scegliere sempre accounts** per REMURA. È possibile accedere a demo e live; ambiente e broker vanno verificati.
+
+Per iniziare, consulta https://help.ctrader.com/open-api/api-application/ e accedi al portale https://openapi.ctrader.com/ . Non comunicare \`client_secret\`, refresh token o credenziali nella chat. I token vanno conservati come segreti di un backend privato.
+
+**Stato della connessione:** adapter cTrader remoto NON ancora autenticato né configurato; sarà completato dopo la registrazione dell'app e la scelta dell'hosting protetto. Non presentare questa guida come connessione cTrader già operativa. La versione attuale supporta in modo verificabile l'importazione di dati CSV, Twelve Data, OANDA e, quando disponibile il terminale Windows, MT5.
+
 ## Sicurezza operativa e sviluppi
 
 - Nessun backend pubblico, richiesta prezzi dal browser o caricamento automatico di token. Il file JSON è letto localmente in RAM dall'interfaccia.
