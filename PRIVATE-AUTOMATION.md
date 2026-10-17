@@ -4,14 +4,16 @@ Questa guida si riferisce al ramo `feature/private-price-engine-v10`, **non anco
 
 ## Cosa fa già il codice
 
-Il servizio `scripts/private_server.py` è un unico processo locale. Avvia un piccolo server HTTP **solo su 127.0.0.1:8765** e, se abilitati, due lavoratori automatici:
+Il servizio `scripts/private_server.py` è un unico processo locale. Avvia un piccolo server HTTP **solo su 127.0.0.1:8765** e, se abilitati, tre lavoratori automatici facoltativi:
 
 - **cTrader** ogni quarto d'ora UTC, 90 secondi dopo la chiusura della candela M15. Il processo figlio `scripts/ctrader_feed.py` richiede soltanto prezzi storici M15 tramite Open API ufficiale, poi memorizza le candele in SQLite `private/remura-prices.sqlite3`, ricostruendo H1 e H4 senza dati fittizi. Primo avvio: massimo 30 giorni di storico; successivamente 2 giorni per recuperare eventuali disconnessioni. Storico locale massimo 45 giorni.
 - **Myfxbook** ogni 20 minuti, riutilizzando `scripts/update_myfxbook.py` ma eseguendolo nella cartella privata `private/myfxbook/`. Salva l'archivio e le rilevazioni senza fare commit sul repository. Rispetta la stessa frequenza esistente: circa 72 richieste giornaliere (+ login/logout come previsto dall'API). Se il feed non è disponibile, non inventa rilevazioni.
 
+- **IG Client Sentiment (facoltativo):** una lettura ogni ora dal servizio REST ufficiale autenticato. I soli aggregati percentuali vengono salvati nel file privato `private/ig/latest.json`; nessun commit automatico, nessuna chiave nel JavaScript. Mercati privi di dati IG verificati restano N/D.
+
 Il COT CFTC continua a essere recuperato dalla fonte ufficiale all'apertura della scheda. La sua frequenza rimane settimanale, non M15.
 
-La dashboard legge tutto dalla **stessa origine privata**, tramite `/private-api/prices/EURUSD`, `/private-api/retail/latest.json` e `/private-api/retail/history/EURUSD.json`. Quando un dato non esiste, la pagina mostra N/D anziché inventarlo.
+La dashboard legge tutto dalla **stessa origine privata**, tramite `/private-api/prices/EURUSD`, `/private-api/retail/latest.json`, `/private-api/retail/history/EURUSD.json` e `/private-api/ig/latest.json`. Quando un dato non esiste, la pagina mostra N/D anziché inventarlo.
 
 Nessun comando apre o chiude posizioni. Il servizio non legge saldi né operazioni personali. Prezzi e storico privati restano fuori dal repository grazie a `.gitignore`.
 
@@ -71,6 +73,21 @@ Imposta sul computer/server, non su GitHub:
 Riavvia il server privato. Le rilevazioni rimangono nel percorso locale `private/myfxbook/` e non vengono salvate nella repository. Il raccoglitore prosegue circa ogni 20 minuti secondo disponibilità e rate limits del provider. Senza credenziali il pannello resta N/D.
 
 Quando la versione privata sarà quella che utilizzi, si potrà disattivare il precedente workflow GitHub Actions Myfxbook che scrive `data/myfxbook/` nel repository. **Non disabilitarlo adesso**: REMURA v0.9 pubblica ancora lo usa.
+
+## Attivare IG Client Sentiment privato (facoltativo)
+
+Per una seconda fonte numerica indipendente da Myfxbook, serve un account IG con accesso API abilitato, autorizzato secondo i termini del provider. Non serve inviare credenziali in chat o inserirle su GitHub. Imposta **solo nel file d'ambiente privato della macchina**:
+
+- `REMURA_IG_ENABLED=1` — avvia il lettore automatico orario;
+- `IG_API_KEY` — chiave generata nel tuo account IG;
+- `IG_IDENTIFIER` e `IG_PASSWORD` — login API personale;
+- `IG_ENV=demo` oppure `IG_ENV=live` — ambiente coerente con l'account.
+
+Il server effettua login verso la REST API, legge solo `/clientsentiment` e salva in privato percentuali long/short per i gruppi di mercato che IG restituisce effettivamente. **Non esegue ordini**. L'elenco di copertura reale dipende dal conto e dai permessi IG, non possiamo garantirlo per tutti i 35 strumenti prima della prova autentica. Il nome del marketId non è necessariamente quello del CFD e gli strumenti non trovati vengono esclusi.
+
+Usa `/private-api/ig/latest.json` per verificare che il server esponga i soli aggregati consentiti (mai chiavi, password o token). In `/private-api/health` sono disponibili `igStatus` e `igLastSuccess`. Gli aggiornamenti sono su base oraria, non M5. Se IG non è configurata o il feed non risponde, il pannello mostra N/D o l'ultima lettura marcata come datata. Nessuna media arbitraria fra quote di lotti Myfxbook e percentuali di posizioni IG.
+
+Per i test senza internet o credenziali: `python -m unittest discover -s tests -p 'test_ig_sentiment.py' -v` e `python -m unittest discover -s tests -p 'test_ig_private.py' -v`.
 
 ## Avvio automatico su server Linux (facoltativo)
 

@@ -14,6 +14,7 @@ from __future__ import annotations
 import datetime as dt
 import json
 import mimetypes
+import math
 import os
 from pathlib import Path
 import re
@@ -40,6 +41,7 @@ SAFE_ASSETS={
 }
 STATUS_PATH="/private-api/health"
 RETAIL_LATEST="/private-api/retail/latest.json"
+IG_LATEST="/private-api/ig/latest.json"
 RETAIL_HISTORY_RE=re.compile(r"^/private-api/retail/history/([A-Z0-9]{3,8})[.]json$")
 PRICE_RE=re.compile(r"^/private-api/prices/([A-Z0-9]{3,8})$")
 
@@ -97,6 +99,43 @@ def retail_document(db_path,path):
             "records":data["records"][-2250:]}
 
 
+def ig_document(db_path):
+    """Read a strictly filtered local snapshot, never expose private IG credentials."""
+    source=Path(db_path).resolve().parent/"ig"/"latest.json"
+    if not source.is_file() or source.stat().st_size>250_000:
+        return None
+    try:
+        data=json.loads(source.read_text("utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(data,dict) or data.get("status")!="ok":
+        return None
+    symbols=data.get("symbols")
+    if not isinstance(symbols,dict):
+        return None
+    checked={}
+    for symbol,item in symbols.items():
+        if symbol not in MARKETS or not isinstance(item,dict):
+            continue
+        try:
+            l=float(item.get("lPct"))
+            short=float(item.get("sPct"))
+        except (TypeError,ValueError):
+            continue
+        if not (math.isfinite(l) and math.isfinite(short) and
+                0<=l<=100 and 0<=short<=100 and abs(l+short-100)<=1):
+            continue
+        stamp=item.get("t")
+        if not isinstance(stamp,str) or len(stamp)>40:
+            continue
+        checked[symbol]={"t":stamp,"lPct":l,"sPct":short,"metric":"client_positions"}
+    if not checked:
+        return None
+    return {"status":"ok","source":"IG Client Sentiment",
+            "environment":data.get("environment") if data.get("environment") in ("demo","live") else "unknown",
+            "updatedAt":data.get("updatedAt"),"symbols":checked}
+
+
 def http_handler(db_path):
     class Handler(BaseHTTPRequestHandler):
         server_version="REMURA-Private/1.0"
@@ -133,6 +172,11 @@ def http_handler(db_path):
 
         def do_GET(self):
             path=urlsplit(self.path).path
+            if path==IG_LATEST:
+                data=ig_document(db_path)
+                if data is None:self.response(503,{"error":"ig_not_collected"})
+                else:self.response(200,data)
+                return
             if path==RETAIL_LATEST or RETAIL_HISTORY_RE.fullmatch(path):
                 data=retail_document(db_path,path)
                 if data is None:self.response(503,{"error":"retail_not_collected"})
@@ -151,6 +195,8 @@ def http_handler(db_path):
                             "lastError":status.get("last_error"),
                             "retailStatus":status.get("retail_status","disabled"),
                             "retailLastSuccess":status.get("retail_last_success"),
+                            "igStatus":status.get("ig_status","disabled"),
+                            "igLastSuccess":status.get("ig_last_success"),
                             "instruments":symbols_available(db),
                             "serverTime":utcnow().isoformat(),
                         })
@@ -294,6 +340,45 @@ def retail_once(db_path,runner=subprocess.run):
         return False
 
 
+def ig_once(db_path,runner=subprocess.run):
+    """Collect optional IG client sentiment locally; never commit or log secrets."""
+    credentials=("IG_API_KEY","IG_IDENTIFIER","IG_PASSWORD")
+    db=connect(db_path)
+    if not all(os.environ.get(name) for name in credentials):
+        try:set_status(db,ig_status="awaiting_credentials")
+        finally:db.close()
+        return False
+    try:set_status(db,ig_status="collecting")
+    finally:db.close()
+    output=Path(db_path).resolve().parent/"ig"/"latest.json"
+    env=dict(os.environ)
+    env["REMURA_IG_OUTPUT"]=str(output)
+    command=[sys.executable,str(ROOT/"scripts"/"update_ig.py")]
+    try:
+        run=runner(command,cwd=ROOT,env=env,stdin=subprocess.DEVNULL,
+                   stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
+                   timeout=120,check=False)
+        data=ig_document(db_path)
+        if run.returncode!=0 or data is None:
+            raise RuntimeError("IG unavailable.")
+        db=connect(db_path)
+        try:set_status(db,ig_status="running",ig_last_success=utcnow().isoformat(),
+                       ig_last_error="")
+        finally:db.close()
+        return True
+    except (OSError,ValueError,RuntimeError,subprocess.SubprocessError):
+        db=connect(db_path)
+        try:set_status(db,ig_status="failed",ig_last_error="IG non aggiornato.")
+        finally:db.close()
+        return False
+
+
+def ig_loop(db_path,stop):
+    while not stop.is_set():
+        ig_once(db_path)
+        stop.wait(next_cycle(60*60,150))
+
+
 def next_cycle(interval_sec,grace_sec,now=None):
     timestamp=(now or utcnow()).timestamp()
     return max(2.0,((int(timestamp)//interval_sec)+1)*interval_sec+grace_sec-timestamp)
@@ -361,6 +446,9 @@ def main():
     if os.environ.get("REMURA_RETAIL_ENABLED","0")=="1":
         thread_retail=threading.Thread(target=retail_loop,args=(db_path,stop),daemon=True)
         thread_retail.start()
+    if os.environ.get("REMURA_IG_ENABLED","0")=="1":
+        thread_ig=threading.Thread(target=ig_loop,args=(db_path,stop),daemon=True)
+        thread_ig.start()
     server=ThreadingHTTPServer((SERVER_HOST,args.port),http_handler(db_path))
     print("REMURA Private listening ONLY on http://127.0.0.1:"+str(args.port))
     print("Do NOT expose without authentication. Use Cloudflare Tunnel with a validated Access policy for the iPhone.")

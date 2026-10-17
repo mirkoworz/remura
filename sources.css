@@ -29,3 +29,8 @@
 .rem-sources .ms-legend{margin-top:16px;border-top:1px solid #2f5159;padding-top:14px;font-size:11px;line-height:1.8;color:#aac7c8}
 .rem-sources .ms-legend strong{color:#85edd1}
 @media(max-width:760px){.rem-sources .ms-list{grid-template-columns:1fr}.rem-sources .ms-card{padding:15px}}
+
+/* Numeri di provider indipendenti: niente consenso inventato. */
+.rem-sources .ms-comparison{font-size:12px;line-height:1.7;padding:12px 14px;margin:0 0 14px;border:1px solid #55747c;border-radius:11px;background:#17323d;color:#cce9eb}
+.rem-sources .ms-comparison[hidden]{display:none}
+.rem-sources .ms-widget iframe{max-width:100%}
