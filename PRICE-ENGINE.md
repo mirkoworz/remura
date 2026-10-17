@@ -117,6 +117,41 @@ Per iniziare, consulta https://help.ctrader.com/open-api/api-application/ e acce
 
 **Stato della connessione:** adapter cTrader remoto NON ancora autenticato né configurato; sarà completato dopo la registrazione dell'app e la scelta dell'hosting protetto. Non presentare questa guida come connessione cTrader già operativa. La versione attuale supporta in modo verificabile l'importazione di dati CSV, Twelve Data, OANDA e, quando disponibile il terminale Windows, MT5.
 
+## Opzione 6 — cTrader Open API ufficiale, adapter pronto in attesa dell'approvazione
+
+Il file `scripts/ctrader_feed.py` ora esiste nel ramo di sviluppo. Si appoggia all'SDK ufficiale Spotware `ctrader-open-api` e legge esclusivamente:
+
+- autenticazione applicazione e **soltanto il conto esplicitamente autorizzato** dal token OAuth;
+- elenco simboli abilitati del broker, `symbolId` e `digits` del loro server;
+- `ProtoOAGetTrendbarsReq` per candele M15 storiche, tramite finestre UTC di 24 ore e richieste seriali (circa 3/secondo);
+- decodifica dei prezzi relativi `low + deltaOpen/High/Close`, convertiti da unità /100000 e arrotondati alla precisione ufficiale del simbolo;
+- esclusione automatica delle candele ancora in formazione tramite `price_feed.market_document`.
+
+Non sono presenti messaggi di apertura/chiusura ordini e non vengono richiesti saldo, posizioni aperte o informazioni della prop firm non necessarie all'analisi.
+
+**STATO: soltanto codice preparato e testato con simulazioni.** Fino a quando Spotware non approva l'app, non si può effettuare l'autorizzazione reale del conto né verificare i ticker del broker. Nessun token API è presente nel repository.
+
+Documentazione ufficiale: https://help.ctrader.com/open-api/api-application/ e https://help.ctrader.com/open-api/account-authentication/.
+
+### Dopo l'approvazione: autorizzazione locale, senza trasmettere segreti a ChatGPT
+
+1. Imposta sul portale la Redirect URI reale della futura applicazione protetta (non GitHub Pages pubblico).
+2. Apri tu il flusso OAuth ufficiale cTrader con `scope=accounts`, non `scope=trading`.
+3. Recupera i token e il tuo account ID **esclusivamente nel tuo ambiente protetto**; non pubblicarli in screenshot, messaggi, GitHub né JavaScript.
+4. Su computer con Python 3.11+ e connessione Internet installa l'SDK `pip install ctrader-open-api`.
+5. Imposta sul computer/server privato le variabili d'ambiente `CTRADER_CLIENT_ID`, `CTRADER_CLIENT_SECRET`, `CTRADER_ACCESS_TOKEN`, `CTRADER_ACCOUNT_ID`, `CTRADER_ENV` (`demo` o `live`).
+6. Avvia:
+
+```bash
+python scripts/ctrader_feed.py --days 14 --symbols EURUSD GBPJPY XAUUSD US500 --output local/price-snapshot.json
+```
+
+Se un indice ha un ticker diverso dal simbolo REMURA, usa `--symbol-map private/symbols.json` con il **nome esatto e verificato del broker**. Lo script rifiuta corrispondenze mancanti o ambigue e scrive `N/D` al posto di prezzi fittizi. Il file locale rimane ignorato da Git.
+
+### Automatizzazione cloud futura
+
+L'adapter è stato progettato per poter essere eseguito periodicamente da un **processo Python privato** senza terminale cTrader aperto. Serve un servizio con connessione TCP in uscita, archivio persistente, gestione sicura del rinnovo OAuth e accesso all'app protetto; GitHub Pages statico non basta. Al momento non sono ancora implementati la rotazione automatica dei token, la persistenza del feed cloud o l'aggiornamento senza importazione sul telefono. Saranno realizzati dopo aver deciso l'ambiente di hosting e autorizzato un conto demo o idoneo.
+
 ## Sicurezza operativa e sviluppi
 
 - Nessun backend pubblico, richiesta prezzi dal browser o caricamento automatico di token. Il file JSON è letto localmente in RAM dall'interfaccia.
