@@ -90,6 +90,8 @@ def default_ticker(provider: str, symbol: str, aliases: dict) -> str:
     # FX/spot metals only. Index/CFD symbols must be confirmed with the actual provider/account.
     if symbol in MARKETS_OTHER and symbol not in ("XAUUSD", "XAGUSD"):
         raise ValueError(f"{symbol}: no verified {provider} ticker. Add a symbol override in your PRIVATE mapping file.")
+    if provider == "mt5":
+        return symbol  # Broker-specific symbols require an explicit private alias.
     if provider == "oanda":
         return f"{symbol[:3]}_{symbol[3:]}"
     return f"{symbol[:3]}/{symbol[3:]}"
@@ -135,6 +137,43 @@ def oanda(symbol: str, mapped: str, count: int, environment: str) -> list[dict]:
         except (KeyError, TypeError, ValueError):
             continue
     return bars
+
+
+
+def mt5_prices(symbol: str, mapped: str, count: int, terminal: str | None = None) -> list[dict]:
+    """Read-only OHLC from an already connected local MetaTrader 5 terminal.
+
+    No password, login, balances, orders, or trade permissions are used.
+    """
+    try:
+        import MetaTrader5 as mt5
+    except ImportError:
+        raise RuntimeError("MetaTrader5 is not installed; on Windows run: py -m pip install MetaTrader5") from None
+    path = terminal or os.environ.get("REMURA_MT5_TERMINAL")
+    try:
+        ready = mt5.initialize(path, timeout=15000) if path else mt5.initialize(timeout=15000)
+    except Exception:
+        raise RuntimeError("MT5 terminal initialization failed.") from None
+    if not ready:
+        raise RuntimeError("MT5 terminal unavailable. Run MT5 on Windows with an active logged-in broker session.")
+    try:
+        if mt5.symbol_info(mapped) is None or not mt5.symbol_select(mapped, True):
+            raise RuntimeError(f"{symbol}: ticker '{mapped}' not provided by MT5 broker; add private --symbol-map.")
+        # Zero is the potentially incomplete current candle. Fetch and exclude by UTC close time.
+        rates = mt5.copy_rates_from_pos(mapped, mt5.TIMEFRAME_M15, 0, count + 1)
+        if rates is None or len(rates) == 0:
+            raise RuntimeError(f"{symbol}: no M15 history in MT5; inspect the terminal's Max. bars in chart.")
+        bars = []
+        for row in rates:
+            try:
+                timestamp = iso(dt.datetime.fromtimestamp(int(row["time"]), UTC))
+                bars.append(candle(timestamp, float(row["open"]), float(row["high"]),
+                                   float(row["low"]), float(row["close"])))
+            except (KeyError, TypeError, ValueError, OverflowError):
+                continue
+        return bars
+    finally:
+        mt5.shutdown()
 
 
 def csv_input(path: Path) -> list[dict]:
@@ -221,6 +260,8 @@ def make_bundle(args, symbols: list[str], aliases: dict, now: dt.datetime | None
                 bars = twelve_data(symbol, mapped, args.count)
             elif args.provider == "oanda":
                 bars = oanda(symbol, mapped, args.count, args.oanda_environment)
+            elif args.provider == "mt5":
+                bars = mt5_prices(symbol, mapped, args.count, args.mt5_terminal)
             elif args.provider == "csv":
                 if not args.csv:
                     raise ValueError("CSV mode requires --csv path.")
@@ -239,13 +280,14 @@ def make_bundle(args, symbols: list[str], aliases: dict, now: dt.datetime | None
 
 def main() -> int:
     p = argparse.ArgumentParser(description="Private OHLC export for REMURA; NEVER commit generated JSON.")
-    p.add_argument("--provider", choices=["twelve", "oanda", "csv"], required=True)
+    p.add_argument("--provider", choices=["twelve", "oanda", "mt5", "csv"], required=True)
     p.add_argument("--symbols", nargs="+", default=["EURUSD", "XAUUSD", "US500"], help="Any subset of the 35 REMURA symbols")
     p.add_argument("--count", type=int, default=2400, help="Number of M15 bars: 100..5000")
     p.add_argument("--delay", type=float, default=9.0, help="Seconds between Twelve Data calls (default 9s to respect Basic 8 credits/min)")
     p.add_argument("--oanda-environment", choices=["practice", "live"], default="practice")
     p.add_argument("--symbol-map", help="Private JSON mapping of REMURA symbols to broker/provider tickers")
     p.add_argument("--csv", help="Private CSV with UTC OHLC M15 bars")
+    p.add_argument("--mt5-terminal", help="Optional Windows path to terminal64.exe. Defaults to installed terminal autodetection.")
     p.add_argument("--output", default="local/price-snapshot.json", help="Local file for Safari import, never committed")
     args = p.parse_args()
     if not 100 <= args.count <= 5000:
