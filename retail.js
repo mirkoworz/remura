@@ -164,7 +164,7 @@ async function retail(){
  }
  draw();
  const p=latest.symbols?.[sym];
- if(!p){$("r-status").textContent=latest.status==="not_configured"?"Myfxbook da attivare":"Sentiment N/D";$("r-date").textContent="Nessun dato Myfxbook verificato per "+sym+". Nessun numero simulato.";return;}
+ if(!p){window.dispatchEvent(new CustomEvent("remura:retail",{detail:{symbol:sym,current:null,history,status:latest.status||"missing"}}));$("r-status").textContent=latest.status==="not_configured"?"Myfxbook da attivare":"Sentiment N/D";$("r-date").textContent="Nessun dato Myfxbook verificato per "+sym+". Nessun numero simulato.";return;}
  const at=p.t||latest.updatedAt,age=Date.now()-Date.parse(at),fresh=Number.isFinite(age)&&age>=0&&age<3*3600000;
  $("r-status").textContent=fresh?"Myfxbook · rilevato":"Myfxbook · datato";$("r-status").className="rt-tag"+(fresh?"":" warn");
  const values=[["r-lp",fmt(p.lPct)+"%"],["r-sp",fmt(p.sPct)+"%"],["r-ll",fmt(p.lLots)+" lotti"],["r-sl",fmt(p.sLots)+" lotti"],["r-nl",fmt(p.lPos)],["r-ns",fmt(p.sPos)],["r-al","Prezzo medio "+fmt(p.avgL)],["r-as","Prezzo medio "+fmt(p.avgS)]];
@@ -177,7 +177,8 @@ async function retail(){
  $("r-date").textContent="Myfxbook · "+text+" (ora italiana). "+(fresh?"Rilevazione recente.":"ATTENZIONE: rilevazione vecchia.");
  const sampleCount=Number(p.lPos)+Number(p.sPos);
  if(Number.isFinite(sampleCount)&&sampleCount>=0&&sampleCount<30){$("r-date").textContent+=" ATTENZIONE: solo "+sampleCount+" posizioni censite per questo simbolo. Il sentiment è poco rappresentativo.";}
- }catch(e){$("r-status").textContent="Myfxbook non collegato";$("r-date").textContent="Feed retail mancante o non ancora configurato. Nessuna percentuale inventata.";draw();}
+ window.dispatchEvent(new CustomEvent("remura:retail",{detail:{symbol:sym,current:p,history,status:latest.status||"ok"}}));
+ }catch(e){window.dispatchEvent(new CustomEvent("remura:retail",{detail:{symbol:sym,current:null,history:[],status:"error"}}));$("r-status").textContent="Myfxbook non collegato";$("r-date").textContent="Feed retail mancante o non ancora configurato. Nessuna percentuale inventata.";draw();}
 }
 price();draw();retail();
 })();
