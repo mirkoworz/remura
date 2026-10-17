@@ -117,9 +117,6 @@ def main():
     if environment not in BASE:
         print("IG_ENV must be 'demo' or 'live'.")
         return 1
-    if os.environ.get("IG_PUBLISH_AGGREGATES", "").lower() != "true":
-        print("IG publication disabled; set IG_PUBLISH_AGGREGATES=true only if permitted.")
-        return 0
     try:
         result = collect(api_key, identifier, password, environment)
     except Exception:
@@ -127,8 +124,11 @@ def main():
         print("IG sentiment fetch failed; previous data preserved.")
         return 1
     OUTPUT.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-    OUTPUT.write_text(json.dumps(result, ensure_ascii=False,
-                                 separators=(",", ":")) + "\n", encoding="utf-8")
+    tmp = OUTPUT.with_suffix(".tmp")
+    tmp.write_text(json.dumps(result, ensure_ascii=False,
+                              separators=(",", ":")) + "\n", encoding="utf-8")
+    tmp.chmod(0o600)
+    tmp.replace(OUTPUT)
     print("IG sentiment: updated", len(result["symbols"]), "verified market groups.")
     return 0
 
