@@ -147,7 +147,7 @@ function draw(){
 }
 async function retail(){
  try{
- const base="https://raw.githubusercontent.com/mirkoworz/remura/main/data/myfxbook/",v=Date.now();
+ const base="./private-api/retail/",v=Date.now(); // Same-origin private collector; works when repo is private.
  const current=await fetch(base+"latest.json?ts="+v,{cache:"no-store"});
  if(!current.ok)throw Error("Feed non disponibile");
  const latest=await current.json();
