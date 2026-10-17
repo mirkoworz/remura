@@ -27,6 +27,7 @@ from urllib.parse import urlsplit
 
 from price_feed import MARKETS, UTC, utcnow
 from price_store import connect, get_status, set_status, latest, ingest, api_document, symbols_available
+from ctrader_tokens import access_token, path_for, read_file
 
 ROOT=Path(__file__).resolve().parents[1]
 STORE=ROOT/"private"/"remura-prices.sqlite3"
@@ -43,9 +44,13 @@ RETAIL_HISTORY_RE=re.compile(r"^/private-api/retail/history/([A-Z0-9]{3,8})[.]js
 PRICE_RE=re.compile(r"^/private-api/prices/([A-Z0-9]{3,8})$")
 
 
-def source_configured(env=None):
-    env=env or os.environ
-    return all(env.get(name) for name in ("CTRADER_CLIENT_ID","CTRADER_CLIENT_SECRET","CTRADER_ACCESS_TOKEN","CTRADER_ACCOUNT_ID"))
+def source_configured(env=None,db_path=None):
+    env=os.environ if env is None else env
+    basic=all(env.get(name) for name in ("CTRADER_CLIENT_ID","CTRADER_CLIENT_SECRET","CTRADER_ACCOUNT_ID"))
+    authorised=bool(env.get("CTRADER_REFRESH_TOKEN") or env.get("CTRADER_ACCESS_TOKEN"))
+    if db_path is not None and read_file(path_for(db_path)):
+        authorised=True
+    return basic and authorised
 
 
 def resolve_asset(url_path):
@@ -194,7 +199,7 @@ def collect_once(db_path, symbols, days=2, runner=subprocess.run, now=None):
     No file is written under the public asset allowlist.
     """
     now=now or utcnow()
-    if not source_configured():
+    if not source_configured(db_path=db_path):
         db=connect(db_path)
         try:
             set_status(db,collector="awaiting_approval",last_error="App cTrader/token non configurati")
@@ -214,8 +219,14 @@ def collect_once(db_path, symbols, days=2, runner=subprocess.run, now=None):
                                          dir=private_dir,delete=False) as temp:
             temp_path=Path(temp.name)
         temp_path.chmod(0o600)
+        # Access token is passed to the child through private environment only.
+        # Refresh token is rotated on disk automatically when near expiry.
+        token=access_token(db_path)
+        env=dict(os.environ)
+        env["CTRADER_ACCESS_TOKEN"]=token
+        env.pop("CTRADER_REFRESH_TOKEN",None)
         command=collector_command(symbols,days,temp_path)
-        process=runner(command,stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,
+        process=runner(command,env=env,stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,
                        stderr=subprocess.DEVNULL,timeout=12*60,check=False)
         if not temp_path.is_file() or temp_path.stat().st_size<50:
             raise RuntimeError("Collettore senza risposta valida da cTrader.")
