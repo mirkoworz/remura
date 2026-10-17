@@ -15,6 +15,9 @@ on:
       - 'tests/test_ctrader_tokens.py'
       - 'tests/test_private_server.py'
       - 'PRIVATE-AUTOMATION.md'
+      - 'VPS-SETUP.md'
+      - 'deploy/**'
+      - 'tests/test_vps_deployment.py'
       - 'retail.js'
       - 'sw.js'
       - 'tests/price.test.js'
@@ -45,6 +48,8 @@ jobs:
       - run: python -m unittest discover -s tests -p 'test_ctrader_feed.py' -v
       - run: python -m unittest discover -s tests -p 'test_private_server.py' -v
       - run: python -m unittest discover -s tests -p 'test_ctrader_tokens.py' -v
+      - run: python -m unittest discover -s tests -p 'test_vps_deployment.py' -v
+      - run: bash -n deploy/bootstrap-ubuntu.sh deploy/update-ubuntu.sh
       - name: Verify no personal feed or API token is publicly embedded
         run: |
           node - <<'NODE'
