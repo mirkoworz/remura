@@ -56,6 +56,32 @@ class PriceFeedTests(unittest.TestCase):
             self.assertEqual(len(rows),1)
             self.assertEqual(rows[0]["o"],1.1)
 
+    def test_mt5_read_only_adapter_with_mocked_terminal(self):
+        """CI cannot launch a broker terminal. Mock documented read-only methods."""
+        import sys
+        import types
+        from unittest.mock import patch
+        calls = []
+        first = int(dt.datetime(2026, 10, 16, 0, 0, tzinfo=UTC).timestamp())
+        mocked = types.SimpleNamespace(
+            TIMEFRAME_M15=15,
+            initialize=lambda **kwargs: calls.append(("initialize", kwargs)) or True,
+            symbol_info=lambda symbol: types.SimpleNamespace(name=symbol),
+            symbol_select=lambda symbol, select: calls.append(("symbol_select", symbol)) or True,
+            copy_rates_from_pos=lambda symbol, tf, start, count: [
+                {"time": first + 900*i, "open": 1.101, "high": 1.105,
+                 "low": 1.100, "close": 1.103} for i in range(3)
+            ],
+            shutdown=lambda: calls.append(("shutdown",)) or None
+        )
+        with patch.dict(sys.modules, {"MetaTrader5": mocked}):
+            values=feed.mt5_prices("EURUSD", "EURUSD.r", 120)
+        self.assertEqual(len(values), 3)
+        self.assertEqual(values[0]["t"], "2026-10-16T00:00:00Z")
+        self.assertTrue(any(x[0]=="shutdown" for x in calls))
+        self.assertTrue(any(x[0]=="symbol_select" for x in calls))
+        self.assertEqual(feed.default_ticker("mt5", "EURUSD", {}), "EURUSD")
+
     def test_bundle_is_explicit_and_contains_no_api_tokens(self):
         data=feed.market_document("EURUSD","csv","my csv",self.make(),dt.datetime(2026,10,16,1,0,tzinfo=UTC))
         self.assertEqual(len(data["timeframes"]["M15"]),4)
