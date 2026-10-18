@@ -1,213 +1,192 @@
-/* REMURA multi-fonte: only independently collected numbers are counted. */
+/* REMURA v1.3: Myfxbook dedicated above; Capital.com DEMO below.
+   Only same-origin PRIVATE numeric endpoints. No calls to Capital API in browser.
+   No other providers/widgets; never publish private Capital observations.
+*/
 (()=>{
 "use strict";
-const symbol=(new URLSearchParams(location.search).get("symbol")||"XAUUSD").toUpperCase();
+const core=window.REMURA_SENTIMENT_CORE;
 const cfg=window.REMURA_MARKETS;
+const symbol=(new URLSearchParams(location.search).get("symbol")||"XAUUSD").toUpperCase();
 const holder=document.getElementById("retail-module");
-if(!cfg||!cfg.symbols.includes(symbol)||!holder)return;
-const group=cfg.other[symbol]?.group||(symbol.length===6?"forex":"other");
-const isFX=group==="forex",isMetal=group==="metals",isIndex=group==="indices";
-const sourceDefs=[
- {id:"myfxbook",name:"Myfxbook",measure:"Lotti e numero di posizioni della community",
-   status:"automatic",coverage:"Strumenti disponibili nell'API Community Outlook",
-   url:()=> "https://www.myfxbook.com/community/outlook/"+encodeURIComponent(symbol),
-   note:"Il volume in lotti non è il numero di trader. Le percentuali Myfxbook sono quote del volume.",ok:true},
- {id:"ig",name:"IG Client Sentiment",measure:"Percentuale delle posizioni long e short dei clienti IG",
-   status:"automatic",coverage:"Gruppi di mercato restituiti dall'API IG autenticata",
-   url:()=> "https://www.ig.com/it/dati-di-mercato",
-   note:"Fonte indipendente, attivabile con credenziali API lato GitHub Actions. Non usa gli stessi lotti o lo stesso campione di Myfxbook.",ok:true},
- {id:"capital",name:"Capital.com Demo",measure:"Percentuale delle posizioni long e short dei clienti Capital.com",
-   status:"automatic",coverage:"Mercati confermati dall'API DEMO, inizialmente argento",
-   url:()=> "https://capital.com/it",
-   note:"Raccolta demo autonoma con storico numerico privato. Non usa MetaApi e non rappresenta direttamente gli istituzionali.",ok:true},
- {id:"dukascopy",name:"Dukascopy SWFX",measure:"Indice del sentiment di liquidity consumers e providers",
-   status:"widget",coverage:"Coppie Forex selezionate",
-   url:()=> "https://www.dukascopy.com/trading-tools/widget/historical_sentiment_index",
-   note:"Widget del provider aggiornato di norma ogni 30 minuti. Il dato rimane nel widget e non è importato nella nostra API.",ok:isFX},
- {id:"fxblue",name:"FX Blue",measure:"Percentuali di conti reali net long e net short",
-   status:"external",coverage:"Coppie Forex disponibili sul sito",
-   url:()=> "https://www.fxblue.com/market-data/tools/sentiment",
-   note:"Conta conti reali, non lotti o singole operazioni. Consultazione esterna.",ok:isFX},
- {id:"oanda",name:"OANDA Position Book",measure:"Distribuzione delle posizioni per livelli di prezzo",
-   status:"external",coverage:"Forex e alcuni metalli, quando supportati",
-   url:()=> "https://www.oanda.com/bvi-en/cfds/tools/orderbook/",
-   note:"Un position book non equivale a una percentuale complessiva long/short.",ok:isFX||isMetal},
- {id:"forexfactory",name:"Forex Factory",measure:"Trader e lotti della community collegata",
-   status:"external",coverage:"Forex e Gold",
-   url:()=> "https://www.forexfactory.com/trades",
-   note:"Nessun feed automatico autorizzato in Remura.",ok:isFX||symbol==="XAUUSD"},
- {id:"fxcm",name:"FXCM SSI Pro",measure:"Rapporto fra posizioni speculative dei clienti FXCM",
-   status:"commercial",coverage:"Forex, metalli, alcuni indici",
-   url:()=> "https://www.fxcm.com/pro/market-data/sentiment/",
-   note:"Accesso commerciale richiesto; nessun numero acquisito.",ok:isFX||isMetal||isIndex}
-];
-function elem(tag,cls,txt){
+if(!core||!cfg?.symbols?.includes(symbol)||!holder)return;
+const el=(tag,cls,txt)=>{
  const n=document.createElement(tag);
  if(cls)n.className=cls;
  if(txt!==undefined)n.textContent=txt;
  return n;
+};
+const fmt=new Intl.NumberFormat("it-IT",{maximumFractionDigits:2});
+const percent=n=>fmt.format(n)+"%";
+const dateLabel=t=>{
+ const d=new Date(t);
+ return Number.isFinite(+d)?new Intl.DateTimeFormat("it-IT",{
+  day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",timeZone:"Europe/Rome"
+ }).format(d):"N/D";
+};
+const section=el("section","panel overview rem-sources");
+section.id="remura-capital";
+holder.insertAdjacentElement("afterend",section);
+const top=el("div","ms-intro");
+top.append(
+ el("div","eyebrow","SENTIMENT RETAIL · SECONDA FONTE"),
+ el("h2","","Capital.com"),
+ el("p","","Posizioni dei clienti Capital.com DEMO: un campione diverso dai lotti Myfxbook. Entrambi sono dati retail, non ordini istituzionali.")
+);
+section.append(top);
+const status=el("span","ms-status ms-stale","Archivio privato non collegato");
+top.append(status);
+const main=el("div","ms-main");
+section.append(main);
+const readings=el("div","ms-readings");
+const longBox=el("div","ms-reading"),shortBox=el("div","ms-reading");
+const longValue=el("strong","","—"),shortValue=el("strong","","—");
+longBox.append(el("small","","Posizioni LONG Capital"),longValue);
+shortBox.append(el("small","","Posizioni SHORT Capital"),shortValue);
+readings.append(longBox,shortBox);
+main.append(readings);
+const split=el("div","ms-split");
+split.setAttribute("aria-label","Distribuzione long short Capital.com");
+const green=el("i","ms-long"),red=el("i","ms-short");
+split.append(green,red);main.append(split);
+const observed=el("p","ms-data-time","In attesa della prima rilevazione disponibile per questo strumento.");
+main.append(observed);
+const chartWrap=el("div","ms-chart");
+const chartHeader=el("div","ms-chart-header");
+chartHeader.append(el("h3","","Storico posizioni Capital.com"),
+ el("p","","Bande da rilevazioni numeriche reali: non corrispondono ai timeframe del prezzo."));
+const periods=el("div","ms-periods");periods.setAttribute("role","group");
+periods.setAttribute("aria-label","Periodo dello storico Capital.com");
+const windows={"6h":6*3600000,"24h":86400000,"7g":7*86400000,"30g":30*86400000,"Tutto":Infinity};
+let selected="7g",allHistory=[],retail=null,capital=null;
+for(const name of Object.keys(windows)){
+ const button=el("button","",name);button.type="button";
+ button.setAttribute("aria-pressed",String(name===selected));
+ button.addEventListener("click",()=>{
+  selected=name;
+  for(const item of periods.querySelectorAll("button"))
+   item.setAttribute("aria-pressed",String(item===button));
+  drawHistory();
+ });
+ periods.append(button);
 }
-function dateLabel(value){
- const d=new Date(value);
- return Number.isFinite(+d)?new Intl.DateTimeFormat("it-IT",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",timeZone:"Europe/Rome"}).format(d):"sconosciuta";
+const graph=el("div","ms-history-panel","Lo storico apparirà dopo due osservazioni valide.");
+const graphInfo=el("p","ms-data-time","");
+chartWrap.append(chartHeader,periods,graph,graphInfo);
+main.append(chartWrap);
+const compare=el("div","ms-comparison");
+compare.append(el("h3","","Confronto Myfxbook ↔ Capital.com"));
+const comparisonText=el("p","","Attendo entrambi i feed.");
+compare.append(comparisonText);
+section.append(compare);
+const foot=el("p","ms-legend",
+ "Myfxbook misura la quota del volume in lotti; Capital.com misura la quota di posizioni dei suoi clienti. Non sono la stessa popolazione né la stessa metrica: niente media artificiale. Un segnale contrarian va verificato sul prezzo e sul COT.");
+const link=el("a","ms-link","Capital.com · sito ufficiale ↗");
+link.href="https://capital.com/it";link.target="_blank";link.rel="noopener noreferrer";
+section.append(foot,link);
+function state(label,ok=false){
+ status.className="ms-status "+(ok?"ms-live":"ms-stale");
+ status.textContent=label;
 }
-const section=elem("section","panel overview rem-sources");
-section.id="remura-multisource";holder.insertAdjacentElement("afterend",section);
-const intro=elem("div","ms-intro");
-intro.append(elem("div","eyebrow","REMURA · FONTI INDIPENDENTI"),elem("h2","","Confronto sentiment multi-fonte"),
- elem("p","","Solo valori realmente acquisiti dalle API entrano nel confronto. Widget e siti esterni restano strumenti di verifica separati."));
-section.append(intro);
-const summary=elem("div","ms-summary","Controllo dei feed in corso…");section.append(summary);
-const compare=elem("div","ms-comparison");compare.hidden=true;section.append(compare);
-const host=elem("div","ms-list");section.append(host);
-const legend=elem("div","ms-legend");
-legend.textContent="Myfxbook misura il peso dei lotti e il numero di posizioni; IG e Capital.com misurano la quota delle posizioni dei rispettivi clienti. Dukascopy osserva un diverso pool di operatori. I campioni non sono rappresentativi dell'intero mercato: nessuna media e nessuna identificazione automatica delle controparti istituzionali. Il COT resta settimanale.";
-section.append(legend);
-const providers=sourceDefs.filter(s=>s.ok);
-const cards=new Map();
-for(const p of providers){
- const card=elem("article","ms-card");card.id="ms-"+p.id;
- const header=elem("div","ms-card-top"),status=elem("span","ms-status",
-   p.status==="automatic"?"Controllo feed…":p.status==="widget"?"Widget esterno":p.status==="commercial"?"Commerciale":"Sito esterno");
- header.append(elem("h3","",p.name),status);
- card.append(header,elem("p","ms-measure",p.measure),elem("p","ms-note",p.note),
-   elem("p","ms-coverage","Copertura: "+p.coverage));
- const bottom=elem("div","ms-actions");
- const link=elem("a","ms-link","Apri fonte originale ↗");
- link.href=p.url();link.target="_blank";link.rel="noopener noreferrer";
- if(p.status==="widget"){
-  const button=elem("button","ms-widget-button","Mostra Dukascopy");
-  button.type="button";button.setAttribute("aria-expanded","false");
-  button.addEventListener("click",()=>showWidget(card,button));
-  bottom.append(button);
- }
- bottom.append(link);card.append(bottom);host.append(card);
- cards.set(p.id,{card,status});
+function updateComparison(){
+ const result=core.compare(retail,capital);
+ comparisonText.textContent=result.text;
+ compare.dataset.state=result.status;
 }
-function showWidget(card,button){
- let panel=card.querySelector(".ms-widget");
- if(panel){
-  panel.hidden=!panel.hidden;
-  button.textContent=panel.hidden?"Mostra Dukascopy":"Nascondi Dukascopy";
-  button.setAttribute("aria-expanded",String(!panel.hidden));
+function drawHistory(){
+ const records=core.points(allHistory,windows[selected]);
+ graph.replaceChildren();
+ graphInfo.textContent=records.length+" rilevazioni reali negli ultimi "+selected+".";
+ if(records.length<2){
+  graph.append(el("div","ms-no-chart",records.length===1?
+   "Un punto disponibile ("+dateLabel(records[0].t)+"). Serve almeno un'altra rilevazione per tracciare le bande.":
+   "Nessun andamento storico per questo periodo. Le rilevazioni mancanti non vengono ricostruite."));
   return;
  }
- panel=elem("div","ms-widget");
- panel.append(elem("div","ms-widget-info","Widget ufficiale: i numeri provengono da Dukascopy e non vengono copiati nelle statistiche Remura. Se Safari lo blocca, apri la fonte originale."));
- const frame=document.createElement("iframe");
- frame.title="Dukascopy Historical Sentiment - "+symbol;
- frame.loading="lazy";frame.setAttribute("sandbox","allow-scripts allow-popups");
- frame.setAttribute("referrerpolicy","no-referrer");frame.style.cssText="width:100%;height:310px;border:0;display:block;";
- const config={type:"historical_sentiment_index",params:{
-   showHeader:false,tableBorderColor:"#30565f",liquidity:"consumers",
-   availableInstruments:[symbol.slice(0,3)+"/"+symbol.slice(3),"EUR/USD","GBP/USD","USD/JPY"],
-   availableCurrencies:["AUD","CAD","CHF","GBP","JPY","NZD","USD","EUR"],
-   last:true,sixhours:true,oneday:true,fivedays:true,width:"100%",height:"280",adv:"popup"}};
- frame.srcdoc='<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0"><script>window.DukascopyApplet='+JSON.stringify(config)+';<\/script><script src="https://freeserv-static.dukascopy.com/2.0/core.js"><\/script></body></html>';
- panel.append(frame);card.append(panel);
- button.textContent="Nascondi Dukascopy";button.setAttribute("aria-expanded","true");
-}
-const reading={myfxbook:null,ig:null,capital:null};
-const fmt=new Intl.NumberFormat("it-IT",{maximumFractionDigits:1});
-function percent(n){return fmt.format(n)+"%";}
-function validPercent(row){
- const l=Number(row?.lPct),s=Number(row?.sPct);
- return row&&row.lPct!==null&&row.lPct!==undefined&&row.sPct!==null&&row.sPct!==undefined&&
-   Number.isFinite(l)&&Number.isFinite(s)&&l>=0&&s>=0&&l<=100&&s<=100&&Math.abs(l+s-100)<=1;
-}
-function setStatus(id,message,cls){
- const tag=cards.get(id)?.status;if(!tag)return;
- tag.textContent=message;tag.className="ms-status"+(cls?" "+cls:"");
-}
-function addNumbers(id,row,time,age,environment){
- const card=cards.get(id).card;
- const info=elem("div","ms-readings");
- const add=(label,value)=>{
-  const box=elem("div","ms-reading");
-  box.append(elem("small","",label),elem("strong","",value));info.append(box);
+ const xmlns="http://www.w3.org/2000/svg",W=730,H=235,LEFT=48,RIGHT=14,TOP=17,BOTTOM=38;
+ const svg=document.createElementNS(xmlns,"svg");
+ svg.setAttribute("viewBox","0 0 "+W+" "+H);
+ svg.setAttribute("role","img");
+ svg.setAttribute("aria-label","Capital.com storico osservato: verde percentuale long, rosa percentuale short; interruzioni in presenza di dati mancanti");
+ const start=records[0].ms,end=records[records.length-1].ms;
+ const X=t=>LEFT+(t-start)/Math.max(1,end-start)*(W-LEFT-RIGHT);
+ const Y=v=>TOP+(100-v)/100*(H-TOP-BOTTOM);
+ const add=(tag,attrs,text)=>{
+  const node=document.createElementNS(xmlns,tag);
+  for(const [k,v] of Object.entries(attrs))node.setAttribute(k,String(v));
+  if(text!==undefined)node.textContent=text;
+  svg.append(node);
+  return node;
  };
- const caption=id==="capital"?"Capital.com":id==="ig"?"IG":"Myfxbook";
- add(id==="myfxbook"?"Lotti long Myfxbook":"Posizioni long "+caption,percent(+row.lPct));
- if(id!=="myfxbook")add("Posizioni short "+caption,percent(+row.sPct));
- else {
-  const total=Number(row.lPos)+Number(row.sPos);
-  add("Posizioni long Myfxbook",Number.isFinite(total)&&total>0?percent(Number(row.lPos)/total*100):"N/D");
+ for(const v of [0,25,50,75,100]){
+  const y=Y(v);
+  add("line",{x1:LEFT,y1:y,x2:W-RIGHT,y2:y,stroke:"#315461","stroke-dasharray":"3 5"});
+  add("text",{x:LEFT-8,y:y+4,"text-anchor":"end",fill:"#a7c9cc","font-size":11},String(v)+"%");
  }
- card.insertBefore(info,card.querySelector(".ms-coverage"));
- const label=elem("p","ms-data-time","Acquisizione "+dateLabel(time)+" (ora italiana)"+
-   (age>3*3600000?" · DATO DATATO":"")+
-   (environment==="demo"?" · Fonte demo":""));
- card.append(label);
-}
-async function fetchJson(path){
- const response=await fetch(path+"?t="+Date.now(),{cache:"no-store"});
- if(!response.ok)throw Error("HTTP "+response.status);
- return response.json();
-}
-async function loadSource(id,path){
- try{
-  const data=await fetchJson(path),row=data.symbols?.[symbol];
-  if(data.status!=="ok"){setStatus(id,"Feed non disponibile");return;}
-  if(!validPercent(row)){setStatus(id,"Mercato non coperto");return;}
-  const time=row.t||data.updatedAt,age=Date.now()-Date.parse(time);
-  const fresh=Number.isFinite(age)&&age>=0&&age<=3*3600000;
-  const total=Number(row.lPos)+Number(row.sPos);
-  const tiny=id==="myfxbook"&&Number.isFinite(total)&&total<30;
-  const usable=fresh&&!tiny;
-  setStatus(id,tiny?"Campione piccolo":fresh?"Dati acquisiti":"Dati datati",usable?"ms-live":"ms-stale");
-  addNumbers(id,row,time,age,data.environment);
-  if(tiny)cards.get(id).card.append(elem("p","ms-data-time","Campione inferiore a 30 posizioni: escluso dal confronto."));
-  reading[id]={row,fresh:usable};
-  if(id==="capital")await loadCapitalHistory();
- }catch(error){
-  setStatus(id,error.message==="HTTP 503"?"Non ancora attiva":error.message==="HTTP 404"?"API privata assente":"Feed non raggiungibile","ms-stale");
- }
-}
-async function loadCapitalHistory(){
- try{
-  const data=await fetchJson("/private-api/capital/history/"+symbol+".json");
-  if(!Array.isArray(data.records))return;
-  const points=data.records.filter(validPercent).filter(v=>Number.isFinite(Date.parse(v.t))).slice(-96);
-  if(points.length<2)return;
-  const card=cards.get("capital")?.card;
-  if(!card)return;
-  const title=elem("p","ms-data-time","Storico Capital.com · "+points.length+" rilevazioni (non candele)");
-  card.append(title);
-  const ns="http://www.w3.org/2000/svg",svg=document.createElementNS(ns,"svg");
-  svg.setAttribute("viewBox","0 0 320 112");
-  svg.setAttribute("role","img");
-  svg.setAttribute("aria-label","Andamento storico delle percentuali long e short Capital.com");
-  svg.classList.add("ms-history");
-  const tMin=Date.parse(points[0].t),tMax=Date.parse(points[points.length-1].t);
-  const tSpan=Math.max(1,tMax-tMin);
-  for(const [name,color] of [["lPct","#53dcab"],["sPct","#ffac89"]]){
-   const line=document.createElementNS(ns,"polyline");
-   line.setAttribute("fill","none");
-   line.setAttribute("stroke",color);
-   line.setAttribute("stroke-width","2");
-   line.setAttribute("points",points.map(p=>{
-    const x=10+300*(Date.parse(p.t)-tMin)/tSpan;
-    return x.toFixed(1)+","+(106-Number(p[name])*1).toFixed(1);
-   }).join(" "));
-   svg.append(line);
+ for(const [x,t] of [[LEFT,start],[W-RIGHT,end]])
+  add("text",{x,y:H-12,"text-anchor":x===LEFT?"start":"end",fill:"#a7c9cc","font-size":11},dateLabel(t));
+ const groups=[];let group=[];
+ for(let i=0;i<records.length;i++){
+  // A schedule is nominally every 2h. Draw gaps instead of invented curves.
+  if(i>0&&records[i].ms-records[i-1].ms>4*3600000){
+   if(group.length)groups.push(group);
+   group=[];
   }
-  card.append(svg);
- }catch(_){/* historical data are optional; no additional provider call */}
+  group.push(records[i]);
+ }
+ if(group.length)groups.push(group);
+ for(const [key,color] of [["lPct","#51d8a6"],["sPct","#f78e95"]]){
+  for(const group of groups){
+   if(group.length===1){
+    add("circle",{cx:X(group[0].ms),cy:Y(group[0][key]),r:3.5,fill:color});
+   }else{
+    const points=group.map(p=>X(p.ms).toFixed(1)+","+Y(p[key]).toFixed(1)).join(" ");
+    add("polyline",{points,fill:"none",stroke:color,"stroke-width":2.5,"stroke-linejoin":"round","stroke-linecap":"round"});
+   }
+  }
+ }
+ graph.append(svg);
 }
-function updateSummary(){
- const active=Object.entries(reading).filter(([,value])=>value?.fresh);
- summary.textContent=active.length+" fonti numeriche aggiornate su 3 possibili per "+symbol+
-  ". Myfxbook misura il volume in lotti; IG e Capital.com misurano posizioni nei loro rispettivi campioni. Nessun segnale istituzionale automatico.";
- if(active.length<2){compare.hidden=true;return;}
- const sides=active.map(([id,value])=>({id,side:Math.abs(value.row.lPct-50)<5?"neutro":value.row.lPct>50?"long":"short"}));
- const positive=sides.filter(x=>x.side==="long").length,negative=sides.filter(x=>x.side==="short").length;
- compare.hidden=false;
- compare.textContent=positive&&negative?"DIVERGENZA fra campioni: "+sides.map(x=>x.id+" "+x.side).join(" · ")+". Nessuna prova diretta del lato istituzionale.":
-  "Confronto dei campioni: "+sides.map(x=>x.id+" "+x.side).join(" · ")+". Differenti metriche e popolazioni, nessuna media artificiale.";
+window.addEventListener("remura:retail",e=>{
+ if(e.detail?.symbol!==symbol)return;
+ retail=e.detail.current?{row:e.detail.current,fresh:e.detail.fresh===true}:null;
+ updateComparison();
+});
+async function loadCapital(){
+ try{
+  const response=await fetch("./private-api/capital/latest.json",{cache:"no-store"});
+  if(!response.ok)throw Error(String(response.status));
+  const data=await response.json(),row=data?.symbols?.[symbol];
+  if(data?.status!=="ok"||data.environment!=="demo"||!core.valid(row)){
+   state("Mercato non ancora coperto");
+   observed.textContent="Il collector Capital.com non ha dati verificati per "+symbol+". Nessun valore stimato.";
+   updateComparison();
+   return;
+  }
+  const age=core.ageMs(row,data.updatedAt),recent=core.fresh(row,data.updatedAt);
+  capital={row,fresh:recent};
+  longValue.textContent=percent(+row.lPct);
+  shortValue.textContent=percent(+row.sPct);
+  green.style.width=Number(row.lPct)+"%";
+  red.style.width=Number(row.sPct)+"%";
+  const when=row.t||data.updatedAt;
+  observed.textContent="Rilevato il "+dateLabel(when)+" (ora italiana) · Conto DEMO · "+
+   (recent?"Dato recente.":"Dato datato: non usare per confronto attuale.");
+  state(recent?"Capital.com · rilevazione recente":"Capital.com · dato datato",recent);
+  try{
+   const archive=await fetch("./private-api/capital/history/"+encodeURIComponent(symbol)+".json",{cache:"no-store"});
+   if(archive.ok){
+    const raw=await archive.json();
+    allHistory=raw.symbol===symbol&&Array.isArray(raw.records)?raw.records:[];
+   }
+  }catch(_){/* no provider request, history is optional */}
+  drawHistory();
+  updateComparison();
+ }catch(_){
+  state("Dati Capital.com riservati");
+  observed.textContent="Capital.com raccoglie i numeri nel repository privato REMURA. La pagina attuale non ha ancora accesso autenticato a quell'archivio.";
+  updateComparison();
+ }
 }
-Promise.all([
- loadSource("myfxbook","/private-api/retail/latest.json"),
- loadSource("ig","/private-api/ig/latest.json"),
- loadSource("capital","/private-api/capital/latest.json")
-]).then(updateSummary);
+updateComparison();
+loadCapital();
 })();
