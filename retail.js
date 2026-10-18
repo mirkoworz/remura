@@ -146,39 +146,77 @@ function draw(){
  canvas.addEventListener("pointerleave",()=>{tooltip.hidden=true;});
 }
 async function retail(){
- try{
- const base="./private-api/retail/",v=Date.now(); // Same-origin private collector; works when repo is private.
- const current=await fetch(base+"latest.json?ts="+v,{cache:"no-store"});
- if(!current.ok)throw Error("Feed non disponibile");
- const latest=await current.json();
- // A compact per-symbol archive avoids downloading the histories of every Myfxbook market.
- const perSymbol=await fetch(base+"history/"+encodeURIComponent(sym)+".json?ts="+v,{cache:"no-store"});
- if(perSymbol.ok){
-   const archived=await perSymbol.json();
-   history=Array.isArray(archived.records)?archived.records:[];
- }else{
-   // Compatibility with the first snapshot collected before v0.7.
-   const legacy=await fetch(base+"history.json?ts="+v,{cache:"no-store"});
-   const prior=legacy.ok?await legacy.json():{};
-   history=Array.isArray(prior.symbols?.[sym])?prior.symbols[sym]:[];
+ const stamp=Date.now();
+ const sources=[
+  {base:"./private-api/retail/",name:"Feed privato"},
+  {base:"./data/myfxbook/",name:"Archivio pubblico Myfxbook"}
+ ];
+ let latest=null,source=null;
+ for(const item of sources){
+  try{
+   const response=await fetch(item.base+"latest.json?t="+stamp,{cache:"no-store"});
+   if(!response.ok)continue;
+   const doc=await response.json();
+   if(doc?.status!=="ok"||!doc.symbols||typeof doc.symbols!=="object")continue;
+   latest=doc;source=item;break;
+  }catch(_){/* Local saved-file fallback only. No provider API requests. */}
  }
+ if(!latest){
+  $("r-status").textContent="Myfxbook · archivio assente";
+  $("r-date").textContent="Nessun archivio Myfxbook disponibile. Nessun numero simulato.";
+  $("r-updated").textContent="N/D";
+  window.dispatchEvent(new CustomEvent("remura:retail",{detail:{symbol:sym,current:null,history:[],status:"missing"}}));
+  draw();return;
+ }
+ try{
+  history=[];
+  const response=await fetch(source.base+"history/"+encodeURIComponent(sym)+".json?t="+stamp,{cache:"no-store"});
+  if(response.ok){
+   const doc=await response.json();
+   if(doc?.symbol===sym&&Array.isArray(doc.records))history=doc.records;
+  }else{
+   const old=await fetch(source.base+"history.json?t="+stamp,{cache:"no-store"});
+   if(old.ok){
+    const doc=await old.json();
+    history=Array.isArray(doc?.symbols?.[sym])?doc.symbols[sym]:[];
+   }
+  }
+ }catch(_){/* Display current percentages even if historical file is unavailable */}
+ const row=latest.symbols[sym],lp=Number(row?.lPct),sp=Number(row?.sPct);
+ const at=row?.t||latest.updatedAt,age=Date.now()-Date.parse(at);
+ const valid=row&&row.lPct!==null&&row.lPct!==undefined&&row.sPct!==null&&row.sPct!==undefined&&
+  Number.isFinite(lp)&&Number.isFinite(sp)&&lp>=0&&sp>=0&&lp<=100&&sp<=100&&
+  Math.abs(lp+sp-100)<=1&&Number.isFinite(age)&&age>=-300000;
  draw();
- const p=latest.symbols?.[sym];
- if(!p){window.dispatchEvent(new CustomEvent("remura:retail",{detail:{symbol:sym,current:null,history,status:latest.status||"missing"}}));$("r-status").textContent=latest.status==="not_configured"?"Myfxbook da attivare":"Sentiment N/D";$("r-date").textContent="Nessun dato Myfxbook verificato per "+sym+". Nessun numero simulato.";return;}
- const at=p.t||latest.updatedAt,age=Date.now()-Date.parse(at),fresh=Number.isFinite(age)&&age>=0&&age<3*3600000;
- $("r-status").textContent=fresh?"Myfxbook · rilevato":"Myfxbook · datato";$("r-status").className="rt-tag"+(fresh?"":" warn");
- const values=[["r-lp",fmt(p.lPct)+"%"],["r-sp",fmt(p.sPct)+"%"],["r-ll",fmt(p.lLots)+" lotti"],["r-sl",fmt(p.sLots)+" lotti"],["r-nl",fmt(p.lPos)],["r-ns",fmt(p.sPos)],["r-al","Prezzo medio "+fmt(p.avgL)],["r-as","Prezzo medio "+fmt(p.avgS)]];
- for(const [id,value] of values)$(id).textContent=value;
- const lp=+p.lPct,sp=+p.sPct,total=lp+sp;
- $("r-bar-long").style.width=Number.isFinite(total)&&total>0?Math.max(0,Math.min(100,100*lp/total))+"%":"0%";
- $("r-bar-short").style.width=Number.isFinite(total)&&total>0?Math.max(0,Math.min(100,100*sp/total))+"%":"0%";
- const text=new Date(at).toLocaleString("it-IT",{timeZone:"Europe/Rome"});
- $("r-updated").textContent=text;
- $("r-date").textContent="Myfxbook · "+text+" (ora italiana). "+(fresh?"Rilevazione recente.":"ATTENZIONE: rilevazione vecchia.");
- const sampleCount=Number(p.lPos)+Number(p.sPos);
- if(Number.isFinite(sampleCount)&&sampleCount>=0&&sampleCount<30){$("r-date").textContent+=" ATTENZIONE: solo "+sampleCount+" posizioni censite per questo simbolo. Il sentiment è poco rappresentativo.";}
- window.dispatchEvent(new CustomEvent("remura:retail",{detail:{symbol:sym,current:p,history,status:latest.status||"ok"}}));
- }catch(e){window.dispatchEvent(new CustomEvent("remura:retail",{detail:{symbol:sym,current:null,history:[],status:"error"}}));$("r-status").textContent="Myfxbook non collegato";$("r-date").textContent="Feed retail mancante o non ancora configurato. Nessuna percentuale inventata.";draw();}
+ if(!valid){
+  $("r-status").textContent="Myfxbook · N/D";
+  $("r-date").textContent="Nessuna percentuale affidabile per "+sym+" nell'archivio Myfxbook.";
+  $("r-updated").textContent="N/D";
+  window.dispatchEvent(new CustomEvent("remura:retail",{detail:{symbol:sym,current:null,history,status:"invalid"}}));
+  return;
+ }
+ const fresh=age<=3*3600000;
+ const count=Number(row.lPos)+Number(row.sPos);
+ const sampleKnown=row.lPos!==null&&row.lPos!==undefined&&row.sPos!==null&&row.sPos!==undefined&&Number.isFinite(count)&&count>=0;
+ const small=sampleKnown&&count<30;
+ $("r-status").textContent=small?"Myfxbook · campione piccolo":fresh?"Myfxbook · aggiornato":"Myfxbook · datato";
+ $("r-status").className="rt-tag"+(fresh&&!small?"":" warn");
+ for(const [id,text] of [
+  ["r-lp",fmt(row.lPct)+"%"],["r-sp",fmt(row.sPct)+"%"],
+  ["r-ll",fmt(row.lLots)+" lotti"],["r-sl",fmt(row.sLots)+" lotti"],
+  ["r-nl",fmt(row.lPos)],["r-ns",fmt(row.sPos)],
+  ["r-al","Prezzo medio "+fmt(row.avgL)],["r-as","Prezzo medio "+fmt(row.avgS)]
+ ])$(id).textContent=text;
+ $("r-bar-long").style.width=lp+"%";
+ $("r-bar-short").style.width=sp+"%";
+ const label=localDate(at);
+ $("r-updated").textContent=label;
+ $("r-date").textContent="Myfxbook · "+label+" (ora italiana) · "+source.name+
+  (fresh?" · Rilevazione recente.":" · Dato datato, non utilizzarlo come segnale attuale.")+
+  (small?" · Campione sotto 30 posizioni: confronto disabilitato.":"");
+ window.dispatchEvent(new CustomEvent("remura:retail",{
+  detail:{symbol:sym,current:row,history,status:"ok",fresh:fresh&&!small,source:source.name}
+ }));
 }
 price();draw();retail();
 })();
