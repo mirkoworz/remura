@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#09141d">
-<meta name="description" content="REMURA: COT istituzionale, grafici TradingView e confronti retail Myfxbook, Dukascopy, IG, FX Blue, OANDA, Forex Factory, FXCM.">
+<meta name="description" content="REMURA: COT istituzionale, grafici TradingView, sentiment Myfxbook e Capital.com con storico numerico.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="./icon.svg">
@@ -77,8 +77,8 @@ th:first-child,td:first-child{text-align:left}
 </style>
 <link rel="stylesheet" href="./insights.css?v=9">
 <link rel="stylesheet" href="./price.css?v=10">
-<link rel="stylesheet" href="./retail.css?v=8">
-<link rel="stylesheet" href="./sources.css?v=11">
+<link rel="stylesheet" href="./retail.css?v=13">
+<link rel="stylesheet" href="./sources.css?v=13">
 </head>
 <body>
 <div class="shell">
@@ -96,7 +96,7 @@ th:first-child,td:first-child{text-align:left}
  <div class="note" id="method-note">Net% = (contratti long − contratti short) ÷ open interest × 100. Non rappresenta una probabilità di rialzo o ribasso.</div>
 </section>
 <section class="panel overview" id="retail-module">
-<div class="rt-head"><div><div class="eyebrow">PREZZO + SENTIMENT RETAIL</div><h2>Prezzo sopra, posizioni sotto</h2><p class="rt-sub">Grafico delle candele TradingView e storico long/short della community Myfxbook, basato su rilevazioni autentiche.</p></div><span id="r-status" class="rt-tag warn">Myfxbook da attivare</span></div>
+<div class="rt-head"><div><div class="eyebrow">PREZZO + MYFXBOOK</div><h2>Prezzo e posizioni Myfxbook</h2><p class="rt-sub">Candele TradingView e bande long/short ottenute dai lotti e dalle posizioni dei trader della community. Lo storico usa dati archiviati realmente.</p></div><span id="r-status" class="rt-tag warn">Myfxbook da attivare</span></div>
 <div class="rt-summary">
 <div class="rt-stat"><span>Quota lotti long</span><strong id="r-lp" class="rt-green">—</strong><small id="r-ll">— lotti</small></div>
 <div class="rt-stat"><span>Quota lotti short</span><strong id="r-sp" class="rt-red">—</strong><small id="r-sl">— lotti</small></div>
@@ -108,7 +108,7 @@ th:first-child,td:first-child{text-align:left}
 <div class="rt-section"><div class="rt-section-head"><h3>Prezzo a candele</h3><div id="r-tf" class="rt-tfs" aria-label="Timeframe candele"></div></div>
 <div id="r-price" class="rt-price"></div><p class="rt-disclaimer">Timeframe M1–D1 delle candele, non delle rilevazioni retail. Fonte esterna TradingView. <a id="r-tradingview" target="_blank" rel="noopener noreferrer">Apri il grafico ↗</a></p></div>
 <div class="rt-section"><div class="rt-section-head"><h3>Come si muovono i trader retail</h3><div class="rt-tfs rt-toggle" id="r-modes"><button type="button" data-mode="lots" aria-pressed="true">Lotti</button><button type="button" data-mode="positions" aria-pressed="false">Posizioni</button></div></div>
-<div class="rt-window-heading"><div><strong>Storico dei lotti / delle posizioni</strong><small>Seleziona un periodo reale; non è il timeframe delle candele</small></div></div>
+<div class="rt-window-heading"><div><strong>Storico Myfxbook · long / short</strong><small>Grafico dei lotti o delle posizioni: finestra temporale indipendente dalle candele</small></div></div>
 <div class="rt-tfs rt-periods" id="r-windows" role="group" aria-label="Periodo dello storico retail">
 <button type="button" data-window="6h" aria-pressed="false">6 ore</button>
 <button type="button" data-window="1d" aria-pressed="false">24 ore</button>
@@ -321,8 +321,9 @@ async function load(){
 }
 setup();load();
 </script>
-<script src="./retail.js?v=8"></script>
-<script src="./sources.js?v=11"></script>
+<script src="./retail.js?v=13"></script>
+<script src="./sentiment-core.js?v=13"></script>
+<script src="./sources.js?v=13"></script>
 <script src="./price-core.js?v=10"></script>
 <script src="./price.js?v=10"></script>
 </body>
