@@ -18,6 +18,10 @@ on:
       - 'CAPITAL-DEMO.md'
       - '.github/workflows/capital-private-collector.yml'
       - 'sources.js'
+      - 'sentiment-core.js'
+      - 'tests/sentiment.test.js'
+      - 'fonti.html'
+      - 'sw.js'
       - 'sources.css'
       - 'tests/test_ig_sentiment.py'
       - 'tests/test_ig_private.py'
@@ -50,11 +54,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: node --check price-core.js && node --check price.js && node --check insights.js && node --check sources.js
+      - run: node --check price-core.js && node --check price.js && node --check insights.js && node --check sources.js && node --check sentiment-core.js
       - name: Verify Oracle Always Free bootstrap syntax
         run: bash -n deploy/oracle/install.sh
       - run: python -m py_compile scripts/price_feed.py scripts/ctrader_feed.py scripts/ctrader_tokens.py scripts/price_store.py scripts/private_server.py scripts/update_capital.py
-      - run: node --test tests/price.test.js tests/insights.test.js
+      - run: node --test tests/price.test.js tests/insights.test.js tests/sentiment.test.js
       - run: python -m unittest discover -s tests -p 'test_price_feed.py' -v
       - run: python -m unittest discover -s tests -p 'test_ctrader_feed.py' -v
       - run: python -m unittest discover -s tests -p 'test_private_server.py' -v
