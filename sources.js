@@ -70,7 +70,7 @@ for(const name of Object.keys(windows)){
  periods.append(button);
 }
 const graph=el("div","ms-history-panel","Lo storico apparirà dopo due osservazioni valide.");
-const graphInfo=el("p","ms-data-time","");
+const graphInfo=el("p","ms-data-time","Verde: LONG · Rosa: SHORT");
 chartWrap.append(chartHeader,periods,graph,graphInfo);
 main.append(chartWrap);
 const compare=el("div","ms-comparison");
@@ -95,7 +95,7 @@ function updateComparison(){
 function drawHistory(){
  const records=core.points(allHistory,windows[selected]);
  graph.replaceChildren();
- graphInfo.textContent=records.length+" rilevazioni reali negli ultimi "+selected+".";
+ graphInfo.textContent=records.length+" rilevazioni reali nel periodo "+selected+". · Verde: LONG, Rosa: SHORT.";
  if(records.length<2){
   graph.append(el("div","ms-no-chart",records.length===1?
    "Un punto disponibile ("+dateLabel(records[0].t)+"). Serve almeno un'altra rilevazione per tracciare le bande.":
@@ -140,6 +140,9 @@ function drawHistory(){
     add("circle",{cx:X(group[0].ms),cy:Y(group[0][key]),r:3.5,fill:color});
    }else{
     const points=group.map(p=>X(p.ms).toFixed(1)+","+Y(p[key]).toFixed(1)).join(" ");
+    const path="M "+group.map(p=>X(p.ms).toFixed(1)+" "+Y(p[key]).toFixed(1)).join(" L ")+
+      " L "+X(group[group.length-1].ms).toFixed(1)+" "+Y(0)+" L "+X(group[0].ms).toFixed(1)+" "+Y(0)+" Z";
+    add("path",{d:path,fill:color,"fill-opacity":0.13,stroke:"none"});
     add("polyline",{points,fill:"none",stroke:color,"stroke-width":2.5,"stroke-linejoin":"round","stroke-linecap":"round"});
    }
   }
