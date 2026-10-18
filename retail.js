@@ -49,9 +49,8 @@ function draw(){
    .sort((a,b)=>Date.parse(a.t)-Date.parse(b.t));
  const unique=new Map(all.map(row=>[row.t,row]));
  const timeline=[...unique.values()];
- const lastTime=timeline.length?Date.parse(timeline[timeline.length-1].t):Date.now();
  // An actual 6h/24h window ends NOW, not at the last possibly stale observation.
-  const minimum=Date.now()-(PERIODS[period]??Infinity);
+ const minimum=Date.now()-(PERIODS[period]??Infinity);
  const records=timeline.filter(row=>Date.parse(row.t)>=minimum);
  $("r-count").textContent=records.length+" rilevazioni nel periodo";
  if(records.length<2){
@@ -60,53 +59,55 @@ function draw(){
      "Una rilevazione per il periodo selezionato ("+localDate(records[0].t)+"). Servono due punti per disegnare le bande.":
      "Nessuna rilevazione in questa finestra. Scegli Tutto oppure attendi nuovi dati Myfxbook.";
    host.append(empty);
-   $("r-change").textContent="Andamento: servono almeno due rilevazioni reali. Il grafico non interpola dati inesistenti.";
+   $("r-change").textContent="Andamento: servono almeno due rilevazioni reali per collegare i punti.";
    return;
  }
  const firstTime=Date.parse(records[0].t),last=Date.parse(records[records.length-1].t);
- const W=750,H=315,L=56,R=22,T=22,B=46;
+ // Build the viewBox at the actual available width, avoiding mobile SVG letterboxing.
+ const W=Math.min(850,Math.max(310,Math.round(host.clientWidth-16)||750));
+ const H=W<480?288:330,L=W<480?53:65,R=18,T=22,B=46;
  const maximum=Math.max(1,...records.flatMap(r=>keys.map(k=>+r[k])))*1.10;
  const X=stamp=>L+(stamp-firstTime)/Math.max(1,last-firstTime)*(W-L-R);
  const Y=value=>T+(maximum-value)/maximum*(H-T-B);
  const bottom=Y(0);
  const time=records.map(p=>Date.parse(p.t));
- const segments=[];let segment=[];
- for(let i=0;i<records.length;i++){
-   if(i>0 && time[i]-time[i-1]>75*60000){if(segment.length)segments.push(segment);segment=[];}
-   segment.push(i);
- }
- if(segment.length)segments.push(segment);
- const linePath=(ids,key)=>ids.map((i,n)=>(n?"L":"M")+X(time[i]).toFixed(2)+" "+Y(+records[i][key]).toFixed(2)).join(" ");
- const areaPath=(ids,key)=>{
-   const path=linePath(ids,key);
-   return path+" L"+X(time[ids[ids.length-1]]).toFixed(2)+" "+bottom.toFixed(2)+
-     " L"+X(time[ids[0]]).toFixed(2)+" "+bottom.toFixed(2)+" Z";
- };
+ // Join real observations as a visual trend: no intermediate samples are created.
+ // Large time gaps are still visible through dashed connectors and the gap counter.
+ const ids=records.map((_,i)=>i);
+ const gapLimit=75*60000;
+ const missingIntervals=time.slice(1).filter((stamp,i)=>stamp-time[i]>gapLimit).length;
+ const linePath=(indices,key)=>indices.map((i,n)=>(n?"L":"M")+X(time[i]).toFixed(2)+" "+Y(+records[i][key]).toFixed(2)).join(" ");
+ const areaPath=(indices,key)=>linePath(indices,key)+
+   " L"+X(time[indices[indices.length-1]]).toFixed(2)+" "+bottom.toFixed(2)+
+   " L"+X(time[indices[0]]).toFixed(2)+" "+bottom.toFixed(2)+" Z";
  let svg='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Bande del sentiment: verde volume long e rosso volume short, rilevazioni reali Myfxbook">';
  for(let i=0;i<5;i++){
    const value=maximum*i/4,y=Y(value).toFixed(2);
    svg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'" stroke="#375861" stroke-dasharray="3 5"/>';
    svg+='<text x="'+(L-7)+'" y="'+(Number(y)+4)+'" text-anchor="end" font-size="11" fill="#a4c0c6">'+fmt(value)+'</text>';
  }
- for(let i=0;i<=4;i++){
-   const t=firstTime+(last-firstTime)*i/4;
+ const tickCount=W<480?2:4;
+ for(let i=0;i<=tickCount;i++){
+   const t=firstTime+(last-firstTime)*i/tickCount;
    const x=X(t).toFixed(2);
-   if(i>0&&i<4)svg+='<line x1="'+x+'" x2="'+x+'" y1="'+T+'" y2="'+bottom+'" stroke="#31525a" stroke-dasharray="2 7"/>';
+   if(i>0&&i<tickCount)svg+='<line x1="'+x+'" x2="'+x+'" y1="'+T+'" y2="'+bottom+'" stroke="#31525a" stroke-dasharray="2 7"/>';
    const timeLabel=localDate(t,period==="6h"||period==="1d");
-   svg+='<text x="'+x+'" y="'+(H-15)+'" font-size="11" text-anchor="'+(i===0?"start":i===4?"end":"middle")+'" fill="#aac5c8">'+timeLabel+'</text>';
+   svg+='<text x="'+x+'" y="'+(H-15)+'" font-size="11" text-anchor="'+(i===0?"start":i===tickCount?"end":"middle")+'" fill="#aac5c8">'+timeLabel+'</text>';
  }
- for(const ids of segments){
-   // A lone isolated point must not be turned into an invented flat line.
-   if(ids.length>1){
-     svg+='<path class="rt-area-green" d="'+areaPath(ids,keys[0])+'"/>';
-     svg+='<path class="rt-area-red" d="'+areaPath(ids,keys[1])+'"/>';
-     svg+='<path class="rt-long-line" d="'+linePath(ids,keys[0])+'"/>';
-     svg+='<path class="rt-short-line" d="'+linePath(ids,keys[1])+'"/>';
-   }else{
-     const i=ids[0];
-     svg+='<circle cx="'+X(time[i])+'" cy="'+Y(+records[i][keys[0]])+'" r="3" fill="#66e2a8"/>';
-     svg+='<circle cx="'+X(time[i])+'" cy="'+Y(+records[i][keys[1]])+'" r="3" fill="#fd778a"/>';
-   }
+ // Two continuous filled bands, as in the Myfxbook view.
+ svg+='<path class="rt-area-green" d="'+areaPath(ids,keys[0])+'"/>';
+ svg+='<path class="rt-area-red" d="'+areaPath(ids,keys[1])+'"/>';
+ for(let i=1;i<records.length;i++){
+   const pair=[i-1,i];
+   const gap=time[i]-time[i-1]>gapLimit;
+   const style=gap?" rt-gap":"";
+   svg+='<path class="rt-long-line'+style+'" d="'+linePath(pair,keys[0])+'"/>';
+   svg+='<path class="rt-short-line'+style+'" d="'+linePath(pair,keys[1])+'"/>';
+ }
+ // Actual sample markers stay visible; avoid thousands of circles on long archives.
+ if(records.length<=125)for(let i=0;i<records.length;i++){
+   svg+='<circle class="rt-sample" cx="'+X(time[i])+'" cy="'+Y(+records[i][keys[0]])+'" r="2.4" fill="#6ee1b0"/>';
+   svg+='<circle class="rt-sample" cx="'+X(time[i])+'" cy="'+Y(+records[i][keys[1]])+'" r="2.4" fill="#ff8592"/>';
  }
  const tail=records[records.length-1];
  svg+='<circle cx="'+X(last)+'" cy="'+Y(+tail[keys[0]])+'" r="4" fill="#6ee1b0" stroke="#163e3c" stroke-width="2"/>';
@@ -120,7 +121,7 @@ function draw(){
  const unit=mode==="lots"?" lotti":" posizioni";
  $("r-change").textContent="Ultime 2 rilevazioni ("+Math.round(elapsed)+" min): Long "+
    signed(deltaLong)+unit+" · Short "+signed(deltaShort)+unit+
-   (elapsed>75?" · Dati distanti nel tempo: discontinuità segnalata nel grafico.":"")+
+   (missingIntervals?" · "+missingIntervals+" intervalli >75 min (tratteggiati, senza campioni intermedi).":"")+
    " · Ultimo punto "+localDate(tail.t)+".";
  const tooltip=document.createElement("div");tooltip.className="rt-tooltip";tooltip.hidden=true;host.append(tooltip);
  const canvas=host.querySelector("svg");
@@ -219,5 +220,6 @@ async function retail(){
   detail:{symbol:sym,current:row,history,status:"ok",fresh:fresh&&!small,source:source.name}
  }));
 }
+window.addEventListener("resize",draw);
 price();draw();retail();
 })();

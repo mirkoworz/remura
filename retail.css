@@ -61,3 +61,9 @@
 #retail-module .rt-lots-plot .rt-short-line{stroke:#fd778a;stroke-width:2.7;fill:none;stroke-linejoin:round}
 #retail-module .rt-legend .lg,#retail-module .rt-legend .sh{width:13px;height:8px}
 @media(max-width:720px){#retail-module .rt-lots-plot{min-height:220px}#retail-module .rt-lots-plot svg{min-height:195px}#retail-module .rt-periods button{padding:7px 8px}}
+
+/* Connected observations with honest dashed strokes across missing samples. */
+#retail-module .rt-lots-plot .rt-long-line.rt-gap,
+#retail-module .rt-lots-plot .rt-short-line.rt-gap{stroke-dasharray:7 5;stroke-opacity:.82}
+#retail-module .rt-lots-plot .rt-sample{stroke:#0b1e29;stroke-width:1}
+#retail-module .rt-legend .rt-gap-dash{width:18px;height:3px;background:repeating-linear-gradient(90deg,#b0c6c9 0 6px,transparent 6px 10px)}
