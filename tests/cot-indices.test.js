@@ -50,3 +50,15 @@ test("intervallo a 260 settimane è calcolabile con almeno 260 report",()=>{
   assert.equal(evaluate(series(259),260).state,"insufficient");
   assert.equal(evaluate(series(260),260).a.value,100);
 });
+
+test("le 35 schede condivise collegano gli indici e hanno uno script inline sintatticamente valido",()=>{
+  const fs=require("node:fs"),vm=require("node:vm");
+  const html=fs.readFileSync("asset.html","utf8");
+  for(const id of ['id="cot-period"','id="cot-index-a"','id="cot-index-b"','id="cot-index-gap"','id="cot-gap-chart"','id="chart-period"','cot-indices-core.js']) {
+    assert.ok(html.includes(id),"Elemento mancante: "+id);
+  }
+  const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)]
+    .map(match=>match[1]).filter(Boolean);
+  assert.equal(scripts.length,1,"La pagina dovrebbe avere un solo script inline");
+  assert.doesNotThrow(()=>new vm.Script(scripts[0]));
+});
