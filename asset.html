@@ -77,7 +77,7 @@ th:first-child,td:first-child{text-align:left}
 </style>
 <link rel="stylesheet" href="./insights.css?v=9">
 <link rel="stylesheet" href="./price.css?v=10">
-<link rel="stylesheet" href="./retail.css?v=13">
+<link rel="stylesheet" href="./retail.css?v=14">
 <link rel="stylesheet" href="./sources.css?v=13">
 </head>
 <body>
@@ -115,9 +115,9 @@ th:first-child,td:first-child{text-align:left}
 <button type="button" data-window="7d" aria-pressed="true">7 giorni</button>
 <button type="button" data-window="30d" aria-pressed="false">30 giorni</button>
 <button type="button" data-window="all" aria-pressed="false">Tutto</button></div>
-<div class="rt-legend"><span><b class="lg"></b>Long</span><span><b class="sh"></b>Short</span><span id="r-count">0 rilevazioni</span></div>
+<div class="rt-legend"><span><b class="lg"></b>Long</span><span><b class="sh"></b>Short</span><span id="r-count">0 rilevazioni</span><span><b class="rt-gap-dash"></b>Tratteggio: pausa &gt;75 min</span></div>
 <div id="r-change" class="rt-change">Andamento: in attesa di almeno due rilevazioni.</div>
-<div id="r-chart" class="rt-lots-plot"></div><p class="rt-disclaimer">Ogni punto è una rilevazione Myfxbook salvata da Remura. Frequenza programmata: circa 20 minuti (con possibili ritardi GitHub e della fonte). Il grafico non inventa barre M1/M5 e lascia interruzioni dove mancano rilevazioni.</p></div>
+<div id="r-chart" class="rt-lots-plot"></div><p class="rt-disclaimer">Ogni puntino è una rilevazione Myfxbook realmente archiviata. Le bande uniscono visivamente i campioni: i tratti tratteggiati indicano più di 75 minuti senza osservazioni intermedie, non nuovi valori misurati. GitHub richiede una raccolta ogni 20 minuti, ma la frequenza effettiva può essere inferiore. Nessuna barra M1/M5 viene inventata.</p></div>
 <div class="rt-section"><h3>Fonte e aggiornamento</h3><div class="rt-line"><span>Myfxbook Community Outlook</span><b id="r-updated">Non collegato</b></div>
 <p class="rt-disclaimer">Myfxbook mostra soltanto gli account della propria community, non la totalità del Forex. <a id="r-myfxbook" rel="noopener noreferrer" target="_blank">Verifica su Myfxbook ↗</a></p></div>
 </section>
@@ -321,7 +321,7 @@ async function load(){
 }
 setup();load();
 </script>
-<script src="./retail.js?v=13"></script>
+<script src="./retail.js?v=14"></script>
 <script src="./sentiment-core.js?v=13"></script>
 <script src="./sources.js?v=13"></script>
 <script src="./price-core.js?v=10"></script>
