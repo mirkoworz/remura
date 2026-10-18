@@ -1,5 +1,38 @@
 # REMURA v0.9 — Segui le tracce degli istituzionali
 
+## REMURA v1.3 — due soli sentiment sulle 35 schede
+
+**Stato: modifica di sviluppo, nel ramo feature/capital-demo-sentiment-v12.
+Non pubblicata su main/GitHub Pages.**
+
+Nelle pagine asset.html di Forex, metalli e indici le fonti retail si riducono a
+due sole fonti indipendenti:
+- **Myfxbook Community Outlook**: numeri da file già archiviati in
+  data/myfxbook/latest.json e data/myfxbook/history/SYMBOL.json, con fallback
+  automatico al server /private-api/retail/ quando esiste. Percentuali del
+  volume long/short, lotti, conteggi di posizioni, prezzi medi e bande storiche
+  in 6h, 24h, 7g, 30g o tutto. Il sito NON effettua nuove API Myfxbook:
+  interroga soltanto file dello stesso sito e non raddoppia le raccolte.
+- **Capital.com Demo**: percentuali long/short e storico degli effettivi
+  campioni dei clienti Capital.com, per mercati realmente confermati.
+  L'app privata legge /private-api/capital/latest.json e
+  /private-api/capital/history/SYMBOL.json. Il sito pubblico segnala N/D:
+  non interroga GitHub privato dal browser, non trasferisce segreti e non
+  pubblica i dataset Capital.com.
+
+IG, Dukascopy, FX Blue, OANDA, Forex Factory e FXCM sono stati tolti dalle
+schede dei singoli mercati e dalla pagina di descrizione delle fonti.
+I vecchi backend non vengono richiamati: non modificano la prop o il Guardiano.
+
+**Confronto:** non calcolare medie fra lotti e percentuali delle posizioni.
+Eventuali divergenze sono fra DUE campioni retail, non la prova che gli
+istituzionali occupino l'altro lato. Il COT rimane settimanale. Se manca una
+fonte, il confronto resta N/D. I grafici non ricostruiscono punti non raccolti.
+
+**Test:** node --test tests/sentiment.test.js; il controllo è integrato
+nel workflow GitHub price-checks.yml. Nessuna credenziale è richiesta.
+
+
 ## Novità v0.9 — Interprete COT per tutti i 35 mercati
 Le **28 schede Forex**, le **2 schede metalli** e le **5 schede indici** condividono il nuovo pannello di analisi in `asset.html`: trend netto % open interest, variazione della settimana e delle 4 precedenti, persistenza della spinta, differenze fra le categorie e testo interpretativo in italiano.
 
