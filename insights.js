@@ -24,7 +24,7 @@
     '<p class="rm-fine">Contratti del future CFTC originale, senza aggregare i lotti Myfxbook. Su un cross Forex scegli una singola valuta: il COT non esiste direttamente per ogni coppia.</p>' +
     '<div class="rm-controls"><label for="rm-leg">Future</label><select id="rm-leg" aria-label="Future/valuta"></select>' +
     '<label for="rm-group">Categoria</label><select id="rm-group" aria-label="Categoria istituzionale"></select>' +
-    '<label for="rm-range">Storico</label><select id="rm-range" aria-label="Numero settimane"><option value="13">13 settimane</option><option value="26">26 settimane</option><option value="52" selected>52 settimane</option></select></div>' +
+    '<label for="rm-range">Storico</label><select id="rm-range" aria-label="Numero settimane"><option value="13">13 settimane</option><option value="26">26 settimane</option><option value="52" selected>52 settimane</option><option value="156">156 settimane</option><option value="260">260 settimane</option></select></div>' +
     '<p class="rm-trace" id="rm-trace">In attesa di dati sui contratti.</p>' +
     '<div class="rm-chart-panel"><h4>Contratti long · <span id="rm-long-now">—</span></h4><div id="rm-chart-long"></div></div>' +
     '<div class="rm-chart-panel"><h4>Contratti short · <span id="rm-short-now">—</span></h4><div id="rm-chart-short"></div></div>' +

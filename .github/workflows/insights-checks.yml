@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'insights-core.js'
+      - 'cot-indices-core.js'
       - 'insights.js'
       - 'insights.css'
       - 'asset.html'
@@ -25,11 +26,12 @@ jobs:
       - name: Validate browser script syntax
         run: |
           node --check insights-core.js
+          node --check cot-indices-core.js
           node --check insights.js
           node --check retail.js
           node --check nav.js
       - name: Verify COT analysis rules
-        run: node --test tests/insights.test.js tests/retail-chart.test.js
+        run: node --test tests/insights.test.js tests/retail-chart.test.js tests/cot-indices.test.js
       - name: Verify wiring on all market detail pages
         run: |
           node - <<'NODE'
