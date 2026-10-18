@@ -12,6 +12,10 @@ on:
       - 'scripts/price_store.py'
       - 'scripts/private_server.py'
       - 'scripts/update_ig.py'
+      - 'scripts/update_capital.py'
+      - 'tests/test_capital_sentiment.py'
+      - 'tests/test_capital_private.py'
+      - 'CAPITAL-DEMO.md'
       - 'sources.js'
       - 'sources.css'
       - 'tests/test_ig_sentiment.py'
@@ -48,13 +52,15 @@ jobs:
       - run: node --check price-core.js && node --check price.js && node --check insights.js && node --check sources.js
       - name: Verify Oracle Always Free bootstrap syntax
         run: bash -n deploy/oracle/install.sh
-      - run: python -m py_compile scripts/price_feed.py scripts/ctrader_feed.py scripts/ctrader_tokens.py scripts/price_store.py scripts/private_server.py
+      - run: python -m py_compile scripts/price_feed.py scripts/ctrader_feed.py scripts/ctrader_tokens.py scripts/price_store.py scripts/private_server.py scripts/update_capital.py
       - run: node --test tests/price.test.js tests/insights.test.js
       - run: python -m unittest discover -s tests -p 'test_price_feed.py' -v
       - run: python -m unittest discover -s tests -p 'test_ctrader_feed.py' -v
       - run: python -m unittest discover -s tests -p 'test_private_server.py' -v
       - run: python -m unittest discover -s tests -p 'test_ig_sentiment.py' -v
       - run: python -m unittest discover -s tests -p 'test_ig_private.py' -v
+      - run: python -m unittest discover -s tests -p 'test_capital_sentiment.py' -v
+      - run: python -m unittest discover -s tests -p 'test_capital_private.py' -v
       - run: python -m unittest discover -s tests -p 'test_ctrader_tokens.py' -v
       - name: Verify no personal feed or API token is publicly embedded
         run: |
