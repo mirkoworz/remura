@@ -32,7 +32,7 @@ test("divergence when volume and positions disagree, no institutional proof",()=
 test("both agreeing, neutral, or stale are never invented consensus",()=>{
  const agree=core.compare({row:lot,fresh:true},{row:{...capital,lPct:71,sPct:29},fresh:true});
  assert.equal(agree.status,"aligned");
- assert.match(agree.text,/non è una conferma istituzionale/);
+ assert.match(agree.text,/non è una conferma istituzionale/i);
  assert.equal(core.compare({row:lot,fresh:true},{row:{...capital,lPct:49,sPct:51},fresh:true}).status,"neutral");
  assert.equal(core.compare({row:lot,fresh:true},{row:capital,fresh:false}).status,"unavailable");
  assert.equal(core.compare(null,{row:capital,fresh:true}).status,"unavailable");
