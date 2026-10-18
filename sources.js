@@ -1,136 +1,195 @@
-/* REMURA v0.8: source-comparison hub. No invented sentiment readings. */
+/* REMURA v1.3: Myfxbook dedicated above; Capital.com DEMO below.
+   Only same-origin PRIVATE numeric endpoints. No calls to Capital API in browser.
+   No other providers/widgets; never publish private Capital observations.
+*/
 (()=>{
 "use strict";
-const symbol=(new URLSearchParams(location.search).get("symbol")||"XAUUSD").toUpperCase();
+const core=window.REMURA_SENTIMENT_CORE;
 const cfg=window.REMURA_MARKETS;
-if(!cfg||!cfg.symbols.includes(symbol))return;
+const symbol=(new URLSearchParams(location.search).get("symbol")||"XAUUSD").toUpperCase();
 const holder=document.getElementById("retail-module");
-if(!holder)return;
-const group=cfg.other[symbol]?.group||(symbol.length===6?"forex":"other");
-const isFX=group==="forex",isMetal=group==="metals",isIndex=group==="indices";
-const sourceDefs=[
- {id:"myfxbook",name:"Myfxbook",measure:"Volume in lotti e numero di posizioni della community",
-   status:"api",coverage:"Tutti gli strumenti restituiti dal suo endpoint",
-   url:()=> "https://www.myfxbook.com/community/outlook/"+encodeURIComponent(symbol),
-   note:"Un dato automatico già collegato. % lotti e % posizioni non equivalgono al numero di trader unici.",
-   ok:true},
- {id:"dukascopy",name:"Dukascopy SWFX",measure:"Sentiment del flusso di operazioni / liquidità",
-   status:"widget",coverage:"Coppie Forex selezionate",url:()=> "https://www.dukascopy.com/trading-tools/widget/historical_sentiment_index",
-   note:"Widget ufficiale sui consumatori di liquidità, distinto dalle posizioni Myfxbook. Non sono i lotti aperti della community.",
-   ok:isFX},
- {id:"ig",name:"IG Client Sentiment",measure:"Percentuale di posizioni long/short presso IG",
-   status:"api_external",coverage:"Forex, metalli e indici a seconda del mercato",
-   url:()=> "https://www.ig.com/it/dati-di-mercato",
-   note:"IG dispone di un'API ufficiale, ma Remura non ha ancora un accesso API IG autorizzato.",
-   ok:true},
- {id:"fxblue",name:"FX Blue",measure:"Conti reali net long/short",
-   status:"external",coverage:"Forex, disponibilità per mercato da controllare",
-   url:()=> "https://www.fxblue.com/market-data/tools/sentiment",
-   note:"Conta i conti reali, non i lotti. Utile per una conferma indipendente dai grandi volumi dei singoli account.",
-   ok:isFX},
- {id:"oanda",name:"OANDA Position Book",measure:"Posizioni e ordini dei clienti per livello di prezzo",
-   status:"external",coverage:"16 strumenti, Forex e alcuni metalli, da verificare",
-   url:()=> "https://www.oanda.com/bvi-en/cfds/tools/orderbook/",
-   note:"Distribuzione per livello di prezzo: non è una singola percentuale long/short confrontabile direttamente.",
-   ok:isFX||isMetal},
- {id:"forexfactory",name:"Forex Factory",measure:"Traders long/short e lotti, campione di conti collegati",
-   status:"external",coverage:"Forex e Gold, copertura in pagina",
-   url:()=> "https://www.forexfactory.com/trades",
-   note:"Le statistiche possono mostrare conti e lotti, ma Remura non dispone di un'API ufficiale autorizzata.",
-   ok:isFX||symbol==="XAUUSD"},
- {id:"fxcm",name:"FXCM SSI Pro",measure:"Rapporto fra posizioni speculative dei clienti FXCM",
-   status:"commercial",coverage:"Forex, Gold, Silver, indici selezionati",
-   url:()=> "https://www.fxcm.com/pro/market-data/sentiment/",
-   note:"Feed professionale XML: per importarci i valori serve accesso commerciale. Non è attivo in Remura.",
-   ok:isFX||isMetal||isIndex}
-];
-const section=document.createElement("section");
-section.className="panel overview rem-sources";
-section.id="remura-multisource";
+if(!core||!cfg?.symbols?.includes(symbol)||!holder)return;
+const el=(tag,cls,txt)=>{
+ const n=document.createElement(tag);
+ if(cls)n.className=cls;
+ if(txt!==undefined)n.textContent=txt;
+ return n;
+};
+const fmt=new Intl.NumberFormat("it-IT",{maximumFractionDigits:2});
+const percent=n=>fmt.format(n)+"%";
+const dateLabel=t=>{
+ const d=new Date(t);
+ return Number.isFinite(+d)?new Intl.DateTimeFormat("it-IT",{
+  day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",timeZone:"Europe/Rome"
+ }).format(d):"N/D";
+};
+const section=el("section","panel overview rem-sources");
+section.id="remura-capital";
 holder.insertAdjacentElement("afterend",section);
-const intro=document.createElement("div");intro.className="ms-intro";
-intro.innerHTML='<div><div class="eyebrow">REMURA · CONFERME INDIPENDENTI</div><h2>Confronto sentiment multi-fonte</h2><p>Un unico punto di accesso alle fonti più utili per <strong>'+symbol+'</strong>. Separiamo API automatiche, widget, consultazione esterna e feed professionali.</p></div>';
-section.append(intro);
-const summary=document.createElement("div");summary.className="ms-summary";
-summary.textContent="Dati numerici automatici: verifica in corso. Le altre fonti rimangono separate e non entrano nel calcolo di una falsa media.";
-section.append(summary);
-const host=document.createElement("div");host.className="ms-list";section.append(host);
-const manual=document.createElement("div");manual.className="ms-legend";
-manual.innerHTML='<strong>Come confrontarli:</strong> Myfxbook misura lotti/posizioni; IG conta posizioni; FX Blue misura conti reali; Dukascopy osserva flussi e liquidità; OANDA raggruppa livelli di prezzo. <b>Non sommiamo o mediamo queste percentuali.</b> Il COT istituzionale rimane nella scheda sopra ed è settimanale.';
-section.append(manual);
-const providers=sourceDefs.filter(p=>p.ok);
-function elem(tag,className,txt){const n=document.createElement(tag);if(className)n.className=className;if(txt!==undefined)n.textContent=txt;return n;}
-function dateLabel(value){
- const d=new Date(value);
- return Number.isFinite(+d)?new Intl.DateTimeFormat("it-IT",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",timeZone:"Europe/Rome"}).format(d):"sconosciuta";
+const top=el("div","ms-intro");
+top.append(
+ el("div","eyebrow","SENTIMENT RETAIL · SECONDA FONTE"),
+ el("h2","","Capital.com"),
+ el("p","","Posizioni dei clienti Capital.com DEMO: un campione diverso dai lotti Myfxbook. Entrambi sono dati retail, non ordini istituzionali.")
+);
+section.append(top);
+const status=el("span","ms-status ms-stale","Archivio privato non collegato");
+top.append(status);
+const main=el("div","ms-main");
+section.append(main);
+const readings=el("div","ms-readings");
+const longBox=el("div","ms-reading"),shortBox=el("div","ms-reading");
+const longValue=el("strong","","—"),shortValue=el("strong","","—");
+longBox.append(el("small","","Posizioni LONG Capital"),longValue);
+shortBox.append(el("small","","Posizioni SHORT Capital"),shortValue);
+readings.append(longBox,shortBox);
+main.append(readings);
+const split=el("div","ms-split");
+split.setAttribute("aria-label","Distribuzione long short Capital.com");
+const green=el("i","ms-long"),red=el("i","ms-short");
+split.append(green,red);main.append(split);
+const observed=el("p","ms-data-time","In attesa della prima rilevazione disponibile per questo strumento.");
+main.append(observed);
+const chartWrap=el("div","ms-chart");
+const chartHeader=el("div","ms-chart-header");
+chartHeader.append(el("h3","","Storico posizioni Capital.com"),
+ el("p","","Bande da rilevazioni numeriche reali: non corrispondono ai timeframe del prezzo."));
+const periods=el("div","ms-periods");periods.setAttribute("role","group");
+periods.setAttribute("aria-label","Periodo dello storico Capital.com");
+const windows={"6h":6*3600000,"24h":86400000,"7g":7*86400000,"30g":30*86400000,"Tutto":Infinity};
+let selected="7g",allHistory=[],retail=null,capital=null;
+for(const name of Object.keys(windows)){
+ const button=el("button","",name);button.type="button";
+ button.setAttribute("aria-pressed",String(name===selected));
+ button.addEventListener("click",()=>{
+  selected=name;
+  for(const item of periods.querySelectorAll("button"))
+   item.setAttribute("aria-pressed",String(item===button));
+  drawHistory();
+ });
+ periods.append(button);
 }
-for(const p of providers){
- const card=elem("article","ms-card");card.id="ms-"+p.id;
- const header=elem("div","ms-card-top"),heading=elem("h3","",p.name);
- const status=elem("span","ms-status",p.id==="myfxbook"?"Verifica dati…":p.status==="widget"?"Widget ufficiale":p.status==="api_external"?"API da attivare":p.status==="commercial"?"Professionale":"Sito esterno");
- header.append(heading,status);
- const measure=elem("p","ms-measure",p.measure);
- const note=elem("p","ms-note",p.note);
- const coverage=elem("p","ms-coverage","Copertura: "+p.coverage);
- const bottom=elem("div","ms-actions");
- const a=elem("a","ms-link","Apri fonte originale ↗");a.href=p.url();a.target="_blank";a.rel="noopener noreferrer";
- bottom.append(a);
- if(p.status==="widget"){
-   const w=elem("button","ms-widget-button","Mostra widget Dukascopy");
-   w.type="button";w.setAttribute("aria-expanded","false");
-   w.addEventListener("click",()=>showWidget(card,w));
-   bottom.prepend(w);
+const graph=el("div","ms-history-panel","Lo storico apparirà dopo due osservazioni valide.");
+const graphInfo=el("p","ms-data-time","Verde: LONG · Rosa: SHORT");
+chartWrap.append(chartHeader,periods,graph,graphInfo);
+main.append(chartWrap);
+const compare=el("div","ms-comparison");
+compare.append(el("h3","","Confronto Myfxbook ↔ Capital.com"));
+const comparisonText=el("p","","Attendo entrambi i feed.");
+compare.append(comparisonText);
+section.append(compare);
+const foot=el("p","ms-legend",
+ "Myfxbook misura la quota del volume in lotti; Capital.com misura la quota di posizioni dei suoi clienti. Non sono la stessa popolazione né la stessa metrica: niente media artificiale. Un segnale contrarian va verificato sul prezzo e sul COT.");
+const link=el("a","ms-link","Capital.com · sito ufficiale ↗");
+link.href="https://capital.com/it";link.target="_blank";link.rel="noopener noreferrer";
+section.append(foot,link);
+function state(label,ok=false){
+ status.className="ms-status "+(ok?"ms-live":"ms-stale");
+ status.textContent=label;
+}
+function updateComparison(){
+ const result=core.compare(retail,capital);
+ comparisonText.textContent=result.text;
+ compare.dataset.state=result.status;
+}
+function drawHistory(){
+ const records=core.points(allHistory,windows[selected]);
+ graph.replaceChildren();
+ graphInfo.textContent=records.length+" rilevazioni reali nel periodo "+selected+". · Verde: LONG, Rosa: SHORT.";
+ if(records.length<2){
+  graph.append(el("div","ms-no-chart",records.length===1?
+   "Un punto disponibile ("+dateLabel(records[0].t)+"). Serve almeno un'altra rilevazione per tracciare le bande.":
+   "Nessun andamento storico per questo periodo. Le rilevazioni mancanti non vengono ricostruite."));
+  return;
  }
- card.append(header,measure,note,coverage,bottom);
- host.append(card);
-}
-function showWidget(card,button){
- const old=card.querySelector(".ms-widget");
- if(old){const wasHidden=old.hidden;old.hidden=!wasHidden;button.setAttribute("aria-expanded",String(wasHidden));button.textContent=wasHidden?"Nascondi widget":"Mostra widget Dukascopy";return;}
- const panel=elem("div","ms-widget");
- const info=elem("div","ms-widget-info","Widget ufficiale: scegli lo strumento all'interno del pannello Dukascopy. Potrebbe essere bloccato da Safari o da restrizioni del provider.");
- const slot=elem("div","ms-widget-slot");
- const loading=elem("div","ms-widget-loading","Caricamento widget esterno. Se non appare, usa il link alla fonte originale.");
- slot.append(loading);panel.append(info,slot);card.append(panel);
- button.setAttribute("aria-expanded","true");button.textContent="Nascondi widget";
- // Official Dukascopy widget loader, configured for the forex instruments available in Remura.
- window.DukascopyApplet={
-   type:"historical_sentiment_index",
-   params:{
-     showHeader:false,tableBorderColor:"#30565f",liquidity:"consumers",
-     availableInstruments:[symbol.slice(0,3)+"/"+symbol.slice(3),"EUR/USD","GBP/USD","USD/JPY","USD/CHF","EUR/JPY","GBP/JPY"],
-     availableCurrencies:["AUD","CAD","CHF","GBP","HKD","JPY","MXN","NOK","NZD","PLN","RUB","SEK","SGD","TRY","USD","ZAR","EUR","XAG","XAU"],
-     last:true,sixhours:true,oneday:true,fivedays:true,width:"100%",height:"280",adv:"popup"
-   }
+ const xmlns="http://www.w3.org/2000/svg",W=730,H=235,LEFT=48,RIGHT=14,TOP=17,BOTTOM=38;
+ const svg=document.createElementNS(xmlns,"svg");
+ svg.setAttribute("viewBox","0 0 "+W+" "+H);
+ svg.setAttribute("role","img");
+ svg.setAttribute("aria-label","Capital.com storico osservato: verde percentuale long, rosa percentuale short; interruzioni in presenza di dati mancanti");
+ const start=records[0].ms,end=records[records.length-1].ms;
+ const X=t=>LEFT+(t-start)/Math.max(1,end-start)*(W-LEFT-RIGHT);
+ const Y=v=>TOP+(100-v)/100*(H-TOP-BOTTOM);
+ const add=(tag,attrs,text)=>{
+  const node=document.createElementNS(xmlns,tag);
+  for(const [k,v] of Object.entries(attrs))node.setAttribute(k,String(v));
+  if(text!==undefined)node.textContent=text;
+  svg.append(node);
+  return node;
  };
- const script=document.createElement("script");
- script.src="https://freeserv-static.dukascopy.com/2.0/core.js";
- script.async=true;script.onerror=()=>{loading.textContent="Widget non caricato. Apri Dukascopy dal collegamento originale.";};
- slot.append(script);
+ for(const v of [0,25,50,75,100]){
+  const y=Y(v);
+  add("line",{x1:LEFT,y1:y,x2:W-RIGHT,y2:y,stroke:"#315461","stroke-dasharray":"3 5"});
+  add("text",{x:LEFT-8,y:y+4,"text-anchor":"end",fill:"#a7c9cc","font-size":11},String(v)+"%");
+ }
+ for(const [x,t] of [[LEFT,start],[W-RIGHT,end]])
+  add("text",{x,y:H-12,"text-anchor":x===LEFT?"start":"end",fill:"#a7c9cc","font-size":11},dateLabel(t));
+ const groups=[];let group=[];
+ for(let i=0;i<records.length;i++){
+  // A schedule is nominally every 2h. Draw gaps instead of invented curves.
+  if(i>0&&records[i].ms-records[i-1].ms>4*3600000){
+   if(group.length)groups.push(group);
+   group=[];
+  }
+  group.push(records[i]);
+ }
+ if(group.length)groups.push(group);
+ for(const [key,color] of [["lPct","#51d8a6"],["sPct","#f78e95"]]){
+  for(const group of groups){
+   if(group.length===1){
+    add("circle",{cx:X(group[0].ms),cy:Y(group[0][key]),r:3.5,fill:color});
+   }else{
+    const points=group.map(p=>X(p.ms).toFixed(1)+","+Y(p[key]).toFixed(1)).join(" ");
+    const path="M "+group.map(p=>X(p.ms).toFixed(1)+" "+Y(p[key]).toFixed(1)).join(" L ")+
+      " L "+X(group[group.length-1].ms).toFixed(1)+" "+Y(0)+" L "+X(group[0].ms).toFixed(1)+" "+Y(0)+" Z";
+    add("path",{d:path,fill:color,"fill-opacity":0.13,stroke:"none"});
+    add("polyline",{points,fill:"none",stroke:color,"stroke-width":2.5,"stroke-linejoin":"round","stroke-linecap":"round"});
+   }
+  }
+ }
+ graph.append(svg);
 }
-async function myfxbook(){
- const card=section.querySelector("#ms-myfxbook");if(!card)return;
- const tag=card.querySelector(".ms-status");
+window.addEventListener("remura:retail",e=>{
+ if(e.detail?.symbol!==symbol)return;
+ retail=e.detail.current?{row:e.detail.current,fresh:e.detail.fresh===true}:null;
+ updateComparison();
+});
+async function loadCapital(){
  try{
-  const request=await fetch("./data/myfxbook/latest.json?t="+Date.now(),{cache:"no-store"});
-  if(!request.ok)throw Error("file non raggiungibile");
-  const data=await request.json(),r=data.symbols?.[symbol];
-  if(!r||r.lPct==null||r.sPct==null){tag.textContent="N/D";summary.textContent="Nessun campione Myfxbook valido per "+symbol+". Le altre fonti rimangono consultabili esternamente.";return;}
-  const age=Date.now()-Date.parse(r.t||data.updatedAt),fresh=Number.isFinite(age)&&age>=0&&age<3*3600000;
-  tag.textContent=fresh?"API collegata":"API collegata · datato";
-  tag.classList.add(fresh?"ms-live":"ms-stale");
-  const info=elem("div","ms-readings");
-  const lots=elem("div","ms-reading"),trades=elem("div","ms-reading");
-  const formatter=new Intl.NumberFormat("it-IT",{maximumFractionDigits:1});
-  lots.append(elem("small","","Quota lotti long"),elem("strong","",formatter.format(+r.lPct)+"%"));
-  const countLong=+r.lPos,countShort=+r.sPos,total=countLong+countShort;
-  const positionPercent=Number.isFinite(total)&&total>0?formatter.format(countLong/total*100)+"%":"N/D";
-  trades.append(elem("small","","Quota posizioni long"),elem("strong","",positionPercent));
-  info.append(lots,trades);card.insertBefore(info,card.querySelector(".ms-coverage"));
-  card.append(elem("p","ms-data-time","Ultimo campione "+dateLabel(r.t||data.updatedAt)+" (ora italiana)"+(fresh?"":" · ATTENZIONE: DATATO")));
-  const supported=providers.length;
-  summary.textContent="1 fonte con valori automatici verificabili (Myfxbook), "+(supported-1)+" ulteriori fonti consultabili o predisposte per "+symbol+". Nessuna media aggregata senza metriche omogenee.";
- }catch(e){tag.textContent="N/D";summary.textContent="Il feed Myfxbook non è raggiungibile in questa pagina. Verifica i collegamenti originali.";}
+  const response=await fetch("./private-api/capital/latest.json",{cache:"no-store"});
+  if(!response.ok)throw Error(String(response.status));
+  const data=await response.json(),row=data?.symbols?.[symbol];
+  if(data?.status!=="ok"||data.environment!=="demo"||!core.valid(row)){
+   state("Mercato non ancora coperto");
+   observed.textContent="Il collector Capital.com non ha dati verificati per "+symbol+". Nessun valore stimato.";
+   updateComparison();
+   return;
+  }
+  const age=core.ageMs(row,data.updatedAt),recent=core.fresh(row,data.updatedAt);
+  capital={row,fresh:recent};
+  longValue.textContent=percent(+row.lPct);
+  shortValue.textContent=percent(+row.sPct);
+  green.style.width=Number(row.lPct)+"%";
+  red.style.width=Number(row.sPct)+"%";
+  const when=row.t||data.updatedAt;
+  observed.textContent="Rilevato il "+dateLabel(when)+" (ora italiana) · Conto DEMO · "+
+   (recent?"Dato recente.":"Dato datato: non usare per confronto attuale.");
+  state(recent?"Capital.com · rilevazione recente":"Capital.com · dato datato",recent);
+  try{
+   const archive=await fetch("./private-api/capital/history/"+encodeURIComponent(symbol)+".json",{cache:"no-store"});
+   if(archive.ok){
+    const raw=await archive.json();
+    allHistory=raw.symbol===symbol&&Array.isArray(raw.records)?raw.records:[];
+   }
+  }catch(_){/* no provider request, history is optional */}
+  drawHistory();
+  updateComparison();
+ }catch(_){
+  state("Dati Capital.com riservati");
+  observed.textContent="Capital.com raccoglie i numeri nel repository privato REMURA. La pagina attuale non ha ancora accesso autenticato a quell'archivio.";
+  updateComparison();
+ }
 }
-myfxbook();
+updateComparison();
+loadCapital();
 })();

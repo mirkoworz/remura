@@ -1,31 +1,42 @@
-/* REMURA v0.8 · Multi-source positioning dashboard. */
-.rem-sources .ms-intro h2{margin:4px 0 8px;font-size:23px;letter-spacing:-.03em}
-.rem-sources .ms-intro p{margin:0 0 12px;color:#aec7cb;font-size:12px;line-height:1.75}
-.rem-sources .ms-summary{border-radius:12px;padding:13px 15px;font-size:12px;line-height:1.65;background:#163734;border:1px solid #397466;color:#c2eee1;margin:12px 0 18px}
-.rem-sources .ms-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.rem-sources .ms-card{background:linear-gradient(140deg,#102a34,#0c222d);border:1px solid #31515c;border-radius:16px;padding:17px;min-width:0}
-.rem-sources .ms-card-top{display:flex;gap:10px;align-items:start;justify-content:space-between;flex-wrap:wrap;margin-bottom:7px}
-.rem-sources .ms-card h3{margin:0;font-size:18px;letter-spacing:-.02em;color:#e4faf2}
-.rem-sources .ms-status{background:#25353a;color:#afc6c7;border:1px solid #476169;padding:5px 8px;border-radius:9px;font-size:10px;font-weight:800}
-.rem-sources .ms-status.ms-live{background:#17443d;color:#9ff0d4;border-color:#4e987c}
-.rem-sources .ms-status.ms-stale{background:#423625;color:#f2c58a;border-color:#775f41}
-.rem-sources .ms-measure{margin:8px 0 6px;font-weight:760;font-size:13px;color:#d0e8e4}
-.rem-sources .ms-note,.rem-sources .ms-coverage{font-size:11px;color:#a4c0c6;line-height:1.65;margin:5px 0}
-.rem-sources .ms-coverage{margin:11px 0;color:#93b3b6}
-.rem-sources .ms-actions{display:flex;flex-wrap:wrap;gap:8px;margin:13px 0 0}
-.rem-sources .ms-link,.rem-sources .ms-widget-button{font-family:inherit;display:inline-block;border-radius:10px;padding:9px 11px;font-size:11px;font-weight:790;cursor:pointer;background:#17433a;color:#a5f2d5;border:1px solid #4f907c;text-decoration:none}
-.rem-sources .ms-link:hover,.rem-sources .ms-widget-button:hover{background:#21564c}
-.rem-sources .ms-widget-button{background:#1b3441;border-color:#3d6781;color:#c1d9fd}
-.rem-sources .ms-widget{background:#fff;color:#263b43;border:1px solid #64817d;border-radius:11px;margin-top:13px;padding:12px;min-height:180px}
-.rem-sources .ms-widget[hidden]{display:none}
-.rem-sources .ms-widget-info{font-size:11px;margin-bottom:12px;line-height:1.65}
-.rem-sources .ms-widget-slot{min-height:160px}
-.rem-sources .ms-widget-loading{font-size:11px;color:#586f77;line-height:1.7}
-.rem-sources .ms-readings{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:11px 0}
-.rem-sources .ms-reading{background:#13383e;border:1px solid #32665f;padding:11px;border-radius:10px}
-.rem-sources .ms-reading small{color:#b0d9d0;font-size:10px;display:block}
-.rem-sources .ms-reading strong{font-size:24px;color:#79ebc2;font-variant-numeric:tabular-nums}
-.rem-sources .ms-data-time{color:#aac7cc;font-size:11px}
-.rem-sources .ms-legend{margin-top:16px;border-top:1px solid #2f5159;padding-top:14px;font-size:11px;line-height:1.8;color:#aac7c8}
-.rem-sources .ms-legend strong{color:#85edd1}
-@media(max-width:760px){.rem-sources .ms-list{grid-template-columns:1fr}.rem-sources .ms-card{padding:15px}}
+/* REMURA v1.3 · Two source retail comparison; Capital private-data panel. */
+.rem-sources{min-width:0;--ms-long:#57dfad;--ms-short:#fb8e99}
+.rem-sources .ms-intro{position:relative;padding-right:0}
+.rem-sources .ms-intro h2{font-size:clamp(22px,3vw,29px);margin:5px 0 6px;letter-spacing:-.03em;color:#e7faf3}
+.rem-sources .ms-intro p{color:#b5cdd0;font-size:12px;max-width:780px;line-height:1.75;margin:0 0 12px}
+.rem-sources .ms-status{display:inline-block;font-size:11px;font-weight:760;line-height:1.5;padding:6px 10px;border-radius:9px;border:1px solid #69725b;color:#ffe0b7;background:#3d3328}
+.rem-sources .ms-status.ms-live{color:#aaf5d4;background:#173d37;border-color:#488a74}
+.rem-sources .ms-main{margin-top:15px}
+.rem-sources .ms-readings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.rem-sources .ms-reading{min-width:0;background:linear-gradient(150deg,#103039,#10252f);border:1px solid #35645c;border-radius:13px;padding:15px}
+.rem-sources .ms-reading small{display:block;font-size:11px;color:#bbd6d3;margin-bottom:5px}
+.rem-sources .ms-reading strong{font-size:clamp(25px,5vw,39px);font-weight:800;letter-spacing:-.035em;line-height:1.3;font-variant-numeric:tabular-nums}
+.rem-sources .ms-reading:first-child strong{color:var(--ms-long)}
+.rem-sources .ms-reading:last-child strong{color:var(--ms-short)}
+.rem-sources .ms-split{height:15px;display:flex;overflow:hidden;background:#294752;border-radius:30px;margin:13px 0 10px}
+.rem-sources .ms-split i{display:block;height:100%;width:0}
+.rem-sources .ms-long{background:#47c78a}
+.rem-sources .ms-short{background:#ee7c8e}
+.rem-sources .ms-data-time{font-size:11px;line-height:1.65;color:#acc6cc;margin:7px 0}
+.rem-sources .ms-chart{margin:24px 0 12px;padding-top:17px;border-top:1px solid #31545c}
+.rem-sources .ms-chart-header h3{font-size:17px;color:#e7faf3;margin:0 0 5px}
+.rem-sources .ms-chart-header p{font-size:11px;color:#a8c4c8;line-height:1.6;margin:0 0 12px}
+.rem-sources .ms-periods{display:flex;gap:6px;flex-wrap:wrap;margin:11px 0}
+.rem-sources .ms-periods button{background:#1a3540;color:#c6dce0;border:1px solid #3a5965;border-radius:9px;padding:8px 11px;font-size:11px;font-weight:780;font-family:inherit;cursor:pointer}
+.rem-sources .ms-periods button[aria-pressed=true]{color:#c4fce1;border-color:#63cba3;background:#235046}
+.rem-sources .ms-history-panel{background:#0b2029;border:1px solid #2f525a;border-radius:13px;min-height:160px;padding:12px;min-width:0}
+.rem-sources .ms-history-panel svg{width:100%;display:block;height:auto;max-height:280px}
+.rem-sources .ms-no-chart{min-height:135px;display:flex;align-items:center;justify-content:center;padding:15px;text-align:center;color:#b7cace;font-size:12px;line-height:1.7}
+.rem-sources .ms-comparison{background:#132e37;border:1px solid #3d626a;border-radius:12px;padding:14px;margin:17px 0;color:#d0e8e5}
+.rem-sources .ms-comparison[data-state=divergence]{background:#3a2a27;border-color:#b07e5c}
+.rem-sources .ms-comparison h3{margin:0 0 6px;font-size:15px}
+.rem-sources .ms-comparison p{font-size:12px;line-height:1.75;margin:0}
+.rem-sources .ms-legend{margin:14px 0 10px;padding-top:12px;border-top:1px solid #2f5159;font-size:11px;line-height:1.8;color:#a6c2c6}
+.rem-sources .ms-link{display:inline-block;margin:7px 0 0;text-decoration:none;border:1px solid #3a7068;color:#99eecf;background:#153932;font-size:11px;font-weight:740;border-radius:9px;padding:8px 11px}
+.rem-sources .ms-link:hover{background:#1d4e43}
+@media(max-width:520px){
+ .rem-sources .ms-readings{gap:7px}
+ .rem-sources .ms-reading{padding:11px}
+ .rem-sources .ms-reading strong{font-size:clamp(20px,5vw,28px)}
+ .rem-sources .ms-history-panel{padding:5px}
+ .rem-sources .ms-periods button{flex:1;min-width:44px}
+}

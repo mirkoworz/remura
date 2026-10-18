@@ -1,0 +1,82 @@
+/* REMURA dual retail sentiment: strict samples, independent metrics, honest gaps. */
+const test=require("node:test"),assert=require("node:assert/strict");
+const fs=require("node:fs");
+const core=require("../sentiment-core.js");
+const now=Date.parse("2026-10-18T16:30:00Z");
+const when="2026-10-18T16:00:00Z";
+const lot={t:when,lPct:78,sPct:22,lLots:100,sLots:25,lPos:300,sPos:90};
+const capital={t:when,lPct:19,sPct:81};
+
+test("strict long short percentages; false or incomplete samples excluded",()=>{
+ assert.equal(core.valid(lot),true);
+ assert.equal(core.valid(capital),true);
+ for(const x of [null,{}, {lPct:null,sPct:100},
+  {lPct:NaN,sPct:40},{lPct:Infinity,sPct:20},
+  {lPct:-1,sPct:101},{lPct:70,sPct:70}])
+  assert.equal(core.valid(x),false);
+});
+test("freshness is timestamped: no recent-looking stale or future feeds",()=>{
+ assert.equal(core.fresh(lot,when,now),true);
+ assert.equal(core.fresh({...lot,t:"2026-10-18T07:00:00Z"},null,now),false);
+ assert.equal(core.fresh({...lot,t:"2026-10-19T00:00:00Z"},null,now),false);
+ assert.equal(core.fresh({...lot,t:"invalid"},null,now),false);
+});
+test("divergence when volume and positions disagree, no institutional proof",()=>{
+ const result=core.compare({row:lot,fresh:true},{row:capital,fresh:true});
+ assert.equal(result.status,"divergence");
+ assert.match(result.text,/Myfxbook per volume in lotti/);
+ assert.match(result.text,/Capital.com per posizioni/);
+ assert.match(result.text,/Non dimostra/);
+ assert.doesNotMatch(result.text,/istituzionali sono short/i);
+});
+test("both agreeing, neutral, or stale are never invented consensus",()=>{
+ const agree=core.compare({row:lot,fresh:true},{row:{...capital,lPct:71,sPct:29},fresh:true});
+ assert.equal(agree.status,"aligned");
+ assert.match(agree.text,/non è una conferma istituzionale/i);
+ assert.equal(core.compare({row:lot,fresh:true},{row:{...capital,lPct:49,sPct:51},fresh:true}).status,"neutral");
+ assert.equal(core.compare({row:lot,fresh:true},{row:capital,fresh:false}).status,"unavailable");
+ assert.equal(core.compare(null,{row:capital,fresh:true}).status,"unavailable");
+});
+test("history respects true sample timestamps and window, never fabricates intermediate points",()=>{
+ const dates=[
+  {t:"2026-10-18T05:00:00Z",lPct:60,sPct:40},
+  {...lot,t:"2026-10-18T12:00:00Z"},
+  {...lot,t:"2026-10-18T12:00:00Z",lPct:75,sPct:25},
+  {...lot,t:"2026-10-18T16:00:00Z"},
+  {...lot,t:"invalid"},
+  {...lot,t:"2026-10-20T16:00:00Z"}
+ ];
+ const last=core.points(dates,6*3600000,now);
+ assert.deepEqual(last.map(x=>x.t),["2026-10-18T12:00:00Z","2026-10-18T16:00:00Z"]);
+ assert.equal(last[0].lPct,75);
+ assert.equal(core.points(dates,3600000,now).length,1);
+});
+test("all 35 market pages use only Myfxbook and Capital display code; no provider credentials",()=>{
+ const html=fs.readFileSync("asset.html","utf8");
+ const js=fs.readFileSync("sources.js","utf8");
+ const retail=fs.readFileSync("retail.js","utf8");
+ const css=fs.readFileSync("sources.css","utf8");
+ for(const asset of ["sentiment-core.js?v=13","sources.js?v=13","sources.css?v=13","retail.js?v=13"])
+  assert.ok(html.includes(asset),asset);
+ assert.ok(html.indexOf("retail.js?v=13")<html.indexOf("sentiment-core.js?v=13"));
+ assert.ok(html.indexOf("sentiment-core.js?v=13")<html.indexOf("sources.js?v=13"));
+ assert.ok(retail.includes("./data/myfxbook/"),"public Myfxbook archive path must be used as fallback");
+ assert.ok(retail.includes("./private-api/retail/"),"private reader retained");
+ assert.ok(js.includes("/private-api/capital/latest.json"));
+ assert.ok(js.includes("/private-api/capital/history/"));
+ assert.ok(js.includes("remura:retail"),"do not fetch Myfxbook twice");
+ assert.ok(js.includes("core.compare"));
+ assert.ok(js.includes("Camp")||css.includes("ms-reading"));
+ for(const provider of ["Dukascopy","FX Blue","FXCM","IG Client Sentiment","OANDA","Forex Factory"])
+  assert.ok(!js.includes(provider),provider+" must be removed from pair pages");
+ for(const secret of ["CAPITAL_API_KEY","CAPITAL_IDENTIFIER","CAPITAL_API_PASSWORD","MYFXBOOK_PASSWORD"])
+  assert.ok(!js.includes(secret),"no secrets in browser code");
+ assert.ok(html.includes("remura:")===false||html.includes("retail-module"));
+});
+test("asset and sources page no longer advertise seven live retail sources",()=>{
+ const html=fs.readFileSync("asset.html","utf8"),sources=fs.readFileSync("fonti.html","utf8");
+ assert.match(sources,/Myfxbook/);
+ assert.match(sources,/Capital\.com/);
+ assert.doesNotMatch(sources,/7 provider|Dukascopy|IG Client Sentiment|FX Blue|FXCM SSI/);
+ assert.doesNotMatch(html,/(Myfxbook, Dukascopy|IG, FX Blue)/);
+});
