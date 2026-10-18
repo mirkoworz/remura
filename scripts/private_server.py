@@ -42,6 +42,8 @@ SAFE_ASSETS={
 STATUS_PATH="/private-api/health"
 RETAIL_LATEST="/private-api/retail/latest.json"
 IG_LATEST="/private-api/ig/latest.json"
+CAPITAL_LATEST="/private-api/capital/latest.json"
+CAPITAL_HISTORY_RE=re.compile(r"^/private-api/capital/history/([A-Z0-9]{3,8})[.]json$")
 RETAIL_HISTORY_RE=re.compile(r"^/private-api/retail/history/([A-Z0-9]{3,8})[.]json$")
 PRICE_RE=re.compile(r"^/private-api/prices/([A-Z0-9]{3,8})$")
 
@@ -97,6 +99,66 @@ def retail_document(db_path,path):
         return None
     return {"symbol":symbol,"source":"Myfxbook Community Outlook",
             "records":data["records"][-2250:]}
+
+
+
+def capital_document(db_path,path):
+    """Release numeric-only Capital aggregates from private disk, not credentials."""
+    private=Path(db_path).resolve().parent/"capital"
+    if path==CAPITAL_LATEST:
+        filename=private/"latest.json"
+        symbol=None
+    else:
+        match=CAPITAL_HISTORY_RE.fullmatch(path)
+        if not match or match.group(1) not in MARKETS:
+            return None
+        symbol=match.group(1)
+        filename=private/"history"/(symbol+".json")
+    if not filename.is_file() or filename.stat().st_size>3_000_000:
+        return None
+    try:
+        content=json.loads(filename.read_text("utf-8"))
+    except (ValueError,OSError):
+        return None
+    if not isinstance(content,dict):
+        return None
+    if symbol is None:
+        if content.get("status")!="ok" or content.get("environment")!="demo":
+            return None
+        items=content.get("symbols")
+        if not isinstance(items,dict):
+            return None
+    else:
+        if content.get("symbol")!=symbol or not isinstance(content.get("records"),list):
+            return None
+        items={symbol:content["records"]}
+    def validated(item):
+        if not isinstance(item,dict):
+            return None
+        try:
+            long=float(item.get("lPct"))
+            short=float(item.get("sPct"))
+        except (TypeError,ValueError):
+            return None
+        if not (math.isfinite(long) and math.isfinite(short) and
+                0<=long<=100 and 0<=short<=100 and abs(long+short-100)<=0.51):
+            return None
+        t=item.get("t")
+        if not isinstance(t,str) or not 15<=len(t)<=40:
+            return None
+        return {"t":t,"lPct":long,"sPct":short,"metric":"client_positions"}
+    if symbol is None:
+        cleaned={k:v for k,row in items.items() if k in MARKETS
+                 if (v:=validated(row)) is not None}
+        if not cleaned:
+            return None
+        return {"status":"ok","source":"Capital.com Client Sentiment",
+                "environment":"demo","updatedAt":content.get("updatedAt"),
+                "symbols":cleaned}
+    records=[value for item in items[symbol]
+             if (value:=validated(item)) is not None]
+    return {"symbol":symbol,"source":"Capital.com Client Sentiment",
+            "records":records[-1100:]} if records else None
 
 
 def ig_document(db_path):
@@ -172,6 +234,11 @@ def http_handler(db_path):
 
         def do_GET(self):
             path=urlsplit(self.path).path
+            if path==CAPITAL_LATEST or CAPITAL_HISTORY_RE.fullmatch(path):
+                data=capital_document(db_path,path)
+                if data is None:self.response(503,{"error":"capital_not_collected"})
+                else:self.response(200,data)
+                return
             if path==IG_LATEST:
                 data=ig_document(db_path)
                 if data is None:self.response(503,{"error":"ig_not_collected"})
@@ -195,6 +262,8 @@ def http_handler(db_path):
                             "lastError":status.get("last_error"),
                             "retailStatus":status.get("retail_status","disabled"),
                             "retailLastSuccess":status.get("retail_last_success"),
+                            "capitalStatus":status.get("capital_status","disabled"),
+                            "capitalLastSuccess":status.get("capital_last_success"),
                             "igStatus":status.get("ig_status","disabled"),
                             "igLastSuccess":status.get("ig_last_success"),
                             "instruments":symbols_available(db),
@@ -373,6 +442,48 @@ def ig_once(db_path,runner=subprocess.run):
         return False
 
 
+
+def capital_once(db_path,runner=subprocess.run):
+    """Isolated demo-only Capital read; persistent budget is private and not reset."""
+    db=connect(db_path)
+    creds=("CAPITAL_API_KEY","CAPITAL_IDENTIFIER","CAPITAL_API_PASSWORD")
+    if not all(os.environ.get(k) for k in creds):
+        try:set_status(db,capital_status="awaiting_credentials")
+        finally:db.close()
+        return False
+    try:set_status(db,capital_status="collecting")
+    finally:db.close()
+    directory=Path(db_path).resolve().parent/"capital"
+    directory.mkdir(parents=True,exist_ok=True,mode=0o700)
+    env=dict(os.environ)
+    env["REMURA_CAPITAL_PRIVATE_DIR"]=str(directory)
+    env["REMURA_CAPITAL_ENABLED"]="1"
+    command=[sys.executable,str(ROOT/"scripts"/"update_capital.py")]
+    try:
+        outcome=runner(command,cwd=ROOT,env=env,stdin=subprocess.DEVNULL,
+                       stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
+                       timeout=120,check=False)
+        if outcome.returncode!=0 or capital_document(db_path,CAPITAL_LATEST) is None:
+            raise RuntimeError("No valid Capital demo data")
+        db=connect(db_path)
+        try:set_status(db,capital_status="running",
+                       capital_last_success=utcnow().isoformat(),capital_last_error="")
+        finally:db.close()
+        return True
+    except (OSError,ValueError,RuntimeError,subprocess.SubprocessError):
+        db=connect(db_path)
+        try:set_status(db,capital_status="failed",
+                       capital_last_error="Capital demo unavailable or budget exhausted")
+        finally:db.close()
+        return False
+
+
+def capital_loop(db_path,stop):
+    while not stop.is_set():
+        capital_once(db_path)
+        stop.wait(next_cycle(2*60*60,180))
+
+
 def ig_loop(db_path,stop):
     while not stop.is_set():
         ig_once(db_path)
@@ -446,6 +557,9 @@ def main():
     if os.environ.get("REMURA_RETAIL_ENABLED","0")=="1":
         thread_retail=threading.Thread(target=retail_loop,args=(db_path,stop),daemon=True)
         thread_retail.start()
+    if os.environ.get("REMURA_CAPITAL_ENABLED","0")=="1":
+        thread_capital=threading.Thread(target=capital_loop,args=(db_path,stop),daemon=True)
+        thread_capital.start()
     if os.environ.get("REMURA_IG_ENABLED","0")=="1":
         thread_ig=threading.Thread(target=ig_loop,args=(db_path,stop),daemon=True)
         thread_ig.start()
