@@ -1,0 +1,32 @@
+[Unit]
+Description=REMURA private market data and dashboard (loopback only)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=remura
+Group=remura
+WorkingDirectory=/opt/remura
+EnvironmentFile=/opt/remura/private/remura.env
+ExecStart=/opt/remura/.venv/bin/python /opt/remura/scripts/private_server.py --port 8765 --database /opt/remura/private/remura-prices.sqlite3
+Restart=always
+RestartSec=15
+TimeoutStopSec=30
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/opt/remura/private
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+CapabilityBoundingSet=
+LockPersonality=true
+LimitNOFILE=8192
+MemoryMax=1G
+
+[Install]
+WantedBy=multi-user.target

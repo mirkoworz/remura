@@ -1,0 +1,65 @@
+name: REMURA private price engine checks
+on:
+  pull_request:
+    paths:
+      - 'price-core.js'
+      - 'price.js'
+      - 'price.css'
+      - 'insights.js'
+      - 'asset.html'
+      - 'scripts/price_feed.py'
+      - 'scripts/ctrader_feed.py'
+      - 'scripts/price_store.py'
+      - 'scripts/private_server.py'
+      - 'scripts/ctrader_tokens.py'
+      - 'tests/test_ctrader_tokens.py'
+      - 'tests/test_private_server.py'
+      - 'PRIVATE-AUTOMATION.md'
+      - 'VPS-SETUP.md'
+      - 'deploy/**'
+      - 'tests/test_vps_deployment.py'
+      - 'retail.js'
+      - 'sw.js'
+      - 'tests/price.test.js'
+      - 'tests/test_price_feed.py'
+      - 'tests/test_ctrader_feed.py'
+      - 'PRICE-ENGINE.md'
+      - '.github/workflows/price-checks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: node --check price-core.js && node --check price.js && node --check insights.js
+      - run: python -m py_compile scripts/price_feed.py scripts/ctrader_feed.py scripts/ctrader_tokens.py scripts/price_store.py scripts/private_server.py
+      - run: node --test tests/price.test.js tests/insights.test.js
+      - run: python -m unittest discover -s tests -p 'test_price_feed.py' -v
+      - run: python -m unittest discover -s tests -p 'test_ctrader_feed.py' -v
+      - run: python -m unittest discover -s tests -p 'test_private_server.py' -v
+      - run: python -m unittest discover -s tests -p 'test_ctrader_tokens.py' -v
+      - run: python -m unittest discover -s tests -p 'test_vps_deployment.py' -v
+      - run: bash -n deploy/bootstrap-ubuntu.sh deploy/update-ubuntu.sh
+      - name: Verify no personal feed or API token is publicly embedded
+        run: |
+          node - <<'NODE'
+          const fs=require('fs'),html=fs.readFileSync('asset.html','utf8'),ui=fs.readFileSync('price.js','utf8');
+          for (const script of ['price-core.js?v=10','price.js?v=10','price.css?v=10'])
+            if(!html.includes(script))throw new Error('Missing asset integration: '+script);
+          if(!ui.includes('type="file"'))throw new Error('Local file chooser missing');
+          if(ui.includes('api.twelvedata.com')||ui.includes('api-fxpractice.oanda.com'))
+            throw new Error('Frontend must never call credentialled price APIs');
+          if(!fs.readFileSync('.gitignore','utf8').includes('local/'))
+            throw new Error('Private prices not gitignored');
+          console.log('Private file-only UI verified');
+          NODE

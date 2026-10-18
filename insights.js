@@ -142,6 +142,13 @@
       if (!input || input.symbol!==symbol) return;
       cotSeries=input.series;settings={symbol, isFX:!!input.isFX,isMetal:!!input.isMetal,labels:input.labels};
       paint();
+      window.dispatchEvent(new CustomEvent("remura:cot",{detail:{symbol}}));
+    },
+    getAnalysis() {
+      return cotSeries&&settings ? core.analyze(cotSeries,Object.assign({},settings,{now:Date.now()})) : null;
+    },
+    getRetail() {
+      return core.retailContext(retail,retailRecords);
     },
     error(message) {
       section.dataset.state="missing";
@@ -155,6 +162,7 @@
       list("rm-reasons",["Nessuna previsione o posizione simulata."]);
       list("rm-limits",["Senza COT completo, l'analisi del posizionamento non è disponibile."]);
       cotSeries=null;settings=null;
+      window.dispatchEvent(new CustomEvent("remura:cot",{detail:{symbol}}));
     }
   };
   window.addEventListener("remura:retail",e=>{

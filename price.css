@@ -1,0 +1,32 @@
+/* REMURA personal price engine. The chosen JSON remains in browser memory. */
+.rm-price{grid-column:1/-1;border:1px solid #3a6871;background:linear-gradient(148deg,#102e3a,#0a1d28);border-radius:19px;padding:21px;margin:0 0 2px;color:#e6f7f4}
+.rm-price *{box-sizing:border-box}
+.rm-price .rp-top{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;flex-wrap:wrap}
+.rm-price .rp-eyebrow{font-size:10px;font-weight:800;letter-spacing:.15em;color:#7ce8cc;text-transform:uppercase}
+.rm-price h2{font-size:22px;margin:5px 0 8px}
+.rm-price h3{font-size:15px;margin:18px 0 9px}
+.rm-price .rp-muted{font-size:12px;color:#a8c6ca;line-height:1.6;margin:6px 0}
+.rm-price .rp-flag{border:1px solid #597783;border-radius:20px;padding:6px 10px;font-size:11px;color:#d0e4e5;font-weight:800;background:#15353f}
+.rm-price[data-status="unavailable"] .rp-flag,.rm-price[data-status="conflict"] .rp-flag{color:#ffd2a2;border-color:#946d4e}
+.rm-price[data-status="confirmed"] .rp-flag{color:#96edce;border-color:#56967c}
+.rm-price .rp-upload{border:1px dashed #668688;background:#10333a;border-radius:13px;padding:14px;margin:14px 0}
+.rm-price .rp-upload label{display:block;font-size:12px;font-weight:800;margin-bottom:8px}
+.rm-price input[type="file"]{display:block;width:100%;color:#cde9e9;font-size:12px;cursor:pointer}
+.rm-price .rp-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0}
+.rm-price .rp-box{background:#0c2731;border:1px solid #315661;border-radius:14px;padding:14px;min-width:0}
+.rm-price .rp-box h4{font-size:14px;letter-spacing:.03em;color:#90edd3;margin:0 0 6px}
+.rm-price .rp-box strong{display:block;font-size:19px;font-variant-numeric:tabular-nums;letter-spacing:-.02em;overflow-wrap:anywhere}
+.rm-price .rp-box p{font-size:11px;color:#c4dbda;line-height:1.6;margin:7px 0}
+.rm-price .rp-box small{font-size:10px;color:#9bbabe;display:block}
+.rm-price .rp-result{border-left:3px solid #6be4bf;padding:12px 14px;background:#123640;font-size:13px;line-height:1.65;border-radius:0 10px 10px 0}
+.rm-price .rp-compare{background:#0c2d35;border:1px solid #40686d;border-radius:12px;padding:14px;font-size:13px;line-height:1.7;margin-top:10px}
+.rm-price details{border-top:1px solid #31545d;margin-top:16px;padding-top:13px}
+.rm-price summary{cursor:pointer;font-size:12px;font-weight:800;color:#cae9e6}
+.rm-price code{font-size:11px;color:#9bedcb}
+.rm-price .rp-inline{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.rm-price .rp-inline span{font-size:11px;color:#b2cfd0}
+@media(max-width:700px){.rm-price{padding:16px 13px}.rm-price .rp-grid{grid-template-columns:1fr}.rm-price .rp-box{padding:12px}}
+
+.rm-price .rp-return{cursor:pointer;color:#a7edda;background:#173b46;border:1px solid #497a80;border-radius:9px;padding:8px 12px;font-size:12px;font-weight:750;margin-top:6px}
+.rm-price .rp-return:hover{background:#1d4b55}
+.rm-price #rp-auto{font-size:12px;font-weight:700;color:#8fe4cf;margin:11px 0}
