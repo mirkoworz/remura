@@ -16,6 +16,10 @@ const sourceDefs=[
    status:"automatic",coverage:"Gruppi di mercato restituiti dall'API IG autenticata",
    url:()=> "https://www.ig.com/it/dati-di-mercato",
    note:"Fonte indipendente, attivabile con credenziali API lato GitHub Actions. Non usa gli stessi lotti o lo stesso campione di Myfxbook.",ok:true},
+ {id:"capital",name:"Capital.com Demo",measure:"Percentuale delle posizioni long e short dei clienti Capital.com",
+   status:"automatic",coverage:"Mercati confermati dall'API DEMO, inizialmente argento",
+   url:()=> "https://capital.com/it",
+   note:"Raccolta demo autonoma con storico numerico privato. Non usa MetaApi e non rappresenta direttamente gli istituzionali.",ok:true},
  {id:"dukascopy",name:"Dukascopy SWFX",measure:"Indice del sentiment di liquidity consumers e providers",
    status:"widget",coverage:"Coppie Forex selezionate",
    url:()=> "https://www.dukascopy.com/trading-tools/widget/historical_sentiment_index",
@@ -57,7 +61,7 @@ const summary=elem("div","ms-summary","Controllo dei feed in corso…");section.
 const compare=elem("div","ms-comparison");compare.hidden=true;section.append(compare);
 const host=elem("div","ms-list");section.append(host);
 const legend=elem("div","ms-legend");
-legend.textContent="Myfxbook misura il peso dei lotti e il numero di posizioni; IG misura la quota delle posizioni dei suoi clienti. Dukascopy osserva un diverso pool di operatori. I campioni non sono rappresentativi dell'intero mercato: nessuna media e nessuna identificazione automatica delle controparti istituzionali. Il COT resta settimanale.";
+legend.textContent="Myfxbook misura il peso dei lotti e il numero di posizioni; IG e Capital.com misurano la quota delle posizioni dei rispettivi clienti. Dukascopy osserva un diverso pool di operatori. I campioni non sono rappresentativi dell'intero mercato: nessuna media e nessuna identificazione automatica delle controparti istituzionali. Il COT resta settimanale.";
 section.append(legend);
 const providers=sourceDefs.filter(s=>s.ok);
 const cards=new Map();
@@ -103,7 +107,7 @@ function showWidget(card,button){
  panel.append(frame);card.append(panel);
  button.textContent="Nascondi Dukascopy";button.setAttribute("aria-expanded","true");
 }
-const reading={myfxbook:null,ig:null};
+const reading={myfxbook:null,ig:null,capital:null};
 const fmt=new Intl.NumberFormat("it-IT",{maximumFractionDigits:1});
 function percent(n){return fmt.format(n)+"%";}
 function validPercent(row){
@@ -122,8 +126,9 @@ function addNumbers(id,row,time,age,environment){
   const box=elem("div","ms-reading");
   box.append(elem("small","",label),elem("strong","",value));info.append(box);
  };
- add(id==="ig"?"Posizioni long IG":"Lotti long Myfxbook",percent(+row.lPct));
- if(id==="ig")add("Posizioni short IG",percent(+row.sPct));
+ const caption=id==="capital"?"Capital.com":id==="ig"?"IG":"Myfxbook";
+ add(id==="myfxbook"?"Lotti long Myfxbook":"Posizioni long "+caption,percent(+row.lPct));
+ if(id!=="myfxbook")add("Posizioni short "+caption,percent(+row.sPct));
  else {
   const total=Number(row.lPos)+Number(row.sPos);
   add("Posizioni long Myfxbook",Number.isFinite(total)&&total>0?percent(Number(row.lPos)/total*100):"N/D");
@@ -131,7 +136,7 @@ function addNumbers(id,row,time,age,environment){
  card.insertBefore(info,card.querySelector(".ms-coverage"));
  const label=elem("p","ms-data-time","Acquisizione "+dateLabel(time)+" (ora italiana)"+
    (age>3*3600000?" · DATO DATATO":"")+
-   (environment==="demo"?" · Accesso IG demo":""));
+   (environment==="demo"?" · Fonte demo":""));
  card.append(label);
 }
 async function fetchJson(path){
@@ -153,25 +158,56 @@ async function loadSource(id,path){
   addNumbers(id,row,time,age,data.environment);
   if(tiny)cards.get(id).card.append(elem("p","ms-data-time","Campione inferiore a 30 posizioni: escluso dal confronto."));
   reading[id]={row,fresh:usable};
+  if(id==="capital")await loadCapitalHistory();
  }catch(error){
   setStatus(id,error.message==="HTTP 503"?"Non ancora attiva":error.message==="HTTP 404"?"API privata assente":"Feed non raggiungibile","ms-stale");
  }
 }
+async function loadCapitalHistory(){
+ try{
+  const data=await fetchJson("/private-api/capital/history/"+symbol+".json");
+  if(!Array.isArray(data.records))return;
+  const points=data.records.filter(validPercent).filter(v=>Number.isFinite(Date.parse(v.t))).slice(-96);
+  if(points.length<2)return;
+  const card=cards.get("capital")?.card;
+  if(!card)return;
+  const title=elem("p","ms-data-time","Storico Capital.com · "+points.length+" rilevazioni (non candele)");
+  card.append(title);
+  const ns="http://www.w3.org/2000/svg",svg=document.createElementNS(ns,"svg");
+  svg.setAttribute("viewBox","0 0 320 112");
+  svg.setAttribute("role","img");
+  svg.setAttribute("aria-label","Andamento storico delle percentuali long e short Capital.com");
+  svg.classList.add("ms-history");
+  const tMin=Date.parse(points[0].t),tMax=Date.parse(points[points.length-1].t);
+  const tSpan=Math.max(1,tMax-tMin);
+  for(const [name,color] of [["lPct","#53dcab"],["sPct","#ffac89"]]){
+   const line=document.createElementNS(ns,"polyline");
+   line.setAttribute("fill","none");
+   line.setAttribute("stroke",color);
+   line.setAttribute("stroke-width","2");
+   line.setAttribute("points",points.map(p=>{
+    const x=10+300*(Date.parse(p.t)-tMin)/tSpan;
+    return x.toFixed(1)+","+(106-Number(p[name])*1).toFixed(1);
+   }).join(" "));
+   svg.append(line);
+  }
+  card.append(svg);
+ }catch(_){/* historical data are optional; no additional provider call */}
+}
 function updateSummary(){
- const n=Object.values(reading).filter(s=>s?.fresh).length;
- summary.textContent=n+" fonte"+(n===1?"":"i")+" numerica"+(n===1?"":"he")+" aggiornata"+(n===1?"":"e")+" su 2 possibili per "+symbol+
-  ". Ogni fonte mantiene unità, campione e data propri. Widget e siti esterni non sono conteggiati.";
- const m=reading.myfxbook,i=reading.ig;
- if(!m?.fresh||!i?.fresh){compare.hidden=true;return;}
- const a=Math.abs(m.row.lPct-50)<5?"neutro":m.row.lPct>50?"long":"short";
- const b=Math.abs(i.row.lPct-50)<5?"neutro":i.row.lPct>50?"long":"short";
+ const active=Object.entries(reading).filter(([,value])=>value?.fresh);
+ summary.textContent=active.length+" fonti numeriche aggiornate su 3 possibili per "+symbol+
+  ". Myfxbook misura il volume in lotti; IG e Capital.com misurano posizioni nei loro rispettivi campioni. Nessun segnale istituzionale automatico.";
+ if(active.length<2){compare.hidden=true;return;}
+ const sides=active.map(([id,value])=>({id,side:Math.abs(value.row.lPct-50)<5?"neutro":value.row.lPct>50?"long":"short"}));
+ const positive=sides.filter(x=>x.side==="long").length,negative=sides.filter(x=>x.side==="short").length;
  compare.hidden=false;
- compare.textContent=a==="neutro"||b==="neutro"?"Uno dei due campioni è vicino all'equilibrio: nessuna convergenza forte.":
-  a===b?"Entrambi i campioni hanno prevalenza "+a+", ma si basano su metriche diverse. Non è un segnale istituzionale.":
-  "DIVERGENZA: Myfxbook per lotti prevale "+a+", IG per posizioni prevale "+b+". Campioni indipendenti: verificare prima di interpretare.";
+ compare.textContent=positive&&negative?"DIVERGENZA fra campioni: "+sides.map(x=>x.id+" "+x.side).join(" · ")+". Nessuna prova diretta del lato istituzionale.":
+  "Confronto dei campioni: "+sides.map(x=>x.id+" "+x.side).join(" · ")+". Differenti metriche e popolazioni, nessuna media artificiale.";
 }
 Promise.all([
  loadSource("myfxbook","/private-api/retail/latest.json"),
- loadSource("ig","/private-api/ig/latest.json")
+ loadSource("ig","/private-api/ig/latest.json"),
+ loadSource("capital","/private-api/capital/latest.json")
 ]).then(updateSummary);
 })();
