@@ -50,7 +50,8 @@ function draw(){
  const unique=new Map(all.map(row=>[row.t,row]));
  const timeline=[...unique.values()];
  const lastTime=timeline.length?Date.parse(timeline[timeline.length-1].t):Date.now();
- const minimum=lastTime-(PERIODS[period]??Infinity);
+ // An actual 6h/24h window ends NOW, not at the last possibly stale observation.
+  const minimum=Date.now()-(PERIODS[period]??Infinity);
  const records=timeline.filter(row=>Date.parse(row.t)>=minimum);
  $("r-count").textContent=records.length+" rilevazioni nel periodo";
  if(records.length<2){
