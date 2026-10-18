@@ -1,0 +1,67 @@
+# TEMPLATE: copy into a SEPARATE PRIVATE repo only; OFF by default
+name: REMURA Capital DEMO (PRIVATE ONLY)
+on:
+  workflow_dispatch:
+  # Activate after successful demo authentication and account quota check:
+  # schedule:
+  #   - cron: '19 */2 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: remura-capital-private-collector
+  cancel-in-progress: false
+
+jobs:
+  capital:
+    if: github.event.repository.private == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Offline safety tests
+        run: python -m unittest discover -s tests -p 'test_capital_sentiment.py' -v
+      - name: One bounded DEMO read
+        env:
+          CAPITAL_API_KEY: ${{ secrets.CAPITAL_API_KEY }}
+          CAPITAL_IDENTIFIER: ${{ secrets.CAPITAL_IDENTIFIER }}
+          CAPITAL_API_PASSWORD: ${{ secrets.CAPITAL_API_PASSWORD }}
+          REMURA_CAPITAL_ENABLED: '1'
+        shell: bash
+        run: |
+          set +e
+          python scripts/update_capital.py
+          echo "COLLECTOR_EXIT=$?" >> "$GITHUB_ENV"
+          exit 0
+      - name: Commit budget even when API fails (PRIVATE repo only)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f private/capital/budget.json ]; then
+            echo "No budget file: credentials missing or collector disabled."
+            exit 0
+          fi
+          git config user.name "remura-capital-bot"
+          git config user.email "remura-capital-bot@users.noreply.github.com"
+          git add -f private/capital/budget.json
+          if [ -f private/capital/latest.json ]; then
+            git add -f private/capital/latest.json
+          fi
+          if [ -d private/capital/history ]; then
+            find private/capital/history -maxdepth 1 -name '*.json' -exec git add -f -- '{}' +
+          fi
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Private Capital demo sentiment and request ledger [skip ci]"
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"
+      - name: Mark collector errors without making retries
+        shell: bash
+        run: |
+          if [ "$COLLECTOR_EXIT" != "0" ]; then
+            echo "Capital demo collector failed or hit quota."
+            exit 1
+          fi
