@@ -16,6 +16,7 @@ on:
       - 'tests/test_capital_sentiment.py'
       - 'tests/test_capital_private.py'
       - 'CAPITAL-DEMO.md'
+      - '.github/workflows/capital-private-collector.yml'
       - 'sources.js'
       - 'sources.css'
       - 'tests/test_ig_sentiment.py'
