@@ -37,9 +37,9 @@
 
 <section class="panel scan-panel" id="institutional-scanner">
 <div class="scan-header"><div><div class="eyebrow">REMURA · RADAR AUTOMATICO</div><h2>Dove si muovono i grandi?</h2><p class="scan-description">Classifica dei cambiamenti nel posizionamento CFTC su tutti i mercati con dati validi. Inversione significa cambio del segno della posizione netta, non inversione del prezzo.</p></div><span class="scan-count" id="scan-count">In attesa della CFTC</span></div>
-<div class="tabs scan-controls" aria-label="Filtra i movimenti istituzionali"><button class="tab active" data-scan="moves">Movimenti maggiori</button><button class="tab" data-scan="reversals">Cambi net long/short</button><button class="tab" data-scan="accelerations">Accelerazioni</button><button class="tab" data-scan="slowdowns">Rallentamenti</button></div>
+<div class="tabs scan-controls" aria-label="Filtra i movimenti istituzionali"><button class="tab active" data-scan="moves">Movimenti maggiori</button><button class="tab" data-scan="reversals">Cambi net long/short</button><button class="tab" data-scan="accelerations">Accelerazioni</button><button class="tab" data-scan="slowdowns">Rallentamenti</button><button class="tab" data-scan="extremes">Estremi COT 52s</button></div>
 <div class="scan-results" id="scan-results" aria-live="polite"><div class="scan-empty">Connessione in corso…</div></div>
-<p class="source" style="margin:12px 0 0">Misura: variazione settimanale della posizione netta in punti percentuali di open interest (pp). Per Forex e indici: Leveraged Funds (TFF). Per metalli: Managed Money (Disaggregated). Metodologie non identiche; coppie Forex correlate fra loro. Report vecchi oltre 14 giorni esclusi. Nessuna indicazione di acquisto o vendita.</p>
+<p class="source" style="margin:12px 0 0">Misura: variazione settimanale della posizione netta in punti percentuali di open interest (pp). Per Forex e indici: Leveraged Funds (TFF). Per metalli: Managed Money (Disaggregated). Metodologie non identiche; coppie Forex correlate fra loro. Report vecchi oltre 14 giorni esclusi. Estremi su 52 settimane: COT o Gap Index 0–10 / 90–100. Nessuna indicazione di acquisto o vendita.</p>
 </section>
 <div class="layout">
 <section class="panel"><div class="eyebrow">SCANNER ISTITUZIONALE</div><h2 class="section-title">Dove si muovono i fondi</h2><div class="meta">Due gruppi di operatori per mercato. Ordinamento per movimento netto settimanale; i dati dei gruppi e delle famiglie COT non vanno confrontati direttamente come se fossero equivalenti.</div><input class="searchbar" id="search" placeholder="Cerca EURJPY, XAUUSD, NAS100…" aria-label="Cerca strumento">
@@ -53,6 +53,7 @@
 <div class="source">FONTI: <a href="https://publicreporting.cftc.gov/Commitments-of-Traders/TFF-Futures-Only/gpe5-46if" target="_blank" rel="noopener">CFTC TFF — futures only</a> per Forex/indici · <a href="https://publicreporting.cftc.gov/Commitments-of-Traders/Disaggregated-Futures-Only/72hh-3qpy" target="_blank" rel="noopener">CFTC Disaggregated — futures only</a> per metalli. Nei cross Forex la differenza fra due futures è un proxy sintetico; su oro e indici è riferita al contratto futures specificato, non al CFD del broker. Non abbiamo dati CFTC comparabili per tutti gli indici mondiali o per ogni coppia esotica.</div>
 <footer class="footer">REMURA v0.8 · Radar istituzionale in sperimentazione · Nessun segnale di acquisto/vendita · Non costituisce consulenza finanziaria.</footer>
 </div>
+<script src="./cot-indices-core.js?v=2"></script>
 <script>
 'use strict';
 const FX_CODES={EUR:'099741',GBP:'096742',JPY:'097741',AUD:'232741',CAD:'090741',CHF:'092741',NZD:'112741'};
@@ -155,6 +156,13 @@ function scanSignal(sym){
  if(age>14||age<0||days(n.date,p.date)>14||days(p.date,b.date)>14)return null;
  const key=meta.group==='metals'?'a':'b';
  const curr=n[key],prev=p[key],before=b[key];
+ const ci=window.REMURA_COT_INDEX_CORE.evaluate(data,52);
+ const groupIndex=(key==="a"?ci.a:ci.b)?.value;
+ const gapIndex=ci.gapIndex?.value;
+ const groupExtreme=Number.isFinite(groupIndex)&&(groupIndex<=10||groupIndex>=90);
+ const gapExtreme=Number.isFinite(gapIndex)&&(gapIndex<=10||gapIndex>=90);
+ const extreme=ci.state==="ok"&&(groupExtreme||gapExtreme);
+ const extremeScore=Math.max(groupExtreme?Math.abs(groupIndex-50):0,gapExtreme?Math.abs(gapIndex-50):0);
  const change=curr-prev,oldChange=prev-before;
  if(![curr,prev,before,change,oldChange].every(Number.isFinite))return null;
  const crossed=curr*prev<0&&Math.abs(curr)>=.5&&Math.abs(prev)>=.5;
@@ -162,26 +170,26 @@ function scanSignal(sym){
  const slower=change*oldChange>0&&Math.abs(oldChange)-Math.abs(change)>=1.5;
  const assetDelta=n.a-p.a;
  const confirmed=meta.group==='metals'||Math.abs(assetDelta)<.5||Math.abs(change)<.5?null:Math.sign(assetDelta)===Math.sign(change);
- return {sym,meta,date:n.date,curr,prev,change,oldChange,crossed,faster,slower,confirmed};
+ return {sym,meta,date:n.date,curr,prev,change,oldChange,crossed,faster,slower,confirmed,groupIndex,gapIndex,groupExtreme,gapExtreme,extreme,extremeScore};
 }
 function renderScanner(){
  const el=$('scan-results');el.textContent='';
  const all=allSymbols.map(scanSignal).filter(Boolean);
  $('scan-count').textContent=all.length+' strumenti con storico recente';
- const items=all.filter(t=>scanMode==='moves'||(scanMode==='reversals'?t.crossed:scanMode==='accelerations'?t.faster:t.slower))
-   .sort((x,y)=>scanMode==='accelerations'?(Math.abs(y.change)-Math.abs(y.oldChange))-(Math.abs(x.change)-Math.abs(x.oldChange)):scanMode==='slowdowns'?(Math.abs(x.change)-Math.abs(x.oldChange))-(Math.abs(y.change)-Math.abs(y.oldChange)):Math.abs(y.change)-Math.abs(x.change)).slice(0,12);
+ const items=all.filter(t=>scanMode==='moves'||(scanMode==='reversals'?t.crossed:scanMode==='accelerations'?t.faster:scanMode==='slowdowns'?t.slower:t.extreme))
+   .sort((x,y)=>scanMode==='extremes'?y.extremeScore-x.extremeScore:scanMode==='accelerations'?(Math.abs(y.change)-Math.abs(y.oldChange))-(Math.abs(x.change)-Math.abs(x.oldChange)):scanMode==='slowdowns'?(Math.abs(x.change)-Math.abs(x.oldChange))-(Math.abs(y.change)-Math.abs(y.oldChange)):Math.abs(y.change)-Math.abs(x.change)).slice(0,12);
  if(!items.length){
  const div=document.createElement('div');div.className='scan-empty';
- div.textContent=!all.length?'Nessun report recente sufficiente. Verifica la fonte CFTC e riprova.':scanMode==='reversals'?'Nessun passaggio netto da long a short (o viceversa) nella settimana più recente.':scanMode==='accelerations'?'Nessuna accelerazione della variazione settimanale di almeno 1,5 pp.':scanMode==='slowdowns'?'Nessun rallentamento nella variazione settimanale di almeno 1,5 pp.':'Nessun movimento disponibile.';
+ div.textContent=!all.length?'Nessun report recente sufficiente. Verifica la fonte CFTC e riprova.':scanMode==='reversals'?'Nessun passaggio netto da long a short (o viceversa) nella settimana più recente.':scanMode==='accelerations'?'Nessuna accelerazione della variazione settimanale di almeno 1,5 pp.':scanMode==='slowdowns'?'Nessun rallentamento nella variazione settimanale di almeno 1,5 pp.':scanMode==='extremes'?'Nessun COT Index o Gap Index nelle fasce 0–10 / 90–100 sulle ultime 52 rilevazioni.':'Nessun movimento disponibile.';
  el.append(div);return;
  }
  for(const item of items){
  const btn=document.createElement('button');btn.type='button';btn.className='scan-card';
  const top=document.createElement('div');top.className='scan-top';
  const name=document.createElement('b');name.textContent=item.sym;
- const d=document.createElement('strong');d.className=color(item.change);d.textContent=pp(item.change);top.append(name,d);
+ const d=document.createElement('strong');d.className=color(item.change);d.textContent=scanMode==='extremes'?(item.groupExtreme?'COT '+Math.round(item.groupIndex):'GAP '+Math.round(item.gapIndex)):pp(item.change);top.append(name,d);
  const explain=document.createElement('div');explain.className='scan-reason';
- explain.textContent=scanMode==='reversals'?'Posizione netta passata da '+dec(item.prev)+' a '+dec(item.curr):scanMode==='accelerations'?'Variazione settimanale da '+pp(item.oldChange)+' a '+pp(item.change):scanMode==='slowdowns'?'Spinta settimanale rallentata da '+pp(item.oldChange)+' a '+pp(item.change):'Netto attuale '+dec(item.curr)+' · '+(item.change>=0?'aumento':'riduzione')+' del posizionamento';
+ explain.textContent=scanMode==='extremes'?'COT Index '+(Number.isFinite(item.groupIndex)?Math.round(item.groupIndex):'N/D')+' · Gap Index '+(Number.isFinite(item.gapIndex)?Math.round(item.gapIndex):'N/D')+' / 100 su 52 settimane':scanMode==='reversals'?'Posizione netta passata da '+dec(item.prev)+' a '+dec(item.curr):scanMode==='accelerations'?'Variazione settimanale da '+pp(item.oldChange)+' a '+pp(item.change):scanMode==='slowdowns'?'Spinta settimanale rallentata da '+pp(item.oldChange)+' a '+pp(item.change):'Netto attuale '+dec(item.curr)+' · '+(item.change>=0?'aumento':'riduzione')+' del posizionamento';
  const info=document.createElement('div');info.className='scan-foot';
  info.textContent=(item.meta.group==='metals'?'Managed Money':'Leveraged Funds')+' · '+fdate(item.date)+(item.confirmed===true?' · Asset Manager stessa direzione':item.confirmed===false?' · Asset Manager divergenti':'');
  btn.append(top,explain,info);btn.addEventListener('click',()=>{location.href='./asset.html?symbol='+encodeURIComponent(item.sym)+'&v=8';});
