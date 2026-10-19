@@ -8,7 +8,7 @@ function element(id=""){
  const listeners={};
  return {id,style:{},dataset:{},clientWidth:320,children:[],innerHTML:"",textContent:"",listeners,
   append(...items){this.children.push(...items)},
-  replaceChildren(...items){this.children=items},
+  replaceChildren(...items){this.children=items;this.innerHTML=""},
   setAttribute(){},
   addEventListener(name,handler){listeners[name]=handler},
   querySelectorAll(){return []},
