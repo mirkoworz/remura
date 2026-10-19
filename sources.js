@@ -1,6 +1,6 @@
-/* REMURA v1.3: Myfxbook dedicated above; Capital.com DEMO below.
-   Only same-origin PRIVATE numeric endpoints. No calls to Capital API in browser.
-   No other providers/widgets; never publish private Capital observations.
+/* REMURA Capital.com client sentiment: private same-origin, authenticated
+   personal Firestore, or manual local JSON fallback. No Capital API in browser.
+   Never infer institutional flows from client sentiment.
 */
 (()=>{
 "use strict";
@@ -84,6 +84,10 @@ const link=el("a","ms-link","Capital.com · sito ufficiale ↗");
 link.href="https://capital.com/it";link.target="_blank";link.rel="noopener noreferrer";
 section.append(foot,link);
 const LOCAL_CAPITAL="remura:capital:demo:v1";
+const cloud=window.REMURA_CAPITAL_CLOUD||null;
+let cloudConnected=false;
+let cloudError="";
+
 let importedLatest=null,importedHistory=null;
 const savedLatest=()=>readStored(LOCAL_CAPITAL+":latest");
 const savedHistory=()=>readStored(LOCAL_CAPITAL+":history:"+symbol);
@@ -98,12 +102,54 @@ function writeStored(key,obj){
 const importPanel=el("div","ms-import");
 importPanel.append(
  el("h3","","Visualizza il tuo Capital.com privato"),
- el("p","","La pagina pubblica non può leggere GitHub privato. Scarica latest.json dal tuo repository personale e importalo qui: vedrai EUR/USD e gli altri mercati già raccolti, senza nuove richieste API. I numeri restano solo su questo dispositivo.")
+ el("p","",cloud?.enabled?
+  "Collega il tuo account Google autorizzato: REMURA leggerà automaticamente i dati Capital.com privati da Firestore. In alternativa puoi ancora importare i JSON manualmente.":
+  "La pagina pubblica non può leggere GitHub privato. Per ora importa latest.json; il collegamento automatico con accesso Google sarà disponibile dopo la configurazione Firestore.")
 );
 const githubLink=el("a","ms-link","Apri latest.json privato su GitHub ↗");
 githubLink.href="https://github.com/mirkoworz/remura-collector/blob/main/private/capital/latest.json";
 githubLink.target="_blank";githubLink.rel="noopener noreferrer";
-const steps=el("p","ms-import-help","Su GitHub apri il file → menu ⋯ → Download raw file. Poi torna su REMURA e scegli il file scaricato.");
+const steps=el("p","ms-import-help","Per importare manualmente: su GitHub apri il file → menu ⋯ → Download raw file, quindi scegli il file qui.");
+if(cloud?.enabled){
+ const cloudControls=el("div","ms-import-controls");
+ const login=el("button","ms-clear","Collega Google per aggiornamenti automatici");
+ login.type="button";
+ const logout=el("button","ms-clear","Scollega Google");
+ logout.type="button";
+ logout.hidden=true;
+ const cloudInfo=el("p","ms-import-help","Il login Google serve esclusivamente per l'accesso privato al feed Firestore. Nessun token Capital.com viene inviato al browser.");
+ const updateButtons=async()=>{
+  const signed=await cloud.isSignedIn();
+  cloudConnected=signed;login.hidden=signed;logout.hidden=!signed;
+  if(signed)cloudInfo.textContent="Account Google collegato. REMURA leggerà automaticamente il feed privato.";
+ };
+ login.addEventListener("click",async()=>{
+  login.disabled=true;
+  try{
+   await cloud.signIn();cloudError="";
+   await updateButtons();
+   await loadCapital();
+  }catch(e){
+   cloudError="Login Google non riuscito. Controlla l'account e i domini autorizzati in Firebase.";
+   cloudInfo.textContent=cloudError;
+  }finally{login.disabled=false;}
+ });
+ logout.addEventListener("click",async()=>{
+  logout.disabled=true;
+  try{
+   await cloud.signOut();
+   cloudConnected=false;
+   await updateButtons();
+   await loadCapital();
+  }catch(_){cloudInfo.textContent="Disconnessione non riuscita.";}
+  finally{logout.disabled=false;}
+ });
+ cloudControls.append(login,logout);
+ importPanel.append(cloudControls,cloudInfo);
+ cloud.isSignedIn().then(updateButtons).catch(()=>{
+  cloudInfo.textContent="Firebase non raggiungibile. Resta disponibile l'importazione manuale.";
+ });
+}
 const fields=el("div","ms-import-controls");
 const latestLabel=el("label","ms-file-label","Carica latest.json");
 const latestFile=el("input","ms-file");
@@ -240,7 +286,16 @@ async function loadCapital(){
    doc=core.cleanCapitalLatest(raw,cfg.symbols);
    via="privato";
   }
- }catch(_){/* GitHub Pages cannot fetch a private file: local fallback follows */}
+ }catch(_){/* GitHub Pages cannot fetch a private file: cloud or local follows */}
+ if(!doc&&cloud?.enabled){
+  try{
+   cloudConnected=await cloud.isSignedIn();
+   if(cloudConnected){
+    const remote=await cloud.latest();
+    if(remote){doc=core.cleanCapitalLatest(remote,cfg.symbols);via="cloud";}
+   }
+  }catch(_){cloudError="Firestore non disponibile o accesso negato";cloudConnected=false;}
+ }
  if(!doc){
   try{
    const stored=importedLatest||savedLatest();
@@ -250,8 +305,10 @@ async function loadCapital(){
  if(!doc){
   longValue.textContent="—";shortValue.textContent="—";
   green.style.width="0";red.style.width="0";
-  state("Dati privati · importa latest.json");
-  observed.textContent="Nessun file Capital.com sul dispositivo. Scarica latest.json da GitHub privato e caricalo qui sotto.";
+  state(cloud?.enabled?"Capital.com · accesso privato richiesto":"Dati privati · importa latest.json");
+  observed.textContent=cloud?.enabled?
+   (cloudError||"Accedi con Google per vedere automaticamente il sentiment. In alternativa importa il file JSON."):
+   "Nessun file Capital.com sul dispositivo. Scarica latest.json da GitHub privato e caricalo qui sotto.";
   allHistory=[];drawHistory();updateComparison();
   return;
  }
@@ -272,9 +329,10 @@ async function loadCapital(){
  red.style.width=Number(row.sPct)+"%";
  observed.textContent="Rilevato il "+dateLabel(row.t||doc.updatedAt)+
   " (ora italiana) · Capital.com DEMO · "+
-  (via==="locale"?"Copia privata caricata sul tuo dispositivo.":"Archivio privato REMURA.")+
+  (via==="locale"?"Copia privata caricata sul tuo dispositivo.":
+   via==="cloud"?"Firestore privato (accesso Google).":"Archivio privato REMURA.")+
   (recent?" Dato recente.":" Dato datato, non confrontare come segnale attuale.");
- state(recent?"Capital.com · "+(via==="locale"?"importato":"aggiornato"):"Capital.com · dato datato",recent);
+ state(recent?"Capital.com · "+(via==="locale"?"importato":via==="cloud"?"cloud privato":"aggiornato"):"Capital.com · dato datato",recent);
  allHistory=[];
  if(via==="privato"){
   try{
@@ -284,6 +342,12 @@ async function loadCapital(){
     allHistory=core.cleanCapitalHistory(raw,symbol).records;
    }
   }catch(_){}
+ }
+ if(!allHistory.length&&via==="cloud"&&cloudConnected){
+  try{
+   const remote=await cloud.history(symbol);
+   if(remote)allHistory=core.cleanCapitalHistory(remote,symbol).records;
+  }catch(_){/* Firestore history unavailable: retain single real latest point. */}
  }
  if(!allHistory.length){
   try{
