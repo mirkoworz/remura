@@ -130,3 +130,32 @@ test("asset and sources page no longer advertise seven live retail sources",()=>
  assert.doesNotMatch(sources,/7 provider|Dukascopy|IG Client Sentiment|FX Blue|FXCM SSI/);
  assert.doesNotMatch(html,/(Myfxbook, Dukascopy|IG, FX Blue)/);
 });
+
+test("35 schede mostrano Myfxbook e Capital consecutivi, con prezzo indipendente",()=>{
+ const html=fs.readFileSync("asset.html","utf8");
+ const capitalUi=fs.readFileSync("sources.js","utf8");
+ const priceUi=fs.readFileSync("price.js","utf8");
+ const insightsUi=fs.readFileSync("insights.js","utf8");
+ const retailStart=html.indexOf('id="retail-module"');
+ const retailEnd=html.indexOf('</section>',retailStart);
+ const priceStart=html.indexOf('id="remura-tradingview"');
+ const cotStart=html.indexOf('id="cot-overview"');
+ const advancedStart=html.indexOf('id="remura-advanced"');
+ assert.ok(cotStart>0&&retailStart>cotStart&&retailEnd>retailStart);
+ assert.ok(priceStart>retailEnd&&advancedStart>priceStart);
+ assert.ok(html.slice(retailStart,retailEnd).includes('id="r-chart"'));
+ assert.ok(!html.slice(retailStart,retailEnd).includes('id="r-price"'),
+  "TradingView must not be in Myfxbook sentiment panel");
+ assert.equal((html.match(/id="r-price"/g)||[]).length,1);
+ assert.equal((html.match(/id="r-chart"/g)||[]).length,1);
+ assert.match(capitalUi,/holder\.insertAdjacentElement\("afterend",section\)/,
+  "Capital.com must appear immediately after Myfxbook");
+ assert.match(priceUi,/getElementById\("remura-tradingview"\)/);
+ assert.match(priceUi,/host\.insertAdjacentElement\("afterend",el\)/);
+ assert.match(capitalUi,/el\("details","ms-import"\)/);
+ assert.match(insightsUi,/<details class="rm-charts">/);
+ for(const id of ["cot-overview","retail-module","remura-capital","remura-tradingview","remura-advanced"])
+  assert.ok(html.includes('href="#'+id+'"'));
+ assert.match(html,/Netto positivo/);
+ assert.match(html,/Netto negativo/);
+});
