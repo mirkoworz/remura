@@ -4,20 +4,20 @@
   const core=window.REMURA_PRICE_CORE, cfg=window.REMURA_MARKETS;
   const sym=(new URLSearchParams(location.search).get("symbol")||"XAUUSD").toUpperCase();
   const symbol=cfg && cfg.symbols.includes(sym)?sym:"XAUUSD";
-  const host=document.getElementById("retail-module");
+  const host=document.getElementById("remura-tradingview") || document.getElementById("retail-module");
   if(!core||!host)return;
   const el=document.createElement("section");
   el.id="remura-price-engine";
-  el.className="rm-price";
+  el.className="rm-price overview";
   el.setAttribute("aria-label","Analisi del prezzo in modalità personale");
   el.dataset.status="unavailable";
   el.innerHTML=
-    '<div class="rp-top"><div><span class="rp-eyebrow">REMURA · Motore prezzi privato</span>'+
-    '<h2 id="rp-title">Analisi del prezzo in attesa</h2>'+
+    '<div class="rp-top"><div><span class="rp-eyebrow">05 · REMURA · Analisi prezzi automatica</span>'+
+    '<h2 id="rp-title">Conferma prezzo H4 / H1 / M15 in attesa</h2>'+
     '<p class="rp-muted">Candele chiuse M15 → H1 → H4. Il servizio REMURA privato aggiorna i prezzi automaticamente ogni 15 minuti, quando è configurato.</p></div><span class="rp-flag" id="rp-state">Nessun feed caricato</span></div>'+
-    '<p class="rp-muted" id="rp-auto">Controllo del servizio prezzi privato…</p><div class="rp-upload"><label for="rp-file">In alternativa, importa un file locale (.json)</label>'+
+    '<p class="rp-muted" id="rp-auto">Controllo del servizio prezzi privato…</p><details class="rp-upload"><summary>Opzionale · Importa un file prezzi locale</summary><label for="rp-file">Seleziona uno snapshot .json</label>'+
     '<input id="rp-file" type="file" accept=".json,application/json" aria-describedby="rp-file-hint"/>'+
-    '<p id="rp-file-hint" class="rp-muted">Usalo solo se vuoi confrontare uno storico offline. Il file resta nel browser e non viene caricato sul server.</p><button type="button" class="rp-return" id="rp-return">Riprendi aggiornamento automatico</button></div>'+
+    '<p id="rp-file-hint" class="rp-muted">Usalo solo se vuoi confrontare uno storico offline. Il file resta nel browser e non viene caricato sul server.</p><button type="button" class="rp-return" id="rp-return">Riprendi aggiornamento automatico</button></details>'+
     '<div class="rp-inline"><span id="rp-provider">Fonte: N/D</span><span id="rp-last">Ultima candela: N/D</span></div>'+
     '<div class="rp-grid">'+
     '<div class="rp-box"><h4>H4 · Struttura</h4><strong id="rp-h4">N/D</strong><p id="rp-h4-extra">In attesa del feed.</p><small id="rp-h4-age"></small></div>'+
@@ -28,7 +28,7 @@
     '<details><summary>Come produrre il file privato per REMURA</summary>'+
     '<p class="rp-muted">Sul tuo computer scarica i prezzi tramite il comando Python locale descritto in <code>PRICE-ENGINE.md</code>: supporta Twelve Data, OANDA v20 e CSV M15 di broker. Esporta il file <code>local/price-snapshot.json</code>, trasferiscilo su iPhone se necessario e selezionalo qui. Se un mercato non è disponibile dal fornitore, REMURA indica N/D.</p>'+
     '<p class="rp-muted">Attenzione: il sito GitHub Pages esistente resta pubblico. Il tuo file locale non viene caricato o pubblicato da questo pannello; l’uso personale di una fonte non rende privato il sito.</p></details>';
-  host.insertAdjacentElement("beforebegin",el);
+  host.insertAdjacentElement("afterend",el);
   const get = id => document.getElementById(id);
   const set=(id,v)=>{get(id).textContent=String(v)};
   const sideName=n=>n>0?"Rialzista":n<0?"Ribassista":"Neutrale";
