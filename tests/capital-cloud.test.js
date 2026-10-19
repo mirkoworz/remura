@@ -39,7 +39,7 @@ test("Public REMURA uses authenticated Firestore only, with local fallback",()=>
  assert.match(html,/capital-cloud-config\.js\?v=1/);
  assert.match(html,/capital-cloud\.js\?v=1/);
  assert.match(sw,/capital-cloud-config\.js/);
- assert.match(config,/REMURA_FIREBASE_CONFIG = \\{/);
+ assert.ok(config.includes("window.REMURA_FIREBASE_CONFIG = {"));
  for(const secret of ["CAPITAL_API_KEY","CAPITAL_API_PASSWORD",
                        "REMURA_FIREBASE_SERVICE_ACCOUNT","GITHUB_TOKEN"])
   for(const file of [js,ui,config])
