@@ -28,9 +28,9 @@ section.id="remura-capital";
 holder.insertAdjacentElement("afterend",section);
 const top=el("div","ms-intro");
 top.append(
- el("div","eyebrow","SENTIMENT RETAIL · SECONDA FONTE"),
- el("h2","","Capital.com"),
- el("p","","Posizioni dei clienti Capital.com DEMO: un campione diverso dai lotti Myfxbook. Entrambi sono dati retail, non ordini istituzionali.")
+ el("div","eyebrow","03 · SENTIMENT RETAIL · FONTE 2 DI 2"),
+ el("h2","","Capital.com · cosa fanno i suoi clienti"),
+ el("p","","Queste percentuali indicano quante posizioni dei clienti Capital.com sono long o short. Sono dati retail diversi dai lotti Myfxbook, non movimenti istituzionali.")
 );
 section.append(top);
 const status=el("span","ms-status ms-stale","Archivio privato non collegato");
@@ -40,8 +40,8 @@ section.append(main);
 const readings=el("div","ms-readings");
 const longBox=el("div","ms-reading"),shortBox=el("div","ms-reading");
 const longValue=el("strong","","—"),shortValue=el("strong","","—");
-longBox.append(el("small","","Posizioni LONG Capital"),longValue);
-shortBox.append(el("small","","Posizioni SHORT Capital"),shortValue);
+longBox.append(el("small","","Clienti con posizioni LONG"),longValue);
+shortBox.append(el("small","","Clienti con posizioni SHORT"),shortValue);
 readings.append(longBox,shortBox);
 main.append(readings);
 const split=el("div","ms-split");
@@ -52,7 +52,7 @@ const observed=el("p","ms-data-time","In attesa della prima rilevazione disponib
 main.append(observed);
 const chartWrap=el("div","ms-chart");
 const chartHeader=el("div","ms-chart-header");
-chartHeader.append(el("h3","","Storico posizioni Capital.com"),
+chartHeader.append(el("h3","","Come cambiano le posizioni nel tempo?"),
  el("p","","Bande da rilevazioni numeriche reali: non corrispondono ai timeframe del prezzo."));
 const periods=el("div","ms-periods");periods.setAttribute("role","group");
 periods.setAttribute("aria-label","Periodo dello storico Capital.com");
@@ -74,10 +74,10 @@ const graphInfo=el("p","ms-data-time","Verde: LONG · Rosa: SHORT");
 chartWrap.append(chartHeader,periods,graph,graphInfo);
 main.append(chartWrap);
 const compare=el("div","ms-comparison");
-compare.append(el("h3","","Confronto Myfxbook ↔ Capital.com"));
+compare.append(el("h3","","Myfxbook e Capital.com: coincidono o divergono?"));
 const comparisonText=el("p","","Attendo entrambi i feed.");
 compare.append(comparisonText);
-section.append(compare);
+main.insertBefore(compare,chartWrap);
 const foot=el("p","ms-legend",
  "Myfxbook misura la quota del volume in lotti; Capital.com misura la quota di posizioni dei suoi clienti. Non sono la stessa popolazione né la stessa metrica: niente media artificiale. Un segnale contrarian va verificato sul prezzo e sul COT.");
 const link=el("a","ms-link","Capital.com · sito ufficiale ↗");
@@ -99,9 +99,11 @@ function writeStored(key,obj){
  try{localStorage.setItem(key,JSON.stringify(obj));return true;}
  catch(_){return false;}
 }
-const importPanel=el("div","ms-import");
+const importPanel=el("details","ms-import");
+const importSummary=el("summary","","Accesso privato Google e importazione file · Tocca per aprire");
+importPanel.append(importSummary);
 importPanel.append(
- el("h3","","Visualizza il tuo Capital.com privato"),
+ el("h3","","Collegamento ai dati Capital.com privati"),
  el("p","",cloud?.enabled?
   "Collega il tuo account Google autorizzato: REMURA leggerà automaticamente i dati Capital.com privati da Firestore. In alternativa puoi ancora importare i JSON manualmente.":
   "La pagina pubblica non può leggere GitHub privato. Per ora importa latest.json; il collegamento automatico con accesso Google sarà disponibile dopo la configurazione Firestore.")

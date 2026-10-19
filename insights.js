@@ -12,15 +12,15 @@
   section.id = "rm-insights";
   section.setAttribute("aria-label", "REMURA: lettura e verifica dei movimenti istituzionali");
   section.dataset.state = "loading";
-  section.innerHTML = '<div class="rm-head"><div><div class="rm-eyebrow">REMURA · Lettura ragionata dei dati</div><h2 id="rm-title">Analisi istituzionale in preparazione</h2><p class="rm-desc" id="rm-summary">Verifico lo storico ufficiale CFTC prima di mostrare il contesto.</p></div><span class="rm-pill" id="rm-state">Caricamento</span></div>' +
+  section.innerHTML = '<div class="rm-head"><div><div class="rm-eyebrow">IN SINTESI · COSA DICE IL COT</div><h2 id="rm-title">Analisi istituzionale in preparazione</h2><p class="rm-desc" id="rm-summary">Verifico lo storico ufficiale CFTC prima di mostrare il contesto.</p></div><span class="rm-pill" id="rm-state">Caricamento</span></div>' +
     '<div class="rm-grid"><div class="rm-stat"><small id="rm-stat1-label">Speculatori</small><strong id="rm-stat1">—</strong><small id="rm-stat1-note">Variazione settimanale del netto/OI</small></div>' +
     '<div class="rm-stat"><small id="rm-stat2-label">Trend 4 settimane</small><strong id="rm-stat2">—</strong><small>Variazione netta, non movimento prezzo</small></div>' +
     '<div class="rm-stat"><small id="rm-stat3-label">Secondo gruppo</small><strong id="rm-stat3">—</strong><small id="rm-stat3-note">Variazione settimanale del netto/OI</small></div></div>' +
     '<div class="rm-note" id="rm-interpretation">Nessuna indicazione operativa finché non vengono verificati i dati.</div>' +
-    '<h3>Perché REMURA interpreta così</h3><ul id="rm-reasons"><li>Caricamento del COT…</li></ul>' +
-    '<h3>Confronto con la community retail</h3><p class="rm-desc" id="rm-retail">Attendo i dati Myfxbook disponibili per lo strumento.</p><div class="rm-note" id="rm-comparison">Il retail non rappresenta l’altra faccia dei contratti istituzionali.</div>' +
-    '<div class="rm-next"><b>Conferma prezzo e prossima verifica</b><span id="rm-next">Il grafico TradingView è consultabile sotto, ma la verifica strutturale H4/H1 richiede ancora candele OHLC accessibili al motore.</span></div>' +
-    '<details class="rm-charts" open><summary><b>Dettaglio: stanno aumentando i long o gli short?</b></summary>' +
+    '<h3>Perché questa lettura?</h3><ul id="rm-reasons"><li>Caricamento del COT…</li></ul>' +
+    '<h3>Il contesto Myfxbook</h3><p class="rm-desc" id="rm-retail">Attendo i dati Myfxbook disponibili per lo strumento.</p><div class="rm-note" id="rm-comparison">Il retail non rappresenta l’altra faccia dei contratti istituzionali.</div>' +
+    '<div class="rm-next"><b>Cosa controllare sul prezzo</b><span id="rm-next">Il grafico TradingView è consultabile sotto, ma la verifica strutturale H4/H1 richiede ancora candele OHLC accessibili al motore.</span></div>' +
+    '<details class="rm-charts"><summary><b>Dettaglio: stanno aumentando i long o gli short?</b></summary>' +
     '<p class="rm-fine">Contratti del future CFTC originale, senza aggregare i lotti Myfxbook. Su un cross Forex scegli una singola valuta: il COT non esiste direttamente per ogni coppia.</p>' +
     '<div class="rm-controls"><label for="rm-leg">Future</label><select id="rm-leg" aria-label="Future/valuta"></select>' +
     '<label for="rm-group">Categoria</label><select id="rm-group" aria-label="Categoria istituzionale"></select>' +
