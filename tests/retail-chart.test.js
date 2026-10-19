@@ -1,7 +1,7 @@
 /* Regression: real Myfxbook observations form filled bands even with multi-hour gaps. */
 const test=require("node:test"),assert=require("node:assert/strict");
 const fs=require("node:fs"),vm=require("node:vm");
-const fixture=JSON.parse(fs.readFileSync("data/myfxbook/history/EURUSD.json","utf8"));
+const fixture=JSON.parse(fs.readFileSync("tests/fixtures/myfxbook-eurusd-gaps.json","utf8"));
 const source=fs.readFileSync("retail.js","utf8");
 
 function element(id=""){
