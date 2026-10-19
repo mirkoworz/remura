@@ -44,5 +44,37 @@
   }
   return [...unique.values()].sort((a,b)=>a.ms-b.ms).slice(-1100);
  }
- return {valid,ageMs,fresh,side,compare,points};
+ function cleanCapitalLatest(doc,allowed,now=Date.now()){
+  if(doc?.status!=="ok"||doc.environment!=="demo"||!doc.symbols||
+     typeof doc.symbols!=="object"||Array.isArray(doc.symbols)||
+     !Array.isArray(allowed)||allowed.length>60)
+   throw Error("Il file non è un archivio Capital.com DEMO valido");
+  const rootTime=Date.parse(doc.updatedAt);
+  if(!Number.isFinite(rootTime)||rootTime>now+300000||rootTime<now-100*86400000)
+   throw Error("Data archivio non valida");
+  const symbols={};
+  for(const sym of allowed){
+   if(!/^[A-Z0-9]{3,8}$/.test(sym))continue;
+   const row=doc.symbols[sym];
+   if(!valid(row))continue;
+   const epoch=Date.parse(row.t||doc.updatedAt);
+   if(!Number.isFinite(epoch)||epoch>now+300000||epoch<now-100*86400000)continue;
+   symbols[sym]={t:new Date(epoch).toISOString(),
+    lPct:Number(row.lPct),sPct:Number(row.sPct),metric:"client_positions"};
+  }
+  if(Object.keys(symbols).length===0)throw Error("Nessun mercato REMURA valido nel file");
+  return {status:"ok",environment:"demo",source:"Capital.com Client Sentiment",
+   updatedAt:new Date(rootTime).toISOString(),symbols};
+ }
+ function cleanCapitalHistory(doc,symbol,now=Date.now()){
+  if(!/^[A-Z0-9]{3,8}$/.test(symbol)||doc?.symbol!==symbol||
+    !Array.isArray(doc.records)||doc.records.length>5000)
+   throw Error("File storico non corrispondente allo strumento");
+  const records=points(doc.records,Infinity,now).map(p=>({
+   t:p.t,lPct:p.lPct,sPct:p.sPct,metric:"client_positions"
+  }));
+  if(!records.length)throw Error("Lo storico non contiene osservazioni valide");
+  return {symbol,source:"Capital.com Client Sentiment",records};
+ }
+ return {valid,ageMs,fresh,side,compare,points,cleanCapitalLatest,cleanCapitalHistory};
 });

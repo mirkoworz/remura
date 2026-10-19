@@ -30,7 +30,9 @@ async function render(){
   if(url.includes("history/EURUSD.json"))return {ok:true,json:async()=>fixture};
   return {ok:false};
  };
- const clock=Date.parse(fixture.records.at(-1).t)+2*3600000;
+ // Anchor this regression on the latest persisted observation: the fixture is
+ // updated by an independent real collector; its length changes over time.
+ const clock=Date.parse(fixture.records.at(-1).t)+30*60000;
  class Clock extends Date{static now(){return clock}}
  const document={getElementById:get,createElement:()=>element(),createTextNode:text=>({textContent:text})};
  const window={addEventListener(){},dispatchEvent(){}};
@@ -44,11 +46,13 @@ test("real samples across gaps produce two colored continuous areas with dashed 
  const svg=get("r-chart").innerHTML;
  assert.match(svg,/class="rt-area-green"/);
  assert.match(svg,/class="rt-area-red"/);
- assert.equal((svg.match(/class="rt-long-line rt-gap"/g)||[]).length,14);
- assert.equal((svg.match(/class="rt-short-line rt-gap"/g)||[]).length,14);
+ const countGaps=fixture.records.slice(1).filter((row,i)=>
+  Date.parse(row.t)-Date.parse(fixture.records[i].t)>75*60000).length;
+ assert.equal((svg.match(/class="rt-long-line rt-gap"/g)||[]).length,countGaps);
+ assert.equal((svg.match(/class="rt-short-line rt-gap"/g)||[]).length,countGaps);
  assert.equal((svg.match(/class="rt-sample"/g)||[]).length,fixture.records.length*2);
- assert.match(get("r-count").textContent,/15 rilevazioni/);
- assert.match(get("r-change").textContent,/14 intervalli >75 min/);
+ assert.match(get("r-count").textContent,new RegExp(fixture.records.length+" rilevazioni"));
+ assert.match(get("r-change").textContent,new RegExp(countGaps+" intervalli >75 min"));
  assert.match(svg,/viewBox="0 0 310 288"/);
 });
 test("changing to positions and six hours redraws genuine values, not synthetic points",async()=>{
@@ -58,8 +62,15 @@ test("changing to positions and six hours redraws genuine values, not synthetic 
  assert.notEqual(get("r-chart").innerHTML,original);
  assert.match(get("r-change").textContent,/posizioni/);
  windows[0].listeners.click();
- assert.match(get("r-count").textContent,/2 rilevazioni/);
+ const clock=Date.parse(fixture.records.at(-1).t)+30*60000;
+ const subset=fixture.records.filter(row=>Date.parse(row.t)>=clock-6*3600000);
+ assert.match(get("r-count").textContent,new RegExp(subset.length+" rilevazioni"));
  const svg=get("r-chart").innerHTML;
- assert.equal((svg.match(/class="rt-sample"/g)||[]).length,4);
- assert.equal((svg.match(/class="rt-long-line rt-gap"/g)||[]).length,1);
+ if(subset.length>=2){
+  assert.equal((svg.match(/class="rt-sample"/g)||[]).length,subset.length*2);
+  const n= subset.slice(1).filter((p,i)=>Date.parse(p.t)-Date.parse(subset[i].t)>75*60000).length;
+  assert.equal((svg.match(/class="rt-long-line rt-gap"/g)||[]).length,n);
+ }else{
+  assert.ok(!svg.includes('class="rt-sample"'));
+ }
 });

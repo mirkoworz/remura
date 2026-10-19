@@ -83,6 +83,82 @@ const foot=el("p","ms-legend",
 const link=el("a","ms-link","Capital.com · sito ufficiale ↗");
 link.href="https://capital.com/it";link.target="_blank";link.rel="noopener noreferrer";
 section.append(foot,link);
+const LOCAL_CAPITAL="remura:capital:demo:v1";
+let importedLatest=null,importedHistory=null;
+const savedLatest=()=>readStored(LOCAL_CAPITAL+":latest");
+const savedHistory=()=>readStored(LOCAL_CAPITAL+":history:"+symbol);
+function readStored(key){
+ try{const raw=localStorage.getItem(key);return raw?JSON.parse(raw):null;}
+ catch(_){return null;}
+}
+function writeStored(key,obj){
+ try{localStorage.setItem(key,JSON.stringify(obj));return true;}
+ catch(_){return false;}
+}
+const importPanel=el("div","ms-import");
+importPanel.append(
+ el("h3","","Visualizza il tuo Capital.com privato"),
+ el("p","","La pagina pubblica non può leggere GitHub privato. Scarica latest.json dal tuo repository personale e importalo qui: vedrai EUR/USD e gli altri mercati già raccolti, senza nuove richieste API. I numeri restano solo su questo dispositivo.")
+);
+const githubLink=el("a","ms-link","Apri latest.json privato su GitHub ↗");
+githubLink.href="https://github.com/mirkoworz/remura-collector/blob/main/private/capital/latest.json";
+githubLink.target="_blank";githubLink.rel="noopener noreferrer";
+const steps=el("p","ms-import-help","Su GitHub apri il file → menu ⋯ → Download raw file. Poi torna su REMURA e scegli il file scaricato.");
+const fields=el("div","ms-import-controls");
+const latestLabel=el("label","ms-file-label","Carica latest.json");
+const latestFile=el("input","ms-file");
+latestFile.type="file";latestFile.accept=".json,application/json";
+latestFile.setAttribute("aria-label","Importa l'ultimo snapshot Capital.com dal repository privato");
+latestLabel.append(latestFile);
+const historyLabel=el("label","ms-file-label","Carica storico "+symbol+" (facoltativo)");
+const historyFile=el("input","ms-file");
+historyFile.type="file";historyFile.accept=".json,application/json";
+historyFile.setAttribute("aria-label","Importa lo storico privato Capital.com di "+symbol);
+historyLabel.append(historyFile);
+const clearButton=el("button","ms-clear","Cancella dati importati");
+clearButton.type="button";
+const importStatus=el("p","ms-import-help","Nessun dato viene caricato sui server REMURA.");
+fields.append(latestLabel,historyLabel,clearButton);
+importPanel.append(githubLink,steps,fields,importStatus);
+section.append(importPanel);
+async function readFileSafe(file){
+ if(!file||file.size<=0||file.size>1_000_000)
+  throw Error("Seleziona un file JSON non superiore a 1 MB.");
+ try{return JSON.parse(await file.text());}
+ catch(_){throw Error("Impossibile leggere il JSON selezionato.");}
+}
+latestFile.addEventListener("change",async()=>{
+ try{
+  const cleaned=core.cleanCapitalLatest(await readFileSafe(latestFile.files?.[0]),cfg.symbols);
+  importedLatest=cleaned;
+  const stored=writeStored(LOCAL_CAPITAL+":latest",cleaned);
+  importStatus.textContent=Object.keys(cleaned.symbols).length+
+   " mercati importati. "+(stored?"Dati conservati soltanto su questo dispositivo.":"Visualizzazione temporanea: salvataggio locale non disponibile.");
+  await loadCapital();
+ }catch(e){importStatus.textContent="Importazione non riuscita: "+e.message;}
+ finally{latestFile.value="";}
+});
+historyFile.addEventListener("change",async()=>{
+ try{
+  const cleaned=core.cleanCapitalHistory(await readFileSafe(historyFile.files?.[0]),symbol);
+  importedHistory=cleaned;
+  const stored=writeStored(LOCAL_CAPITAL+":history:"+symbol,cleaned);
+  importStatus.textContent=cleaned.records.length+" rilevazioni storiche importate per "+symbol+
+   (stored?" e salvate sul dispositivo.":"; salvataggio locale non disponibile.");
+  await loadCapital();
+ }catch(e){importStatus.textContent="Storico non importato: "+e.message;}
+ finally{historyFile.value="";}
+});
+clearButton.addEventListener("click",async()=>{
+ try{
+  localStorage.removeItem(LOCAL_CAPITAL+":latest");
+  for(const sym of cfg.symbols)localStorage.removeItem(LOCAL_CAPITAL+":history:"+sym);
+ }catch(_){}
+ importedLatest=null;importedHistory=null;
+ importStatus.textContent="Dati importati eliminati dal browser, se la memoria locale era disponibile.";
+ await loadCapital();
+});
+
 function state(label,ok=false){
  status.className="ms-status "+(ok?"ms-live":"ms-stale");
  status.textContent=label;
@@ -155,40 +231,72 @@ window.addEventListener("remura:retail",e=>{
  updateComparison();
 });
 async function loadCapital(){
+ capital=null;
+ let doc=null,via="locale";
  try{
   const response=await fetch("./private-api/capital/latest.json",{cache:"no-store"});
-  if(!response.ok)throw Error(String(response.status));
-  const data=await response.json(),row=data?.symbols?.[symbol];
-  if(data?.status!=="ok"||data.environment!=="demo"||!core.valid(row)){
-   state("Mercato non ancora coperto");
-   observed.textContent="Il collector Capital.com non ha dati verificati per "+symbol+". Nessun valore stimato.";
-   updateComparison();
-   return;
+  if(response.ok){
+   const raw=await response.json();
+   doc=core.cleanCapitalLatest(raw,cfg.symbols);
+   via="privato";
   }
-  const age=core.ageMs(row,data.updatedAt),recent=core.fresh(row,data.updatedAt);
-  capital={row,fresh:recent};
-  longValue.textContent=percent(+row.lPct);
-  shortValue.textContent=percent(+row.sPct);
-  green.style.width=Number(row.lPct)+"%";
-  red.style.width=Number(row.sPct)+"%";
-  const when=row.t||data.updatedAt;
-  observed.textContent="Rilevato il "+dateLabel(when)+" (ora italiana) · Conto DEMO · "+
-   (recent?"Dato recente.":"Dato datato: non usare per confronto attuale.");
-  state(recent?"Capital.com · rilevazione recente":"Capital.com · dato datato",recent);
+ }catch(_){/* GitHub Pages cannot fetch a private file: local fallback follows */}
+ if(!doc){
   try{
-   const archive=await fetch("./private-api/capital/history/"+encodeURIComponent(symbol)+".json",{cache:"no-store"});
-   if(archive.ok){
-    const raw=await archive.json();
-    allHistory=raw.symbol===symbol&&Array.isArray(raw.records)?raw.records:[];
-   }
-  }catch(_){/* no provider request, history is optional */}
-  drawHistory();
-  updateComparison();
- }catch(_){
-  state("Dati Capital.com riservati");
-  observed.textContent="Capital.com raccoglie i numeri nel repository privato REMURA. La pagina attuale non ha ancora accesso autenticato a quell'archivio.";
-  updateComparison();
+   const stored=importedLatest||savedLatest();
+   if(stored)doc=core.cleanCapitalLatest(stored,cfg.symbols);
+  }catch(_){}
  }
+ if(!doc){
+  longValue.textContent="—";shortValue.textContent="—";
+  green.style.width="0";red.style.width="0";
+  state("Dati privati · importa latest.json");
+  observed.textContent="Nessun file Capital.com sul dispositivo. Scarica latest.json da GitHub privato e caricalo qui sotto.";
+  allHistory=[];drawHistory();updateComparison();
+  return;
+ }
+ const row=doc.symbols[symbol];
+ if(!core.valid(row)){
+  longValue.textContent="—";shortValue.textContent="—";
+  green.style.width="0";red.style.width="0";
+  state("Mercato non ancora disponibile");
+  observed.textContent="Questo file non contiene un campione valido per "+symbol+". Gli altri mercati importati rimangono disponibili.";
+  allHistory=[];drawHistory();updateComparison();
+  return;
+ }
+ const recent=core.fresh(row,doc.updatedAt);
+ capital={row,fresh:recent};
+ longValue.textContent=percent(+row.lPct);
+ shortValue.textContent=percent(+row.sPct);
+ green.style.width=Number(row.lPct)+"%";
+ red.style.width=Number(row.sPct)+"%";
+ observed.textContent="Rilevato il "+dateLabel(row.t||doc.updatedAt)+
+  " (ora italiana) · Capital.com DEMO · "+
+  (via==="locale"?"Copia privata caricata sul tuo dispositivo.":"Archivio privato REMURA.")+
+  (recent?" Dato recente.":" Dato datato, non confrontare come segnale attuale.");
+ state(recent?"Capital.com · "+(via==="locale"?"importato":"aggiornato"):"Capital.com · dato datato",recent);
+ allHistory=[];
+ if(via==="privato"){
+  try{
+   const response=await fetch("./private-api/capital/history/"+encodeURIComponent(symbol)+".json",{cache:"no-store"});
+   if(response.ok){
+    const raw=await response.json();
+    allHistory=core.cleanCapitalHistory(raw,symbol).records;
+   }
+  }catch(_){}
+ }
+ if(!allHistory.length){
+  try{
+   const saved=importedHistory||savedHistory();
+   if(saved)allHistory=core.cleanCapitalHistory(saved,symbol).records;
+  }catch(_){}
+ }
+ // A latest snapshot is a real observation, even if history has not been imported.
+ if(!allHistory.some(item=>item.t===row.t)){
+  allHistory.push({...row});
+ }
+ drawHistory();
+ updateComparison();
 }
 updateComparison();
 loadCapital();
