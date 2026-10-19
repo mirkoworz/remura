@@ -3,15 +3,24 @@ const assert=require("node:assert/strict");
 const fs=require("node:fs");
 const vm=require("node:vm");
 
-test("Capital Firebase stays disabled until owner configures project",async()=>{
+test("REMURA owner Firebase Web config matches the expected project",()=>{
+ const win={};
+ vm.runInNewContext(fs.readFileSync("capital-cloud-config.js","utf8"),{window:win});
+ const cfg=win.REMURA_FIREBASE_CONFIG;
+ assert.equal(cfg.projectId,"remura-a9176");
+ assert.equal(cfg.authDomain,"remura-a9176.firebaseapp.com");
+ assert.ok(cfg.apiKey.startsWith("AIza"));
+ assert.ok(/^1:[0-9]+:web:[0-9a-f]+$/.test(cfg.appId));
+ assert.equal(Object.hasOwn(cfg,"private_key"),false);
+ assert.equal(Object.hasOwn(cfg,"client_email"),false);
+});
+test("Capital Firebase frontend recognizes configured project",()=>{
  const js=fs.readFileSync("capital-cloud.js","utf8");
- const win={REMURA_FIREBASE_CONFIG:null};
+ const win={};
+ vm.runInNewContext(fs.readFileSync("capital-cloud-config.js","utf8"),{window:win});
  vm.runInNewContext(js,{window:win});
- const api=win.REMURA_CAPITAL_CLOUD;
- assert.ok(api);
- assert.equal(api.enabled,false);
- assert.equal(await api.isSignedIn(),false);
- await assert.rejects(api.signIn(),/Firebase non è ancora configurato/);
+ assert.ok(win.REMURA_CAPITAL_CLOUD);
+ assert.equal(win.REMURA_CAPITAL_CLOUD.enabled,true);
 });
 
 test("Public REMURA uses authenticated Firestore only, with local fallback",()=>{
@@ -30,7 +39,7 @@ test("Public REMURA uses authenticated Firestore only, with local fallback",()=>
  assert.match(html,/capital-cloud-config\.js\?v=1/);
  assert.match(html,/capital-cloud\.js\?v=1/);
  assert.match(sw,/capital-cloud-config\.js/);
- assert.match(config,/REMURA_FIREBASE_CONFIG = null/);
+ assert.match(config,/REMURA_FIREBASE_CONFIG = \\{/);
  for(const secret of ["CAPITAL_API_KEY","CAPITAL_API_PASSWORD",
                        "REMURA_FIREBASE_SERVICE_ACCOUNT","GITHUB_TOKEN"])
   for(const file of [js,ui,config])
