@@ -56,10 +56,10 @@ test("all 35 market pages use only Myfxbook and Capital display code; no provide
  const js=fs.readFileSync("sources.js","utf8");
  const retail=fs.readFileSync("retail.js","utf8");
  const css=fs.readFileSync("sources.css","utf8");
- for(const asset of ["sentiment-core.js?v=13","sources.js?v=13","sources.css?v=13","retail.js?v=14"])
+ for(const asset of ["sentiment-core.js?v=14","sources.js?v=14","sources.css?v=14","retail.js?v=14"])
   assert.ok(html.includes(asset),asset);
- assert.ok(html.indexOf("retail.js?v=14")<html.indexOf("sentiment-core.js?v=13"));
- assert.ok(html.indexOf("sentiment-core.js?v=13")<html.indexOf("sources.js?v=13"));
+ assert.ok(html.indexOf("retail.js?v=14")<html.indexOf("sentiment-core.js?v=14"));
+ assert.ok(html.indexOf("sentiment-core.js?v=14")<html.indexOf("sources.js?v=14"));
  assert.ok(retail.includes("./data/myfxbook/"),"public Myfxbook archive path must be used as fallback");
  assert.ok(retail.includes("./private-api/retail/"),"private reader retained");
  assert.ok(js.includes("/private-api/capital/latest.json"));
@@ -72,6 +72,56 @@ test("all 35 market pages use only Myfxbook and Capital display code; no provide
  for(const secret of ["CAPITAL_API_KEY","CAPITAL_IDENTIFIER","CAPITAL_API_PASSWORD","MYFXBOOK_PASSWORD"])
   assert.ok(!js.includes(secret),"no secrets in browser code");
  assert.ok(html.includes("remura:")===false||html.includes("retail-module"));
+});
+test("Capital DEMO snapshot strips secrets and imports EURUSD 64.09%",()=>{
+ const now=Date.parse("2026-10-19T07:26:00Z");
+ const raw={status:"ok",environment:"demo",updatedAt:"2026-10-19T07:25:21Z",
+  API_KEY:"do-not-store",symbols:{
+   EURUSD:{t:"2026-10-19T07:25:21Z",lPct:64.09,sPct:35.91,marketId:"EURUSD",SECRET:"private"},
+   EURJPY:{t:"2026-10-19T07:25:21Z",lPct:65.56,sPct:34.44},
+   XAGUSD:{t:"2026-10-19T07:25:21Z",lPct:90.42,sPct:9.58},
+   EURAUD:{t:"2026-10-19T07:25:21Z",lPct:90,sPct:90}
+  }};
+ const cleaned=core.cleanCapitalLatest(raw,["EURUSD","EURJPY","XAGUSD","EURAUD"],now);
+ assert.deepEqual(Object.keys(cleaned.symbols),["EURUSD","EURJPY","XAGUSD"]);
+ assert.equal(cleaned.symbols.EURUSD.lPct,64.09);
+ assert.equal(cleaned.symbols.EURUSD.sPct,35.91);
+ for(const secret of ["API_KEY","SECRET","marketId","do-not-store"])
+  assert.ok(!JSON.stringify(cleaned).includes(secret));
+ assert.equal(core.cleanCapitalLatest(cleaned,["EURUSD"],now).symbols.EURUSD.lPct,64.09);
+});
+test("Capital import rejects live credentials, malformed, old and future snapshots",()=>{
+ const now=Date.parse("2026-10-19T07:26:00Z");
+ const raw={status:"ok",environment:"demo",updatedAt:"2026-10-19T07:25:21Z",
+  symbols:{EURUSD:{t:"2026-10-19T07:25:21Z",lPct:64,sPct:36}}};
+ for(const changed of [
+  {...raw,environment:"live"},{...raw,status:"invalid"},
+  {...raw,updatedAt:"2026-06-01T00:00:00Z"},
+  {...raw,updatedAt:"2026-10-20T00:00:00Z"},
+  {...raw,symbols:{EURUSD:{t:"bad",lPct:64,sPct:36}}},
+  {...raw,symbols:{EURUSD:{t:"2026-10-19T07:25:21Z",lPct:64,sPct:85}}}
+ ])assert.throws(()=>core.cleanCapitalLatest(changed,["EURUSD"],now));
+});
+test("Capital historical import checks exact pair and strips extra fields",()=>{
+ const now=Date.parse("2026-10-19T07:26:00Z");
+ const p={t:"2026-10-19T07:25:21Z",lPct:64.09,sPct:35.91,CST:"secret"};
+ const old={symbol:"EURUSD",records:[p,p,{t:"bad",lPct:50,sPct:50}]};
+ const result=core.cleanCapitalHistory(old,"EURUSD",now);
+ assert.equal(result.records.length,1);
+ assert.equal(result.records[0].lPct,64.09);
+ assert.ok(!JSON.stringify(result).includes("secret"));
+ assert.throws(()=>core.cleanCapitalHistory(old,"EURJPY",now));
+});
+test("capital UI imports locally without browser secrets or direct private GitHub fetch",()=>{
+ const ui=fs.readFileSync("sources.js","utf8"),html=fs.readFileSync("asset.html","utf8");
+ assert.ok(ui.includes('latestFile.type="file"'));
+ assert.ok(ui.includes("core.cleanCapitalLatest"));
+ assert.ok(ui.includes("localStorage"));
+ assert.ok(ui.includes("/private-api/capital/latest.json"));
+ assert.ok(ui.includes("remura-collector/blob/main/private/capital/latest.json"));
+ assert.ok(html.includes("sentiment-core.js?v=14"));
+ for(const secret of ["CAPITAL_API_KEY","CAPITAL_API_PASSWORD","X-SECURITY-TOKEN"])
+  assert.ok(!ui.includes(secret));
 });
 test("asset and sources page no longer advertise seven live retail sources",()=>{
  const html=fs.readFileSync("asset.html","utf8"),sources=fs.readFileSync("fonti.html","utf8");
