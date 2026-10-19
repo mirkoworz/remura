@@ -12,7 +12,7 @@
   el.setAttribute("aria-label","Analisi del prezzo in modalità personale");
   el.dataset.status="unavailable";
   el.innerHTML=
-    '<div class="rp-top"><div><span class="rp-eyebrow">05 · REMURA · Analisi prezzi automatica</span>'+
+    '<div class="rp-top"><div><span class="rp-eyebrow">04 · REMURA · Analisi prezzi automatica</span>'+
     '<h2 id="rp-title">Conferma prezzo H4 / H1 / M15 in attesa</h2>'+
     '<p class="rp-muted">Candele chiuse M15 → H1 → H4. Il servizio REMURA privato aggiorna i prezzi automaticamente ogni 15 minuti, quando è configurato.</p></div><span class="rp-flag" id="rp-state">Nessun feed caricato</span></div>'+
     '<p class="rp-muted" id="rp-auto">Controllo del servizio prezzi privato…</p><details class="rp-upload"><summary>Opzionale · Importa un file prezzi locale</summary><label for="rp-file">Seleziona uno snapshot .json</label>'+
