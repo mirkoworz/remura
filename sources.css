@@ -40,3 +40,20 @@
  .rem-sources .ms-history-panel{padding:5px}
  .rem-sources .ms-periods button{flex:1;min-width:44px}
 }
+
+
+/* Private Capital.com JSON import; only on-device, no outgoing data requests. */
+.rem-sources .ms-import{margin:17px 0 5px;border:1px solid #386068;background:#102a34;padding:15px;border-radius:13px}
+.rem-sources .ms-import h3{font-size:15px;color:#e7faf3;margin:0 0 8px}
+.rem-sources .ms-import>p{font-size:12px;color:#b4cfd1;line-height:1.75;margin:0 0 10px}
+.rem-sources .ms-import-help{font-size:11px;color:#abc5c7;line-height:1.65;margin:11px 0}
+.rem-sources .ms-import-controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
+.rem-sources .ms-file-label{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;min-height:42px;max-width:100%;padding:9px 12px;border:1px solid #53ab90;color:#dbfff1;background:#1b5547;border-radius:9px;font-size:12px;font-weight:750;cursor:pointer}
+.rem-sources .ms-file{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.rem-sources .ms-file-label:focus-within{outline:2px solid #87e9bf;outline-offset:2px}
+.rem-sources .ms-clear{padding:10px 12px;border:1px solid #647886;color:#c4d4db;background:#203641;border-radius:9px;font-family:inherit;font-size:12px;cursor:pointer}
+.rem-sources .ms-clear:hover{background:#2c4551}
+@media(max-width:520px){
+ .rem-sources .ms-import-controls{flex-direction:column;align-items:stretch}
+ .rem-sources .ms-file-label,.rem-sources .ms-clear{width:100%}
+}
