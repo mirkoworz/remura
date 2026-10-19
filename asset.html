@@ -72,6 +72,20 @@ th:first-child,td:first-child{text-align:left}
 .raw-box small{display:block;color:#9eb9bf;font-size:10px}
 .raw-box strong{font-variant-numeric:tabular-nums;font-size:15px}
 .footer{padding:35px 0;text-align:center;font-size:11px;color:#78949d}
+.cot-window{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:12px}
+.cot-window select{color:var(--text);border:1px solid var(--line);background:#122f39;border-radius:9px;padding:9px 11px;font:inherit}
+.cot-index-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:19px}
+.cot-index-tile{border:1px solid var(--line);border-radius:13px;background:#102b35;padding:15px;min-width:0}
+.cot-index-tile small{display:block;color:var(--muted);font-size:11px}
+.cot-index-tile strong{display:block;font-size:clamp(20px,3vw,30px);font-variant-numeric:tabular-nums;margin:5px 0}
+.cot-index-bar{height:7px;border-radius:9px;background:#29464f;overflow:hidden;margin:11px 0}
+.cot-index-bar i{display:block;height:100%;width:0;background:#69edca;transition:width .2s}
+.cot-index-tile:nth-child(2) .cot-index-bar i{background:#8db6ff}
+.cot-index-tile:nth-child(3) .cot-index-bar i{background:#f6c47e}
+.cot-gap{font-variant-numeric:tabular-nums;color:#b9d6d8;margin:10px 0}
+@media(max-width:600px){.cot-index-grid{grid-template-columns:1fr}.cot-window{flex-wrap:wrap}}
+
+
 @media(max-width:800px){.layout{grid-template-columns:1fr}.shell{padding:15px 14px 60px}.panel{padding:16px}.top{margin-bottom:24px}.cards{gap:9px}.card{padding:14px 12px}.value{font-size:30px}.topright{justify-content:flex-end;margin-left:auto}.overview{grid-column:auto}}
 @media(max-width:360px){.card{padding:11px 9px}.value{font-size:26px}.topright .btn{padding:7px 9px}}
 
@@ -119,7 +133,7 @@ html{scroll-behavior:smooth}
 <h1 id="heading">Gold <span>XAUUSD</span></h1>
 <p class="subtitle" id="description">COT ufficiale, posizioni dei trader retail e prezzo: tre dati diversi, spiegati separatamente.</p>
 <div class="alert" id="alert">Carico i dati ufficiali CFTC. Se la fonte non risponde, mostrerò N/D senza inventare alcun valore.</div>
-<nav class="rem-jump" aria-label="Vai alle sezioni della scheda"><a href="#rm-insights">In sintesi</a><a href="#cot-overview">COT istituzionale</a><a href="#retail-module">Myfxbook</a><a href="#remura-capital">Capital.com</a><a href="#remura-tradingview">Prezzo</a><a href="#remura-advanced">Approfondimenti</a></nav>
+<nav class="rem-jump" aria-label="Vai alle sezioni della scheda"><a href="#rm-insights">In sintesi</a><a href="#cot-overview">COT istituzionale</a><a href="#cot-indices">COT Index / Gap</a><a href="#retail-module">Myfxbook</a><a href="#remura-capital">Capital.com</a><a href="#remura-tradingview">Prezzo</a><a href="#remura-advanced">Approfondimenti</a></nav>
 <div class="layout">
 <section class="panel overview" id="cot-overview">
  <div class="row"><div><div class="eyebrow">01 · COT UFFICIALE · SETTIMANALE</div><h2>Come sono posizionati i grandi operatori</h2><p class="rem-intro">Questi numeri provengono dai contratti futures dichiarati alla CFTC: non sono gli ordini di oggi, né le posizioni dei clienti dei broker.</p></div><div class="chip" id="asof">Report: in attesa</div></div>
@@ -129,6 +143,12 @@ html{scroll-behavior:smooth}
  <div class="note" id="method-note">Net% = (contratti long − contratti short) ÷ open interest × 100. Non rappresenta una probabilità di rialzo o ribasso.</div>
 <div class="rem-glossary"><p><strong>Netto positivo (+)</strong> = in questa categoria prevalgono i contratti long sugli short.</p><p><strong>Netto negativo (−)</strong> = prevalgono i contratti short.</p><p><strong>Variazione settimanale</strong> = come cambia il posizionamento, non di quanto è salito o sceso il prezzo.</p></div>
 </section>
+<section class="panel overview cot-index-panel" id="cot-indices"><div class="row"><div><div class="eyebrow">01B · COT INDEX / GAP INDEX</div><h2>Estremi storici delle posizioni</h2></div><label class="cot-window" for="cot-period">Calcola su <select id="cot-period" aria-label="Finestra indici COT"><option value="26">26 settimane</option><option value="52" selected>52 settimane</option><option value="156">156 settimane</option><option value="260">260 settimane</option></select></label></div>
+<div class="cot-index-grid">
+<div class="cot-index-tile"><small id="cot-name-a">Categoria 1 · COT Index</small><strong id="cot-index-a">—</strong><div class="cot-index-bar"><i id="cot-bar-a"></i></div><small>Posizione relativa del netto/OI</small></div>
+<div class="cot-index-tile"><small id="cot-name-b">Categoria 2 · COT Index</small><strong id="cot-index-b">—</strong><div class="cot-index-bar"><i id="cot-bar-b"></i></div><small>Posizione relativa del netto/OI</small></div>
+<div class="cot-index-tile"><small>Gap Index · distanza con segno</small><strong id="cot-index-gap">—</strong><div class="cot-index-bar"><i id="cot-bar-gap"></i></div><small id="cot-gap-value">Gap: —</small></div>
+</div><h3>Gap storico tra categorie</h3><div class="chart" id="cot-gap-chart">In attesa dei report…</div><p class="headnote" id="cot-index-note">Gli indici confrontano i netti normalizzati nel periodo scelto; 0 e 100 sono estremi relativi, non probabilità né segnali operativi.</p></section>
 <section class="panel overview" id="retail-module" aria-labelledby="rem-myfx-title">
 <div class="rt-head"><div><div class="eyebrow">02 · SENTIMENT RETAIL · FONTE 1 DI 2</div><h2 id="rem-myfx-title">Myfxbook · cosa fanno i trader retail</h2><p class="rt-sub">Qui vedi <strong>quanti lotti</strong> sono long o short fra i conti della community Myfxbook. Sotto trovi anche il numero delle posizioni e lo storico delle rilevazioni realmente raccolte.</p></div><span id="r-status" class="rt-tag warn">Myfxbook da attivare</span></div>
 <div class="rt-summary">
@@ -160,7 +180,7 @@ html{scroll-behavior:smooth}
 <div class="rt-section"><div class="rt-section-head"><h3>Seleziona il timeframe delle candele</h3><div id="r-tf" class="rt-tfs" aria-label="Timeframe candele"></div></div>
 <div id="r-price" class="rt-price"></div><p class="rt-disclaimer">Timeframe M1–D1 delle candele, non delle rilevazioni retail. Fonte esterna TradingView. <a id="r-tradingview" target="_blank" rel="noopener noreferrer">Apri il grafico ↗</a></p></div>
 </section>
-<section class="panel overview rem-cot-trend"><div class="eyebrow">05 · STORICO COT · SETTIMANALE</div><h2>Come cambiano le posizioni dei grandi operatori?</h2><div class="chart" id="chart">Attendo i dati…</div><div class="legend"><span><b></b><span id="legend-a">Gruppo principale</span></span><span><b class="blue"></b><span id="legend-b">Secondo gruppo</span></span></div><p class="headnote" id="chart-note">Ogni punto rappresenta una settimana COT. La linea mostra il posizionamento netto, non il movimento del prezzo.</p></section>
+<section class="panel overview rem-cot-trend"><div class="eyebrow">05 · STORICO COT · SETTIMANALE</div><h2>Come cambiano le posizioni dei grandi operatori?</h2><label class="cot-window" for="chart-period">Grafico su <select id="chart-period" aria-label="Periodo grafico COT"><option value="26">26 settimane</option><option value="52" selected>52 settimane</option><option value="156">156 settimane</option><option value="260">260 settimane</option></select></label><div class="chart" id="chart">Attendo i dati…</div><div class="legend"><span><b></b><span id="legend-a">Gruppo principale</span></span><span><b class="blue"></b><span id="legend-b">Secondo gruppo</span></span></div><p class="headnote" id="chart-note">Ogni punto rappresenta una settimana COT. La linea mostra il posizionamento netto, non il movimento del prezzo.</p></section>
 <details class="rem-advanced overview" id="remura-advanced"><summary><span class="rem-advanced-title">06 · Approfondimenti e numeri COT</span><span class="rem-advanced-sub">Percentili, open interest, contratti long/short, tabella delle settimane e fonti · Tocca per aprire</span></summary><div class="rem-advanced-grid"><section class="panel"><div class="eyebrow">CONTESTO · QUANTO È INSOLITO?</div><h2>Quanto è insolita questa esposizione?</h2><p class="rem-intro">Il percentile confronta il valore attuale con lo storico disponibile: 90° percentile significa superiore o uguale a circa il 90% dei campioni osservati, non una probabilità del 90%.</p><div class="stat"><span class="k">Percentile netto gruppo 1</span><strong id="pct-a">—</strong></div><div class="stat"><span class="k">Percentile netto gruppo 2</span><strong id="pct-b">—</strong></div><div class="stat"><span class="k">Open interest</span><strong id="oi">—</strong></div><div class="stat"><span class="k">Variazione settimanale OI</span><strong id="oi-delta">—</strong></div><p class="headnote" id="percentile-note">I percentili sono calcolati sulla serie settimanale disponibile; non sono percentuali di probabilità.</p></section>
 <section class="panel"><div class="eyebrow">DETTAGLIO FUTURES · LONG E SHORT</div><h2>Dentro i numeri CFTC</h2><div id="raw-contracts" class="muted">In attesa…</div><p class="headnote" id="raw-note">Posizioni future riportate dalla CFTC, non flussi intraday.</p></section>
 <section class="panel"><div class="eyebrow">TABELLA · SETTIMANA PER SETTIMANA</div><h2>Come cambiano le posizioni</h2><div class="table-overflow"><table><thead><tr><th>Data</th><th id="column-a">Gruppo 1</th><th id="column-b">Gruppo 2</th><th>Variazione 1</th></tr></thead><tbody id="history-rows"><tr><td colspan="4">In attesa…</td></tr></tbody></table></div><p class="headnote">Variazioni espresse in punti percentuali (pp) rispetto alla settimana precedente.</p></section>
@@ -171,6 +191,7 @@ html{scroll-behavior:smooth}
 </div>
 <script src="./nav.js?v=8"></script>
 <script src="./insights-core.js?v=9"></script>
+<script src="./cot-indices-core.js?v=2"></script>
 <script src="./insights.js?v=9"></script>
 <script>
 "use strict";
@@ -213,6 +234,9 @@ function setup(){
  const a=document.createElement("a");a.href=sourceUrl;a.target="_blank";a.rel="noopener noreferrer";a.textContent=dataset==="tff"?"Apri TFF Futures Only ufficiale ↗":"Apri Disaggregated Futures Only ufficiale ↗";
  $("source").replaceChildren(document.createTextNode("Fonte dei contratti: "),a,document.createTextNode(". Il COT fotografa normalmente le posizioni del martedì e viene pubblicato di norma venerdì. I contratti non identificano ogni transazione istituzionale e non coprono tutto il Forex o i CFD. Questo strumento mostra esposizioni nette e loro variazioni, non ordini eseguiti in tempo reale. Il sentiment Myfxbook, quando disponibile, proviene da un campione distinto di conti retail e non misura gli istituzionali."));
  $("refresh").addEventListener("click",load);
+ $("cot-name-a").textContent=labels[0]+" · COT Index";$("cot-name-b").textContent=labels[1]+" · COT Index";
+ $("cot-period").addEventListener("change",renderIndices);
+ $("chart-period").addEventListener("change",()=>draw(chartData));
 }
 function setState(t,kind=""){
  $("state").textContent=t;$("state").className="status "+kind;
@@ -226,6 +250,9 @@ function fail(message){
  $("raw-contracts").textContent="N/D";
  $("history-rows").replaceChildren();
  window.REMURA_INSIGHTS?.error(message);
+ chartData=[];for(const id of ["cot-index-a","cot-index-b","cot-index-gap","cot-gap-value"])$(id).textContent="N/D";
+ for(const id of ["cot-bar-a","cot-bar-b","cot-bar-gap"])$(id).style.width="0%";
+ $("cot-gap-chart").textContent="Dati CFTC non disponibili.";$("cot-index-note").textContent="Impossibile calcolare indici senza dati verificati.";
  for(const id of ["value-a","value-b","change-a","change-b","pct-a","pct-b","oi","oi-delta"])$(id).textContent="—";
 }
 function parseRow(r){
@@ -252,14 +279,14 @@ function datasetRows(raw){
  const legs=[base,quote].filter(c=>c!=="USD");
  if(legs.some(c=>!groups[conf.fxCodes[c]].size))throw Error("Mancano i report CFTC di una valuta necessaria");
  const maps=legs.map(c=>groups[conf.fxCodes[c]]);
- const dates=[...maps[0].keys()].filter(d=>maps.every(m=>m.has(d))).sort().slice(-56);
+ const dates=[...maps[0].keys()].filter(d=>maps.every(m=>m.has(d))).sort().slice(-261);
  return dates.map(date=>{
   const leg=c=>c==="USD"?null:groups[conf.fxCodes[c]].get(date);
   const first=leg(base),second=leg(quote);
   return {date,a:(first?net(first,"a"):0)-(second?net(second,"a"):0),b:(first?net(first,"b"):0)-(second?net(second,"b"):0),parts:{base:first,quote:second}};
  });
  }
- return [...groups[codes[0]].values()].sort((a,b)=>a.date.localeCompare(b.date)).slice(-56).map(r=>({date:r.date,a:net(r,"a"),b:net(r,"b"),oi:r.oi,raw:r}));
+ return [...groups[codes[0]].values()].sort((a,b)=>a.date.localeCompare(b.date)).slice(-261).map(r=>({date:r.date,a:net(r,"a"),b:net(r,"b"),oi:r.oi,raw:r}));
 }
 function pushText(parent,tag,text,className){const el=document.createElement(tag);el.textContent=text;if(className)el.className=className;parent.append(el);return el;}
 function putPercentile(name,values,current){
@@ -285,7 +312,44 @@ function showContracts(r){
  }
  $("raw-note").textContent=isFX?"Le percentuali del cross sono sintetiche: per ciascuna valuta, netto long-short diviso per OI del suo future. Non esistono contratti COT diretti su tutte queste coppie.":"Conteggi sul singolo contratto future indicato, non su spot/CFD.";
 }
+function gapChart(rows){
+ const node=$("cot-gap-chart");if(rows.length<2){node.textContent="Servono almeno due report.";return;}
+ const W=750,H=210,L=63,R=17,T=15,B=33;
+ const vals=rows.map(r=>r.gap), low=Math.min(0,...vals),high=Math.max(0,...vals);
+ const pad=Math.max(1,(high-low)*.10),min=low-pad,max=high+pad;
+ const X=i=>L+(W-L-R)*i/(rows.length-1),Y=v=>T+(max-v)/(max-min)*(H-T-B);
+ const path=rows.map((r,i)=>(i?"L":"M")+X(i).toFixed(1)+","+Y(r.gap).toFixed(1)).join(" ");
+ const y0=Y(0),last=rows.length-1;
+ node.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Gap storico in punti percentuali tra le due categorie istituzionali">'
+  +'<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y0+'" y2="'+y0+'" stroke="#7199a0" stroke-dasharray="5 5"/>'
+  +'<text x="'+(L-10)+'" y="'+(Y(max-pad)+5)+'" text-anchor="end" font-size="11" fill="#afc8cc">'+pformat.format(high)+'</text>'
+  +'<text x="'+(L-10)+'" y="'+(y0+4)+'" text-anchor="end" font-size="11" fill="#afc8cc">0</text>'
+  +'<text x="'+(L-10)+'" y="'+(Y(min+pad)+5)+'" text-anchor="end" font-size="11" fill="#afc8cc">'+pformat.format(low)+'</text>'
+  +'<path d="'+path+'" fill="none" stroke="#f6c47e" stroke-width="2.5"/>'
+  +'<circle cx="'+X(last).toFixed(1)+'" cy="'+Y(vals[last]).toFixed(1)+'" r="4" fill="#f6c47e"/>'
+  +'<text x="'+L+'" y="'+(H-6)+'" font-size="11" fill="#afc8cc">'+dateText(rows[0].date)+'</text>'
+  +'<text x="'+(W-R)+'" y="'+(H-6)+'" text-anchor="end" font-size="11" fill="#afc8cc">'+dateText(rows[last].date)+'</text></svg>';
+}
+function renderIndices(){
+ const core=window.REMURA_COT_INDEX_CORE;
+ if(!core||!chartData.length)return;
+ const weeks=Number($("cot-period").value),r=core.evaluate(chartData,weeks);
+ for(const [key,item] of [["a",r.a],["b",r.b],["gap",r.gapIndex]]){
+  $("cot-index-"+key).textContent=item?Math.round(item.value)+" / 100":"N/D";
+  $("cot-bar-"+key).style.width=item?item.value.toFixed(2)+"%":"0%";
+ }
+ $("cot-gap-value").textContent=Number.isFinite(r.gap)?"Gap: "+signed(r.gap," pp"):"Gap: N/D";
+ if(r.state!=="ok"){
+  $("cot-gap-chart").textContent="Storico insufficiente per questa finestra.";
+  $("cot-index-note").textContent="Servono "+weeks+" report COT settimanali verificati; al momento sono disponibili "+r.available+". Nessun indice viene stimato o inventato.";
+  return;
+ }
+ gapChart(r.gapSeries);
+ const flat=(!r.a||!r.b||!r.gapIndex)?" Un intervallo costante produce N/D.":"";
+ $("cot-index-note").textContent="Periodo: "+weeks+" rilevazioni, ultima posizione "+dateText(r.asof)+". COT Index = posizione del netto/OI rispetto al minimo e massimo nel periodo. Gap = "+labels[0]+" meno "+labels[1]+" (pp); Gap Index = posizione del gap CON SEGNO rispetto ai suoi estremi. I valori 0–100 non sono percentuali di trader long, probabilità né segnali."+flat;
+}
 function draw(series){
+ series=series.slice(-Number($("chart-period").value||52));
  if(series.length<2){$("chart").textContent="Servono almeno due settimane di storico per il grafico.";return;}
  const W=750,H=300,L=52,R=15,T=21,B=33,all=series.flatMap(s=>[s.a,s.b,0]);
  let min=Math.min(...all),max=Math.max(...all),pad=Math.max(3,(max-min)*.12);min-=pad;max+=pad;
@@ -330,17 +394,17 @@ function show(series){
  setState(stale?"CFTC · datato":"CFTC · ufficiale",stale?"bad":"live");
  $("alert").className="alert"+(stale?" warning":"");
  $("alert").textContent=(stale?"ATTENZIONE · Report vecchio di "+age+" giorni. ":"Fonte CFTC ufficiale · ")+"Posizioni al "+dateText(r.date)+". Aggiornamento settimanale, non in tempo reale. Sentiment retail separato: controlla la sezione dedicata.";
- showContracts(r);showHistory(series);draw(series);chartData=series;
+ showContracts(r);showHistory(series);chartData=series;draw(series);renderIndices();
  window.REMURA_INSIGHTS?.updateCOT({series,symbol,isFX,isMetal,labels});
 }
 async function request(){
- const cutoff=new Date();cutoff.setUTCDate(cutoff.getUTCDate()-411);
+ const cutoff=new Date();cutoff.setUTCFullYear(cutoff.getUTCFullYear()-5);cutoff.setUTCDate(cutoff.getUTCDate()-21);
  const where="report_date_as_yyyy_mm_dd >= '"+cutoff.toISOString().slice(0,10)+"T00:00:00' AND cftc_contract_market_code IN ("+codes.map(c=>"'"+c+"'").join(",")+")";
  const hosts=["https://publicreporting.cftc.gov","https://publicreportinghub.cftc.gov"],errors=[];
  for(const host of hosts){
   const url=new URL("/resource/"+datasetId+".json",host);
   url.searchParams.set("$select",reportFields.join(","));url.searchParams.set("$where",where);
-  url.searchParams.set("$order","report_date_as_yyyy_mm_dd DESC");url.searchParams.set("$limit","1100");
+  url.searchParams.set("$order","report_date_as_yyyy_mm_dd DESC");url.searchParams.set("$limit","1200");
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),16000);
   try{
    const res=await fetch(url.toString(),{mode:"cors",headers:{Accept:"application/json"},signal:controller.signal});
