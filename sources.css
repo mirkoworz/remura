@@ -57,3 +57,11 @@
  .rem-sources .ms-import-controls{flex-direction:column;align-items:stretch}
  .rem-sources .ms-file-label,.rem-sources .ms-clear{width:100%}
 }
+
+/* La connessione privata resta disponibile ma non occupa spazio se già configurata. */
+.rem-sources .ms-import>summary{cursor:pointer;display:list-item;color:#baf5df;font-size:13px;font-weight:800;line-height:1.65;margin:0}
+.rem-sources .ms-import:not([open]){padding:13px 15px}
+.rem-sources .ms-import[open]>summary{border-bottom:1px solid #365c63;padding-bottom:11px;margin-bottom:12px}
+.rem-sources .ms-comparison{margin:18px 0}
+.rem-sources .ms-intro h2{line-height:1.23}
+.rem-sources .ms-data-time{overflow-wrap:anywhere}
