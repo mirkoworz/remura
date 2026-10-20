@@ -50,6 +50,25 @@ class OAuthTests(unittest.TestCase):
             self.assertEqual(len(recorded), 1)
             self.assertIn("grant_type=authorization_code", recorded[0].full_url)
 
+    def test_provider_denial_is_logged_without_secrets(self):
+        with tempfile.TemporaryDirectory() as d:
+            dest = Path(d) / "private" / "db.sqlite"
+            def denied(req):
+                return {
+                    "errorCode": "ACCESS_DENIED",
+                    "description": "Secret value must never be logged",
+                }
+            with self.assertRaises(RuntimeError):
+                oauth.exchange_code("test-code_123", CONFIG, dest, denied)
+            status_file = dest.parent / "ctrader-oauth-status.json"
+            self.assertEqual(status_file.stat().st_mode & 0o777, 0o600)
+            raw = status_file.read_text()
+            self.assertEqual(json.loads(raw)["result"], "API_ACCESS_DENIED")
+            self.assertNotIn("Secret value", raw)
+            self.assertNotIn(CONFIG["CTRADER_CLIENT_SECRET"], raw)
+            self.assertNotIn("test-code_123", raw)
+            self.assertFalse((dest.parent / "ctrader-tokens.json").exists())
+
     def test_failed_exchange_does_not_disclose_or_store_secrets(self):
         with tempfile.TemporaryDirectory() as d:
             dest = Path(d) / "private" / "db.sqlite"
