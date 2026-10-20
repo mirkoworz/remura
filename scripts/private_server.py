@@ -18,17 +18,20 @@ import math
 import os
 from pathlib import Path
 import re
+import secrets
 import subprocess
 import sys
 import tempfile
 import threading
 import time
+from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 
 from price_feed import MARKETS, UTC, utcnow
 from price_store import connect, get_status, set_status, latest, ingest, api_document, symbols_available
 from ctrader_tokens import access_token, path_for, read_file
+from ctrader_oauth import CALLBACK_PATH, START_PATH, authorization_url, exchange_code, settings as oauth_settings
 
 ROOT=Path(__file__).resolve().parents[1]
 STORE=ROOT/"private"/"remura-prices.sqlite3"
@@ -46,14 +49,20 @@ CAPITAL_LATEST="/private-api/capital/latest.json"
 CAPITAL_HISTORY_RE=re.compile(r"^/private-api/capital/history/([A-Z0-9]{3,8})[.]json$")
 RETAIL_HISTORY_RE=re.compile(r"^/private-api/retail/history/([A-Z0-9]{3,8})[.]json$")
 PRICE_RE=re.compile(r"^/private-api/prices/([A-Z0-9]{3,8})$")
+OAUTH_PENDING={}
+OAUTH_LOCK=threading.Lock()
+OAUTH_COOKIE="remura_ctrader_consent"
+OAUTH_TTL_SECONDS=300
 
 
 def source_configured(env=None,db_path=None):
     env=os.environ if env is None else env
     basic=all(env.get(name) for name in ("CTRADER_CLIENT_ID","CTRADER_CLIENT_SECRET","CTRADER_ACCOUNT_ID"))
     authorised=bool(env.get("CTRADER_REFRESH_TOKEN") or env.get("CTRADER_ACCESS_TOKEN"))
-    if db_path is not None and read_file(path_for(db_path)):
-        authorised=True
+    if db_path is not None:
+        saved=read_file(path_for(db_path))
+        if saved and saved.get("accessToken") and saved.get("refreshToken"):
+            authorised=True
     return basic and authorised
 
 
@@ -219,7 +228,7 @@ def http_handler(db_path):
             self.send_header("Content-Length",str(len(payload)))
             self.send_header("Cache-Control","public, max-age=300" if cacheable else "no-store, max-age=0")
             self.send_header("X-Content-Type-Options","nosniff")
-            self.send_header("Referrer-Policy","strict-origin-when-cross-origin")
+            self.send_header("Referrer-Policy","no-referrer")
             self.send_header("X-Frame-Options","DENY")
             self.send_header("Cross-Origin-Resource-Policy","same-origin")
             self.end_headers()
@@ -229,11 +238,73 @@ def http_handler(db_path):
                 except (ConnectionResetError,BrokenPipeError):
                     pass
 
+        def oauth_redirect(self, target, cookie=None):
+            self.send_response(303 if target.startswith("/") else 302)
+            self.send_header("Location",target)
+            self.send_header("Cache-Control","no-store")
+            self.send_header("Referrer-Policy","no-referrer")
+            self.send_header("X-Content-Type-Options","nosniff")
+            if cookie is not None:
+                self.send_header("Set-Cookie",cookie)
+            self.send_header("Content-Length","0")
+            self.end_headers()
+
+        def oauth_callback(self):
+            # State is bound to a temporary HttpOnly SameSite=Lax browser cookie.
+            # Spotware does not currently document returning an OAuth state value.
+            try:
+                parsed=parse_qs(urlsplit(self.path).query,max_num_fields=5)
+                values=parsed.get("code",[])
+                code=values[0] if len(values)==1 else ""
+                cookie=SimpleCookie()
+                cookie.load(self.headers.get("Cookie","")[:2048])
+                nonce=cookie[OAUTH_COOKIE].value if OAUTH_COOKIE in cookie else ""
+                with OAUTH_LOCK:
+                    expires=OAUTH_PENDING.pop(nonce,0)
+                if not nonce or expires<time.monotonic():
+                    raise ValueError("Authorization session expired")
+                client_id,client_secret,redirect=oauth_settings(os.environ)
+                exchange_code(db_path,code,client_id,client_secret,redirect)
+                ok=True
+            except (ValueError,RuntimeError,OSError,KeyError):
+                ok=False
+            # Never leave an authorization code visible in the resulting URL.
+            self.oauth_redirect("/private-api/ctrader/connected" if ok else
+                                "/private-api/ctrader/failed",
+                                OAUTH_COOKIE+"=; Path="+CALLBACK_PATH+
+                                "; Max-Age=0; Secure; HttpOnly; SameSite=Lax")
+
         def do_HEAD(self):
             self.do_GET()
 
         def do_GET(self):
             path=urlsplit(self.path).path
+            if path==START_PATH:
+                try:
+                    client_id,_,redirect=oauth_settings(os.environ)
+                    with OAUTH_LOCK:
+                        now=time.monotonic()
+                        for nonce,expires in list(OAUTH_PENDING.items()):
+                            if expires<now: OAUTH_PENDING.pop(nonce,None)
+                        if len(OAUTH_PENDING)>=16:
+                            raise ValueError("Troppe sessioni OAuth in corso.")
+                        nonce=secrets.token_urlsafe(32)
+                        OAUTH_PENDING[nonce]=now+OAUTH_TTL_SECONDS
+                    self.oauth_redirect(authorization_url(client_id,redirect),
+                                        OAUTH_COOKIE+"="+nonce+"; Path="+CALLBACK_PATH+
+                                        "; Max-Age=300; Secure; HttpOnly; SameSite=Lax")
+                except (ValueError,RuntimeError):
+                    self.response(503,{"error":"ctrader_oauth_not_configured"})
+                return
+            if path==CALLBACK_PATH:
+                self.oauth_callback()
+                return
+            if path=="/private-api/ctrader/connected":
+                self.response(200,"Autorizzazione cTrader in sola lettura ricevuta. I token sono salvati solo sul server privato. Ora configura il conto autorizzato e verifica i prezzi.",mime="text/plain; charset=utf-8")
+                return
+            if path=="/private-api/ctrader/failed":
+                self.response(400,"Autorizzazione non riuscita o scaduta. Apri nuovamente /private-api/ctrader/start dalla rete Tailscale.",mime="text/plain; charset=utf-8")
+                return
             if path==CAPITAL_LATEST or CAPITAL_HISTORY_RE.fullmatch(path):
                 data=capital_document(db_path,path)
                 if data is None:self.response(503,{"error":"capital_not_collected"})
@@ -267,6 +338,7 @@ def http_handler(db_path):
                             "igStatus":status.get("ig_status","disabled"),
                             "igLastSuccess":status.get("ig_last_success"),
                             "instruments":symbols_available(db),
+                            "ctraderTokenStored":bool((read_file(path_for(db_path)) or {}).get("refreshToken")),
                             "serverTime":utcnow().isoformat(),
                         })
                         return
