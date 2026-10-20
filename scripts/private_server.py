@@ -18,17 +18,21 @@ import math
 import os
 from pathlib import Path
 import re
+import secrets
+import hmac
 import subprocess
 import sys
 import tempfile
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlsplit
+from http.cookies import SimpleCookie
+from urllib.parse import urlsplit, parse_qs
 
 from price_feed import MARKETS, UTC, utcnow
 from price_store import connect, get_status, set_status, latest, ingest, api_document, symbols_available
 from ctrader_tokens import access_token, path_for, read_file
+from ctrader_oauth import authorization_url, exchange_code
 
 ROOT=Path(__file__).resolve().parents[1]
 STORE=ROOT/"private"/"remura-prices.sqlite3"
@@ -137,6 +141,12 @@ def ig_document(db_path):
 
 
 def http_handler(db_path):
+    # One private browser session at a time. cTrader's documented OAuth flow
+    # does not promise a state parameter, so bind the callback to a Secure,
+    # HttpOnly, SameSite=Lax cookie issued only when the user begins locally.
+    oauth_pending = {"nonce": None, "expires": 0.0}
+    oauth_lock = threading.Lock()
+
     class Handler(BaseHTTPRequestHandler):
         server_version="REMURA-Private/1.0"
         sys_version=""
@@ -157,7 +167,7 @@ def http_handler(db_path):
             self.send_header("Content-Length",str(len(payload)))
             self.send_header("Cache-Control","public, max-age=300" if cacheable else "no-store, max-age=0")
             self.send_header("X-Content-Type-Options","nosniff")
-            self.send_header("Referrer-Policy","strict-origin-when-cross-origin")
+            self.send_header("Referrer-Policy","no-referrer")
             self.send_header("X-Frame-Options","DENY")
             self.send_header("Cross-Origin-Resource-Policy","same-origin")
             self.end_headers()
@@ -167,11 +177,90 @@ def http_handler(db_path):
                 except (ConnectionResetError,BrokenPipeError):
                     pass
 
+        def oauth_redirect(self, target, cookie=None):
+            self.send_response(303)
+            self.send_header("Location", target)
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Referrer-Policy", "no-referrer")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.send_header("X-Frame-Options", "DENY")
+            self.send_header("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'")
+            if cookie is not None:
+                self.send_header("Set-Cookie", cookie)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+
         def do_HEAD(self):
             self.do_GET()
 
         def do_GET(self):
-            path=urlsplit(self.path).path
+            parsed = urlsplit(self.path)
+            path = parsed.path
+            if path == "/ctrader/start":
+                try:
+                    target = authorization_url(os.environ)
+                except ValueError:
+                    self.response(503, {"error": "ctrader_oauth_not_configured"})
+                    return
+                nonce = secrets.token_urlsafe(32)
+                with oauth_lock:
+                    oauth_pending.update(nonce=nonce, expires=time.monotonic() + 900)
+                self.oauth_redirect(
+                    target,
+                    "__Host-remura-ctrader=" + nonce +
+                    "; Path=/; Max-Age=900; Secure; HttpOnly; SameSite=Lax"
+                )
+                return
+            if path == "/ctrader/callback":
+                # Never log, serve or otherwise expose the short-lived OAuth code.
+                received = SimpleCookie()
+                try:
+                    received.load(self.headers.get("Cookie", ""))
+                except Exception:
+                    received = SimpleCookie()
+                got = received.get("__Host-remura-ctrader")
+                nonce = got.value if got else ""
+                codes = parse_qs(parsed.query, keep_blank_values=True).get("code", [])
+                with oauth_lock:
+                    valid = (
+                        bool(nonce) and oauth_pending["nonce"] is not None and
+                        time.monotonic() < oauth_pending["expires"] and
+                        hmac.compare_digest(nonce, oauth_pending["nonce"]) and
+                        len(codes) == 1 and 8 <= len(codes[0]) <= 512
+                    )
+                    if valid:
+                        oauth_pending.update(nonce=None, expires=0.0)
+                result = "denied"
+                if valid:
+                    try:
+                        exchange_code(codes[0], os.environ, db_path)
+                        result = "ok"
+                    except Exception:
+                        result = "failed"
+                self.oauth_redirect(
+                    "/ctrader/result?result=" + result,
+                    "__Host-remura-ctrader=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Lax"
+                )
+                return
+            if path == "/ctrader/result":
+                # The redirected destination contains no OAuth code or token.
+                status = parse_qs(parsed.query).get("result", [""])[0]
+                message = {
+                    "ok": "Autorizzazione cTrader acquisita e salvata sul VPS privato.",
+                    "failed": "Autorizzazione cTrader non riuscita. Riprova dal link di avvio.",
+                    "denied": "Richiesta non riconosciuta o sessione scaduta. Riprova dal link di avvio.",
+                }.get(status, "Per iniziare, apri /ctrader/start dal tuo dispositivo Tailscale.")
+                body = (
+                    "<!doctype html><html lang='it'><head>"
+                    "<meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
+                    "<meta name='referrer' content='no-referrer'>"
+                    "<title>REMURA · cTrader</title></head>"
+                    "<body style='background:#0a1620;color:#d7f5ec;font:18px system-ui;padding:30px'>"
+                    "<h1>REMURA · cTrader</h1><p>" + message + "</p>"
+                    "<p>Non condividere codici o token negli screenshot.</p></body></html>"
+                )
+                self.response(200, body, "text/html; charset=utf-8")
+                return
             if path==IG_LATEST:
                 data=ig_document(db_path)
                 if data is None:self.response(503,{"error":"ig_not_collected"})
