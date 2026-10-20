@@ -5,8 +5,10 @@ from __future__ import annotations
 import datetime as dt
 import json
 import re
+import urllib.error
 import urllib.parse
 import urllib.request
+from pathlib import Path
 from urllib.parse import urlsplit
 
 from ctrader_tokens import path_for, safe_write
@@ -43,42 +45,77 @@ def authorization_url(env):
     return GRANT_URL + "?" + query
 
 
-def exchange_code(code, env, database, requester=None):
-    """Exchange a short-lived code and atomically store tokens with chmod 0600.
+def _record_diagnostic(database, status):
+    """Keep only a bounded category in the private directory, never provider messages."""
+    location = Path(database).expanduser().resolve().parent / "ctrader-oauth-status.json"
+    safe_write(location, {"result": status, "checkedAt": utcnow().isoformat()})
 
-    No secret, code or token is printed or included in any exception.
-    GET is required by the cTrader documented authorization_code token endpoint.
+
+def exchange_code(code, env, database, requester=None):
+    """Exchange once, retain only safe error categories, never tokens in logs or responses.
+
+    A failed callback produces a private diagnostic with NO access token,
+    refresh token, OAuth code, credentials, request URL or provider description.
     """
-    cid, secret, redirect = settings(env)
-    if (not isinstance(code, str) or
-            not re.fullmatch(r"[A-Za-z0-9._~-]{8,512}", code)):
-        raise ValueError("Codice OAuth non valido.")
-    url = TOKEN_URL + "?" + urllib.parse.urlencode({
-        "grant_type": "authorization_code",
-        "code": code,
-        "redirect_uri": redirect,
-        "client_id": cid,
-        "client_secret": secret,
-    })
-    request = urllib.request.Request(
-        url, headers={"Accept": "application/json", "Cache-Control": "no-store"})
+    status = "REQUEST_FAILED"
     try:
+        cid, secret, redirect = settings(env)
+        if (not isinstance(code, str) or
+                not re.fullmatch(r"[A-Za-z0-9._~-]{8,512}", code)):
+            status = "INVALID_CODE_FORMAT"
+            raise ValueError("Invalid OAuth code format")
+        url = TOKEN_URL + "?" + urllib.parse.urlencode({
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": redirect,
+            "client_id": cid,
+            "client_secret": secret,
+        })
+        request = urllib.request.Request(
+            url, headers={"Accept": "application/json", "Cache-Control": "no-store"})
         if requester is None:
             with urllib.request.urlopen(request, timeout=15) as reply:
                 payload = json.loads(reply.read(20_000).decode("utf-8"))
         else:
             payload = requester(request)
-        if (not isinstance(payload, dict) or payload.get("errorCode") or
-                not payload.get("accessToken") or not payload.get("refreshToken")):
-            raise ValueError("Risposta OAuth non valida.")
+        if not isinstance(payload, dict):
+            status = "INVALID_RESPONSE"
+            raise ValueError("Invalid API response")
+        if payload.get("errorCode"):
+            # An allowlist prevents remotely controlled error strings or secrets
+            # from being written to a diagnostics file.
+            allowed = {
+                "ACCESS_DENIED", "INVALID_REQUEST", "INVALID_TOKEN",
+                "INVALID_CLIENT", "INVALID_GRANT", "CODE_EXPIRED",
+                "INTERNAL_ERROR", "RATE_LIMIT_EXCEEDED",
+            }
+            provider_code = str(payload["errorCode"]).upper()
+            status = ("API_" + provider_code) if provider_code in allowed else "API_REJECTED"
+            raise ValueError("API refused OAuth exchange")
+        if not payload.get("accessToken") or not payload.get("refreshToken"):
+            status = "MISSING_TOKENS"
+            raise ValueError("Missing tokens")
         ttl = int(payload.get("expiresIn", 0))
         if not 3600 <= ttl <= 365 * 86400:
-            raise ValueError("Durata token OAuth non valida.")
+            status = "INVALID_TTL"
+            raise ValueError("Invalid token lifetime")
         safe_write(path_for(database), {
             "accessToken": str(payload["accessToken"]),
             "refreshToken": str(payload["refreshToken"]),
             "expiresAt": (utcnow() + dt.timedelta(seconds=ttl)).isoformat(),
         })
+        status = "SAVED"
+        return True
+    except urllib.error.HTTPError as exc:
+        status = "HTTP_" + str(exc.code) if 400 <= exc.code < 600 else "HTTP_ERROR"
+        raise RuntimeError("cTrader OAuth non riuscito: consultare la diagnostica privata.") from None
+    except urllib.error.URLError:
+        status = "NETWORK_ERROR"
+        raise RuntimeError("cTrader OAuth non riuscito: consultare la diagnostica privata.") from None
     except Exception:
-        raise RuntimeError("cTrader OAuth non riuscito: ripetere l'autorizzazione privata.") from None
-    return True
+        raise RuntimeError("cTrader OAuth non riuscito: consultare la diagnostica privata.") from None
+    finally:
+        try:
+            _record_diagnostic(database, status)
+        except OSError:
+            pass
