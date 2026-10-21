@@ -214,7 +214,16 @@ function state(label,ok=false){
 }
 function updateComparison(){
  const result=core.compare(retail,capital);
- comparisonText.textContent=result.text;
+ if(result.status==="unavailable"){
+  const missing=[
+   !retail?.fresh?"Myfxbook non recente o non verificato":null,
+   !capital?.fresh?"Capital.com non recente o non verificato":null
+  ].filter(Boolean);
+  comparisonText.textContent="Confronto sospeso: "+missing.join("; ")+
+   ". Servono due campioni recenti e validi, senza inventare segnali.";
+ }else{
+  comparisonText.textContent=result.text;
+ }
  compare.dataset.state=result.status;
 }
 function drawHistory(){
