@@ -22,6 +22,37 @@ INTERVAL_MS = 15 * 60 * 1000
 MAX_LOOKBACK_DAYS = 45
 
 
+EVENT_PHASES = frozenset({
+    "ProtoOAApplicationAuthRes",
+    "ProtoOAGetAccountListByAccessTokenRes",
+    "ProtoOAAccountAuthRes",
+    "ProtoOASymbolsListRes",
+    "ProtoOASymbolByIdRes",
+    "ProtoOAGetTrendbarsRes",
+    "ProtoOAErrorRes",
+    "decode",
+})
+EVENT_ERROR_TYPES = frozenset({
+    "AttributeError", "ValueError", "TypeError", "KeyError", "IndexError",
+    "RuntimeError", "OverflowError", "DecodeError", "EncodeError",
+})
+
+
+def safe_event_diagnostic(phase, exc):
+    """Bounded diagnostic: never expose exception text, tokens or broker response."""
+    kind = type(exc).__name__
+    if kind not in EVENT_ERROR_TYPES:
+        kind = "Exception"
+    stage = phase if phase in EVENT_PHASES else "other"
+    tb = exc.__traceback__
+    line = 0
+    # Use the innermost Python line number, never traceback text or file paths.
+    while tb is not None:
+        line = tb.tb_lineno
+        tb = tb.tb_next
+    return f"Risposta cTrader inattesa; fase={stage}; tipo={kind}; riga={line}."
+
+
 def exact_symbols(light_symbols, requested, aliases=None):
     """Find ONE exact enabled broker name per REMURA code; never guess CFD aliases."""
     aliases = aliases or {}
@@ -197,8 +228,10 @@ def collect(config, requested, aliases, lookback_days, now=None):
     def event(client, message):
         if state["closed"]:
             return
+        phase = "decode"
         try:
             payload = Protobuf.extract(message)
+            phase = type(payload).__name__
             if isinstance(payload, ProtoOAErrorRes):
                 problem("cTrader ha segnalato un errore API. Controlla autorizzazione, conto, simboli e limiti.")
             elif isinstance(payload, ProtoOAApplicationAuthRes):
@@ -264,8 +297,8 @@ def collect(config, requested, aliases, lookback_days, now=None):
                             break
                 state["index"] += 1
                 reactor.callLater(0.35, later)
-        except Exception:
-            problem("Risposta cTrader inattesa; esecuzione terminata senza inventare valori.")
+        except Exception as exc:
+            problem(safe_event_diagnostic(phase, exc))
 
     def connected(_):
         q = ProtoOAApplicationAuthReq()
