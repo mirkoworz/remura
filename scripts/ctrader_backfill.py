@@ -11,12 +11,14 @@ import argparse
 import json
 import os
 from pathlib import Path
+import time
 
 from ctrader_feed import collect, settings_from_environment, MAX_LOOKBACK_DAYS
 from ctrader_tokens import access_token
 from price_feed import MARKETS
 from price_store import connect, symbols_available
 from private_server import collect_once
+from ctrader_lock import collection_guard
 
 DEFAULT_DB = "/opt/remura/private/remura-prices.sqlite3"
 
@@ -46,14 +48,15 @@ def private_aliases(db_path):
 
 def load_plan(db_path, batch_size):
     """One read-only broker catalog request and one local SQLite inspection."""
-    token = access_token(db_path)
-    if not token:
-        raise RuntimeError("Autorizzazione cTrader mancante.")
-    os.environ["CTRADER_ACCESS_TOKEN"] = token
-    config = settings_from_environment()
-    discovery = collect(
-        config, sorted(MARKETS), private_aliases(db_path), 1, discover_only=True
-    )
+    with collection_guard(db_path):
+        token = access_token(db_path)
+        if not token:
+            raise RuntimeError("Autorizzazione cTrader mancante.")
+        os.environ["CTRADER_ACCESS_TOKEN"] = token
+        config = settings_from_environment()
+        discovery = collect(
+            config, sorted(MARKETS), private_aliases(db_path), 1, discover_only=True
+        )
     catalog = discovery.get("catalog")
     if not isinstance(catalog, dict) or not isinstance(catalog.get("available"), dict):
         raise RuntimeError("Catalogo cTrader non disponibile.")
@@ -73,19 +76,54 @@ def load_plan(db_path, batch_size):
     }
 
 
+def run_all_missing(db_path, days, batch_size, pause_seconds, max_batches=12, sleeper=time.sleep):
+    """One bounded, resumable run. Stop on first error; next run skips saved data."""
+    if not 60 <= pause_seconds <= 1800 or not 1 <= max_batches <= 12:
+        raise ValueError("Limiti di esecuzione non validi.")
+    for n in range(max_batches):
+        try:
+            plan = load_plan(db_path, batch_size)
+        except (RuntimeError, ValueError, OSError, TypeError, json.JSONDecodeError, TimeoutError):
+            print("ERRORE: scoperta cTrader non disponibile. Arresto sicuro.", flush=True)
+            return 1
+        print("GRUPPO", n + 1, "DA CARICARE:", ", ".join(plan["next"]) or "nessuno", flush=True)
+        if not plan["next"]:
+            print("COMPLETATO: nessun mercato disponibile mancante.", flush=True)
+            return 0
+        report = collect_once(db_path, plan["next"], days=days)
+        print("SALVATI:", report.get("saved", {}), "ERRORI:", report.get("errors", {}), flush=True)
+        if set(report.get("saved", {})) != set(plan["next"]) or report.get("errors"):
+            print("INTERROTTO: dati incompleti. Controllare prima di riprendere.", flush=True)
+            return 1
+        if n + 1 < max_batches:
+            print("PAUSA:", pause_seconds, "secondi.", flush=True)
+            sleeper(pause_seconds)
+    # Fail closed; use a new run to discover whether additional markets remain.
+    print("LIMITE GRUPPI RAGGIUNTO: verifica il database prima di ripartire.", flush=True)
+    return 0
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="REMURA cTrader: load one small batch of missing market histories.")
     parser.add_argument("--database", default=DEFAULT_DB)
     parser.add_argument("--days", type=int, default=21)
     parser.add_argument("--batch-size", type=int, default=3)
-    parser.add_argument("--apply", action="store_true", help="Actually fetch and save only the selected batch.")
+    parser.add_argument("--apply", action="store_true", help="Actually fetch and save.")
+    parser.add_argument("--all-missing", action="store_true", help="Process all missing markets sequentially in batches of at most three.")
+    parser.add_argument("--pause-seconds", type=int, default=180)
     args = parser.parse_args(argv)
     if not 1 <= args.days <= min(30, MAX_LOOKBACK_DAYS):
         parser.error("--days deve essere tra 1 e 30.")
     if not 1 <= args.batch_size <= 3:
         parser.error("--batch-size deve essere tra 1 e 3.")
 
+    if args.all_missing and not args.apply:
+        parser.error("--all-missing richiede --apply.")
+    if not 60 <= args.pause_seconds <= 1800:
+        parser.error("--pause-seconds deve essere tra 60 e 1800.")
     db_path = str(Path(args.database).expanduser().resolve())
+    if args.all_missing:
+        return run_all_missing(db_path, args.days, args.batch_size, args.pause_seconds)
     try:
         plan = load_plan(db_path, args.batch_size)
     except (RuntimeError, ValueError, OSError, TypeError, json.JSONDecodeError):
