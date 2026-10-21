@@ -20,6 +20,7 @@ from price_feed import MARKETS, UTC, candle, market_document, iso, utcnow
 
 INTERVAL_MS = 15 * 60 * 1000
 MAX_LOOKBACK_DAYS = 45
+TRENDBARS_RESPONSE_LIMIT = 350
 
 
 EVENT_PHASES = frozenset({
@@ -51,6 +52,17 @@ def safe_event_diagnostic(phase, exc):
         line = tb.tb_lineno
         tb = tb.tb_next
     return f"Risposta cTrader inattesa; fase={stage}; tipo={kind}; riga={line}."
+
+
+def incomplete_trendbars_response(payload, limit=TRENDBARS_RESPONSE_LIMIT):
+    """Detect truncated M15 responses across old and current Spotware SDKs.
+
+    Older generated protobufs may not expose the newer optional hasMore field.
+    Since each request spans one UTC day (at most ~97 M15 bars), a 350-bar
+    response is conservatively treated as truncated even on older SDKs.
+    """
+    bars = payload.trendbar
+    return bool(getattr(payload, "hasMore", False)) or len(bars) >= limit
 
 
 def exact_symbols(light_symbols, requested, aliases=None):
@@ -222,7 +234,7 @@ def collect(config, requested, aliases, lookback_days, now=None):
         request.period = ProtoOATrendbarPeriod.Value("M15")
         request.fromTimestamp = start_ms
         request.toTimestamp = end_ms
-        request.count = 350  # Covers a whole trading day (at most 96 M15 bars)
+        request.count = TRENDBARS_RESPONSE_LIMIT  # A daily M15 request has at most ~97 bars
         send(request)
 
     def event(client, message):
@@ -285,7 +297,7 @@ def collect(config, requested, aliases, lookback_days, now=None):
                 ):
                     problem("Risposta cTrader non corrispondente alla richiesta.")
                     return
-                if payload.hasMore:
+                if incomplete_trendbars_response(payload):
                     result["errors"][market] = "Dati incompleti: cTrader segnala altre candele per la finestra."
                 elif market not in result["errors"]:
                     for raw_bar in payload.trendbar:
