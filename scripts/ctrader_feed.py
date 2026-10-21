@@ -129,6 +129,19 @@ def exact_symbols(light_symbols, requested, aliases=None):
     return found, errors
 
 
+def catalog_summary(light_symbols, requested=None, aliases=None):
+    """Report exact enabled matches only. Never infer CFD aliases or expose accounts.
+
+    Unmatched markets may exist under broker-specific names and require review.
+    """
+    requested = sorted(MARKETS) if requested is None else list(dict.fromkeys(requested))
+    selected, _ = exact_symbols(light_symbols, requested, aliases)
+    return {
+        "available": {market: str(row.symbolName) for market, row in sorted(selected.items())},
+        "unmatched": [market for market in requested if market not in selected],
+    }
+
+
 def convert_trendbar(bar, digits):
     """Convert documented relative OHLC and UTC-minute timestamp to REMURA OHLC."""
     digits = int(digits)
@@ -187,10 +200,12 @@ def settings_from_environment():
     }
 
 
-def collect(config, requested, aliases, lookback_days, now=None):
+def collect(config, requested, aliases, lookback_days, now=None, discover_only=False):
     """Run one bounded session using the Spotware SDK; return a private JSON bundle.
 
     Every request is read-only and sequential. No balances/positions are requested.
+    discover_only ends immediately after reading the broker's enabled symbol catalog,
+    without fetching market prices or modifying databases.
     The Twisted reactor runs once per process; schedule one process per collection.
     """
     try:
@@ -293,6 +308,10 @@ def collect(config, requested, aliases, lookback_days, now=None):
                 q.includeArchivedSymbols = False
                 send(q)
             elif isinstance(payload, ProtoOASymbolsListRes):
+                if discover_only:
+                    result["catalog"] = catalog_summary(payload.symbol, requested, aliases)
+                    finish()
+                    return
                 selected, errors = exact_symbols(payload.symbol, requested, aliases)
                 result["errors"].update(errors)
                 state["names"] = selected
