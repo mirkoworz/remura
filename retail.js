@@ -180,7 +180,7 @@ async function retail(){
  $("r-date").textContent="Myfxbook · "+text+" (ora italiana). "+(fresh?"Rilevazione recente.":"ATTENZIONE: rilevazione vecchia.");
  const sampleCount=Number(p.lPos)+Number(p.sPos);
  if(Number.isFinite(sampleCount)&&sampleCount>=0&&sampleCount<30){$("r-date").textContent+=" ATTENZIONE: solo "+sampleCount+" posizioni censite per questo simbolo. Il sentiment è poco rappresentativo.";}
- window.dispatchEvent(new CustomEvent("remura:retail",{detail:{symbol:sym,current:p,history,status:latest.status||"ok"}}));
+ window.dispatchEvent(new CustomEvent("remura:retail",{detail:{symbol:sym,current:p,history,status:latest.status||"ok",fresh:fresh&&(!Number.isFinite(sampleCount)||sampleCount>=30)}}));
  }catch(e){window.dispatchEvent(new CustomEvent("remura:retail",{detail:{symbol:sym,current:null,history:[],status:"error"}}));$("r-status").textContent="Myfxbook non collegato";$("r-date").textContent="Feed retail mancante o non ancora configurato. Nessuna percentuale inventata.";draw();}
  finally{retailFetching=false;}
 }
