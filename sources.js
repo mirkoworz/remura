@@ -210,6 +210,7 @@ clearButton.addEventListener("click",async()=>{
 function state(label,ok=false){
  status.className="ms-status "+(ok?"ms-live":"ms-stale");
  status.textContent=label;
+ window.setTimeout(()=>window.dispatchEvent(new CustomEvent("remura:capital",{detail:{symbol}})),0);
 }
 function updateComparison(){
  const result=core.compare(retail,capital);
@@ -365,5 +366,14 @@ async function loadCapital(){
  updateComparison();
 }
 updateComparison();
-loadCapital();
+let backgroundCapital=false;
+async function refreshCapital(){
+ if(backgroundCapital || document.visibilityState==="hidden")return;
+ backgroundCapital=true;
+ try{await loadCapital();}
+ finally{backgroundCapital=false;}
+}
+refreshCapital();
+window.setInterval(refreshCapital,5*60*1000);
+window.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")refreshCapital();});
 })();
