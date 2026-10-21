@@ -28,6 +28,7 @@ sudo install -o remura -g remura -m 644 \
 
 sudo systemctl restart remura-private
 sudo systemctl is-active --quiet remura-private
+sleep 2
 curl --fail --silent --show-error -o /dev/null http://127.0.0.1:8765/squalo.html
 curl --fail --silent --show-error -o /dev/null http://127.0.0.1:8765/squalo-core.js
 curl --fail --silent --show-error -o /dev/null http://127.0.0.1:8765/remura-settings.js
