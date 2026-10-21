@@ -65,7 +65,7 @@ jobs:
           const fs=require('fs'),html=fs.readFileSync('asset.html','utf8'),ui=fs.readFileSync('price.js','utf8');
           for (const script of ['price-core.js?v=10','price.css?v=10','quicklook.js?v=1','quicklook.css?v=1'])
             if(!html.includes(script))throw new Error('Missing asset integration: '+script);
-          if(!/price\\.js\\?v=\\d+/.test(html))throw new Error('Missing versioned price UI');
+          if(!/price\.js\?v=\d+/.test(html))throw new Error('Missing versioned price UI');
           if(!ui.includes('type="file"'))throw new Error('Local file chooser missing');
           if(ui.includes('api.twelvedata.com')||ui.includes('api-fxpractice.oanda.com'))
             throw new Error('Frontend must never call credentialled price APIs');
