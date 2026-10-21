@@ -28,7 +28,7 @@ section.id="remura-capital";
 holder.insertAdjacentElement("afterend",section);
 const top=el("div","ms-intro");
 top.append(
- el("div","eyebrow","03 · SENTIMENT RETAIL · FONTE 2 DI 2"),
+ el("div","eyebrow","02 · SENTIMENT RETAIL · FONTE 2 DI 2"),
  el("h2","","Capital.com · cosa fanno i suoi clienti"),
  el("p","","Queste percentuali indicano quante posizioni dei clienti Capital.com sono long o short. Sono dati retail diversi dai lotti Myfxbook, non movimenti istituzionali.")
 );
