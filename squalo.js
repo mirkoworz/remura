@@ -22,12 +22,12 @@
  '<a class="sq-link" href="./squalo.html">Apri Scanner Squalo ↗</a>';
  layout.prepend(box);
  const $=id=>document.getElementById(id);
- let retail=null;
+ let retail=null,retailHistory=[];
  function render(){
    const cot=window.REMURA_INSIGHTS?.getAnalysis?.()||null;
    const price=window.REMURA_PRICE_OBSERVATION?.symbol===symbol?window.REMURA_PRICE_OBSERVATION.result:null;
    const capital=window.REMURA_CAPITAL_OBSERVATION?.symbol===symbol?window.REMURA_CAPITAL_OBSERVATION:null;
-   const report=core.evaluate({symbol,cot,price,retail,capital});
+   const report=core.evaluate({symbol,cot,price,retail,capital,retailHistory});
    box.dataset.stage=report.stage;
    $("sq-title").textContent=report.title;
    $("sq-summary").textContent=report.summary;
@@ -52,6 +52,7 @@
  window.addEventListener("remura:retail",e=>{
    if(e.detail?.symbol!==symbol)return;
    retail=e.detail.current?{row:e.detail.current,fresh:e.detail.fresh===true}:null;
+   retailHistory=Array.isArray(e.detail.history)?e.detail.history:[];
    render();
  });
  for(const name of ["remura:capital","remura:price","remura:cot"]){
