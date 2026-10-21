@@ -49,6 +49,33 @@ class CTraderTests(unittest.TestCase):
         old_and_full = types.SimpleNamespace(trendbar=[object()] * 350)
         self.assertTrue(feed.incomplete_trendbars_response(old_and_full))
 
+    def test_window_filter_ignores_bars_outside_requested_utc_day(self):
+        now = dt.datetime(2026, 10, 21, 8, 47, tzinfo=dt.timezone.utc)
+        windows = feed.utc_chunks(now, 1)
+        self.assertEqual(len(windows), 1)
+        start, end = windows[0]
+        def bar(t):
+            return types.SimpleNamespace(utcTimestampInMinutes=int(t.timestamp() // 60))
+        previous = bar(dt.datetime(2026, 10, 15, 17, 30, tzinfo=dt.timezone.utc))
+        just_before = bar(dt.datetime(2026, 10, 20, 23, 45, tzinfo=dt.timezone.utc))
+        current = bar(dt.datetime(2026, 10, 21, 8, 30, tzinfo=dt.timezone.utc))
+        incomplete = bar(dt.datetime(2026, 10, 21, 8, 45, tzinfo=dt.timezone.utc))
+        tomorrow = bar(dt.datetime(2026, 10, 22, 0, 0, tzinfo=dt.timezone.utc))
+        self.assertFalse(feed.trendbar_inside_window(previous, start, end, now))
+        self.assertFalse(feed.trendbar_inside_window(just_before, start, end, now))
+        self.assertTrue(feed.trendbar_inside_window(current, start, end, now))
+        self.assertFalse(feed.trendbar_inside_window(incomplete, start, end, now))
+        self.assertFalse(feed.trendbar_inside_window(tomorrow, start, end, now))
+
+    def test_window_filter_midnight_and_end_boundaries(self):
+        now = dt.datetime(2026, 10, 21, 23, 59, tzinfo=dt.timezone.utc)
+        start, end = feed.utc_chunks(now, 1)[0]
+        open_ms = start // 60000
+        self.assertTrue(feed.trendbar_inside_window(
+            types.SimpleNamespace(utcTimestampInMinutes=open_ms), start, end, now))
+        self.assertFalse(feed.trendbar_inside_window(
+            types.SimpleNamespace(utcTimestampInMinutes=end // 60000), start, end, now))
+
     def test_relative_ohlc_and_utc_timestamp_are_decoded(self):
         bar=self.bar(minutes=29873415)
         item=feed.convert_trendbar(bar,5)
