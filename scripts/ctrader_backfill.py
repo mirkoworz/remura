@@ -72,37 +72,60 @@ def load_plan(db_path, batch_size):
         "available": len(available),
         "existing": len(set(existing) & set(available)),
         "waiting": len(waiting),
+        "remaining": waiting,
         "next": next_batch(available, existing, batch_size),
         "unmatched": catalog.get("unmatched", []),
     }
 
 
 def run_all_missing(db_path, days, batch_size, pause_seconds, max_batches=12, sleeper=time.sleep):
-    """One bounded, resumable run. Stop on first error; next run skips saved data."""
-    if not 60 <= pause_seconds <= 1800 or not 1 <= max_batches <= 12:
+    """Resume from SQLite with ONE catalog scan; collect each group in a child.
+
+    cTrader's Twisted reactor cannot be restarted in the same Python process.
+    Re-querying collect(discover_only=True) between groups would fail after the
+    first group; cache the verified enabled-symbol plan for this bounded run.
+    Each collect_once launches a new child process for historical trendbars.
+    """
+    if not 60 <= pause_seconds <= 1800 or not 1 <= max_batches <= 12 or not 1 <= batch_size <= 3:
         raise ValueError("Limiti di esecuzione non validi.")
+    try:
+        plan = load_plan(db_path, batch_size)
+    except (RuntimeError, ValueError, OSError, TypeError, json.JSONDecodeError, TimeoutError):
+        print("ERRORE: scoperta cTrader non disponibile. Arresto sicuro.", flush=True)
+        return 1
+
+    pending = list(plan.get("remaining", []))
+    if len(pending) != len(set(pending)) or any(symbol not in MARKETS for symbol in pending):
+        print("ERRORE: elenco mercati non valido. Arresto sicuro.", flush=True)
+        return 1
+    if not pending:
+        print("COMPLETATO: nessun mercato disponibile mancante.", flush=True)
+        return 0
+
     for n in range(max_batches):
-        try:
-            plan = load_plan(db_path, batch_size)
-        except (RuntimeError, ValueError, OSError, TypeError, json.JSONDecodeError, TimeoutError):
-            print("ERRORE: scoperta cTrader non disponibile. Arresto sicuro.", flush=True)
-            return 1
-        print("GRUPPO", n + 1, "DA CARICARE:", ", ".join(plan["next"]) or "nessuno", flush=True)
-        if not plan["next"]:
-            print("COMPLETATO: nessun mercato disponibile mancante.", flush=True)
+        group = pending[:batch_size]
+        if not group:
+            print("COMPLETATO: tutti gli storici disponibili caricati.", flush=True)
             return 0
-        report = collect_once(db_path, plan["next"], days=days)
+        print("GRUPPO", n + 1, "DA CARICARE:", ", ".join(group), flush=True)
+        try:
+            report = collect_once(db_path, group, days=days)
+        except (RuntimeError, ValueError, OSError, TypeError, TimeoutError):
+            print("INTERROTTO: errore nella raccolta. Riprendere dopo la verifica.", flush=True)
+            return 1
         print("SALVATI:", report.get("saved", {}), "ERRORI:", report.get("errors", {}), flush=True)
-        if set(report.get("saved", {})) != set(plan["next"]) or report.get("errors"):
+        if set(report.get("saved", {})) != set(group) or report.get("errors"):
             print("INTERROTTO: dati incompleti. Controllare prima di riprendere.", flush=True)
             return 1
+        pending = pending[len(group):]
+        if not pending:
+            print("COMPLETATO: tutti gli storici disponibili caricati.", flush=True)
+            return 0
         if n + 1 < max_batches:
             print("PAUSA:", pause_seconds, "secondi.", flush=True)
             sleeper(pause_seconds)
-    # Fail closed; use a new run to discover whether additional markets remain.
-    print("LIMITE GRUPPI RAGGIUNTO: verifica il database prima di ripartire.", flush=True)
+    print("LIMITE GRUPPI RAGGIUNTO: rimangono", len(pending), "mercati. Riavvia per proseguire.", flush=True)
     return 0
-
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description="REMURA cTrader: load one small batch of missing market histories.")
