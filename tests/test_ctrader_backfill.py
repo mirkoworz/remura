@@ -70,6 +70,44 @@ class BackfillTests(unittest.TestCase):
             self.assertEqual(result, 0)
             collect.assert_not_called()
 
+    def test_auto_loads_two_batches_and_waits_between_them(self):
+        def plan(next_group):
+            return dict(available=31, existing=5, waiting=len(next_group),
+                        next=next_group, unmatched=[])
+        batches=[plan(["AUDCAD", "AUDCHF", "AUDJPY"]),
+                 plan(["AUDNZD"]), plan([])]
+        pause=[]
+        def fake_collect(db_path, symbols, days):
+            return {"saved": {s: 1300 for s in symbols}, "errors": {}}
+        with patch.object(backfill, "load_plan", side_effect=batches) as discovery, \
+             patch.object(backfill, "collect_once", side_effect=fake_collect) as collect, \
+             contextlib.redirect_stdout(io.StringIO()):
+            result=backfill.run_all_missing(backfill.DEFAULT_DB, 21, 3, 60, sleeper=pause.append)
+        self.assertEqual(result, 0)
+        self.assertEqual(collect.call_count, 2)
+        self.assertEqual(discovery.call_count, 3)
+        self.assertEqual(pause, [60, 60])
+
+    def test_auto_stops_after_first_incomplete_batch(self):
+        plan=dict(available=31, existing=5, waiting=26,
+                  next=["AUDCAD","AUDCHF"], unmatched=[])
+        with patch.object(backfill, "load_plan", return_value=plan) as discovery, \
+             patch.object(backfill, "collect_once", return_value={
+                 "saved": {"AUDCAD":1300}, "errors": {"AUDCHF":"unavailable"}
+             }) as collect, contextlib.redirect_stdout(io.StringIO()):
+            result=backfill.run_all_missing(backfill.DEFAULT_DB,21,3,60,sleeper=lambda x: None)
+        self.assertEqual(result,1)
+        discovery.assert_called_once()
+        collect.assert_called_once()
+
+    def test_auto_requires_apply_and_safe_pause_limits(self):
+        with self.assertRaises(SystemExit):
+            with contextlib.redirect_stderr(io.StringIO()):
+                backfill.main(["--all-missing"])
+        with self.assertRaises(SystemExit):
+            with contextlib.redirect_stderr(io.StringIO()):
+                backfill.main(["--apply","--all-missing","--pause-seconds","3"])
+
     def test_private_aliases_are_validated(self):
         with tempfile.TemporaryDirectory() as directory:
             db = Path(directory) / "prices.sqlite3"
