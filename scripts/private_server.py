@@ -42,7 +42,8 @@ SAFE_ASSETS={
     "index.html","asset.html","catalogo.html","forex.html","fonti.html","mercati.html",
     "nav.js","nav.css","retail.js","retail.css","insights.js","insights.css","insights-core.js",
     "sources.js","sources.css","price.js","price.css","price-core.js",
-    "quicklook.js","quicklook.css","sw.js",
+    "quicklook.js","quicklook.css","simple-layout.js","simple-layout.css",
+    "sentiment-core.js","capital-cloud-config.js","capital-cloud.js","sw.js",
     "manifest.webmanifest","icon.svg",
 }
 STATUS_PATH="/private-api/health"
