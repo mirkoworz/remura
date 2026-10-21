@@ -1,0 +1,52 @@
+/* REMURA Squalo: readable verdict first, compact ranked scanner on mobile. */
+.sq-verdict,.sq-shell{--sq-ink:#e6f7f2;--sq-muted:#aac9ce;--sq-line:#37606b;--sq-mint:#70e5b9;color:var(--sq-ink)}
+.sq-verdict{background:linear-gradient(145deg,#133840,#102632);border:1px solid #46726f;
+  border-radius:19px;padding:19px;grid-column:1/-1;min-width:0}
+.sq-top{display:flex;justify-content:space-between;align-items:start;gap:12px}
+.sq-top h2{font-size:clamp(22px,4vw,31px);line-height:1.25;letter-spacing:-.04em;margin:5px 0}
+.sq-top small,.sq-eyebrow{font-size:10px;font-weight:800;letter-spacing:.12em;color:#78f0ce}
+.sq-score{font-size:23px;font-weight:850;white-space:nowrap;font-variant-numeric:tabular-nums;color:#d0fff0}
+.sq-verdict>p{font-size:13px;line-height:1.65;color:#bfd8d9;margin:7px 0}
+.sq-verdict .sq-bar{height:10px;background:#31505c;border-radius:99px;overflow:hidden;margin-top:14px}
+.sq-verdict .sq-bar i{display:block;background:#5dcf9c;height:100%;max-width:100%;transition:width .3s}
+.sq-verdict[data-stage=discordante] .sq-bar i{background:#dda370}
+.sq-verdict .sq-clarify{font-size:10px;color:#abc2c4}
+.sq-checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:15px 0}
+.sq-check{display:flex;gap:9px;align-items:start;background:#0d2933;border:1px solid #315863;
+  border-radius:12px;padding:10px}
+.sq-check .sq-icon{color:#95b3c0;font-size:18px;font-weight:800;line-height:1}
+.sq-check[data-status=support] .sq-icon{color:#61e6ac}
+.sq-check[data-status=mixed] .sq-icon{color:#e6b477}
+.sq-check strong{font-size:12px}
+.sq-check p{font-size:11px;line-height:1.6;color:#a9c8cd;margin:3px 0 0}
+.sq-explain{border-top:1px solid #3b606b;padding-top:12px;font-size:12px;color:#bdd6d8}
+.sq-explain summary{color:#d2f5e4;cursor:pointer;font-weight:750}
+.sq-explain ul{line-height:1.7;padding-left:18px}
+.sq-link{display:inline-flex;margin-top:13px;color:#87f0cc;text-decoration:none;font-size:12px;font-weight:800}
+.sq-shell{max-width:980px;margin:auto;padding:26px 17px 90px;background:#07121a;min-height:100vh;font:14px/1.6 system-ui,-apple-system,sans-serif}
+body:has(.sq-shell){background:#07121a;margin:0;color:#e6f7f2}
+.sq-page-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px}
+.sq-page-top a{color:#9df2d5;font-weight:800;text-decoration:none}
+.sq-page-top a:first-child{font-size:23px;letter-spacing:.15em}
+.sq-shell h1{font-size:clamp(30px,5vw,54px);letter-spacing:-.06em;line-height:1.1;margin:7px 0}
+.sq-shell h1 span{color:#79e6c3}
+.sq-intro{color:#b7ccd1;font-size:13px;max-width:730px}
+.sq-controls{display:flex;gap:10px;justify-content:space-between;align-items:end;margin:19px 0 12px}
+.sq-controls label{display:flex;flex-direction:column;font-size:11px;color:#b7c8cb;gap:4px}
+.sq-controls select,.sq-controls button{padding:10px;background:#15353e;color:#e3f8ed;border:1px solid #3a6467;border-radius:10px;cursor:pointer;font:inherit}
+.sq-notice{background:#14333a;border:1px solid #3a6765;color:#b3e3da;border-radius:11px;padding:12px 15px;font-size:12px}
+.sq-market-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:13px}
+.sq-market{display:block;color:#e4f6f2;background:#122b36;border:1px solid #375962;
+  border-radius:15px;padding:16px;text-decoration:none;min-width:0}
+.sq-market[data-stage=preparazione],.sq-market[data-stage=coerente]{border-color:#62b891}
+.sq-market-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.sq-market-head strong{font-size:20px;letter-spacing:-.02em}
+.sq-market-head b{font-size:20px;font-variant-numeric:tabular-nums}
+.sq-market-title{margin:8px 0 4px;color:#78e9ba;font-weight:800;font-size:14px}
+.sq-market p{color:#b9d1d2;font-size:12px;line-height:1.6;margin:6px 0}
+.sq-market small{color:#8fb3bc;font-size:10px}
+.sq-market[data-stage=discordante] .sq-market-title{color:#eac08e}
+.sq-method{background:#102832;color:#bed5d5;border-radius:12px;padding:14px;margin:17px 0;font-size:12px}
+.sq-method summary{color:#a3f3d4;cursor:pointer;font-weight:800}
+.sq-empty{padding:19px;color:#bcd2d2}
+@media(max-width:720px){.sq-checks,.sq-market-list{grid-template-columns:1fr}.sq-verdict{padding:14px}.sq-shell{padding:18px 12px 65px}}
