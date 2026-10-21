@@ -63,6 +63,7 @@
     set("rp-narrative",result.explanation+" "+
       (result.caveats||[]).join(" "));
     combined();
+    window.dispatchEvent(new CustomEvent("remura:price",{detail:{symbol}}));
   }
   get("rp-file").addEventListener("change",async()=>{
     manualSelected=true;
