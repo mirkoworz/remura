@@ -50,6 +50,20 @@ class OAuthTests(unittest.TestCase):
             self.assertEqual(len(recorded), 1)
             self.assertIn("grant_type=authorization_code", recorded[0].full_url)
 
+    def test_provider_error_details_are_reduced_to_safe_labels(self):
+        descriptions = {
+            "Client Secret is invalid, test-token-DO-NOT-LOG": "CLIENT_SECRET",
+            "The redirect URI is incorrect: https://unsafe.invalid/callback?code=SECRET": "REDIRECT_URI",
+            "This code has expired": "EXPIRED_CODE",
+            "The authorization code has already been used": "REUSED_CODE",
+            "Wrong authorization code": "AUTH_CODE",
+            "A required request parameter is missing": "PARAMETERS",
+        }
+        for description, expected in descriptions.items():
+            with self.subTest(description=expected):
+                self.assertEqual(oauth._safe_error_detail(description), expected)
+        self.assertEqual(oauth._safe_error_detail("secret-value-with-no-info"), "OTHER")
+
     def test_provider_denial_is_logged_without_secrets(self):
         with tempfile.TemporaryDirectory() as d:
             dest = Path(d) / "private" / "db.sqlite"
@@ -63,7 +77,7 @@ class OAuthTests(unittest.TestCase):
             status_file = dest.parent / "ctrader-oauth-status.json"
             self.assertEqual(status_file.stat().st_mode & 0o777, 0o600)
             raw = status_file.read_text()
-            self.assertEqual(json.loads(raw)["result"], "API_ACCESS_DENIED")
+            self.assertEqual(json.loads(raw)["result"], "API_ACCESS_DENIED_DETAIL_OTHER")
             self.assertNotIn("Secret value", raw)
             self.assertNotIn(CONFIG["CTRADER_CLIENT_SECRET"], raw)
             self.assertNotIn("test-code_123", raw)
