@@ -107,6 +107,13 @@ class PrivateStorageTests(unittest.TestCase):
         value=server.seconds_to_next_quarter(dt.datetime(2026,10,17,9,14,10,tzinfo=UTC))
         self.assertEqual(value,140)
 
+    def test_collector_skips_if_another_cTrader_process_owns_lock(self):
+        with patch.object(server, "collection_guard", side_effect=TimeoutError("busy")):
+            report=server.collect_once(self.path, ["EURUSD"], runner=lambda *a,**k: None, now=NOW)
+        self.assertEqual(report["saved"], {})
+        self.assertIn("collector", report["errors"])
+        self.assertNotIn("collector", store.get_status(self.db))
+
     def test_collector_fails_closed_without_credentials(self):
         with patch.dict(os.environ,{"CTRADER_CLIENT_ID":"","CTRADER_CLIENT_SECRET":"",
                                     "CTRADER_ACCESS_TOKEN":"","CTRADER_ACCOUNT_ID":""}):
