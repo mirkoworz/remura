@@ -98,6 +98,13 @@
     let score=25+(cot.sustained?15:0)+retailPts+capitalPts+
       (aligned?20:0)+(fast?10:0)+(fast&&price.state==="confirmed"?10:0);
     if(cot.conflict)score=Math.min(39,score);
+    // A reduction of net LONG futures is NOT the same as funds being net SHORT.
+    // Do not call a current-price move "institutionally confirmed" in that case.
+    if(cot.currentNet*dir<0){
+      score=Math.min(74,score);
+      risks.push("Il netto dei fondi è ancora "+sideName(-dir)+
+        ": sta diminuendo, ma non dimostra un posizionamento netto "+sideName(dir)+".");
+    }
     score=Math.min(100,Math.max(0,score));
     const coverage=checks.filter(c=>c.status!=="missing").length;
     let stage="osservazione",title="Tracce "+sideName(dir)+" da monitorare";
