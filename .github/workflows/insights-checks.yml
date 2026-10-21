@@ -7,6 +7,20 @@ on:
       - 'insights.css'
       - 'asset.html'
       - 'retail.js'
+      - 'simple-layout.js'
+      - 'simple-layout.css'
+      - 'squalo.html'
+      - 'squalo-core.js'
+      - 'squalo.js'
+      - 'squalo-scanner.js'
+      - 'squalo.css'
+      - 'remura-settings.js'
+      - 'sentiment-core.js'
+      - 'capital-cloud.js'
+      - 'capital-cloud-config.js'
+      - 'sources.js'
+      - 'sources.css'
+      - 'fonti.html'
       - 'tests/**'
       - '.github/workflows/insights-checks.yml'
   workflow_dispatch:
@@ -27,9 +41,17 @@ jobs:
           node --check insights-core.js
           node --check insights.js
           node --check retail.js
+          node --check simple-layout.js
+          node --check sources.js
+          node --check capital-cloud.js
+          node --check sentiment-core.js
+          node --check squalo-core.js
+          node --check squalo.js
+          node --check squalo-scanner.js
+          node --check remura-settings.js
           node --check nav.js
       - name: Verify COT analysis rules
-        run: node --test tests/insights.test.js
+        run: node --test tests/insights.test.js tests/two-sentiments.test.js tests/squalo.test.js
       - name: Verify wiring on all market detail pages
         run: |
           node - <<'NODE'

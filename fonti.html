@@ -1,54 +1,52 @@
 <!doctype html>
-<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#09141d">
-<meta name="description" content="Fonti sentiment REMURA: Myfxbook, Dukascopy, IG, FX Blue, OANDA, Forex Factory, FXCM e dati istituzionali CFTC.">
-<link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml"><link rel="stylesheet" href="./nav.css?v=8">
-<title>REMURA · Fonti sentiment</title>
+<html lang="it">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#09141d">
+<meta name="description" content="REMURA: sentiment Myfxbook e Capital.com, due fonti retail indipendenti.">
+<title>REMURA · Due sentiment</title>
+<link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="./nav.css?v=8">
 <style>
-:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#07121a;color:#e6f5f1;font:14px/1.65 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}a{color:#91edcd;text-decoration:none}
-.wrap{max-width:1140px;margin:auto;padding:18px 20px 85px}.header{min-height:52px;display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;padding-left:55px;margin-bottom:33px}
-.logo{font-size:23px;letter-spacing:.13em;font-weight:850;color:#69edca}.pill{padding:8px 11px;border:1px solid #37605d;border-radius:9px;font-size:11px;color:#b6e3d1}
-.hero{background:radial-gradient(circle at 95% 5%,#1b575077,transparent 60%),linear-gradient(120deg,#13313a,#0e1f2a);border:1px solid #325b5b;padding:27px;border-radius:22px}
-.eyebrow{font-size:10px;letter-spacing:.16em;color:#7cf2ce;font-weight:850}.hero h1{font-size:clamp(34px,5.6vw,55px);line-height:1.05;letter-spacing:-.055em;margin:9px 0}.hero h1 em{color:#69edca;font-style:normal}
-.hero p{max-width:780px;color:#b6d0d2;margin:12px 0;font-size:15px}.facts{display:flex;gap:9px;flex-wrap:wrap;margin-top:22px}
-.cards{margin:26px 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
-.card{padding:19px;border:1px solid #315360;border-radius:16px;background:linear-gradient(145deg,#132e38,#0d202b);min-width:0}
-.cardhead{display:flex;justify-content:space-between;align-items:start;gap:10px;flex-wrap:wrap}
-.card h2{font-size:21px;letter-spacing:-.025em;margin:0}.badge{border:1px solid #50616c;color:#b4c7cd;border-radius:9px;font-size:10px;padding:5px 9px;font-weight:750}
-.badge.ok{border-color:#51977a;color:#98ebca;background:#1b4339}
-.card p{color:#a7c1c6;font-size:12px;line-height:1.7;margin:10px 0}
-.card a{font-size:12px;font-weight:840;display:inline-block;background:#17453c;padding:10px 13px;border:1px solid #4c8a73;border-radius:10px;margin-top:7px}
-.guide{background:#132b34;border:1px solid #34545c;border-radius:19px;padding:22px;margin-top:22px}
-.guide h2{margin:0 0 11px;font-size:23px}
-.guide table{width:100%;border-collapse:collapse;font-size:12px;min-width:520px}
-.guide td,.guide th{text-align:left;border-bottom:1px solid #31525a;padding:12px 9px}
-.guide th{color:#91f0d5}.table-wrap{overflow-x:auto}
-.note{border-radius:13px;border:1px solid #76613c;background:#322b22;padding:15px;color:#e8d6ac;font-size:12px;margin-top:17px}
-.cta{display:inline-block;color:#0e302a;background:#78ecca;border-radius:12px;padding:13px 16px;font-weight:850;margin-top:17px}
-footer{text-align:center;color:#839da6;font-size:11px;margin:30px auto}
-@media(max-width:730px){.cards{grid-template-columns:1fr}.wrap{padding:14px 13px 85px}.hero{padding:21px}.header{margin-bottom:23px}.guide{padding:15px}}
-</style></head>
-<body><main class="wrap"><header class="header"><a href="./index.html" class="logo">REMURA</a><span class="pill">Fonti sentiment · v0.8</span></header>
-<section class="hero"><div class="eyebrow">SENTIMENT · METODO REMURA</div><h1>Più fonti.<br><em>Meno punti ciechi.</em></h1><p>Confrontiamo diverse comunità di trader e operatori senza scambiare i lotti con il numero di conti o i flussi con gli ordini. L'obiettivo è identificare concentrazioni e divergenze da studiare, non costruire una finta percentuale universale.</p>
-<div class="facts"><span class="pill">7 provider retail individuati</span><span class="pill">1 API attualmente collegata</span><span class="pill">1 widget ufficiale predisposto</span><span class="pill">COT istituzionale in un livello separato</span></div></section>
-<section class="cards">
-<article class="card"><div class="cardhead"><h2>Myfxbook</h2><span class="badge ok">API attiva</span></div><p>Percentuali del volume in lotti, numero di posizioni, prezzo medio di apertura e nostro storico periodico dei singoli strumenti.</p><a href="https://www.myfxbook.com/community/outlook" target="_blank" rel="noopener noreferrer">Sito ufficiale ↗</a></article>
-<article class="card"><div class="cardhead"><h2>Dukascopy SWFX</h2><span class="badge">Widget ufficiale</span></div><p>Indice sul flusso dei partecipanti al mercato. Il widget storico si aggiorna periodicamente ed è distinto dalle posizioni aperte Myfxbook. Disponibile nella scheda Forex, se il browser lo carica.</p><a href="https://www.dukascopy.com/trading-tools/widget/historical_sentiment_index" target="_blank" rel="noopener noreferrer">Widget storico ↗</a></article>
-<article class="card"><div class="cardhead"><h2>IG Client Sentiment</h2><span class="badge">API da autorizzare</span></div><p>Posizionamento dei clienti IG su Forex, indici e materie prime. Esiste un endpoint API, ma Remura non ha ancora una chiave IG né il consenso per ripubblicarne i dati.</p><a href="https://www.ig.com/it/dati-di-mercato" target="_blank" rel="noopener noreferrer">Consulta IG ↗</a></article>
-<article class="card"><div class="cardhead"><h2>FX Blue</h2><span class="badge">Consultazione esterna</span></div><p>Percentuale di conti reali net long/net short. Misura trader/account, invece dei lotti, offrendo una conferma di natura diversa.</p><a href="https://www.fxblue.com/market-data/tools/sentiment" target="_blank" rel="noopener noreferrer">Apri FX Blue ↗</a></article>
-<article class="card"><div class="cardhead"><h2>OANDA Position Book</h2><span class="badge">Consultazione esterna</span></div><p>Ordini e posizioni aperte per livello di prezzo su strumenti selezionati. Informazione utile per individuare concentrazioni, ma non equivale a una singola % long/short.</p><a href="https://www.oanda.com/bvi-en/cfds/tools/orderbook/" target="_blank" rel="noopener noreferrer">Apri OANDA ↗</a></article>
-<article class="card"><div class="cardhead"><h2>Forex Factory</h2><span class="badge">Consultazione esterna</span></div><p>Conti collegati alla community: nelle tabelle Positions/Live Accounts si trovano statistiche per numero di trader e lotti, inclusi diversi pair Forex e Gold.</p><a href="https://www.forexfactory.com/trades" target="_blank" rel="noopener noreferrer">Apri posizionamenti ↗</a></article>
-<article class="card"><div class="cardhead"><h2>FXCM SSI</h2><span class="badge">Feed professionale</span></div><p>Rapporto speculativo long/short dei clienti FXCM, con dati storici e copertura di Forex, metalli e indici selezionati. Il feed XML professionale non è gratuito senza accordo.</p><a href="https://www.fxcm.com/pro/market-data/sentiment/" target="_blank" rel="noopener noreferrer">Informazioni SSI ↗</a></article>
-</section>
-<section class="guide"><div class="eyebrow">NON CONFONDERE LE UNITÀ</div><h2>Che cosa misura ciascuna fonte?</h2>
-<div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Che cosa conta</th><th>Da interpretare come</th></tr></thead><tbody>
-<tr><td>Volume in lotti</td><td>Dimensione delle posizioni aperte</td><td>Esposizione del campione</td></tr>
-<tr><td>Numero posizioni</td><td>Trade long e short</td><td>Sbilanciamento dei trade</td></tr>
-<tr><td>Numero di conti</td><td>Clienti net long/net short</td><td>Diffusione tra i trader</td></tr>
-<tr><td>Flusso di transazioni</td><td>Operazioni per direzione</td><td>Attività, non necessariamente giacenza</td></tr>
-<tr><td>Order/Position Book</td><td>Posizioni per fascia di prezzo</td><td>Dove sono concentrati gli operatori</td></tr>
-<tr><td>COT istituzionale</td><td>Contratti futures per categoria</td><td>Posizionamento settimanale dei grandi gruppi</td></tr>
-</tbody></table></div>
-<div class="note"><strong>Importante:</strong> sette fonti non significano sette percentuali live in Remura. Fino al collegamento delle API autorizzate, soltanto Myfxbook fornisce numeri automatici. Non produciamo un “consenso” artificiale.</div>
-<a class="cta" href="./mercati.html?v=8">Apri lo scanner REMURA ↗</a>
-</section><footer>REMURA v0.8 · Dati di comunità diversi; nessun segnale certo di trading.</footer></main>
-<script src="./nav.js?v=8"></script></body></html>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:#07121a;color:#e6f5f1;font:14px/1.65 system-ui,-apple-system,sans-serif}
+a{color:#73e5c1;text-decoration:none}
+main{max-width:800px;margin:auto;padding:22px 16px 85px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:32px}
+.brand{letter-spacing:.14em;font-weight:850;font-size:22px}
+h1{font-size:clamp(30px,6vw,44px);line-height:1.1;letter-spacing:-.035em;margin:8px 0 13px}
+h1 span,.eyebrow{color:#73e5c1}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:.13em}
+p{color:#bad0d3;font-size:13px;line-height:1.75}
+article{background:linear-gradient(140deg,#122c36,#10222d);border:1px solid #32555e;border-radius:17px;padding:18px;margin:13px 0}
+article h2{font-size:23px;margin:0 0 7px}
+small{color:#96b8bf}
+.line{height:17px;border-radius:11px;overflow:hidden;display:flex;margin:14px 0}
+.line i:first-child{width:50%;background:#47c78a}
+.line i:last-child{width:50%;background:#f08094}
+.explain{border-left:3px solid #72dabb;padding:4px 12px;margin-top:20px}
+.btn{display:inline-block;margin:9px 0;padding:9px 13px;border:1px solid #498e79;border-radius:10px;background:#1a473d;font-weight:750}
+footer{font-size:11px;color:#8ca6ad;text-align:center;margin-top:30px}
+</style>
+</head>
+<body>
+<main>
+<header><a class="brand" href="./index.html">REMURA</a><a href="./mercati.html">Scanner ↗</a></header>
+<div class="eyebrow">SENTIMENT · SOLO DUE FONTI</div>
+<h1>Due fonti, <span>zero confusione.</span></h1>
+<p>Su ogni coppia REMURA mostra Myfxbook e Capital.com uno sotto l'altro. Le percentuali sono osservazioni di due comunità retail: non mostrano direttamente cosa comprano i grandi fondi.</p>
+<article><small>01 · AGGIORNAMENTO AUTOMATICO DAL VPS</small><h2>Myfxbook</h2>
+<p>Misura la quota del <strong>volume in lotti</strong> long e short nella community. REMURA salva nuove rilevazioni circa ogni 20 minuti, quando il collegamento funziona. Include le bande storiche con punti realmente acquisiti.</p>
+<div class="line" aria-label="Legenda: verde long e rosa short"><i></i><i></i></div>
+<a class="btn" href="./asset.html?symbol=EURUSD#retail-module">Apri Myfxbook in EURUSD ↓</a></article>
+<article><small>02 · ARCHIVIO PRIVATO DEMO</small><h2>Capital.com</h2>
+<p>Misura la quota delle <strong>posizioni dei clienti</strong> long e short, non i lotti. La raccolta è nel repository privato e la visualizzazione usa l'accesso protetto Firestore o i file locali. Se non sei autenticato o il dato è vecchio, REMURA lo segnala.</p>
+<div class="line" aria-label="Legenda: verde long e rosa short"><i></i><i></i></div>
+<a class="btn" href="./asset.html?symbol=EURUSD#remura-capital">Apri Capital.com in EURUSD ↓</a></article>
+<div class="explain"><strong>Come leggere le divergenze</strong><p>Myfxbook e Capital possono essere opposti perché seguono clienti e metriche differenti. Per cercare conferme, REMURA usa separatamente il COT settimanale e le candele cTrader. Non crea segnali certi né percentuali fittizie.</p></div>
+<footer>REMURA · Myfxbook + Capital.com · COT CFTC separato</footer>
+</main>
+<script src="./nav.js?v=8"></script>
+</body>
+</html>

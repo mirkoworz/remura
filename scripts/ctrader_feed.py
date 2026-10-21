@@ -20,6 +20,79 @@ from price_feed import MARKETS, UTC, candle, market_document, iso, utcnow
 
 INTERVAL_MS = 15 * 60 * 1000
 MAX_LOOKBACK_DAYS = 45
+TRENDBARS_RESPONSE_LIMIT = 350  # Fail closed for oversized single-day replies.
+
+
+EVENT_PHASES = frozenset({
+    "ProtoOAApplicationAuthRes",
+    "ProtoOAGetAccountListByAccessTokenRes",
+    "ProtoOAAccountAuthRes",
+    "ProtoOASymbolsListRes",
+    "ProtoOASymbolByIdRes",
+    "ProtoOAGetTrendbarsRes",
+    "ProtoOAErrorRes",
+    "decode",
+})
+EVENT_ERROR_TYPES = frozenset({
+    "AttributeError", "ValueError", "TypeError", "KeyError", "IndexError",
+    "RuntimeError", "OverflowError", "DecodeError", "EncodeError",
+})
+
+
+def safe_event_diagnostic(phase, exc):
+    """Bounded diagnostic: never expose exception text, tokens or broker response."""
+    kind = type(exc).__name__
+    if kind not in EVENT_ERROR_TYPES:
+        kind = "Exception"
+    stage = phase if phase in EVENT_PHASES else "other"
+    tb = exc.__traceback__
+    line = 0
+    # Use the innermost Python line number, never traceback text or file paths.
+    while tb is not None:
+        line = tb.tb_lineno
+        tb = tb.tb_next
+    return f"Risposta cTrader inattesa; fase={stage}; tipo={kind}; riga={line}."
+
+
+def incomplete_trendbars_response(payload, limit=TRENDBARS_RESPONSE_LIMIT):
+    """Detect truncated M15 responses across old and current Spotware SDKs.
+
+    Older generated protobufs may not expose the newer optional hasMore field.
+    The request deliberately omits count and uses a UTC-day interval (at most
+    96 M15 bar opens), so 350 returned bars is abnormally large and unsafe.
+    """
+    bars = payload.trendbar
+    return bool(getattr(payload, "hasMore", False)) or len(bars) >= limit
+
+
+def configure_trendbars_request(request, account_id, symbol_id, period, start_ms, end_ms):
+    """Build bounded historical request WITHOUT optional count.
+
+    Spotware documents count as a limit backwards from toTimestamp; setting
+    count=350 for a one-day M15 request returned older out-of-range candles.
+    Rely on the required account/symbol and a validated <=24h UTC window.
+    """
+    if not 0 <= start_ms < end_ms or end_ms - start_ms > 86_400_000:
+        raise ValueError("Intervallo storico cTrader non valido.")
+    request.ctidTraderAccountId = account_id
+    request.symbolId = symbol_id
+    request.period = period
+    request.fromTimestamp = start_ms
+    request.toTimestamp = end_ms
+    return request
+
+
+def trendbar_inside_window(raw_bar, start_ms, end_ms, now):
+    """Accept only M15 candles opened inside this requested UTC chunk and closed.
+
+    cTrader may return the last `count` bars prior to toTimestamp even when
+    fromTimestamp is provided. We never let those older bars contaminate a
+    narrower requested window or include still-forming candles.
+    """
+    opened_ms = int(raw_bar.utcTimestampInMinutes) * 60_000
+    now_ms = int(now.astimezone(UTC).timestamp() * 1000)
+    return (start_ms <= opened_ms < end_ms and
+            opened_ms + INTERVAL_MS <= now_ms)
 
 
 def exact_symbols(light_symbols, requested, aliases=None):
@@ -54,6 +127,19 @@ def exact_symbols(light_symbols, requested, aliases=None):
             continue
         found[market] = matches[0]
     return found, errors
+
+
+def catalog_summary(light_symbols, requested=None, aliases=None):
+    """Report exact enabled matches only. Never infer CFD aliases or expose accounts.
+
+    Unmatched markets may exist under broker-specific names and require review.
+    """
+    requested = sorted(MARKETS) if requested is None else list(dict.fromkeys(requested))
+    selected, _ = exact_symbols(light_symbols, requested, aliases)
+    return {
+        "available": {market: str(row.symbolName) for market, row in sorted(selected.items())},
+        "unmatched": [market for market in requested if market not in selected],
+    }
 
 
 def convert_trendbar(bar, digits):
@@ -114,10 +200,12 @@ def settings_from_environment():
     }
 
 
-def collect(config, requested, aliases, lookback_days, now=None):
+def collect(config, requested, aliases, lookback_days, now=None, discover_only=False):
     """Run one bounded session using the Spotware SDK; return a private JSON bundle.
 
     Every request is read-only and sequential. No balances/positions are requested.
+    discover_only ends immediately after reading the broker's enabled symbol catalog,
+    without fetching market prices or modifying databases.
     The Twisted reactor runs once per process; schedule one process per collection.
     """
     try:
@@ -184,21 +272,20 @@ def collect(config, requested, aliases, lookback_days, now=None):
             finish()
             return
         market, sid, digits, start_ms, end_ms = state["tasks"][state["index"]]
-        state["pending"] = (market, sid)
-        request = ProtoOAGetTrendbarsReq()
-        request.ctidTraderAccountId = config["account_id"]
-        request.symbolId = sid
-        request.period = ProtoOATrendbarPeriod.Value("M15")
-        request.fromTimestamp = start_ms
-        request.toTimestamp = end_ms
-        request.count = 350  # Covers a whole trading day (at most 96 M15 bars)
+        state["pending"] = (market, sid, start_ms, end_ms)
+        request = configure_trendbars_request(
+            ProtoOAGetTrendbarsReq(), config["account_id"], sid,
+            ProtoOATrendbarPeriod.Value("M15"), start_ms, end_ms
+        )
         send(request)
 
     def event(client, message):
         if state["closed"]:
             return
+        phase = "decode"
         try:
             payload = Protobuf.extract(message)
+            phase = type(payload).__name__
             if isinstance(payload, ProtoOAErrorRes):
                 problem("cTrader ha segnalato un errore API. Controlla autorizzazione, conto, simboli e limiti.")
             elif isinstance(payload, ProtoOAApplicationAuthRes):
@@ -221,6 +308,10 @@ def collect(config, requested, aliases, lookback_days, now=None):
                 q.includeArchivedSymbols = False
                 send(q)
             elif isinstance(payload, ProtoOASymbolsListRes):
+                if discover_only:
+                    result["catalog"] = catalog_summary(payload.symbol, requested, aliases)
+                    finish()
+                    return
                 selected, errors = exact_symbols(payload.symbol, requested, aliases)
                 result["errors"].update(errors)
                 state["names"] = selected
@@ -246,26 +337,28 @@ def collect(config, requested, aliases, lookback_days, now=None):
             elif isinstance(payload, ProtoOAGetTrendbarsRes):
                 if "pending" not in state:
                     return
-                market, sid = state["pending"]
+                market, sid, start_ms, end_ms = state["pending"]
                 if payload.ctidTraderAccountId != config["account_id"] or (
                     payload.HasField("symbolId") and payload.symbolId != sid
                 ):
                     problem("Risposta cTrader non corrispondente alla richiesta.")
                     return
-                if payload.hasMore:
+                if incomplete_trendbars_response(payload):
                     result["errors"][market] = "Dati incompleti: cTrader segnala altre candele per la finestra."
                 elif market not in result["errors"]:
                     for raw_bar in payload.trendbar:
                         try:
+                            if not trendbar_inside_window(raw_bar, start_ms, end_ms, now):
+                                continue
                             bar = convert_trendbar(raw_bar, state["digits"][market])
                             state["bars"][market][bar["t"]] = bar
-                        except (ValueError, OverflowError):
+                        except (ValueError, OverflowError, TypeError):
                             result["errors"][market] = "Una candela cTrader è invalida."
                             break
                 state["index"] += 1
                 reactor.callLater(0.35, later)
-        except Exception:
-            problem("Risposta cTrader inattesa; esecuzione terminata senza inventare valori.")
+        except Exception as exc:
+            problem(safe_event_diagnostic(phase, exc))
 
     def connected(_):
         q = ProtoOAApplicationAuthReq()

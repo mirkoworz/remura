@@ -46,7 +46,10 @@
     set("rp-state",result.state==="confirmed"?"Struttura coerente":result.state==="unavailable"?"Dati insufficienti":result.state==="conflict"?"Segnali discordanti":"In osservazione");
     set("rp-provider","Fonte: "+market.provider+" · "+market.providerSymbol+" · UTC");
     const last=market.frames.M15[market.frames.M15.length-1];
-    set("rp-last","Ultima M15 chiusa: "+(last?new Date(last.t+900000).toLocaleString("it-IT",{timeZone:"Europe/Rome"}):"N/D"));
+    // price-core.load() normalizes row.t to epoch milliseconds (number),
+    // whereas the API sends ISO strings. Handle both without inventing a time.
+    const parsed=last?(typeof last.t==="number"?last.t:Date.parse(last.t)):NaN;
+    set("rp-last","Ultima M15 chiusa: "+(Number.isFinite(parsed)?new Date(parsed+900000).toLocaleString("it-IT",{timeZone:"Europe/Rome"}):"N/D"));
     for(const [tf,k] of [["H4","h4"],["H1","h1"],["M15","m15"]]){
       const m=result.metrics[tf];
       if(!m||m.state!=="ok"){
@@ -63,6 +66,8 @@
     set("rp-narrative",result.explanation+" "+
       (result.caveats||[]).join(" "));
     combined();
+    window.REMURA_PRICE_OBSERVATION={symbol,result};
+    window.dispatchEvent(new CustomEvent("remura:price",{detail:{symbol}}));
   }
   get("rp-file").addEventListener("change",async()=>{
     manualSelected=true;

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="it"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#09141d">
+<meta name="description" content="REMURA Scanner Squalo: evidenze COT, Myfxbook, Capital e struttura prezzo per ogni mercato.">
+<title>REMURA · Scanner Squalo</title>
+<link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="./nav.css?v=8"><link rel="stylesheet" href="./squalo.css?v=1">
+</head><body>
+<main class="sq-shell">
+<header class="sq-page-top"><a href="./index.html">REMURA</a><a href="./mercati.html">Radar COT ↗</a></header>
+<div class="sq-eyebrow">🦈 VERDETTI MOTIVATI · NON ORDINI</div>
+<h1>Scanner <span>Squalo</span></h1>
+<p class="sq-intro">Dove COT, retail e prezzo raccontano una storia coerente? Lo scanner non osserva ordini istituzionali in tempo reale: confronta posizionamento settimanale e dati successivi disponibili.</p>
+<div class="sq-controls">
+  <label>Direzione <select id="sq-filter"><option value="all">Tutte</option><option value="long">Contesto LONG</option><option value="short">Contesto SHORT</option><option value="preparazione">Preparazione / coerente</option></select></label>
+  <button id="sq-refresh" type="button">↻ Rianalizza</button>
+</div>
+<div id="sq-scan-status" class="sq-notice" role="status">Raccolgo COT ufficiale e verifico i dati disponibili...</div>
+<div id="sq-market-list" class="sq-market-list"></div>
+<details class="sq-method"><summary>Come vengono classificati gli strumenti?</summary>
+<p>Il COT direzionale recente è obbligatorio. Consideriamo anche persistenza a quattro settimane, conferma prezzo H4/H1/M15 e prevalenza retail contraria sulla sola fonte disponibile. Le fonti mancanti non aggiungono punti. Il punteggio 0–100 misura soltanto la coerenza di regole descrittive non ottimizzate: non una probabilità di profitto. DXY, US500, US2000 e NAS100 non ricevono conferme cTrader se il broker non fornisce quelle candele. Le rilevazioni COT di cross Forex sono differenze fra futures normalizzati delle due valute.</p></details>
+</main>
+<script src="./nav.js?v=8"></script>
+<script src="./insights-core.js?v=9"></script>
+<script src="./price-core.js?v=10"></script>
+<script src="./sentiment-core.js?v=1"></script>
+<script src="./capital-cloud-config.js?v=1"></script>
+<script src="./capital-cloud.js?v=1"></script>
+<script src="./squalo-core.js?v=1"></script>
+<script src="./squalo-scanner.js?v=1"></script>
+</body></html>
