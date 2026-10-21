@@ -130,6 +130,32 @@ class CTraderTests(unittest.TestCase):
         self.assertEqual(resolved,{})
         self.assertIn("EURUSD",errors)
 
+    def test_discover_reports_only_exact_enabled_broker_symbols(self):
+        rows = [
+            types.SimpleNamespace(symbolName="EUR/USD",symbolId=1,enabled=True),
+            types.SimpleNamespace(symbolName="XAUUSD",symbolId=2,enabled=True),
+            types.SimpleNamespace(symbolName="GOLD",symbolId=3,enabled=True),
+            types.SimpleNamespace(symbolName="USDJPY",symbolId=4,enabled=False),
+            types.SimpleNamespace(symbolName="US500.cash",symbolId=5,enabled=True),
+            types.SimpleNamespace(symbolName="GBPUSD",symbolId=6,enabled=True),
+            types.SimpleNamespace(symbolName="GBPUSD",symbolId=7,enabled=True),
+        ]
+        requested=["EURUSD","XAUUSD","USDJPY","US500","GBPUSD"]
+        report=feed.catalog_summary(rows,requested)
+        self.assertEqual(report["available"],{"EURUSD":"EUR/USD","XAUUSD":"XAUUSD"})
+        self.assertEqual(report["unmatched"],["USDJPY","US500","GBPUSD"])
+        mapped=feed.catalog_summary(rows,requested,{"US500":"US500.cash"})
+        self.assertEqual(mapped["available"]["US500"],"US500.cash")
+        self.assertNotIn("US500",mapped["unmatched"])
+        # The discovery report intentionally never contains IDs, OAuth data or prices.
+        self.assertEqual(set(report),{"available","unmatched"})
+        self.assertTrue(all(isinstance(x,str) for x in report["available"].values()))
+
+    def test_discover_defaults_to_the_35_defined_markets(self):
+        report=feed.catalog_summary([])
+        self.assertEqual(report["available"],{})
+        self.assertEqual(report["unmatched"],sorted(feed.MARKETS))
+
     def test_daily_utc_windows_are_bounded(self):
         now=dt.datetime(2026,10,17,8,0,tzinfo=dt.timezone.utc)
         windows=feed.utc_chunks(now,14)
