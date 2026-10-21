@@ -28,6 +28,13 @@ on:
       - 'capital-cloud-config.js'
       - 'fonti.html'
       - 'tests/two-sentiments.test.js'
+      - 'squalo.html'
+      - 'squalo-core.js'
+      - 'squalo.js'
+      - 'squalo-scanner.js'
+      - 'squalo.css'
+      - 'remura-settings.js'
+      - 'tests/squalo.test.js'
       - 'sw.js'
       - 'tests/price.test.js'
       - 'tests/test_price_feed.py'
@@ -52,11 +59,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: node --check price-core.js && node --check price.js && node --check insights.js && node --check sources.js && node --check simple-layout.js && node --check capital-cloud.js && node --check sentiment-core.js
+      - run: node --check price-core.js && node --check price.js && node --check insights.js && node --check sources.js && node --check simple-layout.js && node --check capital-cloud.js && node --check sentiment-core.js && node --check squalo-core.js && node --check squalo.js && node --check squalo-scanner.js && node --check remura-settings.js
       - name: Verify Oracle Always Free bootstrap syntax
         run: bash -n deploy/oracle/install.sh
       - run: python -m py_compile scripts/price_feed.py scripts/ctrader_feed.py scripts/ctrader_tokens.py scripts/price_store.py scripts/private_server.py
-      - run: node --test tests/price.test.js tests/insights.test.js tests/two-sentiments.test.js
+      - run: node --test tests/price.test.js tests/insights.test.js tests/two-sentiments.test.js tests/squalo.test.js
       - run: python -m unittest discover -s tests -p 'test_price_feed.py' -v
       - run: python -m unittest discover -s tests -p 'test_ctrader_feed.py' -v
       - run: python -m unittest discover -s tests -p 'test_private_server.py' -v
@@ -67,7 +74,7 @@ jobs:
         run: |
           node - <<'NODE'
           const fs=require('fs'),html=fs.readFileSync('asset.html','utf8'),ui=fs.readFileSync('price.js','utf8');
-          for (const script of ['price-core.js?v=10','price.css?v=10','simple-layout.js?v=2','simple-layout.css?v=2','capital-cloud.js?v=1','sentiment-core.js?v=1'])
+          for (const script of ['price-core.js?v=10','price.css?v=10','simple-layout.js?v=2','simple-layout.css?v=2','squalo-core.js?v=1','squalo.js?v=1','squalo.css?v=1','remura-settings.js?v=1','capital-cloud.js?v=1','sentiment-core.js?v=1'])
             if(!html.includes(script))throw new Error('Missing asset integration: '+script);
           if(!/price\.js\?v=\d+/.test(html))throw new Error('Missing versioned price UI');
           if(!ui.includes('type="file"'))throw new Error('Local file chooser missing');
