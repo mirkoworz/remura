@@ -66,8 +66,8 @@
   function refreshRetail(){
     const status=get("r-status");
     const l=get("r-lp"),s=get("r-sp"),recorded=get("r-updated");
-    const valid=x=>/^\\d+(?:[.,]\\d+)?%$/.test(x);
-    if(valid(l)&&valid(s)){
+    const valid=x=>/^\d+(?:[.,]\d+)?%$/.test(x);
+    if(valid(l)&&valid(s)&&!/non collegato|da attivare|sentiment n\/d/i.test(status)){
       put("rq-retail-main",l+" long · "+s+" short");
       put("rq-retail-details",(status||"Myfxbook")+(recorded && recorded!=="Non collegato"?" · "+recorded:"")+
         " · Quote lotti, non posizioni istituzionali.");
