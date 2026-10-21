@@ -49,6 +49,27 @@
   details.append(additional);
   retail.append(details);
 
+  // Keep the three price directions visible; reveal technical prose only on request.
+  for(const card of price.querySelectorAll(".rp-grid .rp-box")){
+    const explanation=card.querySelector("p");
+    const levels=card.querySelector("small");
+    if(!explanation&&!levels)continue;
+    const expanded=document.createElement("details");
+    expanded.className="rm-timeframe-more";
+    expanded.innerHTML="<summary>Indicatori e livelli</summary>";
+    if(explanation)expanded.append(explanation);
+    if(levels)expanded.append(levels);
+    card.append(expanded);
+  }
+  const technical=document.createElement("details");
+  technical.className="rm-more rm-price-extra";
+  technical.innerHTML="<summary>Spiegazione tecnica e importazione file</summary>";
+  for(const el of [price.querySelector(".rp-upload"),price.querySelector("#rp-narrative"),
+                   price.querySelector(":scope > details")]){
+    if(el)technical.append(el);
+  }
+  price.append(technical);
+
   const alert=document.getElementById("alert");
   if(alert)cotOverview.append(alert);
   const cotHeader=cotOverview.querySelector("h2");
