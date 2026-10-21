@@ -89,7 +89,7 @@
   const retailDonut=makeDonut(retail.querySelector(".rt-summary"),"Myfxbook");
   const capitalDonut=makeDonut(capital.querySelector(".ms-readings"),"Capital.com");
   const parsePct=text=>{
-    const match=String(text||"").trim().match(/^(\\d+(?:[.,]\\d+)?)%$/);
+    const match=String(text||"").trim().match(/^(\d+(?:[.,]\d+)?)%$/);
     const n=match?Number(match[1].replace(",",".")):NaN;
     return Number.isFinite(n)&&n>=0&&n<=100?n:null;
   };
