@@ -37,6 +37,26 @@ class CTraderTests(unittest.TestCase):
         self.assertIn("fase=other", other)
         self.assertNotIn("TOPSECRET", other)
 
+    def test_trendbars_request_uses_utc_window_without_count(self):
+        # The optional count caused cTrader to return older bars from toTimestamp.
+        now = dt.datetime(2026, 10, 21, 8, 47, tzinfo=dt.timezone.utc)
+        start, end = feed.utc_chunks(now, 1)[0]
+        request = types.SimpleNamespace()
+        returned = feed.configure_trendbars_request(request, 123, 456, 7, start, end)
+        self.assertIs(returned, request)
+        self.assertEqual(returned.ctidTraderAccountId, 123)
+        self.assertEqual(returned.symbolId, 456)
+        self.assertEqual(returned.period, 7)
+        self.assertEqual(returned.fromTimestamp, start)
+        self.assertEqual(returned.toTimestamp, end)
+        self.assertFalse(hasattr(returned, "count"))
+        with self.assertRaises(ValueError):
+            feed.configure_trendbars_request(types.SimpleNamespace(), 123, 456, 7,
+                                             start, end + 1)
+        with self.assertRaises(ValueError):
+            feed.configure_trendbars_request(types.SimpleNamespace(), 123, 456, 7,
+                                             end, start)
+
     def test_trendbars_legacy_sdk_without_hasmore_field(self):
         payload = types.SimpleNamespace(trendbar=[object()] * 96)
         self.assertFalse(feed.incomplete_trendbars_response(payload))
