@@ -20,6 +20,23 @@ class CTraderTests(unittest.TestCase):
             low=low,deltaOpen=delta_open,deltaHigh=delta_high,deltaClose=delta_close
         )
 
+    def test_event_diagnostic_contains_only_safe_metadata(self):
+        try:
+            raise AttributeError("accessToken=TOPSECRET-12345")
+        except AttributeError as exc:
+            result = feed.safe_event_diagnostic("ProtoOASymbolsListRes", exc)
+        self.assertIn("fase=ProtoOASymbolsListRes", result)
+        self.assertIn("tipo=AttributeError", result)
+        self.assertRegex(result, r"riga=[0-9]+")
+        self.assertNotIn("TOPSECRET", result)
+        self.assertNotIn("accessToken", result)
+        try:
+            raise RuntimeError("refresh_token=TOPSECRET")
+        except RuntimeError as exc:
+            other = feed.safe_event_diagnostic("secret-id-user-supplied", exc)
+        self.assertIn("fase=other", other)
+        self.assertNotIn("TOPSECRET", other)
+
     def test_relative_ohlc_and_utc_timestamp_are_decoded(self):
         bar=self.bar(minutes=29873415)
         item=feed.convert_trendbar(bar,5)
