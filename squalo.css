@@ -50,3 +50,25 @@ body:has(.sq-shell){background:#07121a;margin:0;color:#e6f7f2}
 .sq-method summary{color:#a3f3d4;cursor:pointer;font-weight:800}
 .sq-empty{padding:19px;color:#bcd2d2}
 @media(max-width:720px){.sq-checks,.sq-market-list{grid-template-columns:1fr}.sq-verdict{padding:14px}.sq-shell{padding:18px 12px 65px}}
+
+/* One settings dialog shared by all instrument pages. */
+#remura-settings{box-sizing:border-box;width:min(670px,calc(100vw - 20px));max-height:88dvh;overflow-y:auto;
+ border:1px solid #487273;border-radius:20px;background:#0c2430;color:#e7f6f0;
+ padding:18px;box-shadow:0 18px 60px #0009;font:14px/1.6 system-ui,-apple-system,sans-serif}
+#remura-settings::backdrop{background:#020d15cc}
+#remura-settings .rs-head{display:flex;align-items:start;justify-content:space-between;gap:16px}
+#remura-settings .rs-head small{font-size:10px;color:#8bf1d0;letter-spacing:.12em;font-weight:800}
+#remura-settings .rs-head h2{font-size:29px;letter-spacing:-.045em;margin:3px 0}
+#remura-settings #rs-close{border:1px solid #55717b;color:#d8f4e6;background:#1b3a46;
+ border-radius:12px;min-height:42px;min-width:42px;font-size:26px;cursor:pointer}
+#remura-settings .rs-intro,#remura-settings .rs-info p{font-size:12px;color:#a9c7cd}
+#remura-settings section{background:#102f39;border:1px solid #3b5c67;border-radius:13px;
+ padding:13px;margin:12px 0;min-width:0}
+#remura-settings section>strong{display:block;font-size:15px;margin-bottom:4px}
+#remura-settings .rs-capital .ms-import{margin-top:10px}
+#remura-settings .rs-prices .rp-upload{display:block!important;margin-top:12px}
+#remura-settings .rs-prices .rp-upload input{max-width:100%}
+#remura-settings .rs-capital .ms-file-label,
+#remura-settings .rs-capital .ms-clear{font-size:12px}
+#remura-settings a{color:#83f0ce}
+@media(max-width:600px){#remura-settings{padding:12px}}
