@@ -66,6 +66,7 @@
     set("rp-narrative",result.explanation+" "+
       (result.caveats||[]).join(" "));
     combined();
+    window.REMURA_PRICE_OBSERVATION={symbol,result};
     window.dispatchEvent(new CustomEvent("remura:price",{detail:{symbol}}));
   }
   get("rp-file").addEventListener("change",async()=>{
