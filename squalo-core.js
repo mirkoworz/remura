@@ -49,6 +49,26 @@
     };
     const retailPts=checkRetail("2 · Myfxbook (lotti)",retail);
     const capitalPts=checkRetail("3 · Capital.com (posizioni)",capital);
+    // Lot history explains whether long/short volume actually grows or shrinks.
+    // This is supporting context, never extra institutional evidence or score.
+    const hist=Array.isArray(input?.retailHistory)?input.retailHistory:[];
+    const lotSamples=hist.filter(p=>p&&Number.isFinite(Date.parse(p.t))&&
+      Number.isFinite(Number(p.lLots))&&Number.isFinite(Number(p.sLots))&&
+      Number(p.lLots)>=0&&Number(p.sLots)>=0)
+      .sort((a,b)=>Date.parse(a.t)-Date.parse(b.t));
+    if(lotSamples.length>=2){
+      const old=lotSamples[lotSamples.length-2],newest=lotSamples[lotSamples.length-1];
+      const gap=Date.parse(newest.t)-Date.parse(old.t);
+      if(gap>0&&gap<=4*3600000&&Date.parse(newest.t)>=now-6*3600000){
+        const longChange=Number(newest.lLots)-Number(old.lLots);
+        const shortChange=Number(newest.sLots)-Number(old.sLots);
+        evidence.push("Myfxbook, ultime due rilevazioni: lotti long "+
+          (longChange>0?"in aumento":longChange<0?"in diminuzione":"stabili")+
+          " ("+fmt(longChange)+"); lotti short "+
+          (shortChange>0?"in aumento":shortChange<0?"in diminuzione":"stabili")+
+          " ("+fmt(shortChange)+"). La differenza non identifica gli ordini dei fondi.");
+      }
+    }
     const h4=price?.metrics?.H4,h1=price?.metrics?.H1,m15=price?.metrics?.M15;
     const verified=price&&price.state!=="unavailable"&&
       [h4,h1,m15].every(m=>m?.state==="ok");
