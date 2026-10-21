@@ -65,6 +65,19 @@ def incomplete_trendbars_response(payload, limit=TRENDBARS_RESPONSE_LIMIT):
     return bool(getattr(payload, "hasMore", False)) or len(bars) >= limit
 
 
+def trendbar_inside_window(raw_bar, start_ms, end_ms, now):
+    """Accept only M15 candles opened inside this requested UTC chunk and closed.
+
+    cTrader may return the last `count` bars prior to toTimestamp even when
+    fromTimestamp is provided. We never let those older bars contaminate a
+    narrower requested window or include still-forming candles.
+    """
+    opened_ms = int(raw_bar.utcTimestampInMinutes) * 60_000
+    now_ms = int(now.astimezone(UTC).timestamp() * 1000)
+    return (start_ms <= opened_ms < end_ms and
+            opened_ms + INTERVAL_MS <= now_ms)
+
+
 def exact_symbols(light_symbols, requested, aliases=None):
     """Find ONE exact enabled broker name per REMURA code; never guess CFD aliases."""
     aliases = aliases or {}
@@ -227,14 +240,14 @@ def collect(config, requested, aliases, lookback_days, now=None):
             finish()
             return
         market, sid, digits, start_ms, end_ms = state["tasks"][state["index"]]
-        state["pending"] = (market, sid)
+        state["pending"] = (market, sid, start_ms, end_ms)
         request = ProtoOAGetTrendbarsReq()
         request.ctidTraderAccountId = config["account_id"]
         request.symbolId = sid
         request.period = ProtoOATrendbarPeriod.Value("M15")
         request.fromTimestamp = start_ms
         request.toTimestamp = end_ms
-        request.count = TRENDBARS_RESPONSE_LIMIT  # A daily M15 request has at most ~97 bars
+        request.count = TRENDBARS_RESPONSE_LIMIT  # Backend may return older bars; filter locally by time.
         send(request)
 
     def event(client, message):
@@ -291,7 +304,7 @@ def collect(config, requested, aliases, lookback_days, now=None):
             elif isinstance(payload, ProtoOAGetTrendbarsRes):
                 if "pending" not in state:
                     return
-                market, sid = state["pending"]
+                market, sid, start_ms, end_ms = state["pending"]
                 if payload.ctidTraderAccountId != config["account_id"] or (
                     payload.HasField("symbolId") and payload.symbolId != sid
                 ):
@@ -302,9 +315,11 @@ def collect(config, requested, aliases, lookback_days, now=None):
                 elif market not in result["errors"]:
                     for raw_bar in payload.trendbar:
                         try:
+                            if not trendbar_inside_window(raw_bar, start_ms, end_ms, now):
+                                continue
                             bar = convert_trendbar(raw_bar, state["digits"][market])
                             state["bars"][market][bar["t"]] = bar
-                        except (ValueError, OverflowError):
+                        except (ValueError, OverflowError, TypeError):
                             result["errors"][market] = "Una candela cTrader è invalida."
                             break
                 state["index"] += 1
