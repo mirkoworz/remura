@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """REMURA: safe, manually triggered, incremental cTrader history backfill.
 
-Discover exact enabled instruments, then load ONE small batch of missing markets.
-Does not change REMURA_SYMBOLS, schedules, credentials, or trading permissions.
+Discover exact enabled instruments; load one group or all missing markets
+in bounded batches with cooldowns. Does not change REMURA_SYMBOLS, schedules,
+credentials, or trading permissions.
 Run as the dedicated remura user with the private environment file.
 """
 from __future__ import annotations
@@ -126,7 +127,7 @@ def main(argv=None):
         return run_all_missing(db_path, args.days, args.batch_size, args.pause_seconds)
     try:
         plan = load_plan(db_path, args.batch_size)
-    except (RuntimeError, ValueError, OSError, TypeError, json.JSONDecodeError):
+    except (RuntimeError, ValueError, OSError, TypeError, json.JSONDecodeError, TimeoutError):
         print("ERRORE: impossibile preparare il catalogo privato cTrader.")
         return 1
 
