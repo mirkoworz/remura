@@ -37,14 +37,15 @@
     const shade=document.createElement("div");shade.id="rm-menu-shade";shade.hidden=true;
     const drawer=document.createElement("aside");drawer.id="rm-menu";
     drawer.setAttribute("aria-label","Navigazione principale Remura");drawer.setAttribute("aria-hidden","true");drawer.inert=true;
-    drawer.innerHTML='<div class="rm-header"><a href="./index.html" class="rm-brand">REMURA<span>Segui le tracce istituzionali</span></a><button id="rm-close" type="button" aria-label="Chiudi menu">×</button></div><nav aria-label="Menu Remura" class="rm-nav"><div class="rm-shortcuts"><a href="./index.html" data-main="home">⌂ <span>Home</span></a><a href="./mercati.html?v=8" data-main="scanner">◎ <span>Scanner istituzionale</span></a><a href="./fonti.html?v=8" data-main="fonti">◈ <span>Sentiment (2)</span></a></div><label class="rm-search-label" for="rm-search">Cerca tra 35 strumenti</label><input id="rm-search" type="search" autocomplete="off" placeholder="Gold, CADJPY, Nasdaq..." aria-label="Filtra strumenti e sottomenu"><div id="rm-menu-tree" class="rm-menu-tree"></div><div class="rm-menu-bottom"><a href="./forex.html?v=8">⌁ Radar Forex classico</a></div></nav><div class="rm-footer">COT: posizioni settimanali, non flussi in tempo reale. Sentiment: Myfxbook e Capital.com, con metriche separate.</div>';
+    drawer.innerHTML='<div class="rm-header"><a href="./index.html" class="rm-brand">REMURA<span>Segui le tracce istituzionali</span></a><button id="rm-close" type="button" aria-label="Chiudi menu">×</button></div><nav aria-label="Menu Remura" class="rm-nav"><div class="rm-shortcuts"><a href="./index.html" data-main="home">⌂ <span>Home</span></a><a href="./mercati.html?v=8" data-main="scanner">◎ <span>Radar COT</span></a><a href="./squalo.html" data-main="squalo">🦈 <span>Scanner Squalo</span></a><a href="./fonti.html?v=8" data-main="fonti">◈ <span>Sentiment (2)</span></a></div><label class="rm-search-label" for="rm-search">Cerca tra 35 strumenti</label><input id="rm-search" type="search" autocomplete="off" placeholder="Gold, CADJPY, Nasdaq..." aria-label="Filtra strumenti e sottomenu"><div id="rm-menu-tree" class="rm-menu-tree"></div><div class="rm-menu-bottom"><a href="./forex.html?v=8">⌁ Radar Forex classico</a><a href="./asset.html?symbol=EURUSD#remura-settings" id="rm-settings-link">⚙ Impostazioni e connessioni</a></div></nav><div class="rm-footer">COT: posizioni settimanali, non flussi in tempo reale. Sentiment: Myfxbook e Capital.com, con metriche separate.</div>';
     document.body.append(shade,drawer,trigger);
     document.body.classList.add("rm-has-nav");
     const tree=drawer.querySelector("#rm-menu-tree");
     const search=drawer.querySelector("#rm-search");
-    const isHome=page==="index.html",isScanner=page==="mercati.html",isSources=page==="fonti.html";
-    const highlight=drawer.querySelector(isHome?'[data-main="home"]':isScanner?'[data-main="scanner"]':isSources?'[data-main="fonti"]':'[data-main="home"]');
-    if(highlight&&(isHome||isScanner||isSources))highlight.classList.add("rm-active");
+    const isHome=page==="index.html",isScanner=page==="mercati.html",isSqualo=page==="squalo.html",isSources=page==="fonti.html";
+    drawer.querySelector("#rm-settings-link").href="./asset.html?symbol="+encodeURIComponent(page==="asset.html"?activeSymbol||"EURUSD":"EURUSD")+"#remura-settings";
+    const highlight=drawer.querySelector(isHome?'[data-main="home"]':isScanner?'[data-main="scanner"]':isSqualo?'[data-main="squalo"]':isSources?'[data-main="fonti"]':'[data-main="home"]');
+    if(highlight&&(isHome||isScanner||isSqualo||isSources))highlight.classList.add("rm-active");
     function render(){
       const v=search.value.trim().toUpperCase();
       tree.replaceChildren();
