@@ -210,6 +210,7 @@ clearButton.addEventListener("click",async()=>{
 function state(label,ok=false){
  status.className="ms-status "+(ok?"ms-live":"ms-stale");
  status.textContent=label;
+ window.REMURA_CAPITAL_OBSERVATION={symbol,row:capital?.row||null,fresh:capital?.fresh===true};
  window.setTimeout(()=>window.dispatchEvent(new CustomEvent("remura:capital",{detail:{symbol}})),0);
 }
 function updateComparison(){
