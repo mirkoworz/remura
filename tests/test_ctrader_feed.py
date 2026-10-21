@@ -37,6 +37,18 @@ class CTraderTests(unittest.TestCase):
         self.assertIn("fase=other", other)
         self.assertNotIn("TOPSECRET", other)
 
+    def test_trendbars_legacy_sdk_without_hasmore_field(self):
+        payload = types.SimpleNamespace(trendbar=[object()] * 96)
+        self.assertFalse(feed.incomplete_trendbars_response(payload))
+
+    def test_trendbars_hasmore_and_limit_protect_from_truncation(self):
+        with_has_more = types.SimpleNamespace(trendbar=[object()] * 50, hasMore=True)
+        self.assertTrue(feed.incomplete_trendbars_response(with_has_more))
+        complete = types.SimpleNamespace(trendbar=[object()] * 50, hasMore=False)
+        self.assertFalse(feed.incomplete_trendbars_response(complete))
+        old_and_full = types.SimpleNamespace(trendbar=[object()] * 350)
+        self.assertTrue(feed.incomplete_trendbars_response(old_and_full))
+
     def test_relative_ohlc_and_utc_timestamp_are_decoded(self):
         bar=self.bar(minutes=29873415)
         item=feed.convert_trendbar(bar,5)
