@@ -102,6 +102,8 @@ class PrivateStorageTests(unittest.TestCase):
                      "/../private/prices.sqlite","/%2e%2e/private/x"]:
             self.assertIsNone(server.resolve_asset(path))
         self.assertIsNotNone(server.resolve_asset("/asset.html"))
+        self.assertIsNotNone(server.resolve_asset("/quicklook.js"))
+        self.assertIsNotNone(server.resolve_asset("/quicklook.css"))
 
     def test_scheduler_aligns_to_utc_quarter_plus_delay(self):
         value=server.seconds_to_next_quarter(dt.datetime(2026,10,17,9,14,10,tzinfo=UTC))
