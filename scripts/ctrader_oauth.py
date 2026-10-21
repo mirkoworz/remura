@@ -56,7 +56,7 @@ def _safe_error_detail(description):
         ("CLIENT_ID", r"client[ _-]*id|application[ _-]*id|invalid[ _-]*client"),
         ("REDIRECT_URI", r"redirect|callback|return[ _-]*uri"),
         ("EXPIRED_CODE", r"expir|timed[ _-]*out|timeout"),
-        ("REUSED_CODE", r"already[ _-]*used|consum|redeem|replay|previously[ _-]*used"),
+        ("REUSED_CODE", r"already(?:[ _-]+been)?[ _-]+used|consum|redeem|replay|previously[ _-]*used"),
         ("AUTH_CODE", r"authori[sz]ation[ _-]*code|auth[ _-]*code|invalid[ _-]*code|code[ _-]*invalid|grant[ _-]*code"),
         ("GRANT_TYPE", r"grant[ _-]*type"),
         ("PARAMETERS", r"parameter|missing|required|malformed|invalid[ _-]*request"),
