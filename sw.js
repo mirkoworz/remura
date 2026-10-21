@@ -1,5 +1,5 @@
 /* Shell only. API CFTC is never cached as live data. */
-const CACHE="remura-shell-v13";
+const CACHE="remura-shell-v14";
 const STATIC=["./","./index.html","./forex.html","./catalogo.html","./mercati.html","./asset.html","./fonti.html","./nav.js","./nav.css","./retail.css","./retail.js","./insights-core.js","./insights.js","./insights.css","./price-core.js","./price.js","./price.css","./sources.js","./sources.css","./sentiment-core.js","./capital-cloud-config.js","./capital-cloud.js","./simple-layout.js","./simple-layout.css","./manifest.webmanifest","./icon.svg"];
 self.addEventListener("install",event=>event.waitUntil(
   caches.open(CACHE).then(cache=>cache.addAll(STATIC)).then(()=>self.skipWaiting())
