@@ -83,11 +83,11 @@
     wrapper.setAttribute("role","img");
     wrapper.setAttribute("aria-label",label+" senza dati");
     wrapper.innerHTML='<div class="rm-donut-hole"><strong>N/D</strong><small>long</small></div>';
-    container.insertAdjacentElement("afterbegin",wrapper);
+    container.insertAdjacentElement("beforebegin",wrapper);
     return wrapper;
   }
-  const retailDonut=makeDonut(retail.querySelector(".rt-summary")?.parentElement||retail,"Myfxbook");
-  const capitalDonut=makeDonut(capital.querySelector(".ms-readings")?.parentElement||capital,"Capital.com");
+  const retailDonut=makeDonut(retail.querySelector(".rt-summary"),"Myfxbook");
+  const capitalDonut=makeDonut(capital.querySelector(".ms-readings"),"Capital.com");
   const parsePct=text=>{
     const match=String(text||"").trim().match(/^(\\d+(?:[.,]\\d+)?)%$/);
     const n=match?Number(match[1].replace(",",".")):NaN;
