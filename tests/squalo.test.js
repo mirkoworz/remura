@@ -65,5 +65,5 @@ test("browser integrates new source events, settings and scanner",()=>{
  assert.match(scanner,/\/private-api\/retail\/latest\.json/);
  assert.match(scanner,/\/private-api\/prices\//);
  assert.match(scanner,/REMURA_CAPITAL_CLOUD/);
- assert.match(scanner,/squalo\.html/);
+ assert.match(grab("squalo.html"),/squalo-scanner\.js/);
 });
