@@ -104,6 +104,9 @@ class PrivateStorageTests(unittest.TestCase):
         self.assertIsNotNone(server.resolve_asset("/asset.html"))
         self.assertIsNotNone(server.resolve_asset("/quicklook.js"))
         self.assertIsNotNone(server.resolve_asset("/quicklook.css"))
+        for name in ("simple-layout.js", "simple-layout.css", "sentiment-core.js",
+                     "capital-cloud.js", "capital-cloud-config.js"):
+            self.assertIsNotNone(server.resolve_asset("/" + name))
 
     def test_scheduler_aligns_to_utc_quarter_plus_delay(self):
         value=server.seconds_to_next_quarter(dt.datetime(2026,10,17,9,14,10,tzinfo=UTC))
