@@ -62,3 +62,14 @@ body.remura-simple #remura-capital .ms-legend{margin:11px 0 8px}
   body.remura-simple #retail-module .rt-tfs{gap:4px}
   body.remura-simple #retail-module .rt-tfs button{font-size:10px;padding:7px 8px}
 }
+
+/* Concise price analysis: the direction of each timeframe is the primary content. */
+body.remura-simple #remura-price-engine .rp-grid .rp-box{padding:12px;min-width:0}
+body.remura-simple #remura-price-engine .rp-grid .rp-box h4{font-size:12px;margin-bottom:5px}
+body.remura-simple #remura-price-engine .rp-grid .rp-box strong{font-size:clamp(19px,4vw,26px)}
+body.remura-simple #remura-price-engine .rm-timeframe-more{margin-top:9px;border-top:1px solid #30515b;padding-top:7px}
+body.remura-simple #remura-price-engine .rm-timeframe-more summary{font-size:11px;color:#a3dcca;cursor:pointer}
+body.remura-simple #remura-price-engine .rm-timeframe-more p{margin-top:9px;font-size:12px}
+body.remura-simple #remura-price-engine .rm-timeframe-more small{display:block;font-size:11px;line-height:1.6}
+body.remura-simple #remura-price-engine .rm-price-extra .rp-upload{margin-top:12px}
+body.remura-simple #remura-price-engine .rm-price-extra #rp-narrative{font-size:12px;line-height:1.7}
