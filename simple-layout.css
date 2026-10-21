@@ -1,0 +1,64 @@
+/* REMURA simpler iPhone layout: two retail sentiments first, one source at a time. */
+body.remura-simple .layout{display:flex;flex-direction:column;gap:13px}
+body.remura-simple .layout > *{min-width:0}
+body.remura-simple .shell{max-width:980px}
+body.remura-simple .panel{padding:clamp(14px,3vw,21px)}
+body.remura-simple .rm-simple-intro{padding:4px 2px 2px}
+body.remura-simple .rm-simple-intro h2{font-size:clamp(24px,4.5vw,32px);line-height:1.2;margin:5px 0}
+body.remura-simple .rm-simple-intro p{font-size:13px;color:var(--muted);line-height:1.65;max-width:650px;margin:0 0 2px}
+body.remura-simple #retail-module,
+body.remura-simple #remura-capital{background:linear-gradient(165deg,#102d35,#0b1f2a);border-color:#3b6268}
+body.remura-simple #retail-module .rt-head h2,
+body.remura-simple #remura-capital .ms-intro h2{font-size:clamp(22px,4.5vw,29px);line-height:1.2;margin:4px 0 9px}
+body.remura-simple #retail-module .rt-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:9px 0}
+body.remura-simple #retail-module .rt-stat strong,
+body.remura-simple #remura-capital .ms-reading strong{font-size:clamp(28px,5.5vw,37px)}
+body.remura-simple #retail-module .rt-split,
+body.remura-simple #remura-capital .ms-split{height:17px;border-radius:11px}
+body.remura-simple #retail-module .rt-lots-plot{min-height:155px}
+body.remura-simple #retail-module .rt-section{margin-top:13px;padding-top:13px}
+body.remura-simple #retail-module .rt-section-head h3{font-size:15px}
+body.remura-simple #remura-capital .ms-chart{margin:15px 0 8px;padding-top:12px}
+body.remura-simple #remura-capital .ms-history-panel{min-height:150px}
+body.remura-simple #remura-capital .ms-readings{gap:9px}
+body.remura-simple #remura-price-engine,
+body.remura-simple #rm-insights,
+body.remura-simple #remura-cot-summary{width:100%;margin:0;max-width:none}
+body.remura-simple #remura-cot-summary .cards{margin:8px 0}
+body.remura-simple #remura-cot-summary .value{font-size:clamp(23px,5vw,33px)}
+body.remura-simple #remura-cot-summary .chip{font-size:10px}
+body.remura-simple #remura-price-engine .rp-upload{border-top:1px solid #315560;padding-top:10px}
+body.remura-simple #remura-price-engine .rp-grid{margin-top:12px}
+body.remura-simple .rm-donut{width:106px;height:106px;margin:12px auto 8px;border-radius:50%;
+  background:conic-gradient(#47c78a 0 var(--rm-long,0%),#ee7c8e var(--rm-long,0%) 100%);
+  display:grid;place-items:center;box-shadow:0 0 0 1px #3d5a62;transition:background .25s}
+body.remura-simple .rm-donut[data-ready=false]{background:#29434d}
+body.remura-simple .rm-donut-hole{width:74px;height:74px;background:#102732;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0}
+body.remura-simple .rm-donut-hole strong{font-size:17px;font-variant-numeric:tabular-nums;line-height:1.2}
+body.remura-simple .rm-donut-hole small{font-size:9px;color:#c0d1d0}
+body.remura-simple .rm-more{border:1px solid #355863;background:#0b2530;border-radius:13px;margin:15px 0 0;padding:10px 14px}
+body.remura-simple .rm-more > summary{cursor:pointer;color:#c5f4e4;font-size:13px;font-weight:750;line-height:1.6}
+body.remura-simple .rm-more[open] > summary{margin-bottom:12px;padding-bottom:9px;border-bottom:1px solid #335762}
+body.remura-simple .rm-more-body{display:flex;flex-direction:column;gap:11px}
+body.remura-simple #retail-module .rm-more-body > .rt-stat{width:100%}
+body.remura-simple #retail-module .rm-more-body > .rt-section{margin-top:4px}
+body.remura-simple #retail-module .rm-more-body > .rt-section:has(.rt-price){min-width:0}
+body.remura-simple #retail-module .rt-price{height:340px}
+body.remura-simple .rm-advanced-body{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+body.remura-simple .rm-advanced-body > .panel{width:100%;margin:0}
+body.remura-simple .rm-extra-cot{background:transparent}
+body.remura-simple #rm-insights .rm-charts:not([open]){margin:5px 0}
+body.remura-simple #remura-capital .ms-comparison{margin:12px 0;border-left:3px solid #70ddbc}
+body.remura-simple #remura-capital .ms-legend{margin:11px 0 8px}
+@media(max-width:600px){
+  body.remura-simple .shell{padding:13px 12px 65px}
+  body.remura-simple .top{margin-bottom:19px}
+  body.remura-simple .rt-head{gap:7px}
+  body.remura-simple #retail-module .rt-summary{gap:8px}
+  body.remura-simple #retail-module .rt-stat{padding:12px}
+  body.remura-simple #remura-capital .ms-reading{padding:12px}
+  body.remura-simple #remura-price-engine .rp-grid{grid-template-columns:1fr}
+  body.remura-simple #retail-module .rt-tfs{gap:4px}
+  body.remura-simple #retail-module .rt-tfs button{font-size:10px;padding:7px 8px}
+}
