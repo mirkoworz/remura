@@ -7,6 +7,8 @@ on:
       - 'insights.css'
       - 'asset.html'
       - 'retail.js'
+      - 'quicklook.js'
+      - 'quicklook.css'
       - 'tests/**'
       - '.github/workflows/insights-checks.yml'
   workflow_dispatch:
@@ -27,9 +29,10 @@ jobs:
           node --check insights-core.js
           node --check insights.js
           node --check retail.js
+          node --check quicklook.js
           node --check nav.js
       - name: Verify COT analysis rules
-        run: node --test tests/insights.test.js
+        run: node --test tests/insights.test.js tests/quicklook.test.js
       - name: Verify wiring on all market detail pages
         run: |
           node - <<'NODE'
