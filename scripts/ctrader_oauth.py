@@ -45,6 +45,28 @@ def authorization_url(env):
     return GRANT_URL + "?" + query
 
 
+def _safe_error_detail(description):
+    """Map untrusted provider description to predefined labels, never persist it."""
+    if not isinstance(description, str):
+        return "UNSPECIFIED"
+    value = description.casefold()[:1200]
+    import re
+    rules = [
+        ("CLIENT_SECRET", r"client[ _-]*secret|secret[ _-]*key|invalid[ _-]*secret|secret.*invalid"),
+        ("CLIENT_ID", r"client[ _-]*id|application[ _-]*id|invalid[ _-]*client"),
+        ("REDIRECT_URI", r"redirect|callback|return[ _-]*uri"),
+        ("EXPIRED_CODE", r"expir|timed[ _-]*out|timeout"),
+        ("REUSED_CODE", r"already[ _-]*used|consum|redeem|replay|previously[ _-]*used"),
+        ("AUTH_CODE", r"authori[sz]ation[ _-]*code|auth[ _-]*code|invalid[ _-]*code|code[ _-]*invalid|grant[ _-]*code"),
+        ("GRANT_TYPE", r"grant[ _-]*type"),
+        ("PARAMETERS", r"parameter|missing|required|malformed|invalid[ _-]*request"),
+    ]
+    for label, pattern in rules:
+        if re.search(pattern, value):
+            return label
+    return "OTHER"
+
+
 def _record_diagnostic(database, status):
     """Keep only a bounded category in the private directory, never provider messages."""
     location = Path(database).expanduser().resolve().parent / "ctrader-oauth-status.json"
@@ -90,7 +112,7 @@ def exchange_code(code, env, database, requester=None):
                 "INTERNAL_ERROR", "RATE_LIMIT_EXCEEDED",
             }
             provider_code = str(payload["errorCode"]).upper()
-            status = ("API_" + provider_code) if provider_code in allowed else "API_REJECTED"
+            status = ("API_" + provider_code + "_DETAIL_" + _safe_error_detail(payload.get("description"))) if provider_code in allowed else "API_REJECTED"
             raise ValueError("API refused OAuth exchange")
         if not payload.get("accessToken") or not payload.get("refreshToken"):
             status = "MISSING_TOKENS"
