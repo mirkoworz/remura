@@ -32,6 +32,7 @@ from urllib.parse import urlsplit, parse_qs
 from price_feed import MARKETS, UTC, utcnow
 from price_store import connect, get_status, set_status, latest, ingest, api_document, symbols_available
 from ctrader_tokens import access_token, path_for, read_file
+from ctrader_lock import collection_guard
 from ctrader_oauth import authorization_url, exchange_code
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -328,6 +329,16 @@ def collector_command(symbols, days, output):
 
 
 def collect_once(db_path, symbols, days=2, runner=subprocess.run, now=None):
+    """Serialize OAuth refresh + broker collection between scheduler and backfill."""
+    try:
+        with collection_guard(db_path):
+            return _collect_once_locked(db_path, symbols, days, runner, now)
+    except TimeoutError:
+        # Preserve the existing collector health; do not label stale data as fresh.
+        return {"saved": {}, "errors": {"collector": "cTrader occupato: raccolta non eseguita."}}
+
+
+def _collect_once_locked(db_path, symbols, days, runner, now):
     """Isolated child process: Twisted reactor and cTrader TCP live outside HTTP server.
 
     No secrets in args; all cTrader credentials are inherited via environment.
