@@ -13,9 +13,9 @@ test("only Myfxbook and Capital are in the pair sentiment module",()=>{
  }
  assert.ok(sources.includes("Capital.com"));
  assert.ok(html.includes('id="retail-module"'));
- assert.ok(html.includes('sources.js?v=20'));
+ assert.ok(html.includes('sources.js?v=21'));
  assert.ok(html.includes('sentiment-core.js?v=1'));
- assert.ok(html.includes('simple-layout.js?v=1'));
+ assert.ok(html.includes('simple-layout.js?v=2'));
  assert.ok(!html.includes('quicklook.js?v=1'));
 });
 test("simple layout places Myfxbook immediately before Capital, price and COT after",()=>{
