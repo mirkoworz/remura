@@ -71,26 +71,26 @@ class BackfillTests(unittest.TestCase):
             collect.assert_not_called()
 
     def test_auto_loads_two_batches_and_waits_between_them(self):
-        def plan(next_group):
-            return dict(available=31, existing=5, waiting=len(next_group),
-                        next=next_group, unmatched=[])
-        batches=[plan(["AUDCAD", "AUDCHF", "AUDJPY"]),
-                 plan(["AUDNZD"]), plan([])]
+        pending=["AUDCAD", "AUDCHF", "AUDJPY", "AUDNZD"]
+        plan=dict(available=31, existing=5, waiting=len(pending),
+                  remaining=pending, next=pending[:3], unmatched=[])
         pause=[]
         def fake_collect(db_path, symbols, days):
             return {"saved": {s: 1300 for s in symbols}, "errors": {}}
-        with patch.object(backfill, "load_plan", side_effect=batches) as discovery, \
+        with patch.object(backfill, "load_plan", return_value=plan) as discovery, \
              patch.object(backfill, "collect_once", side_effect=fake_collect) as collect, \
              contextlib.redirect_stdout(io.StringIO()):
             result=backfill.run_all_missing(backfill.DEFAULT_DB, 21, 3, 60, sleeper=pause.append)
         self.assertEqual(result, 0)
         self.assertEqual(collect.call_count, 2)
-        self.assertEqual(discovery.call_count, 3)
-        self.assertEqual(pause, [60, 60])
+        self.assertEqual(collect.call_args_list[0].args[1], pending[:3])
+        self.assertEqual(collect.call_args_list[1].args[1], pending[3:])
+        self.assertEqual(discovery.call_count, 1)  # Twisted reactor starts only once.
+        self.assertEqual(pause, [60])
 
     def test_auto_stops_after_first_incomplete_batch(self):
         plan=dict(available=31, existing=5, waiting=26,
-                  next=["AUDCAD","AUDCHF"], unmatched=[])
+                  remaining=["AUDCAD","AUDCHF"], next=["AUDCAD","AUDCHF"], unmatched=[])
         with patch.object(backfill, "load_plan", return_value=plan) as discovery, \
              patch.object(backfill, "collect_once", return_value={
                  "saved": {"AUDCAD":1300}, "errors": {"AUDCHF":"unavailable"}
