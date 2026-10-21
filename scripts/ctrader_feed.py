@@ -20,7 +20,7 @@ from price_feed import MARKETS, UTC, candle, market_document, iso, utcnow
 
 INTERVAL_MS = 15 * 60 * 1000
 MAX_LOOKBACK_DAYS = 45
-TRENDBARS_RESPONSE_LIMIT = 350
+TRENDBARS_RESPONSE_LIMIT = 350  # Fail closed for oversized single-day replies.
 
 
 EVENT_PHASES = frozenset({
@@ -58,11 +58,28 @@ def incomplete_trendbars_response(payload, limit=TRENDBARS_RESPONSE_LIMIT):
     """Detect truncated M15 responses across old and current Spotware SDKs.
 
     Older generated protobufs may not expose the newer optional hasMore field.
-    Since each request spans one UTC day (at most ~97 M15 bars), a 350-bar
-    response is conservatively treated as truncated even on older SDKs.
+    The request deliberately omits count and uses a UTC-day interval (at most
+    96 M15 bar opens), so 350 returned bars is abnormally large and unsafe.
     """
     bars = payload.trendbar
     return bool(getattr(payload, "hasMore", False)) or len(bars) >= limit
+
+
+def configure_trendbars_request(request, account_id, symbol_id, period, start_ms, end_ms):
+    """Build bounded historical request WITHOUT optional count.
+
+    Spotware documents count as a limit backwards from toTimestamp; setting
+    count=350 for a one-day M15 request returned older out-of-range candles.
+    Rely on the required account/symbol and a validated <=24h UTC window.
+    """
+    if not 0 <= start_ms < end_ms or end_ms - start_ms > 86_400_000:
+        raise ValueError("Intervallo storico cTrader non valido.")
+    request.ctidTraderAccountId = account_id
+    request.symbolId = symbol_id
+    request.period = period
+    request.fromTimestamp = start_ms
+    request.toTimestamp = end_ms
+    return request
 
 
 def trendbar_inside_window(raw_bar, start_ms, end_ms, now):
@@ -241,13 +258,10 @@ def collect(config, requested, aliases, lookback_days, now=None):
             return
         market, sid, digits, start_ms, end_ms = state["tasks"][state["index"]]
         state["pending"] = (market, sid, start_ms, end_ms)
-        request = ProtoOAGetTrendbarsReq()
-        request.ctidTraderAccountId = config["account_id"]
-        request.symbolId = sid
-        request.period = ProtoOATrendbarPeriod.Value("M15")
-        request.fromTimestamp = start_ms
-        request.toTimestamp = end_ms
-        request.count = TRENDBARS_RESPONSE_LIMIT  # Backend may return older bars; filter locally by time.
+        request = configure_trendbars_request(
+            ProtoOAGetTrendbarsReq(), config["account_id"], sid,
+            ProtoOATrendbarPeriod.Value("M15"), start_ms, end_ms
+        )
         send(request)
 
     def event(client, message):
