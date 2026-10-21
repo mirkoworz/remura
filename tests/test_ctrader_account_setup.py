@@ -4,13 +4,13 @@ import os
 from pathlib import Path
 import sys
 import tempfile
-import types
 import unittest
 from types import SimpleNamespace
 
-# Mock token dependency before importing selector, to keep the tests offline.
-sys.modules.setdefault("ctrader_tokens",
-                       types.SimpleNamespace(access_token=lambda *_a, **_kw: "mock"))
+# Import the real token module: its import performs no network operations.
+# Never install a persistent sys.modules mock: that leaks into other test files.
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
 from scripts import ctrader_account_setup as setup
 
 
