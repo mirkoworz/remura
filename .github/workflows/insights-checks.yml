@@ -9,6 +9,12 @@ on:
       - 'retail.js'
       - 'simple-layout.js'
       - 'simple-layout.css'
+      - 'squalo.html'
+      - 'squalo-core.js'
+      - 'squalo.js'
+      - 'squalo-scanner.js'
+      - 'squalo.css'
+      - 'remura-settings.js'
       - 'sentiment-core.js'
       - 'capital-cloud.js'
       - 'capital-cloud-config.js'
@@ -39,9 +45,13 @@ jobs:
           node --check sources.js
           node --check capital-cloud.js
           node --check sentiment-core.js
+          node --check squalo-core.js
+          node --check squalo.js
+          node --check squalo-scanner.js
+          node --check remura-settings.js
           node --check nav.js
       - name: Verify COT analysis rules
-        run: node --test tests/insights.test.js tests/two-sentiments.test.js
+        run: node --test tests/insights.test.js tests/two-sentiments.test.js tests/squalo.test.js
       - name: Verify wiring on all market detail pages
         run: |
           node - <<'NODE'
