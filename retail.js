@@ -145,7 +145,10 @@ function draw(){
  canvas.addEventListener("pointerdown",inspect);
  canvas.addEventListener("pointerleave",()=>{tooltip.hidden=true;});
 }
+let retailFetching=false;
 async function retail(){
+ if(retailFetching||document.visibilityState==="hidden")return;
+ retailFetching=true;
  try{
  const base="./private-api/retail/",v=Date.now(); // Same-origin private collector; works when repo is private.
  const current=await fetch(base+"latest.json?ts="+v,{cache:"no-store"});
@@ -179,6 +182,9 @@ async function retail(){
  if(Number.isFinite(sampleCount)&&sampleCount>=0&&sampleCount<30){$("r-date").textContent+=" ATTENZIONE: solo "+sampleCount+" posizioni censite per questo simbolo. Il sentiment è poco rappresentativo.";}
  window.dispatchEvent(new CustomEvent("remura:retail",{detail:{symbol:sym,current:p,history,status:latest.status||"ok"}}));
  }catch(e){window.dispatchEvent(new CustomEvent("remura:retail",{detail:{symbol:sym,current:null,history:[],status:"error"}}));$("r-status").textContent="Myfxbook non collegato";$("r-date").textContent="Feed retail mancante o non ancora configurato. Nessuna percentuale inventata.";draw();}
+ finally{retailFetching=false;}
 }
 price();draw();retail();
+window.setInterval(retail,5*60*1000);
+window.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")retail();});
 })();
