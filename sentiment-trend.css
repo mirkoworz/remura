@@ -1,0 +1,28 @@
+/* REMURA v1.4 — chronological sentiment movement cards */
+.rm-momentum{margin:18px 0;--rm-up:#72e7b9;--rm-down:#ff9ca8}
+.rm-momentum .rm-momentum-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.rm-momentum h2{font-size:clamp(21px,3.2vw,29px);margin:5px 0 8px}
+.rm-momentum-header p{font-size:12px;color:#b6cdd0;line-height:1.65;max-width:760px;margin:0}
+.rm-momentum-badge{font-size:11px;color:#c4fae0;border:1px solid #448a76;background:#193d38;padding:7px 9px;border-radius:9px;white-space:normal}
+.rm-momentum-controls{display:flex;gap:6px;flex-wrap:wrap;margin:17px 0 12px}
+.rm-momentum-controls button{border:1px solid #3a5e65;background:#15313a;border-radius:9px;padding:9px 12px;color:#c1d7d9;font:700 12px inherit;cursor:pointer}
+.rm-momentum-controls button[aria-pressed=true]{background:#265747;border-color:#74dcaf;color:#e3ffef}
+.rm-momentum-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.rm-momentum-card{border:1px solid #315960;background:#0b2630;border-radius:13px;padding:14px;min-width:0}
+.rm-momentum-name{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.rm-momentum-name strong{font-size:16px}
+.rm-momentum-name small{font-size:11px;color:#a8c2c7}
+.rm-momentum-verdict{font-size:17px;font-weight:800;color:#ebf5ef;margin-bottom:9px}
+.rm-momentum-card[data-direction=long] .rm-momentum-verdict{color:var(--rm-up)}
+.rm-momentum-card[data-direction=short] .rm-momentum-verdict{color:var(--rm-down)}
+.rm-momentum-values{font-size:13px;font-weight:730;line-height:1.75;font-variant-numeric:tabular-nums;color:#f0fcf6}
+.rm-momentum-detail{font-size:11px;color:#cadede;line-height:1.7;margin:10px 0 0}
+.rm-momentum-meta{font-size:11px;color:#a6c2c7;line-height:1.65;margin:8px 0 0}
+.rm-momentum-joint{margin:12px 0 9px;border:1px solid #3d626a;border-radius:10px;padding:12px 14px;background:#142e36;color:#dfefea;font-size:12px;line-height:1.7}
+.rm-momentum-joint[data-state=aligned]{border-color:#488573}
+.rm-momentum-legend{font-size:11px;color:#a9c3c7;line-height:1.75;margin:10px 0 0}
+@media(max-width:680px){
+ .rm-momentum-grid{grid-template-columns:1fr}
+ .rm-momentum-controls button{flex:1;min-width:60px}
+ .rm-momentum-badge{font-size:10px}
+}
