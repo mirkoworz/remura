@@ -49,9 +49,12 @@
  let period="24h",manual=false;
  const fmt=n=>new Intl.NumberFormat("it-IT",{maximumFractionDigits:2}).format(n);
  const signed=n=>(n>0?"+":"")+fmt(n);
- const date=t=>new Intl.DateTimeFormat("it-IT",{
-  day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",timeZone:"Europe/Rome"
- }).format(new Date(t));
+ const date=t=>{
+  const d=new Date(t);
+  return Number.isFinite(+d)?new Intl.DateTimeFormat("it-IT",{
+   day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",timeZone:"Europe/Rome"
+  }).format(d):"N/D";
+ };
  for(const p of core.PERIODS){
   const button=el("button","",p.id==="7g"?"7 giorni":p.id);
   button.type="button";button.dataset.period=p.id;
