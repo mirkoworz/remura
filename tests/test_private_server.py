@@ -118,6 +118,17 @@ class PrivateStorageTests(unittest.TestCase):
             with self.subTest(asset=filename):
                 self.assertIsNotNone(server.resolve_asset("/"+filename.removeprefix("./")))
 
+    def test_autoupdate_status_is_private_and_sanitized(self):
+        private=Path(self.path).resolve().parent
+        metadata=private/"autoupdate-state.json"
+        metadata.write_text(json.dumps({"enabled":True,"state":"configured",
+                                        "installedSha":"a"*40,
+                                        "CAPITAL_API_PASSWORD":"never-expose"}),encoding="utf-8")
+        doc=server.safe_update_status(self.path)
+        self.assertEqual(doc["state"],"configured")
+        self.assertNotIn("CAPITAL_API_PASSWORD",doc)
+        self.assertNotIn("never-expose",json.dumps(doc))
+
     def test_scheduler_aligns_to_utc_quarter_plus_delay(self):
         value=server.seconds_to_next_quarter(dt.datetime(2026,10,17,9,14,10,tzinfo=UTC))
         self.assertEqual(value,140)

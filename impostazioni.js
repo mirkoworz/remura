@@ -1,4 +1,4 @@
-/* REMURA v1.5: settings and authenticated Capital.com read-only diagnostics. */
+/* REMURA v1.7: settings and authenticated Capital.com read-only diagnostics. */
 (()=>{
 "use strict";
 const $=id=>document.getElementById(id);
@@ -85,6 +85,28 @@ async function checkPublic(){
   status("public-status","Myfxbook GitHub · "+(h.recent?"recente":"DATATO")+" · "+stamp+" · "+h.ageMinutes+" min · "+h.covered+"/"+h.expected+" mercati",h.recent?"ok":"error");
  }catch(_){status("public-status","Archivio pubblico Myfxbook non disponibile o non valido.","error");}
 }
+async function checkAutoupdate(){
+ try{
+  const response=await fetch("./private-api/autoupdate",{cache:"no-store"});
+  if(!response.ok)throw Error("private-only");
+  const data=await response.json();
+  if(!data.enabled){
+   status("autoupdate-status","Aggiornamenti automatici non ancora attivati.","");
+   $("autoupdate-detail").textContent="Per attivare serve un ultimo comando Termius dopo aver installato la v1.7.";
+   return;
+  }
+  const names={configured:"Configurato · prima verifica in attesa",up_to_date:"Versione aggiornata",updated:"Ultimo aggiornamento riuscito",waiting_ci:"In attesa dei test GitHub",blocked:"Questo commit è bloccato",error:"Verifica o installazione fallita"};
+  const state=String(data.state||"unknown");
+  status("autoupdate-status",names[state]||"Stato: "+state,["blocked","error"].includes(state)?"error":["up_to_date","updated"].includes(state)?"ok":"");
+  const sha=s=>typeof s==="string"&&/^[a-f0-9]{40}$/.test(s)?s.slice(0,8):"—";
+  const date=s=>s&&Number.isFinite(Date.parse(s))?new Intl.DateTimeFormat("it-IT",{timeZone:"Europe/Rome",dateStyle:"short",timeStyle:"short"}).format(new Date(s)):"in attesa";
+  $("autoupdate-detail").textContent="Commit installato: "+sha(data.installedSha)+" · Ultimo controllo: "+date(data.lastCheck)+". "+String(data.message||"");
+ }catch(_){
+  status("autoupdate-status","Stato disponibile solo nella VPS privata Tailscale.","");
+  $("autoupdate-detail").textContent="Su GitHub Pages questa API non esiste. Per leggerla, apri l'indirizzo .ts.net dopo l'installazione v1.7.";
+ }
+}
+$("check-autoupdate").addEventListener("click",checkAutoupdate);
 function store(key,doc){
  try{localStorage.setItem(key,JSON.stringify(doc));return true;}
  catch(_){return false;}
@@ -127,5 +149,5 @@ $("clear-local").addEventListener("click",()=>{
  }catch(_){status("import-status","Impossibile accedere alla memoria locale.","error");}
 });
 $("check-feeds").addEventListener("click",()=>{checkGoogle();checkPrivate();checkPublic();});
-checkGoogle();checkPrivate();checkPublic();
+checkGoogle();checkPrivate();checkPublic();checkAutoupdate();
 })();

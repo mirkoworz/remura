@@ -94,3 +94,34 @@ Per i primi controlli visita gli endpoint privati `/private-api/health`, `/priva
 - Conserva un **backup cifrato esterno** del database `/opt/remura/private/remura-prices.sqlite3` e degli storici dei sentiment. Non conservare backup contenenti i token in chiaro.
 - Per aggiornare il codice in sicurezza, scarica/controlla la nuova versione in un checkout separato, poi riesegui l'installer. **Non esegue merge di branch e non aggiorna automaticamente il software.**
 - Verifica l'uso delle risorse nella console Oracle: la gratuità dipende da forma, storage, traffico e altre risorse.
+
+
+---
+## REMURA v1.7 · Aggiornamenti VPS automatici e privati
+
+Questa opzione richiede un'attivazione **una sola volta**, dopo aver installato v1.7 da un nuovo checkout GitHub del ramo main. Il solo installer non abilita il timer.
+
+Nel checkout appena scaricato esegui:
+
+```bash
+sudo bash deploy/oracle/enable-autoupdate.sh
+```
+
+Il sistema controlla Github a intervalli di 10 minuti e usa soltanto commit verificati da **entrambi** i workflow GitHub Actions dopo un **push su main**. Download fissato al commit SHA, file verificati e controllo di salute della VPS dopo il riavvio. Se il nuovo server non risponde viene ripristinato il codice precedente e il commit viene bloccato.
+
+Vengono esclusi dalla sincronizzazione: `/opt/remura/private`, virtualenv, import locali, `data/prices`, file `.env`, chiavi e token. Il backup automatico conserva la versione precedente **del codice**, non è un backup del database e non garantisce il rollback di migrazioni dati. Migrazioni e modifiche alle credenziali richiedono una procedura manuale.
+
+Verifica dal server:
+
+```bash
+systemctl list-timers remura-autoupdate.timer --no-pager
+curl -fsS http://127.0.0.1:8765/private-api/autoupdate
+```
+
+Disattiva quando vuoi:
+
+```bash
+sudo systemctl disable --now remura-autoupdate.timer
+```
+
+Non apre nuove porte; REMURA resta in ascolto su 127.0.0.1 via Tailscale Serve. Non introduce credenziali GitHub o servizi a pagamento.
