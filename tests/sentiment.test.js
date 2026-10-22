@@ -56,10 +56,10 @@ test("all 35 market pages use only Myfxbook and Capital display code; no provide
  const js=fs.readFileSync("sources.js","utf8");
  const retail=fs.readFileSync("retail.js","utf8");
  const css=fs.readFileSync("sources.css","utf8");
- for(const asset of ["sentiment-core.js?v=14","sources.js?v=16","sources.css?v=15","retail.js?v=14"])
+ for(const asset of ["sentiment-core.js?v=14","sources.js?v=17","sources.css?v=15","retail.js?v=14"])
   assert.ok(html.includes(asset),asset);
  assert.ok(html.indexOf("retail.js?v=14")<html.indexOf("sentiment-core.js?v=14"));
- assert.ok(html.indexOf("sentiment-core.js?v=14")<html.indexOf("sources.js?v=16"));
+ assert.ok(html.indexOf("sentiment-core.js?v=14")<html.indexOf("sources.js?v=17"));
  assert.ok(retail.includes("./data/myfxbook/"),"public Myfxbook archive path must be used as fallback");
  assert.ok(retail.includes("./private-api/retail/"),"private reader retained");
  assert.ok(js.includes("/private-api/capital/latest.json"));
