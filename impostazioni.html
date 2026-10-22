@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#09141d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>REMURA · Impostazioni</title>
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="stylesheet" href="./nav.css?v=10">
+<style>
+:root{color-scheme:dark;--bg:#07121a;--ink:#eaf7f2;--muted:#acc7ca;--mint:#76ebc4;--line:#325a62}
+*{box-sizing:border-box}body{background:var(--bg);color:var(--ink);font:14px/1.55 system-ui,-apple-system,sans-serif;margin:0}
+main{max-width:850px;padding:25px 17px 100px;margin:0 auto}.top{padding:0 0 0 58px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{margin:26px 0 8px;font-size:clamp(30px,6vw,41px);letter-spacing:-.04em}h2{font-size:21px;margin:0 0 8px;letter-spacing:-.025em}h3{font-size:15px}
+p{margin:6px 0 13px;color:var(--muted);line-height:1.7}
+a{color:var(--mint)}.back{text-decoration:none;background:#153941;border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-weight:700}
+.panel{background:linear-gradient(155deg,#122f38,#0c1d27);padding:19px;border:1px solid var(--line);border-radius:16px;margin:16px 0}
+.kicker{color:var(--mint);font-size:11px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;margin-bottom:8px}
+.status{background:#18343b;padding:12px;border-radius:10px;color:#d6ede5;line-height:1.65;border:1px solid #3d6463}
+.status[data-status=ok]{border-color:#499478;background:#183b33}.status[data-status=error]{border-color:#9d6c4e;background:#3a2b25}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin:13px 0}.btn{background:#235246;border:1px solid #68b397;border-radius:10px;color:#eafff6;padding:10px 14px;font:750 13px/1.4 inherit;cursor:pointer}
+.btn.secondary{background:#193640;color:#dfeded;border-color:#52727e}.btn[hidden]{display:none}.btn:disabled{opacity:.55}
+.note{font-size:11px;color:#a7c2c5}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{display:block;color:#bcd7d7;font-size:12px;font-weight:700;margin-top:13px;margin-bottom:6px}
+select,input[type=file]{width:100%;max-width:100%;border:1px solid #43646c;color:#edfcf7;border-radius:9px;padding:10px;background:#17343b;font:inherit}
+details{margin-top:12px;border:1px solid #395960;border-radius:12px;padding:12px}
+summary{cursor:pointer;color:#adf3d7;font-weight:750}
+@media(max-width:650px){.row{grid-template-columns:1fr}main{padding-left:13px;padding-right:13px}.panel{padding:15px}}
+</style>
+</head>
+<body>
+<main>
+<div class="top"><strong style="font-size:19px;letter-spacing:.12em;color:#76ebc4">REMURA</strong><a class="back" href="./index.html">← Home</a></div>
+<h1>Impostazioni</h1>
+<p>Qui gestisci i collegamenti ai dati e gli import manuali. I file privati e le credenziali non vengono pubblicati sul repository REMURA.</p>
+<section class="panel" aria-labelledby="google-title">
+<div class="kicker">Collegamenti privati</div>
+<h2 id="google-title">Capital.com via Google e Firestore</h2>
+<p>Il collegamento Google autorizza solo la lettura del tuo feed aggregato in Firestore. Non concede accesso al conto Capital.com e non richiede di scrivere password o chiavi nell'app.</p>
+<div class="status" id="google-status" role="status">Verifico la connessione…</div>
+<div class="actions">
+<button class="btn" id="google-connect" type="button" hidden>Collega Google</button>
+<button class="btn secondary" id="google-disconnect" type="button" hidden>Scollega Google</button>
+<button class="btn secondary" id="google-check" type="button">Verifica collegamento</button>
+</div>
+<p class="note" id="google-detail">Se sei già entrato con Google, REMURA tenterà di recuperare automaticamente la sessione.</p>
+</section>
+<section class="panel">
+<div class="kicker">Feed della VPS</div>
+<h2>Stato delle fonti</h2>
+<div class="status" id="private-status" role="status">Controllo la sorgente privata…</div>
+<p class="note">Il feed Myfxbook e quello Capital.com della VPS sono separati dall'accesso Firestore. In caso di fonte privata assente, REMURA può usare il collegamento Google.</p>
+</section>
+<section class="panel">
+<div class="kicker">Alternativa senza collegamento</div>
+<h2>Importa JSON privati</h2>
+<p>Servono solo se il feed automatico non funziona. Il file viene controllato e conservato esclusivamente sul dispositivo corrente.</p>
+<div class="row"><div>
+<label for="upload-latest">Snapshot Capital.com (latest.json)</label>
+<input type="file" id="upload-latest" accept=".json,application/json">
+</div><div>
+<label for="upload-symbol">Mercato per lo storico</label><select id="upload-symbol" aria-label="Seleziona mercato"></select>
+<label for="upload-history">Storico di questo mercato (facoltativo)</label>
+<input type="file" id="upload-history" accept=".json,application/json">
+</div></div>
+<div class="status" id="import-status" role="status">Nessun file importato in questa sessione.</div>
+<div class="actions"><button class="btn secondary" id="clear-local" type="button">Cancella solo gli import locali</button></div>
+<p class="note">Puoi trovare gli archivi nel tuo <a href="https://github.com/mirkoworz/remura-collector" target="_blank" rel="noopener noreferrer">repository privato di raccolta</a>. Le credenziali non devono mai essere caricate qui.</p>
+</section>
+<section class="panel">
+<div class="kicker">Radar</div><h2>Radar Squali · Squalincome</h2>
+<p>Scanner dei cambiamenti COT settimanali. Le variazioni retail Myfxbook/Capital.com si leggono nelle schede dei mercati: non vengono attribuite agli istituzionali.</p>
+<div class="actions"><a class="back" href="./mercati.html#institutional-scanner">Apri Radar Squali →</a></div>
+</section>
+</main>
+<script src="./nav.js?v=10"></script>
+<script src="./sentiment-core.js?v=14"></script>
+<script src="./capital-cloud-config.js?v=2"></script>
+<script src="./capital-cloud.js?v=2"></script>
+<script src="./impostazioni.js?v=1"></script>
+</body>
+</html>
