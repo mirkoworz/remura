@@ -112,7 +112,7 @@ class PrivateStorageTests(unittest.TestCase):
         # service worker precache can only work for allowlisted static files.
         import re
         sw=(ROOT/"sw.js").read_text(encoding="utf-8")
-        match=re.search(r"const STATIC=(\\[[^\\n]*?\\]);",sw)
+        match=re.search(r"const STATIC=(\[[^\n]*?\]);",sw)
         self.assertIsNotNone(match)
         for filename in json.loads(match.group(1)):
             with self.subTest(asset=filename):
