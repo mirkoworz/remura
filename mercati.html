@@ -24,11 +24,11 @@
 .scan-reason{font-size:12px;color:#b8d5d8}.scan-foot{font-size:10px;color:var(--muted)}.scan-empty{grid-column:1/-1;color:var(--muted);font-size:12px;padding:9px}
 @media(max-width:700px){.scan-results{grid-template-columns:1fr}.scan-header h2{font-size:23px}}
 </style>
-<link rel="stylesheet" href="./nav.css?v=8">
+<link rel="stylesheet" href="./nav.css?v=9">
 </head>
 <body>
 <div class="shell">
-<header class="top"><div class="logo">REMURA <small>RADAR MULTI-ASSET · v0.8</small></div><div class="top-actions"><a class="back" href="./index.html">← Home</a><span class="status" id="global-status">Connessione CFTC…</span><button class="refresh" type="button" id="refresh">↻</button></div></header>
+<header class="top"><div class="logo">REMURA <small>RADAR MULTI-ASSET · v1.4</small></div><div class="top-actions"><a class="back" href="./index.html">← Home</a><span class="status" id="global-status">Connessione CFTC…</span><button class="refresh" type="button" id="refresh">↻</button></div></header>
 <h1>Segui i grandi.<br><span>Su tutti i mercati.</span></h1>
 <p class="intro">Un unico scanner di posizionamento per le principali coppie Forex, oro, argento e indici USA. Mostriamo dati CFTC settimanali: <b>nessun dato inventato</b> quando la fonte non risponde.</p>
 <div class="alert" id="global-notice">Caricamento diretto dei report pubblici CFTC. Il COT è un'istantanea del martedì pubblicata con ritardo, non un flusso di ordini in tempo reale.</div>
@@ -277,5 +277,5 @@ document.querySelectorAll('[data-scan]').forEach(btn=>btn.addEventListener('clic
 $('refresh').addEventListener('click',refresh);
 updateList();detail();renderScanner();refresh();
 </script>
-<script src="./nav.js?v=8"></script>
+<script src="./nav.js?v=9"></script>
 </body></html>
