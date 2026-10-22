@@ -42,6 +42,7 @@ SAFE_ASSETS={
     "manifest.webmanifest","icon.svg",
 }
 STATUS_PATH="/private-api/health"
+UPDATE_STATUS_PATH="/private-api/autoupdate"
 RETAIL_LATEST="/private-api/retail/latest.json"
 IG_LATEST="/private-api/ig/latest.json"
 CAPITAL_LATEST="/private-api/capital/latest.json"
@@ -49,6 +50,18 @@ CAPITAL_HISTORY_RE=re.compile(r"^/private-api/capital/history/([A-Z0-9]{3,8})[.]
 RETAIL_HISTORY_RE=re.compile(r"^/private-api/retail/history/([A-Z0-9]{3,8})[.]json$")
 PRICE_RE=re.compile(r"^/private-api/prices/([A-Z0-9]{3,8})$")
 
+
+def safe_update_status(db_path):
+    """Expose only public updater state, never private credentials."""
+    file=Path(db_path).resolve().parent/"autoupdate-state.json"
+    if not file.is_file() or file.stat().st_size>8192:
+        return {"enabled":False,"state":"not_configured"}
+    try:data=json.loads(file.read_text("utf-8"))
+    except (OSError,ValueError):return {"enabled":False,"state":"unavailable"}
+    if not isinstance(data,dict):return {"enabled":False,"state":"unavailable"}
+    keys=("enabled","state","installedSha","targetSha","failedSha","lastCheck","lastSuccess","message")
+    return {k:data[k] for k in keys if k in data and
+            (isinstance(data[k],bool) if k=="enabled" else isinstance(data[k],str))}
 
 def source_configured(env=None,db_path=None):
     env=os.environ if env is None else env
@@ -236,6 +249,9 @@ def http_handler(db_path):
 
         def do_GET(self):
             path=urlsplit(self.path).path
+            if path==UPDATE_STATUS_PATH:
+                self.response(200,safe_update_status(db_path))
+                return
             if path==CAPITAL_LATEST or CAPITAL_HISTORY_RE.fullmatch(path):
                 data=capital_document(db_path,path)
                 if data is None:self.response(503,{"error":"capital_not_collected"})
