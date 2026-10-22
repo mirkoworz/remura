@@ -23,6 +23,12 @@
   window.REMURA_MARKETS={fxCodes:FX_CODES,fxPairs:FX_PAIRS,other:OTHER,groups,symbols:[...FX_PAIRS,...Object.keys(OTHER)],detailUrl,categoryUrl};
   function init(){
     if(document.getElementById("rm-menu-trigger"))return;
+    // Visible on every REMURA page, including the installed iPhone web app.
+    const release=document.createElement("div");
+    release.id="rm-release";
+    release.textContent="REMURA · Aggiornamento v1.4 · 22/10/2026 ore 12:01 (Italia)";
+    document.body.prepend(release);
+
     const page=location.pathname.split("/").pop()||"index.html";
     const q=new URLSearchParams(location.search);
     const activeSymbol=(q.get("symbol")||"").toUpperCase();
