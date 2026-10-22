@@ -107,6 +107,17 @@ class PrivateStorageTests(unittest.TestCase):
                 self.assertIsNotNone(server.resolve_asset("/"+filename),
                                      "Google login/settings must be served by private Oracle app")
 
+    def test_every_precached_page_and_script_is_servable(self):
+        # Catch regressions where Firebase login disappears after Oracle deploy:
+        # service worker precache can only work for allowlisted static files.
+        import re
+        sw=(ROOT/"sw.js").read_text(encoding="utf-8")
+        match=re.search(r"const STATIC=(\\[[^\\n]*?\\]);",sw)
+        self.assertIsNotNone(match)
+        for filename in json.loads(match.group(1)):
+            with self.subTest(asset=filename):
+                self.assertIsNotNone(server.resolve_asset("/"+filename.removeprefix("./")))
+
     def test_scheduler_aligns_to_utc_quarter_plus_delay(self):
         value=server.seconds_to_next_quarter(dt.datetime(2026,10,17,9,14,10,tzinfo=UTC))
         self.assertEqual(value,140)
