@@ -36,7 +36,8 @@ SERVER_HOST="127.0.0.1"
 SAFE_ASSETS={
     "index.html","asset.html","catalogo.html","forex.html","fonti.html","mercati.html",
     "nav.js","nav.css","retail.js","retail.css","insights.js","insights.css","insights-core.js","cot-indices-core.js",
-    "sentiment-core.js","sources.js","sources.css","price.js","price.css","price-core.js","sw.js",
+    "sentiment-core.js","sentiment-trend-core.js","sentiment-trend.js","sentiment-trend.css",
+    "sources.js","sources.css","price.js","price.css","price-core.js","sw.js",
     "manifest.webmanifest","icon.svg",
 }
 STATUS_PATH="/private-api/health"
