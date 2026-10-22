@@ -45,3 +45,18 @@ test("Public REMURA uses authenticated Firestore only, with local fallback",()=>
   for(const file of [js,ui,config])
    assert.ok(!file.includes(secret),"No private broker or service credentials allowed in browser");
 });
+
+test("REMURA Settings exposes Capital connection and navigation",()=>{
+ const html=fs.readFileSync("impostazioni.html","utf8");
+ const nav=fs.readFileSync("nav.js","utf8");
+ const settings=fs.readFileSync("impostazioni.js","utf8");
+ assert.match(html,/id="google-connect"/);
+ assert.match(html,/id="google-disconnect"/);
+ assert.match(settings,/cloud\.signIn\(\)/);
+ assert.match(settings,/cloud\.latest\(\)/);
+ assert.match(nav,/Radar Squali · Squalincome/);
+ assert.match(nav,/impostazioni\.html/);
+ const sw=fs.readFileSync("sw.js","utf8");
+ assert.match(sw,/impostazioni\.html/);
+ assert.match(sw,/impostazioni\.js/);
+});
