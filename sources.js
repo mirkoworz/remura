@@ -312,6 +312,7 @@ async function loadCapital(){
    (cloudError||"Accedi con Google per vedere automaticamente il sentiment. In alternativa importa il file JSON."):
    "Nessun file Capital.com sul dispositivo. Scarica latest.json da GitHub privato e caricalo qui sotto.";
   allHistory=[];drawHistory();updateComparison();
+  window.dispatchEvent(new CustomEvent("remura:capital",{detail:{symbol,current:null,history:[],status:"missing"}}));
   return;
  }
  const row=doc.symbols[symbol];
@@ -321,6 +322,7 @@ async function loadCapital(){
   state("Mercato non ancora disponibile");
   observed.textContent="Questo file non contiene un campione valido per "+symbol+". Gli altri mercati importati rimangono disponibili.";
   allHistory=[];drawHistory();updateComparison();
+  window.dispatchEvent(new CustomEvent("remura:capital",{detail:{symbol,current:null,history:[],status:"invalid"}}));
   return;
  }
  const recent=core.fresh(row,doc.updatedAt);
@@ -363,6 +365,7 @@ async function loadCapital(){
  }
  drawHistory();
  updateComparison();
+ window.dispatchEvent(new CustomEvent("remura:capital",{detail:{symbol,current:row,history:allHistory,status:"ok",fresh:recent,source:via}}));
 }
 updateComparison();
 loadCapital();
