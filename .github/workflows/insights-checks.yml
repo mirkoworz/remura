@@ -10,6 +10,11 @@ on:
       - 'insights.css'
       - 'asset.html'
       - 'retail.js'
+      - 'forex.html'
+      - 'nav.js'
+      - 'impostazioni.js'
+      - 'impostazioni.html'
+      - 'feed-health-core.js'
       - 'tests/**'
       - '.github/workflows/insights-checks.yml'
   workflow_dispatch:
@@ -32,8 +37,10 @@ jobs:
           node --check insights.js
           node --check retail.js
           node --check nav.js
+          node --check impostazioni.js
+          node --check feed-health-core.js
       - name: Verify COT analysis rules
-        run: node --test tests/insights.test.js tests/retail-chart.test.js tests/cot-indices.test.js tests/cot-scanner.test.js
+        run: node --test tests/insights.test.js tests/retail-chart.test.js tests/cot-indices.test.js tests/cot-scanner.test.js tests/feed-health.test.js tests/release-consistency.test.js
       - name: Verify wiring on all market detail pages
         run: |
           node - <<'NODE'

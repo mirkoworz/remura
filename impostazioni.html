@@ -8,7 +8,7 @@
 <title>REMURA · Impostazioni</title>
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="stylesheet" href="./nav.css?v=10">
+<link rel="stylesheet" href="./nav.css?v=16">
 <style>
 :root{color-scheme:dark;--bg:#07121a;--ink:#eaf7f2;--muted:#acc7ca;--mint:#76ebc4;--line:#325a62}
 *{box-sizing:border-box}body{background:var(--bg);color:var(--ink);font:14px/1.55 system-ui,-apple-system,sans-serif;margin:0}
@@ -51,6 +51,10 @@ summary{cursor:pointer;color:#adf3d7;font-weight:750}
 <div class="kicker">Feed della VPS</div>
 <h2>Stato delle fonti</h2>
 <div class="status" id="private-status" role="status">Controllo la sorgente privata…</div>
+<h3>Myfxbook pubblico su GitHub</h3>
+<div class="status" id="public-status" role="status">Controllo la data della raccolta…</div>
+<div class="actions"><button class="btn secondary" id="check-feeds" type="button">Ricontrolla tutte le fonti</button></div>
+<p class="note">Una fonte collegata non significa che sia aggiornata. Dopo 3 ore senza nuove rilevazioni retail appare DATATO; il COT segue frequenza settimanale.</p>
 <p class="note">Il feed Myfxbook e quello Capital.com della VPS sono separati dall'accesso Firestore. In caso di fonte privata assente, REMURA può usare il collegamento Google.</p>
 </section>
 <section class="panel">
@@ -75,10 +79,11 @@ summary{cursor:pointer;color:#adf3d7;font-weight:750}
 <div class="actions"><a class="back" href="./mercati.html#institutional-scanner">Apri Radar Squali →</a></div>
 </section>
 </main>
-<script src="./nav.js?v=10"></script>
+<script src="./nav.js?v=16"></script>
 <script src="./sentiment-core.js?v=14"></script>
 <script src="./capital-cloud-config.js?v=2"></script>
 <script src="./capital-cloud.js?v=2"></script>
-<script src="./impostazioni.js?v=1"></script>
+<script src="./feed-health-core.js?v=16"></script>
+<script src="./impostazioni.js?v=16"></script>
 </body>
 </html>
