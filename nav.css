@@ -42,3 +42,7 @@
 .rm-has-nav main>.topbar{padding-left:53px}
 @media(max-width:720px){.rm-has-nav main>.topbar{padding-left:52px;flex-wrap:wrap;gap:8px}.rm-has-nav main>.topbar .actions{margin-left:auto}#rm-menu{width:min(390px,92vw)}}
 @media(prefers-reduced-motion:reduce){#rm-menu,.rm-caret{transition:none}}
+
+/* Update marker stays above every page, clear of the mobile menu button. */
+#rm-release{box-sizing:border-box;position:relative;z-index:101;display:block;width:100%;min-height:23px;padding:4px 10px 4px 70px;background:#102c35;border-bottom:1px solid #39655d;color:#b9f8df;text-align:center;font:700 10px/1.4 system-ui,-apple-system,sans-serif;letter-spacing:.02em}
+@media(max-width:560px){#rm-release{font-size:9px;line-height:1.5;padding-left:65px;padding-right:5px}}
