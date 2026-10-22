@@ -100,7 +100,7 @@ function writeStored(key,obj){
  catch(_){return false;}
 }
 const importPanel=el("details","ms-import");
-const importSummary=el("summary","","Accesso privato Google e importazione file · Tocca per aprire");
+const importSummary=el("summary","","Collegamento Capital.com · Gestisci da Impostazioni");
 importPanel.append(importSummary);
 importPanel.append(
  el("h3","","Collegamento ai dati Capital.com privati"),
@@ -108,6 +108,9 @@ importPanel.append(
   "Collega il tuo account Google autorizzato: REMURA leggerà automaticamente i dati Capital.com privati da Firestore. In alternativa puoi ancora importare i JSON manualmente.":
   "La pagina pubblica non può leggere GitHub privato. Per ora importa latest.json; il collegamento automatico con accesso Google sarà disponibile dopo la configurazione Firestore.")
 );
+const settingsLink=el("a","ms-link","⚙ Apri Impostazioni · collega Google");
+settingsLink.href="./impostazioni.html";
+importPanel.append(settingsLink);
 const githubLink=el("a","ms-link","Apri latest.json privato su GitHub ↗");
 githubLink.href="https://github.com/mirkoworz/remura-collector/blob/main/private/capital/latest.json";
 githubLink.target="_blank";githubLink.rel="noopener noreferrer";
