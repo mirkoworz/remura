@@ -8,7 +8,7 @@
 <title>REMURA · Impostazioni</title>
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="stylesheet" href="./nav.css?v=16">
+<link rel="stylesheet" href="./nav.css?v=17">
 <style>
 :root{color-scheme:dark;--bg:#07121a;--ink:#eaf7f2;--muted:#acc7ca;--mint:#76ebc4;--line:#325a62}
 *{box-sizing:border-box}body{background:var(--bg);color:var(--ink);font:14px/1.55 system-ui,-apple-system,sans-serif;margin:0}
@@ -58,6 +58,15 @@ summary{cursor:pointer;color:#adf3d7;font-weight:750}
 <p class="note">Il feed Myfxbook e quello Capital.com della VPS sono separati dall'accesso Firestore. In caso di fonte privata assente, REMURA può usare il collegamento Google.</p>
 </section>
 <section class="panel">
+<div class="kicker">Manutenzione Oracle</div>
+<h2>Aggiornamenti automatici</h2>
+<p>La VPS controlla ogni 10 minuti i nuovi commit di GitHub. Installa solo aggiornamenti con entrambi i test verdi; in caso di problema prova a ripristinare il codice precedente, senza sincronizzare dati e credenziali privati.</p>
+<div class="status" id="autoupdate-status" role="status">Controllo stato aggiornamenti…</div>
+<p class="note" id="autoupdate-detail">Disponibile solo sulla VPS Tailscale, dopo attivazione manuale una tantum.</p>
+<div class="actions"><button id="check-autoupdate" class="btn secondary" type="button">Aggiorna stato</button></div>
+<p class="note">La schermata non può installare software o modificare password e token.</p>
+</section>
+<section class="panel">
 <div class="kicker">Alternativa senza collegamento</div>
 <h2>Importa JSON privati</h2>
 <p>Servono solo se il feed automatico non funziona. Il file viene controllato e conservato esclusivamente sul dispositivo corrente.</p>
@@ -79,11 +88,11 @@ summary{cursor:pointer;color:#adf3d7;font-weight:750}
 <div class="actions"><a class="back" href="./mercati.html#institutional-scanner">Apri Radar Squali →</a></div>
 </section>
 </main>
-<script src="./nav.js?v=16"></script>
+<script src="./nav.js?v=17"></script>
 <script src="./sentiment-core.js?v=14"></script>
 <script src="./capital-cloud-config.js?v=2"></script>
 <script src="./capital-cloud.js?v=2"></script>
 <script src="./feed-health-core.js?v=16"></script>
-<script src="./impostazioni.js?v=16"></script>
+<script src="./impostazioni.js?v=17"></script>
 </body>
 </html>
