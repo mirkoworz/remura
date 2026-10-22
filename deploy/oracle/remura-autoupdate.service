@@ -1,0 +1,15 @@
+[Unit]
+Description=REMURA verified update checker
+Wants=network-online.target
+After=network-online.target
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/bin/python3 /opt/remura/deploy/oracle/autoupdate.py
+TimeoutStartSec=240
+UMask=0077
+NoNewPrivileges=yes
+ProtectHome=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/opt/remura /var/lib/remura-autoupdate

@@ -1,0 +1,10 @@
+[Unit]
+Description=REMURA verified updates each 10 minutes
+[Timer]
+OnBootSec=2min
+OnCalendar=*:0/10
+Persistent=true
+AccuracySec=1min
+Unit=remura-autoupdate.service
+[Install]
+WantedBy=timers.target
