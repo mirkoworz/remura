@@ -5,7 +5,7 @@
 .rm-momentum-header p{font-size:12px;color:#b6cdd0;line-height:1.65;max-width:760px;margin:0}
 .rm-momentum-badge{font-size:11px;color:#c4fae0;border:1px solid #448a76;background:#193d38;padding:7px 9px;border-radius:9px;white-space:normal}
 .rm-momentum-controls{display:flex;gap:6px;flex-wrap:wrap;margin:17px 0 12px}
-.rm-momentum-controls button{border:1px solid #3a5e65;background:#15313a;border-radius:9px;padding:9px 12px;color:#c1d7d9;font:700 12px inherit;cursor:pointer}
+.rm-momentum-controls button{border:1px solid #3a5e65;background:#15313a;border-radius:9px;padding:9px 12px;color:#c1d7d9;font-weight:700;font-size:12px;font-family:inherit;cursor:pointer}
 .rm-momentum-controls button[aria-pressed=true]{background:#265747;border-color:#74dcaf;color:#e3ffef}
 .rm-momentum-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .rm-momentum-card{border:1px solid #315960;background:#0b2630;border-radius:13px;padding:14px;min-width:0}
