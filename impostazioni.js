@@ -95,9 +95,9 @@ async function checkAutoupdate(){
    $("autoupdate-detail").textContent="Per attivare serve un ultimo comando Termius dopo aver installato la v1.7.";
    return;
   }
-  const names={configured:"Configurato · prima verifica in attesa",up_to_date:"Versione aggiornata",updated:"Ultimo aggiornamento riuscito",waiting_ci:"In attesa dei test GitHub",blocked:"Questo commit è bloccato",error:"Verifica o installazione fallita"};
+  const names={configured:"Configurato · prima verifica in attesa",up_to_date:"Versione aggiornata",updated:"Ultimo aggiornamento riuscito",waiting_ci:"In attesa dei test GitHub",data_only:"Solo dati aggiornati · nessun riavvio",manual_required:"Serve approvazione manuale da Termius",blocked:"Questo commit è bloccato",error:"Verifica o installazione fallita"};
   const state=String(data.state||"unknown");
-  status("autoupdate-status",names[state]||"Stato: "+state,["blocked","error"].includes(state)?"error":["up_to_date","updated"].includes(state)?"ok":"");
+  status("autoupdate-status",names[state]||"Stato: "+state,["blocked","error","manual_required"].includes(state)?"error":["up_to_date","updated"].includes(state)?"ok":"");
   const sha=s=>typeof s==="string"&&/^[a-f0-9]{40}$/.test(s)?s.slice(0,8):"—";
   const date=s=>s&&Number.isFinite(Date.parse(s))?new Intl.DateTimeFormat("it-IT",{timeZone:"Europe/Rome",dateStyle:"short",timeStyle:"short"}).format(new Date(s)):"in attesa";
   $("autoupdate-detail").textContent="Commit installato: "+sha(data.installedSha)+" · Ultimo controllo: "+date(data.lastCheck)+". "+String(data.message||"");

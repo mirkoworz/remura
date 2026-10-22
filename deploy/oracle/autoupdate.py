@@ -7,9 +7,22 @@ STATE=APP/"private"/"autoupdate-state.json"
 WORK=Path("/var/lib/remura-autoupdate")
 API="https://api.github.com/repos/mirkoworz/remura"
 SHA=re.compile(r"^[a-f0-9]{40}$")
-FIELDS=("enabled","state","installedSha","targetSha","failedSha","lastCheck","lastSuccess","message")
+FIELDS=("enabled","state","installedSha","targetSha","failedSha","skippedSha","manualSha","lastCheck","lastSuccess","message")
 EXCLUDES=(".git/",".venv/","private/","local/","data/prices/",".env",".env.*","*.pem","*.key","*.apikey","__pycache__/")
 WORKFLOWS=("insights-checks.yml","price-checks.yml")
+MANUAL_ONLY=("deploy/oracle/","scripts/",".github/workflows/")
+def non_code_only(paths):
+ return bool(paths) and all(p.startswith("data/") or p.endswith(".md") for p in paths)
+def requires_manual(paths):
+ return any(p.startswith(MANUAL_ONLY) for p in paths)
+def changed_paths(old,new,fetch=None):
+ if fetch is None:fetch=json_api
+ if not SHA.fullmatch(old) or not SHA.fullmatch(new):raise ValueError("SHA invalid")
+ result=fetch(API+"/compare/"+old+"..."+new)
+ files=result.get("files")
+ if result.get("status")!="ahead" or not isinstance(files,list) or len(files)>=300 or not files:
+  raise ValueError("History not safely comparable")
+ return [f["filename"] for f in files if isinstance(f.get("filename"),str)]
 def now():return datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds")
 def load_state(path=STATE):
  try:
@@ -132,10 +145,19 @@ def check_once():
    sha=remote_sha();state["targetSha"]=sha
    if sha==state.get("installedSha"):state.update(state="up_to_date",message="Codice già aggiornato")
    elif sha==state.get("failedSha"):state.update(state="blocked",message="Questo commit è stato bloccato dopo un errore")
-   elif not ci_passed(sha) or remote_sha()!=sha:state.update(state="waiting_ci",message="Attendo test GitHub verdi su questo commit main")
+   elif sha==state.get("skippedSha"):state.update(state="data_only",message="Solo archivi dati o documentazione: nessun riavvio")
+   elif sha==state.get("manualSha"):state.update(state="manual_required",message="Modifica delicata: aggiornamento da Termius richiesto")
    else:
-    applying=True;install(sha)
-    state.update(state="updated",installedSha=sha,failedSha="",lastSuccess=now(),message="Aggiornamento verificato e installato")
+    files=changed_paths(state.get("installedSha",""),sha)
+    if non_code_only(files):
+     state.update(state="data_only",skippedSha=sha,message="Solo dati o documentazione: codice invariato")
+    elif requires_manual(files):
+     state.update(state="manual_required",manualSha=sha,message="Scripts/server/installer: serve aggiornamento manuale")
+    elif not ci_passed(sha) or remote_sha()!=sha:
+     state.update(state="waiting_ci",message="Attendo entrambi i test verdi per il commit main")
+    else:
+     applying=True;install(sha)
+     state.update(state="updated",installedSha=sha,failedSha="",skippedSha="",manualSha="",lastSuccess=now(),message="Aggiornamento verificato e installato")
   except Exception as e:
    if applying:state["failedSha"]=state.get("targetSha","")
    state.update(state="error",message="Verifica o aggiornamento fallito; controlla log VPS")
@@ -148,5 +170,5 @@ if __name__=="__main__":
  if opts.init_sha:
   if os.geteuid()!=0 or not SHA.fullmatch(opts.init_sha):p.error("Serve root e SHA completo")
   save_state({"enabled":True,"state":"configured","installedSha":opts.init_sha,"targetSha":opts.init_sha,
-              "failedSha":"","lastCheck":"","lastSuccess":now(),"message":"Configurato, attendo prima verifica"})
+              "failedSha":"","skippedSha":"","manualSha":"","lastCheck":"","lastSuccess":now(),"message":"Configurato, attendo prima verifica"})
  else:sys.exit(check_once())

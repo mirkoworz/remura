@@ -10,6 +10,18 @@ class Tests(unittest.TestCase):
   self.assertFalse(u.ci_passed("invalid",good))
   self.assertFalse(u.ci_passed(sha,lambda uri:{"workflow_runs":[]}))
   self.assertFalse(u.ci_passed(sha,lambda uri:{"workflow_runs":[{"head_sha":"b"*40,"head_branch":"main","event":"push","status":"completed","conclusion":"success"}]}))
+ def test_skip_data_only_and_require_manual_for_sensitive_code(self):
+  self.assertTrue(u.non_code_only(["data/myfxbook/latest.json"]))
+  self.assertTrue(u.non_code_only(["README.md","data/myfxbook/EURUSD.json"]))
+  self.assertFalse(u.non_code_only(["nav.js","data/myfxbook/latest.json"]))
+  self.assertTrue(u.requires_manual(["scripts/private_server.py"]))
+  self.assertTrue(u.requires_manual(["deploy/oracle/autoupdate.py"]))
+  self.assertTrue(u.requires_manual([".github/workflows/price-checks.yml"]))
+  self.assertFalse(u.requires_manual(["asset.html","nav.js"]))
+  old="a"*40;new="b"*40
+  data={"status":"ahead","files":[{"filename":"data/myfxbook/latest.json"}]}
+  self.assertEqual(u.changed_paths(old,new,lambda uri:data),["data/myfxbook/latest.json"])
+  self.assertRaises(ValueError,u.changed_paths,old,new,lambda uri:{"status":"diverged","files":[]})
  def test_archive_rejects_traversal_private_and_symlinks(self):
   for name in ("repo/../../etc/passwd","repo/private/credentials.json"):
    b=io.BytesIO()

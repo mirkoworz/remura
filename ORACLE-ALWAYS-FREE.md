@@ -125,3 +125,5 @@ sudo systemctl disable --now remura-autoupdate.timer
 ```
 
 Non apre nuove porte; REMURA resta in ascolto su 127.0.0.1 via Tailscale Serve. Non introduce credenziali GitHub o servizi a pagamento.
+
+Solo gli aggiornamenti di codice applicativo sono automatici. Le modifiche in `scripts/`, `deploy/oracle/` e `.github/workflows/` richiedono un'installazione manuale; i commit che contengono soltanto `data/` o documentazione vengono ignorati senza riavviare REMURA.

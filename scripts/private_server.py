@@ -59,7 +59,7 @@ def safe_update_status(db_path):
     try:data=json.loads(file.read_text("utf-8"))
     except (OSError,ValueError):return {"enabled":False,"state":"unavailable"}
     if not isinstance(data,dict):return {"enabled":False,"state":"unavailable"}
-    keys=("enabled","state","installedSha","targetSha","failedSha","lastCheck","lastSuccess","message")
+    keys=("enabled","state","installedSha","targetSha","failedSha","skippedSha","manualSha","lastCheck","lastSuccess","message")
     return {k:data[k] for k in keys if k in data and
             (isinstance(data[k],bool) if k=="enabled" else isinstance(data[k],str))}
 

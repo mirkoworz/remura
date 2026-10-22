@@ -2,6 +2,9 @@ name: REMURA insights checks
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "data/**"
+      - "**/*.md"
   pull_request:
     paths:
       - 'insights-core.js'
