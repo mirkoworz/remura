@@ -22,6 +22,14 @@ class Tests(unittest.TestCase):
   data={"status":"ahead","files":[{"filename":"data/myfxbook/latest.json"}]}
   self.assertEqual(u.changed_paths(old,new,lambda uri:data),["data/myfxbook/latest.json"])
   self.assertRaises(ValueError,u.changed_paths,old,new,lambda uri:{"status":"diverged","files":[]})
+ def test_safe_zip_extracts_minimal_verified_release(self):
+  b=io.BytesIO()
+  files=("scripts/private_server.py","nav.js","deploy/oracle/autoupdate.py","deploy/oracle/remura.service")
+  with zipfile.ZipFile(b,"w") as z:
+   for path in files:z.writestr("repo/"+path,"safe")
+  with tempfile.TemporaryDirectory() as folder:
+   u.safe_extract(b.getvalue(),pathlib.Path(folder))
+   for path in files:self.assertTrue((pathlib.Path(folder)/path).is_file())
  def test_archive_rejects_traversal_private_and_symlinks(self):
   for name in ("repo/../../etc/passwd","repo/private/credentials.json"):
    b=io.BytesIO()

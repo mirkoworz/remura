@@ -1,6 +1,6 @@
 # REMURA personale — installazione su Oracle Always Free
 
-Questa guida si riferisce **solo** al ramo `fix/private-multisource-v11` (proposta PR #3), costruito sopra la v1.0 privata (PR #2). **Non fare merge su `main` e non pubblicare su GitHub Pages:** il sito pubblico e la VM sono ambienti diversi.
+Guida aggiornata per **REMURA v1.7** sul ramo `main`. La web app privata gira sulla VPS Oracle via Tailscale; GitHub Pages e VPS hanno pubblicazioni distinte. Nessun collegamento da Internet alla porta privata.
 
 ## 1. Crea l'account Oracle e la macchina gratuita
 
@@ -32,7 +32,7 @@ ssh -i /percorso/chiave_privata ubuntu@INDIRIZZO_IP_DELLA_VM
 Esegui sulla VM (non su Cloud Shell locale):
 
 ```bash
-git clone --single-branch --branch fix/private-multisource-v11 https://github.com/mirkoworz/remura.git
+git clone --depth 1 --branch main https://github.com/mirkoworz/remura.git
 cd remura
 sudo bash deploy/oracle/install.sh
 sudo systemctl --no-pager status remura-private
