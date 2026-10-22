@@ -35,7 +35,7 @@
     @media(max-width:720px){.app{display:block}.sidebar{display:none}main{padding:21px 14px calc(99px + env(safe-area-inset-bottom));}.topbar{margin-bottom:25px}.intro{align-items:flex-start}.version{display:none}.actions{gap:7px}.status{padding:9px 10px;font-size:10px}.action-btn{padding:10px}.action-btn .action-text{display:none}.hero{padding:17px 15px}.hero-grid{grid-template-columns:1fr 1fr;gap:9px}.hero-block{padding:13px}.hero-block:last-child{grid-column:1/-1}.hero-block .value{font-size:27px}.hero-top{align-items:start}.pair-select{min-width:140px;font-size:17px}.asof{font-size:11px;max-width:125px}.chart,.ranking,.explain,.legs,.text-panel{padding:17px}.chart-wrap{min-height:195px}.rank-head,.rank-row{grid-template-columns:minmax(67px,1fr) 68px 68px 76px;gap:4px;padding-left:4px;padding-right:4px}.rank-head{font-size:9px}.rank-row{font-size:11px}.pill{font-size:9px;padding:5px 6px}.currency-grid{grid-template-columns:1fr}.source-grid{grid-template-columns:1fr}.alert{font-size:11px}.mobile-nav{position:fixed;z-index:10;bottom:0;left:0;right:0;display:flex;background:#0b1c26ee;backdrop-filter:blur(18px);border-top:1px solid #2b4750;padding:10px 10px calc(12px + env(safe-area-inset-bottom));justify-content:space-around}.mobile-nav .nav-btn{display:flex;flex-direction:column;gap:4px;font-size:10px;text-align:center;padding:8px 15px;border-radius:11px}.mobile-nav .nav-btn svg{height:19px;width:19px}.intro h1{font-size:32px}.panel-h{margin-bottom:14px}}
     @media(max-width:390px){main{padding-left:10px;padding-right:10px}.rank-head,.rank-row{grid-template-columns:minmax(64px,1fr) 59px 59px 74px}.panel-title{font-size:17px}.hero-block .value{font-size:23px}.status{max-width:165px}}
   </style>
-<link rel="stylesheet" href="./nav.css?v=10">
+<link rel="stylesheet" href="./nav.css?v=16">
 </head>
 <body>
   <div class="app">
@@ -47,9 +47,9 @@
     <main>
       <header class="topbar"><div class="bread"><a href="./index.html" style="color:#69edca;text-decoration:none">Home</a> <span style="color:#42606a">/</span> <b id="breadcrumb">Radar istituzionale</b></div><div class="actions"><span class="status loading" id="feed-status" aria-live="polite">Connessione CFTC...</span><button class="action-btn" id="refresh" type="button" title="Ricarica i dati CFTC"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2 6"/><path d="M20 4v7h-7"/></svg><span class="action-text">Aggiorna</span></button></div></header>
       <section id="screen-radar" class="screen active">
-        <div class="intro"><div><h1>Segui i grandi.<br><em>Leggi la corrente.</em></h1><p class="subtitle">Il posizionamento degli operatori istituzionali, tradotto in dati comparabili e confronti tra valute.</p></div><span class="version">VERSIONE 0.5 · FOREX COT</span></div>
+        <div class="intro"><div><h1>Segui i grandi.<br><em>Leggi la corrente.</em></h1><p class="subtitle">Il posizionamento degli operatori istituzionali, tradotto in dati comparabili e confronti tra valute.</p></div><span class="version">VERSIONE 1.6 · FOREX COT</span></div>
         <div class="multiasset-cta"><div><strong>NUOVO · REMURA MULTI-ASSET</strong><p>Forex, GOLD, SILVER e indici USA. Ora classifica movimenti, cambi net long/short e accelerazioni.</p></div><a href="./mercati.html?v=8">Apri radar completo →</a></div>
-        <div class="alert" id="notice" role="status"><span id="notice-text">Simulazione: dati di esempio inventati. Stiamo tentando il collegamento alla CFTC ufficiale.</span><button id="notice-action" type="button">Riprova</button></div>
+        <div class="alert" id="notice" role="status"><span id="notice-text">Caricamento della fonte ufficiale CFTC, senza dati simulati.</span><button id="notice-action" type="button">Riprova</button></div>
         <section class="panel hero" aria-label="Focus sulla coppia"><div class="hero-top"><div><div class="eyebrow">COPPIA IN OSSERVAZIONE</div><div class="pair-switch"><label class="sr-only" for="pair-select">Scegli una coppia</label><select id="pair-select" class="pair-select"></select></div></div><div class="asof">Posizioni rilevate al<strong id="asof-date">—</strong><span id="delay-note">COT settimanale · non live</span></div></div>
           <div class="hero-grid"><div class="hero-block"><div class="k">Asset Manager · spread relativo</div><div class="value mono" id="asset-value">—</div><div class="desc"><span class="delta" id="asset-delta">—</span> rispetto alla settimana prima</div></div><div class="hero-block"><div class="k">Leveraged Funds · spread relativo</div><div class="value mono" id="lev-value">—</div><div class="desc"><span class="delta" id="lev-delta">—</span> rispetto alla settimana prima</div></div><div class="hero-block"><div class="k">Lettura congiunta</div><div class="align-badge" id="alignment">—</div><div class="desc" id="alignment-desc">Analisi delle due categorie</div></div></div><p class="smallnote" id="pair-explanation">Le percentuali sono posizioni nette normalizzate sull'open interest, non probabilità di rialzo.</p><a id="pair-detail-link" class="action-btn" href="./asset.html?symbol=CADJPY&v=8" style="margin-top:12px;display:inline-flex;text-decoration:none">Apri scheda dedicata →</a></section>
         <div class="metrics"><section class="panel chart"><div class="panel-h"><div><div class="eyebrow">EVOLUZIONE DELLE POSIZIONI</div><h2 class="panel-title">Le tracce degli istituzionali</h2></div><div style="display:flex;align-items:center;gap:11px"><span class="tiny muted" id="history-length">Ultime settimane</span><button type="button" id="export-csv" class="action-btn" style="font-size:11px;padding:8px 10px" title="Esporta la serie COT selezionata in formato CSV">↓ CSV</button></div></div><div class="legend"><span><i class="swatch"></i>Asset Manager</span><span><i class="swatch blue"></i>Leveraged Funds</span></div><div id="chart" class="chart-wrap" role="img" aria-label="Grafico storico delle posizioni nette relative"></div><p class="chart-caption">Serie settimanale delle posizioni nette / open interest. Confronto sintetico per le coppie incrociate.</p></section>
@@ -57,21 +57,21 @@
         <div class="lower"><section class="panel ranking"><div class="panel-h"><div><div class="eyebrow">SCANNER</div><h2 class="panel-title">Radar delle coppie</h2></div><span class="tiny muted">Ordinate per variazione recente</span></div><div class="rank-head"><span>Coppia</span><span>Asset Mgr</span><span>Lev. Funds</span><span>Accordo</span></div><div id="rank-list"></div><p class="footnote">Tocca una coppia per aprire il focus. I valori sono differenze percentuali tra valute, non contratti di un future sul cross.</p></section>
           <section class="panel legs"><div class="eyebrow">DENTRO LA COPPIA</div><h2 class="panel-title">Le singole valute</h2><div id="leg-list"></div><p class="footnote">Il future CFTC di ciascuna valuta è espresso rispetto al dollaro. Per le coppie con USD, la lettura viene invertita quando USD è la valuta base.</p></section></div>
       </section>
-      <section id="screen-valute" class="screen"><div class="intro"><div><h1>Le valute <em>sotto osservazione.</em></h1><p class="subtitle">Posizionamento dei contratti futures principali contro USD, suddiviso per operatore.</p></div></div><div class="alert" id="notice-valute"><span id="notice-text-valute">Modalità dimostrativa.</span></div><div class="currency-grid" id="currency-grid"></div><p class="footnote">Asset Manager e Leveraged Funds sono categorie CFTC differenti. Net % = (contratti long − contratti short) / open interest × 100.</p></section>
+      <section id="screen-valute" class="screen"><div class="intro"><div><h1>Le valute <em>sotto osservazione.</em></h1><p class="subtitle">Posizionamento dei contratti futures principali contro USD, suddiviso per operatore.</p></div></div><div class="alert" id="notice-valute"><span id="notice-text-valute">Attendo dati CFTC ufficiali.</span></div><div class="currency-grid" id="currency-grid"></div><p class="footnote">Asset Manager e Leveraged Funds sono categorie CFTC differenti. Net % = (contratti long − contratti short) / open interest × 100.</p></section>
       <section id="screen-metodo" class="screen"><div class="intro"><div><h1>Numeri ufficiali.<br><em>Interpretazioni trasparenti.</em></h1><p class="subtitle">Tutto quello che Remura usa, come lo calcola e cosa non può sapere.</p></div></div>
-        <div class="source-grid"><div class="panel text-panel"><div class="eyebrow">FONTE PRIMARIA</div><h3>CFTC · Traders in Financial Futures</h3><p>Dataset governativo pubblico: <strong>TFF — Futures Only</strong>. Contratti finanziari, inclusi i future sulle principali valute. Mostriamo separatamente Asset Manager, Leveraged Funds e — nei dati di origine — Dealers.</p><p><a href="https://publicreporting.cftc.gov/Commitments-of-Traders/TFF-Futures-Only/gpe5-46if" target="_blank" rel="noopener noreferrer">Apri il dataset CFTC ↗</a></p><p><a href="https://www.cftc.gov/MarketReports/CommitmentsofTraders/ReleaseSchedule/index.htm" target="_blank" rel="noopener noreferrer">Calendario pubblicazioni ufficiale ↗</a></p></div><div class="panel text-panel"><div class="eyebrow">METODOLOGIA</div><h3>Come calcoliamo il confronto</h3><ul><li><strong>Posizione netta</strong> = contratti long − contratti short della categoria.</li><li><strong>Net % OI</strong> = posizione netta ÷ open interest × 100.</li><li><strong>Spread della coppia</strong> = Net % valuta base − Net % valuta quotata.</li><li><strong>Variazione settimanale</strong> = spread attuale − spread precedente, in punti percentuali.</li><li>Con USD, impostiamo a zero la gamba USD come riferimento matematico, <strong>non</strong> perché conosciamo la posizione dei fondi sul dollaro.</li></ul></div><div class="panel text-panel"><div class="eyebrow">COSA NON È</div><h3>Niente flussi in tempo reale</h3><p>Il COT fotografa le posizioni del martedì e normalmente esce il venerdì pomeriggio negli Stati Uniti. Una posizione netta positiva non implica che il mercato salirà, e un cambiamento non descrive tutte le operazioni della settimana.</p><p>Per i cross come CADJPY il valore è un <strong>indicatore euristico sintetico</strong> costruito da due futures separati, non un posizionamento COT ufficiale sul contratto CADJPY. Non va considerato un segnale di acquisto o vendita.</p></div><div class="panel text-panel"><div class="eyebrow">FASE SUCCESSIVA</div><h3>Sentiment retail e conferme</h3><p>L'API ufficiale Myfxbook include il community outlook, ma richiede una sessione autenticata ed è soggetta a limiti d'uso. In Remura questa fonte verrà integrata soltanto dopo aver predisposto un collegamento sicuro: nessuna password inserita nel codice dell'app.</p><p><a href="https://www.myfxbook.com/api" target="_blank" rel="noopener noreferrer">Documentazione API Myfxbook ↗</a></p><div class="info-box"><strong>Regola Remura</strong>Se una fonte non è aggiornata o un valore non è verificabile, deve risultare chiaramente assente o in modalità DEMO. Mai inventare il sentiment o chiamare “live” un COT settimanale.</div></div></div>
+        <div class="source-grid"><div class="panel text-panel"><div class="eyebrow">FONTE PRIMARIA</div><h3>CFTC · Traders in Financial Futures</h3><p>Dataset governativo pubblico: <strong>TFF — Futures Only</strong>. Contratti finanziari, inclusi i future sulle principali valute. Mostriamo separatamente Asset Manager, Leveraged Funds e — nei dati di origine — Dealers.</p><p><a href="https://publicreporting.cftc.gov/Commitments-of-Traders/TFF-Futures-Only/gpe5-46if" target="_blank" rel="noopener noreferrer">Apri il dataset CFTC ↗</a></p><p><a href="https://www.cftc.gov/MarketReports/CommitmentsofTraders/ReleaseSchedule/index.htm" target="_blank" rel="noopener noreferrer">Calendario pubblicazioni ufficiale ↗</a></p></div><div class="panel text-panel"><div class="eyebrow">METODOLOGIA</div><h3>Come calcoliamo il confronto</h3><ul><li><strong>Posizione netta</strong> = contratti long − contratti short della categoria.</li><li><strong>Net % OI</strong> = posizione netta ÷ open interest × 100.</li><li><strong>Spread della coppia</strong> = Net % valuta base − Net % valuta quotata.</li><li><strong>Variazione settimanale</strong> = spread attuale − spread precedente, in punti percentuali.</li><li>Con USD, impostiamo a zero la gamba USD come riferimento matematico, <strong>non</strong> perché conosciamo la posizione dei fondi sul dollaro.</li></ul></div><div class="panel text-panel"><div class="eyebrow">COSA NON È</div><h3>Niente flussi in tempo reale</h3><p>Il COT fotografa le posizioni del martedì e normalmente esce il venerdì pomeriggio negli Stati Uniti. Una posizione netta positiva non implica che il mercato salirà, e un cambiamento non descrive tutte le operazioni della settimana.</p><p>Per i cross come CADJPY il valore è un <strong>indicatore euristico sintetico</strong> costruito da due futures separati, non un posizionamento COT ufficiale sul contratto CADJPY. Non va considerato un segnale di acquisto o vendita.</p></div><div class="panel text-panel"><div class="eyebrow">FASE SUCCESSIVA</div><h3>Sentiment retail e conferme</h3><p>REMURA raccoglie già gli aggregati Myfxbook con rilevazioni datate; il sentiment si trova nelle schede dedicate. Nessuna password è presente nel codice pubblico.</p><p><a href="https://www.myfxbook.com/api" target="_blank" rel="noopener noreferrer">Documentazione API Myfxbook ↗</a></p><div class="info-box"><strong>Regola Remura</strong>Se una fonte non è aggiornata o un valore non è verificabile, deve risultare non disponibile (N/D). Mai inventare il sentiment o chiamare “live” un COT settimanale.</div></div></div>
       </section>
-      <p class="endline">REMURA v0.8 · Radar Forex · Non costituisce consulenza finanziaria</p>
+      <p class="endline">REMURA v1.6 · Radar Forex · Non costituisce consulenza finanziaria</p>
     </main>
     <nav class="mobile-nav" aria-label="Navigazione mobile"><button type="button" class="nav-btn active" data-nav="radar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12 18 6"/></svg>Radar</button><a href="./mercati.html?v=8" class="nav-btn" style="text-decoration:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h18M12 3v18M5 5l14 14"/></svg>Mercati</a><button type="button" class="nav-btn" data-nav="valute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="m7 15 4-5 3 2 5-7"/></svg>Valute</button><button type="button" class="nav-btn" data-nav="metodo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.5"/></svg>Metodo</button></nav>
   </div>
 <script>
 'use strict';
 const CURRENCIES = {
-  EUR:{code:'099741',name:'Euro',flag:'🇪🇺',bias:11}, GBP:{code:'096742',name:'Sterlina britannica',flag:'🇬🇧',bias:3},
-  JPY:{code:'097741',name:'Yen giapponese',flag:'🇯🇵',bias:-9}, AUD:{code:'232741',name:'Dollaro australiano',flag:'🇦🇺',bias:4},
-  CAD:{code:'090741',name:'Dollaro canadese',flag:'🇨🇦',bias:-3}, CHF:{code:'092741',name:'Franco svizzero',flag:'🇨🇭',bias:5},
-  NZD:{code:'112741',name:'Dollaro neozelandese',flag:'🇳🇿',bias:-2}
+  EUR:{code:'099741',name:'Euro',flag:'🇪🇺'}, GBP:{code:'096742',name:'Sterlina britannica',flag:'🇬🇧'},
+  JPY:{code:'097741',name:'Yen giapponese',flag:'🇯🇵'}, AUD:{code:'232741',name:'Dollaro australiano',flag:'🇦🇺'},
+  CAD:{code:'090741',name:'Dollaro canadese',flag:'🇨🇦'}, CHF:{code:'092741',name:'Franco svizzero',flag:'🇨🇭'},
+  NZD:{code:'112741',name:'Dollaro neozelandese',flag:'🇳🇿'}
 };
 const PAIRS = ['EURUSD','GBPUSD','AUDUSD','NZDUSD','USDJPY','USDCAD','USDCHF','EURGBP','EURJPY','EURCHF','EURCAD','EURAUD','EURNZD','GBPJPY','GBPCHF','GBPCAD','GBPAUD','GBPNZD','AUDJPY','AUDCAD','AUDCHF','AUDNZD','NZDJPY','NZDCAD','NZDCHF','CADJPY','CADCHF','CHFJPY'];
 const API_HOSTS = ['https://publicreporting.cftc.gov','https://publicreportinghub.cftc.gov'];
@@ -81,7 +81,7 @@ const getSavedPair=()=>{try{return localStorage.getItem('remura_pair')}catch(_){
 const savePair=pair=>{try{localStorage.setItem('remura_pair',pair)}catch(_){}};
 let selectedPair = getSavedPair() || 'CADJPY';
 if (!PAIRS.includes(selectedPair)) selectedPair='CADJPY';
-let currencyHistory={}, commonDates=[], sourceMode='demo', apiError='', isLoading=false;
+let currencyHistory={}, commonDates=[], sourceMode='missing', apiError='', isLoading=false;
 const $=id=>document.getElementById(id);
 const escapeHTML = value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const signed = (v,suffix='%') => Number.isFinite(v) ? `${v>0?'+':''}${fmt.format(v)}${suffix}` : '—';
@@ -94,40 +94,39 @@ const last=a=>a[a.length-1];
 const dateFmt=date=>date?new Intl.DateTimeFormat('it-IT',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(date+'T12:00:00Z')):'—';
 const change=(a)=>a.length>=2?last(a).val-a[a.length-2].val:NaN;
 const groupTag=(a,l)=>{if(Math.abs(a)<2.5||Math.abs(l)<2.5)return {text:'Lettura parziale',className:'mixed',description:'Almeno un gruppo mostra un posizionamento netto contenuto.'};if(a*l<0)return {text:'Divergenza',className:'bad',description:'Le due categorie hanno un orientamento netto opposto.'};return a>0?{text:'Concordanza positiva',className:'good',description:'Entrambe le categorie sono orientate verso la valuta base.'}:{text:'Concordanza negativa',className:'bad',description:'Entrambe le categorie sono orientate verso la valuta quotata.'};};
-function makeDemo(){
-  // Dati artificiali deterministici; non derivati dal mercato né dalla CFTC.
-  const end=new Date('2026-10-06T12:00:00Z'); const dates=[];
-  for(let i=55;i>=0;i--){const d=new Date(end); d.setUTCDate(d.getUTCDate()-7*i);dates.push(d.toISOString().slice(0,10));}
-  const histories={}; Object.entries(CURRENCIES).forEach(([symbol,meta],k)=>{
-    const m=new Map();dates.forEach((date,i)=>{
-      const oi=Math.round(85000+(k+1)*15000+16000*Math.sin(i*.18+k));
-      const a=meta.bias + 13*Math.sin(i*.12+k*.7)+5*Math.cos(i*.31+k*.8);
-      const l=-meta.bias*.78 + 15*Math.sin(i*.18+k*.92+1.7)+4*Math.cos(i*.3-k);
-      const de=-a*.45-l*.45;
-      const book=net=>({long:Math.round(oi*(.32+net/200)),short:Math.round(oi*(.32-net/200))});
-      m.set(date,{date,oi,asset:book(a),lev:book(l),dealer:book(de)});
-    });histories[symbol]=m;
-  });return {histories,dates};
-}
 function useData(result,mode){
   currencyHistory=result.histories;commonDates=result.dates;sourceMode=mode;renderAll();
 }
 function renderNotice(){
-  const status=$('feed-status'),notice=$('notice'),msg=$('notice-text');
-  const official=sourceMode==='live';
-  const latest=last(commonDates);
-  const lagDays=latest?Math.floor((Date.now()-Date.parse(latest+'T00:00:00Z'))/86400000):NaN;
-  const stale=official&&Number.isFinite(lagDays)&&lagDays>14;
-  if(isLoading){status.className='status loading';status.textContent='Connessione CFTC...';$('refresh').disabled=true;}
-  else{status.className='status '+(official&&!stale?'live':'');status.textContent=official?(stale?'CFTC · dati non aggiornati':'CFTC · dati ufficiali'):'DEMO · dati inventati';$('refresh').disabled=false;}
-  notice.className='alert '+(stale?'error':official?'live':apiError?'error':'');
-  if(stale)msg.textContent=`ATTENZIONE · dati CFTC ufficiali ma datati: posizioni al ${dateFmt(latest)} (${lagDays} giorni fa). Non considerarli attuali: controlla la pubblicazione più recente.`;
-  else if(official)msg.textContent=`Fonte CFTC ufficiale · posizioni al ${dateFmt(latest)}. Aggiornamento settimanale, non in tempo reale.`;
-  else msg.textContent=apiError?`DEMO · valori inventati e non utilizzabili per operare. Feed CFTC non raggiunto (${apiError}).`:'DEMO · tutti i numeri sono simulati, NON sono dati di mercato. Connessione CFTC in corso.';
-  $('notice-action').style.display=official&&!stale?'none':'';
-  $('notice-action').textContent=stale?'Riprova aggiornamento':'Riprova CFTC';
-  $('notice-text-valute').textContent=official?`Fonte CFTC · posizioni al ${dateFmt(latest)}${stale?' · ATTENZIONE: dati non aggiornati':''} · nessuna quotazione in tempo reale.`:'DEMO · valori artificiali non rappresentativi delle posizioni attuali.';
-  $('notice-valute').className='alert '+(stale?'error':official?'live':'');
+ const official=sourceMode==='live'&&commonDates.length>=2;
+ const latest=last(commonDates);
+ const lag=latest?Math.floor((Date.now()-Date.parse(latest+'T00:00:00Z'))/86400000):NaN;
+ const stale=official&&(!Number.isFinite(lag)||lag>14);
+ const status=$('feed-status'),notice=$('notice'),msg=$('notice-text');
+ status.className='status '+(isLoading?'loading':official&&!stale&&!apiError?'live':'');
+ status.textContent=isLoading?'Connessione CFTC...':!official?'CFTC · non disponibile':stale?'CFTC · datato':apiError?'CFTC · nuovo aggiornamento fallito':'CFTC · verificato';
+ $('refresh').disabled=isLoading;
+ notice.className='alert '+(stale||apiError?'error':official?'live':'');
+ msg.textContent=!official?(isLoading?'Caricamento dati ufficiali CFTC. Nessuna simulazione.':'Dati CFTC non disponibili'+(apiError?' ('+apiError+')':'')+'. Valori N/D.'):
+  (stale?'ATTENZIONE: dati CFTC datati ('+lag+' giorni). ': 'Dati CFTC ufficiali. ')+
+  'Posizioni al '+dateFmt(latest)+'. '+(apiError?'Nuovo aggiornamento fallito; manteniamo l’ultima rilevazione verificata.':'Il COT non è in tempo reale.');
+ $('notice-action').style.display=official&&!stale&&!apiError?'none':'';
+ $('notice-action').textContent='Riprova CFTC';
+ $('notice-text-valute').textContent=official?'CFTC · posizioni al '+dateFmt(latest)+(stale?' · DATATE':'')+(apiError?' · aggiornamento fallito':''):'Nessuna posizione ufficiale disponibile.';
+ $('notice-valute').className='alert '+(stale||apiError?'error':official?'live':'');
+}
+function showMissing(){
+ $('pair-select').value=selectedPair;
+ $('pair-detail-link').href='./asset.html?symbol='+encodeURIComponent(selectedPair)+'&v=16';
+ for(const id of ['asof-date','asset-value','lev-value','asset-delta','lev-delta'])$(id).textContent='N/D';
+ $('alignment').textContent='Non disponibile';
+ $('alignment-desc').textContent='Attendo report ufficiali CFTC';
+ $('pair-explanation').textContent='Nessuna direzione calcolata senza report verificati.';
+ $('history-length').textContent='Storico assente';$('export-csv').disabled=true;
+ $('chart').textContent='Grafico non disponibile: in attesa della CFTC.';
+ $('rank-list').textContent='Classifica non disponibile: dati ufficiali assenti.';
+ $('leg-list').textContent='Posizioni delle valute non disponibili.';
+ $('currency-grid').textContent='Nessuna posizione CFTC verificata.';
 }
 function renderFocus(){
   const as=rowsFor(selectedPair,'asset'),lv=rowsFor(selectedPair,'lev');
@@ -185,7 +184,7 @@ function renderCurrencies(){
     return `<article class="panel currency-card"><div class="cc-head"><div><strong>${meta.flag} ${cur}</strong><div class="cc-name">${escapeHTML(meta.name)}</div></div><small>CFTC ${meta.code}</small></div><div class="cc-line"><span>Asset Manager · net %</span><strong class="${cls(a)} mono">${signed(a)}</strong></div><div class="cc-line"><span>Fondi a leva · net %</span><strong class="${cls(l)} mono">${signed(l)}</strong></div><div class="cc-line"><span>Asset Manager · contratti netti</span><b class="mono">${new Intl.NumberFormat('it-IT').format(netA)}</b></div><div class="cc-line"><span>Fondi a leva · contratti netti</span><b class="mono">${new Intl.NumberFormat('it-IT').format(netL)}</b></div><div class="cc-line"><span>Open interest complessivo</span><b class="mono">${new Intl.NumberFormat('it-IT').format(r.oi)}</b></div></article>`;
   }).join('');
 }
-function renderAll(){renderNotice();renderFocus();renderRanking();renderLegs();renderCurrencies();}
+function renderAll(){if(sourceMode!=='live'||commonDates.length<2){showMissing();renderNotice();return;}$('export-csv').disabled=false;renderNotice();renderFocus();renderRanking();renderLegs();renderCurrencies();}
 function switchScreen(screen){document.querySelectorAll('.screen').forEach(n=>n.classList.toggle('active',n.id==='screen-'+screen));document.querySelectorAll('[data-nav]').forEach(n=>n.classList.toggle('active',n.dataset.nav===screen));$('breadcrumb').textContent=({radar:'Radar istituzionale',valute:'Valute istituzionali',metodo:'Fonti e metodo'})[screen];window.scrollTo({top:0,behavior:'smooth'});}
 async function getEndpointData(host){
   const cutoff=new Date();cutoff.setUTCDate(cutoff.getUTCDate()-405);
@@ -226,20 +225,21 @@ async function loadLive(){
   isLoading=false;apiError=errors.join(' / ');renderNotice();
 }
 $('pair-select').innerHTML=PAIRS.map(p=>`<option value="${p}">${p.slice(0,3)}/${p.slice(3)}</option>`).join('');
-$('pair-select').addEventListener('change',e=>{selectedPair=e.target.value;savePair(selectedPair);renderFocus();renderRanking();renderLegs();});
-$('rank-list').addEventListener('click',e=>{const btn=e.target.closest('[data-pair]');if(!btn)return;selectedPair=btn.dataset.pair;savePair(selectedPair);renderFocus();renderRanking();renderLegs();document.querySelector('.hero').scrollIntoView({behavior:'smooth',block:'start'});});
+$('pair-select').addEventListener('change',e=>{selectedPair=e.target.value;savePair(selectedPair);if(sourceMode==='live'){renderFocus();renderRanking();renderLegs();}});
+$('rank-list').addEventListener('click',e=>{const btn=e.target.closest('[data-pair]');if(!btn)return;selectedPair=btn.dataset.pair;savePair(selectedPair);if(sourceMode==='live'){renderFocus();renderRanking();renderLegs();}document.querySelector('.hero').scrollIntoView({behavior:'smooth',block:'start'});});
 document.querySelectorAll('[data-nav]').forEach(el=>el.addEventListener('click',()=>switchScreen(el.dataset.nav)));
 $('refresh').addEventListener('click',loadLive);$('notice-action').addEventListener('click',loadLive);
 $('export-csv').addEventListener('click',()=>{
+  if(sourceMode!=='live'||commonDates.length<2)return;
   const a=rowsFor(selectedPair,'asset'),l=rowsFor(selectedPair,'lev');
   const rows=[['data_posizioni','coppia','asset_manager_spread_pct_oi','leveraged_funds_spread_pct_oi','fonte']];
-  a.forEach((r,i)=>rows.push([r.date,selectedPair,r.val.toFixed(4),l[i].val.toFixed(4),sourceMode==='live'?'CFTC_TFF_futures_only':'DEMO_DATI_SIMULATI']));
+  a.forEach((r,i)=>rows.push([r.date,selectedPair,r.val.toFixed(4),l[i].val.toFixed(4),'CFTC_TFF_futures_only']));
   const csv='\ufeff'+rows.map(row=>row.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(';')).join('\r\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),link=document.createElement('a');
   link.href=url;link.download=`REMURA_${selectedPair}_${sourceMode}_${last(commonDates)}.csv`;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 });
-useData(makeDemo(),'demo');loadLive();
+renderAll();loadLive();
 if('serviceWorker' in navigator && location.protocol==='https:')navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
-<script src="./nav.js?v=10"></script>
+<script src="./nav.js?v=16"></script>
 </body></html>

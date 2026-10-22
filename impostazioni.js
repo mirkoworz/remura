@@ -4,6 +4,7 @@
 const $=id=>document.getElementById(id);
 const cloud=window.REMURA_CAPITAL_CLOUD||null;
 const core=window.REMURA_SENTIMENT_CORE||null;
+const feedHealth=window.REMURA_FEED_HEALTH;
 const symbols=window.REMURA_MARKETS?.symbols||[];
 const localKey="remura:capital:demo:v1";
 const status=(id,message,type="")=>{const e=$(id);if(!e)return;e.textContent=message;e.dataset.status=type;};
@@ -34,9 +35,10 @@ async function checkGoogle(){
    return;
   }
   const cleaned=core.cleanCapitalLatest(doc,symbols);
-  status("google-status","Google collegato · feed Capital.com accessibile · "+Object.keys(cleaned.symbols).length+" mercati.","ok");
+  const h=feedHealth.inspect(cleaned,symbols);
   const time=new Intl.DateTimeFormat("it-IT",{dateStyle:"short",timeStyle:"short",timeZone:"Europe/Rome"}).format(new Date(cleaned.updatedAt));
-  $("google-detail").textContent="Ultimo dato aggregato: "+time+" (ora italiana). L'accesso Google rimane sul tuo dispositivo.";
+  status("google-status",h.recent?"Google collegato · Capital.com recente":"Google collegato · Capital.com DATATO",h.recent?"ok":"error");
+  $("google-detail").textContent="Ultima raccolta: "+time+" (ora italiana), "+h.ageMinutes+" min fa. Copertura "+h.covered+"/"+h.expected+" mercati. La connessione funziona anche se i dati sono vecchi.";
  }catch(e){
   // No token or account details are written to the UI.
   status("google-status","Collegamento Google presente, ma verifica del feed non riuscita.","error");
@@ -61,19 +63,27 @@ $("google-disconnect").addEventListener("click",async()=>{
 });
 $("google-check").addEventListener("click",checkGoogle);
 async function checkPrivate(){
- const endpoints=[
-  {url:"./private-api/retail/latest.json",label:"Myfxbook"},
-  {url:"./private-api/capital/latest.json",label:"Capital.com"}
- ];
- const results=[];
- for(const item of endpoints){
+ const sources=[{url:"./private-api/retail/latest.json",label:"Myfxbook VPS"},{url:"./private-api/capital/latest.json",label:"Capital VPS"}];
+ const results=[];let allFresh=true;
+ for(const item of sources){
   try{
-   const response=await fetch(item.url,{cache:"no-store"});
-   const doc=response.ok?await response.json():null;
-   results.push(item.label+": "+(doc?.status==="ok"?"disponibile":"non disponibile sul server"));
-  }catch(_){results.push(item.label+": non disponibile sul server");}
+   const response=await fetch(item.url,{cache:"no-store"});if(!response.ok)throw Error("absent");
+   const h=feedHealth.inspect(await response.json(),symbols);
+   if(!h.valid){allFresh=false;results.push(item.label+": dati non validi");continue;}
+   if(!h.recent)allFresh=false;
+   results.push(item.label+": "+(h.recent?"recente":"DATATO")+" ("+h.ageMinutes+" min, "+h.covered+"/"+h.expected+" mercati)");
+  }catch(_){allFresh=false;results.push(item.label+": non raggiungibile da questo indirizzo");}
  }
- status("private-status",results.join(" · "),results.every(x=>x.includes(": disponibile"))?"ok":"");
+ status("private-status",results.join(" · "),allFresh?"ok":"");
+}
+async function checkPublic(){
+ try{
+  const response=await fetch("./data/myfxbook/latest.json?t="+Date.now(),{cache:"no-store"});
+  if(!response.ok)throw Error("absent");
+  const h=feedHealth.inspect(await response.json(),symbols);if(!h.valid)throw Error("invalid");
+  const stamp=new Intl.DateTimeFormat("it-IT",{dateStyle:"short",timeStyle:"short",timeZone:"Europe/Rome"}).format(new Date(h.updatedAt));
+  status("public-status","Myfxbook GitHub · "+(h.recent?"recente":"DATATO")+" · "+stamp+" · "+h.ageMinutes+" min · "+h.covered+"/"+h.expected+" mercati",h.recent?"ok":"error");
+ }catch(_){status("public-status","Archivio pubblico Myfxbook non disponibile o non valido.","error");}
 }
 function store(key,doc){
  try{localStorage.setItem(key,JSON.stringify(doc));return true;}
@@ -116,6 +126,6 @@ $("clear-local").addEventListener("click",()=>{
   status("import-status","Import locali rimossi da questo dispositivo. Google/Firestore non è stato modificato.","ok");
  }catch(_){status("import-status","Impossibile accedere alla memoria locale.","error");}
 });
-checkGoogle();
-checkPrivate();
+$("check-feeds").addEventListener("click",()=>{checkGoogle();checkPrivate();checkPublic();});
+checkGoogle();checkPrivate();checkPublic();
 })();

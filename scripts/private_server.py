@@ -38,7 +38,7 @@ SAFE_ASSETS={
     "nav.js","nav.css","retail.js","retail.css","insights.js","insights.css","insights-core.js","cot-indices-core.js",
     "sentiment-core.js","sentiment-trend-core.js","sentiment-trend.js","sentiment-trend.css",
     "sources.js","sources.css","capital-cloud-config.js","capital-cloud.js",
-    "impostazioni.html","impostazioni.js","price.js","price.css","price-core.js","sw.js",
+    "impostazioni.html","impostazioni.js","feed-health-core.js","price.js","price.css","price-core.js","sw.js",
     "manifest.webmanifest","icon.svg",
 }
 STATUS_PATH="/private-api/health"
