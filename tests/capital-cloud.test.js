@@ -36,8 +36,8 @@ test("Public REMURA uses authenticated Firestore only, with local fallback",()=>
  assert.match(ui,/await cloud\.latest\(\)/);
  assert.match(ui,/await cloud\.history\(symbol\)/);
  assert.match(ui,/importedLatest\|\|savedLatest\(\)/);
- assert.match(html,/capital-cloud-config\.js\?v=1/);
- assert.match(html,/capital-cloud\.js\?v=1/);
+ assert.match(html,/capital-cloud-config\.js\?v=2/);
+ assert.match(html,/capital-cloud\.js\?v=2/);
  assert.match(sw,/capital-cloud-config\.js/);
  assert.ok(config.includes("window.REMURA_FIREBASE_CONFIG = {"));
  for(const secret of ["CAPITAL_API_KEY","CAPITAL_API_PASSWORD",
