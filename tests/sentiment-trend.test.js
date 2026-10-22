@@ -50,8 +50,8 @@ test("automatic window prioritizes 24h if both sources have matching history",()
  const b=core.analyze(inputs[1].history,inputs[1].current,"24h",now);
  assert.match(core.joint(a,b),/entrambe verso SHORT/);
 });
-test("real Myfxbook archive supports 24h comparisons without synthetic data",()=>{
- const dataset=JSON.parse(fs.readFileSync("data/myfxbook/history/EURUSD.json","utf8"));
+test("saved real Myfxbook fixture supports 24h comparisons without synthetic data",()=>{
+ const dataset=JSON.parse(fs.readFileSync("tests/fixtures/myfxbook-eurusd-gaps.json","utf8"));
  const last=dataset.records.at(-1);
  const actual=core.analyze(dataset.records,last,"24h",Date.parse(last.t)+3600000);
  assert.equal(actual.available,true);
