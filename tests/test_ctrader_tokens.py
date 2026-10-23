@@ -62,6 +62,16 @@ class TokenTests(unittest.TestCase):
         self.assertEqual(len(CALLS),2)
         self.assertGreater(dt.datetime.fromisoformat(auth.read_file(auth.path_for(self.db))["expiresAt"]), NOW+dt.timedelta(days=29))
 
+    def test_isolated_backup_token_file(self):
+        normal=auth.path_for(self.db)
+        backup=auth.path_for(self.db,source="backup")
+        self.assertNotEqual(normal,backup)
+        with self.assertRaises(ValueError):
+            auth.path_for(self.db,source="../../private")
+        auth.access_token(self.db,env=KEYS,now=NOW,requester=fake_refresh,source="backup")
+        self.assertTrue(backup.is_file())
+        self.assertFalse(normal.exists())
+
     def test_missing_token_never_generates_random_credentials(self):
         with self.assertRaisesRegex(RuntimeError,"token missing"):
             auth.access_token(self.db,env={"CTRADER_CLIENT_ID":"x"},now=NOW)

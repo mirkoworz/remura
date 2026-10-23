@@ -49,18 +49,18 @@ def validated_trendbars_response(payload, expected_account, expected_symbol):
     Return only a bounded collection; never guess prices or account identity.
     """
     if getattr(payload, "ctidTraderAccountId", None) != expected_account:
-        raise ValueError("Unexpected cTrader account in trendbars response")
+        raise ValueError("account_mismatch")
     if getattr(payload, "period", None) != 7:  # ProtoOATrendbarPeriod.M15
-        raise ValueError("Unexpected cTrader timeframe in trendbars response")
+        raise ValueError("timeframe_mismatch")
     reported_symbol=getattr(payload, "symbolId", 0)
     if reported_symbol not in (0, expected_symbol):
-        raise ValueError("Unexpected cTrader symbol in trendbars response")
+        raise ValueError("symbol_mismatch")
     rows=getattr(payload, "trendbar", None)
     if rows is None:
-        raise ValueError("Missing trendbar collection")
+        raise ValueError("bars_missing")
     rows=list(rows)
     if len(rows)>100 or bool(getattr(payload, "hasMore", False)):
-        raise ValueError("Incomplete or oversized daily M15 response")
+        raise ValueError("incomplete_or_oversized")
     return rows
 
 
@@ -297,8 +297,11 @@ def collect(config, requested, aliases, lookback_days, now=None):
                 market, sid = state["pending"]
                 try:
                     bars=validated_trendbars_response(payload, config["account_id"], sid)
-                except (ValueError, TypeError, AttributeError):
-                    result["errors"][market] = "Schema o metadati cTrader della risposta storica non coerenti."
+                except (ValueError, TypeError, AttributeError) as exc:
+                    known={"account_mismatch","timeframe_mismatch","symbol_mismatch",
+                           "bars_missing","incomplete_or_oversized"}
+                    kind=str(exc) if type(exc) is ValueError else ""
+                    result["errors"][market]="ctrader_validation:"+(kind if kind in known else "sdk_schema_mismatch")
                     state["index"] += 1
                     reactor.callLater(0.35, later)
                     return
