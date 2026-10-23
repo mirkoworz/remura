@@ -19,7 +19,7 @@ test('Dashboard uses only lightweight authenticated API, no token or fake data',
  const page=fs.readFileSync('stato-prezzi.html','utf8');
  const client=fs.readFileSync('stato-prezzi.js','utf8');
  const backend=fs.readFileSync('scripts/private_server.py','utf8');
- assert.ok(page.includes('nav.js?v=115'));
+ assert.ok(page.includes('nav.js?v=116'));
  assert.ok(client.includes('./private-api/prices/status'));
  assert.ok(backend.includes('PRICE_OVERVIEW_PATH'));
  assert.ok(backend.includes('stato-prezzi.html'));

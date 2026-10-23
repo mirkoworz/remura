@@ -437,7 +437,8 @@ def price_failure_code(raw):
         return "incomplete_history"
     if any(part in raw for part in ("invalida","non valido","non valida","OHLC")):
         return "invalid_bars"
-    if any(part in raw for part in ("Timeout","Connessione","cTrader ha segnalato")):
+    if any(part in raw for part in ("Timeout","Connessione","cTrader ha segnalato",
+                                   "Risposta cTrader inattesa","cTrader ha rifiutato")):
         return "request_failed"
     return "unknown_error"
 
@@ -541,7 +542,9 @@ def collect_once(db_path, symbols, days=2, runner=subprocess.run, now=None, sour
                 if symbol in report["saved"]:
                     outcome="ok"
                 else:
-                    message=provider_errors.get(symbol) or report["errors"].get(symbol)
+                    message=(provider_errors.get(symbol) or report["errors"].get(symbol)
+                             or provider_errors.get("connection")
+                             or report["errors"].get("collector"))
                     outcome=price_failure_code(message)
                 summary["price_attempt:"+symbol]=json.dumps(
                     {"time":now.isoformat(),"outcome":outcome},separators=(",",":"))
@@ -560,7 +563,14 @@ def collect_once(db_path, symbols, days=2, runner=subprocess.run, now=None, sour
     except (ValueError,RuntimeError,TimeoutError,subprocess.SubprocessError, OSError, json.JSONDecodeError):
         db=connect(db_path)
         try:
-            set_status(db,collector="failed",last_error="Lettore cTrader terminato senza archivio valido: verificare SDK, OAuth e connessione.")
+            # A failed subprocess did attempt each requested symbol. Record the
+            # failure with safe codes so missing rows don't falsely show "mai".
+            attempted={("price_attempt:"+symbol):json.dumps(
+                {"time":now.isoformat(),"outcome":"request_failed"},separators=(",",":"))
+                for symbol in symbols if symbol in MARKETS}
+            set_status(db,collector="failed",
+                       last_error="Lettore cTrader terminato senza archivio valido: verificare SDK, OAuth e connessione.",
+                       **attempted)
         finally:
             db.close()
         return {"saved":{},"errors":{"collector":"No usable output"}}
@@ -718,14 +728,15 @@ def collector_loop(db_path,stop,env=None):
     batches=collector_batches(symbols)
     cursor=0
     while not stop.is_set():
-        batch=batches[cursor % len(batches)]
+        batch_index=cursor % len(batches)
+        batch=batches[batch_index]
         cursor+=1
         db=connect(db_path)
         try:
             stored=set(symbols_available(db))
             brokers={symbol:(latest(db,symbol) or {}).get("providerSymbol","")
                      for symbol in batch}
-            set_status(db,collector_batch=str(cursor % len(batches)+1)+"/"+str(len(batches)),
+            set_status(db,collector_batch=str(batch_index+1)+"/"+str(len(batches)),
                        collector_batch_symbols=str(len(batch)))
         finally:db.close()
         # Returning to the primary after a backup takeover requires enough

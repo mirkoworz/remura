@@ -188,3 +188,13 @@ Le categorie risultato per simbolo sono codificate su una whitelist (`ok`, `tick
 Soglia UI: M15 recente entro 180 minuti (rotazione prevista ~120 minuti + buffer), datato oltre la soglia. Un mercato chiuso può apparire datato correttamente, senza implicare che la connessione sia guasta. La dashboard si aggiorna manualmente o ogni 3 minuti se la pagina è visibile.
 
 **Installazione manuale sulla VPS necessaria**: vengono modificati `scripts/price_store.py` e `scripts/private_server.py`, file protetti dal verificatore degli aggiornamenti automatici. I dati privati non vengono cancellati o ricostruiti.
+
+
+---
+## REMURA v1.16 · gruppi di raccolta e tentativi diagnostici corretti
+
+**Correzione verificabile**: in v1.15 il contatore `collector_batch` mostrava il gruppo *successivo* mentre il collector lavorava su quello corrente (errore di indice: incremento anticipato). Ora etichetta il gruppo realmente selezionato, da `1/8` a `8/8`.
+
+Quando la richiesta cTrader restituisce solo un errore globale (per esempio `errors.connection`) o il processo figlio fallisce interamente, registriamo `request_failed` per ciascun simbolo effettivamente tentato, invece di nascondere la situazione dietro un esito generico o `mai`. I codici sono allowlist: nessun messaggio grezzo, secret, token o ID del conto passa nella dashboard privata. Gli storici esistenti, l'elenco degli asset, le API dei prezzi e la pianificazione delle richieste restano immutati.
+
+Test aggiunti: il primo di due gruppi mostra `1/2`; un processo fallito produce uno stato diagnostico per ogni simbolo e non espone il testo dell'errore. **Modifica a `scripts/private_server.py`: installazione manuale sulla VPS richiesta**, con le protezioni dell'autoaggiornamento già esistenti.
