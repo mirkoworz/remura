@@ -1,5 +1,5 @@
 const test=require("node:test"),assert=require("node:assert/strict"),fs=require("node:fs");
-const macro=require("../macro-core.js");
+const macro=require("../price-status-core.js").macro;
 const HOUR=3600000,QUARTER=900000,END=Date.parse("2026-10-23T14:00:00Z");
 const iso=t=>new Date(t).toISOString();
 function bars(hours=100,start=END-100*HOUR,base=100,rate=0.002){
@@ -56,13 +56,15 @@ test("H1 Pearson uses only aligned contiguous hourly log returns",()=>{
  assert.equal(missing.state,"insufficient");
 });
 test("Macro page has a private-readonly architecture and correct menu version",()=>{
- const html=fs.readFileSync("macro.html","utf8");
- const ui=fs.readFileSync("macro.js","utf8");
+ const html=fs.readFileSync("stato-prezzi.html","utf8");
+ const ui=fs.readFileSync("stato-prezzi.js","utf8");
  const nav=fs.readFileSync("nav.js","utf8");
  const service=fs.readFileSync("sw.js","utf8");
- for(const script of ["nav.js?v=118","macro-core.js?v=118","macro.js?v=118"])assert.ok(html.includes(script));
+ for(const script of ["nav.js?v=118","price-status-core.js?v=118","stato-prezzi.js?v=118"])assert.ok(html.includes(script));
+ assert.ok(html.includes('id="macro"'));
+ assert.ok(ui.includes('window.addEventListener("hashchange",initMacro)'));
  assert.ok(ui.includes("./private-api/prices/"));
  assert.ok(!ui.includes("apiKey")&&!ui.includes("CTRADER_ACCESS_TOKEN"));
- assert.ok(nav.includes('href="./macro.html"'));
- assert.ok(service.includes('"./macro.html"'));
+ assert.ok(nav.includes('href="./stato-prezzi.html#macro"'));
+ assert.ok(service.includes('"./stato-prezzi.html"'));assert.ok(!service.includes('"./macro.html"'));
 });

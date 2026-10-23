@@ -216,10 +216,13 @@ Il simbolo logico **DXY** richiede l'alias privato **DXY → USDX** visto nell'e
 ---
 ## REMURA v1.18 · Radar Macro e audit M15/H1/H4 (solo frontend)
 
-Nuova pagina `macro.html` accessibile da menu, con **DAX GER30, DXY/USDX, VIX** e possibilità di controllare un mercato diverso dall'elenco di 38, un simbolo alla volta. Usa esclusivamente `GET /private-api/prices/<SYMBOL>` per richiedere candele cTrader alla **VPS privata**; non richiede nuove dipendenze, credenziali, né modifica `scripts/`.
+Nuova sezione `stato-prezzi.html#macro` accessibile da menu, con **DAX GER30, DXY/USDX, VIX** e possibilità di controllare un mercato diverso dall'elenco di 38, un simbolo alla volta. Usa esclusivamente `GET /private-api/prices/<SYMBOL>` per richiedere candele cTrader alla **VPS privata**; non richiede nuove dipendenze, credenziali, né modifica `scripts/`.
 
 Qualità: presenza M15/H1/H4, age dalla **chiusura M15** (non apertura), con soglia 180 minuti indicativa; ultimi 97 M15 per contare discontinuità (pause di mercato comprese). Le ultime 30 H1 e 30 H4 vengono ricostruite dalle M15 disponibili e confrontate a OHLC già salvati: contatore di bucket verificati, mancanti o discrepanti. Le discontinuità non sono classificate automaticamente come malfunzionamenti. Per conferme tecniche servono almeno 55 H4.
 
 Correlazione: Pearson sui **rendimenti logaritmici H1** di coppie DAX-DXY, DAX-VIX, DXY-VIX, soltanto quando gli orari UTC degli intervalli **contigui** coincidono; finestra 336h (14 giorni), almeno 30 coppie. Non viene pubblicata una correlazione utilizzabile su mercati datati/anomali; manca il dato → N/D. Questi risultati **non sono previsioni**, e gli strumenti USDX/VIX possono essere contratti a scadenza non equivalenti agli indici spot. Senza dati comparabili o senza gestione rollover non si generano segnali di trading.
 
 L'aggiornamento è solo frontend (asset allowlist e endpoint già presenti). Il deploy automatico della VPS può aggiornare il codice quando i test sono superati, senza reinstallazione manuale backend. Non viene conservato né pubblicato alcun OHLC sul GitHub.
+
+
+Il server privato pubblica esclusivamente asset statici allowlist. La nuova analisi è quindi integrata nei file già consentiti `stato-prezzi.html`, `stato-prezzi.js`, `price-status-core.js`, e carica i tre storici soltanto all'apertura dell'ancora `#macro`. Nessun intervento sul backend Python o sui token è necessario.
