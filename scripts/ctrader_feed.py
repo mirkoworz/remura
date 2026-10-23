@@ -18,6 +18,29 @@ import sys
 
 from price_feed import MARKETS, UTC, candle, market_document, iso, utcnow
 
+# Whitelist only protocol states and exception categories. NEVER print
+# exception messages, protobuf payloads, account identifiers or OAuth tokens.
+REQUEST_PHASES={
+    "ProtoOAApplicationAuthReq":"application_auth",
+    "ProtoOAGetAccountListByAccessTokenReq":"account_list",
+    "ProtoOAAccountAuthReq":"account_auth",
+    "ProtoOASymbolsListReq":"symbols_list",
+    "ProtoOASymbolByIdReq":"symbol_details",
+    "ProtoOAGetTrendbarsReq":"trendbars",
+}
+EXCEPTION_CATEGORIES=frozenset(("AttributeError","TypeError","ValueError",
+                               "KeyError","IndexError","RuntimeError",
+                               "DecodeError","OverflowError","AssertionError"))
+
+def protocol_failure(phase,exc):
+    allowed=frozenset(REQUEST_PHASES.values())
+    step=phase if phase in allowed else "unknown"
+    category=type(exc).__name__
+    if category not in EXCEPTION_CATEGORIES:
+        category="Exception"
+    return "Risposta cTrader inattesa nella fase "+step+" ("+category+")."
+
+
 INTERVAL_MS = 15 * 60 * 1000
 MAX_LOOKBACK_DAYS = 45
 
@@ -159,11 +182,13 @@ def collect(config, requested, aliases, lookback_days, now=None):
         finish()
 
     def send(req):
+        state["phase"]=REQUEST_PHASES.get(type(req).__name__,"unknown")
         try:
             deferred = client.send(req)
-            deferred.addErrback(lambda failure: problem("cTrader ha rifiutato una richiesta o la connessione."))
-        except Exception:
-            problem("Errore durante una richiesta cTrader.")
+            deferred.addErrback(lambda failure: problem(
+                "cTrader ha rifiutato una richiesta nella fase "+state["phase"]+"."))
+        except Exception as exc:
+            problem(protocol_failure(state["phase"],exc))
 
     def later():
         # ~3 requests/sec, below historical 5 req/sec official per connection.
@@ -200,7 +225,7 @@ def collect(config, requested, aliases, lookback_days, now=None):
         try:
             payload = Protobuf.extract(message)
             if isinstance(payload, ProtoOAErrorRes):
-                problem("cTrader ha segnalato un errore API. Controlla autorizzazione, conto, simboli e limiti.")
+                problem("cTrader ha segnalato un errore API nella fase "+state["phase"]+".")
             elif isinstance(payload, ProtoOAApplicationAuthRes):
                 q = ProtoOAGetAccountListByAccessTokenReq()
                 q.accessToken = config["token"]
@@ -264,8 +289,8 @@ def collect(config, requested, aliases, lookback_days, now=None):
                             break
                 state["index"] += 1
                 reactor.callLater(0.35, later)
-        except Exception:
-            problem("Risposta cTrader inattesa; esecuzione terminata senza inventare valori.")
+        except Exception as exc:
+            problem(protocol_failure(state["phase"],exc))
 
     def connected(_):
         q = ProtoOAApplicationAuthReq()
@@ -282,7 +307,8 @@ def collect(config, requested, aliases, lookback_days, now=None):
     client.setMessageReceivedCallback(event)
     # 5 min bound is enough for <= 5 markets x 21 days (<= 105 requests).
     # Old all-35 * 30 days mode would always time out before completion.
-    reactor.callLater(300, lambda: problem("Timeout della raccolta: dati incompleti."))
+    reactor.callLater(300, lambda: problem(
+        "Timeout della raccolta nella fase "+state["phase"]+"."))
     client.startService()
     reactor.run()
     return result
