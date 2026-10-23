@@ -166,3 +166,13 @@ Test locali (nessuna API key):
 node --test tests/insights.test.js tests/price.test.js
 python -m unittest discover -s tests -p 'test_price_feed.py'
 ```
+
+
+---
+## REMURA v1.13 · DAX e petrolio (38 strumenti)
+
+Screenshot cTrader: GER30 (DAX), USOil (WTI), UKOil (Brent), US100 (Nasdaq100), SPX500 (S&P500). REMURA ora supporta GER30, USOIL e UKOIL; le mappature broker *verificate* NAS100→US100 e US500→SPX500 vanno in un file privato `/opt/remura/private/ctrader-symbols.json`, mai nel codice pubblico. DXY e US2000 richiedono ancora verifica sui simboli del broker.
+
+Con `REMURA_SYMBOLS=all`, dopo installazione VPS la rotazione comprende 38 mercati in 8 gruppi da 5, nominalmente ~120 minuti per giro. COT WTI: NYMEX Disaggregated futures-only codice `067651`, distinto dal CFD. Per DAX GER30 (Eurex) e Brent UKOIL (ICE) REMURA mostra COT N/D finché non viene integrata una fonte pertinente e verificata. Non inventiamo posizionamenti istituzionali.
+
+La modifica a `scripts/` richiede installazione manuale approvata sulla VPS, preservando file privati e token.
