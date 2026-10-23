@@ -59,3 +59,17 @@ test('Indices exclude both macro gauges; whole registry remains 38 symbols',()=>
  assert.ok(radar.includes('group!=="macro"'));
  assert.ok(!nav.includes('Russell 2000'));
 });
+
+test('Macro is separate and radar compares selectable markets, not preselected DAX',()=>{
+ const nav=read('nav.js'),site=read('stato-prezzi.html'),logic=read('stato-prezzi.js');
+ assert.match(nav,/\{id:"indices",label:"Indici azionari"/);
+ assert.match(nav,/\{id:"macro",label:"Indicatori macro"/);
+ assert.ok(site.includes('Radar Macro globale'));
+ assert.ok(site.includes('Mercato da analizzare'));
+ assert.ok(site.includes('id="macro-context"'));
+ assert.ok(site.includes('id="macro-target-correlations"'));
+ assert.ok(!site.includes('DAX · USDX · VIX'));
+ assert.ok(logic.includes('if(group.id==="macro")continue'));
+ assert.ok(logic.includes('[[symbol,"DXY"],[symbol,"VIX"]]'));
+ assert.ok(!logic.includes('const pairs=[["GER30","DXY"]'));
+});

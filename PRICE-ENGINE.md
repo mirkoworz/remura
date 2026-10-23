@@ -226,3 +226,13 @@ L'aggiornamento è solo frontend (asset allowlist e endpoint già presenti). Il 
 
 
 Il server privato pubblica esclusivamente asset statici allowlist. La nuova analisi è quindi integrata nei file già consentiti `stato-prezzi.html`, `stato-prezzi.js`, `price-status-core.js`, e carica i tre storici soltanto all'apertura dell'ancora `#macro`. Nessun intervento sul backend Python o sui token è necessario.
+
+
+---
+## REMURA v1.19 · Macro globale autonomo, non centrato sul DAX
+
+**Separazione chiara**: nel menu, catalogo, homepage e diagnostica di prezzo ci sono 4 indici azionari (GER30/DAX, US500, NAS100, US30) e 2 indicatori macro (DXY, VIX); gli altri 32 strumenti sono invariati. La raccolta Python resta a 38 simboli identici e nessuno storico cTrader viene cancellato. DXY conserva il suo COT futures ICE di riferimento nella scheda dedicata, ma DXY e VIX vengono esclusi dalla classifica Radar Squali sui movimenti istituzionali, che non deve mescolare indicatori di contesto e opportunità operative.
+
+Radar Macro in `stato-prezzi.html#macro` analizza innanzitutto **solo DXY e VIX**, non DAX. Mostra prezzi validati, ultime quattro ore H1 consecutive e un confronto con la mediana delle variazioni assolute a quattro ore (fino a 80 finestre recenti); nessuna direzione viene indicata se gli storici non sono freschi, coerenti o sufficienti. Le combinazioni dollaro/volatilità sono presentate come *contesti possibili*, non verdetti long/short. L'utente può scegliere **qualunque altro mercato REMURA** (DAX incluso) per leggerne la qualità e due correlazioni H1 contro DXY e contro VIX. La correlazione usa solo rendimenti logaritmici con timestamp UTC comuni e min 30 osservazioni.
+
+Le quotazioni cTrader USDX e VIX possono derivare da contratti a scadenza e non essere uguali agli indici spot. Le correlazioni non significano causalità né individuano direttamente il flusso degli istituzionali. Nessun endpoint, token, data privata o script backend modificato: aggiornamento frontend auto-distribuibile dopo test GitHub.
