@@ -162,3 +162,9 @@ Nota: modifiche a `scripts/` richiedono l'installazione controllata da Termius; 
 La risposta `no_data` della v1.8 non identifica la fase di errore. La v1.9 associa ogni richiesta Spotware a una fase enumerata (`application_auth`, `account_list`, `account_auth`, `symbols_list`, `symbol_details`, `trendbars`) e classifica le eccezioni con un elenco fisso di nomi tecnici. Non registra messaggi, contenuti JSON/protobuf, token, identificativi account, URL privati o testi di eccezioni non verificati. La diagnostica viene restituita nella voce `lastError` di `/private-api/health` e si legge in Impostazioni → Diagnostica cTrader. Questa versione non modifica né rigenera autorizzazioni OAuth.
 
 Un `SDK installato / OAuth ready` indica solo che il programma trova i pacchetti e la configurazione; il successo dell'autorizzazione e della raccolta si verifica soltanto osservando nuove candele M15 con un timestamp recente. Essendo una modifica a `scripts/`, richiede un aggiornamento manuale approvato dalla VPS.
+
+
+---
+## REMURA v1.10 · Correzione campi facoltativi cTrader
+
+Diagnosi remota, 23 ottobre 2026: `trendbars (AttributeError)`, zero nuove candele, SDK e impostazioni presenti. Nel gestore M15 della v1.9 si interrogava `payload.HasField("symbolId")` e si assumevano disponibili tutti i campi opzionali nel Python generato dall'SDK. La v1.10 usa una funzione testabile che verifica account, periodo M15 e simbolo restituito se presente, senza richiedere `HasField`. Le risposte con conto diverso, timeframe errato, oltre 100 barre giornaliere o `hasMore=true` sono rifiutate. Le candele non conformi vengono rigettate senza simulazioni e senza interrompere l'intero gruppo. Questo elimina un punto di incompatibilità, ma **va verificata una nuova raccolta reale** prima di dichiarare corretto il feed. La modifica a `scripts/` richiede installazione manuale sulla VPS.

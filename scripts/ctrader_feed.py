@@ -41,6 +41,29 @@ def protocol_failure(phase,exc):
     return "Risposta cTrader inattesa nella fase "+step+" ("+category+")."
 
 
+def validated_trendbars_response(payload, expected_account, expected_symbol):
+    """Validate historic M15 reply without assuming optional protobuf attributes.
+
+    Older generated Python models may omit optional fields. A 24h UTC M15
+    window has at most ~97 boundary candles, well below request.count=350.
+    Return only a bounded collection; never guess prices or account identity.
+    """
+    if getattr(payload, "ctidTraderAccountId", None) != expected_account:
+        raise ValueError("Unexpected cTrader account in trendbars response")
+    if getattr(payload, "period", None) != 7:  # ProtoOATrendbarPeriod.M15
+        raise ValueError("Unexpected cTrader timeframe in trendbars response")
+    reported_symbol=getattr(payload, "symbolId", 0)
+    if reported_symbol not in (0, expected_symbol):
+        raise ValueError("Unexpected cTrader symbol in trendbars response")
+    rows=getattr(payload, "trendbar", None)
+    if rows is None:
+        raise ValueError("Missing trendbar collection")
+    rows=list(rows)
+    if len(rows)>100 or bool(getattr(payload, "hasMore", False)):
+        raise ValueError("Incomplete or oversized daily M15 response")
+    return rows
+
+
 INTERVAL_MS = 15 * 60 * 1000
 MAX_LOOKBACK_DAYS = 45
 
@@ -272,20 +295,20 @@ def collect(config, requested, aliases, lookback_days, now=None):
                 if "pending" not in state:
                     return
                 market, sid = state["pending"]
-                if payload.ctidTraderAccountId != config["account_id"] or (
-                    payload.HasField("symbolId") and payload.symbolId != sid
-                ):
-                    problem("Risposta cTrader non corrispondente alla richiesta.")
+                try:
+                    bars=validated_trendbars_response(payload, config["account_id"], sid)
+                except (ValueError, TypeError, AttributeError):
+                    result["errors"][market] = "Schema o metadati cTrader della risposta storica non coerenti."
+                    state["index"] += 1
+                    reactor.callLater(0.35, later)
                     return
-                if payload.hasMore:
-                    result["errors"][market] = "Dati incompleti: cTrader segnala altre candele per la finestra."
-                elif market not in result["errors"]:
-                    for raw_bar in payload.trendbar:
+                if market not in result["errors"]:
+                    for raw_bar in bars:
                         try:
                             bar = convert_trendbar(raw_bar, state["digits"][market])
                             state["bars"][market][bar["t"]] = bar
-                        except (ValueError, OverflowError):
-                            result["errors"][market] = "Una candela cTrader è invalida."
+                        except (AttributeError, TypeError, ValueError, OverflowError):
+                            result["errors"][market] = "Candela cTrader incompatibile o invalida."
                             break
                 state["index"] += 1
                 reactor.callLater(0.35, later)
