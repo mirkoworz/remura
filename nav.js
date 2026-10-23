@@ -1,4 +1,4 @@
-/* REMURA v1.14: menu responsive ad albero + configurazione condivisa dei mercati. */
+/* REMURA v1.15: menu responsive ad albero + configurazione condivisa dei mercati. */
 (() => {
   "use strict";
   const FX_CODES={EUR:"099741",GBP:"096742",JPY:"097741",AUD:"232741",CAD:"090741",CHF:"092741",NZD:"112741"};
@@ -31,7 +31,7 @@
     // Visible on every REMURA page, including the installed iPhone web app.
     const release=document.createElement("div");
     release.id="rm-release";
-    release.textContent="REMURA · Aggiornamento v1.14 · 23/10/2026 13:11 (Italia)";
+    release.textContent="REMURA · Aggiornamento v1.15 · 23/10/2026 13:24 (Italia)";
     document.body.prepend(release);
 
     const page=location.pathname.split("/").pop()||"index.html";
@@ -101,6 +101,28 @@
       document.body.classList.toggle("rm-menu-open",on);
       if(on){render();drawer.querySelector("#rm-close").focus();}
       else if(priorFocus?.isConnected)priorFocus.focus();
+    }
+    // iPhone price monitor: the hamburger stays accessible, but does not
+    // obscure market names when scrolling down. Scroll up to reveal it.
+    if(page==="stato-prezzi.html"){
+      let lastY=window.scrollY;
+      const setTriggerVisible=on=>{
+        trigger.classList.toggle("rm-scrolled-away",!on);
+        trigger.tabIndex=on?0:-1;
+      };
+      window.addEventListener("scroll",()=>{
+        const nextY=window.scrollY;
+        const diff=nextY-lastY;
+        lastY=nextY;
+        if(nextY<90||drawer.classList.contains("visible")){
+          setTriggerVisible(true);
+        }else if(diff>5&&document.activeElement!==trigger){
+          setTriggerVisible(false);
+        }else if(diff< -5){
+          setTriggerVisible(true);
+        }
+      },{passive:true});
+      trigger.addEventListener("focus",()=>setTriggerVisible(true));
     }
     trigger.addEventListener("click",()=>toggle(true));
     shade.addEventListener("click",()=>toggle(false));

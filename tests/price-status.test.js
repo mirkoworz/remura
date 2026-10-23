@@ -19,10 +19,25 @@ test('Dashboard uses only lightweight authenticated API, no token or fake data',
  const page=fs.readFileSync('stato-prezzi.html','utf8');
  const client=fs.readFileSync('stato-prezzi.js','utf8');
  const backend=fs.readFileSync('scripts/private_server.py','utf8');
- assert.ok(page.includes('nav.js?v=114'));
+ assert.ok(page.includes('nav.js?v=115'));
  assert.ok(client.includes('./private-api/prices/status'));
  assert.ok(backend.includes('PRICE_OVERVIEW_PATH'));
  assert.ok(backend.includes('stato-prezzi.html'));
  assert.ok(!client.includes('ctrader-tokens.json'));
  assert.ok(!page.includes('example-candles'));
+});
+
+test('Mobile monitoring keeps source diagnostics accessible in compact disclosure',()=>{
+ const html=fs.readFileSync('stato-prezzi.html','utf8');
+ const js=fs.readFileSync('stato-prezzi.js','utf8');
+ const nav=fs.readFileSync('nav.js','utf8');
+ const navCss=fs.readFileSync('nav.css','utf8');
+ assert.ok(js.includes('node("details","market-more")'));
+ assert.ok(js.includes('rowText("Fonte:"'));
+ assert.ok(js.includes('rowText("Ultimo tentativo:"'));
+ assert.ok(js.includes('Ultimo esito:'));
+ assert.ok(html.includes('Come leggere i dati e la freschezza'));
+ assert.ok(nav.includes('if(page==="stato-prezzi.html")'));
+ assert.ok(navCss.includes('rm-scrolled-away'));
+ assert.ok(navCss.includes('prefers-reduced-motion'));
 });
