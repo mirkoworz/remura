@@ -280,6 +280,8 @@ def collect(config, requested, aliases, lookback_days, now=None):
     client.setConnectedCallback(connected)
     client.setDisconnectedCallback(disconnected)
     client.setMessageReceivedCallback(event)
+    # 5 min bound is enough for <= 5 markets x 21 days (<= 105 requests).
+    # Old all-35 * 30 days mode would always time out before completion.
     reactor.callLater(300, lambda: problem("Timeout della raccolta: dati incompleti."))
     client.startService()
     reactor.run()
