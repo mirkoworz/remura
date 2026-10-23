@@ -342,14 +342,33 @@ def safe_ctrader_reason(payload, process_code=0):
     if any("non è autorizzato" in value for value in reasons):
         return "Conto cTrader non autorizzato dal token o ambiente demo/live non coerente."
     if any("Timeout della raccolta" in value for value in reasons):
-        return "Timeout delle richieste storiche cTrader: riduci numero mercati o controlla la rete."
+        phase=next((m.group(1) for value in reasons
+                    if (m:=re.search(r"Timeout della raccolta nella fase ([a-z_]+)\.",value))),None)
+        if phase in ("application_auth","account_list","account_auth","symbols_list","symbol_details","trendbars"):
+            return "Timeout cTrader durante "+phase+"."
+        return "Timeout della raccolta cTrader. Controllare rete o quantità di mercati."
     if any("cTrader ha segnalato un errore API" in value for value in reasons):
+        phase=next((m.group(1) for value in reasons
+                    if (m:=re.search(r"errore API nella fase ([a-z_]+)\.",value))),None)
+        if phase in ("application_auth","account_list","account_auth","symbols_list","symbol_details","trendbars"):
+            return "API cTrader ha rifiutato il passaggio "+phase+"."
         return "API cTrader ha rifiutato una richiesta: verifica account, token o limiti."
     if any("Nessuna candela storica" in value for value in reasons):
         return "cTrader non ha restituito candele per i ticker richiesti."
+    if any("cTrader ha rifiutato una richiesta nella fase" in value for value in reasons):
+        return "Invio richiesta cTrader rifiutato (SDK o rete); verificare sessione."
     if any("Connessione cTrader interrotta" in value for value in reasons):
         return "Connessione cTrader interrotta."
     if any("Risposta cTrader inattesa" in value for value in reasons):
+        phases=frozenset(("application_auth","account_list","account_auth",
+                          "symbols_list","symbol_details","trendbars","unknown"))
+        kinds=frozenset(("AttributeError","TypeError","ValueError","KeyError",
+                         "IndexError","RuntimeError","DecodeError","OverflowError",
+                         "AssertionError","Exception"))
+        for value in reasons:
+            match=re.search(r"Risposta cTrader inattesa nella fase ([a-z_]+) \(([A-Za-z]+)\)",value)
+            if match and match.group(1) in phases and match.group(2) in kinds:
+                return "Risposta cTrader non attesa durante "+match.group(1)+" ("+match.group(2)+")."
         return "Formato di risposta cTrader non atteso."
     return "Nessuna candela verificata. Controllare SDK, OAuth e simboli del broker."
 

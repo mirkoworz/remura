@@ -154,3 +154,11 @@ La raccolta usa gruppi di massimo **5 strumenti ogni quarto d'ora**. Se uno stru
 Le Impostazioni mostrano lo stato sicuro `/private-api/health` con `ctraderPreflight.sdk`, `ctraderPreflight.configuration`, eventuale errore categorizzato e mercati presenti. **Nessun token, ID conto o password viene restituito dalla API.** Una connessione funzionante si conferma soltanto quando `instruments` contiene strumenti con candele reali.
 
 Nota: modifiche a `scripts/` richiedono l'installazione controllata da Termius; il timer v1.7 non aggiorna automaticamente il backend sensibile.
+
+
+---
+## v1.9 · Diagnostica del protocollo cTrader senza credenziali
+
+La risposta `no_data` della v1.8 non identifica la fase di errore. La v1.9 associa ogni richiesta Spotware a una fase enumerata (`application_auth`, `account_list`, `account_auth`, `symbols_list`, `symbol_details`, `trendbars`) e classifica le eccezioni con un elenco fisso di nomi tecnici. Non registra messaggi, contenuti JSON/protobuf, token, identificativi account, URL privati o testi di eccezioni non verificati. La diagnostica viene restituita nella voce `lastError` di `/private-api/health` e si legge in Impostazioni → Diagnostica cTrader. Questa versione non modifica né rigenera autorizzazioni OAuth.
+
+Un `SDK installato / OAuth ready` indica solo che il programma trova i pacchetti e la configurazione; il successo dell'autorizzazione e della raccolta si verifica soltanto osservando nuove candele M15 con un timestamp recente. Essendo una modifica a `scripts/`, richiede un aggiornamento manuale approvato dalla VPS.

@@ -150,6 +150,18 @@ class PrivateStorageTests(unittest.TestCase):
         self.assertEqual(details["sdk"],"missing")
         self.assertNotIn("CTRADER_ACCESS_TOKEN",json.dumps(details))
 
+    def test_ctrader_problem_reports_only_stage_and_error_class(self):
+        sample={"errors":{"connection":
+                "Risposta cTrader inattesa nella fase account_list (AttributeError)."}}
+        result=server.safe_ctrader_reason(sample)
+        self.assertEqual(result,"Risposta cTrader non attesa durante account_list (AttributeError).")
+        poison=server.safe_ctrader_reason({"errors":{"connection":
+            "Risposta cTrader inattesa nella fase token123 (SecretError) TOKEN123"}})
+        self.assertEqual(poison,"Formato di risposta cTrader non atteso.")
+        api=server.safe_ctrader_reason({"errors":{"connection":
+            "cTrader ha segnalato un errore API nella fase symbols_list."}})
+        self.assertIn("symbols_list",api)
+
     def test_scheduler_aligns_to_utc_quarter_plus_delay(self):
         value=server.seconds_to_next_quarter(dt.datetime(2026,10,17,9,14,10,tzinfo=UTC))
         self.assertEqual(value,140)

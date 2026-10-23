@@ -20,6 +20,17 @@ class CTraderTests(unittest.TestCase):
             low=low,deltaOpen=delta_open,deltaHigh=delta_high,deltaClose=delta_close
         )
 
+    def test_protocol_failure_exposes_only_approved_phase_and_error_type(self):
+        original=ValueError("MY_SECRET_TOKEN=test123, account 123456")
+        reason=feed.protocol_failure("account_list",original)
+        self.assertEqual(reason,"Risposta cTrader inattesa nella fase account_list (ValueError).")
+        self.assertNotIn("test123",reason)
+        self.assertNotIn("123456",reason)
+        self.assertEqual(feed.protocol_failure("custom_secret_stage",original),
+                         "Risposta cTrader inattesa nella fase unknown (ValueError).")
+        class SecretException(Exception):pass
+        self.assertIn("(Exception)",feed.protocol_failure("trendbars",SecretException("secret")))
+
     def test_relative_ohlc_and_utc_timestamp_are_decoded(self):
         bar=self.bar(minutes=29873415)
         item=feed.convert_trendbar(bar,5)
