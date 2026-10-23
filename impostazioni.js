@@ -118,10 +118,12 @@ async function checkCTrader(){
     return;
    }
    const sdk=check.sdk==="installed",oauth=check.configuration==="ready";
+   const backup=data.ctraderBackup;
    const verified=Array.isArray(data.instruments)?data.instruments.length:0;
    status("ctrader-status","SDK "+(sdk?"presente":"MANCANTE")+" · OAuth "+(oauth?"configurato":"incompleto")+" · "+verified+" mercati con prezzi",sdk&&oauth&&verified?"ok":"error");
    const count=data.collectorLastCount;
-   $("ctrader-detail").textContent="Stato: "+String(data.collector||"N/D")+" · Ultima raccolta: "+String(data.lastAttempt||"N/D")+" · Ultimo risultato: "+String(data.lastError||"N/D")+(count?" · Mercati salvati: "+count:"")+". Se l'SDK manca, installalo solo nell'ambiente Python privato della VPS.";
+   const secondary=backup&&backup.enabled?(backup.configuration==="ready"?"riserva pronta":"riserva non autorizzata"):"riserva disattivata";
+   $("ctrader-detail").textContent="Stato: "+String(data.collector||"N/D")+" · Ultima fonte: "+String(data.collectorSource||"N/D")+" · Secondo cTrader: "+secondary+" · Ultima raccolta: "+String(data.lastAttempt||"N/D")+" · Ultimo risultato: "+String(data.lastError||"N/D")+(count?" · Mercati salvati: "+count:"")+". Non vengono mai combinate le candele dei due broker.";
   }catch(_){
    status("ctrader-status","Collegamento cTrader verificabile solo tramite VPS Tailscale.","");
    $("ctrader-detail").textContent="Apri REMURA dal tuo indirizzo .ts.net.";
