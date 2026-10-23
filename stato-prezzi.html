@@ -63,7 +63,11 @@ button:disabled{opacity:.5}
 
 .macro-wrap{margin-top:32px;scroll-margin-top:40px;border-top:1px solid #335561;padding-top:15px}
 .macro-wrap h2{font-size:clamp(24px,5vw,32px);margin:5px 0 12px}
-.macro-wrap .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.macro-wrap .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.macro-context{background:#0d2730;border:1px solid #46717b;padding:14px;border-radius:13px;margin-bottom:13px}
+.macro-context h3{font-size:18px;margin:0 0 4px;color:var(--mint)}
+.macro-context[data-state=caution]{border-color:#a17b5e}
+.macro-context[data-state=calm]{border-color:#368c78}
 .macro-wrap .market{border-color:#40626a}
 .macro-wrap .market strong{font-size:19px}
 .macro-wrap .badge{float:right;border:1px solid #67817f;border-radius:20px;padding:3px 9px;font-size:11px;font-weight:800}
@@ -114,22 +118,32 @@ button:disabled{opacity:.5}
 </section>
 <div id="price-results-count" class="explain" aria-live="polite"></div>
 <div id="price-list" aria-label="Dettaglio dei mercati"></div>
-<p class="explain"><a href="#macro" class="macro-link">Radar Macro: DAX, DXY e VIX ↓</a></p>
+<p class="explain"><a href="#macro" class="macro-link">Radar Macro: forza del dollaro, VIX e impatto sui mercati ↓</a></p>
 <section id="macro" class="macro-wrap" aria-labelledby="macro-heading">
-<div class="eyebrow">Analisi reale · DAX · USDX · VIX</div>
-<h2 id="macro-heading">Radar Macro</h2>
-<p class="lead">Qualità M15/H1/H4 e correlazioni su rendimenti orari allineati UTC. Contratti broker e indici spot possono essere diversi; non sono segnali di trading.</p>
-<div class="panel"><div id="macro-status" class="banner" role="status" aria-live="polite">Connessione alla VPS privata…</div><div class="control" style="margin-top:12px"><button id="macro-refresh" type="button">Aggiorna analisi</button><span class="foot">Leggiamo solo tre strumenti dalla VPS .ts.net</span></div></div>
-<div id="macro-markets" class="grid" aria-label="Stato qualità DAX, DXY, VIX"></div>
-<section class="panel"><h2>Correlazioni dei rendimenti H1</h2><p>Coefficiente di Pearson tra rendimenti logaritmici orari calcolati su candele H1 con lo stesso orario UTC. Finestra: ultime 336 ore, almeno 30 osservazioni in comune. Un valore vicino a +1 indica movimenti orari concordi, −1 opposti, 0 una relazione lineare debole.</p>
-<div id="macro-pairs"><p>In attesa dei dati verificati…</p></div>
-<details><summary>Come interpretare DAX, DXY e VIX</summary>
-<p>VIX in crescita può accompagnare maggiori aspettative di volatilità e avversione al rischio; DXY in crescita può riflettere forza del dollaro, differenziali dei tassi o domanda difensiva. DAX in calo insieme a VIX in rialzo può essere coerente con uno scenario prudente, ma non identifica chi sta vendendo né costituisce un segnale di ingresso.</p>
-<p>USDX e VIX forniti dal broker possono essere contratti con scadenza, diversi dai riferimenti spot. Le correlazioni fra contratti possono essere distorte dai cambi di scadenza. COT è settimanale e non misura movimenti istituzionali in tempo reale.</p>
-</details></section>
-<section class="panel"><h2>Controlla un altro mercato</h2><p>Seleziona uno dei 38 strumenti e verifica qualità M15/H1/H4 senza interrogare inutilmente gli altri 37.</p><div class="control"><label for="macro-symbol">Strumento</label><select id="macro-symbol" aria-label="Seleziona mercato"></select><button id="macro-check" type="button">Verifica</button></div><div id="macro-extra" style="margin-top:12px"></div></section>
-
-<p class="explain">I buchi possono essere pause di mercato. Nessuna candela viene inventata e nessun ordine viene eseguito.</p>
+<div class="eyebrow">Indicatori macro · DXY e VIX</div>
+<h2 id="macro-heading">Radar Macro globale</h2>
+<p class="lead">DXY segue la forza relativa del dollaro. VIX misura la volatilità implicita attesa sulle opzioni S&P 500, mentre il broker può offrirne un contratto a scadenza. Entrambi aiutano a contestualizzare i mercati, non a identificare automaticamente acquisti o vendite istituzionali.</p>
+<div class="panel"><div id="macro-status" class="banner" role="status" aria-live="polite">Connessione alla VPS privata…</div>
+<div class="control" style="margin-top:12px"><button id="macro-refresh" type="button">Aggiorna DXY e VIX</button><span class="foot">Solo dati cTrader privati, senza fonti simulate</span></div></div>
+<div id="macro-markets" class="grid" aria-label="Qualità di DXY e VIX"></div>
+<section class="panel">
+<h2>Che contesto stanno indicando?</h2>
+<div id="macro-context" class="macro-context" aria-live="polite">In attesa delle serie storiche verificate.</div>
+<p>Le variazioni osservate si riferiscono alle ultime quattro ore H1 consecutive e sono confrontate con la mediana dei movimenti assoluti recenti dello stesso strumento. Non sono soglie operative e non forniscono probabilità direzionali.</p>
+<h3>Rapporto DXY / VIX</h3>
+<p>Correlazione di Pearson dei rendimenti logaritmici H1: finestra di 14 giorni, almeno 30 orari UTC comuni e consecutivi per ciascuna serie. N/D per serie incomplete o non recenti.</p>
+<div id="macro-pairs"><p>Servono entrambi gli storici.</p></div>
+<details><summary>Perché questi due indicatori?</summary>
+<p>VIX in aumento indica aspettative di maggiore volatilità del mercato azionario USA, spesso associate a tensione; DXY in aumento indica dollaro più forte rispetto al suo paniere. Il loro movimento comune può coincidere con episodi di difesa dal rischio, ma la relazione non è stabile né causale.</p>
+<p>USDX e VIX di cTrader possono essere contratti a scadenza, non gli indici spot. Salti di rollover possono falsare variazioni e correlazioni. Il COT è settimanale e non fornisce posizioni istituzionali in tempo reale.</p></details></section>
+<section class="panel">
+<h2>Come reagisce un mercato a DXY e VIX?</h2>
+<p>Scegli qualunque mercato disponibile in REMURA: Forex, oro, petrolio o indici, incluso il DAX. Confronteremo i suoi rendimenti H1 con ciascun indicatore, oltre a controllare l’integrità delle candele.</p>
+<div class="control"><label for="macro-symbol">Mercato da analizzare</label><select id="macro-symbol" aria-label="Seleziona mercato da confrontare"></select><button id="macro-check" type="button">Verifica mercato</button></div>
+<div id="macro-extra" style="margin-top:12px"></div>
+<div id="macro-target-correlations" style="margin-top:12px"></div>
+</section>
+<p class="explain">Un’eventuale correlazione non prova che gli istituzionali stiano acquistando o vendendo. Le discontinuità possono derivare da chiusure di mercato. Nessun ordine viene eseguito.</p>
 </section>
 <p class="explain">Dati privati dalla VPS <b>.ts.net</b>. Nessuna credenziale o ordine mostrato. Aggiornamento automatico ogni tre minuti quando la pagina è visibile.</p>
 </main>

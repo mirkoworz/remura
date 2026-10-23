@@ -109,7 +109,45 @@ function correlation(a,b,{now=Date.now(),hours=336,minPoints=30}={}){
 function pairEligible(a,b,now=Date.now()){
  return audit(a,now).state==="recent"&&audit(b,now).state==="recent";
 }
-return Object.freeze({validBar,timeframe,audit,returns,correlation,pairEligible,TFS});
+
+function pulse(doc,{now=Date.now(),period=4}={}){
+ const quality=audit(doc,now);
+ if(quality.state!=="recent")return {state:"unavailable",direction:null,changePct:null,referencePct:null};
+ const frame=timeframe(doc?.timeframes?.H1,"H1");
+ if(!frame.valid)return {state:"unavailable",direction:null,changePct:null,referencePct:null};
+ const rows=frame.rows;
+ const changes=[];
+ for(let i=period;i<rows.length;i++){
+  let contiguous=true;
+  for(let j=i-period+1;j<=i;j++)if(time(rows[j].t)-time(rows[j-1].t)!==HOUR){contiguous=false;break;}
+  if(contiguous)changes.push({stamp:rows[i].t,pct:(rows[i].c/rows[i-period].c-1)*100,index:i});
+ }
+ const recent=changes.at(-1);
+ if(!recent||recent.index!==rows.length-1||changes.length<12)
+  return {state:"insufficient",direction:null,changePct:null,referencePct:null};
+ const values=changes.slice(-80).map(x=>Math.abs(x.pct)).sort((a,b)=>a-b);
+ const mid=values.length>>1;
+ const median=values.length%2?values[mid]:(values[mid-1]+values[mid])/2;
+ const changePct=recent.pct,referencePct=median;
+ const direction=Math.abs(changePct)<=median?"flat":changePct>0?"up":"down";
+ return {state:"ok",direction,changePct:+changePct.toFixed(3),
+  referencePct:+referencePct.toFixed(3),asof:recent.stamp,samples:values.length};
+}
+function context(dxy,vix,{now=Date.now()}={}){
+ const dollar=pulse(dxy,{now}),fear=pulse(vix,{now});
+ if(dollar.state!=="ok"||fear.state!=="ok")
+  return {state:"unavailable",dollar,fear,label:"Dati insufficienti per valutare il contesto",
+   description:"Servono candele fresche e almeno 12 intervalli storici validi di quattro ore per entrambi gli indicatori."};
+ if(fear.direction==="up"&&dollar.direction==="up")
+  return {state:"caution",dollar,fear,label:"Volatilità e dollaro in rafforzamento",
+   description:"Combinazione compatibile con alcune fasi di avversione al rischio, da verificare sui singoli mercati."};
+ if(fear.direction==="down"&&dollar.direction==="down")
+  return {state:"calm",dollar,fear,label:"Volatilità e dollaro in calo",
+   description:"Combinazione compatibile con una distensione, ma non dimostra da sola propensione al rischio."};
+ return {state:"mixed",dollar,fear,label:"Indicazioni macro non concordi",
+  description:"DXY e VIX non mostrano il medesimo schema direzionale netto: analizza il comportamento del mercato scelto."};
+}
+return Object.freeze({validBar,timeframe,audit,returns,correlation,pairEligible,pulse,context,TFS});
  })();
  const api=Object.freeze({LIMIT_MINUTES,OUTCOMES,interpret,summarize,macro});
  if(typeof module==="object"&&module.exports)module.exports=api;
