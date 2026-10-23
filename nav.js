@@ -1,4 +1,4 @@
-/* REMURA v1.12: menu responsive ad albero + configurazione condivisa dei mercati. */
+/* REMURA v1.13: menu responsive ad albero + configurazione condivisa dei mercati. */
 (() => {
   "use strict";
   const FX_CODES={EUR:"099741",GBP:"096742",JPY:"097741",AUD:"232741",CAD:"090741",CHF:"092741",NZD:"112741"};
@@ -10,13 +10,18 @@
     NAS100:{group:"indices",name:"Nasdaq 100 · E-mini",code:"209742",dataset:"tff"},
     US30:{group:"indices",name:"Dow Jones · E-mini",code:"124603",dataset:"tff"},
     US2000:{group:"indices",name:"Russell 2000 · E-mini",code:"239742",dataset:"tff"},
-    DXY:{group:"indices",name:"Dollar Index · ICE",code:"098662",dataset:"tff"}
+    DXY:{group:"indices",name:"Dollar Index · ICE",code:"098662",dataset:"tff"},
+    GER30:{group:"indices",name:"DAX · GER30 (broker)",code:null,dataset:null},
+    USOIL:{group:"energy",name:"WTI · petrolio USOil",code:"067651",dataset:"disagg"},
+    UKOIL:{group:"energy",name:"Brent · petrolio UKOil",code:null,dataset:null}
   };
   const groups=[
     {id:"forex",label:"Forex",icon:"↔",name:"28 coppie principali",items:FX_PAIRS.map(s=>({s,n:s}))},
     {id:"metals",label:"Metalli",icon:"◇",name:"Oro e argento",items:[{s:"XAUUSD",n:"Gold · Oro"},{s:"XAGUSD",n:"Silver · Argento"}]},
-    {id:"indices",label:"Indici",icon:"▥",name:"Principali futures USA",items:[
-      {s:"US500",n:"S&P 500"},{s:"NAS100",n:"Nasdaq 100"},{s:"US30",n:"Dow Jones"},{s:"US2000",n:"Russell 2000"},{s:"DXY",n:"Dollar Index"}]}
+    {id:"indices",label:"Indici",icon:"▥",name:"Indici USA e DAX",items:[
+      {s:"US500",n:"S&P 500"},{s:"NAS100",n:"Nasdaq 100"},{s:"US30",n:"Dow Jones"},{s:"US2000",n:"Russell 2000"},{s:"DXY",n:"Dollar Index"},{s:"GER30",n:"DAX · GER30 (prezzi)"}]},
+    {id:"energy",label:"Energia",icon:"◉",name:"Petrolio WTI e Brent",items:[
+      {s:"USOIL",n:"WTI · USOil (COT + prezzi)"},{s:"UKOIL",n:"Brent · UKOil (prezzi)"}]}
   ];
   const detailUrl=s=>"./asset.html?symbol="+encodeURIComponent(s)+"&v=8";
   const categoryUrl=id=>"./catalogo.html?categoria="+encodeURIComponent(id)+"&v=8";
@@ -26,7 +31,7 @@
     // Visible on every REMURA page, including the installed iPhone web app.
     const release=document.createElement("div");
     release.id="rm-release";
-    release.textContent="REMURA · Aggiornamento v1.12 · 23/10/2026 09:03 (Italia)";
+    release.textContent="REMURA · Aggiornamento v1.13 · 23/10/2026 11:28 (Italia)";
     document.body.prepend(release);
 
     const page=location.pathname.split("/").pop()||"index.html";
@@ -43,7 +48,7 @@
     const shade=document.createElement("div");shade.id="rm-menu-shade";shade.hidden=true;
     const drawer=document.createElement("aside");drawer.id="rm-menu";
     drawer.setAttribute("aria-label","Navigazione principale Remura");drawer.setAttribute("aria-hidden","true");drawer.inert=true;
-    drawer.innerHTML='<div class="rm-header"><a href="./index.html" class="rm-brand">REMURA<span>Segui le tracce istituzionali</span></a><button id="rm-close" type="button" aria-label="Chiudi menu">×</button></div><nav aria-label="Menu Remura" class="rm-nav"><div class="rm-shortcuts"><a href="./index.html" data-main="home">⌂ <span>Home</span></a><a href="./mercati.html#institutional-scanner" data-main="scanner">🦈 <span>Radar Squali · Squalincome</span></a><a href="./fonti.html?v=8" data-main="fonti">◈ <span>Fonti sentiment</span></a><a href="./impostazioni.html" data-main="settings">⚙ <span>Impostazioni · Capital Google</span></a></div><label class="rm-search-label" for="rm-search">Cerca tra 35 strumenti</label><input id="rm-search" type="search" autocomplete="off" placeholder="Gold, CADJPY, Nasdaq..." aria-label="Filtra strumenti e sottomenu"><div id="rm-menu-tree" class="rm-menu-tree"></div><div class="rm-menu-bottom"><a href="./forex.html?v=8">⌁ Radar Forex classico →</a></div></nav><div class="rm-footer">COT: posizioni istituzionali settimanali. Myfxbook e Capital.com: sentiment retail separato.</div>';
+    drawer.innerHTML='<div class="rm-header"><a href="./index.html" class="rm-brand">REMURA<span>Segui le tracce istituzionali</span></a><button id="rm-close" type="button" aria-label="Chiudi menu">×</button></div><nav aria-label="Menu Remura" class="rm-nav"><div class="rm-shortcuts"><a href="./index.html" data-main="home">⌂ <span>Home</span></a><a href="./mercati.html#institutional-scanner" data-main="scanner">🦈 <span>Radar Squali · Squalincome</span></a><a href="./fonti.html?v=8" data-main="fonti">◈ <span>Fonti sentiment</span></a><a href="./impostazioni.html" data-main="settings">⚙ <span>Impostazioni · Capital Google</span></a></div><label class="rm-search-label" for="rm-search">Cerca tra 38 strumenti</label><input id="rm-search" type="search" autocomplete="off" placeholder="Gold, CADJPY, Nasdaq..." aria-label="Filtra strumenti e sottomenu"><div id="rm-menu-tree" class="rm-menu-tree"></div><div class="rm-menu-bottom"><a href="./forex.html?v=8">⌁ Radar Forex classico →</a></div></nav><div class="rm-footer">COT: posizioni istituzionali settimanali. Myfxbook e Capital.com: sentiment retail separato.</div>';
     document.body.append(shade,drawer,trigger);
     document.body.classList.add("rm-has-nav");
     const tree=drawer.querySelector("#rm-menu-tree");

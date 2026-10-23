@@ -383,7 +383,7 @@ def main():
         parser.error("--days must be 1..45")
     markets = list(dict.fromkeys(s.upper() for s in args.symbols))
     if not markets or any(s not in MARKETS for s in markets):
-        parser.error("Only the 35 defined REMURA symbols are allowed.")
+        parser.error("Only the 38 defined REMURA symbols are allowed.")
     aliases = json.loads(Path(args.symbol_map).read_text("utf-8")) if args.symbol_map else {}
     if not isinstance(aliases, dict) or any(k not in MARKETS for k in aliases):
         parser.error("Invalid private symbol mapping.")
