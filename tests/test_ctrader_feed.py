@@ -104,6 +104,22 @@ class CTraderTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             feed.utc_chunks(now,999)
 
+    def test_trendbar_validation_does_not_include_provider_payloads(self):
+        class Reply:
+            ctidTraderAccountId=5
+            period=7
+            symbolId=123
+            trendbar=[]
+            hasMore=False
+        with self.assertRaisesRegex(ValueError,"account_mismatch"):
+            feed.validated_trendbars_response(Reply(),7,123)
+        Reply.period=9
+        with self.assertRaisesRegex(ValueError,"timeframe_mismatch"):
+            feed.validated_trendbars_response(Reply(),5,123)
+        Reply.period=7;Reply.symbolId=124
+        with self.assertRaisesRegex(ValueError,"symbol_mismatch"):
+            feed.validated_trendbars_response(Reply(),5,123)
+
     def test_read_only_environment_fails_closed_before_approval(self):
         with patch.dict("os.environ",{
             "CTRADER_CLIENT_ID":"", "CTRADER_CLIENT_SECRET":"",

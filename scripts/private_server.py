@@ -73,6 +73,32 @@ def source_configured(env=None,db_path=None):
     return basic and authorised
 
 
+def backup_ctrader_environment(db_path,env=None):
+    """Only explicit read-only backup credentials; never inherit primary tokens."""
+    values=os.environ if env is None else env
+    if values.get("REMURA_CTRADER_BACKUP_ENABLED")!="1":
+        return None
+    appid=values.get("CTRADER_BACKUP_CLIENT_ID") or values.get("CTRADER_CLIENT_ID")
+    secret=values.get("CTRADER_BACKUP_CLIENT_SECRET") or values.get("CTRADER_CLIENT_SECRET")
+    account=values.get("CTRADER_BACKUP_ACCOUNT_ID","")
+    stage=values.get("CTRADER_BACKUP_ENV","").lower()
+    authorisation=bool(values.get("CTRADER_BACKUP_REFRESH_TOKEN") or
+        values.get("CTRADER_BACKUP_ACCESS_TOKEN") or read_file(path_for(db_path,source="backup")))
+    if not (appid and secret and account.isdecimal() and int(account)>0
+            and stage in ("demo","live") and authorisation):
+        return None
+    return {"CTRADER_CLIENT_ID":appid,"CTRADER_CLIENT_SECRET":secret,
+            "CTRADER_ACCOUNT_ID":account,"CTRADER_ENV":stage,
+            "CTRADER_REFRESH_TOKEN":values.get("CTRADER_BACKUP_REFRESH_TOKEN",""),
+            "CTRADER_ACCESS_TOKEN":values.get("CTRADER_BACKUP_ACCESS_TOKEN","")}
+
+
+def backup_ctrader_status(db_path):
+    enabled=os.environ.get("REMURA_CTRADER_BACKUP_ENABLED")=="1"
+    return {"enabled":enabled,
+            "configuration":"ready" if enabled and backup_ctrader_environment(db_path) else "incomplete"}
+
+
 def resolve_asset(url_path):
     path=urlsplit(url_path).path
     if path=="/":
@@ -277,6 +303,8 @@ def http_handler(db_path):
                             "name":"REMURA Private",
                             "collector":status.get("collector","disabled"),
                             "ctraderPreflight":ctrader_preflight(db_path),
+                            "ctraderBackup":backup_ctrader_status(db_path),
+                            "collectorSource":status.get("collector_source","none"),
                             "collectorLastCount":status.get("last_count"),
                             "collectorLastRejected":status.get("last_rejected"),
                             "lastSuccess":status.get("last_success"),
@@ -353,6 +381,17 @@ def safe_ctrader_reason(payload, process_code=0):
         if phase in ("application_auth","account_list","account_auth","symbols_list","symbol_details","trendbars"):
             return "API cTrader ha rifiutato il passaggio "+phase+"."
         return "API cTrader ha rifiutato una richiesta: verifica account, token o limiti."
+    categories={
+        "account_mismatch":"cTrader: risposta con conto non corrispondente.",
+        "timeframe_mismatch":"cTrader: risposta con timeframe diverso da M15.",
+        "symbol_mismatch":"cTrader: risposta con simbolo non corrispondente.",
+        "bars_missing":"cTrader: lista delle candele assente.",
+        "incomplete_or_oversized":"cTrader: storico incompleto o fuori limite.",
+        "sdk_schema_mismatch":"cTrader: schema SDK non compatibile."
+    }
+    for key,label in categories.items():
+        if "ctrader_validation:"+key in reasons:
+            return label
     if any("Schema o metadati cTrader" in value for value in reasons):
         return "Risposta storica cTrader incoerente (conto, simbolo, timeframe o limiti)."
     if any("Candela cTrader incompatibile" in value for value in reasons):
@@ -401,14 +440,19 @@ def collector_command(symbols, days, output):
     return args
 
 
-def collect_once(db_path, symbols, days=2, runner=subprocess.run, now=None):
+def collect_once(db_path, symbols, days=2, runner=subprocess.run, now=None, source="primary"):
     """Isolated child process: Twisted reactor and cTrader TCP live outside HTTP server.
 
     No secrets in args; all cTrader credentials are inherited via environment.
     No file is written under the public asset allowlist.
     """
     now=now or utcnow()
-    if not source_configured(db_path=db_path):
+    if source not in ("primary","backup"):
+        raise ValueError("Unexpected cTrader source")
+    secondary=backup_ctrader_environment(db_path) if source=="backup" else None
+    if source=="backup" and secondary is None:
+        return {"saved":{},"errors":{"backup":"not_configured"}}
+    if source=="primary" and not source_configured(db_path=db_path):
         db=connect(db_path)
         try:set_status(db,collector="awaiting_approval",last_error="App cTrader/token non configurati")
         finally:db.close()
@@ -434,8 +478,13 @@ def collect_once(db_path, symbols, days=2, runner=subprocess.run, now=None):
         temp_path.chmod(0o600)
         # Access token is passed to the child through private environment only.
         # Refresh token is rotated on disk automatically when near expiry.
-        token=access_token(db_path)
-        env=dict(os.environ)
+        profile=secondary if source=="backup" else os.environ
+        token=access_token(db_path,env=profile,source=source)
+        # Child process receives credentials for ONE account only.
+        env={key:value for key,value in os.environ.items() if not key.startswith("CTRADER_")}
+        for key in ("CTRADER_CLIENT_ID","CTRADER_CLIENT_SECRET","CTRADER_ACCOUNT_ID","CTRADER_ENV"):
+            if key in profile:
+                env[key]=profile[key]
         env["CTRADER_ACCESS_TOKEN"]=token
         env.pop("CTRADER_REFRESH_TOKEN",None)
         command=collector_command(symbols,days,temp_path)
@@ -446,6 +495,10 @@ def collect_once(db_path, symbols, days=2, runner=subprocess.run, now=None):
         if temp_path.stat().st_size>15_000_000:
             raise RuntimeError("Risposta del collettore troppo grande.")
         payload=json.loads(temp_path.read_text("utf-8"))
+        if source=="backup" and isinstance(payload.get("markets"),dict):
+            for market in payload["markets"].values():
+                if isinstance(market,dict) and isinstance(market.get("providerSymbol"),str):
+                    market["providerSymbol"]="BACKUP · "+market["providerSymbol"]
         db=connect(db_path)
         try:
             report=ingest(db,payload,now=utcnow())
@@ -457,7 +510,8 @@ def collect_once(db_path, symbols, days=2, runner=subprocess.run, now=None):
                        last_success=(utcnow().isoformat() if count else get_status(db).get("last_success","")),
                        last_error=("" if count else reason),
                        last_count=str(count),
-                       last_rejected=str(errors))
+                       last_rejected=str(errors),
+                       collector_source=(source if count else get_status(db).get("collector_source","none")))
         finally:
             db.close()
         return report
@@ -627,17 +681,30 @@ def collector_loop(db_path,stop,env=None):
         db=connect(db_path)
         try:
             stored=set(symbols_available(db))
+            brokers={symbol:(latest(db,symbol) or {}).get("providerSymbol","")
+                     for symbol in batch}
             set_status(db,collector_batch=str(cursor % len(batches)+1)+"/"+str(len(batches)),
                        collector_batch_symbols=str(len(batch)))
         finally:db.close()
-        cold=[item for item in batch if item not in stored]
-        warm=[item for item in batch if item in stored]
-        # At most 5 symbols * 21 daily requests per new batch, vs 35*30 before.
-        # 21 days give enough completed H4 candles for EMA50 on most FX markets.
-        if cold:
-            collect_once(db_path,cold,days=21)
-        if warm and not stop.is_set():
-            collect_once(db_path,warm,days=2)
+        # Returning to the primary after a backup takeover requires enough
+        # primary history to rebuild indicators, not just two days of M15.
+        cold=[symbol for symbol in batch
+              if symbol not in stored or brokers[symbol].startswith("BACKUP · ")]
+        warm=[symbol for symbol in batch if symbol not in cold]
+        # A new backup source gets its own 21-day bootstrap, never reuses
+        # an unrelated broker's previous historical candles.
+        for group,days in ((cold,21),(warm,2)):
+            if not group or stop.is_set():
+                continue
+            primary=collect_once(db_path,group,days=days)
+            missing=[symbol for symbol in group if symbol not in primary.get("saved",{})]
+            if missing and backup_ctrader_status(db_path)["configuration"]=="ready" and not stop.is_set():
+                backup_cold=[symbol for symbol in missing
+                             if not brokers[symbol].startswith("BACKUP · ")]
+                backup_warm=[symbol for symbol in missing if symbol not in backup_cold]
+                for subset,horizon in ((backup_cold,21),(backup_warm,2)):
+                    if subset and not stop.is_set():
+                        collect_once(db_path,subset,days=horizon,source="backup")
         stop.wait(seconds_to_next_quarter())
 
 

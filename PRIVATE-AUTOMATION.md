@@ -168,3 +168,24 @@ Un `SDK installato / OAuth ready` indica solo che il programma trova i pacchetti
 ## REMURA v1.10 · Correzione campi facoltativi cTrader
 
 Diagnosi remota, 23 ottobre 2026: `trendbars (AttributeError)`, zero nuove candele, SDK e impostazioni presenti. Nel gestore M15 della v1.9 si interrogava `payload.HasField("symbolId")` e si assumevano disponibili tutti i campi opzionali nel Python generato dall'SDK. La v1.10 usa una funzione testabile che verifica account, periodo M15 e simbolo restituito se presente, senza richiedere `HasField`. Le risposte con conto diverso, timeframe errato, oltre 100 barre giornaliere o `hasMore=true` sono rifiutate. Le candele non conformi vengono rigettate senza simulazioni e senza interrompere l'intero gruppo. Questo elimina un punto di incompatibilità, ma **va verificata una nuova raccolta reale** prima di dichiarare corretto il feed. La modifica a `scripts/` richiede installazione manuale sulla VPS.
+
+---
+
+## REMURA v1.11: due fonti cTrader a consenso esplicito
+
+Puoi collegare il conto FP Markets LIVE e il conto prop al lettore **solo dati prezzi** (scope OAuth `accounts`, senza permessi di trading). Con la funzione abilitata, REMURA chiede prima al conto primario, poi interroga il conto di riserva **soltanto per gli strumenti senza candele verificate**. La disponibilità dei simboli e dei prezzi dipende dai broker; non deduciamo trading istituzionale dalle diverse quotazioni dei due CFD.
+
+**Non abilitare la riserva prima di aver autorizzato il secondo conto.** In `/opt/remura/private/remura.env`, sul server e mai in chat/GitHub, configura:
+- `REMURA_CTRADER_BACKUP_ENABLED=1` — opt-in del secondo conto.
+- `CTRADER_BACKUP_ACCOUNT_ID` — ID API del conto prop autorizzato, non numero login.
+- `CTRADER_BACKUP_ENV` — `demo` o `live` secondo l'account prop.
+- `CTRADER_BACKUP_REFRESH_TOKEN` — token OAuth separato, con autorizzazione `accounts`; in alternativa un access token temporaneo `CTRADER_BACKUP_ACCESS_TOKEN` (non rinnovabile).
+- `CTRADER_BACKUP_CLIENT_ID` e `CTRADER_BACKUP_CLIENT_SECRET` — facoltativi quando la medesima app Spotware è autorizzata su entrambi i conti.
+
+Per il conto primario rimangono valide le precedenti variabili `CTRADER_*`; il loro ambiente `CTRADER_ENV` deve coincidere con il conto scelto. **La configurazione attuale è demo**, quindi non cambiamo automaticamente il conto esistente in FP Markets live: serve un collegamento OAuth read-only autorizzato.
+
+Il refresh token della riserva viene salvato in un file dedicato, `private/ctrader-backup-tokens.json` con permessi `0600`, distinto da `private/ctrader-tokens.json`. Ogni processo figlio riceve le credenziali di **un solo conto**, mai dell'altro. Il database espone il ticker con prefisso `BACKUP · ` quando la riserva prende il posto del primario: il cambio di provider **ricostruisce uno storico isolato**, non unisce le candele di due broker.
+
+Il pannello Diagnostica cTrader espone soltanto stato primario/secondario, fonte dell'ultimo salvataggio e numero di mercati, mai ID o token. La v1.11 distingue anche i diversi motivi di rifiuto dei metadati storici, come account/timeframe/simbolo non corrispondenti. Ricordiamo che un errore nel lettore comune ai due provider **non viene risolto dal failover**.
+
+Questa è una modifica a `scripts/`: la tua protezione auto-update v1.7 richiede una prima installazione approvata manualmente sulla VPS.

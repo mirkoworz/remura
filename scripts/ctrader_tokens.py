@@ -23,8 +23,11 @@ TOKEN_NAME = "ctrader-tokens.json"
 REFRESH_MARGIN = dt.timedelta(days=2)
 
 
-def path_for(db_path):
-    return Path(db_path).expanduser().resolve().parent/TOKEN_NAME
+def path_for(db_path,source="primary"):
+    if source not in ("primary","backup"):
+        raise ValueError("Invalid cTrader source")
+    name=TOKEN_NAME if source=="primary" else "ctrader-backup-tokens.json"
+    return Path(db_path).expanduser().resolve().parent/name
 
 
 def read_file(path):
@@ -94,10 +97,10 @@ def refresh(client_id,client_secret,refresh_token,now=None,requester=None):
     }
 
 
-def access_token(db_path,env=None,now=None,requester=None):
+def access_token(db_path,env=None,now=None,requester=None,source="primary"):
     env=os.environ if env is None else env
     now=now or utcnow()
-    file=path_for(db_path)
+    file=path_for(db_path,source=source)
     stored=read_file(file)
     if stored and stored.get("accessToken") and stored.get("refreshToken"):
         try:

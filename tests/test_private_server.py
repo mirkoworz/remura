@@ -168,6 +168,71 @@ class PrivateStorageTests(unittest.TestCase):
         self.assertIn("M15",server.safe_ctrader_reason(
             {"errors":{"EURUSD":"Candela cTrader incompatibile o invalida."}}))
 
+    def test_backup_requires_explicit_consent_and_separate_authorisation(self):
+        env={"REMURA_CTRADER_BACKUP_ENABLED":"1",
+             "CTRADER_CLIENT_ID":"app","CTRADER_CLIENT_SECRET":"secret",
+             "CTRADER_BACKUP_ACCOUNT_ID":"2345","CTRADER_BACKUP_ENV":"live",
+             "CTRADER_BACKUP_REFRESH_TOKEN":"test-private-token"}
+        with patch.dict(os.environ,env,clear=True):
+            p=server.backup_ctrader_environment(self.path)
+            self.assertEqual(p["CTRADER_ACCOUNT_ID"],"2345")
+            self.assertEqual(p["CTRADER_ENV"],"live")
+        env["CTRADER_BACKUP_ENV"]="incorrect"
+        with patch.dict(os.environ,env,clear=True):
+            self.assertIsNone(server.backup_ctrader_environment(self.path))
+        env["REMURA_CTRADER_BACKUP_ENABLED"]="0"
+        with patch.dict(os.environ,env,clear=True):
+            self.assertFalse(server.backup_ctrader_status(self.path)["enabled"])
+
+    def test_price_sources_never_share_history(self):
+        data=make_bundle()
+        data["markets"]["EURUSD"]["providerSymbol"]="BACKUP · EUR/USD"
+        store.ingest(self.db,data,now=NOW)
+        self.assertEqual(store.latest(self.db,"EURUSD")["providerSymbol"],"BACKUP · EUR/USD")
+        store.ingest(self.db,make_bundle(count=96),now=NOW)
+        self.assertEqual(store.latest(self.db,"EURUSD")["providerSymbol"],"EUR/USD")
+        self.assertEqual(len(store.latest(self.db,"EURUSD")["timeframes"]["M15"]),96)
+
+    def test_cotrader_failure_codes_are_sanitized(self):
+        self.assertIn("timeframe",server.safe_ctrader_reason(
+            {"errors":{"EURUSD":"ctrader_validation:timeframe_mismatch"}}))
+        self.assertIn("conto",server.safe_ctrader_reason(
+            {"errors":{"EURUSD":"ctrader_validation:account_mismatch"}}))
+
+    def test_failover_checks_only_symbols_missing_from_primary(self):
+        calls=[]
+        class StopOnce:
+            stopped=False
+            def is_set(self):return self.stopped
+            def wait(self,seconds):self.stopped=True
+        def collect(db_path,symbols,days=2,source="primary"):
+            calls.append((tuple(symbols),days,source))
+            if source=="primary":
+                return {"saved":{"EURUSD":10},"errors":{"XAUUSD":"no_data"}}
+            return {"saved":{"XAUUSD":10},"errors":{}}
+        with patch.dict(os.environ,{"REMURA_SYMBOLS":"EURUSD,XAUUSD"},clear=False):
+            with patch.object(server,"collect_once",side_effect=collect):
+                with patch.object(server,"backup_ctrader_status",return_value={"enabled":True,"configuration":"ready"}):
+                    server.collector_loop(self.path,StopOnce())
+        self.assertEqual(calls[0],(("EURUSD","XAUUSD"),21,"primary"))
+        self.assertEqual(calls[1],(("XAUUSD",),21,"backup"))
+        self.assertEqual(len(calls),2)
+
+    def test_no_backup_call_when_primary_saved_all_symbols(self):
+        calls=[]
+        class StopOnce:
+            stopped=False
+            def is_set(self):return self.stopped
+            def wait(self,seconds):self.stopped=True
+        def collect(db_path,symbols,days=2,source="primary"):
+            calls.append((tuple(symbols),source))
+            return {"saved":{symbol:10 for symbol in symbols},"errors":{}}
+        with patch.dict(os.environ,{"REMURA_SYMBOLS":"EURUSD,XAUUSD"},clear=False):
+            with patch.object(server,"collect_once",side_effect=collect):
+                with patch.object(server,"backup_ctrader_status",return_value={"enabled":True,"configuration":"ready"}):
+                    server.collector_loop(self.path,StopOnce())
+        self.assertEqual(calls,[(("EURUSD","XAUUSD"),"primary")])
+
     def test_scheduler_aligns_to_utc_quarter_plus_delay(self):
         value=server.seconds_to_next_quarter(dt.datetime(2026,10,17,9,14,10,tzinfo=UTC))
         self.assertEqual(value,140)
