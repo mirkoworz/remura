@@ -143,3 +143,33 @@ test('Macro contextual movement requires fresh contiguous H1 candles and relativ
  assert.equal(stale.state,"unavailable");
  assert.equal(typeof macro.context(upward,downward,{now:END}).label,"string");
 });
+
+test('Macro context distinguishes stationary dollar from contradictory direction',()=>{
+ const classify=macro.describeContext;
+ const item=d=>({state:"ok",direction:d,changePct:d==="flat"?0.039:d==="down"?-2.274:2.274,referencePct:0.5});
+ const observed=classify(item("flat"),item("down"));
+ assert.equal(observed.state,"easing");
+ assert.match(observed.label,/Volatilità in calo, dollaro sostanzialmente stabile/);
+ assert.ok(!observed.label.includes("non concordi"));
+ assert.ok(observed.description.includes("Non è un segnale long"));
+ const expectations={
+  "up/up":["caution","Volatilità e dollaro in aumento"],
+  "down/down":["calm","Volatilità e dollaro in calo"],
+  "flat/flat":["neutral","senza variazioni significative"],
+  "flat/up":["watch","Volatilità in aumento, dollaro sostanzialmente stabile"],
+  "flat/down":["easing","Volatilità in calo, dollaro sostanzialmente stabile"],
+  "up/flat":["neutral","Dollaro in aumento, volatilità sostanzialmente stabile"],
+  "down/flat":["neutral","Dollaro in calo, volatilità sostanzialmente stabile"],
+  "up/down":["mixed","Volatilità in calo, dollaro in aumento"],
+  "down/up":["mixed","Volatilità in aumento, dollaro in calo"],
+ };
+ for(const [pair,[state,label]] of Object.entries(expectations)){
+  const [d,v]=pair.split("/");
+  const res=classify(item(d),item(v));
+  assert.equal(res.state,state,pair);
+  assert.ok(res.label.includes(label),pair);
+  assert.ok(res.description.length>30,pair);
+ }
+ assert.equal(classify({state:"insufficient"},item("down")).state,"unavailable");
+ assert.equal(classify(item("flat"),{state:"ok",direction:null}).state,"unavailable");
+});

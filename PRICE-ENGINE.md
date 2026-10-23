@@ -251,3 +251,12 @@ Incollare solo **refresh token** nella richiesta nascosta dello script: non deve
 Eseguire `sudo systemctl restart remura-private.service` per caricare la nuova configurazione. Verificare la disponibilità via `GET /private-api/health` (`ctraderBackup.configuration=ready`) e il tentativo di raccolta via `GET /private-api/prices/status`. **Non** attribuire automaticamente il contratto cTrader USDX al DXY spot e il contratto VIX all'indice spot CBOE; verificare scadenze, rollover e M15 valide.
 
 Il backend Python e il workflow di test sono modificati: **installazione manuale v1.20 + enable-autoupdate.sh sullo stesso checkout dopo i test verdi**. I file sensibili privati e lo storico SQLite restano intatti.
+
+
+---
+
+## REMURA v1.21 · Contestualizzazione di variazioni macro non simmetriche
+
+Le ultime 4 ore H1 contigue vengono confrontate con la **mediana delle variazioni assolute H1 su 4h** di ciascun singolo strumento. DXY e VIX hanno scale di volatilità diverse, quindi non sono confrontati per grandezza percentuale assoluta. In particolare, quando **DXY è relativamente stabile e VIX cala**, la schermata riporta *«Volatilità in calo, dollaro sostanzialmente stabile»* e non il generico *«Indicazioni macro non concordi»*. Sono descritti distintamente tutti i nove stati (salita, discesa, oscillazione contenuta per ognuno dei due), inclusi dati insufficienti e direzioni incoerenti. I contesti non sono segnali long/short, probabilità o letture dirette dei flussi istituzionali. I prezzi broker VIX e USDX possono essere contratti a scadenza e non equivalgono necessariamente agli indici spot.
+
+Solo UI e logica pure JS; nessuna modifica Python/credenziali/prezzi. Aggiornamento automatico consentito se gli asset e i test sono verdi.
