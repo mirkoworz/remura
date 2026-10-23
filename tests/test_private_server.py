@@ -199,6 +199,40 @@ class PrivateStorageTests(unittest.TestCase):
         self.assertIn("conto",server.safe_ctrader_reason(
             {"errors":{"EURUSD":"ctrader_validation:account_mismatch"}}))
 
+    def test_failover_checks_only_symbols_missing_from_primary(self):
+        calls=[]
+        class StopOnce:
+            stopped=False
+            def is_set(self):return self.stopped
+            def wait(self,seconds):self.stopped=True
+        def collect(db_path,symbols,days=2,source="primary"):
+            calls.append((tuple(symbols),days,source))
+            if source=="primary":
+                return {"saved":{"EURUSD":10},"errors":{"XAUUSD":"no_data"}}
+            return {"saved":{"XAUUSD":10},"errors":{}}
+        with patch.dict(os.environ,{"REMURA_SYMBOLS":"EURUSD,XAUUSD"},clear=False):
+            with patch.object(server,"collect_once",side_effect=collect):
+                with patch.object(server,"backup_ctrader_status",return_value={"enabled":True,"configuration":"ready"}):
+                    server.collector_loop(self.path,StopOnce())
+        self.assertEqual(calls[0],(("EURUSD","XAUUSD"),21,"primary"))
+        self.assertEqual(calls[1],(("XAUUSD",),21,"backup"))
+        self.assertEqual(len(calls),2)
+
+    def test_no_backup_call_when_primary_saved_all_symbols(self):
+        calls=[]
+        class StopOnce:
+            stopped=False
+            def is_set(self):return self.stopped
+            def wait(self,seconds):self.stopped=True
+        def collect(db_path,symbols,days=2,source="primary"):
+            calls.append((tuple(symbols),source))
+            return {"saved":{symbol:10 for symbol in symbols},"errors":{}}
+        with patch.dict(os.environ,{"REMURA_SYMBOLS":"EURUSD,XAUUSD"},clear=False):
+            with patch.object(server,"collect_once",side_effect=collect):
+                with patch.object(server,"backup_ctrader_status",return_value={"enabled":True,"configuration":"ready"}):
+                    server.collector_loop(self.path,StopOnce())
+        self.assertEqual(calls,[(("EURUSD","XAUUSD"),"primary")])
+
     def test_scheduler_aligns_to_utc_quarter_plus_delay(self):
         value=server.seconds_to_next_quarter(dt.datetime(2026,10,17,9,14,10,tzinfo=UTC))
         self.assertEqual(value,140)
