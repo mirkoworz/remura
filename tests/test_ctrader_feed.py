@@ -31,6 +31,36 @@ class CTraderTests(unittest.TestCase):
         class SecretException(Exception):pass
         self.assertIn("(Exception)",feed.protocol_failure("trendbars",SecretException("secret")))
 
+    def test_validates_cotrader_bars_without_optional_fields_or_hasfield(self):
+        # The request is tied to one pending symbol; protobuf symbolId is optional.
+        class MinimalReply:
+            ctidTraderAccountId=1234
+            period=7
+            trendbar=[self.bar()]
+            # Intentionally no symbolId, hasMore, HasField.
+        reply=MinimalReply()
+        self.assertEqual(len(feed.validated_trendbars_response(reply,1234,77)),1)
+        self.assertAlmostEqual(feed.convert_trendbar(
+            feed.validated_trendbars_response(reply,1234,77)[0],5)["c"],1.12369)
+
+    def test_rejects_wrong_account_symbol_period_or_incomplete_response(self):
+        class Reply:
+            def __init__(self,account=2,symbol=22,period=7,more=False,rows=None):
+                self.ctidTraderAccountId=account
+                self.symbolId=symbol
+                self.period=period
+                self.hasMore=more
+                self.trendbar=rows if rows is not None else [self.bar()]
+            def bar(self):
+                return types.SimpleNamespace(low=112344,deltaOpen=20,deltaHigh=38,
+                                             deltaClose=25,utcTimestampInMinutes=29873415)
+        ok=Reply()
+        self.assertEqual(len(feed.validated_trendbars_response(ok,2,22)),1)
+        for wrong in (Reply(account=3),Reply(symbol=23),Reply(period=9),
+                      Reply(more=True),Reply(rows=[self.bar()]*101)):
+            with self.assertRaises(ValueError):
+                feed.validated_trendbars_response(wrong,2,22)
+
     def test_relative_ohlc_and_utc_timestamp_are_decoded(self):
         bar=self.bar(minutes=29873415)
         item=feed.convert_trendbar(bar,5)

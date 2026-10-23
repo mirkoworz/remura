@@ -353,6 +353,10 @@ def safe_ctrader_reason(payload, process_code=0):
         if phase in ("application_auth","account_list","account_auth","symbols_list","symbol_details","trendbars"):
             return "API cTrader ha rifiutato il passaggio "+phase+"."
         return "API cTrader ha rifiutato una richiesta: verifica account, token o limiti."
+    if any("Schema o metadati cTrader" in value for value in reasons):
+        return "Risposta storica cTrader incoerente (conto, simbolo, timeframe o limiti)."
+    if any("Candela cTrader incompatibile" in value for value in reasons):
+        return "Campi della candela M15 non compatibili con il lettore attuale."
     if any("Nessuna candela storica" in value for value in reasons):
         return "cTrader non ha restituito candele per i ticker richiesti."
     if any("cTrader ha rifiutato una richiesta nella fase" in value for value in reasons):

@@ -162,6 +162,12 @@ class PrivateStorageTests(unittest.TestCase):
             "cTrader ha segnalato un errore API nella fase symbols_list."}})
         self.assertIn("symbols_list",api)
 
+    def test_cotrader_schema_failure_has_safe_status(self):
+        self.assertIn("incoerente",server.safe_ctrader_reason(
+            {"errors":{"EURUSD":"Schema o metadati cTrader della risposta storica non coerenti."}}))
+        self.assertIn("M15",server.safe_ctrader_reason(
+            {"errors":{"EURUSD":"Candela cTrader incompatibile o invalida."}}))
+
     def test_scheduler_aligns_to_utc_quarter_plus_delay(self):
         value=server.seconds_to_next_quarter(dt.datetime(2026,10,17,9,14,10,tzinfo=UTC))
         self.assertEqual(value,140)
