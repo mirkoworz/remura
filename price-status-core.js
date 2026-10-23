@@ -133,21 +133,49 @@ function pulse(doc,{now=Date.now(),period=4}={}){
  return {state:"ok",direction,changePct:+changePct.toFixed(3),
   referencePct:+referencePct.toFixed(3),asof:recent.stamp,samples:values.length};
 }
-function context(dxy,vix,{now=Date.now()}={}){
- const dollar=pulse(dxy,{now}),fear=pulse(vix,{now});
- if(dollar.state!=="ok"||fear.state!=="ok")
+function describeContext(dollar,fear){
+ // "flat" means a 4-hour move not larger than the instrument's own
+ // recent median absolute 4-hour move. It does NOT mean zero change.
+ const valid=new Set(["up","down","flat"]);
+ if(dollar?.state!=="ok"||fear?.state!=="ok"||
+    !valid.has(dollar.direction)||!valid.has(fear.direction))
   return {state:"unavailable",dollar,fear,label:"Dati insufficienti per valutare il contesto",
    description:"Servono candele fresche e almeno 12 intervalli storici validi di quattro ore per entrambi gli indicatori."};
- if(fear.direction==="up"&&dollar.direction==="up")
-  return {state:"caution",dollar,fear,label:"Volatilità e dollaro in rafforzamento",
-   description:"Combinazione compatibile con alcune fasi di avversione al rischio, da verificare sui singoli mercati."};
- if(fear.direction==="down"&&dollar.direction==="down")
-  return {state:"calm",dollar,fear,label:"Volatilità e dollaro in calo",
-   description:"Combinazione compatibile con una distensione, ma non dimostra da sola propensione al rischio."};
- return {state:"mixed",dollar,fear,label:"Indicazioni macro non concordi",
-  description:"DXY e VIX non mostrano il medesimo schema direzionale netto: analizza il comportamento del mercato scelto."};
+ const d=dollar.direction,v=fear.direction;
+ let result;
+ if(v==="up"&&d==="up")
+  result=["caution","Volatilità e dollaro in aumento",
+   "Combinazione compatibile con alcune fasi di avversione al rischio. Non prova vendite istituzionali né anticipa necessariamente un ribasso."];
+ else if(v==="down"&&d==="down")
+  result=["calm","Volatilità e dollaro in calo",
+   "Combinazione compatibile con una distensione, ma non dimostra da sola una propensione al rischio o un segnale long."];
+ else if(v==="flat"&&d==="flat")
+  result=["neutral","DXY e VIX senza variazioni significative",
+   "Entrambi i movimenti sono contenuti rispetto alle mediane recenti: non emerge un cambiamento macro netto dalle ultime quattro ore."];
+ else if(v==="down"&&d==="flat")
+  result=["easing","Volatilità in calo, dollaro sostanzialmente stabile",
+   "Possibile attenuazione della tensione sui mercati azionari USA, senza una conferma direzionale significativa dal dollaro. Non è un segnale long."];
+ else if(v==="up"&&d==="flat")
+  result=["watch","Volatilità in aumento, dollaro sostanzialmente stabile",
+   "Possibile aumento della tensione sui mercati azionari USA, senza una conferma significativa dal dollaro. Non è un segnale short."];
+ else if(v==="flat"&&d==="up")
+  result=["neutral","Dollaro in aumento, volatilità sostanzialmente stabile",
+   "Il rafforzamento del dollaro può dipendere anche da tassi o fattori valutari. Il VIX non segnala uno spostamento altrettanto significativo."];
+ else if(v==="flat"&&d==="down")
+  result=["neutral","Dollaro in calo, volatilità sostanzialmente stabile",
+   "L'indebolimento del dollaro non dimostra, senza altre conferme, un aumento della propensione al rischio."];
+ else if(v==="up"&&d==="down")
+  result=["mixed","Volatilità in aumento, dollaro in calo",
+   "Dinamiche macro diverse: maggiore volatilità attesa insieme a dollaro debole. Controllare i singoli mercati, senza inferire automaticamente una direzione."];
+ else
+  result=["mixed","Volatilità in calo, dollaro in aumento",
+   "La volatilità attesa diminuisce mentre il dollaro si rafforza: segnali macro differenti, non necessariamente in contraddizione."];
+ return {state:result[0],dollar,fear,label:result[1],description:result[2]};
 }
-return Object.freeze({validBar,timeframe,audit,returns,correlation,pairEligible,pulse,context,TFS});
+function context(dxy,vix,{now=Date.now()}={}){
+ return describeContext(pulse(dxy,{now}),pulse(vix,{now}));
+}
+return Object.freeze({validBar,timeframe,audit,returns,correlation,pairEligible,pulse,describeContext,context,TFS});
  })();
  const api=Object.freeze({LIMIT_MINUTES,OUTCOMES,interpret,summarize,macro});
  if(typeof module==="object"&&module.exports)module.exports=api;
