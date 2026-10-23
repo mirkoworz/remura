@@ -1,4 +1,4 @@
-/* REMURA v1.17: menu responsive ad albero + configurazione condivisa dei mercati. */
+/* REMURA v1.18: menu responsive ad albero + configurazione condivisa dei mercati. */
 (() => {
   "use strict";
   const FX_CODES={EUR:"099741",GBP:"096742",JPY:"097741",AUD:"232741",CAD:"090741",CHF:"092741",NZD:"112741"};
@@ -32,7 +32,7 @@
     // Visible on every REMURA page, including the installed iPhone web app.
     const release=document.createElement("div");
     release.id="rm-release";
-    release.textContent="REMURA · Aggiornamento v1.17 · 23/10/2026 16:58 (Italia)";
+    release.textContent="REMURA · Aggiornamento v1.18 · 23/10/2026 17:33 (Italia)";
     document.body.prepend(release);
 
     const page=location.pathname.split("/").pop()||"index.html";
@@ -49,7 +49,7 @@
     const shade=document.createElement("div");shade.id="rm-menu-shade";shade.hidden=true;
     const drawer=document.createElement("aside");drawer.id="rm-menu";
     drawer.setAttribute("aria-label","Navigazione principale Remura");drawer.setAttribute("aria-hidden","true");drawer.inert=true;
-    drawer.innerHTML='<div class="rm-header"><a href="./index.html" class="rm-brand">REMURA<span>Segui le tracce istituzionali</span></a><button id="rm-close" type="button" aria-label="Chiudi menu">×</button></div><nav aria-label="Menu Remura" class="rm-nav"><div class="rm-shortcuts"><a href="./index.html" data-main="home">⌂ <span>Home</span></a><a href="./mercati.html#institutional-scanner" data-main="scanner">🦈 <span>Radar Squali · Squalincome</span></a><a href="./fonti.html?v=8" data-main="fonti">◈ <span>Fonti sentiment</span></a><a href="./stato-prezzi.html" data-main="prices">▤ <span>Stato prezzi · 38 mercati</span></a><a href="./impostazioni.html" data-main="settings">⚙ <span>Impostazioni · Capital Google</span></a></div><label class="rm-search-label" for="rm-search">Cerca tra 38 strumenti</label><input id="rm-search" type="search" autocomplete="off" placeholder="Gold, CADJPY, Nasdaq..." aria-label="Filtra strumenti e sottomenu"><div id="rm-menu-tree" class="rm-menu-tree"></div><div class="rm-menu-bottom"><a href="./forex.html?v=8">⌁ Radar Forex classico →</a></div></nav><div class="rm-footer">COT: posizioni istituzionali settimanali. Myfxbook e Capital.com: sentiment retail separato.</div>';
+    drawer.innerHTML='<div class="rm-header"><a href="./index.html" class="rm-brand">REMURA<span>Segui le tracce istituzionali</span></a><button id="rm-close" type="button" aria-label="Chiudi menu">×</button></div><nav aria-label="Menu Remura" class="rm-nav"><div class="rm-shortcuts"><a href="./index.html" data-main="home">⌂ <span>Home</span></a><a href="./mercati.html#institutional-scanner" data-main="scanner">🦈 <span>Radar Squali · Squalincome</span></a><a href="./fonti.html?v=8" data-main="fonti">◈ <span>Fonti sentiment</span></a><a href="./stato-prezzi.html" data-main="prices">▤ <span>Stato prezzi · 38 mercati</span></a><a href="./stato-prezzi.html#macro" data-main="macro">◈ <span>Radar Macro · DAX DXY VIX</span></a><a href="./impostazioni.html" data-main="settings">⚙ <span>Impostazioni · Capital Google</span></a></div><label class="rm-search-label" for="rm-search">Cerca tra 38 strumenti</label><input id="rm-search" type="search" autocomplete="off" placeholder="Gold, CADJPY, Nasdaq..." aria-label="Filtra strumenti e sottomenu"><div id="rm-menu-tree" class="rm-menu-tree"></div><div class="rm-menu-bottom"><a href="./forex.html?v=8">⌁ Radar Forex classico →</a></div></nav><div class="rm-footer">COT: posizioni istituzionali settimanali. Myfxbook e Capital.com: sentiment retail separato.</div>';
     document.body.append(shade,drawer,trigger);
     document.body.classList.add("rm-has-nav");
     const tree=drawer.querySelector("#rm-menu-tree");

@@ -8,7 +8,7 @@
 <title>REMURA · Stato prezzi</title>
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="stylesheet" href="./nav.css?v=117">
+<link rel="stylesheet" href="./nav.css?v=118">
 <style>
 :root{color-scheme:dark;--bg:#07121a;--ink:#ecf7f5;--muted:#a5c3c7;--mint:#76ebc4;--line:#315960;--surface:#112e37}
 *{box-sizing:border-box}
@@ -60,6 +60,33 @@ button:disabled{opacity:.5}
 .explain{color:var(--muted);font-size:12px;line-height:1.7}
 .hidden{display:none!important}
 @media(max-width:700px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.controls{align-items:stretch}.controls label{flex:1 1 145px}button{width:100%}}
+
+.macro-wrap{margin-top:32px;scroll-margin-top:40px;border-top:1px solid #335561;padding-top:15px}
+.macro-wrap h2{font-size:clamp(24px,5vw,32px);margin:5px 0 12px}
+.macro-wrap .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.macro-wrap .market{border-color:#40626a}
+.macro-wrap .market strong{font-size:19px}
+.macro-wrap .badge{float:right;border:1px solid #67817f;border-radius:20px;padding:3px 9px;font-size:11px;font-weight:800}
+.macro-wrap .badge[data-state=recent]{color:#98f2d2;border-color:#42997c}
+.macro-wrap .badge[data-state=missing],.macro-wrap .badge[data-state=invalid]{color:#f8beac;border-color:#b17d67}
+.macro-wrap .fact{font-size:12px;color:#c5dadd;margin:5px 0;overflow-wrap:anywhere}
+.macro-wrap .fact b{color:#f5fdf9}
+.macro-wrap .warn{font-size:12px;color:#eac7a1}
+.macro-wrap .foot{font-size:12px;color:var(--muted)}
+.macro-wrap table{width:100%;border-collapse:collapse}
+.macro-wrap th,.macro-wrap td{padding:12px 7px;text-align:left;border-bottom:1px solid #38555e}
+.macro-wrap th{font-size:12px;color:#b3cfcc}
+.macro-wrap td b{font-variant-numeric:tabular-nums}
+.macro-wrap .control{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.macro-wrap .banner{padding:12px 15px;border:1px solid #376864;border-radius:12px;background:#173840;line-height:1.6}
+.macro-wrap .banner[data-error=true]{background:#352922;border-color:#a07763}
+.macro-wrap details{margin-top:14px;border-top:1px solid #335561;padding-top:10px}
+.macro-wrap summary{cursor:pointer;font-weight:800;color:var(--mint);padding:8px 0}
+.macro-wrap .panel h2{font-size:19px}
+.macro-wrap .panel{margin:13px 0}
+.macro-wrap .control select{flex:1}
+.macro-link{display:inline-block;padding:10px 14px;border:1px solid #49816e;border-radius:10px;font-weight:800;text-decoration:none;margin:10px 0}
+@media(max-width:720px){.macro-wrap .grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -87,10 +114,27 @@ button:disabled{opacity:.5}
 </section>
 <div id="price-results-count" class="explain" aria-live="polite"></div>
 <div id="price-list" aria-label="Dettaglio dei mercati"></div>
+<p class="explain"><a href="#macro" class="macro-link">Radar Macro: DAX, DXY e VIX ↓</a></p>
+<section id="macro" class="macro-wrap" aria-labelledby="macro-heading">
+<div class="eyebrow">Analisi reale · DAX · USDX · VIX</div>
+<h2 id="macro-heading">Radar Macro</h2>
+<p class="lead">Qualità M15/H1/H4 e correlazioni su rendimenti orari allineati UTC. Contratti broker e indici spot possono essere diversi; non sono segnali di trading.</p>
+<div class="panel"><div id="macro-status" class="banner" role="status" aria-live="polite">Connessione alla VPS privata…</div><div class="control" style="margin-top:12px"><button id="macro-refresh" type="button">Aggiorna analisi</button><span class="foot">Leggiamo solo tre strumenti dalla VPS .ts.net</span></div></div>
+<div id="macro-markets" class="grid" aria-label="Stato qualità DAX, DXY, VIX"></div>
+<section class="panel"><h2>Correlazioni dei rendimenti H1</h2><p>Coefficiente di Pearson tra rendimenti logaritmici orari calcolati su candele H1 con lo stesso orario UTC. Finestra: ultime 336 ore, almeno 30 osservazioni in comune. Un valore vicino a +1 indica movimenti orari concordi, −1 opposti, 0 una relazione lineare debole.</p>
+<div id="macro-pairs"><p>In attesa dei dati verificati…</p></div>
+<details><summary>Come interpretare DAX, DXY e VIX</summary>
+<p>VIX in crescita può accompagnare maggiori aspettative di volatilità e avversione al rischio; DXY in crescita può riflettere forza del dollaro, differenziali dei tassi o domanda difensiva. DAX in calo insieme a VIX in rialzo può essere coerente con uno scenario prudente, ma non identifica chi sta vendendo né costituisce un segnale di ingresso.</p>
+<p>USDX e VIX forniti dal broker possono essere contratti con scadenza, diversi dai riferimenti spot. Le correlazioni fra contratti possono essere distorte dai cambi di scadenza. COT è settimanale e non misura movimenti istituzionali in tempo reale.</p>
+</details></section>
+<section class="panel"><h2>Controlla un altro mercato</h2><p>Seleziona uno dei 38 strumenti e verifica qualità M15/H1/H4 senza interrogare inutilmente gli altri 37.</p><div class="control"><label for="macro-symbol">Strumento</label><select id="macro-symbol" aria-label="Seleziona mercato"></select><button id="macro-check" type="button">Verifica</button></div><div id="macro-extra" style="margin-top:12px"></div></section>
+
+<p class="explain">I buchi possono essere pause di mercato. Nessuna candela viene inventata e nessun ordine viene eseguito.</p>
+</section>
 <p class="explain">Dati privati dalla VPS <b>.ts.net</b>. Nessuna credenziale o ordine mostrato. Aggiornamento automatico ogni tre minuti quando la pagina è visibile.</p>
 </main>
-<script src="./nav.js?v=117"></script>
-<script src="./price-status-core.js?v=115"></script>
-<script src="./stato-prezzi.js?v=115"></script>
+<script src="./nav.js?v=118"></script>
+<script src="./price-status-core.js?v=118"></script>
+<script src="./stato-prezzi.js?v=118"></script>
 </body>
 </html>
