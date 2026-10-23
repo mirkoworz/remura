@@ -40,6 +40,10 @@ on:
       - 'stato-prezzi.html'
       - 'stato-prezzi.js'
       - 'price-status-core.js'
+      - 'macro.html'
+      - 'macro.js'
+      - 'macro-core.js'
+      - 'tests/macro.test.js'
       - 'tests/price-status.test.js'
       - 'PRIVATE-AUTOMATION.md'
       - 'retail.js'
@@ -68,13 +72,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: node --check price-core.js && node --check price.js && node --check price-status-core.js && node --check stato-prezzi.js && node --check insights.js && node --check sources.js && node --check sentiment-core.js && node --check capital-cloud.js && node --check capital-cloud-config.js
+      - run: node --check price-core.js && node --check price.js && node --check price-status-core.js && node --check stato-prezzi.js && node --check macro-core.js && node --check macro.js && node --check insights.js && node --check sources.js && node --check sentiment-core.js && node --check capital-cloud.js && node --check capital-cloud-config.js
       - name: Verify Oracle Always Free bootstrap syntax
         run: bash -n deploy/oracle/install.sh && bash -n deploy/oracle/enable-autoupdate.sh
       - name: Test offline update safety
         run: python -m unittest discover -s tests -p 'test_autoupdate.py' -v
       - run: python -m py_compile scripts/price_feed.py scripts/ctrader_feed.py scripts/ctrader_tokens.py scripts/price_store.py scripts/private_server.py scripts/update_capital.py
-      - run: node --test tests/price.test.js tests/insights.test.js tests/sentiment.test.js tests/capital-cloud.test.js tests/market-expansion.test.js tests/price-status.test.js
+      - run: node --test tests/price.test.js tests/insights.test.js tests/sentiment.test.js tests/capital-cloud.test.js tests/market-expansion.test.js tests/price-status.test.js tests/macro.test.js
       - run: python -m unittest discover -s tests -p 'test_price_feed.py' -v
       - run: python -m unittest discover -s tests -p 'test_ctrader_feed.py' -v
       - run: python -m unittest discover -s tests -p 'test_private_server.py' -v

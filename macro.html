@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#09141d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>REMURA · Radar Macro</title>
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="stylesheet" href="./nav.css?v=118">
+<style>
+:root{color-scheme:dark;--bg:#07121a;--panel:#132c36;--line:#335561;--text:#e9f7f5;--muted:#a1bdc2;--accent:#81ebc7}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.55 system-ui,-apple-system,sans-serif}
+main{max-width:1050px;margin:auto;padding:30px 16px 90px}
+h1{font-size:clamp(29px,7vw,45px);line-height:1.15;margin:10px 0 13px}
+h2{font-size:19px;margin:0 0 10px}
+p{color:var(--muted);line-height:1.75;margin:8px 0}
+a{color:var(--accent)}.top{display:flex;align-items:center;justify-content:space-between;padding-left:57px}
+.link{padding:9px 12px;border:1px solid var(--line);border-radius:11px;text-decoration:none}
+.eyebrow{font-size:11px;color:var(--accent);letter-spacing:.15em;font-weight:850;margin-top:25px}
+.panel{padding:17px;border:1px solid var(--line);background:var(--panel);border-radius:16px;margin:13px 0}
+.banner{padding:12px 15px;border:1px solid #376864;border-radius:12px;background:#173840;line-height:1.6}
+.banner[data-error=true]{background:#352922;border-color:#a07763}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.market{border:1px solid #40626a;border-radius:14px;background:#0d2631;padding:14px;min-width:0}
+.market strong{font-size:21px}.badge{float:right;border:1px solid #67817f;border-radius:20px;padding:3px 9px;font-size:11px;font-weight:800}
+.badge[data-state=recent]{color:#98f2d2;border-color:#42997c}.badge[data-state=missing],.badge[data-state=invalid]{color:#f8beac;border-color:#b17d67}
+.fact{font-size:12px;color:#c5dadd;margin:5px 0;overflow-wrap:anywhere}
+.fact b{color:#f5fdf9}
+.warn{font-size:12px;color:#eac7a1}.foot{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse}th,td{padding:12px 7px;text-align:left;border-bottom:1px solid #38555e}th{font-size:12px;color:#b3cfcc}td b{font-variant-numeric:tabular-nums}
+select,button{font:inherit;border-radius:10px;min-height:44px;padding:9px 13px}
+select{background:#1b3a44;color:var(--text);border:1px solid #52767d;max-width:100%}
+button{background:#225c4b;color:white;font-weight:800;border:1px solid #80c4aa;cursor:pointer}
+.control{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+details{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
+summary{cursor:pointer;font-weight:800;color:var(--accent);padding:8px 0}
+.hidden{display:none}
+@media(max-width:720px){.grid{grid-template-columns:1fr}.panel{padding:14px}.top{padding-left:57px}}
+</style>
+</head>
+<body>
+<main>
+<div class="top"><b style="letter-spacing:.13em;color:#81ebc7;font-size:18px">REMURA</b><a class="link" href="./stato-prezzi.html">← Stato prezzi</a></div>
+<div class="eyebrow">Analisi verificabile · DAX · USDX · VIX</div>
+<h1>Radar Macro</h1>
+<p>Verifichiamo le candele reali cTrader prima di confrontare il DAX con la forza del dollaro e la volatilità. Nessuna correlazione viene calcolata da prezzi simulati o dati non allineati.</p>
+<div class="panel"><div id="macro-status" class="banner" role="status" aria-live="polite">Connessione alla VPS privata…</div><div class="control" style="margin-top:12px"><button id="macro-refresh" type="button">Aggiorna analisi</button><span class="foot">Leggiamo solo tre strumenti dalla VPS .ts.net</span></div></div>
+<div id="macro-markets" class="grid" aria-label="Stato qualità DAX, DXY, VIX"></div>
+<section class="panel"><h2>Correlazioni dei rendimenti H1</h2><p>Coefficiente di Pearson tra rendimenti logaritmici orari calcolati su candele H1 con lo stesso orario UTC. Finestra: ultime 336 ore, almeno 30 osservazioni in comune. Un valore vicino a +1 indica movimenti orari concordi, −1 opposti, 0 una relazione lineare debole.</p>
+<div id="macro-pairs"><p>In attesa dei dati verificati…</p></div>
+<details><summary>Come interpretare DAX, DXY e VIX</summary>
+<p>VIX in crescita può accompagnare maggiori aspettative di volatilità e avversione al rischio; DXY in crescita può riflettere forza del dollaro, differenziali dei tassi o domanda difensiva. DAX in calo insieme a VIX in rialzo può essere coerente con uno scenario prudente, ma non identifica chi sta vendendo né costituisce un segnale di ingresso.</p>
+<p>USDX e VIX forniti dal broker possono essere contratti con scadenza, diversi dai riferimenti spot. Le correlazioni fra contratti possono essere distorte dai cambi di scadenza. COT è settimanale e non misura movimenti istituzionali in tempo reale.</p>
+</details></section>
+<section class="panel"><h2>Controlla un altro mercato</h2><p>Seleziona uno dei 38 strumenti e verifica qualità M15/H1/H4 senza interrogare inutilmente gli altri 37.</p><div class="control"><label for="macro-symbol">Strumento</label><select id="macro-symbol" aria-label="Seleziona mercato"></select><button id="macro-check" type="button">Verifica</button></div><div id="macro-extra" style="margin-top:12px"></div></section>
+<p class="foot">I buchi M15 possono dipendere dalle sessioni e dai mercati chiusi; non vengono considerati automaticamente errori. Le verifiche OHLC si basano sui dati realmente presenti nella VPS. Nessuna operazione di trading viene eseguita.</p>
+</main>
+<script src="./nav.js?v=118"></script>
+<script src="./macro-core.js?v=118"></script>
+<script src="./macro.js?v=118"></script>
+</body></html>
