@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="./icon.svg">
-<link rel="stylesheet" href="./nav.css?v=112">
+<link rel="stylesheet" href="./nav.css?v=113">
 <title>Remura · Scheda strumento</title>
 <style>
 :root{color-scheme:dark;--bg:#07121a;--panel:#10242f;--panel2:#122e38;--line:#2b4b55;--text:#e8f7f4;--muted:#9bb8be;--mint:#69edca;--red:#ff8d99;--blue:#8db6ff;--amber:#f6c47e}
@@ -129,7 +129,7 @@ html{scroll-behavior:smooth}
 </head>
 <body>
 <div class="shell">
-<header class="top"><div class="brand">REMURA<small>35 mercati · COT e sentiment</small></div><div class="topright"><a class="btn" href="./index.html">Home</a><a class="btn" id="category-back" href="./catalogo.html?categoria=forex&v=8">Categoria</a><a class="btn" href="./mercati.html#institutional-scanner">Radar Squali</a><span class="status" id="state">Connessione…</span><button class="btn" id="refresh" type="button" aria-label="Aggiorna i dati">↻</button></div></header>
+<header class="top"><div class="brand">REMURA<small>38 mercati · COT, sentiment e prezzi</small></div><div class="topright"><a class="btn" href="./index.html">Home</a><a class="btn" id="category-back" href="./catalogo.html?categoria=forex&v=8">Categoria</a><a class="btn" href="./mercati.html#institutional-scanner">Radar Squali</a><span class="status" id="state">Connessione…</span><button class="btn" id="refresh" type="button" aria-label="Aggiorna i dati">↻</button></div></header>
 <div class="eyebrow" id="category">MERCATO</div>
 <h1 id="heading">Gold <span>XAUUSD</span></h1>
 <p class="subtitle" id="description">COT ufficiale, posizioni dei trader retail e prezzo: tre dati diversi, spiegati separatamente.</p>
@@ -190,7 +190,7 @@ html{scroll-behavior:smooth}
 </div>
 <footer class="footer">REMURA · COT settimanale, sentiment retail a campioni e prezzi da fonti distinte. Non è consulenza finanziaria.</footer>
 </div>
-<script src="./nav.js?v=112"></script>
+<script src="./nav.js?v=113"></script>
 <script src="./insights-core.js?v=9"></script>
 <script src="./cot-indices-core.js?v=2"></script>
 <script src="./insights.js?v=9"></script>
@@ -202,10 +202,13 @@ const param=(urlParams.get("symbol")||"XAUUSD").toUpperCase();
 const symbol=conf.symbols.includes(param)?param:"XAUUSD";
 const entry=conf.other[symbol]||null;
 const isFX=!entry;
-const isMetal=entry&&entry.group==="metals";
+const isMetal=Boolean(entry&&entry.group==="metals");
+const isEnergy=Boolean(entry&&entry.group==="energy");
+const isDisagg=Boolean(entry&&entry.dataset==="disagg");
+const hasCOT=isFX||Boolean(entry&&entry.code&&entry.dataset);
 const base=isFX?symbol.slice(0,3):null,quote=isFX?symbol.slice(3):null;
-const dataset=isMetal?"disagg":"tff";
-const labels=isMetal?["Managed Money","Producer / Merchant"]:["Asset Manager","Leveraged Funds"];
+const dataset=isDisagg?"disagg":"tff";
+const labels=isDisagg?["Managed Money","Producer / Merchant"]:["Asset Manager","Leveraged Funds"];
 const $=id=>document.getElementById(id);
 const dateText=d=>d?new Intl.DateTimeFormat("it-IT",{day:"2-digit",month:"short",year:"numeric",timeZone:"UTC"}).format(new Date(d+"T12:00:00Z")):"—";
 const number=x=>(x==null||x==="")?NaN:Number(x);
@@ -217,23 +220,24 @@ const color=n=>n>.35?"pos":n<-.35?"neg":"neu";
 const reportFields=dataset==="tff"
  ? ["report_date_as_yyyy_mm_dd","cftc_contract_market_code","open_interest_all","asset_mgr_positions_long","asset_mgr_positions_short","lev_money_positions_long","lev_money_positions_short"]
  : ["report_date_as_yyyy_mm_dd","cftc_contract_market_code","open_interest_all","m_money_positions_long_all","m_money_positions_short_all","prod_merc_positions_long","prod_merc_positions_short"];
-const codes=isFX?[base,quote].filter(c=>c!=="USD").map(c=>conf.fxCodes[c]):[entry.code];
+const codes=isFX?[base,quote].filter(c=>c!=="USD").map(c=>conf.fxCodes[c]):(entry.code?[entry.code]:[]);
 const sourceUrl=dataset==="tff"?"https://publicreporting.cftc.gov/Commitments-of-Traders/TFF-Futures-Only/gpe5-46if":"https://publicreporting.cftc.gov/Commitments-of-Traders/Disaggregated-Futures-Only/72hh-3qpy";
 const datasetId=dataset==="tff"?"gpe5-46if":"72hh-3qpy";
 let chartData=[],rawByCode={},loading=false;
 function setup(){
  document.title="REMURA · "+symbol+" | COT istituzionale";
- const back=$("category-back");const cat=isFX?"forex":isMetal?"metals":"indices";back.href="./catalogo.html?categoria="+cat+"&v=8";back.textContent=cat==="forex"?"← Forex":cat==="metals"?"← Metalli":"← Indici";
- $("category").textContent=isFX?"FOREX · COT TFF":isMetal?"METALLI · COT DISAGGREGATED":"INDICI · COT TFF";
+ const back=$("category-back");const cat=isFX?"forex":entry.group;back.href="./catalogo.html?categoria="+cat+"&v=13";back.textContent="← "+({forex:"Forex",metals:"Metalli",indices:"Indici",energy:"Energia"}[cat]||"Mercati");
+ $("category").textContent=!hasCOT?"PREZZI · COT N/D":isFX?"FOREX · COT TFF":isMetal?"METALLI · COT DISAGGREGATED":isEnergy?"PETROLIO · COT DISAGGREGATED":"INDICI · COT TFF";
  $("heading").textContent="";
  $("heading").append(document.createTextNode(isMetal?(symbol==="XAUUSD"?"Gold · Oro":"Silver · Argento"):isFX?base+"/"+quote:entry.name+" "));
  const sm=document.createElement("span");sm.textContent=isMetal||!isFX?symbol:" "+symbol;$("heading").append(sm);
- $("description").textContent=isFX?"Confronto dei futures delle due valute contro USD. È un proxy sintetico di "+symbol+", non un report COT diretto del cross.":isMetal?"Posizionamento sul future "+entry.name+", usato come riferimento per "+symbol+" (non quotazione spot).":"Posizionamento sul future "+entry.name+" come riferimento per "+symbol+", non sul CFD di un broker.";
+ $("description").textContent=!hasCOT?"Prezzi "+entry.name+". COT non integrato: non vengono inventate posizioni istituzionali.":isFX?"Confronto dei futures delle due valute contro USD. È un proxy sintetico di "+symbol+", non un report COT diretto del cross.":isDisagg?"Posizionamento sul future "+entry.name+", riferimento distinto da spot e CFD.":"Posizionamento sul future "+entry.name+" come riferimento per "+symbol+", non sul CFD di un broker.";
  for(const [k,id] of [[0,"a"],[1,"b"]]){ $("label-"+id).textContent=labels[k];$("legend-"+id).textContent=labels[k];$("column-"+id).textContent=labels[k]; }
  $("dataset-label").textContent=dataset==="tff"?"CFTC · TFF Futures Only":"CFTC · Disaggregated Futures Only";
- $("method-note").textContent=(isFX?"Cross valutario: differenza fra posizioni nette normalizzate di due futures. USD = zero solo come riferimento matematico. ":isMetal?"Managed Money = speculatori; Producer/Merchant = operatori commerciali spesso in copertura. ":"Asset Manager e Leveraged Funds possono avere obiettivi diversi. ")+"Net% = (Long − Short) ÷ Open Interest × 100. Non è un segnale di prezzo.";
+ $("method-note").textContent=(isFX?"Cross valutario: differenza fra posizioni nette normalizzate di due futures. USD = zero solo come riferimento matematico. ":isDisagg?"Managed Money = speculatori; Producer/Merchant = operatori commerciali spesso in copertura. ":"Asset Manager e Leveraged Funds possono avere obiettivi diversi. ")+"Net% = (Long − Short) ÷ Open Interest × 100. Non è un segnale di prezzo.";
  const a=document.createElement("a");a.href=sourceUrl;a.target="_blank";a.rel="noopener noreferrer";a.textContent=dataset==="tff"?"Apri TFF Futures Only ufficiale ↗":"Apri Disaggregated Futures Only ufficiale ↗";
- $("source").replaceChildren(document.createTextNode("Fonte dei contratti: "),a,document.createTextNode(". Il COT fotografa normalmente le posizioni del martedì e viene pubblicato di norma venerdì. I contratti non identificano ogni transazione istituzionale e non coprono tutto il Forex o i CFD. Questo strumento mostra esposizioni nette e loro variazioni, non ordini eseguiti in tempo reale. Il sentiment Myfxbook, quando disponibile, proviene da un campione distinto di conti retail e non misura gli istituzionali."));
+ if(hasCOT) $("source").replaceChildren(document.createTextNode("Fonte dei contratti: "),a,document.createTextNode(". COT futures-only settimanale; non sono le posizioni sui CFD."));
+ else $("source").textContent="COT non integrato per questo mercato. DAX GER30 (Eurex) e Brent UKOIL (ICE) non devono ricevere valori da futures CFTC diversi; prezzi verificati disponibili separatamente.";
  $("refresh").addEventListener("click",load);
  $("cot-name-a").textContent=labels[0]+" · COT Index";$("cot-name-b").textContent=labels[1]+" · COT Index";
  $("cot-period").addEventListener("change",renderIndices);
@@ -396,7 +400,7 @@ function show(series){
  $("alert").className="alert"+(stale?" warning":"");
  $("alert").textContent=(stale?"ATTENZIONE · Report vecchio di "+age+" giorni. ":"Fonte CFTC ufficiale · ")+"Posizioni al "+dateText(r.date)+". Aggiornamento settimanale, non in tempo reale. Sentiment retail separato: controlla la sezione dedicata.";
  showContracts(r);showHistory(series);chartData=series;draw(series);renderIndices();
- window.REMURA_INSIGHTS?.updateCOT({series,symbol,isFX,isMetal,labels});
+ window.REMURA_INSIGHTS?.updateCOT({series,symbol,isFX,isMetal:isDisagg,labels});
 }
 async function request(){
  const cutoff=new Date();cutoff.setUTCFullYear(cutoff.getUTCFullYear()-5);cutoff.setUTCDate(cutoff.getUTCDate()-21);
@@ -424,7 +428,12 @@ async function load(){
  try{show(await request());}catch(e){fail(e.message||"Errore sconosciuto");}
  finally{loading=false;$("refresh").disabled=false;}
 }
-setup();load();
+setup();
+if(hasCOT){load();}else{
+ fail("COT direttamente comparabile non integrato.");
+ setState("COT · N/D");
+ $("alert").textContent="COT N/D per "+symbol+". Nessun dato istituzionale inventato per il CFD; consulta i prezzi cTrader verificati se disponibili.";
+}
 </script>
 <script src="./retail.js?v=14"></script>
 <script src="./sentiment-core.js?v=14"></script>
