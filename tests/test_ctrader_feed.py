@@ -36,7 +36,7 @@ class CTraderTests(unittest.TestCase):
         class MinimalReply:
             ctidTraderAccountId=1234
             period=7
-            trendbar=[self.bar()]
+            trendbar=[self.bar(minutes=29873415)]
             # Intentionally no symbolId, hasMore, HasField.
         reply=MinimalReply()
         self.assertEqual(len(feed.validated_trendbars_response(reply,1234,77)),1)
