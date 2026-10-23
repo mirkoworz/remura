@@ -35,6 +35,7 @@ on:
       - 'tests/test_ig_sentiment.py'
       - 'tests/test_ig_private.py'
       - 'scripts/ctrader_tokens.py'
+      - 'scripts/configure_ctrader_backup.py'
       - 'tests/test_ctrader_tokens.py'
       - 'tests/test_private_server.py'
       - 'stato-prezzi.html'
@@ -73,7 +74,7 @@ jobs:
         run: bash -n deploy/oracle/install.sh && bash -n deploy/oracle/enable-autoupdate.sh
       - name: Test offline update safety
         run: python -m unittest discover -s tests -p 'test_autoupdate.py' -v
-      - run: python -m py_compile scripts/price_feed.py scripts/ctrader_feed.py scripts/ctrader_tokens.py scripts/price_store.py scripts/private_server.py scripts/update_capital.py
+      - run: python -m py_compile scripts/price_feed.py scripts/ctrader_feed.py scripts/ctrader_tokens.py scripts/configure_ctrader_backup.py scripts/price_store.py scripts/private_server.py scripts/update_capital.py
       - run: node --test tests/price.test.js tests/insights.test.js tests/sentiment.test.js tests/capital-cloud.test.js tests/market-expansion.test.js tests/price-status.test.js
       - run: python -m unittest discover -s tests -p 'test_price_feed.py' -v
       - run: python -m unittest discover -s tests -p 'test_ctrader_feed.py' -v

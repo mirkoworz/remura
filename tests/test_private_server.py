@@ -249,6 +249,32 @@ class PrivateStorageTests(unittest.TestCase):
                     server.collector_loop(self.path,StopOnce())
         self.assertEqual(calls,[(("EURUSD","XAUUSD"),"primary")])
 
+    def test_private_fp_setup_never_replaces_primary_credentials(self):
+        import configure_ctrader_backup as helper
+        original=("CTRADER_CLIENT_ID=application\n"
+                  "CTRADER_CLIENT_SECRET=private-secret\n"
+                  "CTRADER_ACCOUNT_ID=12345\n"
+                  "CTRADER_ENV=demo\n"
+                  "REMURA_CTRADER_BACKUP_ENABLED=0\n")
+        values=helper.parse_environment(original)
+        self.assertEqual(values["CTRADER_ENV"],"demo")
+        result=helper.update_environment(original,{
+            "REMURA_CTRADER_BACKUP_ENABLED":"1",
+            "CTRADER_BACKUP_ACCOUNT_ID":"67890",
+            "CTRADER_BACKUP_ENV":"live",
+        })
+        self.assertIn("CTRADER_ACCOUNT_ID=12345",result)
+        self.assertIn("CTRADER_CLIENT_SECRET=private-secret",result)
+        self.assertEqual(result.count("REMURA_CTRADER_BACKUP_ENABLED="),1)
+        self.assertIn("CTRADER_BACKUP_ACCOUNT_ID=67890",result)
+        self.assertNotIn("REFRESH_TOKEN=",result)
+        result_accounts=helper.account_options([
+            types.SimpleNamespace(isLive=False,brokerTitleShort="FP Markets",traderLogin=123),
+            types.SimpleNamespace(isLive=True,brokerTitleShort="FP Markets",traderLogin=456789),
+        ])
+        self.assertEqual(len(result_accounts),1)
+        self.assertEqual(result_accounts[0][2],"••789")
+
     def test_failed_subprocess_marks_each_attempt_without_secret(self):
         with patch.dict(os.environ,{"CTRADER_CLIENT_ID":"app",
               "CTRADER_CLIENT_SECRET":"secret","CTRADER_ACCOUNT_ID":"123",
