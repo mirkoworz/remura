@@ -1,4 +1,4 @@
-/* REMURA v1.16: menu responsive ad albero + configurazione condivisa dei mercati. */
+/* REMURA v1.17: menu responsive ad albero + configurazione condivisa dei mercati. */
 (() => {
   "use strict";
   const FX_CODES={EUR:"099741",GBP:"096742",JPY:"097741",AUD:"232741",CAD:"090741",CHF:"092741",NZD:"112741"};
@@ -32,7 +32,7 @@
     // Visible on every REMURA page, including the installed iPhone web app.
     const release=document.createElement("div");
     release.id="rm-release";
-    release.textContent="REMURA · Aggiornamento v1.16 · 23/10/2026 15:56 (Italia)";
+    release.textContent="REMURA · Aggiornamento v1.17 · 23/10/2026 16:58 (Italia)";
     document.body.prepend(release);
 
     const page=location.pathname.split("/").pop()||"index.html";

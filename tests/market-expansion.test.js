@@ -38,3 +38,10 @@ test('VIX replaces Russell 2000, keeps a DAX 40 market and DXY price independent
  assert.match(scanner,/GER30:\{group:'indices'[^\n]*code:null,dataset:null/);
  assert.ok(nav.includes('DAX 40'));
 });
+
+test('DAX and VIX do not display fabricated COT values on asset detail',()=>{
+ const html=read('asset.html');
+ assert.ok(html.includes('!hasCOT?"COT N/D · Prezzi cTrader"'));
+ assert.ok(html.includes('VIX (contratto sulla volatilità)'));
+ assert.ok(read('mercati.html').includes('SOLO PREZZI · COT N/D'));
+});
