@@ -28,7 +28,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
 
 from price_feed import MARKETS, UTC, utcnow
-from price_store import connect, get_status, set_status, latest, ingest, api_document, symbols_available
+from price_store import connect, get_status, set_status, latest, ingest, api_document, symbols_available, price_overview
 from ctrader_tokens import access_token, path_for, read_file
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -40,9 +40,11 @@ SAFE_ASSETS={
     "sentiment-core.js","sentiment-trend-core.js","sentiment-trend.js","sentiment-trend.css",
     "sources.js","sources.css","capital-cloud-config.js","capital-cloud.js",
     "impostazioni.html","impostazioni.js","feed-health-core.js","price.js","price.css","price-core.js","sw.js",
+    "stato-prezzi.html","stato-prezzi.js","price-status-core.js",
     "manifest.webmanifest","icon.svg",
 }
 STATUS_PATH="/private-api/health"
+PRICE_OVERVIEW_PATH="/private-api/prices/status"
 UPDATE_STATUS_PATH="/private-api/autoupdate"
 RETAIL_LATEST="/private-api/retail/latest.json"
 IG_LATEST="/private-api/ig/latest.json"
@@ -294,9 +296,12 @@ def http_handler(db_path):
                 if data is None:self.response(503,{"error":"retail_not_collected"})
                 else:self.response(200,data)
                 return
-            if path==STATUS_PATH or PRICE_RE.fullmatch(path):
+            if path in (STATUS_PATH,PRICE_OVERVIEW_PATH) or PRICE_RE.fullmatch(path):
                 db=connect(db_path)
                 try:
+                    if path==PRICE_OVERVIEW_PATH:
+                        self.response(200,price_overview(db))
+                        return
                     if path==STATUS_PATH:
                         status=get_status(db)
                         self.response(200,{
@@ -419,6 +424,24 @@ def safe_ctrader_reason(payload, process_code=0):
     return "Nessuna candela verificata. Controllare SDK, OAuth e simboli del broker."
 
 
+
+def price_failure_code(raw):
+    """Encode provider failure into an allowlisted diagnostic, never log text."""
+    if not isinstance(raw,str):
+        return "unknown_error"
+    if "Ticker non disponibile o ambiguo" in raw or "ticker broker è vuoto" in raw:
+        return "ticker_unavailable"
+    if "Nessuna candela storica" in raw or "M15 mancanti" in raw:
+        return "no_historical_bars"
+    if "ctrader_validation:" in raw or "Dati incompleti:" in raw:
+        return "incomplete_history"
+    if any(part in raw for part in ("invalida","non valido","non valida","OHLC")):
+        return "invalid_bars"
+    if any(part in raw for part in ("Timeout","Connessione","cTrader ha segnalato")):
+        return "request_failed"
+    return "unknown_error"
+
+
 def ctrader_preflight(db_path=None):
     """Safe health checks; never include account ID, symbols, tokens or URLs."""
     try:
@@ -508,6 +531,22 @@ def collect_once(db_path, symbols, days=2, runner=subprocess.run, now=None, sour
             count=len(report["saved"])
             errors=len(report["errors"])+len(payload.get("errors",{}))
             reason=safe_ctrader_reason(payload,getattr(process,"returncode",0))
+            provider_errors=payload.get("errors",{})
+            if not isinstance(provider_errors,dict):
+                provider_errors={}
+            summary={}
+            for symbol in symbols:
+                if symbol not in MARKETS:
+                    continue
+                if symbol in report["saved"]:
+                    outcome="ok"
+                else:
+                    message=provider_errors.get(symbol) or report["errors"].get(symbol)
+                    outcome=price_failure_code(message)
+                summary["price_attempt:"+symbol]=json.dumps(
+                    {"time":now.isoformat(),"outcome":outcome},separators=(",",":"))
+            if summary:
+                set_status(db,**summary)
             set_status(db,
                        collector=("running" if count else "no_data"),
                        last_success=(utcnow().isoformat() if count else get_status(db).get("last_success","")),

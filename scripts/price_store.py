@@ -122,6 +122,71 @@ def ingest(db, input_doc, now=None):
     return {"saved":success,"errors":errors}
 
 
+
+PRICE_OUTCOMES=frozenset((
+    "ok","ticker_unavailable","no_historical_bars","incomplete_history",
+    "invalid_bars","request_failed","unknown_error"
+))
+
+
+def price_overview(db,now=None):
+    """One lightweight metadata-only snapshot for the iPhone dashboard.
+
+    No OHLC payloads, OAuth material, account IDs or private file paths are
+    returned. Missing markets are explicit: they never inherit stale prices.
+    """
+    now=now or utcnow()
+    states=get_status(db)
+    saved={row[0]:row[1:] for row in db.execute(
+        "SELECT symbol,source,broker_symbol,updated_at,payload FROM prices")}
+    results=[]
+    for symbol in sorted(MARKETS):
+        record=saved.get(symbol)
+        last_complete=None
+        provider_symbol=None
+        source=None
+        counts={"M15":0,"H1":0,"H4":0}
+        if record:
+            source,provider_symbol,last_complete,payload=record
+            try:
+                doc=json.loads(payload)
+                frames=doc.get("timeframes",{})
+                for timeframe in counts:
+                    bars=frames.get(timeframe,[]) if isinstance(frames,dict) else []
+                    counts[timeframe]=len(bars) if isinstance(bars,list) else 0
+            except (ValueError,TypeError,AttributeError):
+                pass
+            source="backup" if (isinstance(provider_symbol,str)
+                                  and provider_symbol.startswith("BACKUP · ")) else "primary"
+        state={}
+        try:
+            state=json.loads(states.get("price_attempt:"+symbol,"{}"))
+            if not isinstance(state,dict):
+                state={}
+        except (ValueError,TypeError):
+            state={}
+        outcome=state.get("outcome")
+        stamp=state.get("time")
+        results.append({
+            "symbol":symbol,
+            "lastComplete":last_complete if isinstance(last_complete,str) else None,
+            "providerSymbol":provider_symbol if isinstance(provider_symbol,str) else None,
+            "source":source,
+            "counts":counts,
+            "lastAttempt":stamp if isinstance(stamp,str) else None,
+            "lastOutcome":outcome if outcome in PRICE_OUTCOMES else None
+        })
+    return {
+        "schema":"remura-price-status-v1",
+        "serverTime":iso_utc(now),
+        "total":len(MARKETS),
+        "collector":states.get("collector","disabled"),
+        "collectorBatch":states.get("collector_batch"),
+        "lastAttempt":states.get("last_attempt"),
+        "markets":results
+    }
+
+
 def api_document(db,symbol,now=None):
     """Browser shape is exactly the existing remura-price-v1 contract."""
     data=latest(db,symbol)
