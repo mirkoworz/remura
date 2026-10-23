@@ -32,7 +32,7 @@
 <h1>Segui i grandi.<br><span>Su tutti i mercati.</span></h1>
 <p class="intro">Un unico scanner di posizionamento per le principali coppie Forex, oro, argento, WTI e indici USA. Mostriamo dati CFTC settimanali: <b>nessun dato inventato</b> quando la fonte non risponde.</p>
 <div class="alert" id="global-notice">Caricamento diretto dei report pubblici CFTC. Il COT è un'istantanea del martedì pubblicata con ritardo, non un flusso di ordini in tempo reale.</div>
-<div class="tabs" role="group" aria-label="Scegli un mercato"><button class="tab active" data-group="all">Tutti</button><button class="tab" data-group="forex">Forex</button><button class="tab" data-group="metals">Oro e metalli</button><button class="tab" data-group="indices">Indici</button><button class="tab" data-group="energy">Petrolio WTI</button></div>
+<div class="tabs" role="group" aria-label="Scegli un mercato"><button class="tab active" data-group="all">Tutti</button><button class="tab" data-group="forex">Forex</button><button class="tab" data-group="metals">Oro e metalli</button><button class="tab" data-group="indices">Indici</button><button class="tab" data-group="macro">Macro · DXY/VIX</button><button class="tab" data-group="energy">Petrolio WTI</button></div>
 <div class="counter"><div><strong id="total-count">—</strong> strumenti nella lista</div><div><strong id="loaded-count">—</strong> con dati ufficiali · <span id="report-date">in attesa</span></div></div>
 
 <section class="panel scan-panel" id="institutional-scanner">
@@ -65,8 +65,8 @@ US500:{group:'indices',name:'S&P 500 · E-mini',code:'13874A',dataset:'tff',labe
 NAS100:{group:'indices',name:'Nasdaq 100 · E-mini',code:'209742',dataset:'tff',labels:['Asset Manager','Leveraged Funds']},
 US30:{group:'indices',name:'Dow Jones · E-mini $5',code:'124603',dataset:'tff',labels:['Asset Manager','Leveraged Funds']},
 GER30:{group:'indices',name:'DAX 40 · prezzo broker (COT N/D)',code:null,dataset:null,labels:['N/D','N/D']},
-VIX:{group:'indices',name:'VIX · contratto volatilità broker (COT N/D)',code:null,dataset:null,labels:['N/D','N/D']},
-DXY:{group:'indices',name:'Indice Dollaro USA · ICE',code:'098662',dataset:'tff',labels:['Asset Manager','Leveraged Funds']},
+VIX:{group:'macro',name:'VIX · contratto broker (COT N/D)',code:null,dataset:null,labels:['N/D','N/D']},
+DXY:{group:'macro',name:'Dollar Index · riferimento COT ICE',code:'098662',dataset:'tff',labels:['Asset Manager','Leveraged Funds']},
 USOIL:{group:'energy',name:'WTI · NYMEX futures (riferimento USOil CFD)',code:'067651',dataset:'disagg',labels:['Managed Money','Producer / Merchant']}
 };
 const HOSTS=['https://publicreporting.cftc.gov','https://publicreportinghub.cftc.gov'];
@@ -177,7 +177,7 @@ function scanSignal(sym){
 }
 function renderScanner(){
  const el=$('scan-results');el.textContent='';
- const all=allSymbols.map(scanSignal).filter(Boolean);
+ const all=allSymbols.filter(sym=>instrument(sym).group!=="macro").map(scanSignal).filter(Boolean);
  $('scan-count').textContent=all.length+' strumenti con storico recente';
  const items=all.filter(t=>scanMode==='moves'||(scanMode==='reversals'?t.crossed:scanMode==='accelerations'?t.faster:scanMode==='slowdowns'?t.slower:t.extreme))
    .sort((x,y)=>scanMode==='extremes'?y.extremeScore-x.extremeScore:scanMode==='accelerations'?(Math.abs(y.change)-Math.abs(y.oldChange))-(Math.abs(x.change)-Math.abs(x.oldChange)):scanMode==='slowdowns'?(Math.abs(x.change)-Math.abs(x.oldChange))-(Math.abs(y.change)-Math.abs(y.oldChange)):Math.abs(y.change)-Math.abs(x.change)).slice(0,12);

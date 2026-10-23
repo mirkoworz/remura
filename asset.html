@@ -226,8 +226,8 @@ const datasetId=dataset==="tff"?"gpe5-46if":"72hh-3qpy";
 let chartData=[],rawByCode={},loading=false;
 function setup(){
  document.title="REMURA · "+symbol+" | COT istituzionale";
- const back=$("category-back");const cat=isFX?"forex":entry.group;back.href="./catalogo.html?categoria="+cat+"&v=13";back.textContent="← "+({forex:"Forex",metals:"Metalli",indices:"Indici",energy:"Energia"}[cat]||"Mercati");
- $("category").textContent=!hasCOT?"PREZZI · COT N/D":isFX?"FOREX · COT TFF":isMetal?"METALLI · COT DISAGGREGATED":isEnergy?"PETROLIO · COT DISAGGREGATED":"INDICI · COT TFF";
+ const back=$("category-back");const cat=isFX?"forex":entry.group;back.href="./catalogo.html?categoria="+cat+"&v=13";back.textContent="← "+({forex:"Forex",metals:"Metalli",indices:"Indici",macro:"Indicatori macro",energy:"Energia"}[cat]||"Mercati");
+ $("category").textContent=!hasCOT?"PREZZI · COT N/D":isFX?"FOREX · COT TFF":isMetal?"METALLI · COT DISAGGREGATED":isEnergy?"PETROLIO · COT DISAGGREGATED":entry.group==="macro"?"MACRO · RIFERIMENTO COT TFF":"INDICI · COT TFF";
  $("heading").textContent="";
  $("heading").append(document.createTextNode(isMetal?(symbol==="XAUUSD"?"Gold · Oro":"Silver · Argento"):isFX?base+"/"+quote:entry.name+" "));
  const sm=document.createElement("span");sm.textContent=isMetal||!isFX?symbol:" "+symbol;$("heading").append(sm);
