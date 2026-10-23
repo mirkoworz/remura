@@ -104,7 +104,7 @@ test("Macro page has a private-readonly architecture and correct menu version",(
  const ui=fs.readFileSync("stato-prezzi.js","utf8");
  const nav=fs.readFileSync("nav.js","utf8");
  const service=fs.readFileSync("sw.js","utf8");
- for(const script of ["nav.js?v=121","price-status-core.js?v=119","stato-prezzi.js?v=119"])assert.ok(html.includes(script));
+ for(const script of ["nav.js?v=121","price-status-core.js?v=121","stato-prezzi.js?v=121"])assert.ok(html.includes(script));
  assert.ok(html.includes('id="macro"'));
  assert.ok(ui.includes('window.addEventListener("hashchange",initialize)'));
  assert.ok(ui.includes("./private-api/prices/"));
