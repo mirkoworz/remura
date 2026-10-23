@@ -44,7 +44,7 @@ test('Mobile monitoring keeps source diagnostics accessible in compact disclosur
 
 // REMURA v1.18 quality and correlation regression tests
 const macro=core.macro;
-const HOUR=3600000,QUARTER=900000,END=Date.parse("2026-10-23T14:00:00Z");
+const HOUR=3600000,QUARTER=900000,END=Date.parse("2026-10-23T16:00:00Z");
 const iso=t=>new Date(t).toISOString();
 function bars(hours=100,start=END-100*HOUR,base=100,rate=0.002){
  const m15=[];
