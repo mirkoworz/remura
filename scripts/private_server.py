@@ -12,6 +12,7 @@ Never use an anonymous/Quick Tunnel, public bind, or GitHub Pages for this.
 from __future__ import annotations
 
 import datetime as dt
+import importlib.util
 import json
 import mimetypes
 import math
@@ -275,6 +276,9 @@ def http_handler(db_path):
                         self.response(200,{
                             "name":"REMURA Private",
                             "collector":status.get("collector","disabled"),
+                            "ctraderPreflight":ctrader_preflight(db_path),
+                            "collectorLastCount":status.get("last_count"),
+                            "collectorLastRejected":status.get("last_rejected"),
                             "lastSuccess":status.get("last_success"),
                             "lastAttempt":status.get("last_attempt"),
                             "lastError":status.get("last_error"),
@@ -315,6 +319,55 @@ def http_handler(db_path):
     return Handler
 
 
+def collector_batches(symbols, size=5):
+    """Bound each UTC quarter to a small group; never start 35*30 API calls."""
+    if not isinstance(size,int) or not 1<=size<=8:
+        raise ValueError("Batch size must be 1..8")
+    unique=list(dict.fromkeys(symbols))
+    if any(symbol not in MARKETS for symbol in unique):
+        raise ValueError("Unexpected REMURA symbol")
+    return [unique[i:i+size] for i in range(0,len(unique),size)]
+
+
+def safe_ctrader_reason(payload, process_code=0):
+    """Limited diagnostic vocabulary: never show raw provider bodies or credentials."""
+    if not isinstance(payload,dict):
+        return "La sorgente cTrader non ha restituito un archivio valido."
+    errors=payload.get("errors")
+    if not isinstance(errors,dict):
+        errors={}
+    reasons=[str(v) for v in errors.values() if isinstance(v,str)]
+    if any("Ticker non disponibile o ambiguo" in value for value in reasons):
+        return "Alcuni simboli non corrispondono ai ticker del broker. Serve una mappatura privata."
+    if any("non è autorizzato" in value for value in reasons):
+        return "Conto cTrader non autorizzato dal token o ambiente demo/live non coerente."
+    if any("Timeout della raccolta" in value for value in reasons):
+        return "Timeout delle richieste storiche cTrader: riduci numero mercati o controlla la rete."
+    if any("cTrader ha segnalato un errore API" in value for value in reasons):
+        return "API cTrader ha rifiutato una richiesta: verifica account, token o limiti."
+    if any("Nessuna candela storica" in value for value in reasons):
+        return "cTrader non ha restituito candele per i ticker richiesti."
+    if any("Connessione cTrader interrotta" in value for value in reasons):
+        return "Connessione cTrader interrotta."
+    if any("Risposta cTrader inattesa" in value for value in reasons):
+        return "Formato di risposta cTrader non atteso."
+    return "Nessuna candela verificata. Controllare SDK, OAuth e simboli del broker."
+
+
+def ctrader_preflight(db_path=None):
+    """Safe health checks; never include account ID, symbols, tokens or URLs."""
+    try:
+        installed=importlib.util.find_spec("ctrader_open_api") is not None
+    except (ImportError,ValueError):
+        installed=False
+    selected=os.environ.get("CTRADER_ENV","demo").lower()
+    ready=source_configured(db_path=db_path)
+    return {"sdk":"installed" if installed else "missing",
+            "configuration":"ready" if ready else "incomplete",
+            "environment":selected if selected in ("demo","live") else "invalid",
+            "enabled":os.environ.get("REMURA_COLLECTOR_ENABLED","0")=="1"}
+
+
 def collector_command(symbols, days, output):
     script=ROOT/"scripts"/"ctrader_feed.py"
     args=[sys.executable,str(script),"--days",str(days),
@@ -334,11 +387,15 @@ def collect_once(db_path, symbols, days=2, runner=subprocess.run, now=None):
     now=now or utcnow()
     if not source_configured(db_path=db_path):
         db=connect(db_path)
-        try:
-            set_status(db,collector="awaiting_approval",last_error="App cTrader/token non configurati")
-        finally:
-            db.close()
+        try:set_status(db,collector="awaiting_approval",last_error="App cTrader/token non configurati")
+        finally:db.close()
         return {"saved":{},"errors":{"configuration":"ctrader not configured"}}
+    check=ctrader_preflight(db_path)
+    if check["sdk"]!="installed":
+        db=connect(db_path)
+        try:set_status(db,collector="missing_sdk",last_error="SDK ctrader-open-api assente nel Python della VPS.")
+        finally:db.close()
+        return {"saved":{},"errors":{"sdk":"missing"}}
     db=connect(db_path)
     try:
         set_status(db,collector="collecting",last_attempt=now.isoformat())
@@ -371,10 +428,11 @@ def collect_once(db_path, symbols, days=2, runner=subprocess.run, now=None):
             report=ingest(db,payload,now=utcnow())
             count=len(report["saved"])
             errors=len(report["errors"])+len(payload.get("errors",{}))
+            reason=safe_ctrader_reason(payload,getattr(process,"returncode",0))
             set_status(db,
                        collector=("running" if count else "no_data"),
                        last_success=(utcnow().isoformat() if count else get_status(db).get("last_success","")),
-                       last_error=("" if count else "La sorgente non ha restituito candele verificate."),
+                       last_error=("" if count else reason),
                        last_count=str(count),
                        last_rejected=str(errors))
         finally:
@@ -383,7 +441,7 @@ def collect_once(db_path, symbols, days=2, runner=subprocess.run, now=None):
     except (ValueError,RuntimeError,TimeoutError,subprocess.SubprocessError, OSError, json.JSONDecodeError):
         db=connect(db_path)
         try:
-            set_status(db,collector="failed",last_error="Collettore cTrader non disponibile o risposta invalida.")
+            set_status(db,collector="failed",last_error="Lettore cTrader terminato senza archivio valido: verificare SDK, OAuth e connessione.")
         finally:
             db.close()
         return {"saved":{},"errors":{"collector":"No usable output"}}
@@ -538,16 +596,25 @@ def collector_loop(db_path,stop,env=None):
         try:set_status(db,collector="invalid_symbols",last_error="REMURA_SYMBOLS non contiene mercati validi.")
         finally:db.close()
         return
-    db=connect(db_path)
-    try:
-        stored=set(symbols_available(db))
-        days=30 if not stored.intersection(symbols) else 2
-    finally:
-        db.close()
-    # One bounded initial bootstrap; subsequent runs fetch 2 UTC days and merge.
+    batches=collector_batches(symbols)
+    cursor=0
     while not stop.is_set():
-        collect_once(db_path,symbols,days)
-        days=2
+        batch=batches[cursor % len(batches)]
+        cursor+=1
+        db=connect(db_path)
+        try:
+            stored=set(symbols_available(db))
+            set_status(db,collector_batch=str(cursor % len(batches)+1)+"/"+str(len(batches)),
+                       collector_batch_symbols=str(len(batch)))
+        finally:db.close()
+        cold=[item for item in batch if item not in stored]
+        warm=[item for item in batch if item in stored]
+        # At most 5 symbols * 21 daily requests per new batch, vs 35*30 before.
+        # 21 days give enough completed H4 candles for EMA50 on most FX markets.
+        if cold:
+            collect_once(db_path,cold,days=21)
+        if warm and not stop.is_set():
+            collect_once(db_path,warm,days=2)
         stop.wait(seconds_to_next_quarter())
 
 

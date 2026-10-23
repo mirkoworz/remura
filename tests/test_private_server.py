@@ -129,6 +129,27 @@ class PrivateStorageTests(unittest.TestCase):
         self.assertNotIn("CAPITAL_API_PASSWORD",doc)
         self.assertNotIn("never-expose",json.dumps(doc))
 
+    def test_market_batches_are_bounded_and_cover_each_symbol(self):
+        selected=sorted(store.MARKETS)
+        batches=server.collector_batches(selected)
+        self.assertTrue(all(len(b)<=5 for b in batches))
+        self.assertEqual([x for batch in batches for x in batch],selected)
+        self.assertEqual(len(batches),7)
+        self.assertEqual(server.collector_batches(["EURUSD","EURUSD"]),[["EURUSD"]])
+        with self.assertRaises(ValueError):
+            server.collector_batches(["BAD!"])
+
+    def test_diagnostics_summarize_only_non_sensitive_messages(self):
+        reason=server.safe_ctrader_reason({"errors":{"EURUSD":"Ticker non disponibile o ambiguo: EUR/USD"}})
+        self.assertIn("simboli",reason)
+        self.assertNotIn("EUR/USD",reason)
+        self.assertIn("Timeout",server.safe_ctrader_reason({"errors":{"connection":"Timeout della raccolta: dati incompleti."}}))
+        snapshot={"status":"missing","configuration":"incomplete","environment":"demo"}
+        with patch.object(server.importlib.util,"find_spec",return_value=None):
+            details=server.ctrader_preflight(self.path)
+        self.assertEqual(details["sdk"],"missing")
+        self.assertNotIn("CTRADER_ACCESS_TOKEN",json.dumps(details))
+
     def test_scheduler_aligns_to_utc_quarter_plus_delay(self):
         value=server.seconds_to_next_quarter(dt.datetime(2026,10,17,9,14,10,tzinfo=UTC))
         self.assertEqual(value,140)

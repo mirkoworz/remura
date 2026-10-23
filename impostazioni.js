@@ -107,6 +107,27 @@ async function checkAutoupdate(){
  }
 }
 $("check-autoupdate").addEventListener("click",checkAutoupdate);
+async function checkCTrader(){
+  try{
+   const response=await fetch("./private-api/health",{cache:"no-store"});
+   if(!response.ok)throw Error("private_server_unavailable");
+   const data=await response.json();
+   const check=data.ctraderPreflight;
+   if(!check || typeof check!=="object"){
+    status("ctrader-status","Server da aggiornare: diagnostica cTrader non disponibile.","");
+    return;
+   }
+   const sdk=check.sdk==="installed",oauth=check.configuration==="ready";
+   const verified=Array.isArray(data.instruments)?data.instruments.length:0;
+   status("ctrader-status","SDK "+(sdk?"presente":"MANCANTE")+" · OAuth "+(oauth?"configurato":"incompleto")+" · "+verified+" mercati con prezzi",sdk&&oauth&&verified?"ok":"error");
+   const count=data.collectorLastCount;
+   $("ctrader-detail").textContent="Stato: "+String(data.collector||"N/D")+" · Ultima raccolta: "+String(data.lastAttempt||"N/D")+" · Ultimo risultato: "+String(data.lastError||"N/D")+(count?" · Mercati salvati: "+count:"")+". Se l'SDK manca, installalo solo nell'ambiente Python privato della VPS.";
+  }catch(_){
+   status("ctrader-status","Collegamento cTrader verificabile solo tramite VPS Tailscale.","");
+   $("ctrader-detail").textContent="Apri REMURA dal tuo indirizzo .ts.net.";
+  }
+}
+$("check-ctrader").addEventListener("click",checkCTrader);
 function store(key,doc){
  try{localStorage.setItem(key,JSON.stringify(doc));return true;}
  catch(_){return false;}
@@ -149,5 +170,5 @@ $("clear-local").addEventListener("click",()=>{
  }catch(_){status("import-status","Impossibile accedere alla memoria locale.","error");}
 });
 $("check-feeds").addEventListener("click",()=>{checkGoogle();checkPrivate();checkPublic();});
-checkGoogle();checkPrivate();checkPublic();checkAutoupdate();
+checkGoogle();checkPrivate();checkPublic();checkAutoupdate();checkCTrader();
 })();

@@ -142,3 +142,15 @@ Questi test utilizzano dati sintetici **solo nelle fixture**, mai nel sito come 
 ## Limiti da verificare quando attiviamo i dati reali
 
 La frequenza programmata M15 non assicura la disponibilità di ogni quotazione esattamente al secondo di chiusura (mercati chiusi, manutenzione cTrader, assenza di tick, VPN/Internet, rate limit). Il pannello contrassegna le candele datate. L'analisi H4/H1/M15 resta indicativa e non backtestata, e COT rimane settimanale con giorno di pubblicazione diverso dalla data delle posizioni.
+
+
+---
+## REMURA v1.8: cTrader storico a gruppi, senza simulazioni
+
+L'attivazione dei prezzi richiede il pacchetto Open API Spotware dentro il **venv dell'utente REMURA**. Il normale installer Ubuntu NON installa automaticamente dipendenze Python di terzi, quindi verificare separatamente l'SDK prima di abilitare cTrader.
+
+La raccolta usa gruppi di massimo **5 strumenti ogni quarto d'ora**. Se uno strumento non ha ancora storico, chiede 21 giorni di M15, altrimenti recupera 2 giorni e unisce le sole candele chiuse. I 35 mercati ruotano in 7 cicli, fino a circa 105 minuti tra due tentativi per lo stesso strumento, evitando 35 × 30 richieste che superavano il timeout di 5 minuti. I ticker dipendono dal broker e si configurano, se necessario, in `/opt/remura/private/ctrader-symbols.json` senza caricare dati su GitHub.
+
+Le Impostazioni mostrano lo stato sicuro `/private-api/health` con `ctraderPreflight.sdk`, `ctraderPreflight.configuration`, eventuale errore categorizzato e mercati presenti. **Nessun token, ID conto o password viene restituito dalla API.** Una connessione funzionante si conferma soltanto quando `instruments` contiene strumenti con candele reali.
+
+Nota: modifiche a `scripts/` richiedono l'installazione controllata da Termius; il timer v1.7 non aggiorna automaticamente il backend sensibile.
