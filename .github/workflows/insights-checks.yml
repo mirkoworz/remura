@@ -62,6 +62,6 @@ jobs:
           if(!fx||!other)throw new Error('Cannot verify market definitions');
           const fxCount=(fx[1].match(/"[A-Z]{6}"/g)||[]).length;
           const others=(other[1].match(/^\s*[A-Z0-9]+:\{/gm)||[]).length;
-          if(fxCount!==28||others!==7)throw new Error('Expected 28 FX pairs and 7 other markets; got '+fxCount+'+'+others);
+          if(fxCount!==28||others!==10)throw new Error('Expected 28 FX pairs and 10 other markets; got '+fxCount+'+'+others);
           console.log('Verified shared asset page: '+(fxCount+others)+' markets');
           NODE

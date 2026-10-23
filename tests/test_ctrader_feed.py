@@ -77,6 +77,25 @@ class CTraderTests(unittest.TestCase):
         import inspect
         self.assertNotIn("request.count =",inspect.getsource(feed.collect))
 
+    def test_verified_dax_oil_and_two_index_aliases(self):
+        rows=[
+            types.SimpleNamespace(symbolName="GER30",symbolId=301,enabled=True),
+            types.SimpleNamespace(symbolName="USOil",symbolId=302,enabled=True),
+            types.SimpleNamespace(symbolName="UKOil",symbolId=303,enabled=True),
+            types.SimpleNamespace(symbolName="US100",symbolId=304,enabled=True),
+            types.SimpleNamespace(symbolName="SPX500",symbolId=305,enabled=True)
+        ]
+        selected,errors=feed.exact_symbols(rows,
+            ["GER30","USOIL","UKOIL","NAS100","US500"],
+            {"NAS100":"US100","US500":"SPX500"})
+        self.assertEqual(errors,{})
+        self.assertEqual(len(selected),5)
+        self.assertEqual(selected["USOIL"].symbolId,302)
+        self.assertEqual(selected["NAS100"].symbolId,304)
+        empty,missing=feed.exact_symbols(rows,["NAS100","US500"])
+        self.assertEqual(empty,{})
+        self.assertEqual(set(missing),{"NAS100","US500"})
+
     def test_relative_ohlc_and_utc_timestamp_are_decoded(self):
         bar=self.bar(minutes=29873415)
         item=feed.convert_trendbar(bar,5)

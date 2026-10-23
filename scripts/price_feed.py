@@ -32,7 +32,8 @@ MARKETS_FX = [
     "AUDJPY", "AUDCAD", "AUDCHF", "AUDNZD",
     "NZDJPY", "NZDCAD", "NZDCHF", "CADJPY", "CADCHF", "CHFJPY",
 ]
-MARKETS_OTHER = ["XAUUSD", "XAGUSD", "US500", "NAS100", "US30", "US2000", "DXY"]
+MARKETS_OTHER = ["XAUUSD", "XAGUSD", "US500", "NAS100", "US30", "US2000", "DXY",
+                 "GER30", "USOIL", "UKOIL"]
 MARKETS = set(MARKETS_FX + MARKETS_OTHER)
 
 
@@ -281,7 +282,7 @@ def make_bundle(args, symbols: list[str], aliases: dict, now: dt.datetime | None
 def main() -> int:
     p = argparse.ArgumentParser(description="Private OHLC export for REMURA; NEVER commit generated JSON.")
     p.add_argument("--provider", choices=["twelve", "oanda", "mt5", "csv"], required=True)
-    p.add_argument("--symbols", nargs="+", default=["EURUSD", "XAUUSD", "US500"], help="Any subset of the 35 REMURA symbols")
+    p.add_argument("--symbols", nargs="+", default=["EURUSD", "XAUUSD", "US500"], help="Any subset of the 38 REMURA symbols")
     p.add_argument("--count", type=int, default=2400, help="Number of M15 bars: 100..5000")
     p.add_argument("--delay", type=float, default=9.0, help="Seconds between Twelve Data calls (default 9s to respect Basic 8 credits/min)")
     p.add_argument("--oanda-environment", choices=["practice", "live"], default="practice")
