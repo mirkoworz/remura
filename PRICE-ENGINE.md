@@ -198,3 +198,16 @@ Soglia UI: M15 recente entro 180 minuti (rotazione prevista ~120 minuti + buffer
 Quando la richiesta cTrader restituisce solo un errore globale (per esempio `errors.connection`) o il processo figlio fallisce interamente, registriamo `request_failed` per ciascun simbolo effettivamente tentato, invece di nascondere la situazione dietro un esito generico o `mai`. I codici sono allowlist: nessun messaggio grezzo, secret, token o ID del conto passa nella dashboard privata. Gli storici esistenti, l'elenco degli asset, le API dei prezzi e la pianificazione delle richieste restano immutati.
 
 Test aggiunti: il primo di due gruppi mostra `1/2`; un processo fallito produce uno stato diagnostico per ogni simbolo e non espone il testo dell'errore. **Modifica a `scripts/private_server.py`: installazione manuale sulla VPS richiesta**, con le protezioni dell'autoaggiornamento già esistenti.
+
+
+---
+
+## REMURA v1.17 · DAX 40, indice dollaro e VIX, senza Russell
+
+La watchlist privata rimane a **38 strumenti** (28 FX + 2 metalli + 6 indici + 2 energie): rimosso **US2000 / Russell 2000**, aggiunto **VIX** come strumento cTrader. Il DAX è prioritario per l'utente. L'identificativo interno **GER30** resta invariato per mantenere lo storico già salvato; sull'attuale screenshot del broker il DAX è indicato **GER40**, quindi eventuali passaggi GER30→GER40 devono avvenire solo mediante **alias privato verificato** dopo aver visto il ticker effettivo dello storico; i due flussi non devono essere mescolati.
+
+Il simbolo logico **DXY** richiede l'alias privato **DXY → USDX** visto nell'elenco strumenti del conto. L'elenco mostra per USDX il riferimento a un contratto **DXZ6** con scadenza: il prezzo del CFD/contratto non va presentato come copia perpetua dell'indice spot ICE DXY né confuso con il COT futures (rilevazione settimanale). Il nuovo **VIX** è mostrato dal broker come contratto sulla volatilità con sigla e scadenza: verificare M15 effettivamente fresche prima di usarlo come indicatore di risk-off; non è per definizione l'indice CBOE spot VIX.
+
+**COT**: DXY mantiene il riferimento futures CFTC già integrato; il VIX non riceve per ora un COT, né riceve impropriamente posizioni istituzionali da altri strumenti. DAX 40 e VIX hanno COT N/D fino a integrazione di fonti appropriate. I dati del prezzo si ottengono esclusivamente da cTrader privato, nessuna candela sintetica.
+
+**Deploy VPS**: modificati i registri backend Python, quindi necessita una installazione manuale del codice verificato dalla branch main. La mappatura si scrive nel file protetto `/opt/remura/private/ctrader-symbols.json` preservando tutte le chiavi esistenti e modalità 0600; includere DXY:USDX. VIX:VIX si risolve per corrispondenza esatta senza alias. Nessuna chiave OAuth, ordine o dato sensibile va inviato a GitHub.
