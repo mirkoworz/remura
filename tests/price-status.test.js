@@ -19,7 +19,7 @@ test('Dashboard uses only lightweight authenticated API, no token or fake data',
  const page=fs.readFileSync('stato-prezzi.html','utf8');
  const client=fs.readFileSync('stato-prezzi.js','utf8');
  const backend=fs.readFileSync('scripts/private_server.py','utf8');
- assert.ok(page.includes('nav.js?v=118'));
+ assert.ok(page.includes('nav.js?v=119'));
  assert.ok(client.includes('./private-api/prices/status'));
  assert.ok(backend.includes('PRICE_OVERVIEW_PATH'));
  assert.ok(backend.includes('stato-prezzi.html'));
@@ -104,11 +104,42 @@ test("Macro page has a private-readonly architecture and correct menu version",(
  const ui=fs.readFileSync("stato-prezzi.js","utf8");
  const nav=fs.readFileSync("nav.js","utf8");
  const service=fs.readFileSync("sw.js","utf8");
- for(const script of ["nav.js?v=118","price-status-core.js?v=118","stato-prezzi.js?v=118"])assert.ok(html.includes(script));
+ for(const script of ["nav.js?v=119","price-status-core.js?v=119","stato-prezzi.js?v=119"])assert.ok(html.includes(script));
  assert.ok(html.includes('id="macro"'));
- assert.ok(ui.includes('window.addEventListener("hashchange",initMacro)'));
+ assert.ok(ui.includes('window.addEventListener("hashchange",initialize)'));
  assert.ok(ui.includes("./private-api/prices/"));
  assert.ok(!ui.includes("apiKey")&&!ui.includes("CTRADER_ACCESS_TOKEN"));
  assert.ok(nav.includes('href="./stato-prezzi.html#macro"'));
  assert.ok(service.includes('"./stato-prezzi.html"'));assert.ok(!service.includes('"./macro.html"'));
+});
+
+test('Macro contextual movement requires fresh contiguous H1 candles and relative magnitude',()=>{
+ const HOUR=3600000,END=Date.parse("2026-10-23T16:00:00Z");
+ function factory(direction=1){
+  const sample=[];
+  for(let i=0;i<160;i++){
+   const t=END-160*HOUR+i*HOUR,mid=100*Math.exp(direction*0.003*i+0.001*Math.sin(i*.4));
+   sample.push({t:new Date(t).toISOString(),o:mid,h:mid*1.003,l:mid*.997,c:mid*1.0001});
+  }
+  const m15=sample.flatMap(x=>{
+    const start=Date.parse(x.t);
+    return Array.from({length:4},(_,i)=>({t:new Date(start+i*900000).toISOString(),o:x.o,h:x.h,l:x.l,c:x.c}));
+  });
+  const h4=[];
+  for(let i=0;i<sample.length;i+=4){
+   const p=sample.slice(i,i+4);
+   if(p.length<4||Date.parse(p[0].t)%(4*HOUR)!==0)continue;
+   h4.push({t:p[0].t,o:p[0].o,h:Math.max(...p.map(v=>v.h)),l:Math.min(...p.map(v=>v.l)),c:p[3].c});
+  }
+  return {timeframes:{M15:m15,H1:sample,H4:h4}};
+ }
+ const upward=factory(1),downward=factory(-1);
+ const up=macro.pulse(upward,{now:END}),down=macro.pulse(downward,{now:END});
+ assert.equal(up.state,"ok");assert.equal(down.state,"ok");
+ assert.ok(up.changePct>0);assert.ok(down.changePct<0);
+ const missing=macro.context(null,upward,{now:END});
+ assert.equal(missing.state,"unavailable");
+ const stale=macro.pulse(upward,{now:END+48*HOUR});
+ assert.equal(stale.state,"unavailable");
+ assert.equal(typeof macro.context(upward,downward,{now:END}).label,"string");
 });

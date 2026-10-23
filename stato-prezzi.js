@@ -135,121 +135,135 @@ refresh();
 setInterval(()=>{if(document.visibilityState==="visible")refresh();},180000);
 })();
 
-/* REMURA v1.18 · private read-only dashboard, no synthetic prices. */
+/* REMURA v1.19 · global DXY/VIX context and per-market comparison, private/read-only. */
 (()=>{
 "use strict";
-const $=id=>document.getElementById(id);
-const core=window.REMURA_PRICE_STATUS_CORE.macro;
-const marketInfo=[
- {symbol:"GER30",label:"DAX 40",note:"Candele GER30: non sostituite con GER40"},
- {symbol:"DXY",label:"Dollar Index",note:"Prezzo cTrader USDX, possibile scadenza del contratto"},
- {symbol:"VIX",label:"Volatilità",note:"Contratto broker con scadenza, non indice spot CBOE"}
-];
-const docs={};
-const stamp=t=>{const d=new Date(t||"");return Number.isFinite(d.getTime())?new Intl.DateTimeFormat("it-IT",{dateStyle:"short",timeStyle:"short",timeZone:"Europe/Rome"}).format(d):"N/D"};
-function el(tag,cls,text){
- const e=document.createElement(tag);
- if(cls)e.className=cls;
- if(text!==undefined)e.textContent=text;
- return e;
+const $=id=>document.getElementById(id),core=window.REMURA_PRICE_STATUS_CORE.macro;
+const MACRO=[{symbol:"DXY",name:"DXY · dollaro",note:"USDX del broker, contratto con possibile scadenza"},
+             {symbol:"VIX",name:"VIX · volatilità",note:"Contratto broker; diverso dall'indice spot VIX"}];
+const docs=Object.create(null);
+const fmt=n=>(Number.isFinite(n)?n.toLocaleString("it-IT",{maximumFractionDigits:3,minimumFractionDigits:0}):"N/D");
+const when=t=>{const d=new Date(t||"");return Number.isFinite(d.getTime())?new Intl.DateTimeFormat("it-IT",{dateStyle:"short",timeStyle:"short",timeZone:"Europe/Rome"}).format(d):"N/D"};
+const elt=(tag,cls,text)=>{const node=document.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=text;return node};
+function fact(root,label,value,cls="fact"){
+ const div=elt("div",cls);div.append(elt("b",null,label+" "),document.createTextNode(value));root.append(div);
 }
-function line(parent,label,value,cls="fact"){
- const div=el("div",cls);
- div.append(el("b",null,label+" "),document.createTextNode(value));
- parent.append(div);
-}
-function qualityCard(symbol,title,note,data){
- const card=el("article","market");
- const h=el("div");
- const head=el("strong",null,title+" · "+symbol);
- h.append(head);
- const quality=data?core.audit(data,Date.now()):{state:"missing",counts:{M15:0,H1:0,H4:0}};
- const labels={recent:"RECENTE",stale:"DATATO",missing:"N/D",invalid:"VERIFICA"};
- const chip=el("span","badge",labels[quality.state]||"N/D");
- chip.dataset.state=quality.state;h.append(chip);
- card.append(h,el("div","foot",note));
- line(card,"Candele:","M15 "+quality.counts.M15+" · H1 "+quality.counts.H1+" · H4 "+quality.counts.H4);
- if(quality.state==="missing"){
-  line(card,"Disponibilità:","storico non ancora acquisito");
-  return card;
- }
- line(card,"Ultima M15:",stamp(quality.asof)+" · "+quality.ageMinutes+" min dalla chiusura");
- line(card,"Interruzioni nelle ultime 97 M15:",String(quality.recentGaps)+" (possono essere pause di mercato)");
- line(card,"Ricostruzione H1:",quality.h1.verified+"/"+quality.h1.checked+" verificati · "+quality.h1.mismatched+" non coerenti");
- line(card,"Ricostruzione H4:",quality.h4.verified+"/"+quality.h4.checked+" verificati · "+quality.h4.mismatched+" non coerenti");
- if(quality.h1.missingInputs||quality.h4.missingInputs)
-  line(card,"Copertura non verificabile:",(quality.h1.missingInputs+quality.h4.missingInputs)+" intervalli senza tutte le M15");
- if(quality.state==="invalid")card.append(el("div","warn","Anomalie di integrità: non utilizzare per conferme operative."));
- if(quality.state==="stale")card.append(el("div","warn","Prezzo datato: mercato chiuso, scadenza o raccolta da verificare."));
- if(!quality.ready)card.append(el("div","warn","Storico insufficiente per interpretazione tecnica a 55 candele H4."));
+function auditCard(symbol,name,note,doc){
+ const result=core.audit(doc,Date.now()),card=elt("article","market"),header=elt("div");
+ const statusName={recent:"RECENTE",stale:"DATATO",missing:"N/D",invalid:"VERIFICA"};
+ header.append(elt("strong",null,name),elt("span","badge",statusName[result.state]||"N/D"));
+ header.lastChild.dataset.state=result.state;
+ card.append(header,elt("div","foot",note));
+ fact(card,"Storico:","M15 "+result.counts.M15+" · H1 "+result.counts.H1+" · H4 "+result.counts.H4);
+ if(result.state==="missing"){fact(card,"Qualità:","nessuno storico cTrader ancora disponibile");return card}
+ fact(card,"Ultima M15:",when(result.asof)+" · "+result.ageMinutes+" min dalla chiusura");
+ fact(card,"Interruzioni ultime 97 M15:",result.recentGaps+" (comprese pause sessione)");
+ fact(card,"H1 ricostruite:",result.h1.verified+"/"+result.h1.checked+" verificate; "+result.h1.mismatched+" incoerenti");
+ fact(card,"H4 ricostruite:",result.h4.verified+"/"+result.h4.checked+" verificate; "+result.h4.mismatched+" incoerenti");
+ if(result.h1.missingInputs||result.h4.missingInputs)fact(card,"Dati non verificabili:",result.h1.missingInputs+result.h4.missingInputs+" aggregazioni con M15 incomplete");
+ if(result.state!=="recent")card.append(elt("div","warn","Per l'analisi macro sono richiesti dati recenti e coerenti."));
  return card;
 }
-async function load(symbol){
- if(Object.prototype.hasOwnProperty.call(docs,symbol))return docs[symbol];
+async function getPrice(sym){
+ if(Object.prototype.hasOwnProperty.call(docs,sym))return docs[sym];
  try{
-  const r=await fetch("./private-api/prices/"+encodeURIComponent(symbol),{cache:"no-store"});
-  if(!r.ok)throw Error("missing");
-  const parsed=await r.json();
-  const record=parsed?.schema==="remura-price-v1"?parsed?.markets?.[symbol]:null;
-  if(!record||record.symbol!==symbol||record.provider!=="ctrader")throw Error("invalid");
-  docs[symbol]=record;
- }catch(_){docs[symbol]=null;}
- return docs[symbol];
+  const response=await fetch("./private-api/prices/"+encodeURIComponent(sym),{cache:"no-store"});
+  if(!response.ok)throw Error("missing");
+  const body=await response.json();
+  const record=body?.schema==="remura-price-v1"?body?.markets?.[sym]:null;
+  if(!record||record.provider!=="ctrader"||record.symbol!==sym)throw Error("invalid");
+  docs[sym]=record;
+ }catch(_){docs[sym]=null}
+ return docs[sym];
 }
-async function refresh(){
- const status=$("macro-status"),b=$("macro-refresh");b.disabled=true;
- status.dataset.error="false";status.textContent="Leggo le tre serie dalla VPS privata…";
+function macroPulseText(info){
+ if(info.state!=="ok")return "N/D (candele mancanti, datate o non sufficienti)";
+ const sign=info.changePct>0?"+":"";
+ const movement={up:"aumento significativo rispetto alla propria mediana",down:"calo significativo rispetto alla propria mediana",flat:"variazione contenuta rispetto alla propria mediana"}[info.direction];
+ return sign+fmt(info.changePct)+"% nelle ultime 4 ore H1 contigue · "+movement;
+}
+function rowCorrelation(root,left,right,one,two){
+ const c=one&&two?core.correlation(one,two):{state:"insufficient",samples:0,value:null};
+ const trust=!!(one&&two&&core.pairEligible(one,two));
+ const row=elt("tr");
+ row.append(elt("td",null,left+" / "+right),
+  elt("td",null,c.state==="ok"&&trust?fmt(c.value):"N/D"),
+  elt("td",null,c.samples+" · "+(trust?"ore UTC abbinate":"serie assenti, datate o non coerenti")));
+ root.append(row);
+}
+function correlations(pairs){
+ const table=elt("table"),tr=elt("tr");
+ for(const h of ["Confronto","Pearson H1","Campioni"])tr.append(elt("th",null,h));
+ const head=elt("thead");head.append(tr);table.append(head);
+ const body=elt("tbody");
+ for(const [x,y] of pairs)rowCorrelation(body,x,y,docs[x],docs[y]);
+ table.append(body);
+ return table;
+}
+function macroContext(){
+ const result=core.context(docs.DXY,docs.VIX,{now:Date.now()});
+ $("macro-context").replaceChildren(elt("h3",null,result.label),elt("p",null,result.description));
+ fact($("macro-context"),"DXY:",macroPulseText(result.dollar));
+ fact($("macro-context"),"VIX:",macroPulseText(result.fear));
+ $("macro-context").dataset.state=result.state;
+ $("macro-pairs").replaceChildren(correlations([["DXY","VIX"]]));
+}
+async function compareMarket(){
+ const symbol=$("macro-symbol").value,button=$("macro-check");
+ if(!symbol)return;
+ button.disabled=true;
+ $("macro-extra").textContent="Recupero "+symbol+" dalla VPS privata…";
+ try{
+  const target=await getPrice(symbol);
+  $("macro-extra").replaceChildren(auditCard(symbol,symbol,"Strumento scelto per confronto con DXY e VIX",target));
+  $("macro-target-correlations").replaceChildren(correlations([[symbol,"DXY"],[symbol,"VIX"]]));
+ }finally{button.disabled=false}
+}
+async function refreshMacro(){
+ const button=$("macro-refresh"),status=$("macro-status");
+ button.disabled=true;status.dataset.error="false";
+ status.textContent="Verifico USDX e VIX sul server privato…";
  for(const k of Object.keys(docs))delete docs[k];
  try{
-  const results=await Promise.all(marketInfo.map(m=>load(m.symbol)));
+  await Promise.all(MACRO.map(async m=>getPrice(m.symbol)));
   const box=$("macro-markets");box.replaceChildren();
-  for(let i=0;i<marketInfo.length;i++){
-   const info=marketInfo[i];box.append(qualityCard(info.symbol,info.label,info.note,results[i]));
-  }
-  const pairs=[["GER30","DXY"],["GER30","VIX"],["DXY","VIX"]];
-  const table=el("table"),head=el("tr");
-  for(const col of ["Mercati","Pearson H1","Campioni UTC"])head.append(el("th",null,col));
-  const header=el("thead");header.append(head);table.append(header);
-  const body=el("tbody");
-  for(const [left,right] of pairs){
-   const one=docs[left],two=docs[right],row=el("tr"),c=one&&two?core.correlation(one,two):{state:"insufficient",samples:0,value:null};
-   const trusted=one&&two&&core.pairEligible(one,two);
-   row.append(el("td",null,left+" / "+right),
-              el("td",null,c.state==="ok"&&trusted?c.value.toFixed(3):"N/D"),
-              el("td",null,c.samples+" · "+(c.state==="ok"&&!trusted?"prezzi datati/anomali":c.state==="ok"?"allineati":"insufficienti")));
-   body.append(row);
-  }
-  table.append(body);
-  $("macro-pairs").replaceChildren(table);
-  const n=results.filter(Boolean).length;
-  status.dataset.error=String(n===0);
-  status.textContent=n===0
-    ?"Nessun prezzo verificabile. Apri la web app privata .ts.net e controlla il raccoglitore; non mostriamo valori inventati."
-    :n+"/3 serie prezzi ricevute dalla VPS · "+stamp(new Date().toISOString())+". N/D dove la verifica non è possibile.";
-  if(n>0&&n<3)status.textContent+=" DXY/VIX potrebbero essere ancora in fase di primo storico.";
+  for(const info of MACRO)box.append(auditCard(info.symbol,info.name,info.note,docs[info.symbol]));
+  macroContext();
+  const available=MACRO.filter(m=>docs[m.symbol]).length;
+  status.dataset.error=String(available===0);
+  status.textContent=available+"/2 indicatori con storico · "+when(new Date().toISOString())+
+   (available<2?" · N/D finché il raccoglitore non fornisce le candele.":" · Analisi basata su dati cTrader.");
+  if($("macro-symbol").value)await compareMarket();
  }catch(_){
   status.dataset.error="true";
-  status.textContent="Impossibile verificare la VPS privata. Apri REMURA su .ts.net; non mostriamo dati fittizi.";
- }finally{b.disabled=false;}
+  status.textContent="Analisi non disponibile dalla VPS privata. Nessun indicatore simulato.";
+ }finally{button.disabled=false}
 }
-async function selected(){
- const symbol=$("macro-symbol").value,b=$("macro-check");b.disabled=true;
- $("macro-extra").textContent="Verifico "+symbol+"…";
- try{const record=await load(symbol);$("macro-extra").replaceChildren(qualityCard(symbol,symbol,"Verifica privata su richiesta",record));}
- catch(_){$("macro-extra").textContent="Dati non disponibili.";}
- finally{b.disabled=false;}
+let initialized=false;
+function initialize(){
+ if(initialized||location.hash!=="#macro")return;
+ initialized=true;
+ const select=$("macro-symbol");
+ const groups=window.REMURA_MARKETS?.groups||[];
+ const included=new Set();
+ const placeholder=elt("option",null,"Scegli un mercato…");placeholder.value="";select.append(placeholder);
+ for(const group of groups){
+  if(group.id==="macro")continue;
+  for(const item of group.items){
+   if(included.has(item.s))continue;
+   included.add(item.s);
+   const label=elt("option",null,item.n+" · "+item.s);label.value=item.s;
+   select.append(label);
+  }
+ }
+ $("macro-refresh").addEventListener("click",refreshMacro);
+ $("macro-check").addEventListener("click",compareMarket);
+ select.addEventListener("change",()=>{
+  if(!select.value){$("macro-extra").replaceChildren();$("macro-target-correlations").replaceChildren();return;}
+  compareMarket();
+ });
+ refreshMacro();
 }
-let macroInitialized=false;
-function initMacro(){
- if(macroInitialized||location.hash!=="#macro")return;
- macroInitialized=true;
- const marketSymbols=window.REMURA_MARKETS?.symbols||marketInfo.map(x=>x.symbol);
- for(const sym of marketSymbols){const o=el("option",null,sym);o.value=sym;$("macro-symbol").append(o);}
- $("macro-symbol").value="GER30";
- $("macro-refresh").addEventListener("click",refresh);
- $("macro-check").addEventListener("click",selected);
- refresh();
-}
-window.addEventListener("hashchange",initMacro);
-initMacro();
+window.addEventListener("hashchange",initialize);
+initialize();
 })();
