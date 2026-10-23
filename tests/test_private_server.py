@@ -139,6 +139,21 @@ class PrivateStorageTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             server.collector_batches(["BAD!"])
 
+    def test_first_batch_status_is_real_batch_not_next_batch(self):
+        selected=sorted(store.MARKETS)[:6]
+        class StopOnce:
+            stopped=False
+            def is_set(self):return self.stopped
+            def wait(self,seconds):self.stopped=True
+        def collect(db_path,symbols,days=2,source="primary"):
+            return {"saved":{symbol:1 for symbol in symbols},"errors":{}}
+        with patch.dict(os.environ,{"REMURA_SYMBOLS":",".join(selected)},clear=False):
+            with patch.object(server,"collect_once",side_effect=collect):
+                with patch.object(server,"backup_ctrader_status",
+                                  return_value={"configuration":"incomplete","enabled":False}):
+                    server.collector_loop(self.path,StopOnce())
+        self.assertEqual(store.get_status(self.db)["collector_batch"],"1/2")
+
     def test_diagnostics_summarize_only_non_sensitive_messages(self):
         reason=server.safe_ctrader_reason({"errors":{"EURUSD":"Ticker non disponibile o ambiguo: EUR/USD"}})
         self.assertIn("simboli",reason)
@@ -232,6 +247,27 @@ class PrivateStorageTests(unittest.TestCase):
                 with patch.object(server,"backup_ctrader_status",return_value={"enabled":True,"configuration":"ready"}):
                     server.collector_loop(self.path,StopOnce())
         self.assertEqual(calls,[(("EURUSD","XAUUSD"),"primary")])
+
+    def test_failed_subprocess_marks_each_attempt_without_secret(self):
+        with patch.dict(os.environ,{"CTRADER_CLIENT_ID":"app",
+              "CTRADER_CLIENT_SECRET":"secret","CTRADER_ACCOUNT_ID":"123",
+              "CTRADER_ENV":"demo","CTRADER_ACCESS_TOKEN":"test-access"},clear=False):
+            with patch.object(server,"source_configured",return_value=True):
+                with patch.object(server,"ctrader_preflight",return_value={
+                      "sdk":"installed","configuration":"ready","environment":"demo","enabled":True}):
+                    with patch.object(server,"access_token",return_value="token"):
+                        def run(*args,**kwargs):
+                            raise RuntimeError("secret returned by SDK")
+                        report=server.collect_once(self.path,["EURUSD","USOIL"],runner=run,now=NOW)
+        self.assertEqual(report["saved"],{})
+        state=store.get_status(self.db)
+        for symbol in ("EURUSD","USOIL"):
+            self.assertEqual(json.loads(state["price_attempt:"+symbol])["outcome"],
+                             "request_failed")
+            self.assertNotIn("secret",state["price_attempt:"+symbol])
+        self.assertNotIn("secret",state.get("last_error",""))
+        self.assertEqual(server.price_failure_code("Risposta cTrader inattesa nella fase trendbars (AttributeError)."),
+                         "request_failed")
 
     def test_ctrader_pagination_failure_does_not_claim_success(self):
         self.assertIn("incompleto",server.safe_ctrader_reason(
