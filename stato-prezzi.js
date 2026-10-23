@@ -1,4 +1,4 @@
-/* REMURA v1.14: lightweight private monitoring of all 38 markets. */
+/* REMURA v1.15: lightweight private monitoring of all 38 markets. */
 (()=>{
 "use strict";
 const $=id=>document.getElementById(id);
@@ -45,22 +45,29 @@ function marketCard(entry,serverTime){
  }
  card.append(counts);
  const age=result.age===null?"N/D":result.age+" min";
- card.append(rowText("Ultima M15:",entry.lastComplete?prettyTime(entry.lastComplete)+" · "+age:"N/D"));
+ const lastM15=entry.lastComplete?prettyTime(entry.lastComplete)+" · "+age:"N/D";
+ card.append(node("div","price-snapshot",entry.lastComplete?"Ultima M15: "+lastM15:"Ultima M15: N/D · dati ancora assenti"));
+ const reason=core.OUTCOMES[entry.lastOutcome];
+ if(reason&&entry.lastOutcome!=="ok"){
+  card.append(node("div","price-summary-warning","Ultimo esito: "+reason));
+ }else if(!entry.lastAttempt){
+  card.append(node("div","price-summary-muted","Nessun tentativo registrato dalla nuova diagnostica"));
+ }else{
+  card.append(node("div","price-summary-muted","Ultimo tentativo: "+prettyTime(entry.lastAttempt)));
+ }
+ const more=node("details","market-more");
+ more.append(node("summary",null,"Dettagli e provenienza"));
  let origin="N/D";
  if(entry.source==="primary")origin="Principale";
  if(entry.source==="backup")origin="Riserva";
  const ticker=typeof entry.providerSymbol==="string"?entry.providerSymbol:"";
- card.append(rowText("Fonte:",origin+(ticker?" · "+ticker:"")));
- card.append(rowText("Ultimo tentativo:",prettyTime(entry.lastAttempt)));
- const reason=core.OUTCOMES[entry.lastOutcome];
- if(reason&&entry.lastOutcome!=="ok"){
-  const warning=node("div","detail warning","Ultimo esito: "+reason);
-  card.append(warning);
- }else if(entry.lastOutcome==="ok"){
-  card.append(node("div","detail","Ultimo esito: salvataggio riuscito"));
- }else{
-  card.append(node("div","detail","Ultimo esito: non ancora registrato"));
- }
+ more.append(
+  rowText("Ultima M15:",lastM15),
+  rowText("Fonte:",origin+(ticker?" · "+ticker:"")),
+  rowText("Ultimo tentativo:",prettyTime(entry.lastAttempt)),
+  rowText("Ultimo esito:",reason||"Non ancora registrato")
+ );
+ card.append(more);
  const link=node("a",null,"Apri scheda →");
  link.href=config?.detailUrl?.(entry.symbol)||"./asset.html?symbol="+encodeURIComponent(entry.symbol);
  card.append(link);

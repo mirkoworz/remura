@@ -8,7 +8,7 @@
 <title>REMURA · Stato prezzi</title>
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="stylesheet" href="./nav.css?v=114">
+<link rel="stylesheet" href="./nav.css?v=115">
 <style>
 :root{color-scheme:dark;--bg:#07121a;--ink:#ecf7f5;--muted:#a5c3c7;--mint:#76ebc4;--line:#315960;--surface:#112e37}
 *{box-sizing:border-box}
@@ -34,20 +34,29 @@ input{min-width:170px;flex:1}.controls>label:first-child{flex:2}
 button{border:1px solid #77b59f;border-radius:10px;background:#245648;color:#f2fff9;padding:11px 15px;min-height:44px;font-weight:750;cursor:pointer}
 button:disabled{opacity:.5}
 #price-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:11px;margin-top:15px}
-.market{border:1px solid #315963;border-radius:14px;background:#102732;padding:15px;min-width:0}
+.market{border:1px solid #315963;border-radius:14px;background:#102732;padding:13px 15px;min-width:0}
 .market[data-state=recent]{border-color:#3c8372}.market[data-state=missing]{border-color:#947357}
 .market-head{display:flex;justify-content:space-between;gap:9px;align-items:center}
 .market-head b{font-size:20px;letter-spacing:-.025em}
 .tag{font-size:11px;font-weight:850;border:1px solid #617b83;color:#e2edf0;border-radius:20px;padding:4px 8px;white-space:nowrap}
 .market[data-state=recent] .tag{border-color:#469d86;color:#9bf5d3}
 .market[data-state=missing] .tag{border-color:#ab8061;color:#eec6a4}
-.desc{color:var(--muted);font-size:12px;min-height:19px;margin:4px 0 12px}
-.counts{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.desc{color:var(--muted);font-size:12px;min-height:19px;margin:2px 0 5px}
+.counts{display:flex;gap:6px;flex-wrap:wrap;margin:7px 0}
 .count{background:#183a43;padding:5px 8px;border-radius:7px;font-size:12px}
 .detail{font-size:12px;color:#c7dfe2;margin:6px 0;overflow-wrap:anywhere}
 .detail strong{color:#eaf8f5}
 .warning{color:#efc3a3}
-.market a{display:inline-block;margin-top:9px;font-size:12px;font-weight:800}
+.market a{display:inline-block;margin-top:7px;font-size:12px;font-weight:800}
+.price-snapshot{font-size:12px;font-weight:760;color:#e7f5f1}
+.price-summary-muted,.price-summary-warning{font-size:12px;margin:3px 0 4px;color:#a4c6c7;line-height:1.45}
+.price-summary-warning{color:#efc3a3}
+.market-more{border-top:1px solid #30515b;margin-top:9px;padding-top:7px}
+.market-more summary{color:#83eacc;font-size:12px;font-weight:800;cursor:pointer;min-height:32px;padding:4px 0;list-style-position:inside}
+.market-more .detail{margin:5px 0}
+.help{margin-top:15px;font-size:12px;color:#bfd4d6}
+.help summary{cursor:pointer;color:#a6e5d7;font-weight:750;min-height:40px;padding:9px 0}
+.help p{margin:5px 0 0;line-height:1.65}
 .explain{color:var(--muted);font-size:12px;line-height:1.7}
 .hidden{display:none!important}
 @media(max-width:700px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.controls{align-items:stretch}.controls label{flex:1 1 145px}button{width:100%}}
@@ -74,14 +83,14 @@ button:disabled{opacity:.5}
 <label>Categoria<select id="price-group"><option value="all">Tutte le categorie</option><option value="forex">Forex</option><option value="metals">Metalli</option><option value="indices">Indici</option><option value="energy">Energia</option></select></label>
 <button id="price-refresh" type="button">Aggiorna dati</button>
 </div>
-<p class="explain">La raccolta ruota nominalmente su otto gruppi di mercati ogni 15 minuti: un mercato recente può avere candele aperte fino a circa due ore fa. DATATO indica età maggiore di 180 minuti, non necessariamente un guasto: i mercati possono essere chiusi. I risultati mancanti sono sempre N/D, mai simulati.</p>
+<details class="help"><summary>Come leggere i dati e la freschezza</summary><p>Otto gruppi ogni 15 minuti: giro nominale di 120 minuti. RECENTE indica l'ultima M15 entro tre ore; DATATO non implica per forza un guasto perché il mercato potrebbe essere chiuso. N/D indica candele assenti, non dati simulati. Tocca «Dettagli e provenienza» in una scheda per visualizzare fonte e ultimo tentativo.</p></details>
 </section>
 <div id="price-results-count" class="explain" aria-live="polite"></div>
 <div id="price-list" aria-label="Dettaglio dei mercati"></div>
-<p class="explain">Apri questa pagina dall'indirizzo privato <b>.ts.net</b>. Mostriamo la fonte cTrader principale o di riserva senza divulgare identificativi di conto, credenziali o operazioni. I dati si aggiornano alla richiesta e automaticamente ogni tre minuti quando la pagina è visibile.</p>
+<p class="explain">Dati privati dalla VPS <b>.ts.net</b>. Nessuna credenziale o ordine mostrato. Aggiornamento automatico ogni tre minuti quando la pagina è visibile.</p>
 </main>
-<script src="./nav.js?v=114"></script>
-<script src="./price-status-core.js?v=114"></script>
-<script src="./stato-prezzi.js?v=114"></script>
+<script src="./nav.js?v=115"></script>
+<script src="./price-status-core.js?v=115"></script>
+<script src="./stato-prezzi.js?v=115"></script>
 </body>
 </html>

@@ -1,5 +1,7 @@
-/* REMURA v0.5: navigazione laterale nidificata, accessibile e mobile-first. */
+/* REMURA v1.15: menu a scomparsa e navigazione mobile accessibile. */
 #rm-menu-trigger{position:fixed;top:calc(14px + env(safe-area-inset-top,0px));left:calc(13px + env(safe-area-inset-left,0px));z-index:102;width:47px;height:47px;display:grid;place-items:center;color:#8cf3d9;background:#17353e;border:1px solid #3e7778;border-radius:13px;box-shadow:0 8px 24px #0006;cursor:pointer}
+#rm-menu-trigger{transition:transform .2s ease,opacity .2s ease}
+#rm-menu-trigger.rm-scrolled-away{transform:translateY(calc(-110px - env(safe-area-inset-top,0px)));opacity:0;pointer-events:none}
 #rm-menu-trigger:focus-visible,#rm-menu a:focus-visible,#rm-menu button:focus-visible,#rm-menu input:focus-visible,#rm-menu summary:focus-visible{outline:2px solid #69edca;outline-offset:2px}
 #rm-menu-shade{position:fixed;inset:0;z-index:109;background:#020b10bf;backdrop-filter:blur(3px)}
 #rm-menu-shade[hidden]{display:none}
@@ -41,7 +43,7 @@
 .rm-has-nav .shell>.top{padding-left:59px}
 .rm-has-nav main>.topbar{padding-left:53px}
 @media(max-width:720px){.rm-has-nav main>.topbar{padding-left:52px;flex-wrap:wrap;gap:8px}.rm-has-nav main>.topbar .actions{margin-left:auto}#rm-menu{width:min(390px,92vw)}}
-@media(prefers-reduced-motion:reduce){#rm-menu,.rm-caret{transition:none}}
+@media(prefers-reduced-motion:reduce){#rm-menu,.rm-caret,#rm-menu-trigger{transition:none}}
 
 /* Update marker stays above every page, clear of the mobile menu button. */
 #rm-release{box-sizing:border-box;position:relative;z-index:101;display:block;width:100%;min-height:23px;padding:4px 10px 4px 70px;background:#102c35;border-bottom:1px solid #39655d;color:#b9f8df;text-align:center;font:700 10px/1.4 system-ui,-apple-system,sans-serif;letter-spacing:.02em}
