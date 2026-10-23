@@ -252,6 +252,26 @@ class PrivateStorageTests(unittest.TestCase):
         self.assertEqual(result["saved"],{})
         self.assertEqual(store.get_status(self.db)["collector"],"awaiting_approval")
 
+    def test_lightweight_price_overview_distinguishes_saved_and_missing(self):
+        store.ingest(self.db,make_bundle(count=96),now=NOW)
+        store.set_status(self.db,**{
+            "price_attempt:EURUSD":json.dumps({"time":iso(NOW),"outcome":"ok"}),
+            "price_attempt:DXY":json.dumps({"time":iso(NOW),"outcome":"ticker_unavailable"})
+        })
+        overview=store.price_overview(self.db,now=NOW)
+        self.assertEqual(overview["total"],len(store.MARKETS))
+        rows={row["symbol"]:row for row in overview["markets"]}
+        self.assertEqual(rows["EURUSD"]["counts"]["M15"],96)
+        self.assertEqual(rows["EURUSD"]["source"],"primary")
+        self.assertEqual(rows["EURUSD"]["lastOutcome"],"ok")
+        self.assertIsNone(rows["DXY"]["lastComplete"])
+        self.assertEqual(rows["DXY"]["lastOutcome"],"ticker_unavailable")
+        self.assertNotIn("timeframes",json.dumps(overview))
+        self.assertNotIn("CTRADER_REFRESH_TOKEN",json.dumps(overview))
+        self.assertEqual(server.price_failure_code("Ticker non disponibile o ambiguo: USDX"),"ticker_unavailable")
+        self.assertEqual(server.price_failure_code("ctrader_validation:page_incomplete"),"incomplete_history")
+        self.assertEqual(server.price_failure_code("top-secret unknown"),"unknown_error")
+
     def test_http_only_serves_allowlisted_static_and_verified_price(self):
         store.ingest(self.db,make_bundle(count=96),now=NOW)
         site=ThreadingHTTPServer(("127.0.0.1",0),server.http_handler(self.path))
@@ -265,6 +285,13 @@ class PrivateStorageTests(unittest.TestCase):
                 self.assertEqual(payload["markets"]["EURUSD"]["symbol"],"EURUSD")
             with urlopen(base+"/private-api/health",timeout=5) as response:
                 self.assertIn("EURUSD",json.load(response)["instruments"])
+            with urlopen(base+"/private-api/prices/status",timeout=5) as response:
+                self.assertEqual(response.headers.get("Cache-Control"),"no-store, max-age=0")
+                summary=json.load(response)
+                self.assertEqual(summary["schema"],"remura-price-status-v1")
+                self.assertEqual(summary["total"],len(store.MARKETS))
+                self.assertEqual(len(summary["markets"]),len(store.MARKETS))
+                self.assertNotIn("timeframes",json.dumps(summary))
             for path in ("/private/prices.sqlite","/scripts/private_server.py"):
                 with self.assertRaises(HTTPError) as e:
                     urlopen(base+path,timeout=5)

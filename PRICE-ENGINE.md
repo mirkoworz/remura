@@ -176,3 +176,15 @@ Screenshot cTrader: GER30 (DAX), USOil (WTI), UKOil (Brent), US100 (Nasdaq100), 
 Con `REMURA_SYMBOLS=all`, dopo installazione VPS la rotazione comprende 38 mercati in 8 gruppi da 5, nominalmente ~120 minuti per giro. COT WTI: NYMEX Disaggregated futures-only codice `067651`, distinto dal CFD. Per DAX GER30 (Eurex) e Brent UKOIL (ICE) REMURA mostra COT N/D finché non viene integrata una fonte pertinente e verificata. Non inventiamo posizionamenti istituzionali.
 
 La modifica a `scripts/` richiede installazione manuale approvata sulla VPS, preservando file privati e token.
+
+
+---
+## REMURA v1.14 · Diagnostica visiva di tutti i 38 strumenti
+
+Il nuovo pannello `stato-prezzi.html` è accessibile dal menu iPhone via VPS Tailscale. L'endpoint privato `/private-api/prices/status` produce un unico riepilogo leggero: nome dei 38 strumenti, ultimo timestamp M15, conteggi M15/H1/H4, fonte principale/riserva, data ed esito dell'ultima richiesta cTrader registrata per simbolo. Non serializza liste OHLC, token, password o ID dei conti. Non è accessibile pubblicamente tramite GitHub Pages, a meno di errata configurazione esterna del proxy.
+
+Le categorie risultato per simbolo sono codificate su una whitelist (`ok`, `ticker_unavailable`, `no_historical_bars`, `incomplete_history`, `invalid_bars`, `request_failed`, `unknown_error`). Le risposte cTrader, nomi di errore arbitrari e credenziali non sono esposti. I motivi del mancato salvataggio saranno popolati progressivamente durante i prossimi cicli della VPS v1.14; prima di allora si legge “non ancora registrato”.
+
+Soglia UI: M15 recente entro 180 minuti (rotazione prevista ~120 minuti + buffer), datato oltre la soglia. Un mercato chiuso può apparire datato correttamente, senza implicare che la connessione sia guasta. La dashboard si aggiorna manualmente o ogni 3 minuti se la pagina è visibile.
+
+**Installazione manuale sulla VPS necessaria**: vengono modificati `scripts/price_store.py` e `scripts/private_server.py`, file protetti dal verificatore degli aggiornamenti automatici. I dati privati non vengono cancellati o ricostruiti.
