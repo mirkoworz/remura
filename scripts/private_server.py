@@ -681,20 +681,30 @@ def collector_loop(db_path,stop,env=None):
         db=connect(db_path)
         try:
             stored=set(symbols_available(db))
+            brokers={symbol:(latest(db,symbol) or {}).get("providerSymbol","")
+                     for symbol in batch}
             set_status(db,collector_batch=str(cursor % len(batches)+1)+"/"+str(len(batches)),
                        collector_batch_symbols=str(len(batch)))
         finally:db.close()
-        cold=[item for item in batch if item not in stored]
-        warm=[item for item in batch if item in stored]
-        # At most 5 symbols * 21 daily requests per new batch, vs 35*30 before.
-        # 21 days give enough completed H4 candles for EMA50 on most FX markets.
+        # Returning to the primary after a backup takeover requires enough
+        # primary history to rebuild indicators, not just two days of M15.
+        cold=[symbol for symbol in batch
+              if symbol not in stored or brokers[symbol].startswith("BACKUP · ")]
+        warm=[symbol for symbol in batch if symbol not in cold]
+        # A new backup source gets its own 21-day bootstrap, never reuses
+        # an unrelated broker's previous historical candles.
         for group,days in ((cold,21),(warm,2)):
             if not group or stop.is_set():
                 continue
             primary=collect_once(db_path,group,days=days)
             missing=[symbol for symbol in group if symbol not in primary.get("saved",{})]
             if missing and backup_ctrader_status(db_path)["configuration"]=="ready" and not stop.is_set():
-                collect_once(db_path,missing,days=days,source="backup")
+                backup_cold=[symbol for symbol in missing
+                             if not brokers[symbol].startswith("BACKUP · ")]
+                backup_warm=[symbol for symbol in missing if symbol not in backup_cold]
+                for subset,horizon in ((backup_cold,21),(backup_warm,2)):
+                    if subset and not stop.is_set():
+                        collect_once(db_path,subset,days=horizon,source="backup")
         stop.wait(seconds_to_next_quarter())
 
 
