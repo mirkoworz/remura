@@ -56,10 +56,26 @@ class CTraderTests(unittest.TestCase):
                                              deltaClose=25,utcTimestampInMinutes=29873415)
         ok=Reply()
         self.assertEqual(len(feed.validated_trendbars_response(ok,2,22)),1)
-        for wrong in (Reply(account=3),Reply(symbol=23),Reply(period=9),
-                      Reply(more=True),Reply(rows=[self.bar()]*101)):
+        for wrong in (Reply(account=3),Reply(symbol=23),Reply(period=9)):
             with self.assertRaises(ValueError):
                 feed.validated_trendbars_response(wrong,2,22)
+        with self.assertRaisesRegex(ValueError,"page_incomplete"):
+            feed.validated_trendbars_response(Reply(more=True),2,22)
+        with self.assertRaisesRegex(ValueError,"bars_oversized"):
+            feed.validated_trendbars_response(Reply(rows=[self.bar()]*101),2,22)
+
+    def test_partial_historic_window_is_split_not_accepted(self):
+        day=24*60*60*1000
+        start=1760918400000
+        segments=feed.split_historic_window(start,start+day)
+        self.assertEqual(segments,((start,start+day//2),(start+day//2,start+day)))
+        self.assertTrue(all((a%feed.INTERVAL_MS)==0 and (b%feed.INTERVAL_MS)==0
+                            for a,b in segments))
+        self.assertIsNone(feed.split_historic_window(start,start+feed.INTERVAL_MS))
+        with self.assertRaisesRegex(ValueError,"historic_window_invalid"):
+            feed.split_historic_window(start,start)
+        import inspect
+        self.assertNotIn("request.count =",inspect.getsource(feed.collect))
 
     def test_relative_ohlc_and_utc_timestamp_are_decoded(self):
         bar=self.bar(minutes=29873415)

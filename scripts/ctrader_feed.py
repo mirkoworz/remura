@@ -59,13 +59,30 @@ def validated_trendbars_response(payload, expected_account, expected_symbol):
     if rows is None:
         raise ValueError("bars_missing")
     rows=list(rows)
-    if len(rows)>100 or bool(getattr(payload, "hasMore", False)):
-        raise ValueError("incomplete_or_oversized")
+    if bool(getattr(payload, "hasMore", False)):
+        raise ValueError("page_incomplete")
+    if len(rows)>100:
+        raise ValueError("bars_oversized")
     return rows
 
 
 INTERVAL_MS = 15 * 60 * 1000
 MAX_LOOKBACK_DAYS = 45
+MAX_HISTORIC_TASKS = 300
+
+def split_historic_window(start_ms,end_ms):
+    """Split an incomplete historical response without losing M15 boundaries.
+
+    Never silently save truncated bars. The smallest valid request is 15m.
+    """
+    if not isinstance(start_ms,int) or not isinstance(end_ms,int) or end_ms<=start_ms:
+        raise ValueError("historic_window_invalid")
+    if end_ms-start_ms<=INTERVAL_MS:
+        return None
+    midpoint=((start_ms+(end_ms-start_ms)//2)//INTERVAL_MS)*INTERVAL_MS
+    if midpoint<=start_ms or midpoint>=end_ms:
+        return None
+    return ((start_ms,midpoint),(midpoint,end_ms))
 
 
 def exact_symbols(light_symbols, requested, aliases=None):
@@ -239,7 +256,9 @@ def collect(config, requested, aliases, lookback_days, now=None):
         request.period = ProtoOATrendbarPeriod.Value("M15")
         request.fromTimestamp = start_ms
         request.toTimestamp = end_ms
-        request.count = 350  # Covers a whole trading day (at most 96 M15 bars)
+        # The optional "count" is intentionally omitted: a count measured back
+        # from toTimestamp can override/muddle a bounded from/to window.
+        # If cTrader still truncates the response, split and retry that window.
         send(request)
 
     def event(client, message):
@@ -299,11 +318,24 @@ def collect(config, requested, aliases, lookback_days, now=None):
                     bars=validated_trendbars_response(payload, config["account_id"], sid)
                 except (ValueError, TypeError, AttributeError) as exc:
                     known={"account_mismatch","timeframe_mismatch","symbol_mismatch",
-                           "bars_missing","incomplete_or_oversized"}
+                           "bars_missing","page_incomplete","bars_oversized"}
                     kind=str(exc) if type(exc) is ValueError else ""
-                    result["errors"][market]="ctrader_validation:"+(kind if kind in known else "sdk_schema_mismatch")
+                    if kind in ("page_incomplete","bars_oversized"):
+                        _,_,precision,start_ms,end_ms=state["tasks"][state["index"]]
+                        split=split_historic_window(start_ms,end_ms)
+                        if split is not None and len(state["tasks"])<MAX_HISTORIC_TASKS:
+                            left,right=split
+                            state["tasks"][state["index"]:state["index"]+1]=[
+                                (market,sid,precision,*left),(market,sid,precision,*right)]
+                            reactor.callLater(0.35,later)
+                            return
+                        # Cannot obtain a complete 15m window or hit safety
+                        # ceiling: don't insert an incomplete market history.
+                        result["errors"][market]="ctrader_validation:pagination_exhausted"
+                    else:
+                        result["errors"][market]="ctrader_validation:"+(kind if kind in known else "sdk_schema_mismatch")
                     state["index"] += 1
-                    reactor.callLater(0.35, later)
+                    reactor.callLater(0.35,later)
                     return
                 if market not in result["errors"]:
                     for raw_bar in bars:
