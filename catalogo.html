@@ -2,7 +2,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#09141d"><meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./nav.css?v=116"><title>REMURA · Esplora i mercati</title>
+<link rel="stylesheet" href="./nav.css?v=117"><title>REMURA · Esplora i mercati</title>
 <style>
 :root{color-scheme:dark;--bg:#07121a;--panel:#0d2530;--border:#294b56;--muted:#9ab8bf;--mint:#69edca;--text:#e9f7f3;--red:#f8919d}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
@@ -38,9 +38,9 @@ input{background:#0c2430;border:1px solid #355661;color:var(--text);padding:13px
 <div class="hero-footer"><span class="pill" id="count">Strumenti: —</span><span class="pill" id="report">Fonte: CFTC</span><span class="pill">Settimanale · non realtime</span></div></section>
 <section><div class="tools"><div><h2 id="section-title">Tutti gli strumenti</h2><small>Seleziona un mercato per analizzare posizioni, variazioni, storico e contratti.</small></div><input id="filter" type="search" autocomplete="off" aria-label="Cerca uno strumento" placeholder="Cerca EURUSD, XAUUSD, NAS100..."></div><div id="cards" class="cards" aria-live="polite"></div></section>
 <section class="info"><div><h3 id="how-title">Come leggere i dati</h3><p id="how-text">La posizione netta indica i contratti long meno short, normalizzati per l'open interest. La variazione settimanale è una traccia, non una previsione del prezzo.</p></div><div><h3>Prima di seguire gli squali</h3><p>Guarda la direzione e la variazione nel tempo, poi confronta categorie di operatori e prezzo. Una posizione può riflettere coperture, non soltanto una scommessa direzionale. Il COT arriva in ritardo rispetto alle operazioni.</p></div></section>
-<footer class="footer">REMURA v1.16 · Dati ufficiali nelle schede · Nessuna promessa di rendimento.</footer>
+<footer class="footer">REMURA v1.17 · Dati ufficiali nelle schede · Nessuna promessa di rendimento.</footer>
 </div>
-<script src="./nav.js?v=116"></script>
+<script src="./nav.js?v=117"></script>
 <script>
 "use strict";
 const query=new URLSearchParams(location.search);
@@ -50,7 +50,7 @@ const group=config.groups.find(g=>g.id===category)||config.groups[0];
 const content={
  forex:{heading:"Il mondo Forex.",accent:"28 coppie da seguire.",body:"Tutte le combinazioni distinte delle 8 valute principali. Per i cross come CADJPY confrontiamo le posizioni dei due futures valutari: è un proxy sintetico, non un contratto CFTC sul cross.",src:"TFF · futures valutari",how:"Asset Manager e Leveraged Funds possono essere concordi oppure divergenti. Confronta il netto % OI della valuta base e di quella quotata. La gamba USD è un riferimento matematico."},
  metals:{heading:"Oro e argento.",accent:"La traccia dei fondi.",body:"Consulta i futures COMEX Gold e Silver. Managed Money misura il posizionamento dei gestori speculativi; Producer/Merchant include operatori commerciali che possono coprirsi.",src:"Disaggregated · COMEX",how:"Per oro e argento guarda Managed Money, variazioni settimanali, open interest e produttori/commercianti. Non chiamare automaticamente 'vendita' una copertura del produttore."},
- indices:{heading:"I grandi indici.",accent:"USA e DAX.",body:"Futures CFTC per gli indici USA; per DAX/GER30 solo prezzi cTrader verificati, COT N/D.",src:"TFF USA · DAX prezzi",how:"Asset Manager e Leveraged Funds per i futures USA. Non usiamo futures americani come se fossero il DAX."},
+ indices:{heading:"I grandi indici.",accent:"DAX 40, dollaro e VIX.",body:"DAX 40 incluso per il trading, con prezzi cTrader (GER30 storico; GER40 visibile nel broker). DXY usa il contratto USDX del broker; VIX è un contratto di volatilità con scadenza. Non confondere i loro prezzi con gli indici spot. Per DAX e VIX COT N/D finché non abbiamo una fonte verificata.",src:"COT USA e DXY · Prezzi cTrader DAX e VIX",how:"Confronta DXY e VIX con i mercati solo dopo aver verificato la freschezza e il contratto. Le posizioni futures COT non sono quelle dei CFD del broker; DAX e VIX non ricevono COT sostitutivi."},
  energy:{heading:"Petrolio.",accent:"WTI e Brent.",body:"USOIL è il CFD USOil: COT di riferimento sul future NYMEX WTI (067651), distinto dal prezzo. UKOIL è il Brent UKOil: prezzi cTrader e COT N/D finché non abbiamo una fonte ICE verificata.",src:"WTI Disaggregated · Brent prezzi",how:"Managed Money e Producer/Merchant descrivono futures WTI, non posizioni sul CFD. Brent: COT N/D."}
 }[group.id];
 document.title="REMURA · "+group.label;

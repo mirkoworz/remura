@@ -16,6 +16,13 @@ class PriceFeedTests(unittest.TestCase):
     def make(self, day="2026-10-16"):
         return [feed.candle(f"{day}T00:{i*15:02d}:00Z", 1.1, 1.2, 1.0, 1.15) for i in range(4)]
 
+    def test_vix_replaces_retired_russell_without_losing_dax(self):
+        self.assertEqual(len(feed.MARKETS),38)
+        self.assertIn("VIX",feed.MARKETS)
+        self.assertIn("DXY",feed.MARKETS)
+        self.assertIn("GER30",feed.MARKETS)
+        self.assertNotIn("US2000",feed.MARKETS)
+
     def test_m15_input_and_closed_guard(self):
         now=dt.datetime(2026,10,16,0,40,tzinfo=UTC)
         bars=self.make()

@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="./icon.svg">
-<link rel="stylesheet" href="./nav.css?v=116">
+<link rel="stylesheet" href="./nav.css?v=117">
 <title>Remura · Scheda strumento</title>
 <style>
 :root{color-scheme:dark;--bg:#07121a;--panel:#10242f;--panel2:#122e38;--line:#2b4b55;--text:#e8f7f4;--muted:#9bb8be;--mint:#69edca;--red:#ff8d99;--blue:#8db6ff;--amber:#f6c47e}
@@ -190,7 +190,7 @@ html{scroll-behavior:smooth}
 </div>
 <footer class="footer">REMURA · COT settimanale, sentiment retail a campioni e prezzi da fonti distinte. Non è consulenza finanziaria.</footer>
 </div>
-<script src="./nav.js?v=116"></script>
+<script src="./nav.js?v=117"></script>
 <script src="./insights-core.js?v=9"></script>
 <script src="./cot-indices-core.js?v=2"></script>
 <script src="./insights.js?v=9"></script>
@@ -231,13 +231,13 @@ function setup(){
  $("heading").textContent="";
  $("heading").append(document.createTextNode(isMetal?(symbol==="XAUUSD"?"Gold · Oro":"Silver · Argento"):isFX?base+"/"+quote:entry.name+" "));
  const sm=document.createElement("span");sm.textContent=isMetal||!isFX?symbol:" "+symbol;$("heading").append(sm);
- $("description").textContent=!hasCOT?"Prezzi "+entry.name+". COT non integrato: non vengono inventate posizioni istituzionali.":isFX?"Confronto dei futures delle due valute contro USD. È un proxy sintetico di "+symbol+", non un report COT diretto del cross.":isDisagg?"Posizionamento sul future "+entry.name+", riferimento distinto da spot e CFD.":"Posizionamento sul future "+entry.name+" come riferimento per "+symbol+", non sul CFD di un broker.";
+ $("description").textContent=!hasCOT?"Prezzi "+entry.name+". COT non integrato: non vengono inventate posizioni istituzionali. Sul VIX, il grafico TradingView spot può differire dal contratto cTrader.":isFX?"Confronto dei futures delle due valute contro USD. È un proxy sintetico di "+symbol+", non un report COT diretto del cross.":isDisagg?"Posizionamento sul future "+entry.name+", riferimento distinto da spot e CFD.":"Posizionamento sul future "+entry.name+" come riferimento per "+symbol+", non sul CFD di un broker.";
  for(const [k,id] of [[0,"a"],[1,"b"]]){ $("label-"+id).textContent=labels[k];$("legend-"+id).textContent=labels[k];$("column-"+id).textContent=labels[k]; }
- $("dataset-label").textContent=dataset==="tff"?"CFTC · TFF Futures Only":"CFTC · Disaggregated Futures Only";
- $("method-note").textContent=(isFX?"Cross valutario: differenza fra posizioni nette normalizzate di due futures. USD = zero solo come riferimento matematico. ":isDisagg?"Managed Money = speculatori; Producer/Merchant = operatori commerciali spesso in copertura. ":"Asset Manager e Leveraged Funds possono avere obiettivi diversi. ")+"Net% = (Long − Short) ÷ Open Interest × 100. Non è un segnale di prezzo.";
+ $("dataset-label").textContent=!hasCOT?"COT N/D · Prezzi cTrader":dataset==="tff"?"CFTC · TFF Futures Only":"CFTC · Disaggregated Futures Only";
+ $("method-note").textContent=!hasCOT?"Non è disponibile un report COT pertinente a questo mercato: nessuna esposizione istituzionale viene dedotta dalle candele. ":(isFX?"Cross valutario: differenza fra posizioni nette normalizzate di due futures. USD = zero solo come riferimento matematico. ":isDisagg?"Managed Money = speculatori; Producer/Merchant = operatori commerciali spesso in copertura. ":"Asset Manager e Leveraged Funds possono avere obiettivi diversi. ")+"Net% = (Long − Short) ÷ Open Interest × 100. Non è un segnale di prezzo.";
  const a=document.createElement("a");a.href=sourceUrl;a.target="_blank";a.rel="noopener noreferrer";a.textContent=dataset==="tff"?"Apri TFF Futures Only ufficiale ↗":"Apri Disaggregated Futures Only ufficiale ↗";
  if(hasCOT) $("source").replaceChildren(document.createTextNode("Fonte dei contratti: "),a,document.createTextNode(". COT futures-only settimanale; non sono le posizioni sui CFD."));
- else $("source").textContent="COT non integrato per questo mercato. DAX GER30 (Eurex) e Brent UKOIL (ICE) non devono ricevere valori da futures CFTC diversi; prezzi verificati disponibili separatamente.";
+ else $("source").textContent="COT non integrato per questo mercato. DAX 40 (GER30/GER40 broker), VIX (contratto sulla volatilità) e Brent UKOIL non devono ricevere valori CFTC di altri mercati. I contratti VIX possono scadere: controllare le date. Prezzi broker disponibili separatamente.";
  $("refresh").addEventListener("click",load);
  $("cot-name-a").textContent=labels[0]+" · COT Index";$("cot-name-b").textContent=labels[1]+" · COT Index";
  $("cot-period").addEventListener("change",renderIndices);

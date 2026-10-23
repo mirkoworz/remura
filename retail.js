@@ -1,7 +1,7 @@
 (()=>{"use strict";
 const root=document.getElementById("retail-module");if(!root)return;
 const sym=(new URLSearchParams(location.search).get("symbol")||"XAUUSD").toUpperCase();
-const map={US500:"CME_MINI:ES1!",NAS100:"CME_MINI:NQ1!",US30:"CBOT_MINI:YM1!",US2000:"CME_MINI:RTY1!",DXY:"TVC:DXY"};
+const map={US500:"CME_MINI:ES1!",NAS100:"CME_MINI:NQ1!",US30:"CBOT_MINI:YM1!",VIX:"CBOE:VIX",DXY:"TVC:DXY"};
 const ticker=map[sym]||"OANDA:"+sym;
 const $=id=>document.getElementById(id);
 const fmt=n=>n!==null&&n!==undefined&&n!==""&&Number.isFinite(+n)?new Intl.NumberFormat("it-IT",{maximumFractionDigits:2}).format(+n):"—";

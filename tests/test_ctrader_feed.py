@@ -96,6 +96,22 @@ class CTraderTests(unittest.TestCase):
         self.assertEqual(empty,{})
         self.assertEqual(set(missing),{"NAS100","US500"})
 
+    def test_vix_and_dollar_index_use_verified_broker_names(self):
+        rows=[
+            types.SimpleNamespace(symbolName="VIX",symbolId=700,enabled=True),
+            types.SimpleNamespace(symbolName="USDX",symbolId=701,enabled=True),
+            types.SimpleNamespace(symbolName="GER40",symbolId=702,enabled=True),
+        ]
+        selected,errors=feed.exact_symbols(
+            rows,["VIX","DXY","GER30"],
+            {"DXY":"USDX","GER30":"GER40"})
+        self.assertEqual(errors,{})
+        self.assertEqual({key:item.symbolName for key,item in selected.items()},
+                         {"VIX":"VIX","DXY":"USDX","GER30":"GER40"})
+        unavailable,reasons=feed.exact_symbols(rows,["DXY","GER30"])
+        self.assertEqual(unavailable,{})
+        self.assertEqual(set(reasons),{"DXY","GER30"})
+
     def test_relative_ohlc_and_utc_timestamp_are_decoded(self):
         bar=self.bar(minutes=29873415)
         item=feed.convert_trendbar(bar,5)

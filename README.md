@@ -57,7 +57,7 @@ REMURA è una web app gratuita ottimizzata per iPhone, con radar COT ufficiali e
 - [Forex](https://mirkoworz.github.io/remura/catalogo.html?categoria=forex&v=5) — 28 coppie Forex.
 - [Radar Forex classico](https://mirkoworz.github.io/remura/forex.html?v=5) — il radar grafico originale.
 - [Metalli](https://mirkoworz.github.io/remura/catalogo.html?categoria=metals&v=5) — Gold e Silver.
-- [Indici](https://mirkoworz.github.io/remura/catalogo.html?categoria=indices&v=5) — S&P 500, Nasdaq 100, Dow, Russell 2000, DXY.
+- [Indici](https://mirkoworz.github.io/remura/catalogo.html?categoria=indices&v=5) — DAX 40, S&P 500, Nasdaq 100, Dow, DXY e VIX.
 - [Scheda GOLD](https://mirkoworz.github.io/remura/asset.html?symbol=XAUUSD&v=5).
 - [Scheda CADJPY](https://mirkoworz.github.io/remura/asset.html?symbol=CADJPY&v=5).
 

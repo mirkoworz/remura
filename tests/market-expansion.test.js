@@ -21,3 +21,27 @@ test('Private market registry includes DAX and both oils',()=>{
  const p=read('scripts/price_feed.py');
  for(const key of ['"GER30"','"USOIL"','"UKOIL"'])assert.ok(p.includes(key));
 });
+test('VIX replaces Russell 2000, keeps a DAX 40 market and DXY price independently',()=>{
+ const nav=read('nav.js'),registry=read('scripts/price_feed.py');
+ const scanner=read('mercati.html'),retail=read('retail.js');
+ assert.ok(nav.includes('VIX:{group:"indices"'));
+ assert.ok(nav.includes('GER30:{group:"indices"'));
+ assert.ok(nav.includes('DXY:{group:"indices"'));
+ assert.ok(registry.includes('"VIX"'));
+ assert.ok(!registry.includes('"US2000"'));
+ assert.ok(!nav.includes('US2000'));
+ assert.ok(!scanner.includes('US2000'));
+ assert.ok(!retail.includes('US2000'));
+ assert.match(nav,/VIX:\{group:"indices"[^\n]*code:null,dataset:null/);
+ assert.match(nav,/GER30:\{group:"indices"[^\n]*code:null,dataset:null/);
+ assert.match(scanner,/VIX:\{group:'indices'[^\n]*code:null,dataset:null/);
+ assert.match(scanner,/GER30:\{group:'indices'[^\n]*code:null,dataset:null/);
+ assert.ok(nav.includes('DAX 40'));
+});
+
+test('DAX and VIX do not display fabricated COT values on asset detail',()=>{
+ const html=read('asset.html');
+ assert.ok(html.includes('!hasCOT?"COT N/D · Prezzi cTrader"'));
+ assert.ok(html.includes('VIX (contratto sulla volatilità)'));
+ assert.ok(read('mercati.html').includes('SOLO PREZZI · COT N/D'));
+});
