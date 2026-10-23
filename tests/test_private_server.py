@@ -233,6 +233,14 @@ class PrivateStorageTests(unittest.TestCase):
                     server.collector_loop(self.path,StopOnce())
         self.assertEqual(calls,[(("EURUSD","XAUUSD"),"primary")])
 
+    def test_ctrader_pagination_failure_does_not_claim_success(self):
+        self.assertIn("incompleto",server.safe_ctrader_reason(
+            {"errors":{"EURUSD":"ctrader_validation:pagination_exhausted"}}))
+        self.assertIn("parziale",server.safe_ctrader_reason(
+            {"errors":{"EURUSD":"ctrader_validation:page_incomplete"}}))
+        self.assertIn("troppe",server.safe_ctrader_reason(
+            {"errors":{"EURUSD":"ctrader_validation:bars_oversized"}}))
+
     def test_scheduler_aligns_to_utc_quarter_plus_delay(self):
         value=server.seconds_to_next_quarter(dt.datetime(2026,10,17,9,14,10,tzinfo=UTC))
         self.assertEqual(value,140)

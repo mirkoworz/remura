@@ -189,3 +189,13 @@ Il refresh token della riserva viene salvato in un file dedicato, `private/ctrad
 Il pannello Diagnostica cTrader espone soltanto stato primario/secondario, fonte dell'ultimo salvataggio e numero di mercati, mai ID o token. La v1.11 distingue anche i diversi motivi di rifiuto dei metadati storici, come account/timeframe/simbolo non corrispondenti. Ricordiamo che un errore nel lettore comune ai due provider **non viene risolto dal failover**.
 
 Questa è una modifica a `scripts/`: la tua protezione auto-update v1.7 richiede una prima installazione approvata manualmente sulla VPS.
+
+
+---
+## REMURA v1.12 · Finestre storiche cTrader senza perdita di dati
+
+Durante la raccolta v1.11 (23/10/2026, 08:56 Italia), cTrader ha restituito `ctrader_validation:incomplete_or_oversized` su tutti e cinque gli strumenti, con zero salvataggi. Il modulo richiedeva 24 ore di M15 con un contemporaneo `request.count=350`; il protocollo definisce count come limite retrospettivo da `toTimestamp` e `hasMore` indica risultati incompleti. Non abbiamo la prova che il count abbia causato l'errore, quindi rimuoviamo il parametro ambiguo e distinguiamo i due casi senza inventare dati.
+
+In caso di `page_incomplete` (risposta `hasMore`) o `bars_oversized` (oltre 100 barre per giorno), il collector suddivide automaticamente soltanto la finestra interessata in due richieste UTC allineate a M15. Continua fino alla finestra minima M15 o al limite di 300 richieste per ciclo, dopodiché rifiuta il mercato incompleto. Nessuna risposta troncata viene salvata come storico completo. I messaggi di stato indicano se il limite di paginazione è esaurito senza esporre i token.
+
+Restano immutati gli accessi cTrader demo/live e la riserva della v1.11. Essendo una modifica a `scripts/`, la protezione dell'auto-update richiede un'installazione manuale v1.12 sulla VPS.

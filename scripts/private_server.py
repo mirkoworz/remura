@@ -387,6 +387,9 @@ def safe_ctrader_reason(payload, process_code=0):
         "symbol_mismatch":"cTrader: risposta con simbolo non corrispondente.",
         "bars_missing":"cTrader: lista delle candele assente.",
         "incomplete_or_oversized":"cTrader: storico incompleto o fuori limite.",
+        "page_incomplete":"cTrader: risposta storica parziale.",
+        "bars_oversized":"cTrader: troppe candele nella finestra richiesta.",
+        "pagination_exhausted":"cTrader: storico ancora incompleto dopo suddivisione delle finestre.",
         "sdk_schema_mismatch":"cTrader: schema SDK non compatibile."
     }
     for key,label in categories.items():
