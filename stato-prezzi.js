@@ -222,8 +222,11 @@ async function refresh(){
   table.append(body);
   $("macro-pairs").replaceChildren(table);
   const n=results.filter(Boolean).length;
-  status.textContent=n+"/3 serie prezzi ricevute dalla VPS · "+stamp(new Date().toISOString())+". N/D dove la verifica non è possibile.";
-  if(n<3)status.textContent+=" DXY/VIX potrebbero essere ancora in fase di primo storico.";
+  status.dataset.error=String(n===0);
+  status.textContent=n===0
+    ?"Nessun prezzo verificabile. Apri la web app privata .ts.net e controlla il raccoglitore; non mostriamo valori inventati."
+    :n+"/3 serie prezzi ricevute dalla VPS · "+stamp(new Date().toISOString())+". N/D dove la verifica non è possibile.";
+  if(n>0&&n<3)status.textContent+=" DXY/VIX potrebbero essere ancora in fase di primo storico.";
  }catch(_){
   status.dataset.error="true";
   status.textContent="Impossibile verificare la VPS privata. Apri REMURA su .ts.net; non mostriamo dati fittizi.";

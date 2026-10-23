@@ -23,7 +23,7 @@ function bars(hours=100,start=END-100*HOUR,base=100,rate=0.002){
  return {symbol:"GER30",provider:"ctrader",timeframes:{M15:m15,H1:frame(4),H4:frame(16)}};
 }
 test("OHLC integrity and contiguity are audited without inventing bars",()=>{
- const data=bars(),q=macro.audit(data,END);
+ const data=bars(240,END-240*HOUR),q=macro.audit(data,END);
  assert.equal(q.state,"recent");
  assert.equal(q.recentGaps,0);
  assert.equal(q.h1.mismatched,0);assert.equal(q.h4.mismatched,0);
