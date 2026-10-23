@@ -134,7 +134,7 @@ class PrivateStorageTests(unittest.TestCase):
         batches=server.collector_batches(selected)
         self.assertTrue(all(len(b)<=5 for b in batches))
         self.assertEqual([x for batch in batches for x in batch],selected)
-        self.assertEqual(len(batches),7)
+        self.assertEqual(len(batches),8)
         self.assertEqual(server.collector_batches(["EURUSD","EURUSD"]),[["EURUSD"]])
         with self.assertRaises(ValueError):
             server.collector_batches(["BAD!"])
