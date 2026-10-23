@@ -236,3 +236,18 @@ Il server privato pubblica esclusivamente asset statici allowlist. La nuova anal
 Radar Macro in `stato-prezzi.html#macro` analizza innanzitutto **solo DXY e VIX**, non DAX. Mostra prezzi validati, ultime quattro ore H1 consecutive e un confronto con la mediana delle variazioni assolute a quattro ore (fino a 80 finestre recenti); nessuna direzione viene indicata se gli storici non sono freschi, coerenti o sufficienti. Le combinazioni dollaro/volatilità sono presentate come *contesti possibili*, non verdetti long/short. L'utente può scegliere **qualunque altro mercato REMURA** (DAX incluso) per leggerne la qualità e due correlazioni H1 contro DXY e contro VIX. La correlazione usa solo rendimenti logaritmici con timestamp UTC comuni e min 30 osservazioni.
 
 Le quotazioni cTrader USDX e VIX possono derivare da contratti a scadenza e non essere uguali agli indici spot. Le correlazioni non significano causalità né individuano direttamente il flusso degli istituzionali. Nessun endpoint, token, data privata o script backend modificato: aggiornamento frontend auto-distribuibile dopo test GitHub.
+
+
+---
+
+## REMURA v1.20 · FP Markets secondaria SOLO DXY/VIX
+
+Il collector primario (conto prop) resta invariato, con gli storici esistenti. Solo quando il primario non salva **DXY** o **VIX** il collector tenta la seconda fonte autorizzata FP Markets. La whitelist statica `BACKUP_ALLOWED_MARKETS` vieta alla seconda fonte di sovrascrivere i prezzi degli altri 36 strumenti. Lo store non mescola candele da broker diversi e distingue la provenienza `BACKUP ·`.
+
+Per autorizzare FP Markets LIVE su Oracle, dopo aver selezionato **Account info** (scope `accounts`) sul Playground Open API, eseguire da una sessione SSH Termius privata:
+`sudo -u remura /opt/remura/.venv/bin/python /opt/remura/scripts/configure_ctrader_backup.py`.
+Incollare solo **refresh token** nella richiesta nascosta dello script: non deve comparire nella shell history, screenshot, chat o GitHub. Il tool usa l'app cTrader già registrata su REMURA, ruota il token localmente tramite endpoint Spotware ufficiale, legge i conti LIVE autorizzati via Open API, mostra broker e login mascherato per la scelta, chiede conferma FP e salva `ctrader-backup-tokens.json` con 0600, e le sole variabili `REMURA_CTRADER_BACKUP_ENABLED`, `CTRADER_BACKUP_ACCOUNT_ID`, `CTRADER_BACKUP_ENV` in `remura.env`. **Non** esporta login/ID del conto o token in output. Account ID API e login numerico di cTrader non coincidono necessariamente.
+
+Eseguire `sudo systemctl restart remura-private.service` per caricare la nuova configurazione. Verificare la disponibilità via `GET /private-api/health` (`ctraderBackup.configuration=ready`) e il tentativo di raccolta via `GET /private-api/prices/status`. **Non** attribuire automaticamente il contratto cTrader USDX al DXY spot e il contratto VIX all'indice spot CBOE; verificare scadenze, rollover e M15 valide.
+
+Il backend Python e il workflow di test sono modificati: **installazione manuale v1.20 + enable-autoupdate.sh sullo stesso checkout dopo i test verdi**. I file sensibili privati e lo storico SQLite restano intatti.

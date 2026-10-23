@@ -214,7 +214,8 @@ class PrivateStorageTests(unittest.TestCase):
         self.assertIn("conto",server.safe_ctrader_reason(
             {"errors":{"EURUSD":"ctrader_validation:account_mismatch"}}))
 
-    def test_failover_checks_only_symbols_missing_from_primary(self):
+    def test_failover_only_macro_market_sources(self):
+        self.assertEqual(server.BACKUP_ALLOWED_MARKETS,frozenset(("DXY","VIX")))
         calls=[]
         class StopOnce:
             stopped=False
@@ -223,14 +224,14 @@ class PrivateStorageTests(unittest.TestCase):
         def collect(db_path,symbols,days=2,source="primary"):
             calls.append((tuple(symbols),days,source))
             if source=="primary":
-                return {"saved":{"EURUSD":10},"errors":{"XAUUSD":"no_data"}}
-            return {"saved":{"XAUUSD":10},"errors":{}}
-        with patch.dict(os.environ,{"REMURA_SYMBOLS":"EURUSD,XAUUSD"},clear=False):
+                return {"saved":{},"errors":{symbol:"no_data" for symbol in symbols}}
+            return {"saved":{symbol:10 for symbol in symbols},"errors":{}}
+        with patch.dict(os.environ,{"REMURA_SYMBOLS":"DXY,VIX,EURUSD,GER30"},clear=False):
             with patch.object(server,"collect_once",side_effect=collect):
                 with patch.object(server,"backup_ctrader_status",return_value={"enabled":True,"configuration":"ready"}):
                     server.collector_loop(self.path,StopOnce())
-        self.assertEqual(calls[0],(("EURUSD","XAUUSD"),21,"primary"))
-        self.assertEqual(calls[1],(("XAUUSD",),21,"backup"))
+        self.assertEqual(calls[0],(("DXY","VIX","EURUSD","GER30"),21,"primary"))
+        self.assertEqual(calls[1],(("DXY","VIX"),21,"backup"))
         self.assertEqual(len(calls),2)
 
     def test_no_backup_call_when_primary_saved_all_symbols(self):
@@ -247,6 +248,32 @@ class PrivateStorageTests(unittest.TestCase):
                 with patch.object(server,"backup_ctrader_status",return_value={"enabled":True,"configuration":"ready"}):
                     server.collector_loop(self.path,StopOnce())
         self.assertEqual(calls,[(("EURUSD","XAUUSD"),"primary")])
+
+    def test_private_fp_setup_never_replaces_primary_credentials(self):
+        import configure_ctrader_backup as helper
+        original=("CTRADER_CLIENT_ID=application\n"
+                  "CTRADER_CLIENT_SECRET=private-secret\n"
+                  "CTRADER_ACCOUNT_ID=12345\n"
+                  "CTRADER_ENV=demo\n"
+                  "REMURA_CTRADER_BACKUP_ENABLED=0\n")
+        values=helper.parse_environment(original)
+        self.assertEqual(values["CTRADER_ENV"],"demo")
+        result=helper.update_environment(original,{
+            "REMURA_CTRADER_BACKUP_ENABLED":"1",
+            "CTRADER_BACKUP_ACCOUNT_ID":"67890",
+            "CTRADER_BACKUP_ENV":"live",
+        })
+        self.assertIn("CTRADER_ACCOUNT_ID=12345",result)
+        self.assertIn("CTRADER_CLIENT_SECRET=private-secret",result)
+        self.assertEqual(result.count("REMURA_CTRADER_BACKUP_ENABLED="),1)
+        self.assertIn("CTRADER_BACKUP_ACCOUNT_ID=67890",result)
+        self.assertNotIn("REFRESH_TOKEN=",result)
+        result_accounts=helper.account_options([
+            types.SimpleNamespace(isLive=False,brokerTitleShort="FP Markets",traderLogin=123),
+            types.SimpleNamespace(isLive=True,brokerTitleShort="FP Markets",traderLogin=456789),
+        ])
+        self.assertEqual(len(result_accounts),1)
+        self.assertEqual(result_accounts[0][2],"••789")
 
     def test_failed_subprocess_marks_each_attempt_without_secret(self):
         with patch.dict(os.environ,{"CTRADER_CLIENT_ID":"app",

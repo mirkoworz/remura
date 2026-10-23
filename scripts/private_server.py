@@ -33,6 +33,8 @@ from ctrader_tokens import access_token, path_for, read_file
 
 ROOT=Path(__file__).resolve().parents[1]
 STORE=ROOT/"private"/"remura-prices.sqlite3"
+# The FP Markets secondary source may provide macro gauges only.
+BACKUP_ALLOWED_MARKETS=frozenset(("DXY","VIX"))
 SERVER_HOST="127.0.0.1"
 SAFE_ASSETS={
     "index.html","asset.html","catalogo.html","forex.html","fonti.html","mercati.html",
@@ -750,7 +752,8 @@ def collector_loop(db_path,stop,env=None):
             if not group or stop.is_set():
                 continue
             primary=collect_once(db_path,group,days=days)
-            missing=[symbol for symbol in group if symbol not in primary.get("saved",{})]
+            missing=[symbol for symbol in group if symbol in BACKUP_ALLOWED_MARKETS
+                     and symbol not in primary.get("saved",{})]
             if missing and backup_ctrader_status(db_path)["configuration"]=="ready" and not stop.is_set():
                 backup_cold=[symbol for symbol in missing
                              if not brokers[symbol].startswith("BACKUP · ")]
