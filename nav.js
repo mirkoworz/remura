@@ -9,17 +9,18 @@
     US500:{group:"indices",name:"S&P 500 · E-mini",code:"13874A",dataset:"tff"},
     NAS100:{group:"indices",name:"Nasdaq 100 · E-mini",code:"209742",dataset:"tff"},
     US30:{group:"indices",name:"Dow Jones · E-mini",code:"124603",dataset:"tff"},
-    US2000:{group:"indices",name:"Russell 2000 · E-mini",code:"239742",dataset:"tff"},
-    DXY:{group:"indices",name:"Dollar Index · ICE",code:"098662",dataset:"tff"},
-    GER30:{group:"indices",name:"DAX · GER30 (broker)",code:null,dataset:null},
+    VIX:{group:"indices",name:"VIX · contratto volatilità broker",code:null,dataset:null},
+    DXY:{group:"indices",name:"Dollar Index · USDX (broker)",code:"098662",dataset:"tff"},
+    GER30:{group:"indices",name:"DAX 40 · GER30 (broker)",code:null,dataset:null},
     USOIL:{group:"energy",name:"WTI · petrolio USOil",code:"067651",dataset:"disagg"},
     UKOIL:{group:"energy",name:"Brent · petrolio UKOil",code:null,dataset:null}
   };
   const groups=[
     {id:"forex",label:"Forex",icon:"↔",name:"28 coppie principali",items:FX_PAIRS.map(s=>({s,n:s}))},
     {id:"metals",label:"Metalli",icon:"◇",name:"Oro e argento",items:[{s:"XAUUSD",n:"Gold · Oro"},{s:"XAGUSD",n:"Silver · Argento"}]},
-    {id:"indices",label:"Indici",icon:"▥",name:"Indici USA e DAX",items:[
-      {s:"US500",n:"S&P 500"},{s:"NAS100",n:"Nasdaq 100"},{s:"US30",n:"Dow Jones"},{s:"US2000",n:"Russell 2000"},{s:"DXY",n:"Dollar Index"},{s:"GER30",n:"DAX · GER30 (prezzi)"}]},
+    {id:"indices",label:"Indici",icon:"▥",name:"DAX 40, indici USA, dollaro e VIX",items:[
+      {s:"GER30",n:"DAX 40 · indice tedesco"},{s:"US500",n:"S&P 500"},{s:"NAS100",n:"Nasdaq 100"},
+      {s:"US30",n:"Dow Jones"},{s:"DXY",n:"Dollar Index · USDX"},{s:"VIX",n:"VIX · volatilità (contratto broker)"}]},
     {id:"energy",label:"Energia",icon:"◉",name:"Petrolio WTI e Brent",items:[
       {s:"USOIL",n:"WTI · USOil (COT + prezzi)"},{s:"UKOIL",n:"Brent · UKOil (prezzi)"}]}
   ];
