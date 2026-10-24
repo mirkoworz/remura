@@ -30,6 +30,7 @@ from urllib.parse import urlsplit
 from price_feed import MARKETS, UTC, utcnow
 from price_store import connect, get_status, set_status, latest, ingest, api_document, symbols_available, price_overview
 from cot_monitor import collect_once as collect_official_cot, public_status as official_cot_status
+from signals_monitor import scan_once as observe_squalincome, status as squalincome_status
 from ctrader_tokens import access_token, path_for, read_file
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -49,6 +50,7 @@ SAFE_ASSETS={
 STATUS_PATH="/private-api/health"
 PRICE_OVERVIEW_PATH="/private-api/prices/status"
 COT_OVERVIEW_PATH="/private-api/cot/status"
+SIGNAL_OVERVIEW_PATH="/private-api/signals/status"
 UPDATE_STATUS_PATH="/private-api/autoupdate"
 RETAIL_LATEST="/private-api/retail/latest.json"
 IG_LATEST="/private-api/ig/latest.json"
@@ -287,6 +289,9 @@ def http_handler(db_path):
                 return
             if path==COT_OVERVIEW_PATH:
                 self.response(200,official_cot_status(db_path,cot_sync_enabled()))
+                return
+            if path==SIGNAL_OVERVIEW_PATH:
+                self.response(200,squalincome_status(db_path,squalincome_enabled()))
                 return
             if path==CAPITAL_LATEST or CAPITAL_HISTORY_RE.fullmatch(path):
                 data=capital_document(db_path,path)
@@ -785,6 +790,24 @@ def cot_loop(db_path,stop):
         stop.wait(6*3600)
 
 
+def squalincome_enabled(env=None):
+    values=os.environ if env is None else env
+    # Read-only observer uses the collector already opted in; no notifications.
+    return (values.get("REMURA_SQUALINCOME_MONITOR_ENABLED","1")=="1" and
+            values.get("REMURA_COLLECTOR_ENABLED","0")=="1" and
+            values.get("REMURA_COT_SYNC_ENABLED","1")=="1")
+
+
+def squalincome_loop(db_path,stop):
+    # No network requests: this only reads the local COT and cTrader caches.
+    while not stop.is_set():
+        try:
+            observe_squalincome(db_path)
+        except Exception as exc:
+            print("REMURA Squalincome monitor: "+type(exc).__name__,file=sys.stderr)
+        stop.wait(15*60)
+
+
 def main():
     import argparse
     p=argparse.ArgumentParser(description="REMURA private localhost server and scheduled cTrader ingestion")
@@ -809,6 +832,9 @@ def main():
     if cot_sync_enabled():
         thread_cot=threading.Thread(target=cot_loop,args=(db_path,stop),daemon=True)
         thread_cot.start()
+    if squalincome_enabled():
+        thread_signals=threading.Thread(target=squalincome_loop,args=(db_path,stop),daemon=True)
+        thread_signals.start()
     if os.environ.get("REMURA_RETAIL_ENABLED","0")=="1":
         thread_retail=threading.Thread(target=retail_loop,args=(db_path,stop),daemon=True)
         thread_retail.start()

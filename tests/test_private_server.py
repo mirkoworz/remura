@@ -414,6 +414,37 @@ class PrivateStorageTests(unittest.TestCase):
         finally:
             site.shutdown();site.server_close();worker.join(timeout=2)
 
+
+    def test_squalincome_uses_only_approved_collectors_and_explicit_optout(self):
+        self.assertTrue(server.squalincome_enabled({"REMURA_COLLECTOR_ENABLED":"1"}))
+        self.assertFalse(server.squalincome_enabled({"REMURA_COLLECTOR_ENABLED":"0"}))
+        self.assertFalse(server.squalincome_enabled({"REMURA_COLLECTOR_ENABLED":"1",
+                        "REMURA_COT_SYNC_ENABLED":"0"}))
+        self.assertFalse(server.squalincome_enabled({"REMURA_COLLECTOR_ENABLED":"1",
+                        "REMURA_SQUALINCOME_MONITOR_ENABLED":"0"}))
+
+    def test_signals_status_endpoint_contains_no_private_bars_or_credentials(self):
+        import signals_monitor
+        signals_monitor.scan_once(self.path,NOW)
+        site=ThreadingHTTPServer(("127.0.0.1",0),server.http_handler(self.path))
+        worker=threading.Thread(target=site.serve_forever,daemon=True)
+        worker.start()
+        try:
+            with patch.dict(os.environ,{"REMURA_COLLECTOR_ENABLED":"1",
+                                         "REMURA_COT_SYNC_ENABLED":"1"},clear=False):
+                with urlopen("http://127.0.0.1:"+str(site.server_port)+
+                             "/private-api/signals/status",timeout=5) as response:
+                    self.assertEqual(response.headers.get("Cache-Control"),"no-store, max-age=0")
+                    payload=json.load(response)
+            self.assertEqual(payload["schema"],"remura-squalincome-monitor-v1")
+            self.assertEqual(payload["mode"],"observation_only")
+            self.assertFalse(payload["notificationsEnabled"])
+            self.assertEqual(payload["lastEvents"],[])
+            content=json.dumps(payload)
+            for secret in ("timeframes","CTRADER_ACCESS_TOKEN","refresh_token"):
+                self.assertNotIn(secret,content)
+        finally:site.shutdown();site.server_close();worker.join(timeout=2)
+
     def test_http_only_serves_allowlisted_static_and_verified_price(self):
         store.ingest(self.db,make_bundle(count=96),now=NOW)
         site=ThreadingHTTPServer(("127.0.0.1",0),server.http_handler(self.path))
