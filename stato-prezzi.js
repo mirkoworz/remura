@@ -135,7 +135,7 @@ refresh();
 setInterval(()=>{if(document.visibilityState==="visible")refresh();},180000);
 })();
 
-/* REMURA v1.22 · global DXY/VIX context and per-market comparison, private/read-only. */
+/* REMURA v1.23 · global DXY/VIX context and per-market comparison, private/read-only. */
 (()=>{
 "use strict";
 const $=id=>document.getElementById(id),core=window.REMURA_PRICE_STATUS_CORE.macro;
@@ -185,8 +185,14 @@ function macroPulseText(info){
  const movement={up:"aumento significativo rispetto alla propria mediana",down:"calo significativo rispetto alla propria mediana",flat:"variazione contenuta rispetto alla propria mediana"}[info.direction];
  return sign+fmt(info.changePct)+"% nelle ultime 4 ore H1 contigue · "+movement;
 }
+function qualifiedCorrelation(left,right){
+ const one=docs[left],two=docs[right];
+ const result=one&&two?core.correlation(one,two):{state:"insufficient",samples:0,value:null};
+ const eligible=!!(one&&two&&core.pairEligible(one,two));
+ return eligible?result:{...result,state:"unavailable",value:null};
+}
 function rowCorrelation(root,left,right,one,two){
- const c=one&&two?core.correlation(one,two):{state:"insufficient",samples:0,value:null};
+ const c=qualifiedCorrelation(left,right);
  const trust=!!(one&&two&&core.pairEligible(one,two));
  const historical=trust&&[one,two].some(doc=>core.audit(doc,Date.now()).state==="weekend");
  const row=elt("tr");
@@ -203,6 +209,27 @@ function correlations(pairs){
  for(const [x,y] of pairs)rowCorrelation(body,x,y,docs[x],docs[y]);
  table.append(body);
  return table;
+}
+function explainPair(box,benchmark,report){
+ const section=elt("div","relationship-pair");
+ const label=elt("strong",null,benchmark+": "+report.label);
+ const description=elt("p",null,report.detail);
+ section.append(label,description);
+ box.append(section);
+}
+function explainMarket(symbol){
+ const dxy=qualifiedCorrelation(symbol,"DXY"),vix=qualifiedCorrelation(symbol,"VIX");
+ const alias=symbol==="GER30"?"DAX 40 (GER30)":symbol;
+ const report=core.compareMacroRelationships(alias,dxy,vix);
+ const box=elt("section","relationship-insight");
+ box.append(elt("h3",null,report.title),elt("p",null,report.summary));
+ explainPair(box,"DXY",report.dollar);
+ explainPair(box,"VIX",report.fear);
+ const isWeekend=docs[symbol]&&docs.DXY&&docs.VIX&&
+  [symbol,"DXY","VIX"].some(sym=>core.audit(docs[sym],Date.now()).state==="weekend");
+ if(isWeekend)box.append(elt("p","session-note","ULTIMA SESSIONE: interpretazione storica, non live."));
+ box.append(elt("p","foot","Valori di Pearson sui rendimenti H1: relazione storica, non causalità, previsione o prova di ordini istituzionali. Le fasce qualitative sono soltanto descrittive e possono cambiare con il periodo selezionato."));
+ return box;
 }
 function macroContext(){
  const result=core.context(docs.DXY,docs.VIX,{now:Date.now()});
@@ -227,7 +254,9 @@ async function compareMarket(){
  try{
   const target=await getPrice(symbol);
   $("macro-extra").replaceChildren(auditCard(symbol,symbol,"Strumento scelto per confronto con DXY e VIX",target));
-  $("macro-target-correlations").replaceChildren(correlations([[symbol,"DXY"],[symbol,"VIX"]]));
+  $("macro-target-correlations").replaceChildren(
+   correlations([[symbol,"DXY"],[symbol,"VIX"]]));
+  $("macro-target-interpretation").replaceChildren(explainMarket(symbol));
  }finally{button.disabled=false}
 }
 async function refreshMacro(){
@@ -273,7 +302,8 @@ function initialize(){
  $("macro-refresh").addEventListener("click",refreshMacro);
  $("macro-check").addEventListener("click",compareMarket);
  select.addEventListener("change",()=>{
-  if(!select.value){$("macro-extra").replaceChildren();$("macro-target-correlations").replaceChildren();return;}
+  if(!select.value){$("macro-extra").replaceChildren();$("macro-target-correlations").replaceChildren();
+   $("macro-target-interpretation").replaceChildren();return;}
   compareMarket();
  });
  refreshMacro();
