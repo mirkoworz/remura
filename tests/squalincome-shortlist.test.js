@@ -24,12 +24,12 @@ test("diverse mode reduces overlapping NZD legs without fabricating prices",()=>
 });
 test("invalid and below-threshold COT movements never become candidates",()=>{
  const rows=[c("EURUSD",NaN),c("GBPJPY",.1),c("USDJPY",.45),c("XAUUSD",2,"metals")];
- assert.deepEqual(core.select(rows,"diverse").map(x=>x.sym),["XAUUSD","USDJPY"]);
+ assert.deepEqual(Array.from(core.select(rows,"diverse"),x=>x.sym),["XAUUSD","USDJPY"]);
  assert.throws(()=>core.select(rows,"foo"),/Modalità/);
 });
 test("diversification is deterministic without needing invented COT rows",()=>{
  const rows=[c("AUDNZD",6.2),c("NZDJPY",-8.4),c("NZDCHF",-6.3),c("GBPNZD",11)];
  assert.deepEqual(core.select(rows,"diverse").map(x=>x.sym),
   core.select(rows.slice().reverse(),"diverse").map(x=>x.sym));
- assert.deepEqual(core.select([]),[]);
+ assert.deepEqual(Array.from(core.select([])),[]);
 });
