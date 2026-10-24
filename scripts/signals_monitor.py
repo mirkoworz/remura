@@ -204,6 +204,17 @@ def scan_once(db_path,now=None):
                 if prior and (current["report_date"]<prior["report_date"] or
                               current["price_time"]<prior["price_time"]):
                     continue
+                if prior and (current["report_date"]==prior["report_date"] and
+                              current["price_time"]==prior["price_time"]):
+                    continue  # No new source data, even if the classification algorithm changed.
+                if prior:
+                    try:
+                        previous_observed=dt.datetime.fromisoformat(prior["observed_at"])
+                        elapsed=now-previous_observed
+                        if not dt.timedelta(0)<=elapsed<=dt.timedelta(days=14):
+                            prior=None  # Long outages require a new baseline, never a stale alert.
+                    except (ValueError,TypeError):
+                        prior=None
                 change=transition(prior,current)
                 stamp=now.isoformat()
                 with db:

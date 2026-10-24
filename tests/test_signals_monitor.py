@@ -124,6 +124,30 @@ class SignalTest(unittest.TestCase):
                 "freshness":"recent","ready":True}):
             self.assertIsNone(m.price_view({"timeframes":{}},NOW))
 
+
+    def test_prolonged_monitor_outage_restarts_baseline_without_event(self):
+        from unittest.mock import patch
+        from cot_monitor import ensure_table
+        db=connect(self.db_path)
+        try:
+            ensure_table(db)
+            for date,net in (("2026-10-13",100),("2026-10-20",155)):
+                db.execute("INSERT INTO cot_reports VALUES(?,?,?,?,?,?,?,?)",
+                    ("tff","099741",date,1000,100,50,net,30))
+            db.execute("INSERT INTO prices VALUES(?,?,?,?,?)",
+                ("EURUSD","ctrader","EURUSD",NOW.isoformat(),'{"symbol":"EURUSD"}'))
+            m.ensure_tables(db)
+            with db:
+                db.execute("INSERT INTO squalincome_observations VALUES(?,?,?,?,?,?,?)",
+                  ("EURUSD","divergent",1,"2026-10-13","2026-10-26T10:00:00+00:00",
+                   "watch",(NOW-dt.timedelta(days=20)).isoformat()))
+        finally:db.close()
+        p={"side":1,"state":"confirmed","last_m15":"2026-10-26T11:15:00+00:00"}
+        with patch.object(m,"price_view",return_value=p):
+            result=m.scan_once(self.db_path,NOW)
+        self.assertEqual(result["newEvents"],0)
+        self.assertEqual(result["baselines"],1)
+
     def test_duplicate_snapshot_upsert_and_event_key_is_idempotent(self):
         db=connect(self.db_path)
         try:
