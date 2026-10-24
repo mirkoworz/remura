@@ -85,3 +85,55 @@ test("v1.30 lets the user retain strongest mode or reduce overlapping FX currenc
  assert.ok(!html.includes('Analizza 4 candidati COT'));
  assert.ok(!html.includes('Mettere ordini automaticamente'));
 });
+
+test("v1.31 detects meaningful changes only after fresh verified source updates",()=>{
+ const h=fs.readFileSync("mercati.html","utf8");
+ const code=h.slice(h.indexOf("const CROSS_SNAPSHOT_KEY="),h.indexOf("function scanCard("));
+ assert.ok(code.startsWith("const CROSS_SNAPSHOT_KEY="));
+ const store=new Map();
+ const localStorage={getItem:key=>store.has(key)?store.get(key):null,setItem:(key,value)=>store.set(key,value)};
+ const check=vm.runInNewContext(code+"\n({eligibleCrossObservation,meaningfulCrossChange,crossRemember})",
+  {localStorage,Date});
+ const cot={asof:"2026-10-20",bias:1,conflict:false,stale:false,state:"trend"};
+ const candidate={sym:"GBPNZD",date:"2026-10-20"};
+ const fridayStamp="2026-10-23T20:45:00.000Z";
+ const mondayStamp="2026-10-26T08:45:00.000Z";
+ const weekendNow=Date.parse("2026-10-24T17:00:00Z");
+ const mondayNow=Date.parse("2026-10-26T09:10:00Z");
+ function entry({stamp=fridayStamp,kind="divergent",priceState="watch",side=-1,freshness="weekend"}={}){
+  return {candidate,cot,quality:{integrity:"verified",freshness},price:{
+    state:priceState,side,metrics:{M15:{latest:stamp}}},verdict:{state:kind}};
+ }
+ const first=check.crossRemember([entry()],weekendNow);
+ assert.equal(first.events.size,0,"initial scan cannot signal");
+ const historical=check.crossRemember([entry({kind:"aligned",side:1,priceState:"confirmed"})],weekendNow+3600000);
+ assert.equal(historical.events.size,0,"weekend cannot signal");
+ const newObservation=entry({stamp:mondayStamp,kind:"aligned",side:1,priceState:"confirmed",freshness:"recent"});
+ const found=check.crossRemember([newObservation],mondayNow);
+ assert.equal(found.events.size,1);
+ assert.equal(found.events.get("GBPNZD").key,"alignment");
+ assert.equal(check.crossRemember([newObservation],mondayNow+60000).events.size,0,"identical data cannot alert twice");
+ const saved=store.values().next().value;
+ assert.ok(saved.includes("GBPNZD")&&saved.includes(mondayStamp));
+ assert.ok(!saved.includes("timeframes")&&!saved.includes("myfx")&&!saved.includes("token"));
+});
+test("v1.31 suppresses stale candles, weekend transitions, and classification-only changes",()=>{
+ const h=fs.readFileSync("mercati.html","utf8");
+ const code=h.slice(h.indexOf("const CROSS_SNAPSHOT_KEY="),h.indexOf("function scanCard("));
+ const check=vm.runInNewContext(code+"\n({eligibleCrossObservation,meaningfulCrossChange})",{});
+ const now=Date.parse("2026-10-26T09:10:00Z");
+ const candidate={sym:"NZDCHF",date:"2026-10-20"};
+ const cot={asof:"2026-10-20",bias:-1,conflict:false,stale:false,state:"trend"};
+ const price={state:"confirmed",side:-1,metrics:{M15:{latest:"2026-10-26T08:45:00.000Z"}}};
+ const observation={candidate,cot,price,verdict:{state:"aligned"},quality:{integrity:"verified",freshness:"recent"}};
+ const valid=check.eligibleCrossObservation(observation,now);
+ assert.ok(valid);
+ assert.equal(check.eligibleCrossObservation({...observation,quality:{integrity:"invalid",freshness:"recent"}},now),null);
+ assert.equal(check.eligibleCrossObservation({...observation,cot:{...cot,conflict:true}},now),null);
+ assert.equal(check.eligibleCrossObservation({...observation,quality:{integrity:"verified",freshness:"stale"}},now),null);
+ assert.equal(check.meaningfulCrossChange({...valid,state:"divergent"},{...valid,historical:true}),null);
+ assert.equal(check.meaningfulCrossChange({...valid,state:"divergent"},{...valid}),null);
+ assert.equal(check.meaningfulCrossChange({...valid,state:"aligned",priceState:"watch"},{...valid,priceTime:"2026-10-26T09:00:00.000Z"}).key,"confirmation");
+ assert.ok(h.includes("Il primo controllo crea soltanto una fotografia iniziale"));
+ assert.ok(h.includes("non invia notifiche"));
+});
