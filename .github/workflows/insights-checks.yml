@@ -45,7 +45,7 @@ jobs:
           node --check impostazioni.js
           node --check feed-health-core.js
       - name: Verify COT analysis rules
-        run: node --test tests/insights.test.js tests/retail-chart.test.js tests/cot-indices.test.js tests/cot-scanner.test.js tests/feed-health.test.js tests/release-consistency.test.js
+        run: node --test tests/insights.test.js tests/retail-chart.test.js tests/cot-indices.test.js tests/cot-scanner.test.js tests/squalincome-shortlist.test.js tests/feed-health.test.js tests/release-consistency.test.js
       - name: Verify wiring on all market detail pages
         run: |
           node - <<'NODE'
