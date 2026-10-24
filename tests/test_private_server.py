@@ -335,6 +335,53 @@ class PrivateStorageTests(unittest.TestCase):
         self.assertEqual(server.price_failure_code("ctrader_validation:page_incomplete"),"incomplete_history")
         self.assertEqual(server.price_failure_code("top-secret unknown"),"unknown_error")
 
+
+    def test_38_market_quality_metadata_is_lightweight_and_sanitized(self):
+        store.ingest(self.db,make_bundle(),now=NOW)
+        overview=store.price_overview(self.db,now=NOW)
+        row=next(m for m in overview["markets"] if m["symbol"]=="EURUSD")
+        self.assertEqual(row["quality"]["integrity"],"verified")
+        self.assertEqual(row["quality"]["freshness"],"recent")
+        self.assertEqual(row["quality"]["h1"]["verified"],30)
+        self.assertEqual(row["quality"]["h4"]["verified"],30)
+        self.assertEqual(row["quality"]["recentGaps"],0)
+        self.assertEqual(overview["qualityTotals"]["verified"],1)
+        self.assertEqual(overview["qualityTotals"]["missing"],len(store.MARKETS)-1)
+        self.assertNotIn('"timeframes":',json.dumps(overview))
+        self.assertNotIn("CTRADER_ACCESS_TOKEN",json.dumps(overview))
+
+    def test_quality_rejects_damaged_rollup_or_missing_m15_and_short_history(self):
+        store.ingest(self.db,make_bundle(),now=NOW)
+        original=store.latest(self.db,"EURUSD")
+        changed=json.loads(json.dumps(original))
+        changed["timeframes"]["H4"][-1]["h"]*=1.5
+        self.assertEqual(store.audit_market(changed,NOW)["integrity"],"invalid")
+        changed=json.loads(json.dumps(original))
+        changed["timeframes"]["M15"].pop(-12)
+        self.assertEqual(store.audit_market(changed,NOW)["integrity"],"partial")
+        self.assertGreater(store.audit_market(changed,NOW)["h1"]["missingInputs"],0)
+        changed=json.loads(json.dumps(original))
+        changed["timeframes"]["H4"]=changed["timeframes"]["H4"][:10]
+        self.assertEqual(store.audit_market(changed,NOW)["integrity"],"insufficient")
+
+    def test_weekend_quality_not_misreported_as_live(self):
+        store.ingest(self.db,make_bundle(),now=NOW)
+        document=store.latest(self.db,"EURUSD")
+        target=dt.datetime(2026,10,23,20,45,tzinfo=UTC)
+        previous=dt.datetime.fromisoformat(document["lastComplete"].replace("Z","+00:00"))
+        shift=target-previous
+        for timeframe in ("M15","H1","H4"):
+            for bar in document["timeframes"][timeframe]:
+                timestamp=dt.datetime.fromisoformat(bar["t"].replace("Z","+00:00"))
+                bar["t"]=iso(timestamp+shift)
+        document["lastComplete"]=iso(target)
+        saturday=dt.datetime(2026,10,24,14,0,tzinfo=UTC)
+        result=store.audit_market(document,saturday)
+        self.assertEqual(result["freshness"],"weekend")
+        self.assertEqual(result["integrity"],"verified")
+        monday=dt.datetime(2026,10,26,12,0,tzinfo=UTC)
+        self.assertEqual(store.audit_market(document,monday)["freshness"],"stale")
+
     def test_http_only_serves_allowlisted_static_and_verified_price(self):
         store.ingest(self.db,make_bundle(count=96),now=NOW)
         site=ThreadingHTTPServer(("127.0.0.1",0),server.http_handler(self.path))

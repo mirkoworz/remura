@@ -1,4 +1,4 @@
-/* REMURA v1.25: private N/D diagnostics and opt-in OHLC verification. */
+/* REMURA v1.26: private N/D diagnostics and opt-in OHLC verification. */
 (()=>{
 "use strict";
 const $=id=>document.getElementById(id);
@@ -42,7 +42,10 @@ function titleOf(symbol){
 function marketCard(entry,serverTime){
  const result=core.interpret(entry,serverTime);
  const card=node("article","market");
+ card.id="price-market-"+entry.symbol;
  card.dataset.state=result.state;
+ const q=entry.quality;
+ if(q&&typeof q.integrity==="string")card.dataset.quality=q.integrity;
  const head=node("div","market-head");
  head.append(node("b",null,entry.symbol),node("span","tag",labels[result.state]));
  card.append(head,node("div","desc",titleOf(entry.symbol)));
@@ -52,6 +55,18 @@ function marketCard(entry,serverTime){
   counts.append(node("span","count",timeframe+" "+n.toLocaleString("it-IT")));
  }
  card.append(counts);
+ if(q){
+  const labels={verified:"COERENTE",partial:"INPUT MANCANTI",invalid:"INCOERENTE",
+    insufficient:"STORICO INSUFFICIENTE",missing:"N/D"};
+  const freshness={recent:"recente",weekend:"ultimo venerdì (non live)",
+    stale:"datato",missing:"non disponibile"};
+  const line=node("div","market-quality","Qualità: "+(labels[q.integrity]||"da verificare")+
+    " · "+(freshness[q.freshness]||"freschezza da verificare")+
+    " · H1 "+(q.h1?.verified??0)+"/"+(q.h1?.checked??0)+
+    " · H4 "+(q.h4?.verified??0)+"/"+(q.h4?.checked??0));
+  line.dataset.integrity=q.integrity;
+  card.append(line);
+ }
  const age=result.age===null?"N/D":result.age+" min";
  const lastM15=entry.lastComplete?prettyTime(entry.lastComplete)+" · "+age:"N/D";
  card.append(node("div","price-snapshot",entry.lastComplete?"Ultima M15: "+lastM15:"Ultima M15: N/D · dati ancora assenti"));
@@ -148,6 +163,43 @@ function render(){
  for(const row of values)target.append(marketCard(row,data.serverTime));
  $("price-results-count").textContent=values.length+" mercati visualizzati su "+data.total+". Le voci N/D appaiono per prime.";
 }
+
+function renderQuality(overview){
+ const totals=overview?.qualityTotals, freshness=overview?.freshnessTotals;
+ const headline=$("price-quality-summary"),list=$("price-quality-list");
+ list.replaceChildren();
+ const keys=["verified","partial","invalid","insufficient","missing"];
+ if(!totals||keys.some(k=>!Number.isInteger(totals[k])||totals[k]<0)||
+   keys.reduce((sum,k)=>sum+totals[k],0)!==38){
+   headline.textContent="Il server sta ancora usando il vecchio riepilogo. La nuova verifica globale richiede l'aggiornamento del codice VPS; la diagnostica individuale resta disponibile.";
+   return;
+ }
+ const hasProblems=totals.invalid+totals.partial+totals.insufficient+totals.missing>0;
+ headline.textContent="Integrità: "+totals.verified+"/38 con storico sufficiente e H1/H4 coerenti"+
+   " · "+totals.partial+" input mancanti · "+totals.invalid+" incoerenti · "+
+   totals.insufficient+" insufficienti · "+totals.missing+" senza storico. "+
+   (freshness?"Freschezza: "+freshness.recent+" recenti · "+freshness.weekend+
+      " ultime sessioni di venerdì · "+freshness.stale+" datati. ":"")+
+   (hasProblems?"Apri la lista per individuare gli strumenti da controllare. ":
+      "Nessuna incoerenza rilevata nei controlli eseguiti. ")+
+   "Non equivale a un segnale di trading.";
+ const names={verified:"Coerente",partial:"Input mancanti",invalid:"Incoerente",
+   insufficient:"Storico insufficiente",missing:"N/D"};
+ const clock={recent:"recente",weekend:"venerdì (storico)",stale:"datato",missing:"N/D"};
+ const severity={invalid:0,partial:1,insufficient:2,missing:3,verified:4};
+ const entries=[...overview.markets].sort((a,b)=>
+   (severity[a.quality?.integrity]??5)-(severity[b.quality?.integrity]??5)||
+   a.symbol.localeCompare(b.symbol));
+ for(const entry of entries){
+  const q=entry.quality,link=node("a","quality-row");
+  link.href="#price-market-"+entry.symbol;
+  link.dataset.integrity=q?.integrity||"missing";
+  link.append(node("strong",null,entry.symbol),
+    node("span",null,(names[q?.integrity]||"N/D")+" · "+(clock[q?.freshness]||"N/D")));
+  list.append(link);
+ }
+}
+
 async function refresh(){
  if(loading)return;
  loading=true;
@@ -171,6 +223,7 @@ async function refresh(){
   $("price-last-run").textContent="Collector: "+String(parsed.collector||"N/D")+
    " · Ultima richiesta: "+last+" · Gruppo: "+String(parsed.collectorBatch||"N/D")+
    " · Rotazione nominale 120 minuti";
+  renderQuality(parsed);
   const missing=parsed.markets.filter(e=>core.interpret(e,parsed.serverTime).state==="missing");
   $("price-missing-summary").textContent=missing.length?
    "SENZA STORICO ("+missing.length+"): "+
@@ -185,6 +238,8 @@ async function refresh(){
   $("price-last-run").textContent="Nessun dato ricevuto: non mostriamo prezzi simulati.";
   $("price-list").replaceChildren();
   $("price-missing-summary").textContent="La VPS non risponde: mercati N/D non identificabili da GitHub.";
+  $("price-quality-summary").textContent="Verifica globale non disponibile: VPS privata non connessa.";
+  $("price-quality-list").replaceChildren();
   $("price-results-count").textContent="";
   for(const id of ["price-total","price-recent","price-stale","price-missing"])$(id).textContent="—";
  }finally{loading=false;$("price-refresh").disabled=false;}
