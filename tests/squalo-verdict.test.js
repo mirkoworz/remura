@@ -1,5 +1,5 @@
 const test=require("node:test"),assert=require("node:assert/strict"),fs=require("node:fs");
-const core=require("../squalo-verdict-core.js");
+const core=require("../insights-core.js").verdict;
 const NOW=Date.parse("2026-10-24T10:00:00Z");
 const fresh=stamp=>new Date(stamp).toISOString();
 const market=(state="confirmed",side=1,latest="2026-10-23T20:45:00Z")=>({
@@ -44,10 +44,11 @@ test("Neutral, conflict and malformed retail inputs do not produce false institu
  assert.equal(core.macroEvidence({state:"unavailable"}).status,"missing");
 });
 test("All market pages use the same combined renderer without exposing credentials",()=>{
- const html=fs.readFileSync("asset.html","utf8"),script=fs.readFileSync("squalo-verdict.js","utf8");
+ const html=fs.readFileSync("asset.html","utf8"),script=fs.readFileSync("price.js","utf8");
  assert.ok(html.includes('id="squalo-verdict"'));
- assert.ok(html.includes('squalo-verdict-core.js'));
- assert.ok(html.includes('squalo-verdict.js'));
+ assert.ok(html.includes('price.js?v=124'));
+ assert.ok(html.includes('insights-core.js'));
+ assert.ok(!html.includes('squalo-verdict-core.js'));
  for(const name of ["remura:cot","remura:price","remura:retail","remura:capital"])
   assert.ok(script.includes(name),name);
  assert.ok(script.includes("window.REMURA_PRICE_STATUS_CORE"));
