@@ -143,17 +143,21 @@
  function priceEvidence(price,now=Date.now()){
   if(!price||price.state==="unavailable")return {status:"missing",side:0,title:"Prezzo non verificato",detail:"Mancano candele H4/H1/M15 idonee o recenti."};
   const latest=Date.parse(price.metrics?.M15?.latest||"");
-  const weekend=[0,6].includes(new Date(now).getUTCDay());
+  const romeDay=ms=>new Intl.DateTimeFormat("en-US",{timeZone:"Europe/Rome",weekday:"short"}).format(new Date(ms));
+  const weekend=["Sat","Sun"].includes(romeDay(now));
   const maxAge=(weekend?72:3)*HOUR;
-  if(!Number.isFinite(latest)||latest>now+300000||now-latest>maxAge)
+  if(!Number.isFinite(latest)||latest>now+300000||now-latest>maxAge||
+    (weekend&&romeDay(latest)!=="Fri"))
    return {status:"stale",side:0,title:"Prezzo non aggiornato",detail:"Le candele non sono sufficientemente recenti per questo verdetto."};
   if(price.state==="conflict")return {status:"mixed",side:0,title:"H4 e H1 discordanti",detail:"La struttura dei timeframe non sostiene una direzione univoca."};
   if((price.side!==1&&price.side!==-1)||!["watch","partial","confirmed"].includes(price.state))
    return {status:"neutral",side:0,title:"Prezzo senza direzione comune",detail:"H4 e H1 non forniscono una lettura concorde utilizzabile."};
   return {status:"valid",side:price.side,title:"Struttura prezzo "+sideName(price.side),
-   detail:price.state==="confirmed"?"Conferma tecnica H4/H1/M15 completa sul campione chiuso.":
+   historical:weekend,
+   detail:(weekend?"Ultima sessione del venerdì, fotografia storica NON live. ":"")+
+    (price.state==="confirmed"?"Conferma tecnica H4/H1/M15 sul campione chiuso.":
     price.state==="partial"?"H4 e H1 coerenti, ma manca conferma M15 completa.":
-     "Tendenza H4/H1 coerente; rotture ancora incomplete."};
+     "Tendenza H4/H1 coerente; rotture ancora incomplete.")};
  }
  function retailEvidence(feed,source,now=Date.now()){
   const current=feed?.current,stamp=Date.parse(current?.t||"");
@@ -199,12 +203,14 @@
     state="aligned";side=c.side;
     const strong=cot.state==="trend"&&price.state==="confirmed";
     title=strong?"Tracce concordi, da verificare":"Coerenza preliminare, da monitorare";
-    narrative="La spinta speculativa COT settimanale e la struttura del prezzo indicano entrambe una direzione "+
+    if(p.historical)title="ULTIMA SESSIONE · "+title;
+    narrative=(p.historical?"Fotografia storica del venerdì, NON conferma live. ":"")+
+     "La spinta speculativa COT settimanale e la struttura del prezzo indicano entrambe una direzione "+
      sideName(side)+". "+(strong?"Il prezzo conferma H4/H1/M15. ":"Mancano conferme tecniche o persistenza sufficienti. ")+
      "Non identifica acquisti o vendite istituzionali in tempo reale.";
    }else{
-    state="divergent";title="COT e prezzo in contrasto";
-    narrative="Il COT indica una spinta "+sideName(c.side)+
+    state="divergent";title=(p.historical?"ULTIMA SESSIONE · ":"")+"COT e prezzo in contrasto";
+    narrative=(p.historical?"Fotografia storica del venerdì, NON conferma live. ":"")+"Il COT indica una spinta "+sideName(c.side)+
       ", mentre la struttura H4/H1 suggerisce un movimento "+sideName(p.side)+
       ". Non attribuire una direzione affidabile allo Squalo.";
    }
