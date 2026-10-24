@@ -64,9 +64,9 @@ class SignalTest(unittest.TestCase):
         newer={**same,"price_time":"2026-10-26T10:15:00+00:00"}
         self.assertEqual(m.transition(start,newer),"new_convergence")
         self.assertIsNone(m.transition(start,{**newer,"price_time":"2026-10-26T09:45:00+00:00"}))
-        self.assertEqual(m.transition({...start,"state":"aligned"},{
+        self.assertEqual(m.transition({**start,"state":"aligned"},{
             **newer,"state":"divergent"}),"new_divergence")
-        self.assertEqual(m.transition({...start,"state":"aligned"},newer),"confirmation_strengthened")
+        self.assertEqual(m.transition({**start,"state":"aligned"},newer),"confirmation_strengthened")
 
     def test_empty_or_weekend_only_scan_writes_no_false_events(self):
         # Empty CFTC and price data => no baseline or event.
