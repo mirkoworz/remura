@@ -21,3 +21,19 @@ test("Le nuove metriche restano prima dei due blocchi sentiment, prezzo dopo",()
  assert.ok(html.includes('id="cot-gap-chart"'));
  assert.ok(html.includes('remura-capital'));
 });
+
+test("Squalincome v1.27 validates multi-source data and limits iPhone requests",()=>{
+ const html=fs.readFileSync("mercati.html","utf8");
+ for(const term of ['id="squalincome-cross"','id="cross-run"',
+  'private-api/prices/status','private-api/prices/','private-api/retail/latest.json',
+  'private-api/capital/latest.json','quality.integrity!=="verified"',
+  'quality.freshness','const candidates=allSymbols','slice(0,4)',
+  'trendCore.analyze(data.records,current,"24h",now)',
+  'crossCore.verdict.evaluate','NON live','NON segnali live'])
+   assert.ok(html.includes(term),term);
+ assert.ok(!html.includes('private-api/ctrader/token'));
+ const scripts=[...html.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/g)]
+   .map(m=>m[1]).filter(Boolean);
+ assert.equal(scripts.length,1);
+ assert.doesNotThrow(()=>new vm.Script(scripts[0]));
+});
