@@ -29,6 +29,7 @@ from urllib.parse import urlsplit
 
 from price_feed import MARKETS, UTC, utcnow
 from price_store import connect, get_status, set_status, latest, ingest, api_document, symbols_available, price_overview
+from cot_monitor import collect_once as collect_official_cot, public_status as official_cot_status
 from ctrader_tokens import access_token, path_for, read_file
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -47,6 +48,7 @@ SAFE_ASSETS={
 }
 STATUS_PATH="/private-api/health"
 PRICE_OVERVIEW_PATH="/private-api/prices/status"
+COT_OVERVIEW_PATH="/private-api/cot/status"
 UPDATE_STATUS_PATH="/private-api/autoupdate"
 RETAIL_LATEST="/private-api/retail/latest.json"
 IG_LATEST="/private-api/ig/latest.json"
@@ -282,6 +284,9 @@ def http_handler(db_path):
             path=urlsplit(self.path).path
             if path==UPDATE_STATUS_PATH:
                 self.response(200,safe_update_status(db_path))
+                return
+            if path==COT_OVERVIEW_PATH:
+                self.response(200,official_cot_status(db_path,cot_sync_enabled()))
                 return
             if path==CAPITAL_LATEST or CAPITAL_HISTORY_RE.fullmatch(path):
                 data=capital_document(db_path,path)
@@ -764,6 +769,22 @@ def collector_loop(db_path,stop,env=None):
         stop.wait(seconds_to_next_quarter())
 
 
+def cot_sync_enabled(env=None):
+    values=os.environ if env is None else env
+    # Automatic public CFTC sync follows an already opted-in price collector.
+    # REMURA_COT_SYNC_ENABLED=0 explicitly disables it.
+    return values.get("REMURA_COT_SYNC_ENABLED",
+                      values.get("REMURA_COLLECTOR_ENABLED","0"))=="1"
+
+
+def cot_loop(db_path,stop):
+    while not stop.is_set():
+        try:collect_official_cot(db_path)
+        except Exception as exc:
+            print("REMURA public COT sync: "+type(exc).__name__,file=sys.stderr)
+        stop.wait(6*3600)
+
+
 def main():
     import argparse
     p=argparse.ArgumentParser(description="REMURA private localhost server and scheduled cTrader ingestion")
@@ -785,6 +806,9 @@ def main():
     if os.environ.get("REMURA_COLLECTOR_ENABLED","0")=="1":
         thread=threading.Thread(target=collector_loop,args=(db_path,stop),daemon=True)
         thread.start()
+    if cot_sync_enabled():
+        thread_cot=threading.Thread(target=cot_loop,args=(db_path,stop),daemon=True)
+        thread_cot.start()
     if os.environ.get("REMURA_RETAIL_ENABLED","0")=="1":
         thread_retail=threading.Thread(target=retail_loop,args=(db_path,stop),daemon=True)
         thread_retail.start()
