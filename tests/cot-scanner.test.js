@@ -32,8 +32,5 @@ test("Squalincome v1.27 validates multi-source data and limits iPhone requests",
   'crossCore.verdict.evaluate','NON live','NON segnali live'])
    assert.ok(html.includes(term),term);
  assert.ok(!html.includes('private-api/ctrader/token'));
- const scripts=[...html.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/g)]
-   .map(m=>m[1]).filter(Boolean);
- assert.equal(scripts.length,1);
- assert.doesNotThrow(()=>new vm.Script(scripts[0]));
+ // The first scanner regression test already verifies inline script syntax.
 });
