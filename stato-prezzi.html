@@ -8,7 +8,7 @@
 <title>REMURA · Stato prezzi</title>
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="stylesheet" href="./nav.css?v=125">
+<link rel="stylesheet" href="./nav.css?v=126">
 <style>
 :root{color-scheme:dark;--bg:#07121a;--ink:#ecf7f5;--muted:#a5c3c7;--mint:#76ebc4;--line:#315960;--surface:#112e37}
 *{box-sizing:border-box}
@@ -58,6 +58,15 @@ button:disabled{opacity:.5}
 .price-quality-button{margin-top:12px;width:100%;min-height:40px;font-size:12px;background:#1c4650;border-color:#527f86}
 .price-quality{margin-top:8px;white-space:pre-line;font-size:12px;line-height:1.6;color:#c6e2dc;overflow-wrap:anywhere}
 .price-quality[data-state=invalid],.price-quality[data-state=error]{color:#ffcdab}
+.market[data-quality=invalid],.market[data-quality=partial]{border-color:#ac8264}
+.market-quality{font-size:12px;line-height:1.5;margin:7px 0;color:#b8eadb}
+.market-quality[data-integrity=invalid],.market-quality[data-integrity=partial],.market-quality[data-integrity=insufficient]{color:#ffd3a5}
+.quality-overview{margin-top:13px;font-size:12px}
+.quality-overview summary{cursor:pointer;font-weight:750;color:#93e4d1;min-height:38px}
+.quality-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:7px;margin-top:10px}
+.quality-row{display:flex;justify-content:space-between;gap:9px;border:1px solid #325a62;border-radius:9px;padding:10px;text-decoration:none;color:#e2f2ec}
+.quality-row[data-integrity=invalid],.quality-row[data-integrity=partial]{border-color:#b08068}
+.quality-row span{color:#afd0cf;text-align:right}
 .help{margin-top:15px;font-size:12px;color:#bfd4d6}
 .help summary{cursor:pointer;color:#a6e5d7;font-weight:750;min-height:40px;padding:9px 0}
 .help p{margin:5px 0 0;line-height:1.65}
@@ -128,7 +137,16 @@ button:disabled{opacity:.5}
 <label>Categoria<select id="price-group"><option value="all">Tutte le categorie</option><option value="forex">Forex</option><option value="metals">Metalli</option><option value="indices">Indici azionari</option><option value="macro">Indicatori macro</option><option value="energy">Energia</option></select></label>
 <button id="price-refresh" type="button">Aggiorna dati</button>
 </div>
-<details class="help"><summary>Come leggere i dati e la freschezza</summary><p>Otto gruppi ogni 15 minuti: giro nominale di 120 minuti. RECENTE indica l'ultima M15 entro tre ore; DATATO può essere normale durante la chiusura del weekend. Nel Radar Macro, il venerdì resta consultabile come ULTIMA SESSIONE, esplicitamente non live, solo se gli storici sono verificabili. N/D indica candele assenti, non dati simulati. Tocca «Dettagli e provenienza» per fonte ed esito. Tocca «Verifica qualità M15/H1/H4» per controllare uno storico alla volta dalla VPS, senza dati simulati.</p></details>
+<details class="help"><summary>Come leggere i dati e la freschezza</summary><p>Otto gruppi ogni 15 minuti: giro nominale di 120 minuti. RECENTE indica l'ultima M15 entro tre ore; DATATO può essere normale durante la chiusura del weekend. Nel Radar Macro, il venerdì resta consultabile come ULTIMA SESSIONE, esplicitamente non live, solo se gli storici sono verificabili. N/D indica candele assenti, non dati simulati. Tocca «Dettagli e provenienza» per fonte ed esito. Il riquadro «Qualità di tutti i 38 mercati» controlla automaticamente lo storico sulla VPS. Usa «Verifica qualità M15/H1/H4» per controllare nuovamente un singolo mercato dal telefono.</p></details>
+</section>
+<section class="panel" id="quality-audit" aria-label="Audit automatico prezzi dei 38 mercati">
+<div class="eyebrow">Integrità e freschezza · verifica automatica</div>
+<h2 style="margin:6px 0 10px">Qualità di tutti i 38 mercati</h2>
+<p class="explain">La VPS controlla gli ultimi 30 rollup H1 e H4 rispetto alle M15 reali. Le chiusure di sessione non vengono riempite artificialmente. Coerenza dei dati e freschezza sono due controlli distinti.</p>
+<div id="price-quality-summary" class="missing-summary" role="status" aria-live="polite">Attendo il riepilogo privato della VPS…</div>
+<details class="quality-overview"><summary>Visualizza il controllo di tutti i mercati</summary>
+<div id="price-quality-list" class="quality-list"></div></details>
+<p class="explain">Solo dati OHLC già archiviati dalla VPS: nessun ordine, previsione o garanzia di movimento istituzionale. Il venerdì è storico durante il weekend.</p>
 </section>
 <div id="price-missing-summary" class="missing-summary" role="status" aria-live="polite">Controllo i mercati senza storico…</div>
 <div id="price-results-count" class="explain" aria-live="polite"></div>
@@ -163,8 +181,8 @@ button:disabled{opacity:.5}
 </section>
 <p class="explain">Dati privati dalla VPS <b>.ts.net</b>. Nessuna credenziale o ordine mostrato. Aggiornamento automatico ogni tre minuti quando la pagina è visibile.</p>
 </main>
-<script src="./nav.js?v=125"></script>
+<script src="./nav.js?v=126"></script>
 <script src="./price-status-core.js?v=123"></script>
-<script src="./stato-prezzi.js?v=125"></script>
+<script src="./stato-prezzi.js?v=126"></script>
 </body>
 </html>

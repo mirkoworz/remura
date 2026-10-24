@@ -8,9 +8,11 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import math
 import os
 from pathlib import Path
 import sqlite3
+from zoneinfo import ZoneInfo
 
 from price_feed import MARKETS, UTC, candle, closed_m15, market_document, parse_time, utcnow
 
@@ -123,6 +125,96 @@ def ingest(db, input_doc, now=None):
 
 
 
+
+def audit_market(doc, now=None):
+    """Bounded integrity check: OHLC, latest 30 H1/H4 rollups, and freshness.
+
+    Closed-market gaps are informational, not automatically corruption.
+    All timestamps are UTC; Friday history is never counted as live.
+    """
+    now = now or utcnow()
+    missing = {"integrity":"missing", "freshness":"missing", "ready":False,
+               "h1":{"checked":0,"verified":0,"missingInputs":0,"mismatched":0},
+               "h4":{"checked":0,"verified":0,"missingInputs":0,"mismatched":0},
+               "recentGaps":0}
+    if not isinstance(doc,dict) or doc.get("provider")!="ctrader":
+        return missing
+    try:
+        frames = {}
+        for tf,seconds in (("M15",900),("H1",3600),("H4",14400)):
+            rows = doc["timeframes"][tf]
+            if not isinstance(rows,list):
+                raise ValueError("bad_frames")
+            previous=None
+            clean=[]
+            for row in rows:
+                if not isinstance(row,dict):
+                    raise ValueError("bad_row")
+                stamp=parse_time(row["t"])
+                if int(stamp.timestamp())%seconds or (previous is not None and stamp<=previous):
+                    raise ValueError("bad_timestamps")
+                vals=[row[k] for k in ("o","h","l","c")]
+                if not all(type(v) in (int,float) and math.isfinite(v) and v>0 for v in vals):
+                    raise ValueError("bad_price")
+                op,hi,lo,cl=vals
+                if hi<max(op,cl,lo) or lo>min(op,cl,hi):
+                    raise ValueError("bad_ohlc")
+                clean.append((stamp,row))
+                previous=stamp
+            frames[tf]=clean
+        m15=frames["M15"]
+        if not m15:
+            return missing
+        if parse_time(doc["lastComplete"])!=m15[-1][0]:
+            raise ValueError("last_complete_mismatch")
+        lookup={stamp:row for stamp,row in m15}
+        gaps=sum((m15[i][0]-m15[i-1][0]).total_seconds()!=900
+                 for i in range(max(1,len(m15)-96),len(m15)))
+        def rollup(tf,n):
+            rows=frames[tf][-30:]
+            status={"checked":len(rows),"verified":0,"missingInputs":0,"mismatched":0}
+            for stamp,row in rows:
+                samples=[lookup.get(stamp+dt.timedelta(minutes=15*j)) for j in range(n)]
+                if any(s is None for s in samples):
+                    status["missingInputs"]+=1
+                    continue
+                expected=(samples[0]["o"],max(s["h"] for s in samples),
+                          min(s["l"] for s in samples),samples[-1]["c"])
+                observed=tuple(row[k] for k in ("o","h","l","c"))
+                if all(math.isclose(a,b,abs_tol=1e-9,rel_tol=1e-9)
+                       for a,b in zip(expected,observed)):
+                    status["verified"]+=1
+                else:
+                    status["mismatched"]+=1
+            return status
+        h1=rollup("H1",4)
+        h4=rollup("H4",16)
+        ready=all(len(frames[tf])>=55 for tf in ("M15","H1","H4"))
+        close=m15[-1][0]+dt.timedelta(minutes=15)
+        age=(now-close).total_seconds()/60
+        rome=ZoneInfo("Europe/Rome")
+        last=close.astimezone(rome)
+        today=now.astimezone(rome)
+        if -5<=age<=180:
+            freshness="recent"
+        elif (0<=age<=72*60 and today.weekday() in (5,6)
+              and last.weekday()==4 and last.hour>=16):
+            freshness="weekend"
+        else:
+            freshness="stale"
+        if age < -5 or h1["mismatched"] or h4["mismatched"]:
+            integrity="invalid"
+        elif h1["missingInputs"] or h4["missingInputs"]:
+            integrity="partial"
+        elif not ready:
+            integrity="insufficient"
+        else:
+            integrity="verified"
+        return {"integrity":integrity,"freshness":freshness,"ready":ready,
+                "h1":h1,"h4":h4,"recentGaps":gaps}
+    except (TypeError,ValueError,KeyError,OverflowError,AttributeError,OSError):
+        return {**missing,"integrity":"invalid"}
+
 PRICE_OUTCOMES=frozenset((
     "ok","ticker_unavailable","no_historical_bars","incomplete_history",
     "invalid_bars","request_failed","unknown_error"
@@ -140,22 +232,26 @@ def price_overview(db,now=None):
     saved={row[0]:row[1:] for row in db.execute(
         "SELECT symbol,source,broker_symbol,updated_at,payload FROM prices")}
     results=[]
+    quality_totals={key:0 for key in ("verified","partial","invalid","insufficient","missing")}
+    freshness_totals={key:0 for key in ("recent","weekend","stale","missing")}
     for symbol in sorted(MARKETS):
         record=saved.get(symbol)
         last_complete=None
         provider_symbol=None
         source=None
         counts={"M15":0,"H1":0,"H4":0}
+        quality=audit_market(None,now)
         if record:
             source,provider_symbol,last_complete,payload=record
             try:
                 doc=json.loads(payload)
+                quality=audit_market(doc,now)
                 frames=doc.get("timeframes",{})
                 for timeframe in counts:
                     bars=frames.get(timeframe,[]) if isinstance(frames,dict) else []
                     counts[timeframe]=len(bars) if isinstance(bars,list) else 0
             except (ValueError,TypeError,AttributeError):
-                pass
+                quality={**quality,"integrity":"invalid","freshness":"missing"}
             source="backup" if (isinstance(provider_symbol,str)
                                   and provider_symbol.startswith("BACKUP · ")) else "primary"
         state={}
@@ -167,12 +263,15 @@ def price_overview(db,now=None):
             state={}
         outcome=state.get("outcome")
         stamp=state.get("time")
+        quality_totals[quality["integrity"]]+=1
+        freshness_totals[quality["freshness"]]+=1
         results.append({
             "symbol":symbol,
             "lastComplete":last_complete if isinstance(last_complete,str) else None,
             "providerSymbol":provider_symbol if isinstance(provider_symbol,str) else None,
             "source":source,
             "counts":counts,
+            "quality":quality,
             "lastAttempt":stamp if isinstance(stamp,str) else None,
             "lastOutcome":outcome if outcome in PRICE_OUTCOMES else None
         })
@@ -183,6 +282,8 @@ def price_overview(db,now=None):
         "collector":states.get("collector","disabled"),
         "collectorBatch":states.get("collector_batch"),
         "lastAttempt":states.get("last_attempt"),
+        "qualityTotals":quality_totals,
+        "freshnessTotals":freshness_totals,
         "markets":results
     }
 
