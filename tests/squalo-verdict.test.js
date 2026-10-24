@@ -51,5 +51,7 @@ test("All market pages use the same combined renderer without exposing credentia
  for(const name of ["remura:cot","remura:price","remura:retail","remura:capital"])
   assert.ok(script.includes(name),name);
  assert.ok(script.includes("window.REMURA_PRICE_STATUS_CORE"));
+ assert.ok(script.includes("REMURA_VERDICT_SNAPSHOTS"));
+ assert.ok(html.includes("window.REMURA_VERDICT_SNAPSHOTS=Object.create(null)"));
  assert.ok(!script.includes("api_key")&&!script.includes("Bearer "));
 });
