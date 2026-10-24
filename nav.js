@@ -1,4 +1,4 @@
-/* REMURA v1.28: menu responsive ad albero + configurazione condivisa dei mercati. */
+/* REMURA v1.29: menu responsive ad albero + configurazione condivisa dei mercati. */
 (() => {
   "use strict";
   const FX_CODES={EUR:"099741",GBP:"096742",JPY:"097741",AUD:"232741",CAD:"090741",CHF:"092741",NZD:"112741"};
@@ -34,7 +34,7 @@
     // Visible on every REMURA page, including the installed iPhone web app.
     const release=document.createElement("div");
     release.id="rm-release";
-    release.textContent="REMURA · Aggiornamento v1.28 · 24/10/2026 17:51 (Italia)";
+    release.textContent="REMURA · Aggiornamento v1.29 · 24/10/2026 17:55 (Italia)";
     document.body.prepend(release);
 
     const page=location.pathname.split("/").pop()||"index.html";
@@ -105,9 +105,9 @@
       if(on){render();drawer.querySelector("#rm-close").focus();}
       else if(priorFocus?.isConnected)priorFocus.focus();
     }
-    // iPhone price monitor: the hamburger stays accessible, but does not
-    // obscure market names when scrolling down. Scroll up to reveal it.
-    if(page==="stato-prezzi.html"){
+    // iPhone: keep the hamburger off market cards while scrolling down,
+    // and bring it back when scrolling up. Preserve keyboard access.
+    if(["stato-prezzi.html","mercati.html","asset.html"].includes(page)){
       let lastY=window.scrollY;
       const setTriggerVisible=on=>{
         trigger.classList.toggle("rm-scrolled-away",!on);
