@@ -31,6 +31,11 @@ test("DAX and VIX with no matching COT cannot be promoted to institutional trend
 test("Weekend candles can be historic, but expired price, stale COT and stale retail never vote",()=>{
  const week=core.evaluate({symbol:"XAUUSD",cot:cot(),price:market("confirmed",1,"2026-10-23T20:45:00Z"),now:NOW});
  assert.equal(week.state,"aligned");
+ assert.equal(week.items.price.historical,true);
+ assert.match(week.title,/ULTIMA SESSIONE/);
+ assert.match(week.narrative,/NON conferma live/);
+ const thursday=core.evaluate({symbol:"XAUUSD",cot:cot(),price:market("confirmed",1,"2026-10-22T20:45:00Z"),now:NOW});
+ assert.equal(thursday.state,"stale");
  const expired=core.evaluate({symbol:"XAUUSD",cot:cot(),price:market("confirmed",1,"2026-10-19T20:45:00Z"),now:NOW});
  assert.equal(expired.state,"stale");assert.equal(expired.side,0);
  assert.equal(core.retailEvidence({fresh:true,current:{t:"2026-10-22T09:00:00Z",lLots:75,sLots:25,lPos:80,sPos:60}},"Myfxbook",NOW).status,"stale");
