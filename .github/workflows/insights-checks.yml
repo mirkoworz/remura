@@ -9,7 +9,6 @@ on:
     paths:
       - 'insights-core.js'
       - 'cot-indices-core.js'
-      - 'squalincome-shortlist-core.js'
       - 'mercati.html'
       - 'sw.js'
       - 'insights.js'
@@ -40,7 +39,6 @@ jobs:
         run: |
           node --check insights-core.js
           node --check cot-indices-core.js
-          node --check squalincome-shortlist-core.js
           node --check insights.js
           node --check retail.js
           node --check nav.js

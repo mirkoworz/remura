@@ -1,5 +1,9 @@
 const test=require("node:test"),assert=require("node:assert/strict");
-const core=require("../squalincome-shortlist-core.js");
+const fs=require("node:fs"),vm=require("node:vm");
+const html=fs.readFileSync("mercati.html","utf8");
+const fragment=html.slice(html.indexOf("function crossExposures(candidate){"),
+ html.indexOf("let crossMode="));
+const core=vm.runInNewContext(fragment+"\n({select:selectCrossCandidates,exposures:crossExposures})");
 const c=(sym,change,group="forex")=>({sym,change,meta:{group}});
 test("strongest mode remains exactly highest absolute COT deltas",()=>{
  const rows=[c("GBPNZD",11),c("NZDJPY",-8.4),c("NZDCHF",-6.3),c("AUDNZD",6.2),

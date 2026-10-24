@@ -27,7 +27,7 @@ test("Squalincome v1.27 validates multi-source data and limits iPhone requests",
  for(const term of ['id="squalincome-cross"','id="cross-run"',
   'private-api/prices/status','private-api/prices/','private-api/retail/latest.json',
   'private-api/capital/latest.json','quality.integrity!=="verified"',
-  'quality.freshness','const candidates=allSymbols','shortlist.select(available,crossMode,4)',
+  'quality.freshness','const candidates=allSymbols','selectCrossCandidates(available,crossMode,4)',
   'trendCore.analyze(records,current,"24h",now)',
   'crossCore.verdict.evaluate','NON LIVE','NON segnali live'])
    assert.ok(html.includes(term),term);
@@ -78,7 +78,7 @@ test("v1.29 hides floating menu on downward scroll in scanners, without losing u
 test("v1.30 lets the user retain strongest mode or reduce overlapping FX currencies",()=>{
  const html=fs.readFileSync("mercati.html","utf8");
  for(const word of ['data-cross-mode="diverse"','data-cross-mode="strongest"',
- 'shortlist.select(available,crossMode,4)','squalincome-shortlist-core.js',
+ 'selectCrossCandidates(available,crossMode,4)','function selectCrossCandidates(rows,mode=',
  'function nextVerification(cot,quality,price,verdict)','cross-title',
  'Divergenza ≠ inversione','cross-watch'])
   assert.ok(html.includes(word),word);
