@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="./icon.svg">
-<link rel="stylesheet" href="./nav.css?v=123">
+<link rel="stylesheet" href="./nav.css?v=124">
 <title>Remura · Scheda strumento</title>
 <style>
 :root{color-scheme:dark;--bg:#07121a;--panel:#10242f;--panel2:#122e38;--line:#2b4b55;--text:#e8f7f4;--muted:#9bb8be;--mint:#69edca;--red:#ff8d99;--blue:#8db6ff;--amber:#f6c47e}
@@ -91,7 +91,7 @@ th:first-child,td:first-child{text-align:left}
 
 /* Scheda semplice per tutti i 35 mercati: ordine verticale e accesso rapido. */
 html{scroll-behavior:smooth}
-#rm-insights,#cot-overview,#retail-module,#remura-capital,#remura-tradingview,#remura-advanced{scroll-margin-top:18px}
+#squalo-verdict,#rm-insights,#cot-overview,#retail-module,#remura-capital,#remura-tradingview,#remura-advanced{scroll-margin-top:18px}
 .rem-jump{display:flex;align-items:center;gap:9px;overflow-x:auto;padding:3px 0 16px;margin-top:2px;scrollbar-width:thin}
 .rem-jump a{white-space:nowrap;flex:none;color:#d7f6eb;border:1px solid #3b6569;background:#14323c;border-radius:999px;padding:10px 14px;font-size:12px;font-weight:750}
 .rem-jump a:hover,.rem-jump a:focus-visible{background:#24564f;border-color:#70dab8}
@@ -120,6 +120,21 @@ html{scroll-behavior:smooth}
 .rem-advanced-grid>.overview{grid-column:1/-1}
 @media(max-width:800px){.rem-glossary{grid-template-columns:1fr}.rem-advanced-grid{grid-template-columns:1fr}.rem-advanced-grid>.overview{grid-column:auto}.rem-price-panel .rt-price{height:355px}}
 @media(max-width:400px){.rem-jump a{padding:9px 11px;font-size:11px}.rem-advanced{padding:12px}.rem-price-panel .rt-tfs button{padding:8px 9px;font-size:11px}}
+.sv-panel{border-color:#366b64;background:linear-gradient(145deg,#15383b,#0d2330)}
+.sv-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.sv-head small{font-size:11px;color:var(--mint);font-weight:800;letter-spacing:.09em}
+#sv-title{font-size:clamp(21px,3vw,28px);color:#ddfff0;line-height:1.25;margin:10px 0}
+#sv-subtitle{font-size:14px;line-height:1.75;color:#ccdfdd}
+.sv-factors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:18px 0}
+.sv-factor{background:#102f38;border:1px solid #315962;border-radius:12px;padding:13px}
+.sv-factor strong{color:#d7f9ec;font-size:12px}
+.sv-factor strong[data-status=missing],.sv-factor strong[data-status=stale]{color:#f2c98e}
+.sv-factor strong[data-status=mixed]{color:#ffb9ae}
+.sv-factor p{font-size:12px;color:var(--muted);line-height:1.55;margin:7px 0 0}
+.sv-panel[data-state=divergent],.sv-panel[data-state=mixed]{border-color:#997363}
+.sv-panel[data-state=stale]{border-color:#a58b68}
+.sv-note{color:#d1e8e3;font-size:12px;line-height:1.65}
+@media(max-width:700px){.sv-factors{grid-template-columns:1fr}}
 </style>
 <link rel="stylesheet" href="./insights.css?v=9">
 <link rel="stylesheet" href="./price.css?v=10">
@@ -134,8 +149,16 @@ html{scroll-behavior:smooth}
 <h1 id="heading">Gold <span>XAUUSD</span></h1>
 <p class="subtitle" id="description">COT ufficiale, posizioni dei trader retail e prezzo: tre dati diversi, spiegati separatamente.</p>
 <div class="alert" id="alert">Carico i dati ufficiali CFTC. Se la fonte non risponde, mostrerò N/D senza inventare alcun valore.</div>
-<nav class="rem-jump" aria-label="Vai alle sezioni della scheda"><a href="#rm-insights">In sintesi</a><a href="#cot-overview">COT istituzionale</a><a href="#cot-indices">COT Index / Gap</a><a href="#remura-sentiment-momentum">Evoluzione sentiment</a><a href="#retail-module">Myfxbook</a><a href="#remura-capital">Capital.com</a><a href="#remura-tradingview">Prezzo</a><a href="#remura-advanced">Approfondimenti</a></nav>
+<nav class="rem-jump" aria-label="Vai alle sezioni della scheda"><a href="#squalo-verdict">Verdetto Squalo</a><a href="#rm-insights">In sintesi</a><a href="#cot-overview">COT istituzionale</a><a href="#cot-indices">COT Index / Gap</a><a href="#remura-sentiment-momentum">Evoluzione sentiment</a><a href="#retail-module">Myfxbook</a><a href="#remura-capital">Capital.com</a><a href="#remura-tradingview">Prezzo</a><a href="#remura-advanced">Approfondimenti</a></nav>
 <div class="layout">
+<section class="panel overview sv-panel" id="squalo-verdict" aria-labelledby="sv-title" data-state="incomplete">
+ <div class="sv-head"><div class="eyebrow">REMURA · VERDETTO SQUALO · 5 FONTI</div><small>Analisi descrittiva · nessun ordine</small></div>
+ <h2 id="sv-title">Sto raccogliendo le prove per il verdetto…</h2>
+ <p id="sv-subtitle">COT e prezzo sono le due conferme principali; il sentiment retail e DXY/VIX sono elementi di contesto separati.</p>
+ <div id="sv-factors" class="sv-factors" aria-label="Fattori verificati per il mercato"></div>
+ <div id="sv-retail-note" class="sv-note"></div>
+ <p id="sv-footnote" class="headnote">Dati COT settimanali, cTrader, Myfxbook, Capital.com e DXY/VIX: nessuna promessa di performance, nessun flusso istituzionale intraday misurato.</p>
+</section>
 <section class="panel overview" id="cot-overview">
  <div class="row"><div><div class="eyebrow">01 · COT UFFICIALE · SETTIMANALE</div><h2>Come sono posizionati i grandi operatori</h2><p class="rem-intro">Questi numeri provengono dai contratti futures dichiarati alla CFTC: non sono gli ordini di oggi, né le posizioni dei clienti dei broker.</p></div><div class="chip" id="asof">Report: in attesa</div></div>
  <div class="cards"><div class="card"><div class="label" id="label-a">Managed Money</div><div class="value" id="value-a">—</div><div class="delta" id="change-a">Variazione: —</div></div>
@@ -190,7 +213,7 @@ html{scroll-behavior:smooth}
 </div>
 <footer class="footer">REMURA · COT settimanale, sentiment retail a campioni e prezzi da fonti distinte. Non è consulenza finanziaria.</footer>
 </div>
-<script src="./nav.js?v=123"></script>
+<script src="./nav.js?v=124"></script>
 <script src="./insights-core.js?v=9"></script>
 <script src="./cot-indices-core.js?v=2"></script>
 <script src="./insights.js?v=9"></script>
@@ -434,6 +457,14 @@ if(hasCOT){load();}else{
  setState("COT · N/D");
  $("alert").textContent="COT N/D per "+symbol+". Nessun dato istituzionale inventato per il CFD; consulta i prezzi cTrader verificati se disponibili.";
 }
+/* Capture local module events emitted before the final verdict renderer loads.
+   Contains per-page validated samples only; nothing leaves this browser. */
+window.REMURA_VERDICT_SNAPSHOTS=Object.create(null);
+for(const [name,key] of [["remura:retail","myfxbook"],["remura:capital","capital"],["remura:price","price"]]){
+ window.addEventListener(name,event=>{
+  if(event?.detail?.symbol)window.REMURA_VERDICT_SNAPSHOTS[key]=event.detail;
+ });
+}
 </script>
 <script src="./retail.js?v=14"></script>
 <script src="./sentiment-core.js?v=14"></script>
@@ -443,6 +474,7 @@ if(hasCOT){load();}else{
 <script src="./sentiment-trend-core.js?v=2"></script>
 <script src="./sentiment-trend.js?v=2"></script>
 <script src="./price-core.js?v=10"></script>
-<script src="./price.js?v=10"></script>
+<script src="./price-status-core.js?v=124"></script>
+<script src="./price.js?v=10&build=124"></script>
 </body>
 </html>

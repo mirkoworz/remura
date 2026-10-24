@@ -84,3 +84,6 @@ test("aligned COT, price and retail remain a context, not a trading order",()=>{
   assert.equal(out.state,"context");
   assert.match(out.text,/Non è una probabilità/);
 });
+
+// Run the integrated multi-source verdict regression suite in existing price CI.
+require("./squalo-verdict.test.js");

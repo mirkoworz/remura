@@ -79,3 +79,6 @@ test("two Forex legs remain separate, and USD is not a fake future",()=>{
   assert.deepEqual(core.legsFor(rows,{symbol:"EURUSD",isFX:true}).map(x=>x.name),["EUR"]);
   assert.deepEqual(core.legsFor(rows,{symbol:"USDJPY",isFX:true}).map(x=>x.name),["JPY"]);
 });
+
+// The new verdict pure-core tests run with the existing insights workflow too.
+require("./squalo-verdict.test.js");
