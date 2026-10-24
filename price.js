@@ -63,6 +63,9 @@
     set("rp-narrative",result.explanation+" "+
       (result.caveats||[]).join(" "));
     combined();
+    window.dispatchEvent(new CustomEvent("remura:price",{
+      detail:{symbol, result, provider:market.provider, lastComplete:result.metrics?.M15?.latest}
+    }));
   }
   get("rp-file").addEventListener("change",async()=>{
     manualSelected=true;
@@ -84,6 +87,7 @@
       set("rp-provider","Fonte: N/D");set("rp-last","Ultima candela: N/D");
       for(const k of ["h4","h1","m15"]){set("rp-"+k,"N/D");set("rp-"+k+"-extra","File da verificare.");set("rp-"+k+"-age","");}
       combined();
+      window.dispatchEvent(new CustomEvent("remura:price",{detail:{symbol,result:null}}));
     }
   });
   async function autoRefresh(){
