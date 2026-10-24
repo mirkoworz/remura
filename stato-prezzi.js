@@ -135,7 +135,7 @@ refresh();
 setInterval(()=>{if(document.visibilityState==="visible")refresh();},180000);
 })();
 
-/* REMURA v1.19 · global DXY/VIX context and per-market comparison, private/read-only. */
+/* REMURA v1.22 · global DXY/VIX context and per-market comparison, private/read-only. */
 (()=>{
 "use strict";
 const $=id=>document.getElementById(id),core=window.REMURA_PRICE_STATUS_CORE.macro;
@@ -150,7 +150,7 @@ function fact(root,label,value,cls="fact"){
 }
 function auditCard(symbol,name,note,doc){
  const result=core.audit(doc,Date.now()),card=elt("article","market"),header=elt("div");
- const statusName={recent:"RECENTE",stale:"DATATO",missing:"N/D",invalid:"VERIFICA"};
+ const statusName={recent:"RECENTE",weekend:"ULTIMA SESSIONE",stale:"DATATO",missing:"N/D",invalid:"VERIFICA"};
  header.append(elt("strong",null,name),elt("span","badge",statusName[result.state]||"N/D"));
  header.lastChild.dataset.state=result.state;
  card.append(header,elt("div","foot",note));
@@ -161,7 +161,10 @@ function auditCard(symbol,name,note,doc){
  fact(card,"H1 ricostruite:",result.h1.verified+"/"+result.h1.checked+" verificate; "+result.h1.mismatched+" incoerenti");
  fact(card,"H4 ricostruite:",result.h4.verified+"/"+result.h4.checked+" verificate; "+result.h4.mismatched+" incoerenti");
  if(result.h1.missingInputs||result.h4.missingInputs)fact(card,"Dati non verificabili:",result.h1.missingInputs+result.h4.missingInputs+" aggregazioni con M15 incomplete");
- if(result.state!=="recent")card.append(elt("div","warn","Per l'analisi macro sono richiesti dati recenti e coerenti."));
+ if(result.state==="weekend")
+  card.append(elt("div","foot","Pausa del fine settimana: ultimi prezzi del venerdì, NON aggiornati in tempo reale."));
+ else if(result.state!=="recent")
+  card.append(elt("div","warn","Per l'analisi macro sono richiesti dati recenti e coerenti."));
  return card;
 }
 async function getPrice(sym){
@@ -185,10 +188,11 @@ function macroPulseText(info){
 function rowCorrelation(root,left,right,one,two){
  const c=one&&two?core.correlation(one,two):{state:"insufficient",samples:0,value:null};
  const trust=!!(one&&two&&core.pairEligible(one,two));
+ const historical=trust&&[one,two].some(doc=>core.audit(doc,Date.now()).state==="weekend");
  const row=elt("tr");
  row.append(elt("td",null,left+" / "+right),
   elt("td",null,c.state==="ok"&&trust?fmt(c.value):"N/D"),
-  elt("td",null,c.samples+" · "+(trust?"ore UTC abbinate":"serie assenti, datate o non coerenti")));
+  elt("td",null,c.samples+" · "+(historical?"ultima sessione, non live":trust?"ore UTC abbinate":"serie assenti, datate o non coerenti")));
  root.append(row);
 }
 function correlations(pairs){
@@ -202,7 +206,14 @@ function correlations(pairs){
 }
 function macroContext(){
  const result=core.context(docs.DXY,docs.VIX,{now:Date.now()});
- $("macro-context").replaceChildren(elt("h3",null,result.label),elt("p",null,result.description));
+ const closed=docs.DXY&&docs.VIX&&
+  core.audit(docs.DXY,Date.now()).state==="weekend"&&
+  core.audit(docs.VIX,Date.now()).state==="weekend";
+ const banner=closed
+  ?elt("div","session-note","ULTIMA SESSIONE DEL VENERDÌ · Contesto storico, non segnale in tempo reale.")
+  :null;
+ $("macro-context").replaceChildren(...(banner?[banner]:[]),
+  elt("h3",null,result.label),elt("p",null,result.description));
  fact($("macro-context"),"DXY:",macroPulseText(result.dollar));
  fact($("macro-context"),"VIX:",macroPulseText(result.fear));
  $("macro-context").dataset.state=result.state;
@@ -230,9 +241,12 @@ async function refreshMacro(){
   for(const info of MACRO)box.append(auditCard(info.symbol,info.name,info.note,docs[info.symbol]));
   macroContext();
   const available=MACRO.filter(m=>docs[m.symbol]).length;
+  const weekend=MACRO.every(m=>core.audit(docs[m.symbol],Date.now()).state==="weekend");
   status.dataset.error=String(available===0);
   status.textContent=available+"/2 indicatori con storico · "+when(new Date().toISOString())+
-   (available<2?" · N/D finché il raccoglitore non fornisce le candele.":" · Analisi basata su dati cTrader.");
+   (available<2?" · N/D finché il raccoglitore non fornisce le candele.":
+    weekend?" · PAUSA WEEKEND: analisi dell'ultima sessione del venerdì, non live.":
+    " · Analisi basata su dati cTrader.");
   if($("macro-symbol").value)await compareMarket();
  }catch(_){
   status.dataset.error="true";
