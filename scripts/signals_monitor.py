@@ -95,7 +95,9 @@ def cot_view(series, symbol, now):
     delta=first[specidx]-previous[specidx]
     secondary=first[secidx]-previous[secidx]
     side=1 if delta>MIN_COT_DELTA else -1 if delta < -MIN_COT_DELTA else 0
-    opposed=side and (secondary>MIN_COT_DELTA if side<0 else secondary < -MIN_COT_DELTA)
+    # Disaggregated Producer/Merchant commonly hedge; only TFF secondary
+    # Asset Manager opposing Leveraged Funds means mixed institutional groups.
+    opposed=(not is_disagg) and bool(side) and (secondary>MIN_COT_DELTA if side<0 else secondary < -MIN_COT_DELTA)
     if not side or opposed:return None
     sustained=False
     if len(series)>=5:
