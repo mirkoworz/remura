@@ -19,7 +19,7 @@ test('Dashboard uses only lightweight authenticated API, no token or fake data',
  const page=fs.readFileSync('stato-prezzi.html','utf8');
  const client=fs.readFileSync('stato-prezzi.js','utf8');
  const backend=fs.readFileSync('scripts/private_server.py','utf8');
- assert.ok(page.includes('nav.js?v=121'));
+ assert.ok(page.includes('nav.js?v=122'));
  assert.ok(client.includes('./private-api/prices/status'));
  assert.ok(backend.includes('PRICE_OVERVIEW_PATH'));
  assert.ok(backend.includes('stato-prezzi.html'));
@@ -82,7 +82,11 @@ test("OHLC integrity and contiguity are audited without inventing bars",()=>{
  assert.equal(macro.audit(interrupted,END).recentGaps,1);
  assert.ok(macro.audit(interrupted,END).h1.missingInputs>0);
  const weekend=macro.audit(data,END+48*HOUR);
- assert.equal(weekend.state,"stale");
+ assert.equal(weekend.state,"weekend");
+ assert.equal(macro.pulse(data,{now:END+48*HOUR}).state,"ok");
+ assert.equal(macro.pulse(data,{now:END+48*HOUR}).historical,true);
+ assert.equal(macro.pairEligible(data,data,END+48*HOUR),true);
+ assert.equal(macro.audit(data,END+96*HOUR).state,"stale");
 });
 test("H1 Pearson uses only aligned contiguous hourly log returns",()=>{
  const a=bars(100,END-100*HOUR,100,0.004);
@@ -104,10 +108,11 @@ test("Macro page has a private-readonly architecture and correct menu version",(
  const ui=fs.readFileSync("stato-prezzi.js","utf8");
  const nav=fs.readFileSync("nav.js","utf8");
  const service=fs.readFileSync("sw.js","utf8");
- for(const script of ["nav.js?v=121","price-status-core.js?v=121","stato-prezzi.js?v=121"])assert.ok(html.includes(script));
+ for(const script of ["nav.js?v=122","price-status-core.js?v=122","stato-prezzi.js?v=122"])assert.ok(html.includes(script));
  assert.ok(html.includes('id="macro"'));
  assert.ok(ui.includes('window.addEventListener("hashchange",initialize)'));
  assert.ok(ui.includes("./private-api/prices/"));
+ assert.ok(ui.includes("ULTIMA SESSIONE DEL VENERDÌ"));
  assert.ok(!ui.includes("apiKey")&&!ui.includes("CTRADER_ACCESS_TOKEN"));
  assert.ok(nav.includes('href="./stato-prezzi.html#macro"'));
  assert.ok(service.includes('"./stato-prezzi.html"'));assert.ok(!service.includes('"./macro.html"'));
@@ -139,7 +144,7 @@ test('Macro contextual movement requires fresh contiguous H1 candles and relativ
  assert.ok(up.changePct>0);assert.ok(down.changePct<0);
  const missing=macro.context(null,upward,{now:END});
  assert.equal(missing.state,"unavailable");
- const stale=macro.pulse(upward,{now:END+48*HOUR});
+ const stale=macro.pulse(upward,{now:END+96*HOUR});
  assert.equal(stale.state,"unavailable");
  assert.equal(typeof macro.context(upward,downward,{now:END}).label,"string");
 });
@@ -172,4 +177,31 @@ test('Macro context distinguishes stationary dollar from contradictory direction
  }
  assert.equal(classify({state:"insufficient"},item("down")).state,"unavailable");
  assert.equal(classify(item("flat"),{state:"ok",direction:null}).state,"unavailable");
+});
+
+test('Weekend snapshot only admits the immediate verified Friday session in Rome',()=>{
+ const friday=Date.parse('2026-10-23T20:45:00Z')+QUARTER;
+ const saturday=Date.parse('2026-10-24T09:30:00Z');
+ const sunday=Date.parse('2026-10-25T17:30:00Z'); // Italian DST ends Oct 25
+ const monday=Date.parse('2026-10-26T09:30:00Z');
+ assert.equal(macro.weekendSnapshot(friday,saturday),true);
+ assert.equal(macro.weekendSnapshot(friday,sunday),true);
+ assert.equal(macro.weekendSnapshot(friday,monday),false);
+ assert.equal(macro.weekendSnapshot(friday-7*24*HOUR,saturday),false);
+ assert.equal(macro.weekendSnapshot(Date.parse('2026-10-22T20:00:00Z'),saturday),false);
+ assert.equal(macro.weekendSnapshot(Date.parse('2026-10-23T09:00:00Z'),saturday),false);
+});
+test('Friday macro Pearson remains available as a labelled historical snapshot',()=>{
+ const a=bars(100,END-100*HOUR,100,0.004),b=structuredClone(a);
+ for(const tf of ['M15','H1','H4'])for(const bar of b.timeframes[tf]){
+  bar.o*=2;bar.h*=2;bar.l*=2;bar.c*=2;
+ }
+ const sunday=END+48*HOUR;
+ assert.equal(macro.audit(a,sunday).state,'weekend');
+ assert.equal(macro.pairEligible(a,b,sunday),true);
+ const c=macro.correlation(a,b,{now:sunday});
+ assert.equal(c.state,'ok');
+ assert.ok(c.samples>=30);
+ const old=END+96*HOUR;
+ assert.equal(macro.pairEligible(a,b,old),false);
 });

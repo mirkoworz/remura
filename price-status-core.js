@@ -1,4 +1,4 @@
-/* REMURA v1.18: pure, testable classification of factual cTrader metadata. */
+/* REMURA v1.22: pure, testable classification of factual cTrader metadata. */
 (function(root){
  "use strict";
  const LIMIT_MINUTES=180; // Rotation of 8 batches ~120 min, 60 min buffer.
@@ -46,6 +46,23 @@ function timeframe(bars,tf){
  for(let i=1;i<rows.length;i++)if(time(rows[i].t)===time(rows[i-1].t))duplicates++;
  return {valid:rows.length===bars.length&&duplicates===0,rows,bad:bars.length-rows.length,duplicates};
 }
+// Only the immediately preceding Friday late session may be displayed as a
+// clearly marked *historical* weekend snapshot. Not an exchange calendar:
+ // broker instruments may have different sessions or expiring contracts.
+function romeParts(value){
+ const d=new Intl.DateTimeFormat("en-US",{
+  timeZone:"Europe/Rome",weekday:"short",hour:"2-digit",hourCycle:"h23"
+ }).formatToParts(new Date(value));
+ const get=type=>d.find(x=>x.type===type)?.value;
+ return {weekday:get("weekday"),hour:Number(get("hour"))};
+}
+function weekendSnapshot(lastClosed,now){
+ if(!Number.isFinite(lastClosed)||!Number.isFinite(now)||
+    lastClosed>now+5*60000||now-lastClosed>72*HOUR)return false;
+ const today=romeParts(now),last=romeParts(lastClosed);
+ return (today.weekday==="Sat"||today.weekday==="Sun")&&
+   last.weekday==="Fri"&&last.hour>=16;
+}
 function audit(doc,now=Date.now()){
  if(!doc||typeof doc!=="object"||!doc.timeframes)return {state:"missing",counts:{M15:0,H1:0,H4:0}};
  const frames=Object.fromEntries(Object.keys(TFS).map(k=>[k,timeframe(doc.timeframes[k],k)]));
@@ -73,7 +90,8 @@ function audit(doc,now=Date.now()){
  const h1=checkRollup(H1,4),h4=checkRollup(H4,16);
  const malformed=Object.values(frames).some(x=>!x.valid);
  const inconsistent=h1.mismatched>0||h4.mismatched>0||malformed;
- const state=inconsistent?"invalid":ageMinutes< -5||!Number.isFinite(ageMinutes)?"invalid":ageMinutes>180?"stale":"recent";
+ const state=inconsistent?"invalid":ageMinutes< -5||!Number.isFinite(ageMinutes)?"invalid":
+  weekendSnapshot(last+QUARTER,now)?"weekend":ageMinutes>180?"stale":"recent";
  return {state,counts:{M15:M15.length,H1:H1.length,H4:H4.length},
   ageMinutes,asof:new Date(last).toISOString(),recentGaps:gaps,largestGapMinutes:maxGap,
   h1,h4,malformed,ready:H4.length>=55&&H1.length>=55&&M15.length>=55};
@@ -107,12 +125,14 @@ function correlation(a,b,{now=Date.now(),hours=336,minPoints=30}={}){
    from:new Date(shared[0]).toISOString(),to:new Date(shared[shared.length-1]).toISOString()};
 }
 function pairEligible(a,b,now=Date.now()){
- return audit(a,now).state==="recent"&&audit(b,now).state==="recent";
+ const valid=new Set(["recent","weekend"]);
+ return valid.has(audit(a,now).state)&&valid.has(audit(b,now).state);
 }
 
 function pulse(doc,{now=Date.now(),period=4}={}){
  const quality=audit(doc,now);
- if(quality.state!=="recent")return {state:"unavailable",direction:null,changePct:null,referencePct:null};
+ if(quality.state!=="recent"&&quality.state!=="weekend")
+  return {state:"unavailable",direction:null,changePct:null,referencePct:null};
  const frame=timeframe(doc?.timeframes?.H1,"H1");
  if(!frame.valid)return {state:"unavailable",direction:null,changePct:null,referencePct:null};
  const rows=frame.rows;
@@ -131,7 +151,8 @@ function pulse(doc,{now=Date.now(),period=4}={}){
  const changePct=recent.pct,referencePct=median;
  const direction=Math.abs(changePct)<=median?"flat":changePct>0?"up":"down";
  return {state:"ok",direction,changePct:+changePct.toFixed(3),
-  referencePct:+referencePct.toFixed(3),asof:recent.stamp,samples:values.length};
+  referencePct:+referencePct.toFixed(3),asof:recent.stamp,samples:values.length,
+  historical:quality.state==="weekend"};
 }
 function describeContext(dollar,fear){
  // "flat" means a 4-hour move not larger than the instrument's own
@@ -175,7 +196,7 @@ function describeContext(dollar,fear){
 function context(dxy,vix,{now=Date.now()}={}){
  return describeContext(pulse(dxy,{now}),pulse(vix,{now}));
 }
-return Object.freeze({validBar,timeframe,audit,returns,correlation,pairEligible,pulse,describeContext,context,TFS});
+return Object.freeze({validBar,timeframe,audit,weekendSnapshot,returns,correlation,pairEligible,pulse,describeContext,context,TFS});
  })();
  const api=Object.freeze({LIMIT_MINUTES,OUTCOMES,interpret,summarize,macro});
  if(typeof module==="object"&&module.exports)module.exports=api;
