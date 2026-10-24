@@ -19,7 +19,7 @@ test('Dashboard uses only lightweight authenticated API, no token or fake data',
  const page=fs.readFileSync('stato-prezzi.html','utf8');
  const client=fs.readFileSync('stato-prezzi.js','utf8');
  const backend=fs.readFileSync('scripts/private_server.py','utf8');
- assert.ok(page.includes('nav.js?v=122'));
+ assert.ok(page.includes('nav.js?v=123'));
  assert.ok(client.includes('./private-api/prices/status'));
  assert.ok(backend.includes('PRICE_OVERVIEW_PATH'));
  assert.ok(backend.includes('stato-prezzi.html'));
@@ -108,7 +108,7 @@ test("Macro page has a private-readonly architecture and correct menu version",(
  const ui=fs.readFileSync("stato-prezzi.js","utf8");
  const nav=fs.readFileSync("nav.js","utf8");
  const service=fs.readFileSync("sw.js","utf8");
- for(const script of ["nav.js?v=122","price-status-core.js?v=122","stato-prezzi.js?v=122"])assert.ok(html.includes(script));
+ for(const script of ["nav.js?v=123","price-status-core.js?v=123","stato-prezzi.js?v=123"])assert.ok(html.includes(script));
  assert.ok(html.includes('id="macro"'));
  assert.ok(ui.includes('window.addEventListener("hashchange",initialize)'));
  assert.ok(ui.includes("./private-api/prices/"));
@@ -204,4 +204,41 @@ test('Friday macro Pearson remains available as a labelled historical snapshot',
  assert.ok(c.samples>=30);
  const old=END+96*HOUR;
  assert.equal(macro.pairEligible(a,b,old),false);
+});
+
+test("Readable macro correlation interprets DAX figures from verified H1 returns",()=>{
+ const dxy=macro.describeCorrelation({state:"ok",value:-0.05,samples:198},"DXY");
+ assert.equal(dxy.state,"ok");
+ assert.equal(dxy.strength,"quasi nulla");
+ assert.match(dxy.label,/quasi nulla/);
+ const vix=macro.describeCorrelation({state:"ok",value:-0.554,samples:189},"VIX");
+ assert.equal(vix.direction,"negative");
+ assert.equal(vix.strength,"moderata");
+ assert.match(vix.label,/inversa moderata/);
+ const contrast=macro.compareMacroRelationships("DAX 40",
+  {state:"ok",value:-0.05,samples:198},
+  {state:"ok",value:-0.554,samples:189});
+ assert.equal(contrast.state,"ok");
+ assert.match(contrast.summary,/VIX ha mostrato l'associazione lineare più marcata/);
+ assert.match(contrast.summary,/non è un segnale operativo/);
+});
+test("Correlation interpretation covers direction, minimum samples and unavailable sources",()=>{
+ const c=(value,samples=50)=>macro.describeCorrelation({state:"ok",value,samples},"VIX");
+ assert.equal(c(0.55).direction,"positive");
+ assert.equal(c(0.55).strength,"moderata");
+ assert.equal(c(-0.79).strength,"elevata");
+ assert.equal(c(0.17).strength,"debole");
+ assert.equal(c(-0.03).direction,"none");
+ assert.equal(c(0.8,29).state,"unavailable");
+ assert.equal(c(1.1).state,"unavailable");
+ assert.equal(c(NaN).state,"unavailable");
+ const partial=macro.compareMacroRelationships("XAUUSD",
+   {state:"unavailable",samples:0,value:null},{state:"ok",samples:60,value:0.5});
+ assert.equal(partial.state,"partial");
+ assert.equal(macro.compareMacroRelationships("GER30",null,null).state,"unavailable");
+ const h=fs.readFileSync("stato-prezzi.html","utf8");
+ const js=fs.readFileSync("stato-prezzi.js","utf8");
+ assert.ok(h.includes('id="macro-target-interpretation"'));
+ assert.ok(js.includes('$("macro-target-interpretation").replaceChildren(explainMarket(symbol))'));
+ assert.ok(js.includes("core.pairEligible(one,two)"));
 });

@@ -8,7 +8,7 @@
 <title>REMURA · Stato prezzi</title>
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="stylesheet" href="./nav.css?v=122">
+<link rel="stylesheet" href="./nav.css?v=123">
 <style>
 :root{color-scheme:dark;--bg:#07121a;--ink:#ecf7f5;--muted:#a5c3c7;--mint:#76ebc4;--line:#315960;--surface:#112e37}
 *{box-sizing:border-box}
@@ -93,6 +93,12 @@ button:disabled{opacity:.5}
 .macro-wrap .panel h2{font-size:19px}
 .macro-wrap .panel{margin:13px 0}
 .macro-wrap .control select{flex:1}
+.macro-wrap .relationship-insight{margin-top:14px;border:1px solid #386961;background:#0c2832;padding:15px;border-radius:14px}
+.macro-wrap .relationship-insight h3{color:var(--mint);font-size:18px;margin:0 0 8px}
+.macro-wrap .relationship-pair{border-top:1px solid #335561;padding-top:10px;margin-top:10px}
+.macro-wrap .relationship-pair strong{color:#e0f8ed}
+.macro-wrap .relationship-pair p{font-size:14px;color:var(--muted);margin:5px 0 0}
+.macro-wrap .relationship-insight .foot{font-size:12px;color:var(--muted)}
 .macro-link{display:inline-block;padding:10px 14px;border:1px solid #49816e;border-radius:10px;font-weight:800;text-decoration:none;margin:10px 0}
 @media(max-width:720px){.macro-wrap .grid{grid-template-columns:1fr}}
 </style>
@@ -142,17 +148,18 @@ button:disabled{opacity:.5}
 <p>USDX e VIX di cTrader possono essere contratti a scadenza, non gli indici spot. Salti di rollover possono falsare variazioni e correlazioni. Il COT è settimanale e non fornisce posizioni istituzionali in tempo reale.</p></details></section>
 <section class="panel">
 <h2>Come reagisce un mercato a DXY e VIX?</h2>
-<p>Scegli qualunque mercato disponibile in REMURA: Forex, oro, petrolio o indici, incluso il DAX. Confronteremo i suoi rendimenti H1 con ciascun indicatore, oltre a controllare l’integrità delle candele.</p>
+<p>Scegli qualunque mercato disponibile in REMURA: Forex, oro, petrolio o indici, incluso il DAX. Confronteremo i suoi rendimenti H1 con ciascun indicatore, oltre a controllare l’integrità delle candele. REMURA spiegherà sotto la tabella se la relazione storica è positiva, inversa o quasi assente.</p>
 <div class="control"><label for="macro-symbol">Mercato da analizzare</label><select id="macro-symbol" aria-label="Seleziona mercato da confrontare"></select><button id="macro-check" type="button">Verifica mercato</button></div>
 <div id="macro-extra" style="margin-top:12px"></div>
 <div id="macro-target-correlations" style="margin-top:12px"></div>
+<div id="macro-target-interpretation" aria-live="polite"></div>
 </section>
 <p class="explain">Durante sabato e domenica, se l’ultima M15 attendibile risale alla sessione di venerdì, REMURA mostra una fotografia storica senza attribuirle freschezza attuale. Un’eventuale correlazione non prova che gli istituzionali stiano acquistando o vendendo. Le discontinuità possono derivare da chiusure di mercato. Nessun ordine viene eseguito.</p>
 </section>
 <p class="explain">Dati privati dalla VPS <b>.ts.net</b>. Nessuna credenziale o ordine mostrato. Aggiornamento automatico ogni tre minuti quando la pagina è visibile.</p>
 </main>
-<script src="./nav.js?v=122"></script>
-<script src="./price-status-core.js?v=122"></script>
-<script src="./stato-prezzi.js?v=122"></script>
+<script src="./nav.js?v=123"></script>
+<script src="./price-status-core.js?v=123"></script>
+<script src="./stato-prezzi.js?v=123"></script>
 </body>
 </html>

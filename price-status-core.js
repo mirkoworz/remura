@@ -124,6 +124,47 @@ function correlation(a,b,{now=Date.now(),hours=336,minPoints=30}={}){
  return {state:"ok",samples:n,value:+v.toFixed(3),
    from:new Date(shared[0]).toISOString(),to:new Date(shared[shared.length-1]).toISOString()};
 }
+
+function describeCorrelation(observation,benchmark){
+ // Qualitative magnitudes are only explanatory bins, never calibrated trade signals.
+ if(observation?.state!=="ok"||!Number.isFinite(observation.value)||
+    Math.abs(observation.value)>1||!Number.isInteger(observation.samples)||observation.samples<30)
+  return {state:"unavailable",label:"Relazione non valutabile",
+    detail:"Servono almeno 30 rendimenti H1 comuni e serie coerenti e ammissibili.",strength:null};
+ const r=observation.value,abs=Math.abs(r),n=observation.samples;
+ const direction=abs<0.1?"none":r>0?"positive":"negative";
+ const strength=abs<0.1?"quasi nulla":abs<0.3?"debole":abs<0.7?"moderata":"elevata";
+ const label=direction==="none"?"Relazione lineare quasi nulla":
+  "Relazione "+(direction==="positive"?"positiva":"inversa")+" "+strength;
+ let detail;
+ if(direction==="none")
+  detail="Nella finestra osservata i rendimenti orari non mostrano una relazione lineare apprezzabile.";
+ else if(direction==="negative")
+  detail="Nel campione osservato, quando "+benchmark+" saliva questo mercato tendeva a scendere, e viceversa.";
+ else
+  detail="Nel campione osservato, "+benchmark+" e questo mercato tendevano a muoversi nella stessa direzione.";
+ return {state:"ok",direction,strength,label,detail,samples:n,value:r};
+}
+function compareMacroRelationships(symbol,dxy,vix){
+ const dollar=describeCorrelation(dxy,"DXY"),fear=describeCorrelation(vix,"VIX");
+ const validD=dollar.state==="ok",validV=fear.state==="ok";
+ if(!validD&&!validV)return {state:"unavailable",title:symbol+": confronto non disponibile",
+  summary:"Impossibile interpretare i rapporti senza dati recenti o un'ultima sessione valida per ciascuna coppia.",dollar,fear};
+ if(validD&&validV){
+  const difference=Math.abs(vix.value)-Math.abs(dxy.value);
+  const relative=Math.abs(difference)>=0.2?
+   difference>0?"VIX":"DXY":null;
+  return {state:"ok",title:"Come leggere le correlazioni di "+symbol,
+   summary:relative?
+    "Nella finestra osservata "+relative+" ha mostrato l'associazione lineare più marcata con "+symbol+
+    ". I campioni e gli orari comuni delle due coppie possono essere diversi; questo non è un segnale operativo.":
+    "Nella finestra osservata l'intensità delle due associazioni è simile. Non basta per attribuire una direzione futura a "+symbol+".",
+   dollar,fear};
+ }
+ return {state:"partial",title:"Confronto parziale di "+symbol,
+  summary:"Solo uno dei due confronti ha dati utilizzabili. Evitare conclusioni sulla relazione con l'altro indicatore.",
+  dollar,fear};
+}
 function pairEligible(a,b,now=Date.now()){
  const valid=new Set(["recent","weekend"]);
  return valid.has(audit(a,now).state)&&valid.has(audit(b,now).state);
@@ -196,7 +237,7 @@ function describeContext(dollar,fear){
 function context(dxy,vix,{now=Date.now()}={}){
  return describeContext(pulse(dxy,{now}),pulse(vix,{now}));
 }
-return Object.freeze({validBar,timeframe,audit,weekendSnapshot,returns,correlation,pairEligible,pulse,describeContext,context,TFS});
+return Object.freeze({validBar,timeframe,audit,weekendSnapshot,returns,correlation,describeCorrelation,compareMacroRelationships,pairEligible,pulse,describeContext,context,TFS});
  })();
  const api=Object.freeze({LIMIT_MINUTES,OUTCOMES,interpret,summarize,macro});
  if(typeof module==="object"&&module.exports)module.exports=api;
