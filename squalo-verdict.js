@@ -10,7 +10,13 @@ const requested=(new URLSearchParams(location.search).get("symbol")||"XAUUSD").t
 const symbol=cfg.symbols.includes(requested)?requested:"XAUUSD";
 const $=id=>document.getElementById(id);
 const text=(tag,cls,v)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(v!==undefined)e.textContent=v;return e;};
-const feeds={price:null,myfxbook:null,capital:null,macro:null};
+const prior=window.REMURA_VERDICT_SNAPSHOTS||{};
+const feeds={
+ price:prior.price?.result||null,
+ myfxbook:prior.myfxbook?{current:prior.myfxbook.current||null,fresh:prior.myfxbook.fresh===true}:null,
+ capital:prior.capital?{current:prior.capital.current||null,fresh:prior.capital.fresh===true}:null,
+ macro:null
+};
 function readCot(){return window.REMURA_INSIGHTS?.getAnalysis?.()||null;}
 function row(label,entry){
  const card=text("div","sv-factor");
