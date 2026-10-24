@@ -19,7 +19,7 @@ test('Dashboard uses only lightweight authenticated API, no token or fake data',
  const page=fs.readFileSync('stato-prezzi.html','utf8');
  const client=fs.readFileSync('stato-prezzi.js','utf8');
  const backend=fs.readFileSync('scripts/private_server.py','utf8');
- assert.ok(page.includes('nav.js?v=124'));
+ assert.ok(page.includes('nav.js?v=125'));
  assert.ok(client.includes('./private-api/prices/status'));
  assert.ok(backend.includes('PRICE_OVERVIEW_PATH'));
  assert.ok(backend.includes('stato-prezzi.html'));
@@ -108,7 +108,7 @@ test("Macro page has a private-readonly architecture and correct menu version",(
  const ui=fs.readFileSync("stato-prezzi.js","utf8");
  const nav=fs.readFileSync("nav.js","utf8");
  const service=fs.readFileSync("sw.js","utf8");
- for(const script of ["nav.js?v=124","price-status-core.js?v=123","stato-prezzi.js?v=123"])assert.ok(html.includes(script));
+ for(const script of ["nav.js?v=125","price-status-core.js?v=123","stato-prezzi.js?v=125"])assert.ok(html.includes(script));
  assert.ok(html.includes('id="macro"'));
  assert.ok(ui.includes('window.addEventListener("hashchange",initialize)'));
  assert.ok(ui.includes("./private-api/prices/"));
@@ -241,4 +241,15 @@ test("Correlation interpretation covers direction, minimum samples and unavailab
  assert.ok(h.includes('id="macro-target-interpretation"'));
  assert.ok(js.includes('$("macro-target-interpretation").replaceChildren(explainMarket(symbol))'));
  assert.ok(js.includes("core.pairEligible(one,two)"));
+});
+
+test('v1.25 audits one OHLC symbol on demand and identifies markets without data',()=>{
+ const html=fs.readFileSync('stato-prezzi.html','utf8');
+ const js=fs.readFileSync('stato-prezzi.js','utf8');
+ assert.ok(html.includes('id="price-missing-summary"'));
+ assert.ok(js.includes('missing.map(e=>e.symbol'));
+ assert.ok(js.includes('button.addEventListener("click",async()=>'));
+ assert.ok(js.includes('core.macro.audit(doc,Date.parse(serverTime))'));
+ assert.ok(js.includes('Verifica qualità M15/H1/H4'));
+ assert.ok(!js.includes('CTRADER_CLIENT_SECRET'));
 });

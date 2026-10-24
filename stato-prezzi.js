@@ -1,4 +1,4 @@
-/* REMURA v1.18: lightweight private monitoring of all 38 markets. */
+/* REMURA v1.25: private N/D diagnostics and opt-in OHLC verification. */
 (()=>{
 "use strict";
 const $=id=>document.getElementById(id);
@@ -6,6 +6,14 @@ const core=window.REMURA_PRICE_STATUS_CORE;
 const config=window.REMURA_MARKETS;
 let data=null,loading=false;
 const labels={recent:"RECENTE",stale:"DATATO",missing:"N/D"};
+const fixes={
+ ticker_unavailable:"Verifica il nome esatto del ticker sul conto cTrader e la mappatura privata.",
+ no_historical_bars:"Verifica che lo strumento sia negoziabile e abbia storico M15 sul broker.",
+ incomplete_history:"Lo storico restituito non è completo: verificare le finestre richieste.",
+ invalid_bars:"Le candele non superano i controlli di formato e timestamp.",
+ request_failed:"Controlla OAuth, connessione e collector della VPS.",
+ unknown_error:"Controlla l'ultimo tentativo e, se persiste, i log privati della VPS."
+};
 const prettyTime=value=>{
  const date=new Date(value||"");
  return Number.isFinite(date.getTime())
@@ -55,6 +63,8 @@ function marketCard(entry,serverTime){
  }else{
   card.append(node("div","price-summary-muted","Ultimo tentativo: "+prettyTime(entry.lastAttempt)));
  }
+ if(result.state==="missing")card.append(node("div","price-summary-warning",
+  "Come sbloccarlo: "+(fixes[entry.lastOutcome]||"Controlla il prossimo tentativo di acquisizione cTrader.")));
  const more=node("details","market-more");
  more.append(node("summary",null,"Dettagli e provenienza"));
  let origin="N/D";
@@ -68,6 +78,51 @@ function marketCard(entry,serverTime){
   rowText("Ultimo esito:",reason||"Non ancora registrato")
  );
  card.append(more);
+ if(result.state!=="missing"){
+  const button=node("button","price-quality-button","Verifica qualità M15/H1/H4");
+  button.type="button";
+  const output=node("div","price-quality","");
+  output.setAttribute("role","status");
+  button.addEventListener("click",async()=>{
+   button.disabled=true;
+   output.textContent="Verifico lo storico privato di "+entry.symbol+"…";
+   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
+   try{
+    const response=await fetch("./private-api/prices/"+encodeURIComponent(entry.symbol),
+       {cache:"no-store",signal:controller.signal});
+    if(!response.ok)throw Error("no_price");
+    const bundle=await response.json();
+    const doc=bundle?.schema==="remura-price-v1"?bundle.markets?.[entry.symbol]:null;
+    if(doc?.symbol!==entry.symbol||doc?.provider!=="ctrader")throw Error("invalid");
+    const q=core.macro.audit(doc,Date.parse(serverTime));
+    const h1=q.h1||{verified:0,checked:0,missingInputs:0,mismatched:0};
+    const h4=q.h4||{verified:0,checked:0,missingInputs:0,mismatched:0};
+    const names={recent:"RECENTE",weekend:"ULTIMA SESSIONE VENERDÌ — NON LIVE",
+       stale:"DATATO",invalid:"INCOERENTE",missing:"NESSUNA M15"};
+    const lines=[
+      "Stato: "+(names[q.state]||"Non verificabile"),
+      "Campioni: M15 "+(q.counts?.M15||0)+" · H1 "+(q.counts?.H1||0)+" · H4 "+(q.counts?.H4||0),
+      "H1 verificate: "+h1.verified+"/"+h1.checked+
+         "; input mancanti "+h1.missingInputs+"; incoerenti "+h1.mismatched,
+      "H4 verificate: "+h4.verified+"/"+h4.checked+
+         "; input mancanti "+h4.missingInputs+"; incoerenti "+h4.mismatched,
+      "Discontinuità ultime 97 M15: "+(q.recentGaps??"N/D")+
+         " (possono includere pause regolari di mercato)"
+    ];
+    if(!q.ready)lines.push("Storico insufficiente: servono almeno 55 candele per timeframe.");
+    if(q.state==="invalid"||h1.mismatched||h4.mismatched)
+      lines.push("Non utilizzare i segnali prezzo finché i dati sono incoerenti.");
+    if(q.state==="weekend")
+      lines.push("La fotografia del venerdì non equivale a una conferma live.");
+    output.dataset.state=q.state;
+    output.textContent=lines.join("\n");
+   }catch(_){
+    output.dataset.state="error";
+    output.textContent="Verifica non disponibile. Apri REMURA dalla VPS privata .ts.net.";
+   }finally{clearTimeout(timer);button.disabled=false;}
+  });
+  card.append(button,output);
+ }
  const link=node("a",null,"Apri scheda →");
  link.href=config?.detailUrl?.(entry.symbol)||"./asset.html?symbol="+encodeURIComponent(entry.symbol);
  card.append(link);
@@ -116,6 +171,12 @@ async function refresh(){
   $("price-last-run").textContent="Collector: "+String(parsed.collector||"N/D")+
    " · Ultima richiesta: "+last+" · Gruppo: "+String(parsed.collectorBatch||"N/D")+
    " · Rotazione nominale 120 minuti";
+  const missing=parsed.markets.filter(e=>core.interpret(e,parsed.serverTime).state==="missing");
+  $("price-missing-summary").textContent=missing.length?
+   "SENZA STORICO ("+missing.length+"): "+
+   missing.map(e=>e.symbol+" · "+(core.OUTCOMES[e.lastOutcome]||"motivo non registrato")).join(" | ")+
+   ". I dettagli qui sotto mostrano il prossimo controllo da fare.":
+   "Tutti i 38 mercati hanno M15 archiviate. Controlla comunque freschezza e qualità prima di generare segnali.";
   render();
  }catch(_){
   data=null;
@@ -123,6 +184,7 @@ async function refresh(){
   $("price-message").textContent="Stato privato non disponibile. Apri REMURA dalla tua web app .ts.net e verifica che la VPS sia connessa; su GitHub Pages i dati del server non sono accessibili.";
   $("price-last-run").textContent="Nessun dato ricevuto: non mostriamo prezzi simulati.";
   $("price-list").replaceChildren();
+  $("price-missing-summary").textContent="La VPS non risponde: mercati N/D non identificabili da GitHub.";
   $("price-results-count").textContent="";
   for(const id of ["price-total","price-recent","price-stale","price-missing"])$(id).textContent="—";
  }finally{loading=false;$("price-refresh").disabled=false;}

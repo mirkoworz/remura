@@ -8,7 +8,7 @@
 <title>REMURA · Stato prezzi</title>
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="stylesheet" href="./nav.css?v=124">
+<link rel="stylesheet" href="./nav.css?v=125">
 <style>
 :root{color-scheme:dark;--bg:#07121a;--ink:#ecf7f5;--muted:#a5c3c7;--mint:#76ebc4;--line:#315960;--surface:#112e37}
 *{box-sizing:border-box}
@@ -54,6 +54,10 @@ button:disabled{opacity:.5}
 .market-more{border-top:1px solid #30515b;margin-top:9px;padding-top:7px}
 .market-more summary{color:#83eacc;font-size:12px;font-weight:800;cursor:pointer;min-height:32px;padding:4px 0;list-style-position:inside}
 .market-more .detail{margin:5px 0}
+.missing-summary{border:1px solid #49716e;border-radius:12px;background:#102e32;color:#d2eae2;font-size:12px;line-height:1.65;padding:12px 14px;margin-top:14px;overflow-wrap:anywhere}
+.price-quality-button{margin-top:12px;width:100%;min-height:40px;font-size:12px;background:#1c4650;border-color:#527f86}
+.price-quality{margin-top:8px;white-space:pre-line;font-size:12px;line-height:1.6;color:#c6e2dc;overflow-wrap:anywhere}
+.price-quality[data-state=invalid],.price-quality[data-state=error]{color:#ffcdab}
 .help{margin-top:15px;font-size:12px;color:#bfd4d6}
 .help summary{cursor:pointer;color:#a6e5d7;font-weight:750;min-height:40px;padding:9px 0}
 .help p{margin:5px 0 0;line-height:1.65}
@@ -124,8 +128,9 @@ button:disabled{opacity:.5}
 <label>Categoria<select id="price-group"><option value="all">Tutte le categorie</option><option value="forex">Forex</option><option value="metals">Metalli</option><option value="indices">Indici azionari</option><option value="macro">Indicatori macro</option><option value="energy">Energia</option></select></label>
 <button id="price-refresh" type="button">Aggiorna dati</button>
 </div>
-<details class="help"><summary>Come leggere i dati e la freschezza</summary><p>Otto gruppi ogni 15 minuti: giro nominale di 120 minuti. RECENTE indica l'ultima M15 entro tre ore; DATATO può essere normale durante la chiusura del weekend. Nel Radar Macro, il venerdì resta consultabile come ULTIMA SESSIONE, esplicitamente non live, solo se gli storici sono verificabili. N/D indica candele assenti, non dati simulati. Tocca «Dettagli e provenienza» in una scheda per visualizzare fonte e ultimo tentativo.</p></details>
+<details class="help"><summary>Come leggere i dati e la freschezza</summary><p>Otto gruppi ogni 15 minuti: giro nominale di 120 minuti. RECENTE indica l'ultima M15 entro tre ore; DATATO può essere normale durante la chiusura del weekend. Nel Radar Macro, il venerdì resta consultabile come ULTIMA SESSIONE, esplicitamente non live, solo se gli storici sono verificabili. N/D indica candele assenti, non dati simulati. Tocca «Dettagli e provenienza» per fonte ed esito. Tocca «Verifica qualità M15/H1/H4» per controllare uno storico alla volta dalla VPS, senza dati simulati.</p></details>
 </section>
+<div id="price-missing-summary" class="missing-summary" role="status" aria-live="polite">Controllo i mercati senza storico…</div>
 <div id="price-results-count" class="explain" aria-live="polite"></div>
 <div id="price-list" aria-label="Dettaglio dei mercati"></div>
 <p class="explain"><a href="#macro" class="macro-link">Radar Macro: forza del dollaro, VIX e impatto sui mercati ↓</a></p>
@@ -158,8 +163,8 @@ button:disabled{opacity:.5}
 </section>
 <p class="explain">Dati privati dalla VPS <b>.ts.net</b>. Nessuna credenziale o ordine mostrato. Aggiornamento automatico ogni tre minuti quando la pagina è visibile.</p>
 </main>
-<script src="./nav.js?v=124"></script>
+<script src="./nav.js?v=125"></script>
 <script src="./price-status-core.js?v=123"></script>
-<script src="./stato-prezzi.js?v=123"></script>
+<script src="./stato-prezzi.js?v=125"></script>
 </body>
 </html>
