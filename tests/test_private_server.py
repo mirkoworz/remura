@@ -382,6 +382,38 @@ class PrivateStorageTests(unittest.TestCase):
         monday=dt.datetime(2026,10,26,12,0,tzinfo=UTC)
         self.assertEqual(store.audit_market(document,monday)["freshness"],"stale")
 
+
+    def test_cot_monitor_defaults_to_existing_approved_collector(self):
+        self.assertTrue(server.cot_sync_enabled({"REMURA_COLLECTOR_ENABLED":"1"}))
+        self.assertFalse(server.cot_sync_enabled({"REMURA_COLLECTOR_ENABLED":"0"}))
+        self.assertFalse(server.cot_sync_enabled({"REMURA_COLLECTOR_ENABLED":"1",
+                                                 "REMURA_COT_SYNC_ENABLED":"0"}))
+        self.assertTrue(server.cot_sync_enabled({"REMURA_COLLECTOR_ENABLED":"0",
+                                                "REMURA_COT_SYNC_ENABLED":"1"}))
+
+    def test_cot_private_http_endpoint_returns_only_sanitized_status(self):
+        import cot_monitor as cot
+        cot.collect_once(self.path,NOW,lambda ds,now:[
+            {"report_date_as_yyyy_mm_dd":"2026-10-13T00:00:00",
+             "cftc_contract_market_code":code,"open_interest_all":"1000",
+             **{field:"100" for field in cot.DATASETS[ds]["keys"]}}
+            for code in cot.DATASETS[ds]["codes"]])
+        site=ThreadingHTTPServer(("127.0.0.1",0),server.http_handler(self.path))
+        worker=threading.Thread(target=site.serve_forever,daemon=True)
+        worker.start()
+        try:
+            with patch.dict(os.environ,{"REMURA_COT_SYNC_ENABLED":"1"},clear=False):
+                with urlopen("http://127.0.0.1:"+str(site.server_port)+
+                             "/private-api/cot/status",timeout=5) as response:
+                    self.assertEqual(response.headers.get("Cache-Control"),"no-store, max-age=0")
+                    payload=json.load(response)
+            self.assertEqual(payload["schema"],"remura-cot-status-v1")
+            self.assertEqual(payload["datasets"]["tff"]["contracts"],11)
+            self.assertNotIn("first_long",json.dumps(payload))
+            self.assertNotIn("api_key",json.dumps(payload))
+        finally:
+            site.shutdown();site.server_close();worker.join(timeout=2)
+
     def test_http_only_serves_allowlisted_static_and_verified_price(self):
         store.ingest(self.db,make_bundle(count=96),now=NOW)
         site=ThreadingHTTPServer(("127.0.0.1",0),server.http_handler(self.path))

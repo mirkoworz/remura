@@ -137,3 +137,11 @@ test("v1.31 suppresses stale candles, weekend transitions, and classification-on
  assert.ok(h.includes("Il primo controllo crea soltanto una fotografia iniziale"));
  assert.ok(h.includes("non invia notifiche"));
 });
+
+test("v1.32 shows private official COT status without suggesting signals are live",()=>{
+ const html=fs.readFileSync("mercati.html","utf8");
+ for(const term of ['id="cot-vps-status"','privateJSON("./private-api/cot/status")',
+   'cotStatus?.schema!=="remura-cot-status-v1"','Nessun avviso o ordine attivo.',
+   'Le notifiche sono ancora disabilitate.'])
+   assert.ok(html.includes(term),term);
+});
