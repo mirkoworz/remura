@@ -46,7 +46,7 @@ test("Neutral, conflict and malformed retail inputs do not produce false institu
 test("All market pages use the same combined renderer without exposing credentials",()=>{
  const html=fs.readFileSync("asset.html","utf8"),script=fs.readFileSync("price.js","utf8");
  assert.ok(html.includes('id="squalo-verdict"'));
- assert.ok(html.includes('price.js?v=124'));
+ assert.ok(html.includes('price.js?v=10&build=124'));
  assert.ok(html.includes('insights-core.js'));
  assert.ok(!html.includes('squalo-verdict-core.js'));
  for(const name of ["remura:cot","remura:price","remura:retail","remura:capital"])
