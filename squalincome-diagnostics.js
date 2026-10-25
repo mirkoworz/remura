@@ -35,6 +35,7 @@
   }
   function read(data){
     if(!data||data.schema!=="remura-squalincome-monitor-v1"||!Array.isArray(data.lastEvents))return null;
+    if(!Object.prototype.hasOwnProperty.call(data,"diagnostics"))return {kind:"legacy"};
     const d=data.diagnostics;
     if(!d)return {kind:"not_scanned",baselines:count(data.baselines),events:count(data.eventsTotal)};
     const analyzed=count(d.analyzed),excluded=count(d.excluded),tracked=count(d.trackedMarkets);
@@ -63,6 +64,10 @@
     if(!view||view.kind==="invalid"){
       host.append(make("p","monitor-warning","Diagnostica non valida o non disponibile: nessun conteggio stimato."));
       return false;
+    }
+    if(view.kind==="legacy"){
+      host.append(make("p","monitor-warning","La VPS usa ancora il backend precedente alla v1.34: la diagnostica delle scansioni non è disponibile. Installazione manuale necessaria."));
+      return true;
     }
     if(view.kind==="not_scanned"){
       host.append(make("p","monitor-warning","Nessuna scansione ancora registrata sulla VPS. Il registro storico non dimostra che i mercati siano stati analizzati."));
