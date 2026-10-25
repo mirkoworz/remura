@@ -25,7 +25,7 @@
   function count(value){return Number.isSafeInteger(value)&&value>=0?value:null;}
   function itDate(value){
     const n=Date.parse(value);
-    return Number.isFinite(n)?new Intl.DateTimeFormat("it-IT",{timeZone:"Europe/Rome",dateStyle:"short",timeStyle:"medium"}).format(new Date(n)):"non disponibile";
+    return Number.isFinite(n)?new Intl.DateTimeFormat("it-IT",{timeZone:"Europe/Rome",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit"}).format(new Date(n)):"non disponibile";
   }
   function make(tag,css,text){
     const el=document.createElement(tag);
