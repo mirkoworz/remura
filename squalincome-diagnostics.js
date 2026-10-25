@@ -6,6 +6,7 @@
     cot_stale:"COT datato (oltre 14 giorni)",
     cot_nonconsecutive:"COT non consecutivo o non comparabile",
     cot_no_direction:"COT valido, ma variazione non direzionale",
+    cot_group_conflict:"COT valido, ma gruppi istituzionali contrapposti",
     prices_missing:"Storico prezzi mancante",
     prices_stale:"Prezzi datati, non utilizzabili come live",
     market_closed:"Prezzi non recenti: mercato chiuso/weekend",
