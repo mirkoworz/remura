@@ -1,4 +1,4 @@
-/* REMURA v1.34 · Read-only VPS diagnostics; never fetches secrets or OHLC. */
+/* REMURA v1.35 · Read-only VPS diagnostics; never fetches secrets or OHLC. */
 (function(root) {
   "use strict";
   const REASONS=Object.freeze({
@@ -20,6 +20,7 @@
   const OUTCOMES=Object.freeze({
     events_detected:"Nuovi eventi significativi verificati nell'ultima scansione.",
     no_significant_event:"Nessun evento significativo: ci sono mercati effettivamente analizzati.",
+    market_closed:"Mercati chiusi nell'ultima scansione: candele non recenti, nessun riferimento live creato. Alla riapertura serviranno nuove candele valide e una direzione COT idonea.",
     data_insufficient:"Dati insufficienti per analizzare tutti i mercati esclusi. Non equivale a nessun segnale.",
     no_qualifying_setup:"Nessuna configurazione direzionale idonea: i dati non sono necessariamente mancanti."
   });
@@ -57,6 +58,20 @@
       if(!row||typeof row.symbol!=="string"||!/^[A-Z0-9]{3,8}$/.test(row.symbol)||!Array.isArray(row.reasons))continue;
       summary.exclusions.push({symbol:row.symbol,labels:row.reasons.filter(r=>REASONS[r]).map(r=>REASONS[r])});
     }
+    // A source-backed UI interpretation, not a change to the VPS scan.
+    // Never disguise missing COT, stale data or errors as a simple weekend.
+    const trueDataFaults=new Set(["cot_missing","cot_stale","cot_nonconsecutive",
+      "prices_missing","prices_stale","candles_insufficient",
+      "timeframe_disagreement","price_error","scan_error"]);
+    const hiddenFaults=Object.entries(reasons).some(([code,n])=>
+      (!REASONS[code] || trueDataFaults.has(code)) && count(n)>0);
+    const solelyClosed=d.outcome==="data_insufficient" && tracked>0 &&
+      analyzed===0 && excluded===tracked && summary.exclusions.length===excluded &&
+      !hiddenFaults &&
+      d.exclusions.every(row=>Array.isArray(row.reasons) &&
+        row.reasons.includes("market_closed") &&
+        row.reasons.every(reason=>REASONS[reason] && !trueDataFaults.has(reason)));
+    summary.displayOutcome=solelyClosed?"market_closed":d.outcome;
     return summary;
   }
   function render(data,host){
@@ -87,8 +102,8 @@
     }
     host.append(grid);
     host.append(make("p","monitor-caption","Analizzati = COT direzionale e prezzi verificati su timeframe coerenti. Gli esclusi sono stati controllati, ma non hanno superato tutti i criteri."));
-    const state=make("p","monitor-outcome",OUTCOMES[view.outcome]);
-    state.setAttribute("data-outcome",view.outcome);
+    const state=make("p","monitor-outcome",OUTCOMES[view.displayOutcome]);
+    state.setAttribute("data-outcome",view.displayOutcome);
     host.append(state);
     host.append(make("p","monitor-caption","Ultima scansione: "+(view.newBaselines??"—")+" nuovi riferimenti · "+(view.newEvents??"—")+" nuovi eventi. I totali del registro sono distinti da questi incrementi."));
     if(view.reasons.length){
