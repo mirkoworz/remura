@@ -63,10 +63,14 @@
     const trueDataFaults=new Set(["cot_missing","cot_stale","cot_nonconsecutive",
       "prices_missing","prices_stale","candles_insufficient",
       "timeframe_disagreement","price_error","scan_error"]);
+    const hiddenFaults=Object.entries(reasons).some(([code,n])=>
+      (!REASONS[code] || trueDataFaults.has(code)) && count(n)>0);
     const solelyClosed=d.outcome==="data_insufficient" && tracked>0 &&
       analyzed===0 && excluded===tracked && summary.exclusions.length===excluded &&
-      d.exclusions.every(row=>row.reasons.includes("market_closed") &&
-        !row.reasons.some(reason=>trueDataFaults.has(reason)));
+      !hiddenFaults &&
+      d.exclusions.every(row=>Array.isArray(row.reasons) &&
+        row.reasons.includes("market_closed") &&
+        row.reasons.every(reason=>REASONS[reason] && !trueDataFaults.has(reason)));
     summary.displayOutcome=solelyClosed?"market_closed":d.outcome;
     return summary;
   }
