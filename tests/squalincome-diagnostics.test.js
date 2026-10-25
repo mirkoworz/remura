@@ -16,6 +16,8 @@ const valid=()=>({
 });
 test("never confuse first unscanned VPS with zero meaningful events",()=>{
   assert.equal(diagnostics.read(payload(null)).kind,"not_scanned");
+  const legacy=payload(null); delete legacy.diagnostics;
+  assert.equal(diagnostics.read(legacy).kind,"legacy");
   assert.equal(diagnostics.read(payload(valid())).outcome,"data_insufficient");
   const scan={...valid(),analyzed:34,excluded:0,exclusionReasons:{},exclusions:[],
     outcome:"no_significant_event"};
