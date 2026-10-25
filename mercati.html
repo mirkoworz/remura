@@ -95,7 +95,7 @@
 <h2 class="section-title">Cambiamenti verificati, anche con iPhone chiuso</h2>
 <p class="scan-description">La VPS rilegge COT e candele chiuse M15/H1/H4 ogni 15 minuti usando solo i dati privati già archiviati. Non genera previsioni né segnali operativi. Il primo controllo crea soltanto un riferimento iniziale; il weekend non produce eventi live.</p>
 <button type="button" id="monitor-refresh">Aggiorna registro VPS</button>
-<p class="cross-change-status" role="status" aria-live="polite" id="monitor-status">Registro privato da verificare. Notifiche Telegram disattivate.</p>
+<p class="cross-change-status" role="status" aria-live="polite" id="monitor-status">Registro privato da verificare. Telegram NON attivo.</p>
 <div id="monitor-diagnostics" class="monitor-diagnostics" aria-live="polite"></div>
 <div class="cross-grid" id="monitor-events"></div>
 </section>
@@ -309,7 +309,7 @@ async function refreshMonitor(){
   }else{
    status.textContent="Monitor VPS configurato · "+data.baselines+"/"+data.trackedMarkets+
      " riferimenti iniziali · "+data.eventsTotal+
-     " eventi registrati (fino a 90 giorni). Notifiche Telegram disattivate.";
+     " eventi registrati (fino a 90 giorni). Telegram NON attivo.";
   }
   if(!data.lastEvents.length){
    const p=document.createElement("p");
