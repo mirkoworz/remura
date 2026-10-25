@@ -198,6 +198,11 @@ def cot_exclusion(series, symbol, now):
             return "cot_nonconsecutive"
     except (ValueError,TypeError,IndexError):
         return "cot_missing"
+    # A valid but opposed TFF institutional group is not a missing report.
+    if not (symbol in OTHER and OTHER[symbol][0]=="disagg"):
+        spec,other=series[-1][2]-series[-2][2],series[-1][1]-series[-2][1]
+        if abs(spec)>MIN_COT_DELTA and other*spec<0 and abs(other)>MIN_COT_DELTA:
+            return "cot_group_conflict"
     # A valid report without enough directional change is NOT missing data.
     return "cot_no_direction"
 
@@ -207,12 +212,14 @@ def price_exclusion(doc, now):
     if doc is None:
         return "prices_missing"
     quality=audit_market(doc,now)
+    if quality["h1"]["mismatched"] or quality["h4"]["mismatched"]:
+        return "timeframe_disagreement"
+    if quality["integrity"]=="invalid":
+        return "price_error"
     if quality["freshness"]=="weekend":
         return "market_closed"
     if quality["freshness"] in ("stale","missing"):
         return "prices_stale"
-    if quality["h1"]["mismatched"] or quality["h4"]["mismatched"]:
-        return "timeframe_disagreement"
     if quality["integrity"] in ("missing","insufficient","partial") or not quality["ready"]:
         return "candles_insufficient"
     if quality["integrity"]!="verified":
