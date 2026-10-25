@@ -304,6 +304,8 @@ async function refreshMonitor(){
   if(!valid)throw Error("diagnostics_invalid");
   if(!data.enabled){
    status.textContent="Monitor VPS disabilitato. Eventuali scansioni visualizzate sono storiche. Telegram disattivato.";
+  }else if(!Object.prototype.hasOwnProperty.call(data,"diagnostics")){
+   status.textContent="Backend VPS precedente alla v1.34. Installa la diagnostica per ottenere conteggi reali; nessun dato stimato.";
   }else if(!data.diagnostics){
    status.textContent="Monitor abilitato, ma nessuna scansione VPS ancora registrata. Non è possibile dichiarare assenza di eventi.";
   }else{
