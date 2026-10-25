@@ -312,7 +312,7 @@ async function refreshMonitor(){
   if(!data.enabled){
    status.textContent="Monitor VPS disabilitato. Eventuali scansioni visualizzate sono storiche. Telegram disattivato.";
   }else if(!Object.prototype.hasOwnProperty.call(data,"diagnostics")){
-   status.textContent="Backend VPS precedente alla v1.34. Installa la diagnostica per ottenere conteggi reali; nessun dato stimato.";
+   status.textContent="Backend VPS precedente alla v1.35. Installa la diagnostica per ottenere conteggi reali; nessun dato stimato.";
   }else if(!data.diagnostics){
    status.textContent="Monitor abilitato, ma nessuna scansione VPS ancora registrata. Non è possibile dichiarare assenza di eventi.";
   }else{
@@ -346,7 +346,7 @@ async function refreshMonitor(){
   }
  }catch(_){
   diagnostics.replaceChildren();
-  status.textContent="Diagnostica VPS non disponibile o incompatibile. È necessario installare il backend v1.34; nessun dato stimato.";
+  status.textContent="Diagnostica VPS non disponibile o incompatibile. È necessario installare il backend v1.35; nessun dato stimato.";
  }
 }
 $("monitor-refresh").addEventListener("click",refreshMonitor);
@@ -838,5 +838,5 @@ document.querySelectorAll('[data-scan]').forEach(btn=>btn.addEventListener('clic
 $('refresh').addEventListener('click',refresh);
 updateList();detail();renderScanner();refresh();
 </script>
-<script src="./nav.js?v=134"></script>
+<script src="./nav.js?v=135"></script>
 </body></html>
