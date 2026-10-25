@@ -215,6 +215,8 @@ class SignalTest(unittest.TestCase):
         rows=[("2026-10-13",0,0),("2026-10-20",2,2)]
         self.assertEqual(m.cot_exclusion(rows,"EURUSD",NOW),"cot_no_direction")
         self.assertEqual(m.cot_exclusion([], "EURUSD",NOW),"cot_missing")
+        self.assertEqual(m.cot_exclusion([("2026-10-13",0,0),
+                              ("2026-10-20",-2,2)],"EURUSD",NOW),"cot_group_conflict")
         self.assertEqual(m.cot_exclusion([("2026-09-01",0,0),("2026-09-08",1,1)],
                                          "EURUSD",NOW),"cot_stale")
         quality={"integrity":"invalid","freshness":"recent","ready":True,
