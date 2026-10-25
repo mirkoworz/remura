@@ -77,8 +77,8 @@
     host.append(make("p","monitor-timestamp","Ultima scansione VPS: "+view.date+" (ora italiana)"));
     const grid=make("div","monitor-metrics");
     const metrics=[
-      ["Mercati previsti",view.tracked],["Analizzati",view.analyzed],
-      ["Esclusi",view.excluded],["Riferimenti iniziali",view.baselines],
+      ["Mercati controllati",view.tracked],["Analizzati (idonei)",view.analyzed],
+      ["Esclusi dal confronto",view.excluded],["Riferimenti iniziali",view.baselines],
       ["Eventi registrati",view.events]];
     for(const [name,val] of metrics){
       const box=make("div","monitor-metric");
@@ -86,6 +86,7 @@
       grid.append(box);
     }
     host.append(grid);
+    host.append(make("p","monitor-caption","Analizzati = COT direzionale e prezzi verificati su timeframe coerenti. Gli esclusi sono stati controllati, ma non hanno superato tutti i criteri."));
     const state=make("p","monitor-outcome",OUTCOMES[view.outcome]);
     state.setAttribute("data-outcome",view.outcome);
     host.append(state);
