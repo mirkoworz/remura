@@ -46,6 +46,9 @@ def ensure_tables(db):
         report_date TEXT NOT NULL, price_time TEXT NOT NULL, observed_at TEXT NOT NULL,
         detail TEXT NOT NULL,
         UNIQUE(symbol,event_type,report_date,price_time))""")
+    db.execute("""CREATE TABLE IF NOT EXISTS squalincome_last_scan(
+        id INTEGER PRIMARY KEY CHECK(id=1),
+        scanned_at TEXT NOT NULL, summary TEXT NOT NULL)""")
     db.commit()
 
 
@@ -181,6 +184,64 @@ def transition(previous, current):
     return None
 
 
+def cot_exclusion(series, symbol, now):
+    """Allowlisted reason: no raw CFTC rows in HTTP diagnostics."""
+    if len(series)<2:
+        return "cot_missing"
+    try:
+        first,previous=series[-1],series[-2]
+        age=(now.date()-dt.date.fromisoformat(first[0])).days
+        span=(dt.date.fromisoformat(first[0])-dt.date.fromisoformat(previous[0])).days
+        if age<0 or age>14:
+            return "cot_stale"
+        if not 6<=span<=10:
+            return "cot_nonconsecutive"
+    except (ValueError,TypeError,IndexError):
+        return "cot_missing"
+    # A valid but opposed TFF institutional group is not a missing report.
+    if not (symbol in OTHER and OTHER[symbol][0]=="disagg"):
+        spec,other=series[-1][2]-series[-2][2],series[-1][1]-series[-2][1]
+        if abs(spec)>MIN_COT_DELTA and other*spec<0 and abs(other)>MIN_COT_DELTA:
+            return "cot_group_conflict"
+    # A valid report without enough directional change is NOT missing data.
+    return "cot_no_direction"
+
+
+def price_exclusion(doc, now):
+    """Report the reason a price was rejected without exporting private bars."""
+    if doc is None:
+        return "prices_missing"
+    quality=audit_market(doc,now)
+    if quality["h1"]["mismatched"] or quality["h4"]["mismatched"]:
+        return "timeframe_disagreement"
+    if quality["integrity"]=="invalid":
+        return "price_error"
+    if quality["freshness"]=="weekend":
+        return "market_closed"
+    if quality["freshness"] in ("stale","missing"):
+        return "prices_stale"
+    if quality["integrity"] in ("missing","insufficient","partial") or not quality["ready"]:
+        return "candles_insufficient"
+    if quality["integrity"]!="verified":
+        return "price_error"
+    try:
+        frames={}
+        for key,seconds in DURATIONS.items():
+            rows=doc["timeframes"][key]
+            if len(rows)<MIN_FRAMES:
+                return "candles_insufficient"
+            frame=frame_direction(rows,seconds,now)
+            if frame is None:
+                return "prices_stale"
+            frames[key]=frame
+        h4,h1=frames["H4"],frames["H1"]
+        if h4["side"] and h1["side"] and h4["side"]!=h1["side"]:
+            return "timeframe_disagreement"
+        return "price_no_direction"
+    except (KeyError,TypeError,ValueError,IndexError,OverflowError):
+        return "price_error"
+
+
 def scan_once(db_path,now=None):
     now=now or utcnow()
     # Safe to run even when the upstream collector is not ready: no invented report.
@@ -189,14 +250,23 @@ def scan_once(db_path,now=None):
     from cot_monitor import ensure_table as ensure_cot_table
     ensure_cot_table(db)
     examined=baselines=events=0
+    exclusions={}
     try:
         for symbol in monitored_symbols():
             try:
-                cot=cot_view(cot_series(db,symbol),symbol,now)
+                series=cot_series(db,symbol)
+                cot=cot_view(series,symbol,now)
                 document=latest(db,symbol)
                 price=price_view(document,now) if document else None
                 current=classify(cot,price)
-                if current is None:continue
+                if current is None:
+                    reasons=[]
+                    if cot is None:
+                        reasons.append(cot_exclusion(series,symbol,now))
+                    if price is None:
+                        reasons.append(price_exclusion(document,now))
+                    exclusions[symbol]=reasons or ["no_qualifying_setup"]
+                    continue
                 examined+=1
                 row=db.execute("SELECT state,side,report_date,price_time,price_state,observed_at "
                                "FROM squalincome_observations WHERE symbol=?",(symbol,)).fetchone()
@@ -233,12 +303,35 @@ def scan_once(db_path,now=None):
                         "observed_at=excluded.observed_at",
                         (symbol,current["state"],current["side"],current["report_date"],current["price_time"],
                          current["price_state"],stamp))
-            except (ValueError,TypeError,KeyError,sqlite3.Error):
-                # One malformed market cannot block the remaining private markets.
+            except (ValueError,TypeError,KeyError,sqlite3.Error,OverflowError):
+                # Never expose provider exceptions, prices or credentials.
+                exclusions[symbol]=["scan_error"]
                 continue
+        counts={}
+        for reasons in exclusions.values():
+            for reason in reasons:
+                counts[reason]=counts.get(reason,0)+1
+        data_gaps={"cot_missing","cot_stale","cot_nonconsecutive",
+                   "prices_missing","prices_stale","market_closed",
+                   "candles_insufficient","timeframe_disagreement",
+                   "price_error","scan_error"}
+        outcome=("events_detected" if events else
+                 "no_significant_event" if examined else
+                 "data_insufficient" if any(r in data_gaps for r in counts) else
+                 "no_qualifying_setup")
+        summary={"lastScanAt":now.isoformat(),"trackedMarkets":len(monitored_symbols()),
+                 "analyzed":examined,"excluded":len(exclusions),
+                 "exclusionReasons":counts,
+                 "exclusions":[{"symbol":symbol,"reasons":reasons}
+                               for symbol,reasons in sorted(exclusions.items())],
+                 "newBaselines":baselines,"newEvents":events,"outcome":outcome}
         with db:
             db.execute("DELETE FROM squalincome_events WHERE observed_at < ?",
                 ((now-dt.timedelta(days=EVENT_KEEP_DAYS)).isoformat(),))
+            db.execute("INSERT INTO squalincome_last_scan(id,scanned_at,summary)"
+                " VALUES(1,?,?) ON CONFLICT(id) DO UPDATE SET"
+                " scanned_at=excluded.scanned_at,summary=excluded.summary",
+                (now.isoformat(),json.dumps(summary,sort_keys=True)))
         return {"examined":examined,"baselines":baselines,"newEvents":events}
     finally:db.close()
 
@@ -249,11 +342,22 @@ def status(db_path,enabled=False,now=None):
     try:
         ensure_tables(db)
         baseline=db.execute("SELECT count(*) FROM squalincome_observations").fetchone()[0]
+        total_events=db.execute("SELECT count(*) FROM squalincome_events").fetchone()[0]
+        saved=db.execute("SELECT summary FROM squalincome_last_scan WHERE id=1").fetchone()
+        diagnostics=None
+        if saved:
+            try:
+                candidate=json.loads(saved[0])
+                if isinstance(candidate,dict) and candidate.get("lastScanAt"):
+                    diagnostics=candidate
+            except (TypeError,ValueError):
+                pass
         events=db.execute("SELECT symbol,event_type,side,report_date,price_time,observed_at,detail "
             "FROM squalincome_events ORDER BY id DESC LIMIT 20").fetchall()
         return {"schema":"remura-squalincome-monitor-v1","enabled":bool(enabled),
                 "mode":"observation_only","notificationsEnabled":False,
                 "trackedMarkets":len(monitored_symbols()),"baselines":baseline,
+                "eventsTotal":total_events,"diagnostics":diagnostics,
                 "lastEvents":[dict(zip(("symbol","eventType","side","reportDate","priceTime","observedAt","detail"),r))
                               for r in events],
                 "serverTime":now.isoformat()}
