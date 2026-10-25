@@ -148,6 +148,85 @@ class SignalTest(unittest.TestCase):
         self.assertEqual(result["newEvents"],0)
         self.assertEqual(result["baselines"],1)
 
+    def test_diagnostics_empty_scan_is_data_insufficient_not_no_event(self):
+        result=m.scan_once(self.db_path,NOW)
+        self.assertEqual(result["examined"],0)
+        info=m.status(self.db_path,True,NOW)["diagnostics"]
+        self.assertEqual(info["lastScanAt"],NOW.isoformat())
+        self.assertEqual(info["analyzed"],0)
+        self.assertEqual(info["excluded"],len(m.monitored_symbols()))
+        self.assertEqual(info["trackedMarkets"],info["analyzed"]+info["excluded"])
+        self.assertEqual(info["exclusionReasons"]["cot_missing"],info["excluded"])
+        self.assertEqual(info["exclusionReasons"]["prices_missing"],info["excluded"])
+        self.assertEqual(info["outcome"],"data_insufficient")
+        self.assertEqual(m.status(self.db_path,True,NOW)["eventsTotal"],0)
+        import json
+        self.assertNotIn("access_token",json.dumps(info))
+        self.assertNotIn("timeframes",json.dumps(info))
+
+    def test_usable_data_with_zero_events_is_not_data_insufficient(self):
+        from unittest.mock import patch
+        p={"side":1,"state":"confirmed","last_m15":"2026-10-26T11:15:00+00:00"}
+        rows=[("2026-10-13",0,0),("2026-10-20",2,2)]
+        with patch.object(m,"cot_series",return_value=rows), \
+             patch.object(m,"latest",return_value={"timeframes":{}}), \
+             patch.object(m,"price_view",return_value=p):
+            first=m.scan_once(self.db_path,NOW)
+            second=m.scan_once(self.db_path,NOW+dt.timedelta(minutes=15))
+        self.assertEqual(first["examined"],len(m.monitored_symbols()))
+        self.assertEqual(first["baselines"],len(m.monitored_symbols()))
+        self.assertEqual(second["newEvents"],0)
+        info=m.status(self.db_path,True,NOW)["diagnostics"]
+        self.assertEqual(info["analyzed"],len(m.monitored_symbols()))
+        self.assertEqual(info["excluded"],0)
+        self.assertEqual(info["outcome"],"no_significant_event")
+        self.assertEqual(info["newBaselines"],0)
+
+    def test_weekend_is_explicit_and_never_fabricates_live_analysis(self):
+        from unittest.mock import patch
+        rows=[("2026-10-13",0,0),("2026-10-20",2,2)]
+        weekend_quality={"integrity":"verified","freshness":"weekend","ready":True,
+                         "h1":{"mismatched":0},"h4":{"mismatched":0}}
+        with patch.object(m,"cot_series",return_value=rows), \
+             patch.object(m,"latest",return_value={"timeframes":{}}), \
+             patch.object(m,"audit_market",return_value=weekend_quality):
+            m.scan_once(self.db_path,NOW)
+        info=m.status(self.db_path,True,NOW)["diagnostics"]
+        self.assertEqual(info["outcome"],"data_insufficient")
+        self.assertEqual(info["exclusionReasons"]["market_closed"],len(m.monitored_symbols()))
+        self.assertNotIn("new_convergence",str(info))
+        self.assertEqual(m.status(self.db_path,True,NOW)["baselines"],0)
+
+    def test_non_directional_cot_is_not_labeled_missing(self):
+        from unittest.mock import patch
+        rows=[("2026-10-13",0,0),("2026-10-20",0.01,0.02)]
+        p={"side":1,"state":"watch","last_m15":"2026-10-26T11:15:00+00:00"}
+        with patch.object(m,"cot_series",return_value=rows), \
+             patch.object(m,"latest",return_value={"timeframes":{}}), \
+             patch.object(m,"price_view",return_value=p):
+            m.scan_once(self.db_path,NOW)
+        info=m.status(self.db_path,True,NOW)["diagnostics"]
+        self.assertEqual(info["outcome"],"no_qualifying_setup")
+        self.assertEqual(info["exclusionReasons"]["cot_no_direction"],len(m.monitored_symbols()))
+        self.assertNotIn("cot_missing",info["exclusionReasons"])
+
+    def test_diagnostic_reason_taxonomy_distinguishes_timeframes(self):
+        from unittest.mock import patch
+        rows=[("2026-10-13",0,0),("2026-10-20",2,2)]
+        self.assertEqual(m.cot_exclusion(rows,"EURUSD",NOW),"cot_no_direction")
+        self.assertEqual(m.cot_exclusion([], "EURUSD",NOW),"cot_missing")
+        self.assertEqual(m.cot_exclusion([("2026-09-01",0,0),("2026-09-08",1,1)],
+                                         "EURUSD",NOW),"cot_stale")
+        quality={"integrity":"invalid","freshness":"recent","ready":True,
+                 "h1":{"mismatched":1},"h4":{"mismatched":0}}
+        with patch.object(m,"audit_market",return_value=quality):
+            self.assertEqual(m.price_exclusion({"timeframes":{}},NOW),"timeframe_disagreement")
+        quality["integrity"]="insufficient"
+        quality["h1"]["mismatched"]=0
+        quality["ready"]=False
+        with patch.object(m,"audit_market",return_value=quality):
+            self.assertEqual(m.price_exclusion({"timeframes":{}},NOW),"candles_insufficient")
+
     def test_duplicate_snapshot_upsert_and_event_key_is_idempotent(self):
         db=connect(self.db_path)
         try:
