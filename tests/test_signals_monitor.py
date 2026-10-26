@@ -1,4 +1,4 @@
-"""Offline tests of REMURA v1.33 observation-only monitor."""
+"""Offline tests of REMURA v1.36 observation-only monitor."""
 import datetime as dt
 from pathlib import Path
 import sys
@@ -162,7 +162,9 @@ class SignalTest(unittest.TestCase):
         self.assertEqual(m.status(self.db_path,True,NOW)["eventsTotal"],0)
         import json
         self.assertNotIn("access_token",json.dumps(info))
-        self.assertNotIn("timeframes",json.dumps(info))
+        self.assertNotIn("providerSymbol",json.dumps(info))
+        self.assertNotIn('"o":',json.dumps(info))
+        self.assertEqual(len(info["markets"]),len(m.monitored_symbols()))
 
     def test_usable_data_with_zero_events_is_not_data_insufficient(self):
         from unittest.mock import patch
@@ -222,12 +224,91 @@ class SignalTest(unittest.TestCase):
         quality={"integrity":"invalid","freshness":"recent","ready":True,
                  "h1":{"mismatched":1},"h4":{"mismatched":0}}
         with patch.object(m,"audit_market",return_value=quality):
-            self.assertEqual(m.price_exclusion({"timeframes":{}},NOW),"timeframe_disagreement")
+            self.assertEqual(m.price_exclusion({"timeframes":{}},NOW),"ohlc_mismatch")
         quality["integrity"]="insufficient"
         quality["h1"]["mismatched"]=0
         quality["ready"]=False
         with patch.object(m,"audit_market",return_value=quality):
             self.assertEqual(m.price_exclusion({"timeframes":{}},NOW),"candles_insufficient")
+
+    def test_real_closed_candle_ages_without_exposing_ohlc(self):
+        now=dt.datetime(2026,10,26,12,15,tzinfo=UTC)
+        doc={"timeframes":{
+            "M15":[{"t":"2026-10-26T11:45:00+00:00","o":1.42,"c":1.56}],
+            "H1":[{"t":"2026-10-26T10:00:00+00:00","o":1.3,"h":2}],
+            "H4":[{"t":"2026-10-26T04:00:00+00:00","l":1.1}]}}
+        frames=m.safe_frame_diagnostics(doc,now)
+        self.assertEqual(frames["M15"]["lastClosedAt"],"2026-10-26T12:00:00+00:00")
+        self.assertEqual(frames["M15"]["ageMinutes"],15)
+        self.assertEqual(frames["H1"]["ageMinutes"],75)
+        self.assertEqual(frames["H4"]["ageMinutes"],255)
+        self.assertEqual(frames["M15"]["bars"],1)
+        import json
+        flat=json.dumps(frames)
+        for secret in ('"o"', '"h"', '"l"', '"c"', "1.42", "refresh_token"):
+            self.assertNotIn(secret,flat)
+        self.assertIsNone(m.safe_frame_diagnostics(None,now)["H4"]["lastClosedAt"])
+
+    def test_scan_reports_timeframe_ages_even_for_excluded_markets(self):
+        from unittest.mock import patch
+        doc={"timeframes":{
+            "M15":[{"t":"2026-10-26T11:45:00+00:00"}],
+            "H1":[{"t":"2026-10-26T10:00:00+00:00"}],
+            "H4":[{"t":"2026-10-26T04:00:00+00:00"}]}}
+        rows=[("2026-10-13",0,0),("2026-10-20",2,2)]
+        with patch.object(m,"cot_series",return_value=rows), \
+             patch.object(m,"latest",return_value=doc), \
+             patch.object(m,"price_view",return_value=None), \
+             patch.object(m,"price_exclusion",return_value="prices_stale"):
+            m.scan_once(self.db_path,NOW)
+        d=m.status(self.db_path,True,NOW)["diagnostics"]
+        self.assertEqual(d["trackedMarkets"],34)
+        self.assertEqual(d["excluded"],34)
+        self.assertEqual(len(d["markets"]),34)
+        self.assertEqual(d["markets"][0]["timeframes"]["H4"]["ageMinutes"],255)
+        self.assertFalse(d["markets"][0]["analyzed"])
+        self.assertEqual(d["exclusionReasons"]["prices_stale"],34)
+        self.assertEqual(d["updatedObservations"],0)
+
+    def test_distinguishes_opposing_trends_from_corrupted_rollups(self):
+        from unittest.mock import patch
+        verified={"integrity":"verified","freshness":"recent","ready":True,
+                  "h1":{"mismatched":0},"h4":{"mismatched":0}}
+        def direction(bars,seconds,now):
+            return {"side":1 if seconds==14400 else -1,
+                    "close_time":NOW.isoformat(),"breakout":0}
+        doc={"timeframes":{key:[{}]*55 for key in m.DURATIONS}}
+        with patch.object(m,"audit_market",return_value=verified), \
+             patch.object(m,"frame_direction",side_effect=direction):
+            self.assertEqual(m.price_exclusion(doc,NOW),"trend_disagreement")
+            self.assertIsNone(m.price_view(doc,NOW))
+        verified["h4"]["mismatched"]=1
+        verified["integrity"]="invalid"
+        with patch.object(m,"audit_market",return_value=verified):
+            self.assertEqual(m.price_exclusion(doc,NOW),"ohlc_mismatch")
+
+    def test_existing_observations_list_is_read_only_and_preserved(self):
+        from unittest.mock import patch
+        p={"side":1,"state":"watch","last_m15":"2026-10-26T11:15:00+00:00"}
+        rows=[("2026-10-13",0,0),("2026-10-20",2,2)]
+        with patch.object(m,"cot_series",return_value=rows), \
+             patch.object(m,"latest",return_value={"timeframes":{}}), \
+             patch.object(m,"price_view",return_value=p):
+            m.scan_once(self.db_path,NOW)
+        baseline=m.status(self.db_path,True,NOW)
+        self.assertEqual(len(baseline["observations"]),34)
+        self.assertEqual(baseline["observations"][0]["priceState"],"watch")
+        self.assertEqual(baseline["diagnostics"]["newBaselines"],34)
+        nextp={**p,"last_m15":"2026-10-26T11:30:00+00:00"}
+        with patch.object(m,"cot_series",return_value=rows), \
+             patch.object(m,"latest",return_value={"timeframes":{}}), \
+             patch.object(m,"price_view",return_value=nextp):
+            m.scan_once(self.db_path,NOW+dt.timedelta(minutes=15))
+        after=m.status(self.db_path,True,NOW)
+        self.assertEqual(after["baselines"],34)
+        self.assertEqual(after["diagnostics"]["newBaselines"],0)
+        self.assertEqual(after["diagnostics"]["updatedObservations"],34)
+        self.assertEqual(after["eventsTotal"],0)
 
     def test_duplicate_snapshot_upsert_and_event_key_is_idempotent(self):
         db=connect(self.db_path)
