@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""REMURA private Squalincome observer (v1.33).
+"""REMURA private Squalincome observer (v1.36).
 
 Read-only analysis of verified cTrader OHLC and locally stored official CFTC
 futures. A SQLite baseline is required before any transition can be recorded.
@@ -207,13 +207,36 @@ def cot_exclusion(series, symbol, now):
     return "cot_no_direction"
 
 
+def safe_frame_diagnostics(doc, now):
+    """Export only UTC close timestamps, counts and ages; never OHLC or tokens."""
+    result={}
+    timeframes=doc.get("timeframes") if isinstance(doc,dict) else None
+    for name,seconds in DURATIONS.items():
+        entry={"lastClosedAt":None,"ageMinutes":None,"bars":0}
+        try:
+            rows=timeframes.get(name) if isinstance(timeframes,dict) else None
+            if isinstance(rows,list):
+                entry["bars"]=len(rows)
+                if rows:
+                    opened=parse_time(rows[-1]["t"])
+                    closed=opened+dt.timedelta(seconds=seconds)
+                    age=(now-closed).total_seconds()/60
+                    if math.isfinite(age) and abs(age)<10_000_000:
+                        entry["lastClosedAt"]=closed.isoformat()
+                        entry["ageMinutes"]=round(age)
+        except (ValueError,TypeError,KeyError,OverflowError,AttributeError,OSError):
+            pass
+        result[name]=entry
+    return result
+
+
 def price_exclusion(doc, now):
     """Report the reason a price was rejected without exporting private bars."""
     if doc is None:
         return "prices_missing"
     quality=audit_market(doc,now)
     if quality["h1"]["mismatched"] or quality["h4"]["mismatched"]:
-        return "timeframe_disagreement"
+        return "ohlc_mismatch"
     if quality["integrity"]=="invalid":
         return "price_error"
     if quality["freshness"]=="weekend":
@@ -236,7 +259,7 @@ def price_exclusion(doc, now):
             frames[key]=frame
         h4,h1=frames["H4"],frames["H1"]
         if h4["side"] and h1["side"] and h4["side"]!=h1["side"]:
-            return "timeframe_disagreement"
+            return "trend_disagreement"
         return "price_no_direction"
     except (KeyError,TypeError,ValueError,IndexError,OverflowError):
         return "price_error"
@@ -249,14 +272,17 @@ def scan_once(db_path,now=None):
     ensure_tables(db)
     from cot_monitor import ensure_table as ensure_cot_table
     ensure_cot_table(db)
-    examined=baselines=events=0
+    examined=baselines=events=updates=0
     exclusions={}
+    frames_by_symbol={}
+    symbols=monitored_symbols()
     try:
-        for symbol in monitored_symbols():
+        for symbol in symbols:
             try:
                 series=cot_series(db,symbol)
                 cot=cot_view(series,symbol,now)
                 document=latest(db,symbol)
+                frames_by_symbol[symbol]=safe_frame_diagnostics(document,now)
                 price=price_view(document,now) if document else None
                 current=classify(cot,price)
                 if current is None:
@@ -295,6 +321,7 @@ def scan_once(db_path,now=None):
                             "COT futures e struttura OHLC verificata; osservazione, non ordine o previsione."))
                         if cur.rowcount:events+=1
                     if prior is None:baselines+=1
+                    else:updates+=1
                     db.execute("INSERT INTO squalincome_observations"
                         "(symbol,state,side,report_date,price_time,price_state,observed_at)"
                         " VALUES(?,?,?,?,?,?,?) ON CONFLICT(symbol) DO UPDATE SET "
@@ -307,6 +334,8 @@ def scan_once(db_path,now=None):
                 # Never expose provider exceptions, prices or credentials.
                 exclusions[symbol]=["scan_error"]
                 continue
+        # Keep counters internally consistent even if a single market errors.
+        examined=len(symbols)-len(exclusions)
         counts={}
         for reasons in exclusions.values():
             for reason in reasons:
@@ -314,17 +343,22 @@ def scan_once(db_path,now=None):
         data_gaps={"cot_missing","cot_stale","cot_nonconsecutive",
                    "prices_missing","prices_stale","market_closed",
                    "candles_insufficient","timeframe_disagreement",
-                   "price_error","scan_error"}
+                   "ohlc_mismatch","trend_disagreement","price_error","scan_error"}
         outcome=("events_detected" if events else
                  "no_significant_event" if examined else
                  "data_insufficient" if any(r in data_gaps for r in counts) else
                  "no_qualifying_setup")
-        summary={"lastScanAt":now.isoformat(),"trackedMarkets":len(monitored_symbols()),
+        summary={"lastScanAt":now.isoformat(),"trackedMarkets":len(symbols),
                  "analyzed":examined,"excluded":len(exclusions),
                  "exclusionReasons":counts,
                  "exclusions":[{"symbol":symbol,"reasons":reasons}
                                for symbol,reasons in sorted(exclusions.items())],
-                 "newBaselines":baselines,"newEvents":events,"outcome":outcome}
+                 "markets":[{"symbol":symbol,
+                             "timeframes":frames_by_symbol.get(symbol,safe_frame_diagnostics(None,now)),
+                             "analyzed":symbol not in exclusions}
+                            for symbol in symbols],
+                 "newBaselines":baselines,"updatedObservations":updates,
+                 "newEvents":events,"outcome":outcome}
         with db:
             db.execute("DELETE FROM squalincome_events WHERE observed_at < ?",
                 ((now-dt.timedelta(days=EVENT_KEEP_DAYS)).isoformat(),))
@@ -352,12 +386,18 @@ def status(db_path,enabled=False,now=None):
                     diagnostics=candidate
             except (TypeError,ValueError):
                 pass
+        observations=db.execute(
+            "SELECT symbol,state,report_date,price_time,price_state,observed_at "
+            "FROM squalincome_observations ORDER BY symbol LIMIT 40").fetchall()
         events=db.execute("SELECT symbol,event_type,side,report_date,price_time,observed_at,detail "
             "FROM squalincome_events ORDER BY id DESC LIMIT 20").fetchall()
         return {"schema":"remura-squalincome-monitor-v1","enabled":bool(enabled),
                 "mode":"observation_only","notificationsEnabled":False,
                 "trackedMarkets":len(monitored_symbols()),"baselines":baseline,
                 "eventsTotal":total_events,"diagnostics":diagnostics,
+                "observations":[dict(zip(("symbol","state","reportDate","priceTime",
+                                         "priceState","observedAt"),record))
+                                for record in observations if record[0] in monitored_symbols()],
                 "lastEvents":[dict(zip(("symbol","eventType","side","reportDate","priceTime","observedAt","detail"),r))
                               for r in events],
                 "serverTime":now.isoformat()}
