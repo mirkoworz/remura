@@ -440,8 +440,10 @@ class PrivateStorageTests(unittest.TestCase):
             self.assertEqual(payload["mode"],"observation_only")
             self.assertFalse(payload["notificationsEnabled"])
             self.assertEqual(payload["lastEvents"],[])
+            self.assertEqual(len(payload["diagnostics"]["markets"]),34)
+            self.assertEqual(payload["observations"],[])
             content=json.dumps(payload)
-            for secret in ("timeframes","CTRADER_ACCESS_TOKEN","refresh_token"):
+            for secret in ('"o":', '"h":', '"l":', '"c":', "providerSymbol", "CTRADER_ACCESS_TOKEN","refresh_token"):
                 self.assertNotIn(secret,content)
         finally:site.shutdown();site.server_close();worker.join(timeout=2)
 
