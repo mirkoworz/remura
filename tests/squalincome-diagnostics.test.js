@@ -82,9 +82,50 @@ test("open or mixed markets cannot be reported as wholly closed",()=>{
   clean.outcome="no_significant_event";
   assert.equal(diagnostics.read(payload(clean)).displayOutcome,"no_significant_event");
 });
+test("v1.36 shows real distinct timeframe stamps and seven stored observations",()=>{
+  const snapshot=valid();
+  snapshot.markets=snapshot.exclusions.map((row,i)=>({
+    symbol:row.symbol,analyzed:false,
+    timeframes:{
+      M15:{lastClosedAt:"2026-10-26T10:45:00+00:00",ageMinutes:15,bars:1657},
+      H1:{lastClosedAt:"2026-10-26T10:00:00+00:00",ageMinutes:60,bars:414},
+      H4:{lastClosedAt:"2026-10-26T08:00:00+00:00",ageMinutes:180,bars:99}
+    }
+  }));
+  snapshot.updatedObservations=2;
+  const base=payload(snapshot,7,0);
+  base.observations=Array.from({length:7},(_,i)=>({
+    symbol:"EUR"+String(i).padStart(3,"0"),state:"aligned",priceState:"watch",
+    reportDate:"2026-10-20",priceTime:"2026-10-26T10:45:00+00:00",
+    observedAt:"2026-10-26T11:00:00+00:00"
+  }));
+  const view=diagnostics.read(base);
+  assert.equal(view.markets.length,34);
+  assert.equal(view.markets[0].frames.M15.ageMinutes,15);
+  assert.equal(view.markets[0].frames.H1.ageMinutes,60);
+  assert.equal(view.markets[0].frames.H4.ageMinutes,180);
+  assert.equal(view.updatedObservations,2);
+  assert.equal(view.observations.length,7);
+  assert.equal(view.baselines,7);
+});
+test("v1.36 refuses fabricated frames and clearly separates trend from OHLC errors",()=>{
+  assert.match(diagnostics.REASONS.ohlc_mismatch,/candele/);
+  assert.match(diagnostics.REASONS.trend_disagreement,/tendenze/i);
+  const snapshot=valid();
+  snapshot.exclusions[0].reasons=["ohlc_mismatch"];
+  snapshot.exclusionReasons={ohlc_mismatch:1};
+  const view=diagnostics.read(payload(snapshot));
+  assert.equal(view.displayOutcome,"data_insufficient");
+  assert.match(view.exclusions[0].labels[0],/H1\/H4/);
+  const legacy=diagnostics.read(payload(valid()));
+  assert.equal(legacy.markets.length,0);
+  assert.equal(legacy.observations.length,0);
+  snapshot.markets=[{symbol:"BAD",analyzed:true,timeframes:{}}];
+  assert.equal(diagnostics.read(payload(snapshot)).kind,"invalid");
+});
 test("Radar Squali wires only private endpoint and same-origin script",()=>{
   const html=fs.readFileSync("mercati.html","utf8");
   assert.ok(html.includes('id="monitor-diagnostics"'));
-  assert.ok(html.includes('squalincome-diagnostics.js?v=135'));
+  assert.ok(html.includes('squalincome-diagnostics.js?v=136'));
   assert.ok(html.includes("./private-api/signals/status"));
 });
