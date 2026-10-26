@@ -138,7 +138,7 @@
 <div class="plot" id="plot"></div><div class="legend"><span class="one" id="legend-one">Asset Manager</span><span class="two" id="legend-two">Leveraged Funds</span></div>
 <div class="contracts" id="contracts"></div></section></div>
 <div class="source">FONTI: <a href="https://publicreporting.cftc.gov/Commitments-of-Traders/TFF-Futures-Only/gpe5-46if" target="_blank" rel="noopener">CFTC TFF — futures only</a> per Forex/indici · <a href="https://publicreporting.cftc.gov/Commitments-of-Traders/Disaggregated-Futures-Only/72hh-3qpy" target="_blank" rel="noopener">CFTC Disaggregated — futures only</a> per metalli e WTI. Nei cross Forex la differenza fra due futures è un proxy sintetico; su oro e indici è riferita al contratto futures specificato, non al CFD del broker. Non abbiamo dati CFTC comparabili per tutti gli indici mondiali o per ogni coppia esotica.</div>
-<footer class="footer">REMURA v1.35 · Radar istituzionale in sperimentazione · Nessun segnale di acquisto/vendita · Non costituisce consulenza finanziaria.</footer>
+<footer class="footer">REMURA v1.36 · Radar istituzionale in sperimentazione · Nessun segnale di acquisto/vendita · Non costituisce consulenza finanziaria.</footer>
 </div>
 <script src="./cot-indices-core.js?v=2"></script>
 <script src="./insights-core.js?v=9"></script>
@@ -353,7 +353,7 @@ async function refreshMonitor(){
   }
  }catch(_){
   diagnostics.replaceChildren();
-  status.textContent="Diagnostica VPS non disponibile o incompatibile. È necessario installare il backend v1.35; nessun dato stimato.";
+  status.textContent="Diagnostica VPS non disponibile o incompatibile. È necessario installare il backend v1.36; nessun dato stimato.";
  }
 }
 $("monitor-refresh").addEventListener("click",refreshMonitor);
@@ -845,5 +845,5 @@ document.querySelectorAll('[data-scan]').forEach(btn=>btn.addEventListener('clic
 $('refresh').addEventListener('click',refresh);
 updateList();detail();renderScanner();refresh();
 </script>
-<script src="./nav.js?v=135"></script>
+<script src="./nav.js?v=136"></script>
 </body></html>
