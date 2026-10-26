@@ -1,4 +1,4 @@
-/* REMURA v1.35 · Read-only VPS diagnostics; never fetches secrets or OHLC. */
+/* REMURA v1.36 · Read-only VPS diagnostics; never fetches secrets or OHLC. */
 (function(root) {
   "use strict";
   const REASONS=Object.freeze({
@@ -11,7 +11,9 @@
     prices_stale:"Prezzi datati, non utilizzabili come live",
     market_closed:"Prezzi non recenti: mercato chiuso/weekend",
     candles_insufficient:"Candele M15/H1/H4 insufficienti o incomplete",
-    timeframe_disagreement:"Timeframe discordanti o candele aggregate incoerenti",
+    timeframe_disagreement:"Timeframe discordanti (storico v1.35, motivo non distinto)",
+    ohlc_mismatch:"Errore verificato: candele H1/H4 non coerenti con M15",
+    trend_disagreement:"Tendenze H1 e H4 opposte (candele corrette)",
     price_no_direction:"Prezzo valido, ma tendenza non definita",
     price_error:"Integrità prezzi non verificata",
     scan_error:"Errore durante l'analisi (dettagli privati)",
@@ -47,7 +49,8 @@
     const summary={kind:"scanned",analyzed,excluded,tracked,date:itDate(d.lastScanAt),
       outcome:d.outcome,newBaselines:count(d.newBaselines),newEvents:count(d.newEvents),
       baselines:count(data.baselines),events:count(data.eventsTotal),
-      reasons:[],exclusions:[]};
+      updatedObservations:count(d.updatedObservations),
+      reasons:[],exclusions:[],markets:[],observations:[]};
     const reasons=d.exclusionReasons&&typeof d.exclusionReasons==="object"?d.exclusionReasons:{};
     for(const [code,value] of Object.entries(reasons)){
       const n=count(value);
@@ -58,11 +61,48 @@
       if(!row||typeof row.symbol!=="string"||!/^[A-Z0-9]{3,8}$/.test(row.symbol)||!Array.isArray(row.reasons))continue;
       summary.exclusions.push({symbol:row.symbol,labels:row.reasons.filter(r=>REASONS[r]).map(r=>REASONS[r])});
     }
+    // New per-market data is optional until the VPS manually receives v1.36.
+    // Do not infer current timestamps from the device clock or invent snapshots.
+    if(Array.isArray(d.markets)){
+      if(d.markets.length!==tracked)return {kind:"invalid"};
+      const seen=new Set();
+      for(const market of d.markets){
+        if(!market || typeof market.symbol!=="string" ||
+           !/^[A-Z0-9]{3,8}$/.test(market.symbol) ||
+           typeof market.analyzed!=="boolean" || seen.has(market.symbol))return {kind:"invalid"};
+        seen.add(market.symbol);
+        const frames={};
+        for(const key of ["M15","H1","H4"]){
+          const row=market.timeframes?.[key];
+          const bars=count(row?.bars),age=row?.ageMinutes;
+          const validAge=Number.isSafeInteger(age)&&Math.abs(age)<=10000000;
+          const date=typeof row?.lastClosedAt==="string" && Number.isFinite(Date.parse(row.lastClosedAt))?
+            row.lastClosedAt:null;
+          frames[key]={bars:bars??null,ageMinutes:validAge?age:null,lastClosedAt:date};
+        }
+        summary.markets.push({symbol:market.symbol,analyzed:market.analyzed,frames,
+          reasons:summary.exclusions.find(row=>row.symbol===market.symbol)?.labels||[]});
+      }
+      summary.markets.sort((a,b)=>a.symbol.localeCompare(b.symbol));
+    }
+    if(Array.isArray(data.observations)){
+      for(const row of data.observations){
+        if(!row||typeof row.symbol!=="string"||!/^[A-Z0-9]{3,8}$/.test(row.symbol))continue;
+        if(!["aligned","divergent"].includes(row.state) ||
+           !["confirmed","partial","watch"].includes(row.priceState))continue;
+        summary.observations.push({
+          symbol:row.symbol,state:row.state,priceState:row.priceState,
+          priceTime:typeof row.priceTime==="string"?row.priceTime:null,
+          observedAt:typeof row.observedAt==="string"?row.observedAt:null,
+          reportDate:typeof row.reportDate==="string"?row.reportDate:null
+        });
+      }
+    }
     // A source-backed UI interpretation, not a change to the VPS scan.
     // Never disguise missing COT, stale data or errors as a simple weekend.
     const trueDataFaults=new Set(["cot_missing","cot_stale","cot_nonconsecutive",
       "prices_missing","prices_stale","candles_insufficient",
-      "timeframe_disagreement","price_error","scan_error"]);
+      "timeframe_disagreement","ohlc_mismatch","trend_disagreement","price_error","scan_error"]);
     const hiddenFaults=Object.entries(reasons).some(([code,n])=>
       (!REASONS[code] || trueDataFaults.has(code)) && count(n)>0);
     const solelyClosed=d.outcome==="data_insufficient" && tracked>0 &&
@@ -105,7 +145,9 @@
     const state=make("p","monitor-outcome",OUTCOMES[view.displayOutcome]);
     state.setAttribute("data-outcome",view.displayOutcome);
     host.append(state);
-    host.append(make("p","monitor-caption","Ultima scansione: "+(view.newBaselines??"—")+" nuovi riferimenti · "+(view.newEvents??"—")+" nuovi eventi. I totali del registro sono distinti da questi incrementi."));
+    host.append(make("p","monitor-caption","Ultima scansione: "+(view.newBaselines??"—")+" nuovi riferimenti · "+
+      (view.updatedObservations??"—")+" riferimenti aggiornati · "+(view.newEvents??"—")+
+      " nuovi eventi. I totali del registro sono distinti dagli incrementi."));
     if(view.reasons.length){
       const section=make("div","monitor-reasons");
       section.append(make("h3",null,"Perché alcuni mercati sono esclusi"));
@@ -113,6 +155,46 @@
       for(const r of view.reasons)ul.append(make("li",null,r.label+": "+r.count));
       section.append(ul,make("p","monitor-caption","Uno stesso mercato può avere più motivi: la somma dei motivi può superare gli esclusi."));
       host.append(section);
+    }
+    if(view.observations.length){
+      const panel=make("details","monitor-exclusions");
+      panel.append(make("summary",null,"Mostra i "+view.observations.length+" riferimenti con ultima osservazione"));
+      const list=make("ul");
+      for(const item of view.observations){
+        const label=item.state==="aligned"?"COT e prezzo concordi":"COT e prezzo divergenti";
+        const level={watch:"osservazione",partial:"parziale",confirmed:"confermata"}[item.priceState];
+        list.append(make("li",null,item.symbol+" · "+label+" ("+level+")"+
+          " · prezzo "+itDate(item.priceTime)+" · registrato "+itDate(item.observedAt)));
+      }
+      panel.append(list);
+      host.append(panel);
+    }else if(view.markets.length){
+      host.append(make("p","monitor-caption","Nessun dettaglio dei riferimenti disponibile: il database VPS potrebbe non contenere osservazioni."));
+    }
+    if(view.markets.length){
+      const panel=make("details","monitor-exclusions");
+      panel.append(make("summary",null,"Freschezza M15/H1/H4 · "+view.tracked+" mercati"));
+      panel.append(make("p","monitor-caption","Orari delle ultime candele CHIUSE in Italia, età calcolata dalla VPS al momento della scansione. Il dato recente M15 non garantisce H1/H4 recenti."));
+      const list=make("div","monitor-frame-list");
+      for(const market of view.markets){
+        const row=make("div","monitor-frame-row");
+        row.append(make("strong",null,market.symbol+(market.analyzed?" · idoneo":" · escluso")));
+        const times=make("div","monitor-frame-times");
+        for(const name of ["M15","H1","H4"]){
+          const frame=market.frames[name];
+          const when=frame.lastClosedAt?itDate(frame.lastClosedAt):"N/D";
+          const age=frame.ageMinutes===null?"età N/D":frame.ageMinutes+" min";
+          times.append(make("span",null,name+" · "+when+" · "+age+
+            " · "+(frame.bars??"—")+" candele"));
+        }
+        row.append(times);
+        if(market.reasons.length)row.append(make("p","monitor-caption",market.reasons.join("; ")));
+        list.append(row);
+      }
+      panel.append(list);
+      host.append(panel);
+    }else{
+      host.append(make("p","monitor-caption","Dettaglio per timeframe non disponibile dal backend VPS precedente alla v1.36."));
     }
     if(view.exclusions.length){
       const details=make("details","monitor-exclusions");
