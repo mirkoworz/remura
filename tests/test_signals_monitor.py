@@ -1,4 +1,4 @@
-"""Offline tests of REMURA v1.36 observation-only monitor."""
+"""Offline tests of REMURA v1.37 observation-only monitor."""
 import datetime as dt
 from pathlib import Path
 import sys
@@ -309,6 +309,82 @@ class SignalTest(unittest.TestCase):
         self.assertEqual(after["diagnostics"]["newBaselines"],0)
         self.assertEqual(after["diagnostics"]["updatedObservations"],34)
         self.assertEqual(after["eventsTotal"],0)
+
+    def test_v137_preserves_old_baselines_and_collects_real_history_only(self):
+        from unittest.mock import patch
+        rows=[("2026-10-13",0,0),("2026-10-20",2,2)]
+        db=connect(self.db_path)
+        m.ensure_tables(db)
+        with db:
+            db.execute("INSERT INTO squalincome_observations VALUES(?,?,?,?,?,?,?)",
+                ("EURUSD","divergent",1,"2026-10-20",
+                 "2026-10-26T11:00:00+00:00","watch",
+                 (NOW-dt.timedelta(minutes=30)).isoformat()))
+        db.close()
+        p={"side":-1,"state":"watch","last_m15":"2026-10-26T11:15:00+00:00",
+           "h4_side":-1,"h1_side":-1,"m15_side":-1}
+        with patch.object(m,"monitored_symbols",return_value=("EURUSD",)), \
+             patch.object(m,"cot_series",return_value=rows), \
+             patch.object(m,"latest",return_value={"timeframes":{}}), \
+             patch.object(m,"price_view",return_value=p):
+            m.scan_once(self.db_path,NOW)
+            first=m.status(self.db_path,True,NOW)
+            self.assertEqual(first["baselines"],1)
+            self.assertEqual(first["historyTotal"],1)
+            self.assertEqual(first["history"][0]["origin"],"first_after_upgrade")
+            self.assertEqual(first["history"][0]["cotSide"],1)
+            self.assertEqual(first["history"][0]["priceSide"],-1)
+            self.assertEqual(first["history"][0]["h4Side"],-1)
+            self.assertEqual(first["history"][0]["state"],"divergent")
+            self.assertEqual(first["history"][0]["cotWeekly"],2)
+            repeat=m.scan_once(self.db_path,NOW+dt.timedelta(minutes=1))
+            self.assertEqual(repeat["newEvents"],0)
+            self.assertEqual(m.status(self.db_path,True,NOW)["historyTotal"],1)
+            p.update(side=1,state="confirmed",h4_side=1,h1_side=1,
+                     m15_side=1,last_m15="2026-10-26T11:30:00+00:00")
+            second=m.scan_once(self.db_path,NOW+dt.timedelta(minutes=15))
+            after=m.status(self.db_path,True,NOW)
+        self.assertEqual(second["newEvents"],1)
+        self.assertEqual(after["historyTotal"],2)
+        self.assertEqual([h["state"] for h in after["history"]],
+                         ["divergent","aligned"])
+        self.assertEqual(after["history"][-1]["eventType"],"new_convergence")
+        self.assertEqual(after["history"][-1]["origin"],"update")
+        self.assertEqual(after["eventsTotal"],1)
+        self.assertEqual(after["baselines"],1)
+
+    def test_v137_history_is_bounded_and_no_false_events_after_outage(self):
+        from unittest.mock import patch
+        rows=[("2026-10-13",0,0),("2026-10-20",2,2)]
+        p={"side":1,"state":"watch","last_m15":"2026-10-26T11:15:00+00:00",
+           "h4_side":1,"h1_side":1,"m15_side":0}
+        with patch.object(m,"monitored_symbols",return_value=("EURUSD",)), \
+             patch.object(m,"cot_series",return_value=rows), \
+             patch.object(m,"latest",return_value={"timeframes":{}}), \
+             patch.object(m,"price_view",return_value=p), \
+             patch.object(m,"HISTORY_MAX_PER_SYMBOL",3):
+            for i in range(6):
+                p["last_m15"]=(NOW+dt.timedelta(minutes=i*15)).isoformat()
+                m.scan_once(self.db_path,NOW+dt.timedelta(minutes=i*15+15))
+            state=m.status(self.db_path,True,NOW)
+        self.assertEqual(state["historyTotal"],3)
+        self.assertEqual(len(state["history"]),3)
+        self.assertEqual(state["eventsTotal"],0)
+        self.assertEqual(state["baselines"],1)
+        self.assertEqual(state["history"][-1]["priceTime"],
+                         (NOW+dt.timedelta(minutes=75)).isoformat())
+        import json
+        serialized=json.dumps(state["history"])
+        for secret in ('"o":','"h":','"l":','"c":','CTRADER_ACCESS_TOKEN',
+                       'refresh_token','client_secret'):
+            self.assertNotIn(secret,serialized)
+
+    def test_v137_empty_scan_does_not_create_synthetic_timeline(self):
+        m.scan_once(self.db_path,NOW)
+        data=m.status(self.db_path,True,NOW)
+        self.assertEqual(data["baselines"],0)
+        self.assertEqual(data["historyTotal"],0)
+        self.assertEqual(data["history"],[])
 
     def test_duplicate_snapshot_upsert_and_event_key_is_idempotent(self):
         db=connect(self.db_path)

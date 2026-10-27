@@ -123,9 +123,55 @@ test("v1.36 refuses fabricated frames and clearly separates trend from OHLC erro
   snapshot.markets=[{symbol:"BAD",analyzed:true,timeframes:{}}];
   assert.equal(diagnostics.read(payload(snapshot)).kind,"invalid");
 });
+test("v1.37 interprets verified directional history without inventing older samples",()=>{
+  const p=payload(valid(),13,0);
+  p.historyTotal=2;
+  p.history=[
+    {symbol:"NZDJPY",state:"divergent",cotSide:-1,priceSide:1,h4Side:1,h1Side:1,m15Side:0,
+     priceState:"watch",reportDate:"2026-10-20",priceTime:"2026-10-27T05:15:00+00:00",
+     observedAt:"2026-10-27T05:20:00+00:00",cotWeekly:-8.4,cotSustained:1,
+     origin:"first_after_upgrade",eventType:null},
+    {symbol:"NZDJPY",state:"aligned",cotSide:-1,priceSide:-1,h4Side:-1,h1Side:-1,m15Side:-1,
+     priceState:"confirmed",reportDate:"2026-10-20",priceTime:"2026-10-27T05:30:00+00:00",
+     observedAt:"2026-10-27T05:35:00+00:00",cotWeekly:-8.4,cotSustained:1,
+     origin:"update",eventType:"new_convergence"}
+  ];
+  const out=diagnostics.read(p);
+  assert.equal(out.historyTotal,2);
+  assert.equal(out.history.length,2);
+  assert.equal(out.history[0].origin,"first_after_upgrade");
+  assert.equal(out.history[0].h4Side,1);
+  assert.equal(out.history[1].priceSide,-1);
+  assert.equal(out.history[1].eventType,"new_convergence");
+  assert.equal(out.baselines,13);
+});
+test("v1.37 never displays unsanitized or guessed directions or sentiment",()=>{
+  const p=payload(valid());
+  p.historyTotal=2;
+  p.history=[
+    {symbol:"EURUSD",state:"divergent",cotSide:1,priceSide:-1,
+     h4Side:9,h1Side:null,m15Side:null,priceState:"watch",
+     reportDate:"2026-10-20",priceTime:"2026-10-27T04:00:00+00:00",
+     observedAt:"2026-10-27T05:00:00+00:00",cotWeekly:NaN,cotSustained:0,
+     origin:"baseline",eventType:"secret_token"},
+    {symbol:"MY_SECRET",state:"aligned",cotSide:1,priceSide:1,
+     priceState:"confirmed",reportDate:"2026-10-20",
+     priceTime:"2026-10-27T05:30:00+00:00",observedAt:"2026-10-27T05:40:00+00:00",
+     origin:"update",eventType:"new_convergence"}
+  ];
+  const out=diagnostics.read(p);
+  assert.equal(out.history.length,1);
+  assert.equal(out.history[0].h4Side,null);
+  assert.equal(out.history[0].cotWeekly,null);
+  assert.equal(out.history[0].eventType,null);
+  assert.ok(!JSON.stringify(out.history).includes("secret"));
+  const old=payload(valid(),13);
+  assert.equal(diagnostics.read(old).history.length,0);
+  assert.equal(diagnostics.read(old).historyTotal,null);
+});
 test("Radar Squali wires only private endpoint and same-origin script",()=>{
   const html=fs.readFileSync("mercati.html","utf8");
   assert.ok(html.includes('id="monitor-diagnostics"'));
-  assert.ok(html.includes('squalincome-diagnostics.js?v=136'));
+  assert.ok(html.includes('squalincome-diagnostics.js?v=137'));
   assert.ok(html.includes("./private-api/signals/status"));
 });

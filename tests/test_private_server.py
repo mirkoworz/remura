@@ -442,6 +442,8 @@ class PrivateStorageTests(unittest.TestCase):
             self.assertEqual(payload["lastEvents"],[])
             self.assertEqual(len(payload["diagnostics"]["markets"]),34)
             self.assertEqual(payload["observations"],[])
+            self.assertEqual(payload["historyTotal"],0)
+            self.assertEqual(payload["history"],[])
             content=json.dumps(payload)
             for secret in ('"o":', '"h":', '"l":', '"c":', "providerSymbol", "CTRADER_ACCESS_TOKEN","refresh_token"):
                 self.assertNotIn(secret,content)
