@@ -169,9 +169,102 @@ test("v1.37 never displays unsanitized or guessed directions or sentiment",()=>{
   assert.equal(diagnostics.read(old).history.length,0);
   assert.equal(diagnostics.read(old).historyTotal,null);
 });
+test("v1.38 models discrete observed changes, not synthetic continuous movement",()=>{
+  const p=payload(valid(),13);
+  p.historyTotal=3;
+  const base={symbol:"GBPNZD",state:"divergent",cotSide:1,priceSide:-1,
+    h4Side:-1,h1Side:-1,m15Side:-1,reportDate:"2026-10-20",
+    cotWeekly:11.03,cotSustained:1,origin:"update",eventType:null};
+  p.history=[
+    {...base,priceState:"partial",priceTime:"2026-10-27T10:15:00+00:00",
+      observedAt:"2026-10-27T10:24:00+00:00"},
+    {...base,priceState:"watch",origin:"first_after_upgrade",priceTime:"2026-10-27T08:15:00+00:00",
+      observedAt:"2026-10-27T08:24:00+00:00"},
+    {...base,priceState:"confirmed",priceTime:"2026-10-27T12:15:00+00:00",
+      observedAt:"2026-10-27T12:24:00+00:00"}
+  ];
+  const view=diagnostics.read(p);
+  const m=diagnostics.evolutionModel(view.history);
+  assert.equal(m.length,1);
+  assert.equal(m[0].symbol,"GBPNZD");
+  assert.equal(m[0].points.length,3); // no synthetic intermediate bars
+  assert.equal(m[0].changes.length,2);
+  assert.equal(m[0].verifiedEvents,0); // technical confirmations are NOT events
+  assert.equal(m[0].divergentSamples,3);
+  assert.deepEqual(m[0].changes[1].labels,["conferma tecnica parziale → conferma tecnica"]);
+  assert.equal(m[0].last.priceTime,"2026-10-27T12:15:00+00:00");
+});
+test("v1.38 honors only backend-qualified events and keeps weekly COT separate",()=>{
+  const p=payload(valid());
+  p.historyTotal=2;
+  p.history=[
+    {symbol:"EURGBP",state:"aligned",cotSide:-1,priceSide:-1,h4Side:-1,h1Side:-1,m15Side:0,
+     priceState:"watch",reportDate:"2026-10-20",priceTime:"2026-10-27T08:15:00+00:00",
+     observedAt:"2026-10-27T08:25:00+00:00",cotWeekly:-5.71,cotSustained:1,
+     origin:"baseline",eventType:null,token:"PRIVATE"},
+    {symbol:"EURGBP",state:"divergent",cotSide:-1,priceSide:1,h4Side:1,h1Side:1,m15Side:1,
+     priceState:"confirmed",reportDate:"2026-10-20",priceTime:"2026-10-27T10:15:00+00:00",
+     observedAt:"2026-10-27T10:25:00+00:00",cotWeekly:-5.71,cotSustained:1,
+     origin:"update",eventType:"new_divergence"}
+  ];
+  const view=diagnostics.read(p);
+  assert.equal(view.history.length,2);
+  assert.ok(!JSON.stringify(view.history).includes("PRIVATE"));
+  const model=diagnostics.evolutionModel(view.history);
+  assert.equal(model[0].verifiedEvents,1);
+  assert.ok(model[0].changes[0].labels.includes("concordanza → divergenza"));
+  assert.ok(model[0].changes[0].labels.some(x=>x.includes("EVENTO verificato")));
+  assert.equal(model[0].changes[0].labels.some(x=>x.includes("nuova osservazione COT")),false);
+});
+test("v1.38 filter buttons really filter markets, without inventing signals",()=>{
+  class Node {
+    constructor(tag){this.tag=tag;this.children=[];this.attributes={};this.handlers={};this.style={};this.textContent="";this.className="";}
+    append(...nodes){this.children.push(...nodes);}
+    replaceChildren(...nodes){this.children=[...nodes];}
+    setAttribute(key,val){this.attributes[key]=val;}
+    addEventListener(key,fn){this.handlers[key]=fn;}
+  }
+  const doc=globalThis.document;
+  globalThis.document={createElement:tag=>new Node(tag)};
+  try {
+    const scan=valid();scan.exclusions=scan.exclusions.slice(2);scan.analyzed=2;scan.excluded=32;
+    scan.outcome="no_significant_event";
+    const p=payload(scan,13);
+    p.historyTotal=2;
+    const template={h4Side:1,h1Side:1,m15Side:1,priceState:"confirmed",
+       reportDate:"2026-10-20",priceTime:"2026-10-27T11:15:00+00:00",
+       observedAt:"2026-10-27T11:25:00+00:00",cotWeekly:4.79,
+       cotSustained:1,origin:"update",eventType:null};
+    p.history=[
+      {...template,symbol:"GBPAUD",cotSide:1,priceSide:-1,h4Side:-1,h1Side:-1,m15Side:-1,state:"divergent"},
+      {...template,symbol:"EURGBP",cotSide:1,priceSide:1,state:"aligned"}
+    ];
+    const host=new Node("div");
+    assert.equal(diagnostics.render(p,host),true);
+    const walk=(node)=>[node,...node.children.flatMap(walk)];
+    const radar=walk(host).find(x=>x.className==="monitor-evolution radar-evolution");
+    assert.ok(radar);
+    const results=walk(radar).find(x=>x.className==="radar-evolution-results");
+    const buttons=walk(radar).filter(x=>x.className==="radar-filter");
+    assert.equal(buttons.length,4);
+    assert.equal(results.children.length,2);
+    const cells=walk(results).filter(x=>x.className==="radar-matrix-cell");
+    assert.equal(cells.length,14); // 2 source-backed samples, 7 lanes per sample
+    buttons[1].handlers.click();
+    assert.equal(buttons[1].attributes["aria-pressed"],"true");
+    assert.equal(results.children.length,1);
+    assert.equal(walk(results).filter(x=>x.className==="radar-evolution-name")[0].textContent,"GBPAUD");
+    buttons[3].handlers.click();
+    assert.equal(results.children.length,1);
+    assert.ok(walk(results).some(x=>x.textContent.includes("Nessun evento verificato")));
+    assert.ok(!walk(host).some(x=>String(x.textContent).includes("PRIVATE")));
+  } finally {
+    globalThis.document=doc;
+  }
+});
 test("Radar Squali wires only private endpoint and same-origin script",()=>{
   const html=fs.readFileSync("mercati.html","utf8");
   assert.ok(html.includes('id="monitor-diagnostics"'));
-  assert.ok(html.includes('squalincome-diagnostics.js?v=137'));
+  assert.ok(html.includes('squalincome-diagnostics.js?v=138'));
   assert.ok(html.includes("./private-api/signals/status"));
 });
