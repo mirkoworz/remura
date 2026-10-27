@@ -10,6 +10,9 @@ on:
       - 'insights-core.js'
       - 'cot-indices-core.js'
       - 'mercati.html'
+      - 'statistica-squali.html'
+      - 'statistica-squali-core.js'
+      - 'statistica-squali.js'
       - 'squalincome-diagnostics.js'
       - 'sw.js'
       - 'insights.js'
@@ -44,10 +47,12 @@ jobs:
           node --check retail.js
           node --check nav.js
           node --check squalincome-diagnostics.js
+          node --check statistica-squali-core.js
+          node --check statistica-squali.js
           node --check impostazioni.js
           node --check feed-health-core.js
       - name: Verify COT analysis rules
-        run: node --test tests/insights.test.js tests/retail-chart.test.js tests/cot-indices.test.js tests/cot-scanner.test.js tests/squalincome-shortlist.test.js tests/feed-health.test.js tests/release-consistency.test.js tests/squalincome-diagnostics.test.js
+        run: node --test tests/insights.test.js tests/retail-chart.test.js tests/cot-indices.test.js tests/cot-scanner.test.js tests/squalincome-shortlist.test.js tests/feed-health.test.js tests/release-consistency.test.js tests/squalincome-diagnostics.test.js tests/statistica-squali.test.js
       - name: Verify wiring on all market detail pages
         run: |
           node - <<'NODE'
