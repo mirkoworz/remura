@@ -151,6 +151,33 @@ class ForwardValidationTests(unittest.TestCase):
         self.assertNotIn("refresh_token",serial)
 
 
+
+    def test_three_nested_study_arms_are_not_pooled_as_independent(self):
+        self.seed(stage="watch")
+        db = connect(self.db_path)
+        with db:
+            for minute, candle_minute, price_state, event in (
+                (20, 15, "confirmed", None),
+                (40, 30, "confirmed", "new_convergence"),
+            ):
+                db.execute(
+                    "INSERT INTO squalincome_history"
+                    "(symbol,state,cot_side,price_side,price_state,report_date,"
+                    "price_time,observed_at,origin,event_type)"
+                    " VALUES(?,?,?,?,?,?,?,?,?,?)",
+                    ("EURUSD","aligned",1,1,price_state,"2026-10-20",
+                     ISO(dt.datetime(2026,10,26,9,candle_minute,tzinfo=UTC)),
+                     ISO(OBS+dt.timedelta(minutes=minute)),"update",event))
+        db.close()
+        result = self.run_update()
+        self.assertEqual(result,{"cohortsAdded":3,"outcomesAdded":9})
+        stats = v.validation_status(self.db_path)["segments"]
+        for arm in ("all","observation","technical_confirmation","qualified_event"):
+            self.assertEqual(next(r["samples"] for r in stats if
+                                 r["horizonHours"]==1 and r["segment"]==arm),1)
+        self.assertEqual(self.run_update(),
+                         {"cohortsAdded":0,"outcomesAdded":0})
+
     def test_private_http_endpoint_aggregates_without_exposing_prices(self):
         from http.server import ThreadingHTTPServer
         from urllib.request import urlopen
