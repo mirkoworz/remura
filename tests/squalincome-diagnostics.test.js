@@ -236,7 +236,7 @@ test("v1.38 filter buttons really filter markets, without inventing signals",()=
        observedAt:"2026-10-27T11:25:00+00:00",cotWeekly:4.79,
        cotSustained:1,origin:"update",eventType:null};
     p.history=[
-      {...template,symbol:"GBPAUD",cotSide:1,priceSide:-1,state:"divergent"},
+      {...template,symbol:"GBPAUD",cotSide:1,priceSide:-1,h4Side:-1,h1Side:-1,m15Side:-1,state:"divergent"},
       {...template,symbol:"EURGBP",cotSide:1,priceSide:1,state:"aligned"}
     ];
     const host=new Node("div");
@@ -249,7 +249,7 @@ test("v1.38 filter buttons really filter markets, without inventing signals",()=
     assert.equal(buttons.length,4);
     assert.equal(results.children.length,2);
     const cells=walk(results).filter(x=>x.className==="radar-matrix-cell");
-    assert.equal(cells.length,0); // no timeline opened: collapsed details created but present as nodes?
+    assert.equal(cells.length,14); // 2 source-backed samples, 7 lanes per sample
     buttons[1].handlers.click();
     assert.equal(buttons[1].attributes["aria-pressed"],"true");
     assert.equal(results.children.length,1);
