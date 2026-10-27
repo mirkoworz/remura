@@ -247,24 +247,90 @@ test("v1.38 filter buttons really filter markets, without inventing signals",()=
     const results=walk(radar).find(x=>x.className==="radar-evolution-results");
     const buttons=walk(radar).filter(x=>x.className==="radar-filter");
     assert.equal(buttons.length,4);
+    assert.deepEqual(buttons.map(x=>x.textContent),["Tutti (2)","Divergenti (1)","Concordi (1)","Eventi verificati (0)"]);
+    assert.equal(buttons[0].attributes["aria-pressed"],"true");
     assert.equal(results.children.length,2);
     const cells=walk(results).filter(x=>x.className==="radar-matrix-cell");
     assert.equal(cells.length,14); // 2 source-backed samples, 7 lanes per sample
+    const scroll=walk(results).filter(x=>x.className==="radar-matrix-scroll");
+    assert.equal(scroll.length,2);
+    assert.ok(scroll.every(x=>x.tabIndex===0 && x.attributes.role==="region"));
+    assert.ok(walk(results).some(x=>x.className==="radar-stamp-date"));
+    assert.ok(walk(results).some(x=>x.className==="radar-legend"));
     buttons[1].handlers.click();
     assert.equal(buttons[1].attributes["aria-pressed"],"true");
     assert.equal(results.children.length,1);
     assert.equal(walk(results).filter(x=>x.className==="radar-evolution-name")[0].textContent,"GBPAUD");
     buttons[3].handlers.click();
     assert.equal(results.children.length,1);
-    assert.ok(walk(results).some(x=>x.textContent.includes("Nessun evento verificato")));
+    assert.ok(walk(results).some(x=>x.textContent.includes("Nessun evento COT/prezzo qualificato")));
     assert.ok(!walk(host).some(x=>String(x.textContent).includes("PRIVATE")));
   } finally {
     globalThis.document=doc;
   }
 });
+test("v1.39 CSS constrains every ancestor of the scrollable radar and keeps filters readable on iPhone",()=>{
+  const html=fs.readFileSync("mercati.html","utf8");
+  const css=html.split("<style>")[1].split("</style>")[0];
+  assert.match(css,/\.monitor-diagnostics,\.radar-evolution,\.radar-evolution-results\{grid-template-columns:minmax\(0,1fr\)\}/);
+  assert.match(css,/\.radar-evolution-card\{width:100%;overflow:hidden\}/);
+  assert.match(css,/\.radar-matrix-scroll\{[\s\S]*?overflow-x:auto;/);
+  assert.match(css,/\.radar-evolution-top\{display:grid;grid-template-columns:minmax\(0,1fr\)/);
+  assert.match(css,/@media\(max-width:650px\)\{[\s\S]*?\.radar-filters\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(css,/\.radar-filter\[aria-pressed="true"\]/);
+  assert.match(css,/\.radar-state\{max-width:100%;min-width:0;overflow-wrap:anywhere/);
+  assert.match(css,/\.radar-stamp-date/);
+  assert.ok(!css.includes("overflow-x:visible"));
+});
+test("v1.39 never equates a weekly COT delta with a net short position or technical confirmation with an institutional trade",()=>{
+  const js=fs.readFileSync("squalincome-diagnostics.js","utf8");
+  assert.match(js,/Δ COT settimanale/);
+  assert.match(js,/NON equivale necessariamente a posizione netta long\/short/);
+  assert.match(js,/non conferma un'operazione istituzionale/);
+  assert.match(js,/Idonei nella scansione corrente/);
+  assert.match(js,/Il Radar storico può contenerne più/);
+  assert.match(js,/Nessun evento COT\/prezzo qualificato/);
+  assert.match(js,/scroll\.tabIndex=0/);
+});
+test("v1.39 rejects contradictory API labels without inventing a corrected relation",()=>{
+  const p=payload(valid(),13);
+  p.historyTotal=1;
+  p.history=[{symbol:"AUDJPY",state:"aligned",cotSide:-1,priceSide:1,h4Side:1,h1Side:1,
+    m15Side:1,priceState:"watch",reportDate:"2026-10-20",
+    priceTime:"2026-10-27T11:15:00+00:00",observedAt:"2026-10-27T11:25:00+00:00",
+    cotWeekly:-2.12,cotSustained:1,origin:"update",eventType:null}];
+  const result=diagnostics.read(p);
+  assert.equal(result.historyTotal,1);
+  assert.deepEqual(result.history,[]);
+  assert.deepEqual(diagnostics.evolutionModel(result.history),[]);
+});
+test("v1.39 preserves truthful radar totals from 11 market histories independent of scan eligibility",()=>{
+  const basis={h4Side:1,h1Side:1,m15Side:1,priceState:"watch",
+    reportDate:"2026-10-20",priceTime:"2026-10-27T12:15:00+00:00",
+    observedAt:"2026-10-27T12:25:00+00:00",cotWeekly:-2.12,
+    origin:"update",cotSustained:1,eventType:null};
+  const p=payload({...valid(),analyzed:6,excluded:28,
+    exclusions:valid().exclusions.slice(0,28),outcome:"no_significant_event"},13,0);
+  p.historyTotal=11;
+  p.history=Array.from({length:11},(_,i)=>{
+    const divergent=i<7;
+    return {...basis,symbol:"EUR"+String(i).padStart(3,"0"),
+      cotSide:-1,priceSide:divergent?1:-1,
+      state:divergent?"divergent":"aligned"};
+  });
+  const view=diagnostics.read(p),models=diagnostics.evolutionModel(view.history);
+  assert.equal(view.tracked,34);
+  assert.equal(view.analyzed,6);
+  assert.equal(view.excluded,28);
+  assert.equal(models.length,11);
+  assert.equal(models.filter(x=>x.last.state==="divergent").length,7);
+  assert.equal(models.filter(x=>x.last.state==="aligned").length,4);
+  assert.equal(models.filter(x=>x.verifiedEvents>0).length,0);
+  assert.equal(models.reduce((n,x)=>n+x.points.length,0),11);
+});
 test("Radar Squali wires only private endpoint and same-origin script",()=>{
   const html=fs.readFileSync("mercati.html","utf8");
   assert.ok(html.includes('id="monitor-diagnostics"'));
-  assert.ok(html.includes('squalincome-diagnostics.js?v=138'));
+  assert.ok(html.includes('squalincome-diagnostics.js?v=139'));
   assert.ok(html.includes("./private-api/signals/status"));
 });

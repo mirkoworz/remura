@@ -146,7 +146,7 @@ test("v1.32 shows private official COT status without suggesting signals are liv
    assert.ok(html.includes(term),term);
 });
 
-test("v1.38 renders private VPS event register with no notifications",()=>{
+test("v1.39 renders private VPS event register with no notifications",()=>{
  const h=fs.readFileSync("mercati.html","utf8");
  for(const phrase of ['id="squalincome-monitor"','id="monitor-refresh"',
   'id="monitor-events"','privateJSON("./private-api/signals/status")',
