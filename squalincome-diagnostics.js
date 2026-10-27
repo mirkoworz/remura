@@ -108,6 +108,7 @@
            !["watch","partial","confirmed"].includes(row.priceState)||
            !["baseline","update","first_after_upgrade"].includes(row.origin)||
            ![-1,1].includes(row.cotSide)||![-1,1].includes(row.priceSide)||
+           row.state!==(row.cotSide===row.priceSide?"aligned":"divergent")||
            !["string"].includes(typeof row.observedAt)||
            !Number.isFinite(Date.parse(row.observedAt))||
            !Number.isFinite(Date.parse(row.priceTime))||
