@@ -31,6 +31,7 @@ from price_feed import MARKETS, UTC, utcnow
 from price_store import connect, get_status, set_status, latest, ingest, api_document, symbols_available, price_overview
 from cot_monitor import collect_once as collect_official_cot, public_status as official_cot_status
 from signals_monitor import scan_once as observe_squalincome, status as squalincome_status
+from statistical_validation import update_validation, validation_status
 from ctrader_tokens import access_token, path_for, read_file
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -46,11 +47,13 @@ SAFE_ASSETS={
     "impostazioni.html","impostazioni.js","feed-health-core.js","price.js","price.css","price-core.js","sw.js",
     "stato-prezzi.html","stato-prezzi.js","price-status-core.js",
     "manifest.webmanifest","icon.svg",
+    "statistica-squali.html","statistica-squali.js","statistica-squali-core.js",
 }
 STATUS_PATH="/private-api/health"
 PRICE_OVERVIEW_PATH="/private-api/prices/status"
 COT_OVERVIEW_PATH="/private-api/cot/status"
 SIGNAL_OVERVIEW_PATH="/private-api/signals/status"
+VALIDATION_OVERVIEW_PATH="/private-api/signals/validation"
 UPDATE_STATUS_PATH="/private-api/autoupdate"
 RETAIL_LATEST="/private-api/retail/latest.json"
 IG_LATEST="/private-api/ig/latest.json"
@@ -292,6 +295,9 @@ def http_handler(db_path):
                 return
             if path==SIGNAL_OVERVIEW_PATH:
                 self.response(200,squalincome_status(db_path,squalincome_enabled()))
+                return
+            if path==VALIDATION_OVERVIEW_PATH:
+                self.response(200,validation_status(db_path))
                 return
             if path==CAPITAL_LATEST or CAPITAL_HISTORY_RE.fullmatch(path):
                 data=capital_document(db_path,path)
@@ -803,6 +809,7 @@ def squalincome_loop(db_path,stop):
     while not stop.is_set():
         try:
             observe_squalincome(db_path)
+            update_validation(db_path)
         except Exception as exc:
             print("REMURA Squalincome monitor: "+type(exc).__name__,file=sys.stderr)
         stop.wait(15*60)

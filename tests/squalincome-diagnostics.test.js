@@ -331,6 +331,6 @@ test("v1.39 preserves truthful radar totals from 11 market histories independent
 test("Radar Squali wires only private endpoint and same-origin script",()=>{
   const html=fs.readFileSync("mercati.html","utf8");
   assert.ok(html.includes('id="monitor-diagnostics"'));
-  assert.ok(html.includes('squalincome-diagnostics.js?v=139'));
+  assert.ok(html.includes('squalincome-diagnostics.js?v=140'));
   assert.ok(html.includes("./private-api/signals/status"));
 });
