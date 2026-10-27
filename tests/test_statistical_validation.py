@@ -76,6 +76,9 @@ class ForwardValidationTests(unittest.TestCase):
                    if x["segment"]=="all" and x["horizonHours"]==1)
         self.assertEqual(one["verdict"],"Campione insufficiente")
         self.assertEqual(one["directionHitPct"],100)
+        self.assertEqual(one["maturedCohorts"],1)
+        self.assertEqual(one["unevaluatedMatured"],0)
+        self.assertEqual(one["coveragePct"],100)
         self.assertLess(one["wilson95Pct"][0],50)
         self.assertNotIn("1.00",json.dumps(status))
 
@@ -101,6 +104,10 @@ class ForwardValidationTests(unittest.TestCase):
         self.seed(gap=True)
         self.assertEqual(self.run_update()["outcomesAdded"],0)
         self.assertEqual(v.validation_status(self.db_path)["outcomes"],0)
+        gap_stats=v.validation_status(self.db_path)["segments"]
+        gap_one=next(x for x in gap_stats if x["segment"]=="all" and x["horizonHours"]==1)
+        self.assertEqual(gap_one["maturedCohorts"],1)
+        self.assertEqual(gap_one["coveragePct"],0)
 
     def test_only_matured_horizons_are_evaluated(self):
         self.seed()
