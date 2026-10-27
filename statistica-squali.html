@@ -7,15 +7,15 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./nav.css?v=140">
-<title>REMURA v1.40 · Verifica statistica Squali</title>
+<link rel="stylesheet" href="./nav.css?v=141">
+<title>REMURA v1.41 · Verifica statistica Squali</title>
 <style>
 :root{color-scheme:dark;--bg:#07131b;--panel:#122a35;--border:#34535c;--fg:#e8f7f2;--muted:#aac2c5;--mint:#71edc8;--amber:#eecb91;--red:#faa6aa}
 *{box-sizing:border-box}html,body{margin:0;max-width:100%;overflow-x:hidden}
 body{background:var(--bg);color:var(--fg);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 a{color:var(--mint)}button{font:inherit;cursor:pointer}button:focus-visible,a:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
 main{max-width:1050px;padding:26px 20px 100px;margin:auto;min-width:0}
-.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 26px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 26px}main>header.top{padding-left:58px;min-height:53px}
 .logo{font-weight:850;letter-spacing:.13em;color:var(--mint);font-size:23px}
 .small{font-size:12px;color:var(--muted)}
 .heading{font-size:clamp(30px,5vw,47px);line-height:1.12;letter-spacing:-.04em;margin:0 0 11px}
@@ -28,8 +28,8 @@ main{max-width:1050px;padding:26px 20px 100px;margin:auto;min-width:0}
 .status{margin:10px 0 15px;color:var(--muted);font-size:12px}
 .status[data-state=error]{color:var(--red)}
 .cta{background:#173f38;border:1px solid #4a9e86;border-radius:11px;padding:9px 13px;color:#ebfff9;font-weight:750;min-height:44px}
-.period{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
-.period button{background:#102935;border:1px solid #3d6570;color:#d4e9e6;border-radius:12px;padding:11px 18px;min-height:44px;font-weight:800}
+.period{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:18px 0}
+.period button{background:#102935;border:1px solid #3d6570;color:#d4e9e6;border-radius:12px;padding:10px 6px;min-height:44px;font-size:clamp(12px,3.5vw,15px);font-weight:800;min-width:0}
 .period button[aria-pressed=true]{background:#215c4f;color:#f2fff6;border-color:#7cdfba}
 .board{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0}
 .stat{border:1px solid #355663;border-radius:14px;padding:13px;background:#0f2832;min-width:0}
@@ -46,7 +46,7 @@ main{max-width:1050px;padding:26px 20px 100px;margin:auto;min-width:0}
 .detail .bad{color:var(--amber)}
 .detail dl{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:9px;row-gap:5px;font-size:12px;margin:14px 0 0}
 .detail dt{color:var(--muted)}.detail dd{margin:0;text-align:right;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.foot{margin:23px 0;color:var(--muted);font-size:12px}
+.foot{margin:23px 0;color:var(--muted);font-size:12px}.interpretation{border-left:3px solid #67ba9b;padding:9px 12px;margin:13px 0;color:#d5ece5;font-size:13px;background:#102f34;border-radius:0 10px 10px 0}
 [hidden]{display:none!important}
 @media(max-width:700px){main{padding:18px 13px 90px}.cards,.cards.stages{grid-template-columns:1fr}.panel{padding:15px}.heading{font-size:32px}.board{gap:8px}.stat{padding:12px}.stat strong{font-size:23px}.top{margin-bottom:18px}}
 @media(max-width:350px){.board{grid-template-columns:1fr}}
@@ -69,14 +69,15 @@ main{max-width:1050px;padding:26px 20px 100px;margin:auto;min-width:0}
   </div>
   <section id="stat-data" hidden>
     <div class="period" aria-label="Orizzonte di verifica">
-      <button type="button" data-horizon="1" aria-pressed="true">Dopo 1 ora</button>
-      <button type="button" data-horizon="4" aria-pressed="false">Dopo 4 ore</button>
-      <button type="button" data-horizon="24" aria-pressed="false">Dopo 24 ore</button>
+      <button type="button" data-horizon="1" aria-pressed="true" aria-label="Dopo 1 ora">1 ora</button>
+      <button type="button" data-horizon="4" aria-pressed="false" aria-label="Dopo 4 ore">4 ore</button>
+      <button type="button" data-horizon="24" aria-pressed="false" aria-label="Dopo 24 ore">24 ore</button>
     </div>
     <section class="panel" aria-labelledby="result-title">
       <h2 id="result-title">Campione principale</h2>
       <div id="main-verdict" class="vrd">Campione insufficiente</div>
       <p class="small">Prima osservazione autentica per mercato e settimana COT. Il risultato è misurato nella direzione del COT, non è un segnale di ingresso.</p>
+      <p id="stat-interpretation" class="interpretation" role="status" aria-live="polite">La statistica sarà interpretata solo quando saranno disponibili dati verificati.</p>
       <div id="stat-overview" class="board"></div>
     </section>
     <h2 class="sectiontitle">Concordanze contro divergenze</h2>
@@ -86,15 +87,15 @@ main{max-width:1050px;padding:26px 20px 100px;margin:auto;min-width:0}
     <div id="stat-stages" class="cards stages"></div>
     <section class="panel foot">
       <h2>Come leggere questi dati</h2>
-      <p>La percentuale direzionale conta quante volte il prezzo finale si muove nella direzione indicata dal COT. L'intervallo al 95% misura una parte dell'incertezza campionaria, ma non corregge la dipendenza tra mercati. Il benchmark long è il movimento del prezzo sugli stessi intervalli, senza considerare il COT.</p>
-      <p>Escursione favorevole e contraria sono basate sui massimi e minimi delle vere candele disponibili, non su esecuzioni reali. Le coorti mature senza dati contigui restano escluse dal calcolo e sono mostrate nella copertura.</p>
+      <p>Il confronto 1h, 4h e 24h può usare numeri diversi di osservazioni: non confrontare le percentuali come se tutti gli strumenti fossero gli stessi. La percentuale direzionale conta quante volte il prezzo finale si muove nella direzione indicata dal COT. L'intervallo al 95% misura una parte dell'incertezza campionaria, ma non corregge la dipendenza tra mercati. Il benchmark long è il movimento del prezzo sugli stessi intervalli, senza considerare il COT.</p>
+      <p>Escursione favorevole e contraria sono basate sui massimi e minimi delle vere candele disponibili, non su esecuzioni reali. La copertura è calcolata solo sulle coorti già mature e non su tutti i 38 mercati. Le coorti mature senza candele contigue restano escluse dal calcolo e sono indicate esplicitamente.</p>
       <p>«Campione insufficiente» significa meno di 30 osservazioni oppure meno di 8 settimane COT distinte. Anche superata la soglia, nessun risultato prova da solo un vantaggio predittivo fuori campione.</p>
     </section>
   </section>
-  <p class="foot">REMURA v1.40 · Verifica di ricerca privata · Nessun ordine automatico o promessa di rendimento.</p>
+  <p class="foot">REMURA v1.41 · Verifica di ricerca privata · Nessun ordine automatico o promessa di rendimento.</p>
 </main>
-<script src="./statistica-squali-core.js?v=140"></script>
-<script src="./statistica-squali.js?v=140"></script>
-<script src="./nav.js?v=140"></script>
+<script src="./statistica-squali-core.js?v=141"></script>
+<script src="./statistica-squali.js?v=141"></script>
+<script src="./nav.js?v=141"></script>
 </body>
 </html>
