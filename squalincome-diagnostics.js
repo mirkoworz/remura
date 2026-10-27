@@ -1,4 +1,4 @@
-/* REMURA v1.38 · Read-only VPS evolution radar; never fetches secrets or OHLC. */
+/* REMURA v1.39 · Mobile-contained, source-backed VPS evolution radar. */
 (function(root) {
   "use strict";
   const REASONS=Object.freeze({
@@ -154,6 +154,16 @@
     return Number.isFinite(t)?new Intl.DateTimeFormat("it-IT",
       {timeZone:"Europe/Rome",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}).format(new Date(t)):"N/D";
   }
+
+  function stampParts(value){
+    const t=Date.parse(value);
+    if(!Number.isFinite(t))return {date:"N/D",time:"—"};
+    const local=new Date(t);
+    return {
+      date:new Intl.DateTimeFormat("it-IT",{timeZone:"Europe/Rome",day:"2-digit",month:"2-digit"}).format(local),
+      time:new Intl.DateTimeFormat("it-IT",{timeZone:"Europe/Rome",hour:"2-digit",minute:"2-digit"}).format(local)
+    };
+  }
   // Group only server-backed observations. Do not interpolate missing intervals,
   // calculate a predictive score or turn technical confirmations into events.
   function evolutionModel(history){
@@ -203,38 +213,47 @@
     const item=make("article","radar-evolution-card");
     const last=model.last,top=make("div","radar-evolution-top");
     const name=make("strong","radar-evolution-name",model.symbol);
-    const state=make("span","radar-state",last.state==="aligned"?"COT/prezzo concordi":"COT/prezzo divergenti");
+    const state=make("span","radar-state",last.state==="aligned"?"Δ COT/prezzo concordi":"Δ COT/prezzo divergenti");
     state.setAttribute("data-state",last.state);
     top.append(name,state);
     item.append(top);
     item.append(make("p","monitor-caption",
-      "COT "+(DIRECTION[last.cotSide]||"N/D")+
-      " · Δ settimanale "+(last.cotWeekly===null?"N/D":last.cotWeekly.toFixed(2)+" pp")+
+      "Δ COT settimanale "+(DIRECTION[last.cotSide]||"N/D")+
+      " · "+(last.cotWeekly===null?"entità N/D":last.cotWeekly.toFixed(2)+" pp")+
       " · Prezzo "+(DIRECTION[last.priceSide]||"N/D")+
-      " · "+PRICE_LEVEL[last.priceState]));
+      " · stato tecnico: "+PRICE_LEVEL[last.priceState]));
     item.append(make("p","monitor-caption",
       "COT: "+last.reportDate+" · Ultima osservazione: "+itDate(last.observedAt)+
       " · "+model.points.length+" campioni visualizzati"+
-      (model.verifiedEvents?" · "+model.verifiedEvents+" eventi verificati nello storico":" · nessun evento verificato")));
+      (model.verifiedEvents?" · "+model.verifiedEvents+" eventi COT/prezzo qualificati nei campioni visibili":
+       " · nessun evento COT/prezzo qualificato nei campioni visibili")));
     const chart=make("details","radar-chart-details");
-    chart.append(make("summary",null,"Visualizza confronto temporale COT · H4 · H1 · M15"));
-    const note=make("p","monitor-caption","Colonne = osservazioni archiviate (NON candele consecutive). "+
-      "Colori e frecce indicano soltanto direzioni, non rendimenti o probabilità. "+
-      "Il COT settimanale può ripetersi in più colonne.");
+    chart.append(make("summary",null,"Confronto nel tempo · Δ COT, H4, H1, M15"));
+    const note=make("p","monitor-caption radar-chart-note",
+      "Scorri lateralmente la matrice. Ogni colonna = un campione salvato, "+
+      "non una candela consecutiva. Δ COT è settimanale e può ripetersi.");
     chart.append(note);
     const scroll=make("div","radar-matrix-scroll");
+    scroll.tabIndex=0;
+    scroll.setAttribute("role","region");
+    scroll.setAttribute("aria-label","Tabella scorrevole delle osservazioni "+model.symbol);
     const matrix=make("div","radar-matrix");
     matrix.setAttribute("role","table");
     matrix.setAttribute("aria-label","Cronologia direzionale "+model.symbol);
     const points=model.points;
-    matrix.style.gridTemplateColumns="minmax(68px,86px) repeat("+points.length+",minmax(64px,1fr))";
+    matrix.style.gridTemplateColumns="76px repeat("+points.length+",72px)";
     function row(label,values){
       const head=make("span","radar-axis-label",label);
       head.setAttribute("role","rowheader");
       matrix.append(head);
       for(let i=0;i<points.length;i++){
         const v=values[i];
-        const el=make("span","radar-matrix-cell",v.label);
+        const el=make("span","radar-matrix-cell",v.stamp?"":v.label);
+        if(v.stamp){
+          const parts=stampParts(points[i].observedAt);
+          el.append(make("span","radar-stamp-date",parts.date),
+                    make("span","radar-stamp-hour",parts.time));
+        }
         el.setAttribute("role","cell");
         el.setAttribute("data-side",v.state);
         el.setAttribute("title",itDate(points[i].observedAt)+" · "+label+": "+v.description);
@@ -242,13 +261,13 @@
         matrix.append(el);
       }
     }
-    row("Rilevazione",points.map(x=>({label:shortDate(x.observedAt),state:"stamp",
-      description:itDate(x.observedAt)})));
-    for(const [label,key] of [["COT","cotSide"],["H4","h4Side"],["H1","h1Side"],["M15","m15Side"]]){
+    row("Data / ora",points.map(x=>({label:shortDate(x.observedAt),state:"stamp",
+      stamp:true,description:itDate(x.observedAt)})));
+    for(const [label,key] of [["Δ COT","cotSide"],["H4","h4Side"],["H1","h1Side"],["M15","m15Side"]]){
       row(label,points.map(p=>{
         const dir=trendCell(p[key]);
         return {...dir,description:(DIRECTION[p[key]]||"direzione N/D")+
-          (key==="cotSide"?" · report "+p.reportDate:"")};
+          (key==="cotSide"?" · variazione settimanale del report "+p.reportDate:"")};
       }));
     }
     row("Relazione",points.map(p=>({
@@ -261,9 +280,17 @@
     })));
     scroll.append(matrix);
     chart.append(scroll);
-    const legend=make("p","monitor-caption",
-      "Legenda: ↑ rialzista, ↓ ribassista, → neutro, — non disponibile; "+
-      "= concordi, ≠ divergenti; ○ osservazione, ◐ parziale, ● conferma tecnica.");
+    const legend=make("details","radar-legend");
+    legend.append(make("summary",null,"Legenda e significato degli stati"));
+    legend.append(make("p","monitor-caption",
+      "↑ spinta rialzista, ↓ ribassista, → neutro, — non disponibile; "+
+      "= Δ COT e prezzo concordi, ≠ divergenti; ○ osservazione, ◐ conferma parziale, ● conferma tecnica."));
+    legend.append(make("p","monitor-caption",
+      "Δ COT misura la variazione settimanale della posizione netta/open interest del gruppo CFTC selezionato: "+
+      "NON equivale necessariamente a posizione netta long/short né rivela ordini istituzionali live."));
+    legend.append(make("p","monitor-caption",
+      "Conferma tecnica = criteri EMA e breakout H4/H1/M15 soddisfatti: "+
+      "non conferma un'operazione istituzionale e non è una previsione."));
     chart.append(legend);
     item.append(chart);
     const changes=make("details","radar-change-details");
@@ -281,8 +308,8 @@
     }
     item.append(changes);
     if(last.state==="divergent"){
-      item.append(make("p","monitor-caption","Divergenza negli ultimi "+
-        model.divergentSamples+" campioni visibili: non prova continuità tra osservazioni né inversione futura."));
+      item.append(make("p","monitor-caption","Divergenza osservata negli ultimi "+
+        model.divergentSamples+" campioni visibili. Non prova continuità tra i campioni né inversione futura."));
     }
     return item;
   }
@@ -299,22 +326,23 @@
     const withEvent=models.filter(m=>m.verifiedEvents>0).length;
     const h=make("div","radar-evolution-heading");
     h.append(make("h3",null,"Radar Evoluzione Squali"));
-    h.append(make("p","monitor-caption",models.length+" mercati con campioni · "+
+    h.append(make("p","monitor-caption",models.length+" mercati con storico · "+
       divergent+" divergenti · "+(models.length-divergent)+" concordi · "+
-      withEvent+" con eventi verificati nello storico consultabile"));
+      withEvent+" con eventi COT/prezzo qualificati nei campioni visibili"));
     panel.append(h);
-    panel.append(make("p","monitor-caption",
-      "Dati privati della VPS: ultimi 12 campioni per mercato. Nessuna interpolazione fra scansioni, "+
-      "nessun sentiment inventato e nessuna previsione. La cronologia comincia dalla v1.37."));
+    panel.append(make("p","monitor-caption radar-monitor-context",
+      "Vista STORICA: mercati con campioni già archiviati, anche se non idonei "+
+      "nell'ultima scansione. Ultimi 12 campioni per mercato, nessuna interpolazione "+
+      "né sentiment inventato. Cronologia dalla v1.37; nessuna previsione."));
     const filterBox=make("div","radar-filters");
     filterBox.setAttribute("role","group");
     filterBox.setAttribute("aria-label","Filtro radar evoluzione");
     const result=make("div","radar-evolution-results");
     const options=[
-      ["all","Tutti"],
-      ["divergent","Divergenti"],
-      ["aligned","Concordi"],
-      ["verified","Eventi verificati"]];
+      ["all","Tutti",models.length],
+      ["divergent","Divergenti",divergent],
+      ["aligned","Concordi",models.length-divergent],
+      ["verified","Eventi verificati",withEvent]];
     const buttons=[];
     function update(mode){
       result.replaceChildren();
@@ -325,12 +353,12 @@
         (mode==="verified"?m.verifiedEvents>0:m.last.state===mode));
       if(!filtered.length){
         result.append(make("p","monitor-caption",mode==="verified"?
-          "Nessun evento verificato nei campioni visualizzati: i cambi tecnici non sono segnali confermati.":
+          "Nessun evento COT/prezzo qualificato nei campioni visibili. I cambi tecnici non provano movimenti istituzionali.":
           "Nessun mercato corrisponde al filtro nei dati disponibili."));
       }else for(const m of filtered)result.append(makeRadarCard(m));
     }
-    for(const [key,label] of options){
-      const b=make("button","radar-filter",label);
+    for(const [key,label,total] of options){
+      const b=make("button","radar-filter",label+" ("+total+")");
       b.type="button";
       b.addEventListener("click",()=>update(key));
       buttons.push([key,b]);filterBox.append(b);
@@ -358,16 +386,19 @@
     host.append(make("p","monitor-timestamp","Ultima scansione VPS: "+view.date+" (ora italiana)"));
     const grid=make("div","monitor-metrics");
     const metrics=[
-      ["Mercati controllati",view.tracked],["Analizzati (idonei)",view.analyzed],
-      ["Esclusi dal confronto",view.excluded],["Riferimenti iniziali",view.baselines],
-      ["Eventi registrati",view.events]];
+      ["Mercati controllati",view.tracked],["Idonei nella scansione corrente",view.analyzed],
+      ["Esclusi dalla scansione corrente",view.excluded],["Riferimenti iniziali salvati",view.baselines],
+      ["Eventi COT/prezzo qualificati",view.events]];
     for(const [name,val] of metrics){
       const box=make("div","monitor-metric");
       box.append(make("small",null,name),make("strong",null,val===null?"—":val));
       grid.append(box);
     }
     host.append(grid);
-    host.append(make("p","monitor-caption","Analizzati = COT direzionale e prezzi verificati su timeframe coerenti. Gli esclusi sono stati controllati, ma non hanno superato tutti i criteri."));
+    host.append(make("p","monitor-caption",
+      "Idonei = mercati che nell'ULTIMA scansione superano i criteri Δ COT e prezzo H4/H1. "+
+      "Il Radar storico può contenerne più di quanti siano idonei ora. "+
+      "La conferma tecnica del prezzo non dimostra un'operazione istituzionale."));
     const state=make("p","monitor-outcome",OUTCOMES[view.displayOutcome]);
     state.setAttribute("data-outcome",view.displayOutcome);
     host.append(state);
@@ -389,7 +420,7 @@
       const list=make("ul");
       for(const item of view.observations){
         const label=item.state==="aligned"?"COT e prezzo concordi":"COT e prezzo divergenti";
-        const level={watch:"osservazione",partial:"parziale",confirmed:"confermata"}[item.priceState];
+        const level={watch:"prezzo in osservazione",partial:"prezzo parziale",confirmed:"prezzo tecnicamente confermato"}[item.priceState];
         list.append(make("li",null,item.symbol+" · "+label+" ("+level+")"+
           " · prezzo "+itDate(item.priceTime)+" · registrato "+itDate(item.observedAt)));
       }
