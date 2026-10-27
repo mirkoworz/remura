@@ -47,6 +47,7 @@ SAFE_ASSETS={
     "impostazioni.html","impostazioni.js","feed-health-core.js","price.js","price.css","price-core.js","sw.js",
     "stato-prezzi.html","stato-prezzi.js","price-status-core.js",
     "manifest.webmanifest","icon.svg",
+    "statistica-squali.html","statistica-squali.js","statistica-squali-core.js",
 }
 STATUS_PATH="/private-api/health"
 PRICE_OVERVIEW_PATH="/private-api/prices/status"
