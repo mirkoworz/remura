@@ -37,7 +37,7 @@ test('Mobile monitoring keeps source diagnostics accessible in compact disclosur
  assert.ok(js.includes('rowText("Ultimo tentativo:"'));
  assert.ok(js.includes('Ultimo esito:'));
  assert.ok(html.includes('Come leggere i dati e la freschezza'));
- assert.ok(nav.includes('["stato-prezzi.html","mercati.html","asset.html"].includes(page)'));
+ assert.ok(nav.includes('["stato-prezzi.html","mercati.html","asset.html","statistica-squali.html"].includes(page)'));
  assert.ok(navCss.includes('rm-scrolled-away'));
  assert.ok(navCss.includes('prefers-reduced-motion'));
 });
