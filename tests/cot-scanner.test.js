@@ -67,7 +67,7 @@ test("v1.28 reuses only already authenticated private Google Capital sentiment",
 
 test("v1.29 hides floating menu on downward scroll in scanners, without losing upward access",()=>{
  const nav=fs.readFileSync("nav.js","utf8");
- assert.ok(nav.includes('["stato-prezzi.html","mercati.html","asset.html"].includes(page)'));
+ assert.ok(nav.includes('["stato-prezzi.html","mercati.html","asset.html","statistica-squali.html"].includes(page)'));
  assert.ok(nav.includes('trigger.classList.toggle("rm-scrolled-away",!on)'));
  assert.ok(nav.includes('trigger.tabIndex=on?0:-1'));
  assert.ok(nav.includes('diff< -5'));
