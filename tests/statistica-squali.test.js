@@ -64,9 +64,9 @@ test('native iPhone route, no mock stats, private source and PWA cache wiring',(
  const server=fs.readFileSync('scripts/private_server.py','utf8');
  const sw=fs.readFileSync('sw.js','utf8');
  const nav=fs.readFileSync('nav.js','utf8');
- assert.match(html,/statistica-squali-core\.js\?v=140/);
- assert.match(html,/statistica-squali\.js\?v=140/);
- assert.match(html,/nav\.js\?v=140/);
+ assert.match(html,/statistica-squali-core\.js\?v=141/);
+ assert.match(html,/statistica-squali\.js\?v=141/);
+ assert.match(html,/nav\.js\?v=141/);
  assert.match(js,/private-api\/signals\/validation/);
  assert.match(js,/cache:'no-store'/);
  assert.match(js,/area\.hidden=true/);
@@ -81,4 +81,18 @@ test('mobile layout allows minimum width and displays all horizon choices',()=>{
  assert.match(html,/@media\(max-width:700px\)/);
  assert.match(html,/overflow-x:hidden/);
  for(const h of [1,4,24])assert.match(html,new RegExp('data-horizon="'+h+'"'));
+});
+
+test('v1.41 keeps three iPhone horizons on one row and menu out of scrolled data',()=>{
+ const html=fs.readFileSync('statistica-squali.html','utf8');
+ const js=fs.readFileSync('statistica-squali.js','utf8');
+ const nav=fs.readFileSync('nav.js','utf8');
+ assert.match(html,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+ assert.match(html,/id="stat-interpretation"/);
+ assert.match(html,/main>header\.top\{padding-left:58px/);
+ assert.match(js,/main\.matured===0/);
+ assert.match(js,/non misura ancora/);
+ assert.match(js,/Copertura coorti già mature/);
+ assert.match(nav,/"asset\.html","statistica-squali\.html"\]\.includes\(page\)/);
+ assert.doesNotMatch(js,/Direzione COT corretta/);
 });

@@ -1,4 +1,4 @@
-/* REMURA v1.40 — Private statistics, view only. No mock data or orders. */
+/* REMURA v1.41 — Private statistics, view only. No mock data or orders. */
 (function(){
   'use strict';
   const core=window.REMURA_STAT_VALIDATION;
@@ -42,10 +42,10 @@
     smallTable(el,[
       ['Campioni',integer(data.samples)],
       ['Settimane COT',integer(data.weeks)],
-      ['Copertura dati',core.formatPercent(data.coverage)],
+      ['Copertura coorti mature',core.formatPercent(data.coverage)],
       ['Intervallo 95%',data.samples?
         core.formatPercent(data.low)+' – '+core.formatPercent(data.high):'—'],
-      ['Rendimento medio COT',core.formatBps(data.mean)],
+      ['Movimento medio verso COT',core.formatBps(data.mean)],
       ['Benchmark long',core.formatBps(data.benchmark)]
     ]);
     return el;
@@ -56,18 +56,32 @@
       button.setAttribute('aria-pressed',String(Number(button.dataset.horizon)===horizon));
     }
     const main=group('all');
+    const explain=document.getElementById('stat-interpretation');
+    if(main.samples===0){
+      explain.textContent=main.matured===0?
+        'Non ci sono ancora finestre complete di '+horizon+' ore per il campione principale. '+
+        'Zero risultati non significa zero movimenti o previsioni sbagliate.':
+        integer(main.matured)+' finestre da '+horizon+' ore sono trascorse, ma nessuna '+ 
+        'dispone di tutte le candele M15 contigue necessarie alla verifica.';
+    }else{
+      explain.textContent=integer(main.samples)+' osservazioni valutabili su '+
+        integer(main.weeks)+' settimane COT distinte. I mercati possono essere '+
+        'correlati: questa percentuale descrive il campione, non misura ancora '+
+        'una probabilità affidabile di previsione.';
+    }
     document.getElementById('main-verdict').textContent=main.verdict;
     const summary=document.getElementById('stat-overview');
     summary.replaceChildren(
       valueCard('Osservazioni valutabili',integer(main.samples),
         integer(main.weeks)+' settimane COT distinte'),
-      valueCard('Direzione COT corretta',core.formatPercent(main.hit),
+      valueCard('Prezzo nella direzione COT',core.formatPercent(main.hit),
         main.samples?'Intervallo 95%: '+core.formatPercent(main.low)+' – '+
           core.formatPercent(main.high):'Nessun risultato autentico'),
       valueCard('Movimento medio verso COT',core.formatBps(main.mean),
         'Benchmark long: '+core.formatBps(main.benchmark)),
-      valueCard('Copertura del campione',core.formatPercent(main.coverage),
-        integer(main.unevaluated)+' coorti mature senza esito'),
+      valueCard('Copertura coorti già mature',core.formatPercent(main.coverage),
+        integer(main.samples)+' valutate su '+integer(main.matured)+
+        '; '+integer(main.unevaluated)+' senza esito'),
       valueCard('Escursione favorevole',core.formatBps(main.favorable),
         'Prezzi massimi/minimi rilevati'),
       valueCard('Escursione contraria',core.formatBps(main.adverse),
