@@ -37,19 +37,20 @@ def ensure_tables(db):
         broker_symbol TEXT NOT NULL,
         entry_at TEXT NOT NULL,
         entry_open REAL NOT NULL CHECK(entry_open > 0),
-        PRIMARY KEY(symbol,report_date))""")
+        PRIMARY KEY(symbol,report_date,stage))""")
     db.execute("""CREATE TABLE IF NOT EXISTS squalincome_validation_outcomes(
         symbol TEXT NOT NULL,
         report_date TEXT NOT NULL,
+        stage TEXT NOT NULL CHECK(stage IN ('observation','technical_confirmation','qualified_event')),
         horizon_hours INTEGER NOT NULL CHECK(horizon_hours IN (1,4,24)),
         evaluated_at TEXT NOT NULL,
         directional_bps REAL NOT NULL,
         long_benchmark_bps REAL NOT NULL,
         favorable_bps REAL NOT NULL,
         adverse_bps REAL NOT NULL,
-        PRIMARY KEY(symbol,report_date,horizon_hours),
-        FOREIGN KEY(symbol,report_date)
-          REFERENCES squalincome_validation_cohorts(symbol,report_date))""")
+        PRIMARY KEY(symbol,report_date,stage,horizon_hours),
+        FOREIGN KEY(symbol,report_date,stage)
+          REFERENCES squalincome_validation_cohorts(symbol,report_date,stage))""")
     db.execute("CREATE INDEX IF NOT EXISTS idx_squal_validation_horizon"
                " ON squalincome_validation_outcomes(horizon_hours)")
     db.commit()
@@ -136,49 +137,53 @@ def update_validation(db_path, now=None):
         seen = set()
         added = completed = 0
         for symbol, report_date, observed, price_time, side, relation, price_state, event in history:
-            key = (symbol, report_date)
-            if key in seen:
-                continue
-            seen.add(key)  # never cherry-pick a later, stronger intraweek scan
-            if (symbol not in allowed or side not in (-1, 1)
-                    or relation not in ("aligned", "divergent")):
-                continue
-            if db.execute("SELECT 1 FROM squalincome_validation_cohorts"
-                          " WHERE symbol=? AND report_date=?", key).fetchone():
-                continue
-            try:
-                observed_dt = parse_time(observed)
-                price_dt = parse_time(price_time)
-                report_dt = dt.date.fromisoformat(report_date)
-                if report_dt > observed_dt.date():
+            stages = ["observation"]
+            if price_state == "confirmed":
+                stages.append("technical_confirmation")
+            if event:
+                stages.append("qualified_event")
+            for stage in stages:
+                key = (symbol, report_date, stage)
+                if key in seen:
                     continue
-                if symbol not in cached:
-                    doc = latest(db, symbol)
-                    cached[symbol] = (doc, _bars(doc))
-                doc, bars = cached[symbol]
-                if bars is None:
+                seen.add(key)  # earliest authentic occurrence in this experiment arm
+                if (symbol not in allowed or side not in (-1, 1)
+                        or relation not in ("aligned", "divergent")):
                     continue
-                entry = _entry(bars, observed_dt, price_dt, now)
-                if entry is None:
+                if db.execute("SELECT 1 FROM squalincome_validation_cohorts"
+                              " WHERE symbol=? AND report_date=? AND stage=?", key).fetchone():
                     continue
-                entry_at, entry_open = entry
-                stage = ("qualified_event" if event else
-                         "technical_confirmation" if price_state == "confirmed" else
-                         "observation")
-                with db:
-                    db.execute("INSERT OR IGNORE INTO squalincome_validation_cohorts"
-                               "(symbol,report_date,observed_at,price_time,cot_side,"
-                               "relationship,stage,broker_symbol,entry_at,entry_open)"
-                               " VALUES(?,?,?,?,?,?,?,?,?,?)",
-                               (symbol,report_date,observed,price_time,side,relation,
-                                stage,doc["providerSymbol"],entry_at.isoformat(),entry_open))
-                added += 1
-            except (ValueError, TypeError, KeyError, OverflowError):
-                continue
+                try:
+                    observed_dt = parse_time(observed)
+                    price_dt = parse_time(price_time)
+                    report_dt = dt.date.fromisoformat(report_date)
+                    if report_dt > observed_dt.date():
+                        continue
+                    if symbol not in cached:
+                        doc = latest(db, symbol)
+                        cached[symbol] = (doc, _bars(doc))
+                    doc, bars = cached[symbol]
+                    if bars is None:
+                        continue
+                    entry = _entry(bars, observed_dt, price_dt, now)
+                    if entry is None:
+                        continue
+                    entry_at, entry_open = entry
+                    with db:
+                        cur = db.execute(
+                            "INSERT OR IGNORE INTO squalincome_validation_cohorts"
+                            "(symbol,report_date,observed_at,price_time,cot_side,"
+                            "relationship,stage,broker_symbol,entry_at,entry_open)"
+                            " VALUES(?,?,?,?,?,?,?,?,?,?)",
+                            (symbol,report_date,observed,price_time,side,relation,
+                             stage,doc["providerSymbol"],entry_at.isoformat(),entry_open))
+                        added += int(cur.rowcount > 0)
+                except (ValueError, TypeError, KeyError, OverflowError):
+                    continue
         cohorts = db.execute(
-            "SELECT symbol,report_date,cot_side,broker_symbol,entry_at,entry_open"
+            "SELECT symbol,report_date,stage,cot_side,broker_symbol,entry_at,entry_open"
             " FROM squalincome_validation_cohorts").fetchall()
-        for symbol, report_date, side, broker, when, op in cohorts:
+        for symbol, report_date, stage, side, broker, when, op in cohorts:
             try:
                 if symbol not in cached:
                     doc = latest(db, symbol)
@@ -192,8 +197,8 @@ def update_validation(db_path, now=None):
                     continue
                 for hours in HORIZONS:
                     if db.execute("SELECT 1 FROM squalincome_validation_outcomes"
-                                  " WHERE symbol=? AND report_date=? AND horizon_hours=?",
-                                  (symbol,report_date,hours)).fetchone():
+                                  " WHERE symbol=? AND report_date=? AND stage=? AND horizon_hours=?",
+                                  (symbol,report_date,stage,hours)).fetchone():
                         continue
                     values = _outcome(bars,start,op,side,hours,now)
                     if values is None:
@@ -201,10 +206,10 @@ def update_validation(db_path, now=None):
                     with db:
                         cur = db.execute(
                             "INSERT OR IGNORE INTO squalincome_validation_outcomes"
-                            "(symbol,report_date,horizon_hours,evaluated_at,directional_bps,"
+                            "(symbol,report_date,stage,horizon_hours,evaluated_at,directional_bps,"
                             "long_benchmark_bps,favorable_bps,adverse_bps)"
-                            " VALUES(?,?,?,?,?,?,?,?)",
-                            (symbol,report_date,hours,now.isoformat(),*values))
+                            " VALUES(?,?,?,?,?,?,?,?,?)",
+                            (symbol,report_date,stage,hours,now.isoformat(),*values))
                         completed += int(cur.rowcount > 0)
             except (ValueError, TypeError, KeyError, OverflowError):
                 continue
@@ -250,13 +255,14 @@ def validation_status(db_path, now=None):
             "SELECT c.report_date,c.relationship,c.stage,o.horizon_hours,"
             "o.directional_bps,o.long_benchmark_bps,o.favorable_bps,o.adverse_bps"
             " FROM squalincome_validation_outcomes o JOIN squalincome_validation_cohorts c"
-            " ON o.symbol=c.symbol AND o.report_date=c.report_date").fetchall()
+            " ON o.symbol=c.symbol AND o.report_date=c.report_date AND o.stage=c.stage").fetchall()
         cohorts = db.execute("SELECT count(*) FROM squalincome_validation_cohorts").fetchone()[0]
         groups = defaultdict(list)
         for week, relation, stage, horizon, direction, benchmark, favorable, adverse in rows:
             record = (relation,week,direction,benchmark,favorable,adverse)
-            groups[(horizon,"all")].append(record)
-            groups[(horizon,relation)].append(record)
+            if stage == "observation":
+                groups[(horizon,"all")].append(record)
+                groups[(horizon,relation)].append(record)
             groups[(horizon,stage)].append(record)
         summary = []
         for horizon in HORIZONS:
@@ -265,9 +271,9 @@ def validation_status(db_path, now=None):
                 summary.append({"horizonHours":horizon,"segment":segment,
                                 **_statistics(groups[(horizon,segment)])})
         return {"schema":"remura-forward-validation-v1","mode":"research_only",
-                "method":"first_authenticated_observation_per_symbol_and_COT_week",
+                "method":"earliest_authentic_event_per_symbol_COT_week_and_study_arm",
                 "entry":"first_next_M15_open_after_observed_at",
-                "costsIncluded":False, "sampleIndependence":"approximate; correlated assets and weeks",
+                "costsIncluded":False, "sampleIndependence":"one per symbol/week in each arm; arms overlap, assets correlated",
                 "cohorts":cohorts,"outcomes":len(rows),
                 "warning":"Solo prezzi lordi; spread, slippage e commissioni non inclusi. "
                           "COT e sentiment non provano causalità.",
