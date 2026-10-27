@@ -53,7 +53,7 @@ class ForwardValidationTests(unittest.TestCase):
                        "(symbol,state,cot_side,price_side,h4_side,h1_side,m15_side,"
                        "price_state,report_date,price_time,observed_at,cot_weekly,"
                        "cot_sustained,origin,event_type) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                       ("EURUSD",relation,side,side,side,side,side,stage,
+                       ("EURUSD",relation,side,(-side if relation == "divergent" else side),side,side,side,stage,
                         "2026-10-20",ISO(dt.datetime(2026,10,26,9,0,tzinfo=UTC)),
                         ISO(OBS),.7,1,"update",event))
         db.close()
@@ -149,6 +149,36 @@ class ForwardValidationTests(unittest.TestCase):
         self.assertNotIn("private-broker-symbol",serial)
         self.assertNotIn("entry_open",serial)
         self.assertNotIn("refresh_token",serial)
+
+
+    def test_private_http_endpoint_aggregates_without_exposing_prices(self):
+        from http.server import ThreadingHTTPServer
+        from urllib.request import urlopen
+        import threading
+        import private_server
+        self.seed(broker="do-not-expose-private-name")
+        self.run_update()
+        site = ThreadingHTTPServer(("127.0.0.1", 0),
+                                   private_server.http_handler(self.db_path))
+        worker = threading.Thread(target=site.serve_forever, daemon=True)
+        worker.start()
+        try:
+            with urlopen("http://127.0.0.1:" + str(site.server_port) +
+                         "/private-api/signals/validation", timeout=5) as response:
+                self.assertEqual(response.headers.get("Cache-Control"),
+                                 "no-store, max-age=0")
+                payload = json.load(response)
+            self.assertEqual(payload["schema"], "remura-forward-validation-v1")
+            self.assertEqual(payload["outcomes"], 3)
+            exposed = json.dumps(payload)
+            for secret in ("do-not-expose-private-name","entry_open",
+                           '"o":','"h":','"l":','"c":',"CTRADER_ACCESS_TOKEN"):
+                self.assertNotIn(secret, exposed)
+        finally:
+            site.shutdown()
+            site.server_close()
+            worker.join(timeout=2)
+
 
 
 if __name__ == "__main__":
