@@ -5,7 +5,7 @@ La v1.39 resta in produzione finché test, backup e installazione manuale del ba
 ## Metodo e limiti
 
 - Origine esclusiva: storico osservato realmente da Squalincome. Il martedì della data COT NON è considerato il momento di conoscenza: si parte dall'ora italiana/UTC della prima osservazione autentica memorizzata.
-- Campione: prima osservazione per ogni mercato e settimana COT (simbolo, report_date), senza duplicare scansioni dei 15 minuti o scegliere a posteriori una conferma migliore.
+- Campione: prima osservazione per ogni mercato e settimana COT per il gruppo principale. Si misura separatamente il primo passaggio a conferma tecnica e il primo evento qualificato, ciascuno una sola volta per mercato/settimana. I tre gruppi si possono sovrapporre: NON vengono sommati come risultati indipendenti.
 - Ingresso teorico: prezzo open della prima candela M15 che inizia non prima dell'osservazione, entro 45 minuti e sullo stesso broker; non è un prezzo realmente negoziato.
 - Uscita: close dopo 1/4/24 ore, rispettivamente su 4/16/96 M15 contigue, completamente chiuse. Weekend, festività, gap e mix tra broker non sono interpolati.
 - Risultati: percentuale nella direzione COT, Wilson 95%, ritorno in punti base (bps), massima escursione favorevole e contraria, benchmark long dello stesso mercato e periodo. Tutti lordi, senza spread, commissioni, slippage.
