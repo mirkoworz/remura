@@ -248,6 +248,7 @@ def _statistics(rows):
 
 def validation_status(db_path, now=None):
     """Aggregate only: no private price, broker, token, or single-trade exposure."""
+    now = now or utcnow()
     db = connect(db_path)
     try:
         ensure_tables(db)
@@ -256,7 +257,23 @@ def validation_status(db_path, now=None):
             "o.directional_bps,o.long_benchmark_bps,o.favorable_bps,o.adverse_bps"
             " FROM squalincome_validation_outcomes o JOIN squalincome_validation_cohorts c"
             " ON o.symbol=c.symbol AND o.report_date=c.report_date AND o.stage=c.stage").fetchall()
-        cohorts = db.execute("SELECT count(*) FROM squalincome_validation_cohorts").fetchone()[0]
+        cohort_rows = db.execute(
+            "SELECT report_date,relationship,stage,entry_at"
+            " FROM squalincome_validation_cohorts").fetchall()
+        cohorts = len(cohort_rows)
+        matured = defaultdict(int)
+        for _, relation, stage, entry in cohort_rows:
+            try:
+                opened = parse_time(entry)
+            except (ValueError,TypeError,OverflowError):
+                continue
+            for horizon in HORIZONS:
+                if opened + dt.timedelta(hours=horizon) > now:
+                    continue
+                matured[(horizon,stage)] += 1
+                if stage == "observation":
+                    matured[(horizon,"all")] += 1
+                    matured[(horizon,relation)] += 1
         groups = defaultdict(list)
         for week, relation, stage, horizon, direction, benchmark, favorable, adverse in rows:
             record = (relation,week,direction,benchmark,favorable,adverse)
@@ -268,8 +285,13 @@ def validation_status(db_path, now=None):
         for horizon in HORIZONS:
             for segment in ("all","aligned","divergent","observation",
                             "technical_confirmation","qualified_event"):
+                measured = _statistics(groups[(horizon,segment)])
+                due = matured[(horizon,segment)]
                 summary.append({"horizonHours":horizon,"segment":segment,
-                                **_statistics(groups[(horizon,segment)])})
+                                "maturedCohorts":due,
+                                "unevaluatedMatured":max(0,due-measured["samples"]),
+                                "coveragePct":round(100*measured["samples"]/due,1) if due else None,
+                                **measured})
         return {"schema":"remura-forward-validation-v1","mode":"research_only",
                 "method":"earliest_authentic_event_per_symbol_COT_week_and_study_arm",
                 "entry":"first_next_M15_open_after_observed_at",
