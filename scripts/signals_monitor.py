@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""REMURA private Squalincome observer (v1.36).
+"""REMURA private Squalincome observer (v1.37).
 
 Read-only analysis of verified cTrader OHLC and locally stored official CFTC
 futures. A SQLite baseline is required before any transition can be recorded.
@@ -26,6 +26,9 @@ DURATIONS={"M15":900,"H1":3600,"H4":14400}
 MIN_COT_DELTA=.45
 EVENT_KEEP_DAYS=90
 MIN_FRAMES=55
+HISTORY_KEEP_DAYS=30
+HISTORY_MAX_PER_SYMBOL=720
+HISTORY_API_PER_SYMBOL=12
 
 
 def monitored_symbols():
@@ -49,6 +52,28 @@ def ensure_tables(db):
     db.execute("""CREATE TABLE IF NOT EXISTS squalincome_last_scan(
         id INTEGER PRIMARY KEY CHECK(id=1),
         scanned_at TEXT NOT NULL, summary TEXT NOT NULL)""")
+    # Append-only samples of accepted REAL observations (no fabricated OHLC).
+    # Existing v1.36 baselines are NOT deleted, replaced, or backdated.
+    db.execute("""CREATE TABLE IF NOT EXISTS squalincome_history(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        symbol TEXT NOT NULL,
+        state TEXT NOT NULL CHECK(state IN ('aligned','divergent')),
+        cot_side INTEGER NOT NULL CHECK(cot_side IN (-1,1)),
+        price_side INTEGER NOT NULL CHECK(price_side IN (-1,1)),
+        h4_side INTEGER CHECK(h4_side IN (-1,0,1) OR h4_side IS NULL),
+        h1_side INTEGER CHECK(h1_side IN (-1,0,1) OR h1_side IS NULL),
+        m15_side INTEGER CHECK(m15_side IN (-1,0,1) OR m15_side IS NULL),
+        price_state TEXT NOT NULL CHECK(price_state IN ('watch','partial','confirmed')),
+        report_date TEXT NOT NULL,
+        price_time TEXT NOT NULL,
+        observed_at TEXT NOT NULL,
+        cot_weekly REAL,
+        cot_sustained INTEGER,
+        origin TEXT NOT NULL CHECK(origin IN ('baseline','update','first_after_upgrade')),
+        event_type TEXT,
+        UNIQUE(symbol,report_date,price_time))""")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_squal_history_symbol"
+               " ON squalincome_history(symbol,id DESC)")
     db.commit()
 
 
@@ -157,7 +182,8 @@ def price_view(doc, now):
     full=breakout and m15["side"]==side and m15["breakout"]==side
     partial=breakout and m15["side"]==side
     state="confirmed" if full else "partial" if partial else "watch"
-    return {"side":side,"state":state,"last_m15":m15["close_time"]}
+    return {"side":side,"state":state,"last_m15":m15["close_time"],
+            "h4_side":h4["side"],"h1_side":h1["side"],"m15_side":m15["side"]}
 
 
 def classify(cot, price):
@@ -322,6 +348,26 @@ def scan_once(db_path,now=None):
                         if cur.rowcount:events+=1
                     if prior is None:baselines+=1
                     else:updates+=1
+                    history_found=db.execute(
+                        "SELECT 1 FROM squalincome_history WHERE symbol=? LIMIT 1",
+                        (symbol,)).fetchone() is not None
+                    origin=("baseline" if prior is None and not history_found else
+                            "first_after_upgrade" if not history_found else "update")
+                    # An existing reference may be valid even if no v1.37
+                    # timeline exists yet. Never invent older data for it.
+                    db.execute("INSERT OR IGNORE INTO squalincome_history"
+                        "(symbol,state,cot_side,price_side,h4_side,h1_side,m15_side,"
+                        "price_state,report_date,price_time,observed_at,cot_weekly,"
+                        "cot_sustained,origin,event_type) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                        (symbol,current["state"],current["side"],price["side"],
+                         price.get("h4_side"),price.get("h1_side"),price.get("m15_side"),
+                         current["price_state"],current["report_date"],current["price_time"],
+                         stamp,cot.get("weekly"),int(bool(cot.get("sustained"))),
+                         origin,change))
+                    db.execute("DELETE FROM squalincome_history WHERE symbol=? AND id NOT IN"
+                        " (SELECT id FROM squalincome_history WHERE symbol=?"
+                        " ORDER BY id DESC LIMIT ?)",
+                        (symbol,symbol,HISTORY_MAX_PER_SYMBOL))
                     db.execute("INSERT INTO squalincome_observations"
                         "(symbol,state,side,report_date,price_time,price_state,observed_at)"
                         " VALUES(?,?,?,?,?,?,?) ON CONFLICT(symbol) DO UPDATE SET "
@@ -362,6 +408,8 @@ def scan_once(db_path,now=None):
         with db:
             db.execute("DELETE FROM squalincome_events WHERE observed_at < ?",
                 ((now-dt.timedelta(days=EVENT_KEEP_DAYS)).isoformat(),))
+            db.execute("DELETE FROM squalincome_history WHERE observed_at < ?",
+                ((now-dt.timedelta(days=HISTORY_KEEP_DAYS)).isoformat(),))
             db.execute("INSERT INTO squalincome_last_scan(id,scanned_at,summary)"
                 " VALUES(1,?,?) ON CONFLICT(id) DO UPDATE SET"
                 " scanned_at=excluded.scanned_at,summary=excluded.summary",
@@ -389,12 +437,27 @@ def status(db_path,enabled=False,now=None):
         observations=db.execute(
             "SELECT symbol,state,report_date,price_time,price_state,observed_at "
             "FROM squalincome_observations ORDER BY symbol LIMIT 40").fetchall()
+        history_total=db.execute("SELECT count(*) FROM squalincome_history").fetchone()[0]
+        history=[]
+        for symbol in monitored_symbols():
+            sampled=db.execute(
+                "SELECT state,cot_side,price_side,h4_side,h1_side,m15_side,"
+                "price_state,report_date,price_time,observed_at,cot_weekly,"
+                "cot_sustained,origin,event_type FROM squalincome_history"
+                " WHERE symbol=? ORDER BY id DESC LIMIT ?",
+                (symbol,HISTORY_API_PER_SYMBOL)).fetchall()
+            for record in reversed(sampled):
+                entry=dict(zip(("state","cotSide","priceSide","h4Side","h1Side","m15Side",
+                      "priceState","reportDate","priceTime","observedAt","cotWeekly",
+                      "cotSustained","origin","eventType"),record))
+                history.append({"symbol":symbol,**entry})
         events=db.execute("SELECT symbol,event_type,side,report_date,price_time,observed_at,detail "
             "FROM squalincome_events ORDER BY id DESC LIMIT 20").fetchall()
         return {"schema":"remura-squalincome-monitor-v1","enabled":bool(enabled),
                 "mode":"observation_only","notificationsEnabled":False,
                 "trackedMarkets":len(monitored_symbols()),"baselines":baseline,
                 "eventsTotal":total_events,"diagnostics":diagnostics,
+                "historyTotal":history_total,"history":history,
                 "observations":[dict(zip(("symbol","state","reportDate","priceTime",
                                          "priceState","observedAt"),record))
                                 for record in observations if record[0] in monitored_symbols()],
