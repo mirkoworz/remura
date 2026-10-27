@@ -27,6 +27,9 @@
          weeks>samples|| (matured===0?coverage!==null:coverage===null)||
          !VERDICTS.includes(raw.verdict)||
          (raw.verdict===VERDICTS[1]&&(samples<30||weeks<8)))return null;
+      if(!samples&&['directionHitPct','wilson95Pct','meanDirectionalBps',
+        'meanLongBenchmarkBps','meanFavorableBps','meanAdverseBps']
+        .some(key=>raw[key]!==undefined&&raw[key]!==null))return null;
       const hit=samples?pct(raw.directionHitPct):null;
       const ci=raw.wilson95Pct;
       const low=samples&&Array.isArray(ci)&&ci.length===2?pct(ci[0]):null;
