@@ -265,6 +265,6 @@ test("v1.38 filter buttons really filter markets, without inventing signals",()=
 test("Radar Squali wires only private endpoint and same-origin script",()=>{
   const html=fs.readFileSync("mercati.html","utf8");
   assert.ok(html.includes('id="monitor-diagnostics"'));
-  assert.ok(html.includes('squalincome-diagnostics.js?v=138'));
+  assert.ok(html.includes('squalincome-diagnostics.js?v=139'));
   assert.ok(html.includes("./private-api/signals/status"));
 });
