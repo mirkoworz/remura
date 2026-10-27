@@ -323,9 +323,9 @@ class SignalTest(unittest.TestCase):
         db.close()
         p={"side":-1,"state":"watch","last_m15":"2026-10-26T11:15:00+00:00",
            "h4_side":-1,"h1_side":-1,"m15_side":-1}
-        with patch.object(m,"monitored_symbols",return_value=("EURUSD",)), \\
-             patch.object(m,"cot_series",return_value=rows), \\
-             patch.object(m,"latest",return_value={"timeframes":{}}), \\
+        with patch.object(m,"monitored_symbols",return_value=("EURUSD",)), \
+             patch.object(m,"cot_series",return_value=rows), \
+             patch.object(m,"latest",return_value={"timeframes":{}}), \
              patch.object(m,"price_view",return_value=p):
             m.scan_once(self.db_path,NOW)
             first=m.status(self.db_path,True,NOW)
@@ -358,10 +358,10 @@ class SignalTest(unittest.TestCase):
         rows=[("2026-10-13",0,0),("2026-10-20",2,2)]
         p={"side":1,"state":"watch","last_m15":"2026-10-26T11:15:00+00:00",
            "h4_side":1,"h1_side":1,"m15_side":0}
-        with patch.object(m,"monitored_symbols",return_value=("EURUSD",)), \\
-             patch.object(m,"cot_series",return_value=rows), \\
-             patch.object(m,"latest",return_value={"timeframes":{}}), \\
-             patch.object(m,"price_view",return_value=p), \\
+        with patch.object(m,"monitored_symbols",return_value=("EURUSD",)), \
+             patch.object(m,"cot_series",return_value=rows), \
+             patch.object(m,"latest",return_value={"timeframes":{}}), \
+             patch.object(m,"price_view",return_value=p), \
              patch.object(m,"HISTORY_MAX_PER_SYMBOL",3):
             for i in range(6):
                 p["last_m15"]=(NOW+dt.timedelta(minutes=i*15)).isoformat()
