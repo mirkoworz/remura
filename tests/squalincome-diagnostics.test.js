@@ -292,6 +292,18 @@ test("v1.39 never equates a weekly COT delta with a net short position or techni
   assert.match(js,/Nessun evento COT\/prezzo qualificato/);
   assert.match(js,/scroll\.tabIndex=0/);
 });
+test("v1.39 rejects contradictory API labels without inventing a corrected relation",()=>{
+  const p=payload(valid(),13);
+  p.historyTotal=1;
+  p.history=[{symbol:"AUDJPY",state:"aligned",cotSide:-1,priceSide:1,h4Side:1,h1Side:1,
+    m15Side:1,priceState:"watch",reportDate:"2026-10-20",
+    priceTime:"2026-10-27T11:15:00+00:00",observedAt:"2026-10-27T11:25:00+00:00",
+    cotWeekly:-2.12,cotSustained:1,origin:"update",eventType:null}];
+  const result=diagnostics.read(p);
+  assert.equal(result.historyTotal,1);
+  assert.deepEqual(result.history,[]);
+  assert.deepEqual(diagnostics.evolutionModel(result.history),[]);
+});
 test("v1.39 preserves truthful radar totals from 11 market histories independent of scan eligibility",()=>{
   const basis={h4Side:1,h1Side:1,m15Side:1,priceState:"watch",
     reportDate:"2026-10-20",priceTime:"2026-10-27T12:15:00+00:00",
