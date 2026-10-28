@@ -33,6 +33,7 @@
         low:n?item.wilson95Pct[0]:null,high:n?item.wilson95Pct[1]:null,
         mean:n?item.meanDirectionalBps:null,baseline:n?item.meanLongBenchmarkBps:null});
     }
+    const n=x.pairedSamples;
     const delta=x.deltaTradingMinusCalendarBps;
     if(n?(!finite(delta)||Math.abs(delta-(values[1].mean-values[0].mean))>0.03):delta!==null)return null;
     return {matured:x.cohortsMatured,matched:n,unmatched:x.unpairedMatured,
