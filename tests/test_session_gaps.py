@@ -42,6 +42,19 @@ class SessionGapTests(unittest.TestCase):
         self.assertEqual(found["patterns"][0]["missingM15"], 4)
         self.assertGreaterEqual(found["patterns"][0]["observedDays"], 4)
 
+    def test_ctrader_session_wallclock_matches_same_utc_gap_across_dst(self):
+        from zoneinfo import ZoneInfo
+        rome = ZoneInfo("Europe/Rome")
+        # Platform displayed CET 22:00–23:00 on 27 October, while the
+        # same 21:00–22:00 UTC interval read 23:00–00:00 in CEST.
+        for day, local_hour in ((dt.date(2026,10,22),23),
+                                (dt.date(2026,10,27),22)):
+            utc_start = dt.datetime.combine(day,dt.time(21),tzinfo=UTC)
+            local_start = utc_start.astimezone(rome)
+            self.assertEqual(local_start.hour,local_hour)
+            self.assertEqual((utc_start+dt.timedelta(hours=1)).astimezone(rome).hour,
+                             (local_hour+1)%24)
+
     def test_one_off_missing_bars_not_called_session(self):
         only = dt.datetime(2026, 10, 27, 13, 0, tzinfo=UTC)
         doc = mock_doc(utc_hour=99, skipped={only})
