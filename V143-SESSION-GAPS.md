@@ -9,9 +9,20 @@ assenti nello stesso intervallo di ogni sessione:
 - Entrambe le fasce sono 21:00–22:00 UTC.
 
 La ripetizione in due strumenti e attraverso il passaggio all'ora solare
-è **compatibile** con una chiusura quotidiana del broker, ma non prova
-l'orario ufficiale del contratto. Verificarlo sul server di trading prima
-di trattarlo come dato accertato.
+è coerente con la chiusura quotidiana del broker. **Verifica manuale
+effettuata il 28 ottobre 2026:** negli screenshot cTrader FP Markets, le
+informazioni dei simboli **XAUUSD** e **XAGUSD** mostrano entrambe le sessioni
+di apertura alle **23:00** e chiusura alle **21:59** (ora cTrader mostrata
+nella schermata in UTC+1). La pausa italiana è quindi **22:00–23:00 CET**,
+corrispondente a **21:00–22:00 UTC**. Prima dell'ora solare la stessa pausa
+era **23:00–00:00 CEST**. Il confronto conferma la corrispondenza fra gli
+orari visibili del conto e i buchi registrati.
+
+**Limite:** la conferma è manuale e riferita ai simboli FP Markets mostrati:
+la diagnostica automatica non recupera il calendario negoziazioni dal broker,
+né prova automaticamente le sessioni future, festività o altri conti. Per
+questo l'API conserva `brokerHoursConfirmed: false`, nel senso preciso
+«non verificato automaticamente dall'API». Nessuna candela viene inventata.
 
 ## Cosa fa questa PR
 
