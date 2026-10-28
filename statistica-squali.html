@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./nav.css?v=143">
-<title>REMURA v1.43 · Verifica statistica Squali</title>
+<link rel="stylesheet" href="./nav.css?v=144">
+<title>REMURA v1.44 · Verifica statistica Squali</title>
 <style>
 :root{color-scheme:dark;--bg:#07131b;--panel:#122a35;--border:#34535c;--fg:#e8f7f2;--muted:#aac2c5;--mint:#71edc8;--amber:#eecb91;--red:#faa6aa}
 *{box-sizing:border-box}html,body{margin:0;max-width:100%;overflow-x:hidden}
@@ -88,7 +88,7 @@ main{max-width:1050px;padding:26px 20px 100px;margin:auto;min-width:0}
     <div id="stat-stages" class="cards stages"></div>
     <details class="panel session-diagnostics" id="session-diagnostics">
       <summary>Pause delle sessioni — Oro e Argento</summary>
-      <p class="note">Una pausa di mercato ricorrente non equivale a candele perse. Il riconoscimento è soltanto diagnostico: gli orari del broker non sono confermati e <b>non vengono inventate candele né ricalcolate le statistiche precedenti</b>.</p>
+      <p class="note">La pausa 21:00–22:00 UTC di oro e argento è coerente con gli <b>orari cTrader FP Markets verificati manualmente il 28/10/2026</b>. La VPS rileva la ricorrenza, ma non legge automaticamente il calendario ufficiale e non garantisce gli orari futuri. <b>Non vengono inventate candele né ricalcolate le statistiche precedenti</b>.</p>
       <div id="session-gaps-results" class="status" aria-live="polite">Verifico le pause delle sessioni…</div>
     </details>
     <section class="panel foot">
@@ -98,10 +98,10 @@ main{max-width:1050px;padding:26px 20px 100px;margin:auto;min-width:0}
       <p>«Campione insufficiente» significa meno di 30 osservazioni oppure meno di 8 settimane COT distinte. Anche superata la soglia, nessun risultato prova da solo un vantaggio predittivo fuori campione.</p>
     </section>
   </section>
-  <p class="foot">REMURA v1.43 · Verifica di ricerca privata · Nessun ordine automatico o promessa di rendimento.</p>
+  <p class="foot">REMURA v1.44 · Verifica di ricerca privata · Nessun ordine automatico o promessa di rendimento.</p>
 </main>
-<script src="./statistica-squali-core.js?v=143"></script>
-<script src="./statistica-squali.js?v=143"></script>
-<script src="./nav.js?v=143"></script>
+<script src="./statistica-squali-core.js?v=144"></script>
+<script src="./statistica-squali.js?v=144"></script>
+<script src="./nav.js?v=144"></script>
 </body>
 </html>

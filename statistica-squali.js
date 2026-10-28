@@ -1,4 +1,4 @@
-/* REMURA v1.43 — Private statistics, view only. No mock data or orders. */
+/* REMURA v1.44 — Private statistics, view only. No mock data or orders. */
 (function(){
   'use strict';
   const core=window.REMURA_STAT_VALIDATION;
@@ -123,9 +123,12 @@
           const start=candidate.startUtc;
           box.append(node('span','','Interruzione ricorrente alle '+start+' UTC: '+
             candidate.missingM15+' candele M15 assenti in '+candidate.observedDays+
-            ' giornate. Possibile pausa del broker, non confermata.'));
+            ' giornate. Coerente con la pausa indicata da cTrader FP Markets, '+
+            'verificata manualmente il 28/10/2026 per questi due simboli. '+
+            'L’orario non viene verificato automaticamente.'));
         }else{
-          box.append(node('span','','Nessuna pausa regolare confermata dai dati disponibili.'));
+          box.append(node('span','','Nessuna pausa ricorrente riconosciuta nell’archivio corrente. '+
+            'La verifica manuale degli orari cTrader non sostituisce i dati M15.'));
         }
         nodes.push(box);
       }
