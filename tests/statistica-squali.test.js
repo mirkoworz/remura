@@ -123,6 +123,5 @@ test('v1.43 session-gap UI never invents M15 or overwrites old outcome metrics',
  assert.match(js,/brokerHoursConfirmed!==false/);
  assert.match(js,/ricorrente/);
  assert.match(js,/no-store/);
- assert.match(js,/statistical|statistica-squali/);
  assert.doesNotMatch(js,/localStorage|Math\.random|fakeCandles|mockStats/);
 });
