@@ -12,6 +12,9 @@ on:
       - 'mercati.html'
       - 'statistica-squali.html'
       - 'statistica-squali-core.js'
+      - 'dual24-core.js'
+      - 'dual24-ui.js'
+      - 'tests/dual24-ui.test.js'
       - 'statistica-squali.js'
       - 'squalincome-diagnostics.js'
       - 'sw.js'
@@ -49,10 +52,12 @@ jobs:
           node --check squalincome-diagnostics.js
           node --check statistica-squali-core.js
           node --check statistica-squali.js
+          node --check dual24-core.js
+          node --check dual24-ui.js
           node --check impostazioni.js
           node --check feed-health-core.js
       - name: Verify COT analysis rules
-        run: node --test tests/insights.test.js tests/retail-chart.test.js tests/cot-indices.test.js tests/cot-scanner.test.js tests/squalincome-shortlist.test.js tests/feed-health.test.js tests/release-consistency.test.js tests/squalincome-diagnostics.test.js tests/statistica-squali.test.js
+        run: node --test tests/insights.test.js tests/retail-chart.test.js tests/cot-indices.test.js tests/cot-scanner.test.js tests/squalincome-shortlist.test.js tests/feed-health.test.js tests/release-consistency.test.js tests/squalincome-diagnostics.test.js tests/statistica-squali.test.js tests/dual24-ui.test.js
       - name: Verify wiring on all market detail pages
         run: |
           node - <<'NODE'

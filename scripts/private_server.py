@@ -32,6 +32,7 @@ from price_store import connect, get_status, set_status, latest, ingest, api_doc
 from cot_monitor import collect_once as collect_official_cot, public_status as official_cot_status
 from signals_monitor import scan_once as observe_squalincome, status as squalincome_status
 from statistical_validation import update_validation, validation_status
+from dual24_validation import update_dual24, dual24_status
 from session_gaps import session_gap_overview
 from ctrader_tokens import access_token, path_for, read_file
 
@@ -49,6 +50,7 @@ SAFE_ASSETS={
     "stato-prezzi.html","stato-prezzi.js","price-status-core.js",
     "manifest.webmanifest","icon.svg",
     "statistica-squali.html","statistica-squali.js","statistica-squali-core.js",
+    "dual24-core.js","dual24-ui.js",
 }
 STATUS_PATH="/private-api/health"
 PRICE_OVERVIEW_PATH="/private-api/prices/status"
@@ -56,6 +58,7 @@ COT_OVERVIEW_PATH="/private-api/cot/status"
 SIGNAL_OVERVIEW_PATH="/private-api/signals/status"
 VALIDATION_OVERVIEW_PATH="/private-api/signals/validation"
 SESSION_GAPS_PATH="/private-api/signals/session-gaps"
+DUAL24_PATH="/private-api/signals/dual24"
 UPDATE_STATUS_PATH="/private-api/autoupdate"
 RETAIL_LATEST="/private-api/retail/latest.json"
 IG_LATEST="/private-api/ig/latest.json"
@@ -300,6 +303,9 @@ def http_handler(db_path):
                 return
             if path==VALIDATION_OVERVIEW_PATH:
                 self.response(200,validation_status(db_path))
+                return
+            if path==DUAL24_PATH:
+                self.response(200,dual24_status(db_path))
                 return
             if path==SESSION_GAPS_PATH:
                 self.response(200,session_gap_overview(db_path))
@@ -815,6 +821,7 @@ def squalincome_loop(db_path,stop):
         try:
             observe_squalincome(db_path)
             update_validation(db_path)
+            update_dual24(db_path)
         except Exception as exc:
             print("REMURA Squalincome monitor: "+type(exc).__name__,file=sys.stderr)
         stop.wait(15*60)

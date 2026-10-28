@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./nav.css?v=144">
-<title>REMURA v1.44 · Verifica statistica Squali</title>
+<link rel="stylesheet" href="./nav.css?v=145">
+<title>REMURA v1.45 · Verifica statistica Squali</title>
 <style>
 :root{color-scheme:dark;--bg:#07131b;--panel:#122a35;--border:#34535c;--fg:#e8f7f2;--muted:#aac2c5;--mint:#71edc8;--amber:#eecb91;--red:#faa6aa}
 *{box-sizing:border-box}html,body{margin:0;max-width:100%;overflow-x:hidden}
@@ -86,6 +86,13 @@ main{max-width:1050px;padding:26px 20px 100px;margin:auto;min-width:0}
     <h2 class="sectiontitle">Livelli di conferma</h2>
     <p class="small">Le conferme e gli eventi possono derivare dagli stessi mercati già osservati. Non sommare i campioni fra questi gruppi.</p>
     <div id="stat-stages" class="cards stages"></div>
+    <section class="panel" id="dual24-panel" hidden aria-labelledby="dual24-title">
+      <h2 id="dual24-title">Due verifiche separate delle 24 ore</h2>
+      <p class="note">Il risultato storico “24 ore” qui sopra resta invariato. Le due nuove misurazioni usano sempre prezzi cTrader reali e sono <b>esperimenti distinti</b>: non sommare i loro campioni. Le pause del broker sono accettate soltanto quando corrispondono a quelle verificate per oro e argento.</p>
+      <p class="small" id="dual24-state" role="status" aria-live="polite">Verifico i dati sulla VPS privata…</p>
+      <div class="cards" id="dual24-results"></div>
+      <p class="small">La quota verificata è rapportata alle coorti che hanno superato il tempo minimo: le altre possono mancare per chiusure di mercato, storico insufficiente o dati non contigui. Non rappresenta l'affidabilità della previsione. Rendimento lordo, nessuno spread o costo di esecuzione.</p>
+    </section>
     <details class="panel session-diagnostics" id="session-diagnostics">
       <summary>Pause delle sessioni — Oro e Argento</summary>
       <p class="note">La pausa 21:00–22:00 UTC di oro e argento è coerente con gli <b>orari cTrader FP Markets verificati manualmente il 28/10/2026</b>. La VPS rileva la ricorrenza, ma non legge automaticamente il calendario ufficiale e non garantisce gli orari futuri. <b>Non vengono inventate candele né ricalcolate le statistiche precedenti</b>.</p>
@@ -98,10 +105,12 @@ main{max-width:1050px;padding:26px 20px 100px;margin:auto;min-width:0}
       <p>«Campione insufficiente» significa meno di 30 osservazioni oppure meno di 8 settimane COT distinte. Anche superata la soglia, nessun risultato prova da solo un vantaggio predittivo fuori campione.</p>
     </section>
   </section>
-  <p class="foot">REMURA v1.44 · Verifica di ricerca privata · Nessun ordine automatico o promessa di rendimento.</p>
+  <p class="foot">REMURA v1.45 · Verifica di ricerca privata · Nessun ordine automatico o promessa di rendimento.</p>
 </main>
-<script src="./statistica-squali-core.js?v=144"></script>
-<script src="./statistica-squali.js?v=144"></script>
-<script src="./nav.js?v=144"></script>
+<script src="./statistica-squali-core.js?v=145"></script>
+<script src="./statistica-squali.js?v=145"></script>
+<script src="./dual24-core.js?v=145"></script>
+<script src="./dual24-ui.js?v=145"></script>
+<script src="./nav.js?v=145"></script>
 </body>
 </html>

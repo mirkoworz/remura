@@ -1,4 +1,4 @@
-/* REMURA v1.44 — Private statistics, view only. No mock data or orders. */
+/* REMURA v1.45 — Private statistics, view only. No mock data or orders. */
 (function(){
   'use strict';
   const core=window.REMURA_STAT_VALIDATION;
