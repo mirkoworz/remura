@@ -135,6 +135,21 @@ class Dual24Tests(unittest.TestCase):
         self.assertEqual(dual.dual24_status(self.path,cutoff)["outcomes"],1)
         self.assertEqual(dual.update_dual24(self.path,NOW)["outcomesAdded"],1)
 
+    def test_real_exit_open_is_counted_in_excursion_without_future_high(self):
+        payload,entry=self.seed()
+        target=(START+dt.timedelta(hours=24)).isoformat()
+        for row in payload["timeframes"]["M15"]:
+            if row["t"]==target:
+                row["o"]=entry*1.07
+                row["h"]=entry*1.09  # future high MUST NOT be used
+                row["l"]=entry*1.06
+                row["c"]=entry*1.08
+        result=dual._measurement(payload,"XAUUSD",START,entry,1,"calendar24",NOW)
+        self.assertIsNotNone(result)
+        self.assertAlmostEqual(result["directional_bps"],700,places=3)
+        self.assertAlmostEqual(result["favorable_bps"],700,places=3)
+        self.assertLess(result["favorable_bps"],900)
+
     def test_broker_switch_never_mix_old_entry_with_new_quote(self):
         self.seed(broker="FP-ONLY-SECRET")
         db=connect(self.path)
