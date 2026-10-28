@@ -125,3 +125,18 @@ test('v1.43 session-gap UI never invents M15 or overwrites old outcome metrics',
  assert.match(js,/no-store/);
  assert.doesNotMatch(js,/localStorage|Math\.random|fakeCandles|mockStats/);
 });
+
+
+test('v1.44 manual broker schedule evidence is not mistaken for automated verification',()=>{
+ const html=fs.readFileSync('statistica-squali.html','utf8');
+ const js=fs.readFileSync('statistica-squali.js','utf8');
+ const api=fs.readFileSync('scripts/session_gaps.py','utf8');
+ assert.match(html,/orari cTrader FP Markets verificati manualmente il 28\/10\/2026/);
+ assert.match(html,/non legge automaticamente il calendario ufficiale/);
+ assert.match(js,/verificata manualmente il 28\/10\/2026/);
+ assert.match(js,/non viene verificato automaticamente/);
+ assert.doesNotMatch(js,/Possibile pausa del broker, non confermata/);
+ assert.match(api,/"brokerHoursConfirmed": False/);
+ assert.match(js,/result.brokerHoursConfirmed!==false/);
+ assert.match(html,/Non vengono inventate candele né ricalcolate le statistiche precedenti/);
+});
