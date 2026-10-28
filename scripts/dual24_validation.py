@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import datetime as dt
 import math
+import sqlite3
 from collections import defaultdict
 
 from price_feed import parse_time, utcnow
@@ -41,6 +42,7 @@ def _approved_gap(symbol, before, after):
     return (
         symbol in ("XAUUSD", "XAGUSD")
         and before.date() >= METAL_PAUSE_VERIFIED_FROM
+        and before.weekday() < 5
         and before.hour == 20 and before.minute == 45
         and after == before + dt.timedelta(minutes=75)
         and after.hour == 22 and after.minute == 0
@@ -157,7 +159,7 @@ def update_dual24(db_path, now=None):
                 "SELECT symbol,report_date,stage,cot_side,broker_symbol,"
                 "entry_at,entry_open FROM squalincome_validation_cohorts"
             ).fetchall()
-        except __import__("sqlite3").OperationalError:
+        except sqlite3.OperationalError:
             return {"outcomesAdded": 0}
         cache = {}
         added = 0
@@ -213,7 +215,7 @@ def dual24_status(db_path, now=None):
             cohort_rows = db.execute(
                 "SELECT report_date,relationship,stage,entry_at "
                 "FROM squalincome_validation_cohorts").fetchall()
-        except __import__("sqlite3").OperationalError:
+        except sqlite3.OperationalError:
             cohort_rows = []
         rows = db.execute(
             "SELECT c.report_date,c.relationship,o.stage,o.metric,"
