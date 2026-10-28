@@ -64,9 +64,9 @@ test('native iPhone route, no mock stats, private source and PWA cache wiring',(
  const server=fs.readFileSync('scripts/private_server.py','utf8');
  const sw=fs.readFileSync('sw.js','utf8');
  const nav=fs.readFileSync('nav.js','utf8');
- assert.match(html,/statistica-squali-core\.js\?v=143/);
- assert.match(html,/statistica-squali\.js\?v=143/);
- assert.match(html,/nav\.js\?v=143/);
+ assert.match(html,/statistica-squali-core\.js\?v=144/);
+ assert.match(html,/statistica-squali\.js\?v=144/);
+ assert.match(html,/nav\.js\?v=144/);
  assert.match(js,/private-api\/signals\/validation/);
  assert.match(js,/cache:'no-store'/);
  assert.match(js,/area\.hidden=true/);
@@ -117,7 +117,7 @@ test('v1.43 session-gap UI never invents M15 or overwrites old outcome metrics',
  const js=fs.readFileSync('statistica-squali.js','utf8');
  assert.match(html,/id="session-diagnostics"/);
  assert.match(html,/id="session-gaps-results"/);
- assert.match(html,/non vengono inventate candele né ricalcolate le statistiche precedenti/);
+ assert.match(html,/Non vengono inventate candele né ricalcolate le statistiche precedenti/);
  assert.match(js,/private-api\/signals\/session-gaps/);
  assert.match(js,/mode!=='diagnostic_only'/);
  assert.match(js,/brokerHoursConfirmed!==false/);
