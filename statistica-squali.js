@@ -1,4 +1,4 @@
-/* REMURA v1.41 — Private statistics, view only. No mock data or orders. */
+/* REMURA v1.43 — Private statistics, view only. No mock data or orders. */
 (function(){
   'use strict';
   const core=window.REMURA_STAT_VALIDATION;
@@ -98,6 +98,44 @@
     );
     area.hidden=false;
   }
+  async function loadGaps(){
+    const target=document.getElementById('session-gaps-results');
+    if(!target)return;
+    target.textContent='Verifico la ricorrenza delle pause nei dati cTrader…';
+    try{
+      const response=await fetch('./private-api/signals/session-gaps',
+        {cache:'no-store',credentials:'same-origin'});
+      if(!response.ok)throw new Error('http');
+      const result=await response.json();
+      if(!result||result.schema!=='remura-session-gap-diagnostics-v1'||
+         result.mode!=='diagnostic_only'||result.brokerHoursConfirmed!==false||
+         !Array.isArray(result.markets))throw new Error('schema');
+      const nodes=[];
+      for(const symbol of ['XAUUSD','XAGUSD']){
+        const data=result.markets.find(x=>x&&x.symbol===symbol);
+        const box=node('div','session-result');
+        box.append(node('strong','',symbol==='XAUUSD'?'Oro · XAUUSD':'Argento · XAGUSD'));
+        const candidate=data?.patterns?.find(p=>p&&
+          /^[0-2]\d:[0-5]\d$/.test(p.startUtc)&&
+          Number.isSafeInteger(p.missingM15)&&p.missingM15>=1&&p.missingM15<=8&&
+          Number.isSafeInteger(p.observedDays)&&p.observedDays>=3);
+        if(candidate&&data.recurringCandidate===true){
+          const start=candidate.startUtc;
+          box.append(node('span','','Interruzione ricorrente alle '+start+' UTC: '+
+            candidate.missingM15+' candele M15 assenti in '+candidate.observedDays+
+            ' giornate. Possibile pausa del broker, non confermata.'));
+        }else{
+          box.append(node('span','','Nessuna pausa regolare confermata dai dati disponibili.'));
+        }
+        nodes.push(box);
+      }
+      target.replaceChildren(...nodes);
+    }catch(_error){
+      target.textContent='Diagnostica sessioni non disponibile. '+
+        'I risultati statistici già archiviati restano invariati.';
+    }
+  }
+
   async function load(){
     if(pending)return;
     pending=true;
@@ -111,6 +149,7 @@
       if(!parsed)throw Error('schema');
       model=parsed;
       render();
+      loadGaps();
       status.dataset.state='ok';
       status.textContent='Dati aggregati dalla VPS · '+integer(model.cohorts)+
         ' coorti complessive (incluse le conferme sovrapposte).';
