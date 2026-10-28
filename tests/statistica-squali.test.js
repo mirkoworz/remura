@@ -96,3 +96,17 @@ test('v1.41 keeps three iPhone horizons on one row and menu out of scrolled data
  assert.match(nav,/"asset\.html","statistica-squali\.html"\]\.includes\(page\)/);
  assert.doesNotMatch(js,/Direzione COT corretta/);
 });
+
+
+test('v1.42 Radar link is a bounded accessible two-line iPhone control',()=>{
+ const radar=fs.readFileSync('mercati.html','utf8');
+ const layout=radar.match(/<div class="stat-shortcut-wrap">([\s\S]*?)<\/div>/);
+ assert.ok(layout, 'statistics link wrapper exists');
+ assert.match(layout[1],/class="stat-shortcut"/);
+ assert.match(layout[1],/href="\.\/statistica-squali\.html"/);
+ assert.match(layout[1],/<strong>◉ Verifica Squali<\/strong>/);
+ assert.match(layout[1],/<small>Statistiche dopo 1h · 4h · 24h<\/small>/);
+ assert.match(radar,/\.stat-shortcut\{[^}]*display:flex[^}]*width:100%[^}]*max-width:100%/);
+ assert.match(radar,/@media\(max-width:700px\)\{\.stat-shortcut\{padding-left:60px/);
+ assert.doesNotMatch(radar,/class="back" href="\.\/statistica-squali\.html"/);
+});
