@@ -33,6 +33,7 @@ from cot_monitor import collect_once as collect_official_cot, public_status as o
 from signals_monitor import scan_once as observe_squalincome, status as squalincome_status
 from statistical_validation import update_validation, validation_status
 from dual24_validation import update_dual24, dual24_status
+from market_validation import market_audit_status
 from session_gaps import session_gap_overview
 from ctrader_tokens import access_token, path_for, read_file
 
@@ -51,6 +52,7 @@ SAFE_ASSETS={
     "manifest.webmanifest","icon.svg",
     "statistica-squali.html","statistica-squali.js","statistica-squali-core.js",
     "dual24-core.js","dual24-ui.js",
+    "market-audit-core.js","market-audit-ui.js",
 }
 STATUS_PATH="/private-api/health"
 PRICE_OVERVIEW_PATH="/private-api/prices/status"
@@ -59,6 +61,7 @@ SIGNAL_OVERVIEW_PATH="/private-api/signals/status"
 VALIDATION_OVERVIEW_PATH="/private-api/signals/validation"
 SESSION_GAPS_PATH="/private-api/signals/session-gaps"
 DUAL24_PATH="/private-api/signals/dual24"
+MARKET_AUDIT_PATH="/private-api/signals/dual24/markets"
 UPDATE_STATUS_PATH="/private-api/autoupdate"
 RETAIL_LATEST="/private-api/retail/latest.json"
 IG_LATEST="/private-api/ig/latest.json"
@@ -306,6 +309,9 @@ def http_handler(db_path):
                 return
             if path==DUAL24_PATH:
                 self.response(200,dual24_status(db_path))
+                return
+            if path==MARKET_AUDIT_PATH:
+                self.response(200,market_audit_status(db_path))
                 return
             if path==SESSION_GAPS_PATH:
                 self.response(200,session_gap_overview(db_path))
