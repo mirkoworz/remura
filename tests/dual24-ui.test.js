@@ -81,3 +81,12 @@ test('v1.45 iPhone renders two separate 24h metrics without replacing legacy 24h
   assert.match(backend,/update_dual24\(db_path\)/);
   assert.doesNotMatch(js,/mockStats|Math\.random|localStorage/);
 });
+
+
+test('COT week warning uses measured counts, never a hard-coded first week',()=>{
+  const js=fs.readFileSync('dual24-ui.js','utf8');
+  assert.doesNotMatch(js,/Una sola settimana COT/);
+  assert.match(js,/fmt\(a\.weeks\)/);
+  assert.match(js,/fmt\(b\.weeks\)/);
+  assert.match(js,/non provano una previsione affidabile/);
+});
