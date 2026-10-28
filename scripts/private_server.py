@@ -52,6 +52,7 @@ SAFE_ASSETS={
     "manifest.webmanifest","icon.svg",
     "statistica-squali.html","statistica-squali.js","statistica-squali-core.js",
     "dual24-core.js","dual24-ui.js",
+    "market-audit-core.js","market-audit-ui.js",
 }
 STATUS_PATH="/private-api/health"
 PRICE_OVERVIEW_PATH="/private-api/prices/status"
