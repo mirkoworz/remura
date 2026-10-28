@@ -110,3 +110,19 @@ test('v1.42 Radar link is a bounded accessible two-line iPhone control',()=>{
  assert.match(radar,/@media\(max-width:700px\)\{\.stat-shortcut\{padding-left:60px/);
  assert.doesNotMatch(radar,/class="back" href="\.\/statistica-squali\.html"/);
 });
+
+
+test('v1.43 session-gap UI never invents M15 or overwrites old outcome metrics',()=>{
+ const html=fs.readFileSync('statistica-squali.html','utf8');
+ const js=fs.readFileSync('statistica-squali.js','utf8');
+ assert.match(html,/id="session-diagnostics"/);
+ assert.match(html,/id="session-gaps-results"/);
+ assert.match(html,/non vengono inventate candele né ricalcolate le statistiche precedenti/);
+ assert.match(js,/private-api\/signals\/session-gaps/);
+ assert.match(js,/mode!=='diagnostic_only'/);
+ assert.match(js,/brokerHoursConfirmed!==false/);
+ assert.match(js,/ricorrente/);
+ assert.match(js,/no-store/);
+ assert.match(js,/statistical|statistica-squali/);
+ assert.doesNotMatch(js,/localStorage|Math\.random|fakeCandles|mockStats/);
+});
