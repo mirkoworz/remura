@@ -54,7 +54,9 @@
     );
     state.textContent='Dati autentici dalla VPS · '+fmt(model.cohorts)+
       ' coorti complessive, incluse le conferme sovrapposte. '+
-      'Una sola settimana COT non rende affidabile la percentuale.';
+      'Settimane COT distinte: '+fmt(a.weeks)+' (calendario), '+
+      fmt(b.weeks)+' (negoziazione). '+
+      'Queste percentuali descrivono il campione, non provano una previsione affidabile.';
   }
   function sync(){
     panel.hidden=legacyButton.getAttribute('aria-pressed')!=='true';
