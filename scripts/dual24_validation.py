@@ -221,10 +221,22 @@ def dual24_status(db_path, now=None):
             "SELECT c.report_date,c.relationship,o.stage,o.metric,"
             "o.directional_bps,o.long_benchmark_bps,o.favorable_bps,"
             "o.adverse_bps,o.calendar_minutes,o.closed_m15,o.verified_pauses,"
-            "o.exit_delay_minutes FROM squalincome_dual24_outcomes o "
+            "o.exit_delay_minutes,o.exit_at,o.evaluated_at "
+            "FROM squalincome_dual24_outcomes o "
             "JOIN squalincome_validation_cohorts c "
             "ON o.symbol=c.symbol AND o.report_date=c.report_date "
             "AND o.stage=c.stage").fetchall()
+        # Defend against future-dated records in an as-of query; only finalized,
+        # already evaluated records can influence the aggregate at this time.
+        final_rows = []
+        for row in rows:
+            try:
+                if (parse_time(row[-2]) + STEP <= now
+                        and parse_time(row[-1]) <= now):
+                    final_rows.append(row)
+            except (TypeError,ValueError,OverflowError):
+                continue
+        rows = final_rows
         potential = defaultdict(int)
         for week, relation, stage, at in cohort_rows:
             try:
@@ -239,7 +251,7 @@ def dual24_status(db_path, now=None):
                     potential[(metric,relation)] += 1
         groups = defaultdict(list)
         meta = defaultdict(list)
-        for week, relation, stage, metric, direction, benchmark, favorable, adverse, duration, count, gaps, delay in rows:
+        for week, relation, stage, metric, direction, benchmark, favorable, adverse, duration, count, gaps, delay, exit_at, evaluated_at in rows:
             record = (relation,week,direction,benchmark,favorable,adverse)
             if stage == "observation":
                 for name in ("all", relation):
