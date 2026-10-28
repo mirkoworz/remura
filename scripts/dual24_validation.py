@@ -106,8 +106,10 @@ def _measurement(doc, symbol, start, entry_open, side, metric, now):
         return None
     close_open = bars[exit_at][0]  # actual quote, not invented weekend price
     factor = 10000.0 / entry_open
-    high = max(row[1] for row in window)
-    low = min(row[2] for row in window)
+    # Include the actual exit OPEN (known at exit); never peek into
+    # the exit candle's future HIGH/LOW.
+    high = max([entry_open, close_open] + [row[1] for row in window])
+    low = min([entry_open, close_open] + [row[2] for row in window])
     raw = (close_open - entry_open) * factor
     favorable = (high - entry_open) * factor if side == 1 else (entry_open - low) * factor
     adverse = (low - entry_open) * factor if side == 1 else (entry_open - high) * factor
