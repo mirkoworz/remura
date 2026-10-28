@@ -64,9 +64,9 @@ test('native iPhone route, no mock stats, private source and PWA cache wiring',(
  const server=fs.readFileSync('scripts/private_server.py','utf8');
  const sw=fs.readFileSync('sw.js','utf8');
  const nav=fs.readFileSync('nav.js','utf8');
- assert.match(html,/statistica-squali-core\.js\?v=142/);
- assert.match(html,/statistica-squali\.js\?v=142/);
- assert.match(html,/nav\.js\?v=142/);
+ assert.match(html,/statistica-squali-core\.js\?v=143/);
+ assert.match(html,/statistica-squali\.js\?v=143/);
+ assert.match(html,/nav\.js\?v=143/);
  assert.match(js,/private-api\/signals\/validation/);
  assert.match(js,/cache:'no-store'/);
  assert.match(js,/area\.hidden=true/);
@@ -109,4 +109,19 @@ test('v1.42 Radar link is a bounded accessible two-line iPhone control',()=>{
  assert.match(radar,/\.stat-shortcut\{[^}]*display:flex[^}]*width:100%[^}]*max-width:100%/);
  assert.match(radar,/@media\(max-width:700px\)\{\.stat-shortcut\{padding-left:60px/);
  assert.doesNotMatch(radar,/class="back" href="\.\/statistica-squali\.html"/);
+});
+
+
+test('v1.43 session-gap UI never invents M15 or overwrites old outcome metrics',()=>{
+ const html=fs.readFileSync('statistica-squali.html','utf8');
+ const js=fs.readFileSync('statistica-squali.js','utf8');
+ assert.match(html,/id="session-diagnostics"/);
+ assert.match(html,/id="session-gaps-results"/);
+ assert.match(html,/non vengono inventate candele né ricalcolate le statistiche precedenti/);
+ assert.match(js,/private-api\/signals\/session-gaps/);
+ assert.match(js,/mode!=='diagnostic_only'/);
+ assert.match(js,/brokerHoursConfirmed!==false/);
+ assert.match(js,/ricorrente/);
+ assert.match(js,/no-store/);
+ assert.doesNotMatch(js,/localStorage|Math\.random|fakeCandles|mockStats/);
 });
