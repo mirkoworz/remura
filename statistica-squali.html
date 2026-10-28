@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./nav.css?v=142">
-<title>REMURA v1.42 · Verifica statistica Squali</title>
+<link rel="stylesheet" href="./nav.css?v=143">
+<title>REMURA v1.43 · Verifica statistica Squali</title>
 <style>
 :root{color-scheme:dark;--bg:#07131b;--panel:#122a35;--border:#34535c;--fg:#e8f7f2;--muted:#aac2c5;--mint:#71edc8;--amber:#eecb91;--red:#faa6aa}
 *{box-sizing:border-box}html,body{margin:0;max-width:100%;overflow-x:hidden}
@@ -50,6 +50,7 @@ main{max-width:1050px;padding:26px 20px 100px;margin:auto;min-width:0}
 [hidden]{display:none!important}
 @media(max-width:700px){main{padding:18px 13px 90px}.cards,.cards.stages{grid-template-columns:1fr}.panel{padding:15px}.heading{font-size:32px}.board{gap:8px}.stat{padding:12px}.stat strong{font-size:23px}.top{margin-bottom:18px}}
 @media(max-width:350px){.board{grid-template-columns:1fr}}
+.session-diagnostics{margin:22px 0 14px}.session-diagnostics summary{cursor:pointer;color:var(--mint);font-weight:750;font-size:16px;list-style-position:inside}.session-diagnostics summary:focus-visible{outline:2px solid var(--mint);outline-offset:4px}.session-result{padding:10px 0;border-top:1px solid var(--border)}.session-result strong{display:block}.session-result small{color:var(--muted)}
 </style>
 </head>
 <body>
@@ -85,6 +86,11 @@ main{max-width:1050px;padding:26px 20px 100px;margin:auto;min-width:0}
     <h2 class="sectiontitle">Livelli di conferma</h2>
     <p class="small">Le conferme e gli eventi possono derivare dagli stessi mercati già osservati. Non sommare i campioni fra questi gruppi.</p>
     <div id="stat-stages" class="cards stages"></div>
+    <details class="panel session-diagnostics" id="session-diagnostics">
+      <summary>Pause delle sessioni — Oro e Argento</summary>
+      <p class="note">Una pausa di mercato ricorrente non equivale a candele perse. Il riconoscimento è soltanto diagnostico: gli orari del broker non sono confermati e <b>non vengono inventate candele né ricalcolate le statistiche precedenti</b>.</p>
+      <div id="session-gaps-results" class="status" aria-live="polite">Verifico le pause delle sessioni…</div>
+    </details>
     <section class="panel foot">
       <h2>Come leggere questi dati</h2>
       <p>Il confronto 1h, 4h e 24h può usare numeri diversi di osservazioni: non confrontare le percentuali come se tutti gli strumenti fossero gli stessi. La percentuale direzionale conta quante volte il prezzo finale si muove nella direzione indicata dal COT. L'intervallo al 95% misura una parte dell'incertezza campionaria, ma non corregge la dipendenza tra mercati. Il benchmark long è il movimento del prezzo sugli stessi intervalli, senza considerare il COT.</p>
@@ -92,10 +98,10 @@ main{max-width:1050px;padding:26px 20px 100px;margin:auto;min-width:0}
       <p>«Campione insufficiente» significa meno di 30 osservazioni oppure meno di 8 settimane COT distinte. Anche superata la soglia, nessun risultato prova da solo un vantaggio predittivo fuori campione.</p>
     </section>
   </section>
-  <p class="foot">REMURA v1.42 · Verifica di ricerca privata · Nessun ordine automatico o promessa di rendimento.</p>
+  <p class="foot">REMURA v1.43 · Verifica di ricerca privata · Nessun ordine automatico o promessa di rendimento.</p>
 </main>
-<script src="./statistica-squali-core.js?v=142"></script>
-<script src="./statistica-squali.js?v=142"></script>
-<script src="./nav.js?v=142"></script>
+<script src="./statistica-squali-core.js?v=143"></script>
+<script src="./statistica-squali.js?v=143"></script>
+<script src="./nav.js?v=143"></script>
 </body>
 </html>
