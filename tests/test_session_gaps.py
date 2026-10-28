@@ -97,5 +97,41 @@ class SessionGapTests(unittest.TestCase):
             self.assertFalse(path.exists())
 
 
+    def test_private_http_route_is_no_store_and_redacted(self):
+        import threading
+        from http.server import ThreadingHTTPServer
+        from urllib.request import urlopen
+        import private_server
+        with tempfile.TemporaryDirectory() as temp:
+            dbpath = Path(temp) / "private" / "remura-prices.sqlite3"
+            db = connect(dbpath)
+            with db:
+                for symbol in ("XAUUSD", "XAGUSD"):
+                    db.execute(
+                        "INSERT INTO prices(symbol,source,broker_symbol,updated_at,payload)"
+                        " VALUES(?,?,?,?,?)",
+                        (symbol, "ctrader", "SENSITIVE-BROKER-KEY", NOW.isoformat(),
+                         json.dumps(mock_doc(provider="SENSITIVE-BROKER-KEY"))))
+            db.close()
+            server = ThreadingHTTPServer(("127.0.0.1", 0),
+                                         private_server.http_handler(dbpath))
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            try:
+                url = ("http://127.0.0.1:" + str(server.server_port)
+                       + "/private-api/signals/session-gaps")
+                with urlopen(url, timeout=5) as response:
+                    self.assertEqual(response.headers["Cache-Control"],
+                                     "no-store, max-age=0")
+                    body = json.load(response)
+                self.assertEqual(body["mode"], "diagnostic_only")
+                self.assertTrue(body["bothMetalsSamePattern"])
+                self.assertNotIn("SENSITIVE-BROKER-KEY", json.dumps(body))
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=2)
+
+
 if __name__ == "__main__":
     unittest.main()
