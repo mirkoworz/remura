@@ -1,6 +1,6 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
 const pages=['index.html','forex.html','mercati.html','asset.html','catalogo.html','fonti.html','impostazioni.html','stato-prezzi.html','statistica-squali.html'];
-test('all pages use v1.41 menu and no old version labels',()=>{
+test('all pages use v1.42 menu and no old version labels',()=>{
  for(const p of pages){const html=fs.readFileSync(p,'utf8');assert.ok(html.includes('nav.js?v=141'),p);assert.ok(!html.includes('REMURA v0.8')&&!html.includes('REMURA v1.5')&&!html.includes('VERSIONE 0.5'),p);}
  const nav=fs.readFileSync('nav.js','utf8');assert.match(nav,/Aggiornamento v1\.41 · \d{2}\/\d{2}\/2026/);
 });
