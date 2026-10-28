@@ -64,9 +64,9 @@ test('native iPhone route, no mock stats, private source and PWA cache wiring',(
  const server=fs.readFileSync('scripts/private_server.py','utf8');
  const sw=fs.readFileSync('sw.js','utf8');
  const nav=fs.readFileSync('nav.js','utf8');
- assert.match(html,/statistica-squali-core\.js\?v=141/);
- assert.match(html,/statistica-squali\.js\?v=141/);
- assert.match(html,/nav\.js\?v=141/);
+ assert.match(html,/statistica-squali-core\.js\?v=142/);
+ assert.match(html,/statistica-squali\.js\?v=142/);
+ assert.match(html,/nav\.js\?v=142/);
  assert.match(js,/private-api\/signals\/validation/);
  assert.match(js,/cache:'no-store'/);
  assert.match(js,/area\.hidden=true/);
@@ -95,4 +95,18 @@ test('v1.41 keeps three iPhone horizons on one row and menu out of scrolled data
  assert.match(js,/Copertura coorti già mature/);
  assert.match(nav,/"asset\.html","statistica-squali\.html"\]\.includes\(page\)/);
  assert.doesNotMatch(js,/Direzione COT corretta/);
+});
+
+
+test('v1.42 Radar link is a bounded accessible two-line iPhone control',()=>{
+ const radar=fs.readFileSync('mercati.html','utf8');
+ const layout=radar.match(/<div class="stat-shortcut-wrap">([\s\S]*?)<\/div>/);
+ assert.ok(layout, 'statistics link wrapper exists');
+ assert.match(layout[1],/class="stat-shortcut"/);
+ assert.match(layout[1],/href="\.\/statistica-squali\.html"/);
+ assert.match(layout[1],/<strong>◉ Verifica Squali<\/strong>/);
+ assert.match(layout[1],/<small>Statistiche dopo 1h · 4h · 24h<\/small>/);
+ assert.match(radar,/\.stat-shortcut\{[^}]*display:flex[^}]*width:100%[^}]*max-width:100%/);
+ assert.match(radar,/@media\(max-width:700px\)\{\.stat-shortcut\{padding-left:60px/);
+ assert.doesNotMatch(radar,/class="back" href="\.\/statistica-squali\.html"/);
 });
