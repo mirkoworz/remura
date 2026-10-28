@@ -9,6 +9,7 @@ from pathlib import Path
 from http.server import ThreadingHTTPServer
 from threading import Thread
 from urllib.request import urlopen
+from unittest.mock import patch
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"scripts"))
@@ -206,6 +207,16 @@ class Dual24Tests(unittest.TestCase):
         for forbidden in ("SECRET-FP-ACCOUNT","entry_open","exit_open","XAUUSD","CTRADER_CLIENT_SECRET"):
             self.assertNotIn(forbidden,text)
 
+    def test_as_of_snapshot_cannot_use_future_outcomes(self):
+        self.seed()
+        dual.update_dual24(self.path,NOW)
+        past=START+dt.timedelta(hours=1)
+        report=dual.dual24_status(self.path,past)
+        self.assertEqual(report["outcomes"],0)
+        self.assertEqual(report["cohorts"],1)
+        for group in report["segments"]:
+            self.assertEqual(group["samples"],0)
+
     def test_http_readonly_endpoint_returns_aggregate_and_no_cache(self):
         self.seed()
         dual.update_dual24(self.path,NOW)
@@ -213,10 +224,11 @@ class Dual24Tests(unittest.TestCase):
         worker=Thread(target=server.serve_forever,daemon=True)
         worker.start()
         try:
-            with urlopen("http://127.0.0.1:"+str(server.server_port)+
-                         "/private-api/signals/dual24",timeout=5) as response:
-                self.assertEqual(response.headers.get("Cache-Control"),"no-store, max-age=0")
-                data=json.load(response)
+            with patch.object(dual,"utcnow",return_value=NOW):
+                with urlopen("http://127.0.0.1:"+str(server.server_port)+
+                             "/private-api/signals/dual24",timeout=5) as response:
+                    self.assertEqual(response.headers.get("Cache-Control"),"no-store, max-age=0")
+                    data=json.load(response)
             self.assertEqual(data["schema"],"remura-dual24-validation-v1")
             self.assertEqual(data["outcomes"],2)
         finally:
