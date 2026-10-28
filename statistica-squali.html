@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./nav.css?v=145">
-<title>REMURA v1.45 · Verifica statistica Squali</title>
+<link rel="stylesheet" href="./nav.css?v=146">
+<title>REMURA v1.46 · Verifica statistica Squali</title>
 <style>
 :root{color-scheme:dark;--bg:#07131b;--panel:#122a35;--border:#34535c;--fg:#e8f7f2;--muted:#aac2c5;--mint:#71edc8;--amber:#eecb91;--red:#faa6aa}
 *{box-sizing:border-box}html,body{margin:0;max-width:100%;overflow-x:hidden}
@@ -93,6 +93,17 @@ main{max-width:1050px;padding:26px 20px 100px;margin:auto;min-width:0}
       <div class="cards" id="dual24-results"></div>
       <p class="small">La quota verificata è rapportata alle coorti che hanno superato il tempo minimo: le altre possono mancare per chiusure di mercato, storico insufficiente o dati non contigui. Non rappresenta l'affidabilità della previsione. Rendimento lordo, nessuno spread o costo di esecuzione.</p>
     </section>
+    <details class="panel session-diagnostics" id="market-audit-panel" hidden>
+      <summary>Ricerca per mercato · Concordanze e divergenze</summary>
+      <p class="note">Questa ricerca usa <b>solo le stesse osservazioni</b> valutate sia dopo 24 ore di calendario sia dopo 96 M15 negoziate, una per mercato/settimana COT. Le conferme successive non sono aggiunte. I confronti parziali sono esclusi da entrambe le statistiche. Nessun ordinamento per presunta occasione operativa.</p>
+      <label class="small" for="market-audit-select">Seleziona il mercato</label>
+      <select id="market-audit-select" aria-label="Seleziona mercato per confronto statistico" style="display:block;width:100%;max-width:100%;margin:8px 0 15px;padding:12px;border-radius:12px;border:1px solid var(--border);background:#102833;color:var(--fg);font:inherit">
+        <option value="all">Tutti · concordanze e divergenze</option>
+      </select>
+      <p class="small" id="market-audit-state" role="status" aria-live="polite">Carico i campioni abbinati…</p>
+      <div class="cards" id="market-audit-results"></div>
+      <p class="small">I dati sono lordi. La differenza tra i metodi non è un profitto, né una conferma predittiva. Una settimana COT e mercati correlati non equivalgono a tante prove indipendenti.</p>
+    </details>
     <details class="panel session-diagnostics" id="session-diagnostics">
       <summary>Pause delle sessioni — Oro e Argento</summary>
       <p class="note">La pausa 21:00–22:00 UTC di oro e argento è coerente con gli <b>orari cTrader FP Markets verificati manualmente il 28/10/2026</b>. La VPS rileva la ricorrenza, ma non legge automaticamente il calendario ufficiale e non garantisce gli orari futuri. <b>Non vengono inventate candele né ricalcolate le statistiche precedenti</b>.</p>
@@ -105,12 +116,14 @@ main{max-width:1050px;padding:26px 20px 100px;margin:auto;min-width:0}
       <p>«Campione insufficiente» significa meno di 30 osservazioni oppure meno di 8 settimane COT distinte. Anche superata la soglia, nessun risultato prova da solo un vantaggio predittivo fuori campione.</p>
     </section>
   </section>
-  <p class="foot">REMURA v1.45 · Verifica di ricerca privata · Nessun ordine automatico o promessa di rendimento.</p>
+  <p class="foot">REMURA v1.46 · Verifica di ricerca privata · Nessun ordine automatico o promessa di rendimento.</p>
 </main>
-<script src="./statistica-squali-core.js?v=145"></script>
-<script src="./statistica-squali.js?v=145"></script>
-<script src="./dual24-core.js?v=145"></script>
-<script src="./dual24-ui.js?v=145"></script>
-<script src="./nav.js?v=145"></script>
+<script src="./statistica-squali-core.js?v=146"></script>
+<script src="./statistica-squali.js?v=146"></script>
+<script src="./dual24-core.js?v=146"></script>
+<script src="./dual24-ui.js?v=146"></script>
+<script src="./market-audit-core.js?v=146"></script>
+<script src="./market-audit-ui.js?v=146"></script>
+<script src="./nav.js?v=146"></script>
 </body>
 </html>
