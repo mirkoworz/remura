@@ -22,10 +22,14 @@ EXIT_CLOSE = dt.timedelta(minutes=15)
 RELATIONSHIPS = ("aligned", "divergent")
 
 
-def _snapshot(db, now):
-    # Read-only; do NOT call ensure_tables or run a collector through GET.
+def paired_cases(db, now):
+    """Shared eligibility rules of v1.46: one first observation per market/COT week.
+
+    Return only pairs with both original v1.45 horizons evaluated and already
+    closed at `now`; no stage overlap or future as-of observations.
+    """
     cohorts = db.execute(
-        "SELECT symbol,report_date,relationship,entry_at "
+        "SELECT symbol,report_date,relationship,entry_at,cot_side "
         "FROM squalincome_validation_cohorts WHERE stage='observation'"
     ).fetchall()
     outcomes = db.execute(
@@ -38,7 +42,7 @@ def _snapshot(db, now):
     ).fetchall()
 
     eligible = {}
-    for symbol, week, relation, entry in cohorts:
+    for symbol, week, relation, entry, side in cohorts:
         if relation not in RELATIONSHIPS:
             continue
         try:
@@ -49,7 +53,7 @@ def _snapshot(db, now):
                 continue
         except (ValueError, TypeError, OverflowError, AttributeError):
             continue
-        eligible[(symbol,week)] = (relation,when)
+        eligible[(symbol,week)] = (relation,when,side)
 
     paired = defaultdict(dict)
     for symbol, week, metric, entry, exit_at, evaluated_at, direction, long, fav, adv in outcomes:
@@ -68,10 +72,16 @@ def _snapshot(db, now):
             continue
         paired[key][metric] = (direction,long,fav,adv)
 
-    complete = {}
-    for key, vals in paired.items():
-        if len(vals) == 2 and all(m in vals for m in ("calendar24","trading96")):
-            complete[key] = vals
+    complete = {
+        key: vals for key, vals in paired.items()
+        if len(vals) == 2 and all(m in vals for m in ("calendar24","trading96"))
+    }
+    return eligible, complete
+
+
+def _snapshot(db, now):
+    # Common selection shared with v1.47; existing v1.46 counts unchanged.
+    eligible, complete = paired_cases(db, now)
 
     def segment(keys):
         records = {"calendar24": [], "trading96": []}
