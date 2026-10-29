@@ -104,6 +104,11 @@ def ensure_table(db):
         oi REAL NOT NULL, first_long REAL NOT NULL, first_short REAL NOT NULL,
         second_long REAL NOT NULL, second_short REAL NOT NULL,
         PRIMARY KEY(dataset,code,report_date))""")
+    db.execute("""CREATE TABLE IF NOT EXISTS cot_first_seen (
+        dataset TEXT NOT NULL, code TEXT NOT NULL, report_date TEXT NOT NULL,
+        first_seen_at TEXT NOT NULL,
+        PRIMARY KEY(dataset,code,report_date))""")
+    # Provenance is deliberately append-only and does not backfill existing rows.
     db.commit()
 
 def collect_once(db_path, now=None, fetch=download):
@@ -121,6 +126,11 @@ def collect_once(db_path, now=None, fetch=download):
             try:
                 records=normalize(dataset,fetch(dataset,now),now)
                 with db:
+                    # Only NEW contract/week rows receive a first-seen timestamp.
+                    # Older records are never retroactively claimed as captured.
+                    existing=set(db.execute(
+                        "SELECT code,report_date FROM cot_reports WHERE dataset=?",
+                        (dataset,)).fetchall())
                     db.executemany(
                         """INSERT INTO cot_reports(dataset,code,report_date,oi,first_long,first_short,second_long,second_short)
                         VALUES(?,?,?,?,?,?,?,?)
@@ -128,6 +138,12 @@ def collect_once(db_path, now=None, fetch=download):
                             oi=excluded.oi,first_long=excluded.first_long,first_short=excluded.first_short,
                             second_long=excluded.second_long,second_short=excluded.second_short""",
                         [(kind,code,date,*v) for (kind,code,date),v in records.items()])
+                    db.executemany(
+                        "INSERT OR IGNORE INTO cot_first_seen "
+                        "(dataset,code,report_date,first_seen_at) VALUES(?,?,?,?)",
+                        [(kind,code,date,now.isoformat())
+                         for (kind,code,date) in records
+                         if (code,date) not in existing])
                     db.execute("DELETE FROM cot_reports WHERE report_date < ?",
                         ((now-dt.timedelta(days=KEEP_DAYS)).date().isoformat(),))
                 saved[dataset]=len(records)
