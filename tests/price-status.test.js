@@ -19,7 +19,7 @@ test('Dashboard uses only lightweight authenticated API, no token or fake data',
  const page=fs.readFileSync('stato-prezzi.html','utf8');
  const client=fs.readFileSync('stato-prezzi.js','utf8');
  const backend=fs.readFileSync('scripts/private_server.py','utf8');
- assert.ok(page.includes('nav.js?v=149'));
+ assert.ok(page.includes('nav.js?v=150'));
  assert.ok(client.includes('./private-api/prices/status'));
  assert.ok(backend.includes('PRICE_OVERVIEW_PATH'));
  assert.ok(backend.includes('stato-prezzi.html'));
@@ -108,7 +108,7 @@ test("Macro page has a private-readonly architecture and correct menu version",(
  const ui=fs.readFileSync("stato-prezzi.js","utf8");
  const nav=fs.readFileSync("nav.js","utf8");
  const service=fs.readFileSync("sw.js","utf8");
- for(const script of ["nav.js?v=149","price-status-core.js?v=123","stato-prezzi.js?v=126"])assert.ok(html.includes(script));
+ for(const script of ["nav.js?v=150","price-status-core.js?v=123","stato-prezzi.js?v=126"])assert.ok(html.includes(script));
  assert.ok(html.includes('id="macro"'));
  assert.ok(ui.includes('window.addEventListener("hashchange",initialize)'));
  assert.ok(ui.includes("./private-api/prices/"));
