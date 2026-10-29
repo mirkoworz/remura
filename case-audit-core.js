@@ -1,14 +1,13 @@
 /* REMURA v1.47 — validation for private weekly evidence, not trade logs. */
 (function(root){
  'use strict';
- const metricNames=['calendar24','trading96'];
  const positiveInt=x=>Number.isSafeInteger(x)&&x>=0;
  const number=x=>typeof x==='number'&&Number.isFinite(x);
  const rounded=(a,b)=>Math.abs(a-b)<0.031;
  const validWeek=x=>typeof x==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(x)&&
    !Number.isNaN(Date.parse(x+'T00:00:00Z'));
  function metric(m,side){
-   if(!m||!metricNames.every(()=>true)||
+   if(!m||
       !['directionalBps','benchmarkLongBps','favorableBps','adverseBps'].every(k=>number(m[k]))||
       typeof m.directionHit!=='boolean'||m.directionHit!==(m.directionalBps>0)||
       m.favorableBps<0||m.adverseBps>0||
@@ -43,7 +42,7 @@
      !positiveInt(input.pairedCasesShown)||
      input.weekly.length>12||input.weekly.length!==input.weeksShown||
      input.weeksShown>input.totalEligibleWeeks||
-     input.pairedCasesShown!==input.cases.length||
+     input.pairedCasesShown!==input.cases.length||input.cases.length>456||
      !input.caseCountByRelationship)return null;
    const cases=[],keys=new Set();
    for(const r of input.cases){
@@ -76,7 +75,8 @@
      weekly.push({week:r.cotWeek,matured:r.maturedCohorts,paired:r.pairedSamples,
        aligned,divergent});
    }
-   if(new Set(cases.map(r=>r.week)).size>weekly.length||
+   if(weekly.reduce((s,r)=>s+r.paired,0)!==cases.length||
+      new Set(cases.map(r=>r.week)).size>weekly.length||
       cases.some(r=>!seen.has(r.week)))return null;
    return {cases,weekly,totalWeeks:input.totalEligibleWeeks};
  }
