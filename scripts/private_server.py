@@ -36,6 +36,7 @@ from dual24_validation import update_dual24, dual24_status
 from market_validation import market_audit_status
 from case_audit import case_audit_status
 from weekly_quality import weekly_quality_status
+from cot_week_watch import cot_week_watch_status
 from session_gaps import session_gap_overview
 from ctrader_tokens import access_token, path_for, read_file
 
@@ -57,6 +58,7 @@ SAFE_ASSETS={
     "market-audit-core.js","market-audit-ui.js",
     "case-audit-core.js","case-audit-ui.js",
     "weekly-quality-core.js","weekly-quality-ui.js",
+    "cot-week-watch-core.js","cot-week-watch-ui.js",
 }
 STATUS_PATH="/private-api/health"
 PRICE_OVERVIEW_PATH="/private-api/prices/status"
@@ -68,6 +70,7 @@ DUAL24_PATH="/private-api/signals/dual24"
 MARKET_AUDIT_PATH="/private-api/signals/dual24/markets"
 CASE_AUDIT_PATH="/private-api/signals/dual24/cases"
 WEEKLY_QUALITY_PATH="/private-api/signals/weekly-quality"
+COT_WEEK_WATCH_PATH="/private-api/cot/week-watch"
 UPDATE_STATUS_PATH="/private-api/autoupdate"
 RETAIL_LATEST="/private-api/retail/latest.json"
 IG_LATEST="/private-api/ig/latest.json"
@@ -306,6 +309,9 @@ def http_handler(db_path):
                 return
             if path==COT_OVERVIEW_PATH:
                 self.response(200,official_cot_status(db_path,cot_sync_enabled()))
+                return
+            if path==COT_WEEK_WATCH_PATH:
+                self.response(200,cot_week_watch_status(db_path,cot_sync_enabled()))
                 return
             if path==SIGNAL_OVERVIEW_PATH:
                 self.response(200,squalincome_status(db_path,squalincome_enabled()))
