@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./nav.css?v=148">
-<title>REMURA v1.48 · Verifica statistica Squali</title>
+<link rel="stylesheet" href="./nav.css?v=149">
+<title>REMURA v1.49 · Verifica statistica Squali</title>
 <style>
 :root{color-scheme:dark;--bg:#07131b;--panel:#122a35;--border:#34535c;--fg:#e8f7f2;--muted:#aac2c5;--mint:#71edc8;--amber:#eecb91;--red:#faa6aa}
 *{box-sizing:border-box}html,body{margin:0;max-width:100%;overflow-x:hidden}
@@ -133,6 +133,16 @@ main{max-width:1050px;padding:26px 20px 100px;margin:auto;min-width:0}
       </details>
       <p class="small">I dati sono lordi. La differenza tra i metodi non è un profitto, né una conferma predittiva. Una settimana COT e mercati correlati non equivalgono a tante prove indipendenti.</p>
     </details>
+    <details class="panel session-diagnostics" id="cot-week-watch-panel">
+      <summary>Controllo nuovi report COT · 14 contratti</summary>
+      <p class="note">La raccolta ufficiale CFTC è già automatica sulla VPS ogni sei ore quando abilitata. Questo controllo verifica <b>quali contratti di ciascuna settimana sono realmente presenti</b>, quando REMURA li ha acquisiti per la prima volta e se TFF e Disaggregated sono sincronizzati. Una data COT vecchia non dimostra da sola un guasto: festività o ritardi ufficiali richiedono verifica.</p>
+      <button type="button" id="cot-week-watch-refresh" class="btn">Aggiorna controllo COT</button>
+      <p class="small" role="status" aria-live="polite" id="cot-week-watch-state">Caricamento monitor COT…</p>
+      <div class="cards" id="cot-week-watch-overview"></div>
+      <h3 style="margin-top:20px">Ultime settimane presenti nell'archivio</h3>
+      <div class="cards" id="cot-week-watch-weeks"></div>
+      <p class="small">La data di prima acquisizione non è la data ufficiale di pubblicazione. Le settimane precedenti alla v1.48 possono rimanere prive del timestamp. Nessuna candela o report mancante viene ricostruito.</p>
+    </details>
     <details class="panel session-diagnostics" id="session-diagnostics">
       <summary>Pause delle sessioni — Oro e Argento</summary>
       <p class="note">La pausa 21:00–22:00 UTC di oro e argento è coerente con gli <b>orari cTrader FP Markets verificati manualmente il 28/10/2026</b>. La VPS rileva la ricorrenza, ma non legge automaticamente il calendario ufficiale e non garantisce gli orari futuri. <b>Non vengono inventate candele né ricalcolate le statistiche precedenti</b>.</p>
@@ -145,18 +155,20 @@ main{max-width:1050px;padding:26px 20px 100px;margin:auto;min-width:0}
       <p>«Campione insufficiente» significa meno di 30 osservazioni oppure meno di 8 settimane COT distinte. Anche superata la soglia, nessun risultato prova da solo un vantaggio predittivo fuori campione.</p>
     </section>
   </section>
-  <p class="foot">REMURA v1.48 · Verifica di ricerca privata · Nessun ordine automatico o promessa di rendimento.</p>
+  <p class="foot">REMURA v1.49 · Verifica di ricerca privata · Nessun ordine automatico o promessa di rendimento.</p>
 </main>
-<script src="./statistica-squali-core.js?v=148"></script>
-<script src="./statistica-squali.js?v=148"></script>
-<script src="./dual24-core.js?v=148"></script>
-<script src="./dual24-ui.js?v=148"></script>
-<script src="./market-audit-core.js?v=148"></script>
-<script src="./market-audit-ui.js?v=148"></script>
-<script src="./case-audit-core.js?v=148"></script>
-<script src="./case-audit-ui.js?v=148"></script>
-<script src="./weekly-quality-core.js?v=148"></script>
-<script src="./weekly-quality-ui.js?v=148"></script>
-<script src="./nav.js?v=148"></script>
+<script src="./statistica-squali-core.js?v=149"></script>
+<script src="./statistica-squali.js?v=149"></script>
+<script src="./dual24-core.js?v=149"></script>
+<script src="./dual24-ui.js?v=149"></script>
+<script src="./market-audit-core.js?v=149"></script>
+<script src="./market-audit-ui.js?v=149"></script>
+<script src="./case-audit-core.js?v=149"></script>
+<script src="./case-audit-ui.js?v=149"></script>
+<script src="./weekly-quality-core.js?v=149"></script>
+<script src="./weekly-quality-ui.js?v=149"></script>
+<script src="./cot-week-watch-core.js?v=149"></script>
+<script src="./cot-week-watch-ui.js?v=149"></script>
+<script src="./nav.js?v=149"></script>
 </body>
 </html>
