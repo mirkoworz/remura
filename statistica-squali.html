@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./nav.css?v=146">
-<title>REMURA v1.46 · Verifica statistica Squali</title>
+<link rel="stylesheet" href="./nav.css?v=147">
+<title>REMURA v1.47 · Verifica statistica Squali</title>
 <style>
 :root{color-scheme:dark;--bg:#07131b;--panel:#122a35;--border:#34535c;--fg:#e8f7f2;--muted:#aac2c5;--mint:#71edc8;--amber:#eecb91;--red:#faa6aa}
 *{box-sizing:border-box}html,body{margin:0;max-width:100%;overflow-x:hidden}
@@ -102,6 +102,26 @@ main{max-width:1050px;padding:26px 20px 100px;margin:auto;min-width:0}
       </select>
       <p class="small" id="market-audit-state" role="status" aria-live="polite">Carico i campioni abbinati…</p>
       <div class="cards" id="market-audit-results"></div>
+      <details class="session-diagnostics" id="case-audit-panel">
+        <summary>Registro evidenze · Casi per settimana COT</summary>
+        <p class="note">Ogni riga mostra un solo mercato e una sola settimana COT, con la direzione istituzionale <b>registrata nella prima osservazione</b>, la relazione con il prezzo e i due movimenti realmente misurati. Non sono operazioni, raccomandazioni né prezzi d’ingresso. Lo stesso shock macro può coinvolgere molti mercati.</p>
+        <label class="small" for="case-audit-week">Settimana COT di riferimento</label>
+        <select id="case-audit-week" aria-label="Filtra per settimana COT" style="display:block;width:100%;margin:8px 0 12px;padding:12px;border-radius:12px;border:1px solid var(--border);background:#102833;color:var(--fg);font:inherit">
+          <option value="all">Tutte le settimane disponibili</option>
+        </select>
+        <label class="small" for="case-audit-relation">Condizione iniziale</label>
+        <select id="case-audit-relation" aria-label="Filtra condizione COT prezzo" style="display:block;width:100%;margin:8px 0 12px;padding:12px;border-radius:12px;border:1px solid var(--border);background:#102833;color:var(--fg);font:inherit">
+          <option value="all">Concordanze e divergenze</option>
+          <option value="aligned">Concordanze</option>
+          <option value="divergent">Divergenze</option>
+        </select>
+        <p id="case-audit-state" class="small" role="status" aria-live="polite">Verifico i dati registrati…</p>
+        <h3>Riepilogo per settimana</h3>
+        <div id="case-audit-weekly" class="cards"></div>
+        <h3 style="margin-top:20px">Osservazioni archiviate</h3>
+        <div id="case-audit-items" class="cards"></div>
+        <p class="small">Vengono mostrate al massimo le ultime 12 settimane COT, con 24 schede per volta. Il filtro del mercato qui sopra si applica anche a queste schede, non al riepilogo settimanale. Nessun coefficiente di correlazione è calcolato su una singola settimana.</p>
+      </details>
       <p class="small">I dati sono lordi. La differenza tra i metodi non è un profitto, né una conferma predittiva. Una settimana COT e mercati correlati non equivalgono a tante prove indipendenti.</p>
     </details>
     <details class="panel session-diagnostics" id="session-diagnostics">
@@ -116,14 +136,16 @@ main{max-width:1050px;padding:26px 20px 100px;margin:auto;min-width:0}
       <p>«Campione insufficiente» significa meno di 30 osservazioni oppure meno di 8 settimane COT distinte. Anche superata la soglia, nessun risultato prova da solo un vantaggio predittivo fuori campione.</p>
     </section>
   </section>
-  <p class="foot">REMURA v1.46 · Verifica di ricerca privata · Nessun ordine automatico o promessa di rendimento.</p>
+  <p class="foot">REMURA v1.47 · Verifica di ricerca privata · Nessun ordine automatico o promessa di rendimento.</p>
 </main>
-<script src="./statistica-squali-core.js?v=146"></script>
-<script src="./statistica-squali.js?v=146"></script>
-<script src="./dual24-core.js?v=146"></script>
-<script src="./dual24-ui.js?v=146"></script>
-<script src="./market-audit-core.js?v=146"></script>
-<script src="./market-audit-ui.js?v=146"></script>
-<script src="./nav.js?v=146"></script>
+<script src="./statistica-squali-core.js?v=147"></script>
+<script src="./statistica-squali.js?v=147"></script>
+<script src="./dual24-core.js?v=147"></script>
+<script src="./dual24-ui.js?v=147"></script>
+<script src="./market-audit-core.js?v=147"></script>
+<script src="./market-audit-ui.js?v=147"></script>
+<script src="./case-audit-core.js?v=147"></script>
+<script src="./case-audit-ui.js?v=147"></script>
+<script src="./nav.js?v=147"></script>
 </body>
 </html>
