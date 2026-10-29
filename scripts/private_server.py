@@ -35,6 +35,7 @@ from statistical_validation import update_validation, validation_status
 from dual24_validation import update_dual24, dual24_status
 from market_validation import market_audit_status
 from case_audit import case_audit_status
+from weekly_quality import weekly_quality_status
 from session_gaps import session_gap_overview
 from ctrader_tokens import access_token, path_for, read_file
 
@@ -55,6 +56,7 @@ SAFE_ASSETS={
     "dual24-core.js","dual24-ui.js",
     "market-audit-core.js","market-audit-ui.js",
     "case-audit-core.js","case-audit-ui.js",
+    "weekly-quality-core.js","weekly-quality-ui.js",
 }
 STATUS_PATH="/private-api/health"
 PRICE_OVERVIEW_PATH="/private-api/prices/status"
@@ -65,6 +67,7 @@ SESSION_GAPS_PATH="/private-api/signals/session-gaps"
 DUAL24_PATH="/private-api/signals/dual24"
 MARKET_AUDIT_PATH="/private-api/signals/dual24/markets"
 CASE_AUDIT_PATH="/private-api/signals/dual24/cases"
+WEEKLY_QUALITY_PATH="/private-api/signals/weekly-quality"
 UPDATE_STATUS_PATH="/private-api/autoupdate"
 RETAIL_LATEST="/private-api/retail/latest.json"
 IG_LATEST="/private-api/ig/latest.json"
@@ -318,6 +321,9 @@ def http_handler(db_path):
                 return
             if path==CASE_AUDIT_PATH:
                 self.response(200,case_audit_status(db_path))
+                return
+            if path==WEEKLY_QUALITY_PATH:
+                self.response(200,weekly_quality_status(db_path))
                 return
             if path==SESSION_GAPS_PATH:
                 self.response(200,session_gap_overview(db_path))
