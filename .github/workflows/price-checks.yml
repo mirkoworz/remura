@@ -22,6 +22,8 @@ on:
       - 'scripts/market_validation.py'
       - 'scripts/case_audit.py'
       - 'scripts/weekly_quality.py'
+      - 'scripts/cot_week_watch.py'
+      - 'tests/test_cot_week_watch.py'
       - 'tests/test_weekly_quality.py'
       - 'tests/test_case_audit.py'
       - 'tests/test_market_validation.py'
@@ -40,6 +42,9 @@ on:
       - 'case-audit-ui.js'
       - 'weekly-quality-core.js'
       - 'weekly-quality-ui.js'
+      - 'cot-week-watch-core.js'
+      - 'cot-week-watch-ui.js'
+      - 'tests/cot-week-watch-ui.test.js'
       - 'tests/weekly-quality-ui.test.js'
       - 'tests/case-audit-ui.test.js'
       - 'tests/market-audit-ui.test.js'
@@ -102,13 +107,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: node --check price-core.js && node --check price.js && node --check price-status-core.js && node --check stato-prezzi.js && node --check insights.js && node --check sources.js && node --check sentiment-core.js && node --check capital-cloud.js && node --check capital-cloud-config.js && node --check squalincome-diagnostics.js && node --check statistica-squali-core.js && node --check statistica-squali.js && node --check dual24-core.js && node --check dual24-ui.js && node --check market-audit-core.js && node --check market-audit-ui.js && node --check case-audit-core.js && node --check case-audit-ui.js && node --check weekly-quality-core.js && node --check weekly-quality-ui.js
+      - run: node --check price-core.js && node --check price.js && node --check price-status-core.js && node --check stato-prezzi.js && node --check insights.js && node --check sources.js && node --check sentiment-core.js && node --check capital-cloud.js && node --check capital-cloud-config.js && node --check squalincome-diagnostics.js && node --check statistica-squali-core.js && node --check statistica-squali.js && node --check dual24-core.js && node --check dual24-ui.js && node --check market-audit-core.js && node --check market-audit-ui.js && node --check case-audit-core.js && node --check case-audit-ui.js && node --check weekly-quality-core.js && node --check weekly-quality-ui.js && node --check cot-week-watch-core.js && node --check cot-week-watch-ui.js
       - name: Verify Oracle Always Free bootstrap syntax
         run: bash -n deploy/oracle/install.sh && bash -n deploy/oracle/enable-autoupdate.sh
       - name: Test offline update safety
         run: python -m unittest discover -s tests -p 'test_autoupdate.py' -v
-      - run: python -m py_compile scripts/price_feed.py scripts/ctrader_feed.py scripts/ctrader_tokens.py scripts/configure_ctrader_backup.py scripts/price_store.py scripts/cot_monitor.py scripts/signals_monitor.py scripts/statistical_validation.py scripts/dual24_validation.py scripts/market_validation.py scripts/case_audit.py scripts/weekly_quality.py scripts/session_gaps.py scripts/private_server.py scripts/update_capital.py
-      - run: node --test tests/price.test.js tests/insights.test.js tests/sentiment.test.js tests/capital-cloud.test.js tests/market-expansion.test.js tests/price-status.test.js tests/squalincome-diagnostics.test.js tests/statistica-squali.test.js tests/dual24-ui.test.js tests/market-audit-ui.test.js tests/case-audit-ui.test.js tests/weekly-quality-ui.test.js
+      - run: python -m py_compile scripts/price_feed.py scripts/ctrader_feed.py scripts/ctrader_tokens.py scripts/configure_ctrader_backup.py scripts/price_store.py scripts/cot_monitor.py scripts/signals_monitor.py scripts/statistical_validation.py scripts/dual24_validation.py scripts/market_validation.py scripts/case_audit.py scripts/weekly_quality.py scripts/cot_week_watch.py scripts/session_gaps.py scripts/private_server.py scripts/update_capital.py
+      - run: node --test tests/price.test.js tests/insights.test.js tests/sentiment.test.js tests/capital-cloud.test.js tests/market-expansion.test.js tests/price-status.test.js tests/squalincome-diagnostics.test.js tests/statistica-squali.test.js tests/dual24-ui.test.js tests/market-audit-ui.test.js tests/case-audit-ui.test.js tests/weekly-quality-ui.test.js tests/cot-week-watch-ui.test.js
       - run: python -m unittest discover -s tests -p 'test_price_feed.py' -v
       - run: python -m unittest discover -s tests -p 'test_ctrader_feed.py' -v
       - run: python -m unittest discover -s tests -p 'test_private_server.py' -v
@@ -119,6 +124,7 @@ jobs:
       - run: python -m unittest discover -s tests -p 'test_market_validation.py' -v
       - run: python -m unittest discover -s tests -p 'test_case_audit.py' -v
       - run: python -m unittest discover -s tests -p 'test_weekly_quality.py' -v
+      - run: python -m unittest discover -s tests -p 'test_cot_week_watch.py' -v
       - run: python -m unittest discover -s tests -p 'test_session_gaps.py' -v
       - run: python -m unittest discover -s tests -p 'test_ig_sentiment.py' -v
       - run: python -m unittest discover -s tests -p 'test_ig_private.py' -v
