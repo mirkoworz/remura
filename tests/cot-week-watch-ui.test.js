@@ -127,6 +127,7 @@ test('invalid timestamp and source error are distinct from the proof of capture'
  const x=example();
  x.weeks[0].datasets.tff.invalidFirstSeen=1;
  x.weeks[0].datasets.tff.firstSeenKnown=10;
+ x.weeks[0].datasets.tff.recentlyCapturedRows48h=10;
  x.datasets.tff.invalidFirstSeen=1;
  x.datasets.tff.firstSeenKnown=10;
  x.datasets.tff.recentlyCapturedRows48h=10;
