@@ -18,6 +18,9 @@ on:
       - 'market-audit-ui.js'
       - 'case-audit-core.js'
       - 'case-audit-ui.js'
+      - 'weekly-quality-core.js'
+      - 'weekly-quality-ui.js'
+      - 'tests/weekly-quality-ui.test.js'
       - 'tests/case-audit-ui.test.js'
       - 'tests/market-audit-ui.test.js'
       - 'tests/dual24-ui.test.js'
@@ -64,10 +67,12 @@ jobs:
           node --check market-audit-ui.js
           node --check case-audit-core.js
           node --check case-audit-ui.js
+          node --check weekly-quality-core.js
+          node --check weekly-quality-ui.js
           node --check impostazioni.js
           node --check feed-health-core.js
       - name: Verify COT analysis rules
-        run: node --test tests/insights.test.js tests/retail-chart.test.js tests/cot-indices.test.js tests/cot-scanner.test.js tests/squalincome-shortlist.test.js tests/feed-health.test.js tests/release-consistency.test.js tests/squalincome-diagnostics.test.js tests/statistica-squali.test.js tests/dual24-ui.test.js tests/market-audit-ui.test.js tests/case-audit-ui.test.js
+        run: node --test tests/insights.test.js tests/retail-chart.test.js tests/cot-indices.test.js tests/cot-scanner.test.js tests/squalincome-shortlist.test.js tests/feed-health.test.js tests/release-consistency.test.js tests/squalincome-diagnostics.test.js tests/statistica-squali.test.js tests/dual24-ui.test.js tests/market-audit-ui.test.js tests/case-audit-ui.test.js tests/weekly-quality-ui.test.js
       - name: Verify wiring on all market detail pages
         run: |
           node - <<'NODE'
