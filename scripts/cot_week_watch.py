@@ -111,16 +111,21 @@ def _status(db, now, enabled):
     dataset_results={}
     for kind,need in expected.items():
         latest=next((week for week in weeks if by_week[week].get(kind)),None)
-        row=next((v for v in week_records if v["cotWeek"]==latest),None)
+        # Compute latest coverage independently of the six-week UI window.
+        present=by_week[latest].get(kind,set()) if latest else set()
+        known,recent,invalid=counts(kind,latest) if latest else (0,0,0)
         # Last attempt/success must be in UTC and must never lie in the future.
         success=_timestamp(state.get("cot_"+kind+"_last_success"),now)
         last_attempt=_timestamp(state.get("cot_last_attempt"),now)
         source_state=state.get("cot_"+kind+"_state","not_collected")
         age=(now.date()-dt.date.fromisoformat(latest)).days if latest else None
-        stats=row["datasets"][kind] if row else {
-            "present":0,"expected":len(need),"missingCodes":sorted(need),
-            "firstSeenKnown":0,"firstSeenUnknown":0,"invalidFirstSeen":0,
-            "recentlyCapturedRows48h":0}
+        stats={
+            "present":len(present),"expected":len(need),
+            "missingCodes":sorted(need-present),
+            "firstSeenKnown":known,"firstSeenUnknown":len(present)-known-invalid,
+            "invalidFirstSeen":invalid,
+            "recentlyCapturedRows48h":recent,
+        }
         if not enabled:
             verdict="disabled"
         elif not latest:
