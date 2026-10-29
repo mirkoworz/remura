@@ -1,4 +1,4 @@
-/* REMURA v1.49: verify private CFTC week-watch metadata before rendering. */
+/* REMURA v1.50: verify private CFTC week-watch metadata before rendering. */
 (function(root){
  'use strict';
  const kinds=['tff','disagg'];
@@ -77,7 +77,38 @@
    newCapture:x.latestWeekLocallyCapturedIn48h,
    datasets:groups,weeks};
  }
- const api={read};
+ // Local acquisition attestation, derived solely from the unmodified v1.49 API.
+ // This proves that capture timestamps EXIST for every selected row;
+ // it does NOT establish official release time, net profitability or predictive skill.
+ function captureSummary(parsed){
+  if(!parsed||!Array.isArray(parsed.weeks)||!parsed.datasets)return null;
+  const newest=parsed.weeks[0];
+  if(!newest)return {
+   state:'waiting',cotWeek:null,traced:0,total:14,
+   tff:0,disagg:0,missing:14,invalid:0,
+   lastComplete:parsed.lastComplete||null,collectorReady:false
+  };
+  const t=newest.datasets.tff,d=newest.datasets.disagg;
+  if(!t||!d)return null;
+  const traced=t.firstSeenKnown+d.firstSeenKnown;
+  const invalid=t.invalidFirstSeen+d.invalidFirstSeen;
+  const present=t.present+d.present;
+  const complete=newest.complete&&present===14&&
+   newest.week===parsed.lastComplete&&
+   ['tff','disagg'].every(k=>parsed.datasets[k].latestCotWeek===newest.week);
+  let state;
+  if(!complete)state='partial';
+  else if(invalid)state='invalid';
+  else if(traced===14)state='fully_tracked';
+  else if(traced>0)state='partly_tracked';
+  else state='legacy';
+  return {state,cotWeek:newest.week,traced,total:14,
+   tff:t.firstSeenKnown,disagg:d.firstSeenKnown,
+   present,missing:14-present,invalid,
+   lastComplete:parsed.lastComplete||null,
+   collectorReady:parsed.enabled&&parsed.status==='ready'};
+ }
+ const api={read,captureSummary};
  if(typeof module!=='undefined'&&module.exports)module.exports=api;
  root.REMURA_COT_WEEK_WATCH=api;
 })(typeof window!=='undefined'?window:globalThis);

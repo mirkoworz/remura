@@ -1,4 +1,4 @@
-/* REMURA v1.49 — the COT weekly-source watch is diagnostic, not signals. */
+/* REMURA v1.50 — the COT weekly-source watch is diagnostic, not signals. */
 (function(){
  'use strict';
  const api=window.REMURA_COT_WEEK_WATCH;
@@ -6,7 +6,8 @@
  const status=document.getElementById('cot-week-watch-state');
  const overview=document.getElementById('cot-week-watch-overview');
  const weeks=document.getElementById('cot-week-watch-weeks');
- if(!api||!root||!status||!overview||!weeks)return;
+ const proof=document.getElementById('cot-capture-attestation');
+ if(!api||!root||!status||!overview||!weeks||!proof)return;
  const create=(tag,cls,value)=>{
    const x=document.createElement(tag);
    if(cls)x.className=cls;
@@ -39,7 +40,41 @@
      year:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'
    }).format(date)+' (Italia)';
  };
+ function renderProof(doc){
+   proof.replaceChildren();
+   const report=api.captureSummary(doc);
+   if(!report)return;
+   const card=create('article','detail');
+   card.append(create('h3','','Attestazione prima acquisizione locale'));
+   const messages={
+     waiting:'Non risultano ancora settimane COT nell’archivio.',
+     partial:'La settimana più recente non è completa in entrambi gli archivi. Nessuna attestazione 14/14.',
+     invalid:'Almeno un orario di prima acquisizione non è valido. La verifica resta sospesa.',
+     fully_tracked:'Tutti e 14 i contratti della settimana più recente hanno una prima acquisizione locale registrata.',
+     partly_tracked:'La settimana è completa, ma soltanto parte dei 14 orari di prima acquisizione è tracciata.',
+     legacy:'Settimana completa già in archivio: gli orari della prima acquisizione non erano stati salvati. Aspettiamo un nuovo report, senza retrodatare.'
+   };
+   card.append(create('p','small',messages[report.state]),
+    dl([
+      ['Settimana COT più recente',report.cotWeek||'Non disponibile'],
+      ['Prima acquisizione tracciata',report.traced+' / '+report.total],
+      ['TFF tracciati',report.tff+' / 11'],
+      ['Disaggregated tracciati',report.disagg+' / 3'],
+      ['Contratti mancanti',report.missing],
+      ['Orari non validi',report.invalid],
+      ['Ultima settimana completa',report.lastComplete||'Non disponibile']
+    ]));
+   if(report.state==='fully_tracked'){
+     card.append(create('p','small','Attestazione locale completa: i 14 record sono presenti e dotati di timestamp di prima acquisizione. NON attesta la data di pubblicazione ufficiale, la direzione futura del prezzo o la riuscita di una strategia.'));
+   }else{
+     card.append(create('p','small','Non inventiamo orari passati né consideriamo una settimana parziale come un report completo.'));
+   }
+   if(!report.collectorReady)card.append(create('p','small',
+      'Attenzione: il controllo sul collector attuale richiede verifica separata; un timestamp storico non dimostra che la fonte sia funzionante adesso.'));
+   proof.append(card);
+ }
  function render(doc){
+   renderProof(doc);
    overview.replaceChildren();
    weeks.replaceChildren();
    const head=create('article','detail');
@@ -110,7 +145,7 @@
      if(!validated)throw new Error('schema');
      render(validated);
    }catch(_e){
-     overview.replaceChildren();weeks.replaceChildren();
+     proof.replaceChildren();overview.replaceChildren();weeks.replaceChildren();
      status.textContent='Monitor COT non disponibile: le statistiche precedenti restano invariate.';
    }finally{busy=false;}
  }
