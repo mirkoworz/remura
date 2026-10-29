@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./nav.css?v=147">
-<title>REMURA v1.47 · Verifica statistica Squali</title>
+<link rel="stylesheet" href="./nav.css?v=148">
+<title>REMURA v1.48 · Verifica statistica Squali</title>
 <style>
 :root{color-scheme:dark;--bg:#07131b;--panel:#122a35;--border:#34535c;--fg:#e8f7f2;--muted:#aac2c5;--mint:#71edc8;--amber:#eecb91;--red:#faa6aa}
 *{box-sizing:border-box}html,body{margin:0;max-width:100%;overflow-x:hidden}
@@ -122,6 +122,15 @@ main{max-width:1050px;padding:26px 20px 100px;margin:auto;min-width:0}
         <div id="case-audit-items" class="cards"></div>
         <p class="small">Vengono mostrate al massimo le ultime 12 settimane COT, con 24 schede per volta. Il filtro del mercato qui sopra si applica anche a queste schede, non al riepilogo settimanale. Nessun coefficiente di correlazione è calcolato su una singola settimana.</p>
       </details>
+      <details class="session-diagnostics" id="weekly-quality-panel">
+        <summary>Qualità settimane COT · Acquisizione e dipendenze</summary>
+        <p class="note"><b>Prima acquisizione COT:</b> REMURA registra soltanto da questa versione quando scopre una nuova riga ufficiale CFTC. Non coincide necessariamente con la pubblicazione ufficiale; i dati precedenti non vengono retrodatati. Una settimana COT è una data di riferimento, non l'ora di un segnale.</p>
+        <p class="small" id="weekly-quality-state" role="status" aria-live="polite">Verifico le settimane realmente archiviate…</p>
+        <div id="weekly-quality-summary" class="cards"></div>
+        <h3>Confronto settimana per settimana</h3>
+        <div id="weekly-quality-weeks" class="cards"></div>
+        <p class="small">Le esposizioni condivise (USD, metalli, indici USA) sono <b>avvisi qualitativi</b>, non correlazioni calcolate. Anche 8 settimane non dimostrano da sole un vantaggio fuori campione. Nessun costo di esecuzione è incluso.</p>
+      </details>
       <p class="small">I dati sono lordi. La differenza tra i metodi non è un profitto, né una conferma predittiva. Una settimana COT e mercati correlati non equivalgono a tante prove indipendenti.</p>
     </details>
     <details class="panel session-diagnostics" id="session-diagnostics">
@@ -136,16 +145,18 @@ main{max-width:1050px;padding:26px 20px 100px;margin:auto;min-width:0}
       <p>«Campione insufficiente» significa meno di 30 osservazioni oppure meno di 8 settimane COT distinte. Anche superata la soglia, nessun risultato prova da solo un vantaggio predittivo fuori campione.</p>
     </section>
   </section>
-  <p class="foot">REMURA v1.47 · Verifica di ricerca privata · Nessun ordine automatico o promessa di rendimento.</p>
+  <p class="foot">REMURA v1.48 · Verifica di ricerca privata · Nessun ordine automatico o promessa di rendimento.</p>
 </main>
-<script src="./statistica-squali-core.js?v=147"></script>
-<script src="./statistica-squali.js?v=147"></script>
-<script src="./dual24-core.js?v=147"></script>
-<script src="./dual24-ui.js?v=147"></script>
-<script src="./market-audit-core.js?v=147"></script>
-<script src="./market-audit-ui.js?v=147"></script>
-<script src="./case-audit-core.js?v=147"></script>
-<script src="./case-audit-ui.js?v=147"></script>
-<script src="./nav.js?v=147"></script>
+<script src="./statistica-squali-core.js?v=148"></script>
+<script src="./statistica-squali.js?v=148"></script>
+<script src="./dual24-core.js?v=148"></script>
+<script src="./dual24-ui.js?v=148"></script>
+<script src="./market-audit-core.js?v=148"></script>
+<script src="./market-audit-ui.js?v=148"></script>
+<script src="./case-audit-core.js?v=148"></script>
+<script src="./case-audit-ui.js?v=148"></script>
+<script src="./weekly-quality-core.js?v=148"></script>
+<script src="./weekly-quality-ui.js?v=148"></script>
+<script src="./nav.js?v=148"></script>
 </body>
 </html>
