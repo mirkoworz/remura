@@ -79,18 +79,83 @@ test('disabled collection should not be called ready',()=>{
  x.datasets.tff.state='disabled';x.datasets.disagg.state='disabled';
  assert.ok(parser.read(x));
 });
-test('v1.49 page and private API remain uncached, no trading',()=>{
+test('first authentic complete weekly acquisition is recognized without duplicating cohorts',()=>{
+ const x=parser.read(example());assert.ok(x);
+ const result=parser.captureSummary(x);
+ assert.equal(result.state,'fully_tracked');
+ assert.equal(result.cotWeek,'2026-10-27');
+ assert.equal(result.traced,14);
+ assert.equal(result.tff,11);
+ assert.equal(result.disagg,3);
+ assert.equal(result.collectorReady,true);
+ // Evidence remains even after the 48h flag expires; it is a local capture record.
+ x.newCapture=false;
+ assert.equal(parser.captureSummary(x).state,'fully_tracked');
+});
+test('legacy reports are not backdated and do not become 14 genuine captures',()=>{
+ const x=example();
+ for(const kind of ['tff','disagg']){
+  const group=x.datasets[kind];
+  group.firstSeenUnknown=group.present;group.firstSeenKnown=0;
+  group.recentlyCapturedRows48h=0;
+  const wk=x.weeks[0].datasets[kind];
+  wk.firstSeenUnknown=wk.present;wk.firstSeenKnown=0;
+  wk.recentlyCapturedRows48h=0;
+ }
+ x.latestWeekLocallyCapturedIn48h=false;
+ const proof=parser.captureSummary(parser.read(x));
+ assert.equal(proof.state,'legacy');
+ assert.equal(proof.traced,0);
+ assert.equal(proof.missing,0);
+});
+test('partial new week never gets certified even when old complete week exists',()=>{
+ const x=example();
+ x.weeks[0].datasets.disagg=group('disagg',false);
+ x.weeks[0].complete=false;
+ x.datasets.disagg={...x.datasets.disagg,...group('disagg',false),state:'incomplete'};
+ x.latestCommonCompleteWeek='2026-10-20';
+ x.previousCommonCompleteWeek=null;
+ x.hasTwoCompleteReferenceWeeks=false;
+ x.status='attention';
+ x.latestWeekLocallyCapturedIn48h=false;
+ const summary=parser.captureSummary(parser.read(x));
+ assert.equal(summary.state,'partial');
+ assert.equal(summary.missing,1);
+ assert.equal(summary.traced,13);
+});
+test('invalid timestamp and source error are distinct from the proof of capture',()=>{
+ const x=example();
+ x.weeks[0].datasets.tff.invalidFirstSeen=1;
+ x.weeks[0].datasets.tff.firstSeenKnown=10;
+ x.datasets.tff.invalidFirstSeen=1;
+ x.datasets.tff.firstSeenKnown=10;
+ x.datasets.tff.recentlyCapturedRows48h=10;
+ x.datasets.tff.state='timestamp_review';
+ x.status='attention';
+ const bad=parser.captureSummary(parser.read(x));
+ assert.equal(bad.state,'invalid');
+ assert.equal(bad.collectorReady,false);
+ const ok=example();
+ ok.datasets.tff.state='source_error';ok.status='attention';
+ const proof=parser.captureSummary(parser.read(ok));
+ assert.equal(proof.state,'fully_tracked');
+ assert.equal(proof.collectorReady,false);
+});
+
+test('v1.50 page and private API remain uncached, no trading',()=>{
  const html=fs.readFileSync('statistica-squali.html','utf8');
  const server=fs.readFileSync('scripts/private_server.py','utf8');
  const ui=fs.readFileSync('cot-week-watch-ui.js','utf8');
  const backend=fs.readFileSync('scripts/cot_week_watch.py','utf8');
  const cache=fs.readFileSync('sw.js','utf8');
  assert.match(html,/id="cot-week-watch-panel"/);
- assert.match(html,/cot-week-watch-ui\.js\?v=149/);
+ assert.match(html,/id="cot-capture-attestation"/);
+ assert.match(html,/cot-week-watch-ui\.js\?v=150/);
  assert.match(server,/COT_WEEK_WATCH_PATH/);
  assert.match(ui,/private-api\/cot\/week-watch/);
  assert.match(ui,/cache:'no-store'/);
  assert.match(ui,/textContent/);
+ assert.match(ui,/captureSummary/);
  assert.match(cache,/cot-week-watch-core\.js/);
  assert.match(backend,/PRAGMA query_only=ON/);
  assert.doesNotMatch(ui,/Math\.random|placeOrder|localStorage|innerHTML/);
