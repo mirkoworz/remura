@@ -34,7 +34,7 @@
     // Visible on every REMURA page, including the installed iPhone web app.
     const release=document.createElement("div");
     release.id="rm-release";
-    release.textContent="REMURA · Aggiornamento v1.47 · 29/10/2026 07:22 (Italia)";
+    release.textContent="REMURA · Aggiornamento v1.48 · 29/10/2026 09:43 (Italia)";
     document.body.prepend(release);
 
     const page=location.pathname.split("/").pop()||"index.html";
