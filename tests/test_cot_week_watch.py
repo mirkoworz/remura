@@ -136,7 +136,8 @@ class TestCotWeekWatch(unittest.TestCase):
                 raise RuntimeError("source unavailable")
             return row_feed(kind,LATEST)
         cot_monitor.collect_once(self.dbfile,LATER,broken)
-        r=self.result()
+        # Evaluate after the simulated collection, not before its timestamp.
+        r=self.result(now=LATER+dt.timedelta(minutes=1))
         self.assertEqual(r["datasets"]["tff"]["state"],"source_error")
         self.assertEqual(r["datasets"]["disagg"]["state"],"ok")
         self.assertEqual(r["status"],"attention")
