@@ -51,47 +51,47 @@ def _exposures(symbol):
     return ()
 
 
-def _capture_status(db, contract, week, observed, has_first_seen):
-    # Need both the selected COT reference week and the preceding report:
-    # delta direction is computed from those, not the absolute current row.
-    dataset,code=contract
-    dates=[row[0] for row in db.execute(
-        "SELECT report_date FROM cot_reports "
-        "WHERE dataset=? AND code=? AND report_date<=? "
-        "ORDER BY report_date DESC LIMIT 2",
-        (dataset,code,week)).fetchall()]
-    if len(dates)<2 or dates[0]!=week:
-        return "missing_cot_reference"
-    if not has_first_seen:
-        return "unknown_legacy"
-    for date in dates:
-        row=db.execute(
-            "SELECT first_seen_at FROM cot_first_seen "
-            "WHERE dataset=? AND code=? AND report_date=?",
-            (dataset,code,date)).fetchone()
-        if row is None:
-            return "unknown_legacy"
-        try:
-            recorded=parse_time(row[0])
-        except (ValueError,TypeError,OverflowError,AttributeError):
-            return "unknown_legacy"
-        if recorded>observed:
-            return "captured_after_observation"
-    return "recorded_before_observation"
-
-
 def _case_status(db, symbol, week, observed, has_first_seen):
     contracts=_contracts(symbol)
     if not contracts:
         return "missing_cot_reference"
-    outcomes=[_capture_status(db,contract,week,observed,has_first_seen)
-              for contract in contracts]
-    # Any proven temporal contradiction outranks missing legacy metadata.
-    if "captured_after_observation" in outcomes:
-        return "captured_after_observation"
-    if "missing_cot_reference" in outcomes:
+    # For a cross, BOTH currencies must share this week's report AND the
+    # preceding common week. Compare against the same pair used by cot_series.
+    common=None
+    for dataset,code in contracts:
+        dates={row[0] for row in db.execute(
+            "SELECT report_date FROM cot_reports "
+            "WHERE dataset=? AND code=? AND report_date<=?",
+            (dataset,code,week)).fetchall()}
+        common=dates if common is None else common & dates
+    if not common or week not in common:
         return "missing_cot_reference"
-    if "unknown_legacy" in outcomes:
+    predecessor=max((d for d in common if d<week),default=None)
+    if predecessor is None:
+        return "missing_cot_reference"
+    if not has_first_seen:
+        return "unknown_legacy"
+    has_unknown=False
+    has_future=False
+    for dataset,code in contracts:
+        for date in (week,predecessor):
+            row=db.execute(
+                "SELECT first_seen_at FROM cot_first_seen "
+                "WHERE dataset=? AND code=? AND report_date=?",
+                (dataset,code,date)).fetchone()
+            if row is None:
+                has_unknown=True
+                continue
+            try:
+                recorded=parse_time(row[0])
+            except (ValueError,TypeError,OverflowError,AttributeError):
+                has_unknown=True
+                continue
+            if recorded>observed:
+                has_future=True
+    if has_future:
+        return "captured_after_observation"
+    if has_unknown:
         return "unknown_legacy"
     return "recorded_before_observation"
 
