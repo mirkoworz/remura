@@ -83,9 +83,13 @@ def safe_extract(body,dest):
   if not (dest/name).is_file():raise ValueError("Archivio incompleto")
 def cmd(*args):
  subprocess.run(args,check=True,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,timeout=130)
-def sync(src,dst):
+def sync(src,dst,exclude_manual=False):
  args=["rsync","-a","--chown=remura:remura"]
  for x in EXCLUDES:args.append("--exclude="+x)
+ # Automatic releases must never copy sensitive/manual-only directories.
+ # Backups/rollback use the default False to preserve every existing file.
+ if exclude_manual:
+  for x in MANUAL_ONLY:args.append("--exclude="+x)
  # No --delete: never erase locally generated files.
  cmd(*args,str(src)+"/",str(dst)+"/")
 def healthy():
@@ -113,7 +117,7 @@ def install(sha):
    stopped=False
    try:
     cmd("systemctl","stop","remura-private.service");stopped=True
-    sync(candidate,APP)
+    sync(candidate,APP,exclude_manual=True)
     cmd("systemctl","start","remura-private.service")
     if not wait_health():raise RuntimeError("Nuovo server non sano")
     prior=WORK/"previous-code"

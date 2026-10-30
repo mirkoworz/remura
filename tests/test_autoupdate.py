@@ -42,6 +42,27 @@ class Tests(unittest.TestCase):
    z.writestr(item,"/etc/passwd")
   with tempfile.TemporaryDirectory() as d:
    with self.assertRaises(ValueError):u.safe_extract(b.getvalue(),pathlib.Path(d))
+ def test_auto_deploy_excludes_manual_paths_but_backup_keeps_them(self):
+  from unittest.mock import patch
+  with patch.object(u,"cmd") as fake:
+   u.sync(pathlib.Path("/candidate"),pathlib.Path("/app"),exclude_manual=True)
+   args=fake.call_args.args
+   self.assertEqual(args[-2:],("/candidate/","/app/"))
+   for name in u.MANUAL_ONLY:
+    self.assertIn("--exclude="+name,args)
+   self.assertNotIn("--delete",args)
+  with patch.object(u,"cmd") as fake:
+   u.sync(pathlib.Path("/app"),pathlib.Path("/backup"))
+   args=fake.call_args.args
+   for name in u.MANUAL_ONLY:
+    self.assertNotIn("--exclude="+name,args)
+   self.assertNotIn("--delete",args)
+ def test_auto_install_invokes_guarded_sync_and_restores_all_on_failure(self):
+  import inspect
+  body=inspect.getsource(u.install)
+  self.assertIn("sync(candidate,APP,exclude_manual=True)",body)
+  self.assertIn("sync(APP,backup)",body)
+  self.assertIn("sync(backup,APP)",body)
  def test_secrets_never_exposed_in_status_or_sync(self):
   for key in ("private/","local/",".venv/","data/prices/"):self.assertIn(key,u.EXCLUDES)
   with tempfile.TemporaryDirectory() as d:

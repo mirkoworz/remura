@@ -1,8 +1,8 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
 const pages=['index.html','forex.html','mercati.html','asset.html','catalogo.html','fonti.html','impostazioni.html','stato-prezzi.html','statistica-squali.html'];
-test('all pages use v1.51 menu and no old version labels',()=>{
- for(const p of pages){const html=fs.readFileSync(p,'utf8');assert.ok(html.includes('nav.js?v=151'),p);assert.ok(!html.includes('REMURA v0.8')&&!html.includes('REMURA v1.5 ·')&&!html.includes('VERSIONE 0.5'),p);}
- const nav=fs.readFileSync('nav.js','utf8');assert.match(nav,/Aggiornamento v1\.51 · \d{2}\/\d{2}\/2026/);
+test('all pages use v1.52 menu and no old version labels',()=>{
+ for(const p of pages){const html=fs.readFileSync(p,'utf8');assert.ok(html.includes('nav.js?v=152'),p);assert.ok(!html.includes('REMURA v0.8')&&!html.includes('REMURA v1.5 ·')&&!html.includes('VERSIONE 0.5'),p);}
+ const nav=fs.readFileSync('nav.js','utf8');assert.match(nav,/Aggiornamento v1\.52 · \d{2}\/\d{2}\/2026/);
 });
 test('Forex has no generated market samples',()=>{
  const code=fs.readFileSync('forex.html','utf8');
@@ -14,4 +14,11 @@ test('Settings displays public and private feed freshness',()=>{
  const js=fs.readFileSync('impostazioni.js','utf8');
  assert.ok(html.includes('feed-health-core.js')&&html.includes('public-status'));
  assert.ok(js.includes('feedHealth.inspect(cleaned,symbols)')&&js.includes('checkPublic()'));
+});
+test('v1.52 includes correct Italian build timestamp and distinct cache',()=>{
+ const nav=fs.readFileSync('nav.js','utf8');
+ assert.ok(nav.includes('Aggiornamento v1.52 · 30/10/2026 17:50 (Italia, preparazione)'));
+ const sw=fs.readFileSync('sw.js','utf8');
+ assert.ok(sw.includes('remura-shell-v66-v1.52-autoupdate-guard'));
+ for(const p of pages){const html=fs.readFileSync(p,'utf8');assert.ok(!html.includes('REMURA v1.51'),p);}
 });
