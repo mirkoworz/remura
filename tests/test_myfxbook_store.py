@@ -1,5 +1,7 @@
 """Offline regression tests: no APIs, VPS, credentials, or production data."""
 import datetime as dt
+import multiprocessing
+import time
 from pathlib import Path
 import sys
 import tempfile
@@ -13,6 +15,17 @@ import myfxbook_store as store
 def row(t, pct=70):
     return {"t": t, "lPct": pct, "sPct": 100-pct,
             "lLots": 12.0, "sLots": 3.0, "lPos": 20, "sPos": 10}
+
+
+def _concurrent_writer(root, sample_time, ready):
+    """Child uses its own file descriptor and the same storage lock as sync."""
+    ready.set()
+    store.update_collection(
+        root, {"EURUSD": row(sample_time)}, {"EURUSD"},
+        cutoff=dt.datetime(2026, 10, 1, tzinfo=dt.timezone.utc),
+        max_points=2250,
+        latest={"status": "ok", "updatedAt": sample_time,
+                "symbols": {"EURUSD": row(sample_time)}})
 
 
 class HistorySafetyTests(unittest.TestCase):
@@ -136,6 +149,54 @@ class HistorySafetyTests(unittest.TestCase):
                 cutoff=dt.datetime(2026,10,1,tzinfo=dt.timezone.utc),
                 max_points=2250, latest=new)
         self.assertEqual(store.read_json(self.private / "latest.json"), doc)
+
+    def test_concurrent_processes_share_lock_and_keep_both_samples(self):
+        """Two independent writers block on a shared lock, then both persist."""
+        ctx = multiprocessing.get_context("fork")
+        one, two = ctx.Event(), ctx.Event()
+        p1 = ctx.Process(target=_concurrent_writer,
+                         args=(self.private, self.times[1], one))
+        p2 = ctx.Process(target=_concurrent_writer,
+                         args=(self.private, self.times[2], two))
+        try:
+            with store.archive_lock(self.private):
+                p1.start()
+                p2.start()
+                self.assertTrue(one.wait(10), "writer 1 did not start")
+                self.assertTrue(two.wait(10), "writer 2 did not start")
+                time.sleep(0.20)
+                self.assertFalse((self.private / "history" / "EURUSD.json").exists(),
+                                 "child wrote while parent held exclusive lock")
+            p1.join(timeout=10)
+            p2.join(timeout=10)
+            self.assertEqual(p1.exitcode, 0)
+            self.assertEqual(p2.exitcode, 0)
+        finally:
+            for process in (p1, p2):
+                if process.is_alive():
+                    process.terminate()
+                    process.join(timeout=5)
+        actual = store.read_json(self.private / "history" / "EURUSD.json")
+        self.assertEqual({record["t"] for record in actual["records"]},
+                         {self.times[1], self.times[2]})
+        self.assertEqual(
+            store.read_json(self.private / "latest.json")["updatedAt"],
+            self.times[2],
+            "the older child must not move latest backward")
+
+    def test_repository_invalid_late_file_leaves_existing_archives_unchanged(self):
+        """Validation finishes before first history is updated."""
+        self.save_history(self.private, [row(self.times[2])])
+        good = self.save_history(self.public, [row(self.times[0])])
+        bad = self.public / "history" / "ZARJPY.json"
+        store.atomic_json(bad, {"symbol": "ZARJPY", "records": [
+            {"t": self.times[3], "lPct": "not-a-number"}]})
+        before = (self.private / "history" / "EURUSD.json").read_bytes()
+        with self.assertRaises(ValueError):
+            store.merge_repository(self.private, self.public)
+        self.assertEqual(
+            (self.private / "history" / "EURUSD.json").read_bytes(), before)
+        self.assertTrue(good.exists())
 
 
 if __name__ == "__main__":
