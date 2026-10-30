@@ -43,7 +43,7 @@ def require(condition, message):
         raise RuntimeError("STOP: " + message)
 
 def git_blob(data):
-    return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\\0" + data).hexdigest()
+    return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
 
 def sha256(data):
     return hashlib.sha256(data).hexdigest()
