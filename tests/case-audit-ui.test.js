@@ -79,7 +79,7 @@ test('mobile weekly case audit is private, cache-free and no mock trades',()=>{
  assert.match(page,/id="case-audit-panel"/);
  assert.match(page,/id="case-audit-week"/);
  assert.match(page,/id="case-audit-relation"/);
- assert.match(page,/case-audit-ui\.js\?v=151/);
+ assert.match(page,/case-audit-ui\.js\?v=152/);
  assert.match(page,/id="market-audit-results"/);
  assert.match(ui,/private-api\/signals\/dual24\/cases/);
  assert.match(ui,/cache:'no-store'/);
