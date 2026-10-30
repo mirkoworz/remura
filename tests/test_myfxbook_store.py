@@ -152,7 +152,7 @@ class HistorySafetyTests(unittest.TestCase):
 
     def test_concurrent_processes_share_lock_and_keep_both_samples(self):
         """Two independent writers block on a shared lock, then both persist."""
-        ctx = multiprocessing.get_context("fork")
+        ctx = multiprocessing.get_context("spawn")
         one, two = ctx.Event(), ctx.Event()
         p1 = ctx.Process(target=_concurrent_writer,
                          args=(self.private, self.times[1], one))
