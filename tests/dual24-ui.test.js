@@ -69,8 +69,8 @@ test('v1.45 iPhone renders two separate 24h metrics without replacing legacy 24h
   const backend=fs.readFileSync('scripts/private_server.py','utf8');
   assert.match(html,/id="dual24-panel"/);
   assert.match(html,/id="stat-overview"/);
-  assert.match(html,/dual24-core\.js\?v=150/);
-  assert.match(html,/dual24-ui\.js\?v=150/);
+  assert.match(html,/dual24-core\.js\?v=151/);
+  assert.match(html,/dual24-ui\.js\?v=151/);
   assert.match(js,/calendar24:all/);
   assert.match(js,/trading96:all/);
   assert.match(js,/private-api\/signals\/dual24/);
