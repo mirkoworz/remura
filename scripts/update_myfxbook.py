@@ -11,6 +11,8 @@ import sys
 import urllib.parse
 import urllib.request
 
+from myfxbook_store import update_collection
+
 API = "https://www.myfxbook.com/api/"
 ROOT = Path("data/myfxbook")
 HIST = ROOT / "history"
@@ -113,35 +115,6 @@ def snapshot(now, entry):
     return obj
 
 
-def update_symbol_history(symbol, current, cutoff, legacy):
-    filepath = HIST / (symbol + ".json")
-    saved = json_or(filepath, {})
-    rows = saved.get("records")
-    if not isinstance(rows, list):
-        rows = legacy.get(symbol, [])
-    if not isinstance(rows, list):
-        rows = []
-    unique = {}
-    for row in rows:
-        if not isinstance(row, dict):
-            continue
-        stamp = parse_iso(row.get("t"))
-        if stamp is None or stamp < cutoff:
-            continue
-        if finite(row.get("lLots"), 0) is None or finite(row.get("sLots"), 0) is None:
-            continue
-        unique[row["t"]] = row
-    unique[current["t"]] = current
-    records = [unique[k] for k in sorted(unique)][-MAX_POINTS:]
-    HIST.mkdir(parents=True, exist_ok=True)
-    filepath.write_text(
-        json.dumps({"symbol": symbol, "source": "Myfxbook Community Outlook",
-                    "sampling": "observed approximately every 20 minutes",
-                    "records": records}, ensure_ascii=False, separators=(",", ":")) + "\n",
-        encoding="utf-8",
-    )
-
-
 def main():
     email = os.environ.get("MYFXBOOK_EMAIL", "").strip()
     password = os.environ.get("MYFXBOOK_PASSWORD", "")
@@ -175,21 +148,20 @@ def main():
     legacy = json_or(ROOT / "history.json", {}).get("symbols", {})
     if not isinstance(legacy, dict):
         legacy = {}
-    available = sorted(SUPPORTED & parsed.keys())
-    for symbol in available:
-        update_symbol_history(symbol, parsed[symbol], cutoff, legacy)
     current = {
         "status": "ok",
         "source": "Myfxbook Community Outlook",
         "updatedAt": stamp,
         "symbols": parsed,
     }
-    (ROOT / "latest.json").write_text(
-        json.dumps(current, ensure_ascii=False, separators=(",", ":")) + "\n",
-        encoding="utf-8",
+    # History and latest share one advisory lock, with atomic file replacement.
+    # Invalid existing history fails closed instead of resetting observations.
+    updated = update_collection(
+        ROOT, parsed, SUPPORTED, cutoff=cutoff, max_points=MAX_POINTS,
+        legacy=legacy, latest=current,
     )
     print("Fetched", len(parsed), "Myfxbook symbols; updated",
-          len(available), "supported symbol histories.")
+          updated, "supported symbol histories.")
     return 0
 
 
