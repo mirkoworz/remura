@@ -1,0 +1,35 @@
+name: REMURA Myfxbook archive safety
+on:
+  pull_request:
+    paths:
+      - 'scripts/update_myfxbook.py'
+      - 'scripts/myfxbook_store.py'
+      - 'scripts/myfxbook_safe_sync.py'
+      - 'deploy/oracle/release_myfxbook_151.py'
+      - 'tests/test_myfxbook_store.py'
+      - '.github/workflows/myfxbook-safety.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/update_myfxbook.py'
+      - 'scripts/myfxbook_store.py'
+      - 'scripts/myfxbook_safe_sync.py'
+      - 'deploy/oracle/release_myfxbook_151.py'
+      - 'tests/test_myfxbook_store.py'
+      - '.github/workflows/myfxbook-safety.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  archive-regressions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile collector and storage
+        run: python -m py_compile scripts/update_myfxbook.py scripts/myfxbook_store.py scripts/myfxbook_safe_sync.py deploy/oracle/release_myfxbook_151.py
+      - name: Verify offline lossless history tests
+        run: python -m unittest discover -s tests -p 'test_myfxbook_store.py' -v
