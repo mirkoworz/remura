@@ -28,6 +28,10 @@ class ReleaseTests(unittest.TestCase):
             applied.assert_not_called()
             self.assertIn("ESITO=PRONTO_PER_RELEASE_V152", stream.getvalue())
 
+    @staticmethod
+    def fake_unit(action, name):
+        return "disabled" if action == "is-enabled" else "active"
+
     def test_apply_preserves_origins_and_starts_no_service(self):
         with tempfile.TemporaryDirectory() as folder:
             base = pathlib.Path(folder)
@@ -37,7 +41,7 @@ class ReleaseTests(unittest.TestCase):
             original = {key: ((base/key).read_bytes(), b"new "+key.encode(), 0, 0, 0o644)
                         for key in ("nav.js", "sw.js")}
             with patch.object(r, "APP", base), patch.object(r, "BACKUP_DIR", base/"private"), \
-                 patch.object(r, "unit", return_value="active"), patch.object(r, "healthy", return_value=True), \
+                 patch.object(r, "unit", side_effect=self.fake_unit), patch.object(r, "healthy", return_value=True), \
                  patch("os.fchown"), patch.object(r, "atomic_write", wraps=r.atomic_write) as writer:
                 with contextlib.redirect_stdout(io.StringIO()) as stream:
                     r.apply(original)
