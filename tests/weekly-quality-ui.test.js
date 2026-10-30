@@ -52,14 +52,14 @@ test('zero available weeks displays no invented successes',()=>{
  const parsed=parser.read(x);
  assert.ok(parsed);assert.equal(parsed.weeks,0);assert.equal(parsed.weekly.length,0);
 });
-test('v1.50 API and iPhone display use private no-store without making trades',()=>{
+test('v1.51 API and iPhone display use private no-store without making trades',()=>{
  const html=fs.readFileSync('statistica-squali.html','utf8');
  const ui=fs.readFileSync('weekly-quality-ui.js','utf8');
  const backend=fs.readFileSync('scripts/private_server.py','utf8');
  const cot=fs.readFileSync('scripts/cot_monitor.py','utf8');
  const sw=fs.readFileSync('sw.js','utf8');
  assert.match(html,/id="weekly-quality-panel"/);
- assert.match(html,/weekly-quality-ui\.js\?v=150/);
+ assert.match(html,/weekly-quality-ui\.js\?v=151/);
  assert.match(ui,/private-api\/signals\/weekly-quality/);
  assert.match(ui,/cache:'no-store'/);
  assert.match(ui,/textContent/);
