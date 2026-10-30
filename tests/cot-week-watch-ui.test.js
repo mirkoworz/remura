@@ -143,7 +143,7 @@ test('invalid timestamp and source error are distinct from the proof of capture'
  assert.equal(proof.collectorReady,false);
 });
 
-test('v1.50 page and private API remain uncached, no trading',()=>{
+test('v1.51 page and private API remain uncached, no trading',()=>{
  const html=fs.readFileSync('statistica-squali.html','utf8');
  const server=fs.readFileSync('scripts/private_server.py','utf8');
  const ui=fs.readFileSync('cot-week-watch-ui.js','utf8');
@@ -151,7 +151,7 @@ test('v1.50 page and private API remain uncached, no trading',()=>{
  const cache=fs.readFileSync('sw.js','utf8');
  assert.match(html,/id="cot-week-watch-panel"/);
  assert.match(html,/id="cot-capture-attestation"/);
- assert.match(html,/cot-week-watch-ui\.js\?v=150/);
+ assert.match(html,/cot-week-watch-ui\.js\?v=151/);
  assert.match(server,/COT_WEEK_WATCH_PATH/);
  assert.match(ui,/private-api\/cot\/week-watch/);
  assert.match(ui,/cache:'no-store'/);
