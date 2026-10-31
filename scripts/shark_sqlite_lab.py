@@ -64,6 +64,33 @@ def load_price_document(db_path, symbol):
     return rows
 
 
+def archive_quality(clean):
+    """Describe usable contiguous M15 history; no price values exposed."""
+    gaps = 0
+    largest_gap_minutes = 0
+    longest = current = 1
+    weeks = set()
+    for i, row in enumerate(clean):
+        stamp = row[0]
+        year, week, _ = stamp.isocalendar()
+        weeks.add((year, week))
+        if i == 0:
+            continue
+        interval = int((stamp - clean[i-1][0]).total_seconds() // 60)
+        if interval != 15:
+            gaps += 1
+            largest_gap_minutes = max(largest_gap_minutes, interval)
+            current = 1
+        else:
+            current += 1
+            longest = max(longest, current)
+    return {"archivedWeeks": len(weeks), "gapsDetected": gaps,
+            "largestGapMinutes": largest_gap_minutes if gaps else None,
+            "longestContiguousM15": longest,
+            # This is coverage, not a strategy's statistical confidence.
+            "historyCoverage": "limited" if len(weeks) < 8 else "review_required"}
+
+
 def analyze_database(db_path, symbol, *, as_of, round_trip_cost_bps,
                      strategy="breakout", hold_bars=4, lookback=12):
     rows = load_price_document(db_path, symbol)
@@ -80,6 +107,7 @@ def analyze_database(db_path, symbol, *, as_of, round_trip_cost_bps,
             "firstBarAt": clean[0][0].isoformat(),
             "lastClosedAt": last_close.isoformat(),
             "elapsedDays": round((last_close - clean[0][0]).total_seconds() / 86400, 2),
+            "archiveQuality": archive_quality(clean),
             **results}
 
 
