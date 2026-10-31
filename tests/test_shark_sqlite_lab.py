@@ -66,6 +66,9 @@ class SharkSQLiteLabTests(unittest.TestCase):
         self.assertEqual(result["source"], "private_sqlite_readonly")
         self.assertEqual(result["symbol"], "EURUSD")
         self.assertEqual(result["observedBars"], len(self.rows))
+        self.assertEqual(result["archiveQuality"]["gapsDetected"], 0)
+        self.assertEqual(result["archiveQuality"]["longestContiguousM15"], len(self.rows))
+        self.assertEqual(result["archiveQuality"]["historyCoverage"], "limited")
         self.assertGreater(result["all"]["trades"], 0)
         self.assertEqual(result["all"]["evidence"], "insufficient")
         self.assertNotIn("providerSymbol", result)
@@ -123,6 +126,9 @@ class SharkSQLiteLabTests(unittest.TestCase):
         self._init_db()
         result = self._analyze()
         self.assertLess(result["all"]["trades"], 30)
+        self.assertEqual(result["archiveQuality"]["gapsDetected"], 1)
+        self.assertEqual(result["archiveQuality"]["largestGapMinutes"], 30)
+        self.assertLess(result["archiveQuality"]["longestContiguousM15"], len(self.rows))
         self.assertEqual(result["verdict"], "research_only_never_live_signal")
 
     def test_no_source_mutations_sqlite_pragma_query_only(self):
