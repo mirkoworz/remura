@@ -80,3 +80,10 @@ Prossimo rilascio visibile: numero successivo **solo dopo** test verdi, backup, 
 - Rifiuta documenti con broker, simbolo, provider o `lastComplete` incoerenti. Restituisce **solo aggregati e timestamp**, senza OHLC o identificativo del broker. Analizza l'intero campione conservato, non inventa storico remoto.
 - Test offline aggiunti; il laboratorio non potrà dichiarare una strategia validata con il solo archivio a rotazione di circa 45 giorni. I costi sono **stime fornite esplicitamente**, non misure reali del broker.
 - Nessuna nuova lettura cTrader, chiamata GitHub, spazio dati aggiuntivo sulla VPS o upgrade Oracle. Non utilizzare in produzione prima dei gate P0.
+
+## Avanzamento P0 — preflight risorse (31/10/2026)
+- Nuovo script `scripts/resource_preflight.py`: quando eseguito **localmente sulla VPS autorizzata**, raccoglie *solo metadati* di volume disponibile, inode, memoria (con preferenza limiti cgroup), carico CPU informativo, dimensione archivio SQLite + WAL e presenza della directory dei backup.
+- Non legge contenuto dei backup o del database, non apre connessioni SQLite, non richiede nuove API Oracle/cTrader, non accede a chiavi, non modifica servizi o raccolte. Nessun percorso o identificativo personale appare nel riepilogo JSON.
+- Conserva **sempre** `allowAutomaticExpansion=false`: un esito positivo del solo controllo locale NON certifica la fatturazione Oracle Always Free, le quote della tenancy, l'integrità reale del backup, la qualità dei dati o la sicurezza di un deploy.
+- Soglie prudenziali di sola **capacità locale**: almeno 2 GiB e 20% disco libero, almeno 512 MiB e 20% RAM disponibile, almeno 10% inode liberi. Dati mancanti, assenza archivio o della directory backup impongono lo stato `hold`.
+- Aggiunti test offline riproducibili; **nessun test live Oracle è stato eseguito**. Per completare P0 serve esecuzione autorizzata sulla VPS, verifica indipendente della quota Always Free e collaudo backup/rollback.
