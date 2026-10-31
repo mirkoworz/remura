@@ -73,3 +73,10 @@ Vincoli inderogabili:
 Solo moduli di ricerca offline, test e documentazione su un branch di sviluppo.
 Nessuna versione UI aggiornata, nessuna installazione su Oracle, nessuna nuova API, nessun costo abilitato.
 Prossimo rilascio visibile: numero successivo **solo dopo** test verdi, backup, approvazione e collaudo effettivo.
+
+## Avanzamento P1 — adattatore SQLite offline (31/10/2026)
+- `scripts/shark_sqlite_lab.py` legge **un solo strumento** direttamente dalla tabella `prices` già esistente, con `mode=ro` e `PRAGMA query_only=ON`. Non usa `price_store.connect()` (che configura WAL e crea tabelle) e non modifica collector, API o stato dei servizi.
+- Per avviare la ricerca sarà necessario far girare localmente il programma in un ambiente autorizzato con accesso all'archivio. **Non è stato eseguito sulla VPS**, né su dati privati reali durante questa PR.
+- Rifiuta documenti con broker, simbolo, provider o `lastComplete` incoerenti. Restituisce **solo aggregati e timestamp**, senza OHLC o identificativo del broker. Analizza l'intero campione conservato, non inventa storico remoto.
+- Test offline aggiunti; il laboratorio non potrà dichiarare una strategia validata con il solo archivio a rotazione di circa 45 giorni. I costi sono **stime fornite esplicitamente**, non misure reali del broker.
+- Nessuna nuova lettura cTrader, chiamata GitHub, spazio dati aggiuntivo sulla VPS o upgrade Oracle. Non utilizzare in produzione prima dei gate P0.
