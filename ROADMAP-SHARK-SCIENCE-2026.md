@@ -87,3 +87,7 @@ Prossimo rilascio visibile: numero successivo **solo dopo** test verdi, backup, 
 - Conserva **sempre** `allowAutomaticExpansion=false`: un esito positivo del solo controllo locale NON certifica la fatturazione Oracle Always Free, le quote della tenancy, l'integrità reale del backup, la qualità dei dati o la sicurezza di un deploy.
 - Soglie prudenziali di sola **capacità locale**: almeno 2 GiB e 20% disco libero, almeno 512 MiB e 20% RAM disponibile, almeno 10% inode liberi. Dati mancanti, assenza archivio o della directory backup impongono lo stato `hold`.
 - Aggiunti test offline riproducibili; **nessun test live Oracle è stato eseguito**. Per completare P0 serve esecuzione autorizzata sulla VPS, verifica indipendente della quota Always Free e collaudo backup/rollback.
+
+## Avanzamento archivio P1 — misure di copertura
+Il laboratorio SQLite aggiunge ora un riepilogo **solo metadati** `archiveQuality`: settimane ISO presenti, numero di gap fra M15 successive, durata della maggiore interruzione e segmento M15 contiguo più lungo. Non trasforma weekend/chiusure in dati inesistenti e non emette alcun ordine.
+Con meno di 8 settimane archiviate segnala copertura `limited`. Avere 8 settimane o più indica soltanto `review_required`, **mai** sufficiente predittività o profitto. Dati reali Oracle non ancora interrogati.
