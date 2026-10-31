@@ -19,6 +19,7 @@ on:
       - 'tests/test_shark_science.py'
       - 'tests/test_shark_sqlite_lab.py'
       - 'tests/test_resource_preflight.py'
+      - 'tests/test_resource_endpoint.py'
       - 'scripts/ctrader_feed.py'
       - 'scripts/price_store.py'
       - 'scripts/cot_monitor.py'
@@ -132,6 +133,7 @@ jobs:
       - run: python -m unittest discover -s tests -p 'test_shark_science.py' -v
       - run: python -m unittest discover -s tests -p 'test_shark_sqlite_lab.py' -v
       - run: python -m unittest discover -s tests -p 'test_resource_preflight.py' -v
+      - run: python -m unittest discover -s tests -p 'test_resource_endpoint.py' -v
       - run: python -m unittest discover -s tests -p 'test_dual24_validation.py' -v
       - run: python -m unittest discover -s tests -p 'test_market_validation.py' -v
       - run: python -m unittest discover -s tests -p 'test_case_audit.py' -v
