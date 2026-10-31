@@ -9,6 +9,7 @@ This is exploratory, not a validated or executable trade recommendation.
 from __future__ import annotations
 
 import argparse
+from contextlib import closing
 import datetime as dt
 import json
 from pathlib import Path
@@ -30,7 +31,7 @@ def load_price_document(db_path, symbol):
         raise ValueError("database_unavailable")
     uri = "file:" + quote(str(path), safe="/") + "?mode=ro"
     try:
-        with sqlite3.connect(uri, uri=True, timeout=5) as db:
+        with closing(sqlite3.connect(uri, uri=True, timeout=5)) as db:
             db.execute("PRAGMA query_only=ON")
             row = db.execute(
                 "SELECT source,broker_symbol,payload FROM prices WHERE symbol=?",
@@ -58,7 +59,7 @@ def load_price_document(db_path, symbol):
     rows = times.get("M15") if isinstance(times, dict) else None
     if not isinstance(rows, list) or not rows or len(rows) > 5000:
         raise ValueError("invalid_stored_m15")
-    if data.get("lastComplete") != rows[-1].get("t"):
+    if not isinstance(rows[-1], dict) or data.get("lastComplete") != rows[-1].get("t"):
         raise ValueError("last_complete_mismatch")
     return rows
 
