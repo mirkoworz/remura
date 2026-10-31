@@ -37,6 +37,7 @@ from market_validation import market_audit_status
 from case_audit import case_audit_status
 from weekly_quality import weekly_quality_status
 from cot_week_watch import cot_week_watch_status
+from resource_preflight import capture as capture_local_capacity
 from session_gaps import session_gap_overview
 from ctrader_tokens import access_token, path_for, read_file
 
@@ -72,6 +73,7 @@ CASE_AUDIT_PATH="/private-api/signals/dual24/cases"
 WEEKLY_QUALITY_PATH="/private-api/signals/weekly-quality"
 COT_WEEK_WATCH_PATH="/private-api/cot/week-watch"
 UPDATE_STATUS_PATH="/private-api/autoupdate"
+RESOURCE_OVERVIEW_PATH="/private-api/resources/status"
 RETAIL_LATEST="/private-api/retail/latest.json"
 IG_LATEST="/private-api/ig/latest.json"
 CAPITAL_LATEST="/private-api/capital/latest.json"
@@ -91,6 +93,29 @@ def safe_update_status(db_path):
     keys=("enabled","state","installedSha","targetSha","failedSha","skippedSha","manualSha","lastCheck","lastSuccess","message")
     return {k:data[k] for k in keys if k in data and
             (isinstance(data[k],bool) if k=="enabled" else isinstance(data[k],str))}
+
+def resource_overview(db_path):
+    """Local read-only capacity metadata, sanitized; never a billing approval.
+
+    This is private (localhost + approved Tailscale Serve) like all other
+    private-api endpoints. No SSH, Oracle cloud calls, database connection,
+    secrets or broker requests. Fail closed if the local sample is unavailable.
+    """
+    try:
+        data=capture_local_capacity(Path(db_path).resolve().parent)
+        if data.get("schema")!="remura-p0-capacity-v1":
+            raise ValueError("unexpected_capacity_schema")
+        return data
+    except (ValueError,OSError,PermissionError):
+        return {"schema":"remura-p0-capacity-v1",
+                "capacityGate":"hold",
+                "reasons":["local_resource_sample_unavailable"],
+                "allowAutomaticExpansion":False,
+                "oracleAlwaysFreeVerified":False,
+                "backupIntegrityVerified":False,
+                "interpretation":"local_capacity_only_not_oracle_billing_attestation"}
+
+
 
 def source_configured(env=None,db_path=None):
     env=os.environ if env is None else env
@@ -304,6 +329,9 @@ def http_handler(db_path):
 
         def do_GET(self):
             path=urlsplit(self.path).path
+            if path==RESOURCE_OVERVIEW_PATH:
+                self.response(200,resource_overview(db_path))
+                return
             if path==UPDATE_STATUS_PATH:
                 self.response(200,safe_update_status(db_path))
                 return
