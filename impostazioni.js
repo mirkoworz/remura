@@ -186,30 +186,41 @@ const api=[
  ["prices","./private-api/prices/status","remura-price-status-v1"],
  ["cot","./private-api/cot/status","remura-cot-status-v1"],
  ["signals","./private-api/signals/status","remura-squalincome-monitor-v1"],
- ["update","./private-api/autoupdate",null]
+ ["update","./private-api/autoupdate",null],
+ ["retail","./private-api/retail/latest.json",null]
 ];
-const labels={ok:"Operativo",attention:"Attenzione",error:"Problema",disabled:"Non attivo",unknown:"N/D"};
+const labels={ok:"Valido",attention:"Da verificare",error:"Problema",disabled:"Inattivo",closed:"Mercato chiuso",unknown:"N/D"};
 const num=n=>typeof n==="number"&&Number.isFinite(n)&&n>=0;
 const counter=n=>Number.isInteger(n)&&n>=0?n.toLocaleString("it-IT"):"N/D";
 const time=s=>typeof s==="string"&&Number.isFinite(Date.parse(s))?Date.parse(s):null;
 const when=(s,now)=>{const t=time(s);if(t===null||t>now+300000)return "N/D";const m=Math.max(0,Math.floor((now-t)/60000));return m<120?m+" min fa":m<2880?Math.floor(m/60)+" h fa":Math.floor(m/1440)+" giorni fa";};
 const stamp=t=>new Intl.DateTimeFormat("it-IT",{timeZone:"Europe/Rome",dateStyle:"short",timeStyle:"short"}).format(new Date(t));
 const weekend=t=>[0,6].includes(new Date(t).getUTCDay());
-const card=(name,state,value,detail)=>({name,state,value,detail});
+const card=(name,state,value,detail,data="unknown",usage="unknown")=>({name,state,value,detail,data,usage});
+const dataPrice=p=>{
+ if(p?.schema!=="remura-price-status-v1")return {state:"unknown",text:"Dati non attestati"};
+ const q=p.qualityTotals||{},f=p.freshnessTotals||{};
+ if((q.invalid||0)>0||(q.missing||0)>0||(f.stale||0)>0)return {state:"attention",text:"Dati mancanti o datati"};
+ if((q.verified||0)>0&&(f.recent||0)>0)return {state:"ok",text:"Candele recenti e verificate"};
+ if((q.verified||0)>0&&(f.weekend||0)>0)return {state:"closed",text:"Candele archiviate verificate; mercato chiuso"};
+ return {state:"unknown",text:"Freschezza dati N/D"};
+};
+
 function report(docs,now){
  const rows=[],events=[];
  const event=(name,t)=>{const ms=time(t);if(ms!==null&&ms<=now+300000)events.push({name,t:ms});};
- const h=docs.health,r=docs.resources,p=docs.prices,c=docs.cot,s=docs.signals,u=docs.update;
+ const h=docs.health,r=docs.resources,p=docs.prices,c=docs.cot,s=docs.signals,u=docs.update,retail=docs.retail;
+ const pData=dataPrice(p);
  const server=!!h&&h.name==="REMURA Private";
  rows.push(card("VPS · server privato",server?"ok":"error",server?"API raggiungibile":"Nessuna risposta valida",
-   server?"La VPS risponde: non significa che tutti i collector siano operativi.":"Accedi a REMURA tramite Tailscale, non da GitHub Pages."));
+   server?"La VPS risponde: non significa che tutti i collector siano operativi.":"Accedi a REMURA tramite Tailscale, non da GitHub Pages.",server?"ok":"error",r?.schema==="remura-resources-v1"?"ok":"unknown"));
  if(r?.schema==="remura-resources-v1"){
   const percent=(used,total)=>num(used)&&num(total)&&total>0?100*used/total:null;
   const mem=percent(r.memory?.used,r.memory?.total),disk=percent(r.disk?.used,r.disk?.total);
   const high=(mem!==null&&mem>=90)||(disk!==null&&disk>=90);
-  rows.push(card("RAM · CPU · disco",high?"attention":"ok",
+  rows.push(card("RAM · CPU · disco",mem===null||disk===null?"unknown":high?"attention":"ok",
     "RAM "+(mem===null?"N/D":mem.toFixed(1)+"%")+" · disco "+(disk===null?"N/D":disk.toFixed(1)+"%"),
-    "Carico CPU 1 minuto: "+(num(r.cpu?.load1)?r.cpu.load1.toFixed(2):"N/D")+". Non sono quote OCI."));
+    "Carico CPU 1 minuto: "+(num(r.cpu?.load1)?r.cpu.load1.toFixed(2):"N/D")+". Non sono quote OCI.",mem===null||disk===null?"unknown":high?"attention":"ok",mem===null||disk===null?"unknown":"ok"));
   event("Ultimo campionamento risorse",r.sampledAt);
  }else rows.push(card("RAM · CPU · disco","unknown","N/D","Nessun dato locale attendibile."));
  if(server){
@@ -217,10 +228,10 @@ function report(docs,now){
   const configured=pre.sdk==="installed"&&pre.configuration==="ready";
   rows.push(card("cTrader · principale",h.collector==="disabled"?"disabled":configured?"ok":"attention",
     h.collector==="disabled"?"Raccolta disattivata":configured?"SDK e autorizzazione presenti":"Configurazione da controllare",
-    "Mercati con dati: "+(Array.isArray(h.instruments)?counter(h.instruments.length):"N/D")+" · Ultimo successo "+when(h.lastSuccess,now)+". Dati presenti non significa candele recenti."));
+    "Mercati con dati: "+(Array.isArray(h.instruments)?counter(h.instruments.length):"N/D")+" · Ultimo successo "+when(h.lastSuccess,now)+". "+pData.text+". Le chiamate Spotware restano N/D.",pData.state));
   rows.push(card("cTrader · riserva",!backup.enabled?"disabled":backup.configuration==="ready"?"ok":"attention",
     !backup.enabled?"Riserva disattivata":backup.configuration==="ready"?"Riserva configurata":"Riserva non pronta",
-    "Il collegamento secondario non sostituisce né mescola automaticamente le candele del broker principale."));
+    "Fonte di riserva utilizzata in "+(p?.schema==="remura-price-status-v1"&&Array.isArray(p.markets)?p.markets.filter(x=>x?.source==="backup").length:"N/D")+" mercati. Configurata non significa utilizzata.",p?.schema==="remura-price-status-v1"&&Array.isArray(p.markets)&&p.markets.some(x=>x?.source==="backup")?pData.state:"unknown"));
   for(const [title,state,last] of [
    ["Myfxbook sulla VPS",h.retailStatus,h.retailLastSuccess],
    ["Capital sulla VPS",h.capitalStatus,h.capitalLastSuccess],
@@ -232,8 +243,17 @@ function report(docs,now){
    const good=["ok","ready","running"].includes(v);
    const stale=time(last)!==null&&now-time(last)>3*3600000;
    const type=disabled?"disabled":failed?"attention":good&&time(last)===null?"unknown":good&&stale&&!weekend(now)?"attention":good?"ok":"unknown";
+   let data="unknown",detail="Ultima sincronizzazione "+when(last,now)+".";
+   if(disabled)data="disabled";
+   if(title==="Myfxbook sulla VPS"&&retail?.status==="ok"&&retail?.source==="Myfxbook Community Outlook"&&retail.symbols&&typeof retail.symbols==="object"){
+    const lastSource=time(retail.updatedAt);
+    if(lastSource!==null&&lastSource<=now+300000&&Object.keys(retail.symbols).length){
+      data=weekend(now)?"closed":now-lastSource<=3*3600000?"ok":"attention";
+      detail="File aggregato "+when(retail.updatedAt,now)+" · "+Object.keys(retail.symbols).length+" mercati (non prova un cambiamento delle posizioni).";
+    }
+   }
    rows.push(card(title,type,disabled?"Collector locale disattivato":failed?"Errore segnalato":good?"Stato "+v:"Stato non disponibile",
-     "Ultimo successo "+when(last,now)+". Capital via Google/Firestore è un collegamento distinto."));
+     detail+" Capital via Google/Firestore resta distinto.",data));
   }
   event("cTrader · ultimo tentativo",h.lastAttempt);
  }else{
@@ -245,22 +265,25 @@ function report(docs,now){
   const issues=(q.missing||0)+(q.invalid||0)+(q.insufficient||0)+(fresh.stale||0);
   rows.push(card("Qualità candele M15/H1/H4",p.collector==="disabled"?"disabled":issues?"attention":"ok",
     counter(q.verified)+" verificati / "+counter(p.total)+" mercati",
-    "Mancanti "+counter(q.missing)+" · invalidi "+counter(q.invalid)+" · insufficienti "+counter(q.insufficient)+" · datati "+counter(fresh.stale)+" · weekend "+counter(fresh.weekend)+". Mercato chiuso non significa guasto."));
+    "Mancanti "+counter(q.missing)+" · invalidi "+counter(q.invalid)+" · insufficienti "+counter(q.insufficient)+" · datati "+counter(fresh.stale)+" · weekend "+counter(fresh.weekend)+". "+pData.text+".",pData.state));
   event("Prezzi · ultimo tentativo",p.lastAttempt);
  }else rows.push(card("Qualità candele M15/H1/H4","unknown","N/D","Nessuna diagnosi prezzi verificabile."));
  if(c?.schema==="remura-cot-status-v1"){
   const t=c.datasets?.tff||{},g=c.datasets?.disagg||{};
   rows.push(card("COT ufficiale CFTC",!c.enabled?"disabled":c.state==="ready"?"ok":"attention",
     !c.enabled?"Collector disattivato":c.state==="ready"?"Copertura disponibile":"Copertura da verificare",
-    "TFF "+counter(t.contracts)+"/"+counter(t.expectedContracts)+" · Disaggregated "+counter(g.contracts)+"/"+counter(g.expectedContracts)+". Cadenza settimanale."));
+    "TFF "+counter(t.contracts)+"/"+counter(t.expectedContracts)+" · Disaggregated "+counter(g.contracts)+"/"+counter(g.expectedContracts)+" · Report TFF "+String(t.lastReportDate||"N/D")+". Cadenza settimanale.",c.state==="ready"?"ok":"unknown"));
   event("COT · ultimo tentativo",c.lastAttempt);
  }else rows.push(card("COT ufficiale CFTC","unknown","N/D","Nessun esito verificabile."));
  if(s?.schema==="remura-squalincome-monitor-v1"){
   const last=s.diagnostics?.lastScanAt;
   const old=time(last)===null||now-time(last)>3*3600000;
+  const analyzed=s.diagnostics?.analyzed,excluded=s.diagnostics?.excluded;
+  const closed=analyzed===0&&Number.isInteger(excluded)&&excluded>0&&s.diagnostics?.exclusionReasons?.market_closed===excluded;
+  const healthData=!s.enabled?"disabled":analyzed>0?"ok":closed?"closed":analyzed===0&&excluded>0?"attention":"unknown";
   rows.push(card("Scanner Squalincome",!s.enabled?"disabled":old?"attention":"ok",
     !s.enabled?"Disattivato":"Ultima scansione "+when(last,now),
-    "Monitorati "+counter(s.trackedMarkets)+" · Analizzati "+counter(s.diagnostics?.analyzed)+" · Esclusi "+counter(s.diagnostics?.excluded)+". Nessun segnale non è un errore."));
+    "Monitorati "+counter(s.trackedMarkets)+" · Analizzati "+counter(analyzed)+" · Esclusi "+counter(excluded)+". "+(closed?"Mercato chiuso: scanner attivo, nessuna analisi utilizzabile.":analyzed===0?"Nessuna analisi utilizzabile; controllare esclusioni.":"Analisi eseguite, non necessariamente segnali."),healthData));
   event("Squalincome · ultima scansione",last);
  }else rows.push(card("Scanner Squalincome","unknown","N/D","Nessuna diagnosi di scansione."));
  if(u&&typeof u.enabled==="boolean"){
@@ -268,20 +291,27 @@ function report(docs,now){
   const bad=["blocked","error"].includes(v);
   rows.push(card("Aggiornamenti automatici",!u.enabled?"disabled":bad?"error":v==="manual_required"?"attention":["updated","up_to_date"].includes(v)?"ok":"unknown",
     !u.enabled?"Disattivati":bad?"Problema da esaminare":v==="manual_required"?"Rilascio manuale richiesto":"Stato "+v,
-    "Ultimo controllo "+when(u.lastCheck,now)+" · commit installato "+(typeof u.installedSha==="string"&&/^[0-9a-f]{40}$/.test(u.installedSha)?u.installedSha.slice(0,8):"N/D")+"."));
+    "Ultimo controllo "+when(u.lastCheck,now)+" · commit installato "+(typeof u.installedSha==="string"&&/^[0-9a-f]{40}$/.test(u.installedSha)?u.installedSha.slice(0,8):"N/D")+".",["updated","up_to_date"].includes(v)?"ok":"unknown"));
   event("Autoupdate · ultimo controllo",u.lastCheck);
  }else rows.push(card("Aggiornamenti automatici","unknown","N/D","Stato updater non disponibile."));
  rows.push(card("Capital Google / Firestore","unknown","Non verificato in questo controllo","Il collegamento via Google è distinto dal feed Capital della VPS; verifica nella sezione Google."));
  rows.push(card("SQLite e backup","unknown","Integrità e ultimo backup N/D","Le API dati non provano la riuscita di un backup o di un ripristino."));
  rows.push(card("Oracle e chiamate broker","unknown","Quote e costi non verificati","Le richieste GET alla VPS non equivalgono a chiamate cTrader, Capital o consumi Oracle."));
- return {rows,events:events.sort((a,b)=>b.t-a.t).slice(0,6),now,server};
+ const counters=r?.schema==="remura-resources-v1"&&Number.isInteger(r.webApi?.allGet)&&Number.isInteger(r.webApi?.privateGet)?r.webApi:null;
+ const dataTotals={
+  ok:rows.filter(x=>x.data==="ok").length,
+  closed:rows.filter(x=>x.data==="closed").length,
+  attention:rows.filter(x=>x.data==="attention").length,
+  unknown:rows.filter(x=>x.data==="unknown").length
+ };
+ return {rows,events:events.sort((a,b)=>b.t-a.t).slice(0,6),now,server,counters,dataTotals};
 }
 const elt=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e;};
 function render(d){
  const alert=d.rows.filter(x=>["error","attention"].includes(x.state)).length;
  const summary=$("obs-summary");
  summary.dataset.status=d.server?(alert?"error":"ok"):"error";
- summary.textContent=d.server?("VPS raggiungibile · "+(alert?alert+" componenti da verificare":"nessuna anomalia rilevata nei controlli disponibili")):"VPS non verificabile · usa il collegamento privato Tailscale.";
+ summary.textContent=d.server?("VPS raggiungibile · "+(alert?alert+" criticità tecniche da verificare":"nessuna criticità tecnica rilevata")+". Dati utilizzabili: "+d.dataTotals.ok+" · mercato chiuso: "+d.dataTotals.closed+"."):"VPS non verificabile · usa il collegamento privato Tailscale.";
  const counts=$("obs-counts");counts.replaceChildren();
  for(const [state,title] of [["ok","Operativi"],["attention","Da controllare"],["disabled","Non attivi"],["unknown","Non attestati"]]){
   const n=state==="attention"?alert:d.rows.filter(x=>x.state===state).length;
@@ -291,11 +321,24 @@ function render(d){
  for(const c of d.rows){
   const box=elt("article","obs-card"),head=elt("div","obs-header"),badge=elt("span","obs-tag",labels[c.state]);
   badge.dataset.state=c.state;head.append(elt("h3","",c.name),badge);
-  box.append(head,elt("div","obs-value",c.value),elt("p","obs-detail",c.detail));grid.append(box);
+  const axes=elt("div","obs-axes");
+  for(const [label,state] of [["Tecnica",c.state],["Dati",c.data],["Consumi",c.usage]]){
+   const chip=elt("span","obs-axis",label+": "+(labels[state]||"N/D"));chip.dataset.state=state;axes.append(chip);
+  }
+  box.append(head,axes,elt("div","obs-value",c.value),elt("p","obs-detail",c.detail));grid.append(box);
  }
  const events=$("obs-events");events.replaceChildren();
  for(const row of d.events){const li=elt("li"),date=elt("time","",stamp(row.t));date.dateTime=new Date(row.t).toISOString();li.append(elt("span","",row.name),date);events.append(li);}
  if(!d.events.length)events.append(elt("li","","Nessun timestamp attendibile."));
+ const usage=$("obs-usage");
+ if(usage){
+  usage.replaceChildren();
+  if(d.counters)usage.append(elt("strong","","GET reali alla VPS: "+counter(d.counters.allGet)+" totali · "+counter(d.counters.privateGet)+" privati"),
+    elt("p","obs-detail","Misurati dall'ultimo avvio del server Python. NON sono chiamate cTrader, Capital o Firestore; non sono costi Oracle."));
+  else usage.append(elt("p","obs-detail","Contatori VPS N/D. Richieste esterne e billing non misurati."));
+ }
+ const dataStatus=$("obs-data-summary");
+ if(dataStatus)dataStatus.textContent="Dati: "+counter(d.dataTotals.ok)+" utilizzabili · "+counter(d.dataTotals.closed)+" mercato chiuso · "+counter(d.dataTotals.attention)+" da verificare · "+counter(d.dataTotals.unknown)+" N/D.";
  $("obs-sampled").textContent="Ultima verifica: "+stamp(d.now);
 }
 async function read(path,schema){
@@ -310,7 +353,7 @@ async function read(path,schema){
 let busy=false;
 async function refresh(){
  if(busy)return;
- busy=true;$("obs-refresh").disabled=true;$("obs-loading").textContent="Lettura di sei API private…";
+ busy=true;$("obs-refresh").disabled=true;$("obs-loading").textContent="Lettura di sette API private…";
  try{
   const docs={};await Promise.all(api.map(async ([name,path,schema])=>{docs[name]=await read(path,schema);}));
   render(report(docs,Date.now()));
