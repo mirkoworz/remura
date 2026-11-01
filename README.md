@@ -1,5 +1,7 @@
 # REMURA v0.9 — Segui le tracce degli istituzionali
 
+**Roadmap operativa aggiornata (01/11/2026):** [ROADMAP.md](ROADMAP.md) — priorità, test sui mercati aperti, volumi cTrader, Delta/CVD stimati, Squalincome e controlli dei costi.
+
 ## REMURA v1.3 — due soli sentiment sulle 35 schede
 
 **Stato: modifica di sviluppo, nel ramo feature/capital-demo-sentiment-v12.
