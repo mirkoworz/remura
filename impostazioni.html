@@ -9,6 +9,7 @@
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="stylesheet" href="./nav.css?v=133">
+<link rel="stylesheet" href="./resource-health.css?v=153">
 <style>
 :root{color-scheme:dark;--bg:#07121a;--ink:#eaf7f2;--muted:#acc7ca;--mint:#76ebc4;--line:#325a62}
 *{box-sizing:border-box}body{background:var(--bg);color:var(--ink);font:14px/1.55 system-ui,-apple-system,sans-serif;margin:0}
@@ -66,6 +67,28 @@ summary{cursor:pointer;color:#adf3d7;font-weight:750}
 <div class="actions"><button id="check-autoupdate" class="btn secondary" type="button">Aggiorna stato</button></div>
 <p class="note">La schermata non può installare software o modificare password e token.</p>
 </section>
+<section class="panel" aria-labelledby="res-title">
+<div class="kicker">VPS Oracle · letture locali</div>
+<h2 id="res-title">Salute VPS e controllo del gratuito</h2>
+<p>Metriche del sistema aggiornate ogni 30 secondi mentre la pagina è aperta, senza nuove chiamate a Oracle o ai broker.</p>
+<div class="status" id="res-status" role="status" aria-live="polite">Controllo la VPS privata…</div>
+<div class="res-grid">
+<div class="res-tile"><div class="res-label">RAM</div><div class="res-value" id="res-ram">N/D</div><div class="res-track"><span id="res-ram-bar"></span></div><div class="res-sub" id="res-ram-sub">In attesa</div></div>
+<div class="res-tile"><div class="res-label">CPU · carico a 1 minuto</div><div class="res-value" id="res-cpu">N/D</div><div class="res-track"><span id="res-cpu-bar"></span></div><div class="res-sub" id="res-cpu-sub">In attesa</div></div>
+<div class="res-tile"><div class="res-label">Disco VPS</div><div class="res-value" id="res-disk">N/D</div><div class="res-track"><span id="res-disk-bar"></span></div><div class="res-sub" id="res-disk-sub">In attesa</div></div>
+<div class="res-tile"><div class="res-label">Rete · interfaccia predefinita</div><div class="res-value" id="res-network">N/D</div><div class="res-sub" id="res-network-sub">Non equivale ai consumi del mese OCI</div></div>
+</div>
+<div class="res-facts">
+<div><span>Accensione VPS</span><strong id="res-uptime">N/D</strong></div>
+<div><span>Richieste GET server da ultimo avvio</span><strong id="res-requests">N/D</strong></div>
+<div><span>Ultimo campionamento (Italia)</span><strong id="res-time">N/D</strong></div>
+<div><span>Chiamate Capital / Myfxbook / cTrader / Firestore</span><strong>N/D · non ancora contate</strong></div>
+<div><span>Quote Oracle account (OCPU ore, volumi, GB uscita/mese)</span><strong>N/D · console Oracle</strong></div>
+<div><span>Costi Oracle effettivi</span><strong>NON VERIFICATI · non significa 0 €</strong></div>
+</div>
+<div class="actions"><button class="btn secondary" id="res-refresh" type="button">Aggiorna adesso</button><a class="btn secondary" href="https://cloud.oracle.com/" target="_blank" rel="noopener noreferrer">Apri Oracle Cloud</a></div>
+<div class="res-disclaimer"><strong>Come si legge il “gratis”:</strong> RAM e disco mostrano l'utilizzo della singola VPS, non le quote di tutte le risorse Oracle. Consumi mensili, piano effettivo e fatturazione non sono accessibili senza un'integrazione OCI separata. I report OCI possono arrivare in ritardo.</div>
+</section>
 <section class="panel">
 <div class="kicker">Prezzi reali · cTrader</div>
 <h2>Diagnostica cTrader · doppia fonte</h2>
@@ -96,11 +119,12 @@ summary{cursor:pointer;color:#adf3d7;font-weight:750}
 <div class="actions"><a class="back" href="./mercati.html#institutional-scanner">Apri Radar Squali →</a></div>
 </section>
 </main>
-<script src="./nav.js?v=152"></script>
+<script src="./nav.js?v=153"></script>
 <script src="./sentiment-core.js?v=14"></script>
 <script src="./capital-cloud-config.js?v=2"></script>
 <script src="./capital-cloud.js?v=2"></script>
 <script src="./feed-health-core.js?v=16"></script>
 <script src="./impostazioni.js?v=111"></script>
+<script src="./resource-health.js?v=153"></script>
 </body>
 </html>
