@@ -17,8 +17,8 @@ def memory():
             parts=value.split()
             if parts and parts[0].isdigit(): info[name]=int(parts[0])*1024
     total=info.get("MemTotal",0)
-    avail=info.get("MemAvailable",0)
-    return {"total":total or None,"used":max(0,total-min(total,avail)) if total else None,
+    avail=info.get("MemAvailable")
+    return {"total":total or None,"used":max(0,total-min(total,avail)) if total and avail is not None else None,
             "swapTotal":info.get("SwapTotal",0),"swapUsed":max(0,info.get("SwapTotal",0)-info.get("SwapFree",0))}
 
 def network():
