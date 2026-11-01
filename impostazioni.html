@@ -9,7 +9,7 @@
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="stylesheet" href="./nav.css?v=133">
-<link rel="stylesheet" href="./resource-health.css?v=154">
+<link rel="stylesheet" href="./resource-health.css?v=155">
 <style>
 :root{color-scheme:dark;--bg:#07121a;--ink:#eaf7f2;--muted:#acc7ca;--mint:#76ebc4;--line:#325a62}
 *{box-sizing:border-box}body{background:var(--bg);color:var(--ink);font:14px/1.55 system-ui,-apple-system,sans-serif;margin:0}
@@ -51,9 +51,12 @@ summary{cursor:pointer;color:#adf3d7;font-weight:750}
 <section class="panel" id="centro-controllo" aria-labelledby="obs-title">
 <div class="kicker">Infrastruttura · tutti i collegamenti</div>
 <h2 id="obs-title">Centro di Controllo REMURA</h2>
-<p>Diagnostica unica di VPS, cTrader, riserva FP Markets, prezzi, COT, Myfxbook, Capital, IG, Squalincome e aggiornamenti. I controlli leggono solo le API locali già disponibili: nessuna chiamata ai broker.</p>
+<p>Diagnostica di VPS, cTrader, riserva FP Markets, prezzi, COT, sentiment, Squalincome e aggiornamenti. Per ogni collegamento distinguiamo salute tecnica, disponibilità dei dati e consumi. Nessuna chiamata ai broker.</p>
 <div class="status" id="obs-summary" role="status" aria-live="polite">Controllo la VPS privata…</div>
-<div class="obs-counts" id="obs-counts" aria-label="Riepilogo diagnostico"></div>
+<div class="obs-counts" id="obs-counts" aria-label="Salute tecnica dei componenti"></div>
+<div class="obs-data-summary" id="obs-data-summary" role="status" aria-live="polite">Freschezza dei dati in verifica…</div>
+<div class="obs-measure"><h3>Chiamate realmente misurate</h3><div id="obs-usage">In attesa dei contatori della VPS…</div>
+<p class="note">Le GET al nostro server non sono le chiamate alle API dei broker. I contatori dei provider e i costi Oracle restano N/D.</p></div>
 <div class="actions"><button class="btn" id="obs-refresh" type="button">Aggiorna diagnosi</button><span class="note" id="obs-loading">Letture private senza nuove API esterne.</span></div>
 <div class="obs-grid" id="obs-grid" aria-label="Diagnostica dei componenti"></div>
 <details class="obs-timeline"><summary>Ultimi controlli registrati</summary><p class="note">Questi orari sono timestamp di tentativi e verifiche, non prove di nuove candele o eventi di trading.</p><ul id="obs-events" class="obs-events"></ul></details>
@@ -136,7 +139,7 @@ summary{cursor:pointer;color:#adf3d7;font-weight:750}
 <script src="./capital-cloud-config.js?v=2"></script>
 <script src="./capital-cloud.js?v=2"></script>
 <script src="./feed-health-core.js?v=16"></script>
-<script src="./impostazioni.js?v=154"></script>
+<script src="./impostazioni.js?v=155"></script>
 <script src="./resource-health.js?v=153"></script>
 </body>
 </html>
