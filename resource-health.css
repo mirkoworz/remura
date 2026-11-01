@@ -1,4 +1,4 @@
-/* REMURA v1.54 · risorse VPS */
+/* REMURA v1.55 · risorse VPS */
 .res-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:15px 0}
 .res-tile{background:#0b2630;border:1px solid #37606a;border-radius:13px;padding:16px;min-width:0}
 .res-label{font-size:11px;color:#b9d9d7;font-weight:800;text-transform:uppercase;letter-spacing:.07em}
@@ -35,3 +35,14 @@
 .obs-events time{font-variant-numeric:tabular-nums;color:#a8e3d0}
 .obs-warning{border:1px solid #496771;border-radius:12px;background:#17353d;padding:12px;font-size:11px;color:#bdd7d8}
 @media(max-width:620px){.obs-grid{grid-template-columns:1fr}.obs-counts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* v1.55: stato tecnico / dati / consumi separati */
+.obs-data-summary{padding:13px;background:#173840;border:1px solid #426b74;border-radius:12px;color:#d4f0e5;font-size:12px;line-height:1.65;margin:11px 0}
+.obs-measure{background:#0c2a34;border:1px solid #426a74;border-radius:13px;padding:14px;margin:12px 0}
+.obs-measure h3{font-size:14px;margin:0 0 8px}
+.obs-measure strong{font-size:13px;font-variant-numeric:tabular-nums}
+.obs-axes{display:flex;flex-wrap:wrap;gap:5px;margin-top:11px}
+.obs-axis{display:inline-flex;border:1px solid #536e75;border-radius:7px;padding:4px 7px;color:#c7dadd;font-size:10px;font-weight:750;line-height:1.45}
+.obs-axis[data-state=ok]{border-color:#4e987c;color:#9de8c8}
+.obs-axis[data-state=closed]{border-color:#718395;color:#c7d6e2}
+.obs-axis[data-state=attention],.obs-axis[data-state=error]{border-color:#ae895a;color:#ffe0a9}
