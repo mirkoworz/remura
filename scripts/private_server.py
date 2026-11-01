@@ -39,6 +39,7 @@ from weekly_quality import weekly_quality_status
 from cot_week_watch import cot_week_watch_status
 from session_gaps import session_gap_overview
 from ctrader_tokens import access_token, path_for, read_file
+from resource_monitor import snapshot as resource_snapshot
 
 ROOT=Path(__file__).resolve().parents[1]
 STORE=ROOT/"private"/"remura-prices.sqlite3"
@@ -59,6 +60,7 @@ SAFE_ASSETS={
     "case-audit-core.js","case-audit-ui.js",
     "weekly-quality-core.js","weekly-quality-ui.js",
     "cot-week-watch-core.js","cot-week-watch-ui.js",
+    "resource-health.js","resource-health.css",
 }
 STATUS_PATH="/private-api/health"
 PRICE_OVERVIEW_PATH="/private-api/prices/status"
@@ -72,6 +74,7 @@ CASE_AUDIT_PATH="/private-api/signals/dual24/cases"
 WEEKLY_QUALITY_PATH="/private-api/signals/weekly-quality"
 COT_WEEK_WATCH_PATH="/private-api/cot/week-watch"
 UPDATE_STATUS_PATH="/private-api/autoupdate"
+RESOURCES_PATH="/private-api/resources"
 RETAIL_LATEST="/private-api/retail/latest.json"
 IG_LATEST="/private-api/ig/latest.json"
 CAPITAL_LATEST="/private-api/capital/latest.json"
@@ -269,6 +272,8 @@ def ig_document(db_path):
 
 
 def http_handler(db_path):
+    request_counts={"allGet":0,"privateGet":0}
+    request_lock=threading.Lock()
     class Handler(BaseHTTPRequestHandler):
         server_version="REMURA-Private/1.0"
         sys_version=""
@@ -304,6 +309,14 @@ def http_handler(db_path):
 
         def do_GET(self):
             path=urlsplit(self.path).path
+            with request_lock:
+                request_counts["allGet"]+=1
+                if path.startswith("/private-api/"):
+                    request_counts["privateGet"]+=1
+                counts=request_counts.copy()
+            if path==RESOURCES_PATH:
+                self.response(200,resource_snapshot(counts))
+                return
             if path==UPDATE_STATUS_PATH:
                 self.response(200,safe_update_status(db_path))
                 return

@@ -460,6 +460,12 @@ class PrivateStorageTests(unittest.TestCase):
                 self.assertEqual(response.headers.get("Cache-Control"),"no-store, max-age=0")
                 payload=json.load(response)
                 self.assertEqual(payload["markets"]["EURUSD"]["symbol"],"EURUSD")
+            with urlopen(base+"/private-api/resources",timeout=5) as response:
+                resources=json.load(response)
+                self.assertEqual(resources["schema"],"remura-resources-v1")
+                self.assertEqual(resources["oracle"]["bill"],"unverified")
+                self.assertEqual(response.headers.get("Cache-Control"),"no-store, max-age=0")
+                self.assertGreaterEqual(resources["webApi"]["privateGet"],1)
             with urlopen(base+"/private-api/health",timeout=5) as response:
                 self.assertIn("EURUSD",json.load(response)["instruments"])
             with urlopen(base+"/private-api/prices/status",timeout=5) as response:

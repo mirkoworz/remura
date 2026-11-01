@@ -1,0 +1,15 @@
+/* REMURA v1.53 · risorse VPS */
+.res-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:15px 0}
+.res-tile{background:#0b2630;border:1px solid #37606a;border-radius:13px;padding:16px;min-width:0}
+.res-label{font-size:11px;color:#b9d9d7;font-weight:800;text-transform:uppercase;letter-spacing:.07em}
+.res-value{font-weight:850;font-size:clamp(18px,3vw,24px);font-variant-numeric:tabular-nums;overflow-wrap:anywhere;padding:6px 0}
+.res-sub{font-size:11px;color:#b1cbd1}
+.res-track{height:7px;background:#3b565e;border-radius:20px;overflow:hidden;margin:10px 0}
+.res-track span{display:block;width:0;height:100%;border-radius:20px;background:#79e2bf;transition:width .25s}
+.res-track span[data-level=warn]{background:#edba62}
+.res-track span[data-level=high]{background:#e57c76}
+.res-facts{display:grid;gap:9px;padding-top:13px;border-top:1px solid #37606a;font-size:12px}
+.res-facts>div{display:flex;gap:10px;justify-content:space-between}
+.res-facts strong{text-align:right;font-variant-numeric:tabular-nums}
+.res-disclaimer{margin-top:13px;border:1px solid #48656d;border-radius:12px;padding:12px;color:#bed8de;background:#19333a;font-size:12px;line-height:1.6}
+@media(max-width:500px){.res-grid{grid-template-columns:1fr}.res-facts>div{display:block}.res-facts strong{display:block;text-align:left}}
