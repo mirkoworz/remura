@@ -231,7 +231,7 @@ function report(docs,now){
    const failed=["failed","error"].includes(v);
    const good=["ok","ready","running"].includes(v);
    const stale=time(last)!==null&&now-time(last)>3*3600000;
-   const type=disabled?"disabled":failed?"attention":good&&stale&&!weekend(now)?"attention":good?"ok":"unknown";
+   const type=disabled?"disabled":failed?"attention":good&&time(last)===null?"unknown":good&&stale&&!weekend(now)?"attention":good?"ok":"unknown";
    rows.push(card(title,type,disabled?"Collector locale disattivato":failed?"Errore segnalato":good?"Stato "+v:"Stato non disponibile",
      "Ultimo successo "+when(last,now)+". Capital via Google/Firestore è un collegamento distinto."));
   }
