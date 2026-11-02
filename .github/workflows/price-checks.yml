@@ -1,7 +1,7 @@
 name: REMURA private price engine checks
 on:
   push:
-    branches: [main]
+    branches: [main, feature/intraday-priority-v157] # temporary candidate CI; remove before merge
     paths-ignore:
       - "data/**"
       - "**/*.md"
