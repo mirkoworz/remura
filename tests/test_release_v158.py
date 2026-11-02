@@ -119,6 +119,36 @@ class ReleaseV158Test(unittest.TestCase):
         self.assertEqual(data["schema"],"remura-v158-rollback-v1")
         self.assertEqual(set(data["files"]),set(m.FILES))
         self.assertTrue(all(data["files"][p]["old"]==m.digest(self.original[p][0]) for p in m.FILES))
+    def test_apply_and_explicit_rollback_keep_database_and_state_unchanged(self):
+        import contextlib
+        import io
+        import types
+        staged={p:b"new-"+p.encode() for p in m.FILES}
+        staged["nav.js"]=b"REMURA Aggiornamento v1.58 "+m.PREPARED_STAMP
+        staged["sw.js"]=b"remura-shell-v72-v1.58"
+        staged[m.BACKUP_MODULE]=b'def create_backup():\n    return ("RESTORE_TEST=OK",)\n'
+        statefile=self.private/"autoupdate-state.json"
+        dbfile=self.private/"remura-prices.sqlite3"
+        state_before=statefile.read_bytes()
+        db_before=dbfile.read_bytes()
+        with patch.object(m,"candidate",return_value=staged), \
+             patch.object(m.os,"fchown"), \
+             patch.object(m.subprocess,"run",return_value=types.SimpleNamespace(returncode=0)), \
+             contextlib.redirect_stdout(io.StringIO()) as log:
+            m.apply(TARGET)
+            self.assertIn("RILASCIO_V158=OK",log.getvalue())
+            self.assertEqual(statefile.read_bytes(),state_before)
+            self.assertEqual(dbfile.read_bytes(),db_before)
+            self.assertIn(b"Aggiornamento v1.58",(self.root/"nav.js").read_bytes())
+            self.assertNotIn(b"preparazione",(self.root/"nav.js").read_bytes())
+            folders=list(self.backups.glob("rollback-v158-*"))
+            self.assertEqual(len(folders),1)
+            m.rollback_from(folders[0])
+            self.assertEqual(statefile.read_bytes(),state_before)
+            self.assertEqual(dbfile.read_bytes(),db_before)
+            self.assertEqual({p:(self.root/p).read_bytes() for p in m.FILES},
+                             {p:v[0] for p,v in self.original.items()})
+
     def test_unsafe_sha_is_rejected(self):
         with self.assertRaisesRegex(RuntimeError,"COMMIT_INVALID"):m.candidate("main")
 
