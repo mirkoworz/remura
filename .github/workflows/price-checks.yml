@@ -13,6 +13,8 @@ on:
       - 'insights.js'
       - 'asset.html'
       - 'scripts/price_feed.py'
+      - 'scripts/private_server.py'
+      - 'tests/test_private_server.py'
       - 'scripts/ctrader_feed.py'
       - 'scripts/price_store.py'
       - 'scripts/cot_monitor.py'
