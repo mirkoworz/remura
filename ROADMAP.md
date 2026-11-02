@@ -73,3 +73,13 @@
 ## Criterio di completamento di ogni step
 
 Specifiche + fonte ufficiale + test unitari/integrazione + metrica di qualità + misure risorse/costo + backup/rollback + verifica reale su VPS + versione/data ora in ogni pagina **quando c'è un rilascio applicativo**. Documentare esplicitamente ciò che resta N/D.
+
+## 02/11/2026 — lavoro preparato per v1.56, non ancora distribuito
+
+- [x] Ramo `feature/volume-cvd-proxy-v156`: tick volume cTrader conservato in candele M15 e SQLite, H1/H4 sommati solo con barre contigue e volumi completi; dataset precedenti senza volume supportati.
+- [x] Delta/CVD **proxy** su M15 tramite Close Location Value × tick volume, reset giorno UTC, controlli per tick-volume mancante, gap e M15 stale.
+- [x] Primo pannello grafico nel motore prezzi delle schede strumenti; stato N/D finché non arrivano volumi dal broker. Nessuna interpretazione automatica istituzionale.
+- [x] Test unitari Python e Node aggiunti: conversione volume, aggregazione, persistenza SQLite, CVD, discontinuità; CI deve ancora concludersi.
+- [ ] CI verde + revisione PR, backup SQLite coerente, rollback e **installazione manuale protetta del backend**. Non installare solo la UI senza il backend se il rollout è previsto come pacchetto.
+- [ ] Collaudo *reale* VPS a mercato aperto: confronto volumi cTrader, copertura EURUSD/XAUUSD, fresco/stale, utilizzo Oracle e contatori outbound; non verificabile da GitHub.
+- [ ] Fase successiva: valutare tick Bid/Ask storici/live, qualità e overhead (solo se sostenibile), poi test out-of-sample su Squalincome.
