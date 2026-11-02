@@ -110,6 +110,8 @@ def candidate(sha):
     require(set(chosen) == set(selected), "ARCHIVE_FILES_MISSING")
     require(b"Aggiornamento v1.57" in chosen["nav.js"], "WRONG_BANNER")
     require(b"remura-shell-v71-v1.57" in chosen["sw.js"], "WRONG_CACHE")
+    require(all(b"nav.js?v=157" in chosen[p] for p in FILES if p.endswith(".html")),
+            "PAGE_CACHE_VERSION_MISMATCH")
     compile(chosen[BACKUP_MODULE], BACKUP_MODULE, "exec")
     for item in FILES:
         if item.endswith(".py"):
@@ -168,6 +170,7 @@ def preflight(sha, staged=None):
     originals = local_files()
     # Do not silently apply to an unknown version or an already installed v1.57.
     require(b"Aggiornamento v1.56" in originals["nav.js"][0], "EXPECTED_V156")
+    require(b"remura-shell-v70-v1.56" in originals["sw.js"][0], "EXPECTED_V156_CACHE")
     # v1.56 was reconciled: do not release on stale/unmanaged production.
     state_path = PRIVATE / "autoupdate-state.json"
     require(state_path.is_file() and not state_path.is_symlink(), "AUTOUPDATE_STATE_MISSING")
