@@ -386,6 +386,68 @@ class SignalTest(unittest.TestCase):
         self.assertEqual(data["historyTotal"],0)
         self.assertEqual(data["history"],[])
 
+    def test_targeted_scan_preserves_full_snapshot_and_deduplicates_transition(self):
+        from unittest.mock import patch
+        symbols=("EURUSD","GBPJPY")
+        rows=[("2026-10-13",0,0),("2026-10-20",2,2)]
+        docs={"EURUSD":{"symbol":"EURUSD"},"GBPJPY":{"symbol":"GBPJPY"}}
+        prices={
+            "EURUSD":{"side":-1,"state":"watch",
+                      "last_m15":"2026-10-26T11:15:00+00:00",
+                      "h4_side":-1,"h1_side":-1,"m15_side":-1},
+            "GBPJPY":{"side":-1,"state":"watch",
+                      "last_m15":"2026-10-26T11:15:00+00:00",
+                      "h4_side":-1,"h1_side":-1,"m15_side":-1},
+        }
+        with patch.object(m,"monitored_symbols",return_value=symbols), \
+             patch.object(m,"cot_series",return_value=rows), \
+             patch.object(m,"latest",side_effect=lambda db,symbol: docs[symbol]), \
+             patch.object(m,"price_view",side_effect=lambda doc,now:prices[doc["symbol"]]):
+            first=m.scan_once(self.db_path,NOW)
+            full=m.status(self.db_path,True,NOW)["diagnostics"]
+            self.assertEqual(full["trackedMarkets"],2)
+            self.assertEqual(first["baselines"],2)
+            self.assertEqual(m.status(self.db_path,True,NOW)["eventsTotal"],0)
+            prices["EURUSD"].update(side=1,state="confirmed",h4_side=1,
+                                    h1_side=1,m15_side=1,
+                                    last_m15="2026-10-26T11:30:00+00:00")
+            increment=m.scan_once(self.db_path,NOW+dt.timedelta(minutes=15),
+                                  targets=("EURUSD",))
+            after=m.status(self.db_path,True,NOW+dt.timedelta(minutes=15))
+            self.assertEqual(increment["examined"],1)
+            self.assertEqual(increment["newEvents"],1)
+            self.assertEqual(after["diagnostics"],full)
+            self.assertEqual(after["eventsTotal"],1)
+            self.assertEqual(after["historyTotal"],3)
+            changes=[item for item in after["history"] if item["symbol"]=="EURUSD"]
+            self.assertEqual(changes[-1]["eventType"],"new_convergence")
+            recheck=m.scan_once(self.db_path,NOW+dt.timedelta(minutes=16),
+                                targets=("EURUSD",))
+            self.assertEqual(recheck["newEvents"],0)
+            self.assertEqual(m.status(self.db_path,True,NOW)["eventsTotal"],1)
+            self.assertEqual(m.status(self.db_path,True,NOW)["historyTotal"],3)
+            self.assertEqual(m.status(self.db_path,True,NOW)["diagnostics"],full)
+
+    def test_targeted_scan_invalid_targets_fail_closed(self):
+        for bad in ((), [], ("DXY",), ("EURUSD","ZZZZZZ"),
+                    ("EURUSD",)*6, "EURUSD", [None], ["EURUSD",42]):
+            with self.assertRaises(ValueError):
+                m.scan_once(self.db_path,NOW,targets=bad)
+        self.assertFalse(self.db_path.exists())
+
+    def test_targeted_scan_requires_real_cot_and_fresh_price(self):
+        from unittest.mock import patch
+        with patch.object(m,"monitored_symbols",return_value=("EURUSD",)), \
+             patch.object(m,"cot_series",return_value=[]), \
+             patch.object(m,"latest",return_value=None):
+            result=m.scan_once(self.db_path,NOW,targets=("EURUSD",))
+            self.assertEqual(result["newEvents"],0)
+            self.assertEqual(result["baselines"],0)
+            self.assertEqual(result["examined"],0)
+            state=m.status(self.db_path,True,NOW)
+            self.assertEqual(state["eventsTotal"],0)
+            self.assertIsNone(state["diagnostics"])
+
     def test_duplicate_snapshot_upsert_and_event_key_is_idempotent(self):
         db=connect(self.db_path)
         try:
