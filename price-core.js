@@ -70,9 +70,9 @@
     }
     const complete=day[0].t%86400000===0&&gaps===0;
     return {status:complete?"ok":"partial",
-      reason:complete?"M15 contigue dall'inizio della giornata UTC.":"Sessione UTC parziale o con gap: dati non utilizzabili per conferme.",
-      points,cvd,delta:points[points.length-1].delta,lastVolume:last.v,
-      volumeDay:total,gapCount:gaps,day:dayKey,method:"CLV × tick volume"};
+      reason:complete?"M15 contigue dall'inizio della giornata UTC.":"Sessione UTC parziale o con gap: CVD N/D per non sommare dati incompleti.",
+      points:complete?points:[],cvd:complete?cvd:null,delta:points[points.length-1].delta,lastVolume:last.v,
+      volumeDay:complete?total:null,gapCount:gaps,day:dayKey,method:"CLV × tick volume"};
   }
 
   function ema(values,length){

@@ -108,6 +108,7 @@ test("CLV CVD proxy resets by UTC day, treats flat bars as neutral, detects gaps
   assert.equal(core.flow(market,{now:t0+16*900000}).status,"missing");
   rows[8].v=10;rows.splice(5,1);
   assert.equal(core.flow(market,{now:t0+16*900000}).status,"partial");
+  assert.equal(core.flow(market,{now:t0+16*900000}).cvd,null);
   assert.equal(core.flow(market,{now:t0+16*900000+2*3600000}).status,"stale");
 });
 test("no CVD without actual volume feed",()=>{

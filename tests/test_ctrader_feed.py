@@ -122,7 +122,7 @@ class CTraderTests(unittest.TestCase):
         self.assertTrue(item["t"].endswith(":00Z"))
 
     def test_ctrader_tick_volume_rejects_negative(self):
-        bar=self.bar()
+        bar=self.bar(minutes=29873415)
         bar.volume=137
         self.assertEqual(feed.convert_trendbar(bar,5)["v"],137)
         bar.volume=-1
