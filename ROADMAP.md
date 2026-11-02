@@ -109,3 +109,15 @@ Specifiche + fonte ufficiale + test unitari/integrazione + metrica di qualità +
 - [ ] Verifica esterna OCI billing/quota Always Free, non dimostrata dalle metriche sistema.
 
 Il rilascio *riuscito* non dimostra ancora che i volumi cTrader siano stati acquisiti, né che il CVD abbia potere predittivo. Non ripetere `--apply` solo per ottenere nuovi dati.
+
+
+## 02/11/2026 ore ~13:05 Italia — esito diagnostica #16 e candidato scheduler intraday v1.57
+
+- [x] Diagnostica 02/11 ore ~11:27 Italia: 38/38 strumenti integri/recenti per criterio generale, ma Squalincome 4/34 analizzati e 14 esclusi `prices_stale`. Non è un errore di integrità: i criteri M15/H1/H4 e CVD sono più stretti del controllo generale.
+- [x] EURUSD source `primary`, ultimo tentativo `2026-11-02T08:31:30Z` **ok**, ultima apertura M15 `08:15Z`, latenza dalla chiusura 118 minuti.
+- [x] XAUUSD source `primary`, ultimo tentativo `2026-11-02T09:31:43Z` **ok**, ultima apertura M15 `09:15Z`, latenza 58 minuti. Questi risultati confermano successo del tentativo più recente registrato, ma non provano assenza assoluta di problemi del feed.
+- [x] Sul ramo separato `feature/intraday-priority-v157` preparato un pianificatore *opt-in* `REMURA_PRIORITY_COLLECTOR_ENABLED=1`: due strumenti prioritari EURUSD/XAUUSD ai giri 1 e 5 di 8 (ogni 60 minuti, anziché ogni 120) senza aumentare i giri né il massimo di 5 simboli per batch. Gli altri 36 mantengono un tentativo per 8 cicli. Non altera le soglie dei segnali.
+- [ ] **Costo richieste da misurare prima di attivare:** in 8 cicli, 38 acquisizioni diventano 40 (+2, circa +5,3% richieste per simbolo nella raccolta primaria; ciascun download storico può usare più richieste di trendbar). Nessun costo in euro garantito; verificare API limit/consumi e infrastruttura, non aumentare il carico alla cieca.
+- [ ] Eseguire CI, revisione e release manuale protetta v1.57, con backup/rollback e versione/data/ora su ogni pagina. Il codice è solo un **candidato, mai installato**. Per impostazione predefinita il nuovo flag è disattivato.
+- [ ] Prima di modificare la VPS, terminare la riconciliazione PR v1.56, main e autoupdater in modo che gli aggiornamenti successivi non sovrascrivano il backend live.
+- [ ] Ripetere diagnostica di freschezza e tick-volume di EURUSD/XAUUSD dopo il rilascio, e confrontare le percentuali di esclusione Squalincome senza modificare retroattivamente le definizioni.
