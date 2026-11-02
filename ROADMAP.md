@@ -182,3 +182,15 @@ Il rilascio *riuscito* non dimostra ancora che i volumi cTrader siano stati acqu
 - [x] VPS RAM **28,1%**, disco **7,9%**. Oracle billing e quote effettive non verificati; basso consumo RAM/disco non dimostra costo 0€. Backup SQLite non verificato dalla diagnostica GET, ma testato durante rilascio v1.57.
 - [ ] Ripetere un altro campione read-only intorno alle **20:15–20:45 CET** per ricavare due orari post-attivazione per EURUSD/XAUUSD e valutare gli intervalli, mantenendo il flag ON se il server resta stabile.
 - [ ] Dopo verifica cadenza e anomalie Squalincome, pianificare il gate PR #69 (rimuovere trigger CI temporaneo, merge con verifica file e successiva riconciliazione SHA autoupdater); **nessuna modifica ora alla VPS**.
+
+
+## 02/11/2026 ore 20:34 Italia — validazione della prima cadenza prioritaria
+
+- [x] Ho riavviato in sola lettura il job GitHub privato **#18, tentativo #3** (run `41476811725`, job `125502747029`), esito `success`. Nessuna scrittura sul server né nuove chiamate cTrader dal workflow.
+- [x] **Cadenza di raccolta verificata su un intervallo consecutivo:** EURUSD e XAUUSD ultimo tentativo precedente `2026-11-02T18:01:30Z` e successivo `2026-11-02T19:01:30Z`, **esattamente 60 minuti**; entrambi `ok`. Non equivale alla conferma di regolarità futura continua.
+- [x] EURUSD/XAUUSD ultima apertura M15 `2026-11-02T18:45:00Z`, 34 minuti dalla chiusura; tick volume **64/64** M15 per entrambi. Collector `running`, prezzi **38/38 verified e recent**, 0 mancanti o invalidi.
+- [x] COT 11+3 contratti pronti, Myfxbook VPS running, RAM **28,1%**, disco **7,9%**. Costi OCI reali, quote broker e Capital Firestore **non verificati** dalla diagnostica.
+- [!] Squalincome **34 monitorati, 5 analizzati, 29 esclusi**, **8 cause `prices_stale`** (erano 9 alle 19:30), `no_significant_event`. Non interpretare tutte le esclusioni come guasti; i motivi possono sovrapporsi.
+- [x] Preparata e integrata nel solo repository diagnostico `remura-collector` la **PR #9** (`5f2f6775d092bcdfa374c4a932510fd3ae0164d8`), con test CI verdi: conteggi *aggregati* di quali timeframe M15/H1/H4 superino le soglie nel campione di `prices_stale` e quanti non siano attribuibili. Usa soltanto i GET già esistenti, nessun nome mercato, OHLC, token, codice live o deploy.
+- [ ] Eseguire una nuova `workflow_dispatch` sul **main di remura-collector** per leggere i contatori nuovi `SQUALINCOME_STALE_FRAME_M15/H1/H4/NON_ATTRIBUIBILI`, prima di correggere la logica; il rerun di un vecchio workflow non esegue automaticamente il codice appena integrato.
+- [ ] Collaudare più cicli e verificare stabilità dei 36 strumenti, rate/quota API e fatturazione Oracle; non aumentare la frequenza senza misure.
