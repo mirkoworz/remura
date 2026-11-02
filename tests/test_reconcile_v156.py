@@ -133,6 +133,31 @@ class TestReconcile(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError,"MAIN_MOVED_WITH_CODE"):
                 m.remote_main_ci()
 
+    def test_main_moved_only_with_reconciler_files_and_green_ci(self):
+        new_sha="b"*40
+        def good(path):
+            if path=="/commits/main":
+                return {"sha":new_sha}
+            if path.startswith("/compare/"):
+                return {"status":"ahead","files":[
+                    {"filename":"deploy/oracle/reconcile_v156.py"},
+                    {"filename":"tests/test_reconcile_v156.py"},
+                    {"filename":".github/workflows/price-checks.yml"},
+                    {"filename":"ROADMAP.md"}]}
+            if "/runs?" in path:
+                return {"workflow_runs":[{"head_sha":new_sha,"event":"push",
+                    "head_branch":"main","status":"completed","conclusion":"success"}]}
+            raise AssertionError(path)
+        with patch.object(m,"json_api",side_effect=good):
+            self.assertEqual(m.remote_main_ci(),new_sha)
+        # No CI on exact main SHA must fail, even if the diff is allowlisted.
+        def bad(path):
+            result=good(path)
+            return {"workflow_runs":[]} if "/runs?" in path else result
+        with patch.object(m,"json_api",side_effect=bad):
+            with self.assertRaisesRegex(RuntimeError,"MAIN_CI_NOT_GREEN"):
+                m.remote_main_ci()
+
     def test_check_is_readonly_apply_changes_only_state_and_preserves_fields(self):
         self._archive()
         old_files={p:(self.base/p).read_bytes() for p in self.files}
@@ -167,8 +192,9 @@ class TestReconcile(unittest.TestCase):
         data=json.loads(self.state.read_text())
         data["installedSha"]="c"*40
         self.state.write_text(json.dumps(data))
-        with self.assertRaisesRegex(RuntimeError,"UNEXPECTED_INSTALLED_SHA"):
-            m.load_state()
+        with patch.object(m,"release_module",return_value=self.mod),             patch.object(m,"candidate",return_value=self.staged),             patch.object(m,"live_healthy"),             patch.object(m,"check_archives"),             patch.object(m,"remote_main_ci",return_value=m.TARGET):
+            with self.assertRaisesRegex(RuntimeError,"UNEXPECTED_INSTALLED_SHA"):
+                m.inspection()
         data["installedSha"]=m.OLD
         data["failedSha"]="a"*40
         self.state.write_text(json.dumps(data))
