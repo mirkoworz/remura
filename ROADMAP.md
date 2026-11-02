@@ -204,3 +204,11 @@ Il rilascio *riuscito* non dimostra ancora che i volumi cTrader siano stati acqu
 - [x] COT TFF 11/11 e disagg 3/3 ready, Myfxbook running ultimo 20:01:31Z; RAM 27,9% e disco 7,9%. Capital Firestore, quota/costi reali Oracle non verificati; stato autoupdater ancora `d6e2cd7575e0` della v1.56, mentre codice v1.57 è operativo manualmente.
 - [ ] **Bug intermittente Squalincome da approfondire**: monitorare anche la *distanza dalla soglia* per ciascuno dei tre timeframe su tutti i 34 strumenti, usando metadata già presenti; non limitarsi alle sole scansioni con `prices_stale`. Non innalzare artificialmente i limiti, né aumentare la frequenza cTrader per tutti.
 - [ ] Poi consolidare in sicurezza v1.57 su GitHub `main`, rimuovere trigger CI temporaneo e riallineare SHA autoupdater dopo verifica del codice effettivo, conservando backup/rollback; v1.58 divergences resta solo offline.
+
+
+## 02/11/2026 ~21:13 Italia — nuovo controllo preventivo Squalincome pronto
+
+- [x] Merge `remura-collector` PR #10, commit `2f3760a73791cc140903975737ee841ae354e303`, CI `success`. Nuova diagnostica **read-only** `SQUALINCOME_HEADROOM_{M15,H1,H4}_{KNOWN,OVER_LIMIT,NEAR_30M,UNKNOWN,OLDEST_AGE_MIN}` calcolata sullo stesso GET già utilizzato per la scansione.
+- [x] Il controllo segnala *anche in assenza di esclusioni* quante serie M15/H1/H4 sono vicine alle soglie (entro i 30 minuti precedenti) e quante l'hanno superata o hanno timestamp assente, usando **lastScanAt** per non misurare ritardi fittizi della richiesta GitHub.
+- [x] Nessuna modifica VPS, SQLite, segreti, frequenza cTrader, condizioni Squalincome o CVD; nessuna chiamata broker aggiunta. Validato con test offline e privati.
+- [ ] Eseguire in futuro nuova **workflow_dispatch su remura-collector/main** (non rerun vecchia run) per osservare i nuovi 15 valori aggregati e individuare timeframe a rischio anche nei campioni con `prices_stale=0`. Nessun merge PR v1.57 su main finché non abbiamo completato i gate di rilascio e riconciliazione.
