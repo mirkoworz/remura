@@ -377,7 +377,7 @@ def apply(sha):
                         for name in FILES), "POST_INSTALL_HASH")
             result = subprocess.run(["systemctl", "start", SERVICE], capture_output=True, timeout=35)
             require(result.returncode == 0 and wait_health(), "POST_INSTALL_HEALTH")
-            print("RILASCIO_V157=OK", flush=True)
+            print("RILASCIO_V158=OK", flush=True)
             print("FILE_INSTALLATI=" + str(len(FILES)), flush=True)
             print("DATABASE_LIVE_NON_RIPRISTINATO=SI", flush=True)
             print("AUTUPDATE_STATE_NON_MODIFICATO=SI", flush=True)
@@ -421,7 +421,7 @@ def rollback_from(path):
         restore_originals(prior)
         result = subprocess.run(["systemctl", "start", SERVICE], capture_output=True, timeout=35)
         require(result.returncode == 0 and wait_health(), "ROLLBACK_RESTART")
-        print("ROLLBACK_V157=OK")
+        print("ROLLBACK_V158=OK")
 
 
 def main():
@@ -440,7 +440,7 @@ def main():
             require(valid_sha(args.commit), "COMMIT_INVALID")
             if args.check:
                 preflight(args.commit)
-                print("PREFLIGHT_V157=OK")
+                print("PREFLIGHT_V158=OK")
                 print("VERSIONE_LIVE_INVARIATA=SI")
                 print("BACKUP_SQLITE_NON_ANCORA_ESEGUITO=SI")
             else:
