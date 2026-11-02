@@ -25,7 +25,7 @@ def source_file(path):
             return b'def create_backup():\n    return ("RESTORE_TEST=OK",)\n'
         return b"# Test module\npass\n"
     if path == "nav.js":
-        return b"/* REMURA Aggiornamento v1.56 test */"
+        return b"REMURA Aggiornamento v1.56 \\xc2\\xb7 02/11/2026 07:43 (Italia, candidato al rilascio)"
     if path == "sw.js":
         return b'const CACHE="remura-shell-v70-v1.56-test";'
     return ("new " + path).encode("utf-8")
@@ -53,7 +53,7 @@ class ReleaseTests(unittest.TestCase):
             path.write_bytes(content)
             self.initial[name] = content
         self.staged = {path:source_file(path) for path in (*tool.FILES, tool.BACKUP_MODULE)}
-        self.staged["nav.js"] = b"Aggiornamento v1.56 TEST"
+        self.staged["nav.js"] = source_file("nav.js")
         self.patches = [
             patch.object(tool, "APP", self.base),
             patch.object(tool, "PRIVATE", self.private),
@@ -120,7 +120,11 @@ class ReleaseTests(unittest.TestCase):
             self.assertIn("BACKUP_SQLITE=VERIFICATO",out.getvalue())
             self.assertIn("RILASCIO_V156=OK",out.getvalue())
             for name in tool.FILES:
-                self.assertEqual((self.base/name).read_bytes(),self.staged[name])
+                if name == "nav.js":
+                    self.assertIn(b"Aggiornamento v1.56", (self.base/name).read_bytes())
+                    self.assertNotIn(b"candidato al rilascio", (self.base/name).read_bytes())
+                else:
+                    self.assertEqual((self.base/name).read_bytes(),self.staged[name])
             folders=list(self.backups.glob("rollback-v156-*"))
             self.assertEqual(len(folders),1)
             manifest=json.loads((folders[0]/"manifest.json").read_text())
@@ -155,6 +159,15 @@ class ReleaseTests(unittest.TestCase):
         (self.base/"price.js").write_bytes(b"modified by third party")
         with self.assertRaisesRegex(RuntimeError,"ROLLBACK_HASH_OR_LIVE_CHANGED"):
             tool.rollback_from(folder)
+
+    def test_release_stamp_is_actual_italian_time(self):
+        import datetime as dt
+        from zoneinfo import ZoneInfo
+        moment=dt.datetime(2026,11,2,9,47,tzinfo=ZoneInfo("Europe/Rome"))
+        stamped=tool.release_stamp(self.staged,now=moment)
+        self.assertIn(b"02/11/2026 09:47 (Italia)",stamped["nav.js"])
+        self.assertIn(b"candidato al rilascio",self.staged["nav.js"])
+        self.assertEqual(stamped["sw.js"],self.staged["sw.js"])
 
     def test_check_rejects_unknown_installed_version_and_symlink(self):
         (self.base/"nav.js").write_bytes(b"VERSION 0.4")
