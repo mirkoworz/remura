@@ -96,7 +96,11 @@ def create_backup():
         snapshot(image)
         verified = inspect(image)
         restore_test(image, verified)
-        digest = hashlib.sha256(image.read_bytes()).hexdigest()
+        digestor = hashlib.sha256()
+        with image.open("rb") as fh:
+            for block in iter(lambda: fh.read(1024 * 1024), b""):
+                digestor.update(block)
+        digest = digestor.hexdigest()
         (temp / "manifest.txt").write_text("remura-v156-sqlite\nsha256=" + digest
                                            + "\nsource_bytes=" + str(size) + "\n", encoding="ascii")
         os.chmod(temp / "manifest.txt", 0o600)
