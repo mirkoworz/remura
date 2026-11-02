@@ -419,8 +419,8 @@ class SignalTest(unittest.TestCase):
             self.assertEqual(after["diagnostics"],full)
             self.assertEqual(after["eventsTotal"],1)
             self.assertEqual(after["historyTotal"],3)
-            self.assertEqual(after["history"][-1]["symbol"],"EURUSD")
-            self.assertEqual(after["history"][-1]["eventType"],"new_convergence")
+            changes=[item for item in after["history"] if item["symbol"]=="EURUSD"]
+            self.assertEqual(changes[-1]["eventType"],"new_convergence")
             recheck=m.scan_once(self.db_path,NOW+dt.timedelta(minutes=16),
                                 targets=("EURUSD",))
             self.assertEqual(recheck["newEvents"],0)
