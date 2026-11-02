@@ -135,3 +135,14 @@ Il rilascio *riuscito* non dimostra ancora che i volumi cTrader siano stati acqu
 - [x] Preparato `deploy/oracle/priority_v157.py` con `--check` read-only, `--enable`/`--disable` separate: hash live backend v1.57, stato autoupdate, lock, salute, permessi; backup di `remura.env` segreto, cambio atomico flag e riavvio con verifica dell'ambiente effettivo del processo; rollback se errore. Test completamente offline. Non chiama broker e non modifica database.
 - [ ] Eseguire `--check` con codice fissato a commit e Git blob dopo CI verdi; **nessun flag ancora attivato**, non cambiare la produzione prima di questo gate.
 - [ ] Misurare due o più giri completi con nuovo flag, confrontando latenza realizzata, errori, copertura di tutti i mercati, log VPS e quote rate cTrader/Oracle.
+
+
+## 02/11/2026 ore 17:08 Italia — priorità cTrader attivata sulla VPS
+
+- [x] Dopo preflight `PRIORITY_PREFLIGHT=OK`, è stato eseguito manualmente `priority_v157.py --enable` da sorgente GitHub hash-verified (`7511f1edb58119ccdac2747fa235aedbf17fd8f7`, blob `f20e8c2ca1ac95e1100cbd73a7dc84fac42388a3`).
+- [x] Screenshot Termius conferma `BACKUP_CONFIGURAZIONE=CREATO`, `PRIORITA=ATTIVA`, `SERVIZIO=ATTIVO`, `ENV_PROCESSO=VERIFICATO`, `BACKUP_PRIVATO=CONSERVATO`, `DATABASE_INVARIATO=SI`, `SHA_AUTOUPDATE_INVARIATO=SI`.
+- [x] Il processo `remura-private.service` ora ha caricato `REMURA_PRIORITY_COLLECTOR_ENABLED=1`; codice v1.57 già presente. **Non ripetere --enable**.
+- [ ] Il flag attivo **non certifica ancora** che il tentativo sia avvenuto ogni 60 minuti; servono misure `lastAttempt` in almeno 2–3 campioni distribuiti su ≥2 ore, sia per EURUSD sia per XAUUSD, ed esito `ok`.
+- [ ] Verificare che restino 38/38 mercati con dati validi e che il tasso Squalincome `prices_stale` non aumenti; monitorare timeout, rifiuti e qualità CVD.
+- [ ] Budget: 40 tentativi-simbolo teorici / 2 ore, contro 38 (+5,26%); controllare limiti cTrader e Oracle, senza affermare 0 euro dai soli indicatori RAM/disco. Nessun servizio a pagamento introdotto.
+- [ ] Attivazione del flag e GitHub `main` sono indipendenti: PR #69 ancora draft, `main` e SHA autoupdate ancora da riallineare **dopo** collaudo. Non usare `--init-sha`, né modificare la VPS dalla diagnostica read-only.
