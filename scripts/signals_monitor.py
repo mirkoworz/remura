@@ -291,8 +291,24 @@ def price_exclusion(doc, now):
         return "price_error"
 
 
-def scan_once(db_path,now=None):
+def scan_once(db_path,now=None,*,targets=None):
+    """Observe all markets on periodic scans, or a small verified fresh batch.
+
+    Targeted scans update existing observation/history/event tables, but NEVER
+    overwrite the 34-market diagnostics summary. They use the SAME freshness
+    gates, COT validation, event transition and SQLite deduplication as a full
+    scan; no relaxed thresholds, fake observations, or notifications.
+    """
     now=now or utcnow()
+    all_symbols=monitored_symbols()
+    if targets is None:
+        symbols=all_symbols
+    else:
+        if (not isinstance(targets,(tuple,list,set,frozenset)) or
+            not 1<=len(targets)<=5 or
+            any(type(symbol) is not str or symbol not in all_symbols for symbol in targets)):
+            raise ValueError("Invalid Squalincome fresh-batch symbols")
+        symbols=tuple(sorted(set(targets)))
     # Safe to run even when the upstream collector is not ready: no invented report.
     db=connect(db_path)
     ensure_tables(db)
@@ -301,7 +317,6 @@ def scan_once(db_path,now=None):
     examined=baselines=events=updates=0
     exclusions={}
     frames_by_symbol={}
-    symbols=monitored_symbols()
     try:
         for symbol in symbols:
             try:
@@ -410,10 +425,13 @@ def scan_once(db_path,now=None):
                 ((now-dt.timedelta(days=EVENT_KEEP_DAYS)).isoformat(),))
             db.execute("DELETE FROM squalincome_history WHERE observed_at < ?",
                 ((now-dt.timedelta(days=HISTORY_KEEP_DAYS)).isoformat(),))
-            db.execute("INSERT INTO squalincome_last_scan(id,scanned_at,summary)"
-                " VALUES(1,?,?) ON CONFLICT(id) DO UPDATE SET"
-                " scanned_at=excluded.scanned_at,summary=excluded.summary",
-                (now.isoformat(),json.dumps(summary,sort_keys=True)))
+            # This summary is a full 34-market snapshot. Fresh-batch scans
+            # must not replace it with partial counters or fake 0-stale totals.
+            if targets is None:
+                db.execute("INSERT INTO squalincome_last_scan(id,scanned_at,summary)"
+                    " VALUES(1,?,?) ON CONFLICT(id) DO UPDATE SET"
+                    " scanned_at=excluded.scanned_at,summary=excluded.summary",
+                    (now.isoformat(),json.dumps(summary,sort_keys=True)))
         return {"examined":examined,"baselines":baselines,"newEvents":events}
     finally:db.close()
 

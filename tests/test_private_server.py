@@ -223,6 +223,74 @@ class PrivateStorageTests(unittest.TestCase):
                     server.collector_loop(self.path,StopOnce())
         self.assertEqual(store.get_status(self.db)["collector_batch"],"1/2")
 
+    def test_after_ingest_is_off_by_default_and_filters_unmonitored(self):
+        with patch.dict(os.environ,{
+            "REMURA_COLLECTOR_ENABLED":"1","REMURA_COT_SYNC_ENABLED":"1",
+            "REMURA_SQUALINCOME_MONITOR_ENABLED":"1"
+        },clear=False):
+            with patch.object(server,"observe_squalincome") as scan:
+                self.assertIsNone(server.observe_updated_batch(
+                    self.path,{"EURUSD"},env={
+                        "REMURA_COLLECTOR_ENABLED":"1",
+                        "REMURA_COT_SYNC_ENABLED":"1",
+                        "REMURA_SQUALINCOME_MONITOR_ENABLED":"1"}))
+                scan.assert_not_called()
+                enabled={
+                    "REMURA_SQUALINCOME_AFTER_INGEST_ENABLED":"1",
+                    "REMURA_COLLECTOR_ENABLED":"1",
+                    "REMURA_COT_SYNC_ENABLED":"1",
+                    "REMURA_SQUALINCOME_MONITOR_ENABLED":"1"}
+                self.assertIsNone(server.observe_updated_batch(
+                    self.path,{"DXY","VIX"},env=enabled))
+                scan.assert_not_called()
+                def check(db_path,targets):
+                    self.assertEqual(targets,("EURUSD","XAUUSD"))
+                    self.assertTrue(server._SQUALINCOME_SCAN_LOCK.locked())
+                    return {"examined":2,"baselines":0,"newEvents":0}
+                scan.side_effect=check
+                result=server.observe_updated_batch(
+                    self.path,{"XAUUSD","EURUSD","DXY"},env=enabled)
+                self.assertEqual(result["examined"],2)
+                self.assertEqual(scan.call_count,1)
+                self.assertFalse(server._SQUALINCOME_SCAN_LOCK.locked())
+
+    def test_after_ingest_rejects_invalid_symbols_and_no_new_broker_calls(self):
+        enabled={
+            "REMURA_SQUALINCOME_AFTER_INGEST_ENABLED":"1",
+            "REMURA_COLLECTOR_ENABLED":"1",
+            "REMURA_COT_SYNC_ENABLED":"1",
+            "REMURA_SQUALINCOME_MONITOR_ENABLED":"1"}
+        with patch.object(server,"observe_squalincome") as scan, \
+             patch.object(server,"collect_once") as collector:
+            for bad in (["EURUSD","XAUUSD","GBPJPY","US500","XAGUSD","USDJPY"],
+                        ["EURUSD","NOT_A_MARKET"],"EURUSD"):
+                with self.assertRaises(ValueError):
+                    server.observe_updated_batch(self.path,bad,env=enabled)
+            scan.assert_not_called()
+            collector.assert_not_called()
+
+    def test_collector_calls_post_ingest_only_for_saved_batch_on_opt_in(self):
+        class StopOnce:
+            stopped=False
+            def is_set(self):return self.stopped
+            def wait(self,seconds):self.stopped=True
+        calls=[]
+        def run(db_path,symbols,days=2,source="primary"):
+            calls.append((tuple(symbols),source))
+            return {"saved":{"EURUSD":10},"errors":{"USDJPY":"no_data"}}
+        env={
+            "REMURA_SYMBOLS":"EURUSD,USDJPY",
+            "REMURA_SQUALINCOME_AFTER_INGEST_ENABLED":"1",
+            "REMURA_SQUALINCOME_MONITOR_ENABLED":"1",
+            "REMURA_COT_SYNC_ENABLED":"1","REMURA_COLLECTOR_ENABLED":"1"}
+        with patch.dict(os.environ,env,clear=False), \
+             patch.object(server,"collect_once",side_effect=run), \
+             patch.object(server,"observe_squalincome",return_value={
+                "examined":1,"baselines":1,"newEvents":0}) as scan:
+            server.collector_loop(self.path,StopOnce())
+            scan.assert_called_once_with(self.path,targets=("EURUSD",))
+        self.assertEqual(len(calls),1)
+
     def test_diagnostics_summarize_only_non_sensitive_messages(self):
         reason=server.safe_ctrader_reason({"errors":{"EURUSD":"Ticker non disponibile o ambiguo: EUR/USD"}})
         self.assertIn("simboli",reason)

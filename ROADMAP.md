@@ -1,7 +1,31 @@
 # REMURA — Roadmap operativa unica
 
+## 02/11/2026 — candidato v1.58: installer protetto su GitHub (non installato)
 
-> **STATO CORRENTE — 02/11/2026 ore 17:27 Italia.** VPS **v1.57** (rilascio manuale riuscito); priorità EURUSD/XAUUSD **ON** dalle 17:08, ma intervalli effettivi ancora da collaudare; backup e rollback verificati. GitHub `main` ha v1.56, PR #69 ancora draft, e SHA autoupdater registrato alla v1.56. **Non** fare merge, `--init-sha` o nuovi deploy finché il collaudo intraday non è concluso. Questa modifica è solo documentazione: non cambia versione né servizi.
+- [x] Creata PR #74 dalla main v1.57 riconciliata, codice post-ingest identico al prototipo #72; 38 mercati, Myfxbook e autoupdater lasciati invariati sulla VPS.
+- [x] Installer manuale release_v158.py candidato: check/apply separati, verifica dei 13 Git blob v1.57, CI main, rollback, SQLite backup + restore test, lock autoupdater e flag post-ingest OFF.
+- [x] Predisposti banner v1.58 per 9 pagine, timestamp reale Europe/Rome solo all'installazione, cache PWA v72 e nav.js?v=158.
+- [x] **Installer e riconciliazione SHA pronti offline**: `release_v158.py` + `reconcile_v158.py` con test su candidate archivio verificato, 13 file, CI main, manifest rollback, snapshot SQLite, stato autoupdater; Price Engine e Insights **verdi su commit 83380d9db78f** della PR #74.
+- [ ] **Prima del merge**: CI verdi sull'HEAD definitivo (inclusi eventuali cambi documentali), nessun file o API inatteso, review finale; VPS rimane **v1.57**.
+- [ ] **Prima di Termius**: merge main protetto, CI **push** verdi, SHA commit definitivo e blob immutabili; primo comando soltanto `release_v158.py --check`. `--apply` separato dopo esito verde, poi `reconcile_v158.py --check` e `--apply` separati, diagnostica privata conclusiva.
+- [ ] Costi OCI/quote API/Firestore non ancora verificati nel pannello: N/D. Divergenze CVD PR #71 separata.
+
+
+## Stato operativo consolidato — 02/11/2026, dopo diagnostica privata #24
+
+- **VPS in produzione: v1.57**, installata manualmente; backup SQLite e test di ripristino/rollback superati nel rilascio controllato. **Nessun nuovo deploy** in questa fase.
+- **GitHub main:** commit d445b17be20028fdb42ab303fa99718c1c33cd80, PR #73 integrata. **Price Engine e Insights verdi** sul merge commit.
+- **Autoupdater VPS riconciliato:** diagnostica privata #24 (run 41537705649) ha letto installedSha=d445b17be200, targetSha=d445b17be200, up_to_date, server attivo e nessun blocco manuale. PR #69 chiusa, non integrata (sostituita da #73).
+- **Dati reali diagnostica #24:** 38/38 prezzi verificati e recenti; COT TFF 11/11, Disaggregated 3/3; Myfxbook running; tick volume M15 EURUSD e XAUUSD 64/64; RAM 29,0%, disco 7,9%. Firestore e costi/quote OCI non certificati da questi test.
+- **Squalincome (34 strumenti):** ultimo scan diagnostica #24: 9 esclusioni prices_stale, tutte H1; M15 e H4 zero; massima H1 145 minuti contro guardia 120. Le esclusioni multiple per ragione non si sommano come mercati unici.
+- **Lavoro in corso v1.58:** reintegrazione prototipo PR #72 su ramo isolato integration/v158-after-ingest-main-20261102, **flag OFF di default**; nessuna modifica VPS, nessun cambio soglie, nuove chiamate broker zero. Test CI necessari prima di ogni merge. PR #71 prezzo–CVD rimane un lavoro offline successivo.
+- **Gate rilascio v1.58:** solo dopo CI verde, review, preflight read-only, backup+restore, rollback e installazione reale con versione e data/ora italiana su ogni pagina; solo dopo abilitazione controllata del flag e diagnostica prospettica su latenza, duplicati, copertura, RAM/disco e quote.
+
+## Archivio dei precedenti snapshot (preservato)
+
+
+
+> **SNAPSHOT STORICO — 02/11/2026 ore 17:27 Italia (superato).** VPS **v1.57** (rilascio manuale riuscito); priorità EURUSD/XAUUSD **ON** dalle 17:08, ma intervalli effettivi ancora da collaudare; backup e rollback verificati. GitHub `main` ha v1.56, PR #69 ancora draft, e SHA autoupdater registrato alla v1.56. **Non** fare merge, `--init-sha` o nuovi deploy finché il collaudo intraday non è concluso. Questa modifica è solo documentazione: non cambia versione né servizi.
 
 ### Quadro rapido: fatto / in corso / da costruire
 
