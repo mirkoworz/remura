@@ -37,6 +37,10 @@ OLD="d8ae01e19dd87e21b48c0d08c4b0c46a66b1eee4"
 TARGET="b4ec4cdee133d3cdf97b94abf75f5f13c5872cf1"
 RELEASE_COMMIT="3e0e34169ab89ccb2d6c09d777817ae3f705352b"
 RELEASE_BLOB="8997906ee3d246b5c5d3f13a700b546c112dc525"
+RECONCILER_REVIEWED_SHA="88710cb37d6b65890bcf2da7fcb7ef430ec3da0c"
+RECONCILER_ONLY=frozenset(("deploy/oracle/reconcile_v156.py",
+                           "tests/test_reconcile_v156.py",
+                           ".github/workflows/price-checks.yml"))
 EXTRA=("scripts/private_server.py", "deploy/oracle/autoupdate.py", "deploy/oracle/remura.service")
 WORKFLOWS=("insights-checks.yml","price-checks.yml")
 STAMP=b"02/11/2026 07:43 (Italia, candidato al rilascio)"
@@ -163,8 +167,20 @@ def remote_main_ci():
                if isinstance(f,dict)]
         require(cmp.get("status")=="ahead" and 0<len(paths)<300 and
                 all(isinstance(p,str) and
-                    (p.startswith("data/") or p.endswith(".md")) for p in paths),
-                "MAIN_MOVED_WITH_CODE")
+                    (p.startswith("data/") or p.endswith(".md") or p in RECONCILER_ONLY)
+                    for p in paths), "MAIN_MOVED_WITH_CODE")
+        if any(p in RECONCILER_ONLY for p in paths):
+            # The ONE permitted code change is the reviewed reconciliation PR
+            # merged with history preservation. Any subsequent code change,
+            # even in the allowlisted files, is forbidden.
+            post=json_api("/compare/"+RECONCILER_REVIEWED_SHA+"..."+main)
+            newer=[f.get("filename") for f in post.get("files",[])
+                   if isinstance(f,dict)]
+            require(post.get("status") in ("ahead","identical") and
+                    len(newer)<300 and
+                    all(isinstance(p,str) and
+                        (p.startswith("data/") or p.endswith(".md")) for p in newer),
+                    "RECONCILER_NOT_REVIEWED_ANCESTOR")
     for workflow in WORKFLOWS:
         runs=json_api("/actions/workflows/"+workflow+"/runs?event=push&head_sha="+TARGET+"&per_page=20").get("workflow_runs",[])
         matched=[r for r in runs if isinstance(r,dict) and
