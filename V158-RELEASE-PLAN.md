@@ -7,7 +7,7 @@
 - `--apply` soltanto in un passaggio Termius separato dopo `--check`: lock esclusivo, backup SQLite coerente, restore-test isolato, directory rollback persistente, 13 file installati atomici e health dopo restart. Timbratura release italiana effettiva, non ora preparazione GitHub.
 - `--rollback-dir` solo per il bundle v1.58 appena generato e con verifica dei digest del codice corrente; se dopo la riconciliazione SHA, effettuare anche controllo e ripristino dello stato autoupdater separato.
 - L'installer non modifica `remura.env`, DB produzione, credenziali, Myfxbook, COT, stato autoupdater. Non introduce nuove API cTrader. La scansione post-ingest rimane disattivata finché non abilitiamo esplicitamente il flag in fase separata.
-- Dopo rilascio: script di riconciliazione SHA v1.58 separato, backup stato, CI main verdi, diagnostica GitHub privata e misure reali di latenza tra ingest e osservazione, duplicati, freschezza H1, RAM, disco e quote.
+- Dopo rilascio: **è già predisposto in questa PR** `deploy/oracle/reconcile_v158.py` con `--check` di sola lettura, `--apply` separato con lock, verifica dei 13 file live v1.58, manifest rollback, backup SQLite, SHA main e CI; backup dello stato `autoupdate-state.json` e aggiornamento del SOLO SHA autoupdater. Usare il suo blob immutabile verificato. Seguiranno diagnostica GitHub privata e misure reali di latenza tra ingest e osservazione, duplicati, freschezza H1, RAM, disco e quote.
 - Sorgente CVD proxy resta CLV × tick volume e PR #71 è ancora offline; niente notifiche o trading automatico in questo rilascio.
 
 **Budget:** risorse VPS note ma costi Oracle, billing Firestore e quota API ancora N/D; non dichiarare gratuito in modo certo.
