@@ -71,7 +71,7 @@ ALLOWED = set(FILES) | {
 "deploy/oracle/release_v158.py",".github/workflows/price-checks.yml",
 "tests/test_release_v158.py","tests/release-consistency.test.js",
 "tests/test_private_server.py","tests/test_signals_monitor.py",
-"tests/statistica-squali.test.js"}
+"tests/statistica-squali.test.js","tests/price-status.test.js"}
 REQUIRED = {"scripts/private_server.py","scripts/signals_monitor.py","nav.js",
 "sw.js","deploy/oracle/release_v158.py","tests/test_release_v158.py"} | {
 p for p in FILES if p.endswith(".html")}
