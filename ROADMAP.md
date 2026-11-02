@@ -73,3 +73,39 @@
 ## Criterio di completamento di ogni step
 
 Specifiche + fonte ufficiale + test unitari/integrazione + metrica di qualità + misure risorse/costo + backup/rollback + verifica reale su VPS + versione/data ora in ogni pagina **quando c'è un rilascio applicativo**. Documentare esplicitamente ciò che resta N/D.
+
+## 02/11/2026 — lavoro preparato per v1.56, non ancora distribuito
+
+- [x] Ramo `feature/volume-cvd-proxy-v156`: tick volume cTrader conservato in candele M15 e SQLite, H1/H4 sommati solo con barre contigue e volumi completi; dataset precedenti senza volume supportati.
+- [x] Delta/CVD **proxy** su M15 tramite Close Location Value × tick volume, reset giorno UTC, controlli per tick-volume mancante, gap e M15 stale.
+- [x] Primo pannello grafico nel motore prezzi delle schede strumenti; stato N/D finché non arrivano volumi dal broker. Nessuna interpretazione automatica istituzionale.
+- [x] Test unitari Python e Node aggiunti: conversione volume, aggregazione, persistenza SQLite, CVD, discontinuità; CI deve ancora concludersi.
+- [ ] CI verde + revisione PR, backup SQLite coerente, rollback e **installazione manuale protetta del backend**. Non installare solo la UI senza il backend se il rollout è previsto come pacchetto.
+- [ ] Collaudo *reale* VPS a mercato aperto: confronto volumi cTrader, copertura EURUSD/XAUUSD, fresco/stale, utilizzo Oracle e contatori outbound; non verificabile da GitHub.
+- [ ] Fase successiva: valutare tick Bid/Ask storici/live, qualità e overhead (solo se sostenibile), poi test out-of-sample su Squalincome.
+
+
+## 02/11/2026 — diagnostica mercati aperti e backup protetto (pre-rilascio)
+
+- [x] VPS v1.55: 38/38 mercati recenti e verificati nella diagnostica delle 08:06 CET (OHLC; non è validazione di volume).
+- [x] VPS v1.55: preflight privato #13 (~08:19 CET) rileva **64/64 M15 senza campo tick-volume** su EURUSD e XAUUSD, zero valori invalidi. Stato **atteso prima** dell'installazione del collector v1.56, non prova che cTrader non fornisca volumi.
+- [x] Monitoraggio preflight: RAM usata **28%**, disco **7,9%**; non attestano quote o addebiti Oracle.
+- [x] Aggiunto `deploy/oracle/backup_v156.py`: verifica SQLite esistente e spazio, genera snapshot consistente con SQLite Online Backup e lo ripristina in un database temporaneo isolato per verifica integrità/righe. Flag `--check` sola lettura e `--backup` esplicito; NON fa deploy o riavvio. Test automatici offline inclusi.
+- [ ] Eseguire **effettivamente** backup e restore-test sulla VPS con autorizzazione manuale; non dichiarare eseguito sulla base dei soli test GitHub.
+- [ ] Valutare *latenza per strumento*: al preflight EURUSD ultima apertura 05:15 UTC e XAUUSD 06:15 UTC; alle 08:19 CET risultavano rispettivamente circa **124** e **64** minuti dopo l'apertura. Il proxy attuale blocca il CVD se la candela è più vecchia di 90 minuti: con rotazione dei 38 mercati EURUSD può spesso essere N/D anche in condizioni di feed sano. NON rimuovere la guardia per produrre falsi segnali. Progettare un ciclo prioritario per EURUSD/XAUUSD solo dopo controllo delle quote cTrader e misure del carico.
+- [ ] Rilasciare backend/UI v1.56 soltanto dopo backup reale, stadio verificato con hash, test cTrader reali, installazione protetta e possibilità di rollback; versioning/data ora su tutte le pagine.
+
+
+## 02/11/2026 ore 08:45 Italia — v1.56 installata, inizio validazione live
+
+- [x] Preflight server: `PREFLIGHT_V156=OK`, versione v1.55 prima del rilascio.
+- [x] **Esecuzione manuale** dello script di rilascio verificato `deploy/oracle/release_v156.py` con commit fissato `3e0e34169ab89ccb2d6c09d777817ae3f705352b`: secondo lo screenshot terminale restituisce `RILASCIO_V156=OK` e `FILE_INSTALLATI=17`.
+- [x] Prima dell'installazione: `BACKUP_SQLITE=VERIFICATO` e `RESTORE_TEST=OK`. I file originali sono stati conservati nel percorso privato `predeploy-backups/rollback-v156-...`; il database live non è stato sovrascritto dalla copia.
+- [x] Lo script ha verificato la salute del backend dopo il riavvio; lo stato dell'autoupdater non è stato modificato.
+- [ ] **Post-release da fare:** workflow diagnostico privato `remura-collector` su `main`, controllare salute server, 38 mercati, ultimo aggiornamento Myfxbook/COT/Squalincome, RAM/disco e soprattutto `TICK_VOLUME_EURUSD/XAUUSD`.
+- [ ] Distinguere `PARZIALE` (storico pre-v1.56 senza `v`) da `ASSENTE` (nessun `v` nelle 64 M15) e `NON_VALIDO`; verificare più cicli chiusi e confrontare con l'origine cTrader.
+- [ ] Test UI v1.56 su iPhone: banner versione/data e grafico CVD, stato `N/D` su dati incompleti/stale, niente falsi numeri di eseguiti.
+- [ ] Riconciliare la PR `#68`, `main` e il tracciamento SHA dell'autoupdater **solo dopo collaudo live**, senza usare `--init-sha` alla cieca.
+- [ ] Verifica esterna OCI billing/quota Always Free, non dimostrata dalle metriche sistema.
+
+Il rilascio *riuscito* non dimostra ancora che i volumi cTrader siano stati acquisiti, né che il CVD abbia potere predittivo. Non ripetere `--apply` solo per ottenere nuovi dati.

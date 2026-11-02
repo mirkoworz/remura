@@ -61,6 +61,20 @@ class PrivateStorageTests(unittest.TestCase):
         self.assertEqual(len(m["timeframes"]["M15"]),1344)
         self.assertNotIn("CTRADER_ACCESS_TOKEN",json.dumps(doc))
 
+    def test_volume_sqlite_roundtrip_and_legacy_refresh(self):
+        fresh=make_bundle(count=96)
+        for row in fresh["markets"]["EURUSD"]["timeframes"]["M15"]:
+            row["v"]=14
+        self.assertIn("EURUSD",store.ingest(self.db,fresh,now=NOW)["saved"])
+        stored=store.latest(self.db,"EURUSD")
+        self.assertEqual(stored["timeframes"]["H1"][-1]["v"],56)
+        self.assertEqual(stored["timeframes"]["H4"][-1]["v"],224)
+        self.assertIn("EURUSD",store.ingest(self.db,make_bundle(count=96),now=NOW)["saved"])
+        self.assertEqual(store.latest(self.db,"EURUSD")["timeframes"]["M15"][-1]["v"],14)
+        invalid=make_bundle(count=3)
+        invalid["markets"]["EURUSD"]["timeframes"]["M15"][0]["v"]=-1
+        self.assertIn("EURUSD",store.ingest(self.db,invalid,now=NOW)["errors"])
+
     def test_incremental_refresh_merges_not_replace(self):
         store.ingest(self.db,make_bundle(count=96),now=NOW)
         earlier=len(store.latest(self.db,"EURUSD")["timeframes"]["M15"])

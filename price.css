@@ -35,3 +35,9 @@
 .rm-price .rp-upload{padding:13px 15px}
 .rm-price .rp-upload>summary{padding:0 0 2px}
 .rm-price .rp-upload[open]>summary{padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid #44666c}
+
+/* v1.56: accessible CVD proxy panel. */
+.rm-price .rp-flow{margin-top:18px;border-top:1px solid #31545d;padding-top:8px}
+.rm-price .rp-flow-grid{margin:12px 0}
+.rm-price .rp-flow-chart{width:100%;height:112px;display:block;background:#091d28;border:1px solid #315661;border-radius:12px}
+.rm-price .rp-flow-chart[hidden]{display:none}

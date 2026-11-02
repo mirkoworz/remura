@@ -24,6 +24,13 @@
     '<div class="rp-box"><h4>H1 · Conferma</h4><strong id="rp-h1">N/D</strong><p id="rp-h1-extra">In attesa del feed.</p><small id="rp-h1-age"></small></div>'+
     '<div class="rp-box"><h4>M15 · Timing</h4><strong id="rp-m15">N/D</strong><p id="rp-m15-extra">In attesa del feed.</p><small id="rp-m15-age"></small></div>'+
     '</div><div id="rp-narrative" class="rp-result">REMURA non interpreta il prezzo finché non vengono caricate candele verificabili.</div>'+
+    '<section class="rp-flow" aria-label="Delta Volume e CVD stimati"><h3>Delta Volume e CVD · proxy cTrader</h3>'+
+    '<p class="rp-muted">Stima CLV × tick volume delle M15 chiuse: non sono transazioni o ordini istituzionali.</p>'+
+    '<div class="rp-grid rp-flow-grid"><div class="rp-box"><h4>Tick volume ultima M15</h4><strong id="rp-flow-volume">N/D</strong></div>'+
+    '<div class="rp-box"><h4>Delta stimato ultima M15</h4><strong id="rp-flow-delta">N/D</strong></div>'+
+    '<div class="rp-box"><h4>CVD stimato · giornata UTC</h4><strong id="rp-flow-cvd">N/D</strong></div></div>'+
+    '<p id="rp-flow-quality" class="rp-muted">Tick volume ancora da verificare.</p>'+
+    '<svg id="rp-flow-chart" class="rp-flow-chart" viewBox="0 0 340 96" role="img" aria-label="Grafico CVD proxy per la giornata UTC" hidden></svg></section>'+
     '<h3>Prezzo + COT + Retail</h3><div id="rp-compare" class="rp-compare">Servono prima candele M15/H1/H4 e un report COT valido. Il retail è un elemento aggiuntivo, non un ordine.</div>'+
     '<details><summary>Come produrre il file privato per REMURA</summary>'+
     '<p class="rp-muted">Sul tuo computer scarica i prezzi tramite il comando Python locale descritto in <code>PRICE-ENGINE.md</code>: supporta Twelve Data, OANDA v20 e CSV M15 di broker. Esporta il file <code>local/price-snapshot.json</code>, trasferiscilo su iPhone se necessario e selezionalo qui. Se un mercato non è disponibile dal fornitore, REMURA indica N/D.</p>'+
@@ -39,6 +46,32 @@
     const retail=insights && typeof insights.getRetail==="function"?insights.getRetail():null;
     set("rp-compare",core.cross(priceResult,cot,retail).text);
   }
+  function renderFlow(market){
+    const f=core.flow(market);
+    const fmt=n=>typeof n==="number"&&Number.isFinite(n)?
+      new Intl.NumberFormat("it-IT",{maximumFractionDigits:1,signDisplay:"exceptZero"}).format(n):"N/D";
+    set("rp-flow-volume",Number.isSafeInteger(f.lastVolume)?new Intl.NumberFormat("it-IT").format(f.lastVolume):"N/D");
+    set("rp-flow-delta",fmt(f.delta));
+    set("rp-flow-cvd",fmt(f.cvd));
+    set("rp-flow-quality",(f.status==="ok"?"Dati continui":"Non validato per segnali")+
+      " · "+f.reason+" · CLV × tick volume, non order flow reale.");
+    const svg=get("rp-flow-chart");
+    svg.replaceChildren();
+    const pts=f.points||[];
+    if(pts.length<2){svg.hidden=true;return;}
+    svg.hidden=false;
+    const values=pts.map(p=>p.cvd),lo=Math.min(...values),hi=Math.max(...values);
+    const minT=pts[0].t,maxT=pts[pts.length-1].t;
+    const x=t=>10+320*(t-minT)/Math.max(1,maxT-minT);
+    const y=v=>82-68*(v-lo)/Math.max(0.000001,hi-lo);
+    let d="";
+    for(const [i,p] of pts.entries())d+=(i===0||p.break?"M":"L")+x(p.t).toFixed(2)+" "+y(p.cvd).toFixed(2)+" ";
+    const line=document.createElementNS("http://www.w3.org/2000/svg","path");
+    line.setAttribute("d",d);line.setAttribute("fill","none");line.setAttribute("stroke","#7be6cd");
+    line.setAttribute("stroke-width","2.2");line.setAttribute("stroke-linejoin","round");
+    svg.append(line);
+  }
+
   function render(result, market) {
     priceResult=result;
     el.dataset.status=result.state;
@@ -62,6 +95,7 @@
     }
     set("rp-narrative",result.explanation+" "+
       (result.caveats||[]).join(" "));
+    renderFlow(market);
     combined();
     window.dispatchEvent(new CustomEvent("remura:price",{
       detail:{symbol, result, provider:market.provider, lastComplete:result.metrics?.M15?.latest}
@@ -86,6 +120,7 @@
       set("rp-narrative",String(e.message||"File non valido"));
       set("rp-provider","Fonte: N/D");set("rp-last","Ultima candela: N/D");
       for(const k of ["h4","h1","m15"]){set("rp-"+k,"N/D");set("rp-"+k+"-extra","File da verificare.");set("rp-"+k+"-age","");}
+      renderFlow({provider:"unknown",frames:{M15:[]}});
       combined();
       window.dispatchEvent(new CustomEvent("remura:price",{detail:{symbol,result:null}}));
     }
