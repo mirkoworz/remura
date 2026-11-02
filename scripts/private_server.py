@@ -428,6 +428,41 @@ def collector_batches(symbols, size=5):
     return [unique[i:i+size] for i in range(0,len(unique),size)]
 
 
+def collector_priority_batches(symbols, size=5, priority=("EURUSD","XAUUSD")):
+    """Fair bounded schedule: two hot instruments twice in each 8-quarter cycle.
+
+    In the standard 38-market universe there are 8 x 5 = 40 slots.
+    The extra two slots go to EURUSD and XAUUSD, at positions 0 and 4.
+    Other 36 markets remain once per 8 quarters; 2 extra market fetches
+    per 2 hours (38 -> 40), but no extra cycle or higher batch concurrency.
+    If the configured universe has insufficient spare slots, fall back
+    to existing unbiased batches instead of silently dropping markets.
+    """
+    baseline=collector_batches(symbols,size=size)
+    unique=list(dict.fromkeys(symbols))
+    hot=[symbol for symbol in priority if symbol in unique]
+    group_count=len(baseline)
+    if (len(hot)!=2 or group_count<4
+            or group_count*size < len(unique)+len(hot)):
+        return baseline
+    other=[symbol for symbol in unique if symbol not in hot]
+    groups=[[] for _ in range(group_count)]
+    for index in (0,group_count//2):
+        groups[index].extend(hot)
+    iterator=iter(other)
+    for group in groups:
+        while len(group)<size:
+            item=next(iterator,None)
+            if item is None:
+                break
+            group.append(item)
+    # No endpoint sees duplicates, no market omitted, all batches bounded.
+    if (any(not group or len(group)>size or len(group)!=len(set(group)) for group in groups)
+            or set(x for group in groups for x in group)!=set(unique)):
+        raise RuntimeError("Invalid priority schedule")
+    return groups
+
+
 def safe_ctrader_reason(payload, process_code=0):
     """Limited diagnostic vocabulary: never show raw provider bodies or credentials."""
     if not isinstance(payload,dict):
@@ -791,7 +826,12 @@ def collector_loop(db_path,stop,env=None):
         try:set_status(db,collector="invalid_symbols",last_error="REMURA_SYMBOLS non contiene mercati validi.")
         finally:db.close()
         return
-    batches=collector_batches(symbols)
+    # Explicit opt-in; default retains the deployed v1.56 schedule.
+    # The priority mode uses 40 instead of 38 symbol fetches per 2h
+    # in the standard 38-market universe, so monitor broker API quotas.
+    use_priority=os.environ.get("REMURA_PRIORITY_COLLECTOR_ENABLED","0")=="1"
+    batches=(collector_priority_batches(symbols) if use_priority
+             else collector_batches(symbols))
     cursor=0
     while not stop.is_set():
         batch_index=cursor % len(batches)
