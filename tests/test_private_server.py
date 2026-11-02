@@ -193,7 +193,7 @@ class PrivateStorageTests(unittest.TestCase):
             return {"saved":{symbol:1 for symbol in symbols},"errors":{}}
         with patch.dict(os.environ,{"REMURA_SYMBOLS":"ALL",
                                      "REMURA_PRIORITY_COLLECTOR_ENABLED":"1"},clear=False):
-            with patch.object(server,"collect_once",side_effect=collect), \\
+            with patch.object(server,"collect_once",side_effect=collect), \
                  patch.object(server,"backup_ctrader_status",
                               return_value={"configuration":"incomplete","enabled":False}):
                 server.collector_loop(self.path,StopOnce())
@@ -202,7 +202,7 @@ class PrivateStorageTests(unittest.TestCase):
         seen.clear()
         with patch.dict(os.environ,{"REMURA_SYMBOLS":"ALL",
                                      "REMURA_PRIORITY_COLLECTOR_ENABLED":"0"},clear=False):
-            with patch.object(server,"collect_once",side_effect=collect), \\
+            with patch.object(server,"collect_once",side_effect=collect), \
                  patch.object(server,"backup_ctrader_status",
                               return_value={"configuration":"incomplete","enabled":False}):
                 server.collector_loop(self.path,StopOnce())
