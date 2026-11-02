@@ -134,6 +134,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_reconcile_v156.py' -v
       - name: Test v1.57 guarded release installer, offline
         run: python -m unittest discover -s tests -p 'test_release_v157.py' -v
+      - name: Test v1.58 guarded manual release and rollback, offline
+        run: python -m unittest discover -s tests -p 'test_release_v158.py' -v
       - name: Test v1.57 opt-in priority backup and rollback, offline
         run: python -m unittest discover -s tests -p 'test_priority_v157.py' -v
       - name: Test v1.57 SHA-only code/backup reconciliation, offline
