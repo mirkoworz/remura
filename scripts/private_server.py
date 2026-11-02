@@ -30,7 +30,9 @@ from urllib.parse import urlsplit
 from price_feed import MARKETS, UTC, utcnow
 from price_store import connect, get_status, set_status, latest, ingest, api_document, symbols_available, price_overview
 from cot_monitor import collect_once as collect_official_cot, public_status as official_cot_status
-from signals_monitor import scan_once as observe_squalincome, status as squalincome_status
+from signals_monitor import (scan_once as observe_squalincome,
+    monitored_symbols as squalincome_monitored_symbols,
+    status as squalincome_status)
 from statistical_validation import update_validation, validation_status
 from dual24_validation import update_dual24, dual24_status
 from market_validation import market_audit_status
@@ -43,6 +45,8 @@ from resource_monitor import snapshot as resource_snapshot
 
 ROOT=Path(__file__).resolve().parents[1]
 STORE=ROOT/"private"/"remura-prices.sqlite3"
+# Serialize observation writes from periodic and post-ingest threads in this process.
+_SQUALINCOME_SCAN_LOCK=threading.Lock()
 # The FP Markets secondary source may provide macro gauges only.
 BACKUP_ALLOWED_MARKETS=frozenset(("DXY","VIX"))
 SERVER_HOST="127.0.0.1"
@@ -816,6 +820,35 @@ def seconds_to_next_quarter(now=None):
     return max(2.0,next_event-stamp)
 
 
+def squalincome_post_ingest_enabled(env=None):
+    """Opt-in private mode only; never increases broker requests."""
+    values=os.environ if env is None else env
+    return values.get("REMURA_SQUALINCOME_AFTER_INGEST_ENABLED","0")=="1" and (
+        values.get("REMURA_SQUALINCOME_MONITOR_ENABLED","1")=="1" and
+        values.get("REMURA_COLLECTOR_ENABLED","0")=="1" and
+        values.get("REMURA_COT_SYNC_ENABLED","1")=="1")
+
+
+def observe_updated_batch(db_path, saved, env=None):
+    """Scan ONLY monitored symbols already saved to SQLite.
+
+    Does not change 34-market diagnostic snapshot, broker schedule, COT,
+    threshold gates, or notification policy. Fail closed for empty/unknown.
+    """
+    if not squalincome_post_ingest_enabled(env):
+        return None
+    allowed=set(squalincome_monitored_symbols())
+    if not isinstance(saved,(set,tuple,list,frozenset)):
+        raise ValueError("Invalid recent-symbol group")
+    if len(saved)>5 or any(type(symbol) is not str or symbol not in MARKETS for symbol in saved):
+        raise ValueError("Invalid collected symbols")
+    selected=tuple(sorted(set(saved)&allowed))
+    if not selected:
+        return None
+    with _SQUALINCOME_SCAN_LOCK:
+        return observe_squalincome(db_path,targets=selected)
+
+
 def collector_loop(db_path,stop,env=None):
     symbols_text=os.environ.get("REMURA_SYMBOLS","all").strip().upper()
     symbols=sorted(MARKETS) if symbols_text in ("ALL","") else list(dict.fromkeys(
@@ -850,12 +883,14 @@ def collector_loop(db_path,stop,env=None):
         cold=[symbol for symbol in batch
               if symbol not in stored or brokers[symbol].startswith("BACKUP · ")]
         warm=[symbol for symbol in batch if symbol not in cold]
+        saved_this_batch=set()
         # A new backup source gets its own 21-day bootstrap, never reuses
         # an unrelated broker's previous historical candles.
         for group,days in ((cold,21),(warm,2)):
             if not group or stop.is_set():
                 continue
             primary=collect_once(db_path,group,days=days)
+            saved_this_batch.update(primary.get("saved",{}))
             missing=[symbol for symbol in group if symbol in BACKUP_ALLOWED_MARKETS
                      and symbol not in primary.get("saved",{})]
             if missing and backup_ctrader_status(db_path)["configuration"]=="ready" and not stop.is_set():
@@ -864,7 +899,16 @@ def collector_loop(db_path,stop,env=None):
                 backup_warm=[symbol for symbol in missing if symbol not in backup_cold]
                 for subset,horizon in ((backup_cold,21),(backup_warm,2)):
                     if subset and not stop.is_set():
-                        collect_once(db_path,subset,days=horizon,source="backup")
+                        fallback=collect_once(db_path,subset,days=horizon,source="backup")
+                        saved_this_batch.update(fallback.get("saved",{}))
+        # This offline prototype is disabled by default, including after a
+        # code deploy. Scan only genuinely ingested symbols, no broker calls.
+        if saved_this_batch and not stop.is_set():
+            try:
+                observe_updated_batch(db_path,saved_this_batch)
+            except Exception as exc:
+                # Never log provider payload, symbol names or auth values.
+                print("REMURA post-ingest monitor: "+type(exc).__name__,file=sys.stderr)
         stop.wait(seconds_to_next_quarter())
 
 
@@ -896,7 +940,8 @@ def squalincome_loop(db_path,stop):
     # No network requests: this only reads the local COT and cTrader caches.
     while not stop.is_set():
         try:
-            observe_squalincome(db_path)
+            with _SQUALINCOME_SCAN_LOCK:
+                observe_squalincome(db_path)
             update_validation(db_path)
             update_dual24(db_path)
         except Exception as exc:
