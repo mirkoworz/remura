@@ -49,6 +49,7 @@ class TestPriorityActivation(unittest.TestCase):
             patch.object(m,"git_blob",return_value=m.V157_SERVER_BLOB),
             patch.object(m,"service_active",return_value=True),
             patch.object(m,"health",return_value=True),
+            patch.object(m,"running_mode",return_value="0"),
             patch.object(m.os,"fchown"),
             patch.object(m.subprocess,"run",return_value=types.SimpleNamespace(
                 returncode=1,stdout=b"inactive"))
@@ -142,6 +143,17 @@ class TestPriorityActivation(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError,"AUTOUPDATE_STATE_UNEXPECTED"):
             m.preflight()
         self.assertEqual(self.env.read_bytes(),before)
+
+    def test_emergency_disable_after_state_changes_but_never_enable(self):
+        self.env.write_bytes(self.secret+b"\nREMURA_PRIORITY_COLLECTOR_ENABLED=1\n")
+        self.state.write_text(json.dumps({"installedSha":"b"*40,"state":"manual_required"}))
+        with self.assertRaisesRegex(RuntimeError,"AUTOUPDATE_STATE_UNEXPECTED"):
+            m.preflight(disabling=False)
+        self.assertEqual(m.preflight(disabling=True)[2],"1")
+        with patch.object(m,"running_mode",return_value="1"),\
+             patch.object(m,"restart_and_verify",return_value=None):
+            m.change("0")
+        self.assertEqual(m.environment_mode(self.env.read_bytes()),"0")
 
     def test_lock_and_env_symlink_guard(self):
         (self.work/"lock").unlink()
