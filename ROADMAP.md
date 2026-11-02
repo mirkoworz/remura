@@ -121,3 +121,17 @@ Il rilascio *riuscito* non dimostra ancora che i volumi cTrader siano stati acqu
 - [ ] Eseguire CI, revisione e release manuale protetta v1.57, con backup/rollback e versione/data/ora su ogni pagina. Il codice è solo un **candidato, mai installato**. Per impostazione predefinita il nuovo flag è disattivato.
 - [ ] Prima di modificare la VPS, terminare la riconciliazione PR v1.56, main e autoupdater in modo che gli aggiornamenti successivi non sovrascrivano il backend live.
 - [ ] Ripetere diagnostica di freschezza e tick-volume di EURUSD/XAUUSD dopo il rilascio, e confrontare le percentuali di esclusione Squalincome senza modificare retroattivamente le definizioni.
+
+## 02/11/2026, ore 16:58 Italia — Diagnostica privata #18 dopo installazione v1.57
+
+- [x] Accesso diretto ai log workflow privato **#18** (run `41476811725`, job `125384444819`): esito `success`, `SERVER_REMURA=ATTIVO`, `PREZZI_COLLECTOR=running`.
+- [x] Prezzi **38/38 verificati e recenti** con 0 invalidi, mancanti, parziali o datati per controllo generale.
+- [x] **EURUSD tick-volume COMPLETO: 64/64 M15** con `v` valido, 0 assenti, 0 invalidi; ultima apertura M15 14:15 UTC, ultimo tentativo `14:31:30Z` con esito `ok`, latenza misurata dalla chiusura **88 min**.
+- [x] **XAUUSD tick-volume COMPLETO: 64/64 M15**, 0 assenti, 0 invalidi; ultima apertura 15:15 UTC, ultimo tentativo `15:31:43Z` `ok`, latenza **28 min**.
+- [x] Squalincome: 34 monitorati, 4 analizzati, 30 esclusi; **0 esclusioni per prezzi stale** (diagnostica #17: 12). `price_no_direction=21`, `cot_group_conflict=14`, `cot_no_direction=9` sono cause NON mutuamente esclusive; nessun evento significativo.
+- [x] COT 11 TFF + 3 Disaggregated `ready`; Myfxbook VPS `running` ultimo `15:55:15Z`; Capital Firestore non verificato (VPS collector disabled).
+- [x] RAM 28,3%, disco 7,9%. Stato autoupdater `up_to_date` ma **SHA installato/target `d6e2cd7575e0` ancora v1.56**: coerente col rilascio manuale v1.57, da riallineare dopo merge e collaudo, senza `--init-sha`. Billing/quota Oracle non verificati.
+- [ ] v1.57 ha il **nuovo codice scheduler**, ma la sua opzione è OFF fino all'attivazione esplicita e sorvegliata. La diagnosi #18 non certifica una frequenza di 60 minuti.
+- [x] Preparato `deploy/oracle/priority_v157.py` con `--check` read-only, `--enable`/`--disable` separate: hash live backend v1.57, stato autoupdate, lock, salute, permessi; backup di `remura.env` segreto, cambio atomico flag e riavvio con verifica dell'ambiente effettivo del processo; rollback se errore. Test completamente offline. Non chiama broker e non modifica database.
+- [ ] Eseguire `--check` con codice fissato a commit e Git blob dopo CI verdi; **nessun flag ancora attivato**, non cambiare la produzione prima di questo gate.
+- [ ] Misurare due o più giri completi con nuovo flag, confrontando latenza realizzata, errori, copertura di tutti i mercati, log VPS e quote rate cTrader/Oracle.
