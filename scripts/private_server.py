@@ -19,6 +19,7 @@ import math
 import os
 from pathlib import Path
 import re
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -42,6 +43,7 @@ from cot_week_watch import cot_week_watch_status
 from session_gaps import session_gap_overview
 from ctrader_tokens import access_token, path_for, read_file
 from resource_monitor import snapshot as resource_snapshot
+from squalincome_timing import record as record_scan_timing, summary as scan_timing_summary
 
 ROOT=Path(__file__).resolve().parents[1]
 STORE=ROOT/"private"/"remura-prices.sqlite3"
@@ -331,7 +333,9 @@ def http_handler(db_path):
                 self.response(200,cot_week_watch_status(db_path,cot_sync_enabled()))
                 return
             if path==SIGNAL_OVERVIEW_PATH:
-                self.response(200,squalincome_status(db_path,squalincome_enabled()))
+                result=squalincome_status(db_path,squalincome_enabled())
+                result["scanTiming"]=scan_timing_summary(db_path)
+                self.response(200,result)
                 return
             if path==VALIDATION_OVERVIEW_PATH:
                 self.response(200,validation_status(db_path))
@@ -829,7 +833,7 @@ def squalincome_post_ingest_enabled(env=None):
         values.get("REMURA_COT_SYNC_ENABLED","1")=="1")
 
 
-def observe_updated_batch(db_path, saved, env=None):
+def observe_updated_batch(db_path, saved, env=None, batch_completed=None):
     """Scan ONLY monitored symbols already saved to SQLite.
 
     Does not change 34-market diagnostic snapshot, broker schedule, COT,
@@ -845,8 +849,28 @@ def observe_updated_batch(db_path, saved, env=None):
     selected=tuple(sorted(set(saved)&allowed))
     if not selected:
         return None
+    # Batch completion is an approximation: individual bars can be saved earlier.
+    batch_completed=batch_completed or utcnow()
     with _SQUALINCOME_SCAN_LOCK:
-        return observe_squalincome(db_path,targets=selected)
+        started=utcnow()
+        t0=time.perf_counter()
+        result=None
+        try:
+            result=observe_squalincome(db_path,targets=selected)
+            return result
+        finally:
+            finished=utcnow()
+            try:
+                record_scan_timing(
+                    db_path,kind="post_ingest",started=started,completed=finished,
+                    duration_ms=max(0,round((time.perf_counter()-t0)*1000)),
+                    batch_completed=batch_completed,saved_count=len(selected),
+                    examined=result.get("examined",0) if isinstance(result,dict) else 0,
+                    new_events=result.get("newEvents",0) if isinstance(result,dict) else 0,
+                    ok=isinstance(result,dict))
+            except (OSError,ValueError,RuntimeError,sqlite3.Error):
+                # Telemetry must never turn a valid signal observation into a failure.
+                pass
 
 
 def collector_loop(db_path,stop,env=None):
@@ -905,7 +929,7 @@ def collector_loop(db_path,stop,env=None):
         # code deploy. Scan only genuinely ingested symbols, no broker calls.
         if saved_this_batch and not stop.is_set():
             try:
-                observe_updated_batch(db_path,saved_this_batch)
+                observe_updated_batch(db_path,saved_this_batch,batch_completed=utcnow())
             except Exception as exc:
                 # Never log provider payload, symbol names or auth values.
                 print("REMURA post-ingest monitor: "+type(exc).__name__,file=sys.stderr)
@@ -941,7 +965,22 @@ def squalincome_loop(db_path,stop):
     while not stop.is_set():
         try:
             with _SQUALINCOME_SCAN_LOCK:
-                observe_squalincome(db_path)
+                started=utcnow()
+                t0=time.perf_counter()
+                result=None
+                try:
+                    result=observe_squalincome(db_path)
+                finally:
+                    finished=utcnow()
+                    try:
+                        record_scan_timing(
+                            db_path,kind="periodic",started=started,completed=finished,
+                            duration_ms=max(0,round((time.perf_counter()-t0)*1000)),
+                            examined=result.get("examined",0) if isinstance(result,dict) else 0,
+                            new_events=result.get("newEvents",0) if isinstance(result,dict) else 0,
+                            ok=isinstance(result,dict))
+                    except (OSError,ValueError,RuntimeError,sqlite3.Error):
+                        pass
             update_validation(db_path)
             update_dual24(db_path)
         except Exception as exc:

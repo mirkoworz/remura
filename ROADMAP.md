@@ -1,5 +1,19 @@
 # REMURA — Roadmap operativa unica
 
+## 03/11/2026 — stato v1.58 live verificato; telemetria v1.59 solo offline
+
+- [x] VPS v1.58 installata, commit GitHub/SHA autoupdater `112da31cb10c34477642e2822c78b267cb88978d` riconciliato; diagnostica privata #27 `41546105605` verde; server attivo, 38/38 prezzi, TFF 11/11, Disagg 3/3, Myfxbook running, tick-volume M15 EURUSD/XAUUSD 64/64, RAM 27,7%, disco 7,9%.
+- [x] `REMURA_SQUALINCOME_AFTER_INGEST_ENABLED=1` attivato con backup privato e verifica runtime; autoupdater invariato. Scan generale ultima diagnostica: 2 analizzati su 34, 12 prezzi H1 troppo vecchi (146 min massimi contro 120), M15/H4 zero esclusioni stale.
+- [x] Diagnostica privata: 2 osservazioni successive alla scansione generale, **evidenza indiretta** non prova del post-ingest né anticipo di segnale.
+- [ ] **Candidato v1.59:** misurare tempi di scansione periodic/post-ingest, completamento batch→analisi, errori/eventi, con retention limitata; approvare solo dopo CI, review e rilascio protetto con banner versione e ora italiana. Il batch-end non è l'orario del primo prezzo salvato e non misura la latenza candela→segnale.
+- [ ] Prossima integrazione **PR #71** divergenze M15 prezzo–CVD (proxy CLV × tick volume); distinta da divergenze COT/prezzo, ancora offline e non installata.
+- [ ] Radar divergenze: stati potenziale/confermata/invalidata, ID evento, tempi pivot/conferma/rilevamento, prova prospettica contro benchmark prezzo-solo; in seguito notifiche private anti-spam.
+- [ ] Capitale Firestore/sincronizzazione, billing OCI e quote API reali ancora N/D; RAM/disco non certificano gratuità. Nessuna nuova API broker in questa preparazione.
+- [ ] Valutare se archiviare il helper della PR #75 già usato nell'attivazione, senza merge a sorpresa che cambi lo SHA della VPS.
+
+Lo storico che segue è mantenuto a fini di audit; le sezioni precedenti sui candidati v1.57/v1.58 descrivono snapshot superati.
+
+
 ## 02/11/2026 — candidato v1.58: installer protetto su GitHub (non installato)
 
 - [x] Creata PR #74 dalla main v1.57 riconciliata, codice post-ingest identico al prototipo #72; 38 mercati, Myfxbook e autoupdater lasciati invariati sulla VPS.
