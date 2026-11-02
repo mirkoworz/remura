@@ -1,13 +1,15 @@
 name: REMURA private price engine checks
 on:
   push:
-    branches: [main, feature/intraday-priority-v157] # temporary candidate CI; remove before merge
+    branches: [main, feature/intraday-priority-v157, feature/cvd-divergences-v158-offline] # temporary candidate CI; remove before merge
     paths-ignore:
       - "data/**"
       - "**/*.md"
   pull_request:
     paths:
       - 'price-core.js'
+      - 'cvd-divergence-core.js'
+      - 'tests/cvd-divergence.test.js'
       - 'price.js'
       - 'price.css'
       - 'insights.js'
@@ -119,7 +121,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: node --check resource-health.js && node --check price-core.js && node --check price.js && node --check price-status-core.js && node --check stato-prezzi.js && node --check insights.js && node --check sources.js && node --check sentiment-core.js && node --check capital-cloud.js && node --check capital-cloud-config.js && node --check squalincome-diagnostics.js && node --check statistica-squali-core.js && node --check statistica-squali.js && node --check dual24-core.js && node --check dual24-ui.js && node --check market-audit-core.js && node --check market-audit-ui.js && node --check case-audit-core.js && node --check case-audit-ui.js && node --check weekly-quality-core.js && node --check weekly-quality-ui.js && node --check cot-week-watch-core.js && node --check cot-week-watch-ui.js
+      - run: node --check resource-health.js && node --check price-core.js && node --check cvd-divergence-core.js && node --check price.js && node --check price-status-core.js && node --check stato-prezzi.js && node --check insights.js && node --check sources.js && node --check sentiment-core.js && node --check capital-cloud.js && node --check capital-cloud-config.js && node --check squalincome-diagnostics.js && node --check statistica-squali-core.js && node --check statistica-squali.js && node --check dual24-core.js && node --check dual24-ui.js && node --check market-audit-core.js && node --check market-audit-ui.js && node --check case-audit-core.js && node --check case-audit-ui.js && node --check weekly-quality-core.js && node --check weekly-quality-ui.js && node --check cot-week-watch-core.js && node --check cot-week-watch-ui.js
       - name: Verify Oracle Always Free bootstrap syntax
         run: bash -n deploy/oracle/install.sh && bash -n deploy/oracle/enable-autoupdate.sh
       - name: Test offline update safety
@@ -135,7 +137,7 @@ jobs:
       - name: Test v1.57 private priority flag activation and rollback, offline
         run: python -m unittest discover -s tests -p 'test_priority_v157.py' -v
       - run: python -m py_compile scripts/price_feed.py scripts/ctrader_feed.py scripts/ctrader_tokens.py scripts/configure_ctrader_backup.py scripts/price_store.py scripts/cot_monitor.py scripts/signals_monitor.py scripts/statistical_validation.py scripts/dual24_validation.py scripts/market_validation.py scripts/case_audit.py scripts/weekly_quality.py scripts/cot_week_watch.py scripts/session_gaps.py scripts/private_server.py scripts/resource_monitor.py scripts/update_capital.py
-      - run: node --test tests/price.test.js tests/insights.test.js tests/sentiment.test.js tests/capital-cloud.test.js tests/market-expansion.test.js tests/price-status.test.js tests/squalincome-diagnostics.test.js tests/statistica-squali.test.js tests/dual24-ui.test.js tests/market-audit-ui.test.js tests/case-audit-ui.test.js tests/weekly-quality-ui.test.js tests/cot-week-watch-ui.test.js
+      - run: node --test tests/cvd-divergence.test.js tests/price.test.js tests/insights.test.js tests/sentiment.test.js tests/capital-cloud.test.js tests/market-expansion.test.js tests/price-status.test.js tests/squalincome-diagnostics.test.js tests/statistica-squali.test.js tests/dual24-ui.test.js tests/market-audit-ui.test.js tests/case-audit-ui.test.js tests/weekly-quality-ui.test.js tests/cot-week-watch-ui.test.js
       - run: python -m unittest discover -s tests -p 'test_price_feed.py' -v
       - run: python -m unittest discover -s tests -p 'test_ctrader_feed.py' -v
       - run: python -m unittest discover -s tests -p 'test_private_server.py' -v
