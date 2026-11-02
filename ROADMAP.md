@@ -1,5 +1,15 @@
 # REMURA — Roadmap operativa unica
 
+## 02/11/2026 — candidato v1.58: installer protetto su GitHub (non installato)
+
+- [x] Creata PR #74 dalla main v1.57 riconciliata, codice post-ingest identico al prototipo #72; 38 mercati, Myfxbook e autoupdater lasciati invariati sulla VPS.
+- [x] Installer manuale release_v158.py candidato: check/apply separati, verifica dei 13 Git blob v1.57, CI main, rollback, SQLite backup + restore test, lock autoupdater e flag post-ingest OFF.
+- [x] Predisposti banner v1.58 per 9 pagine, timestamp reale Europe/Rome solo all'installazione, cache PWA v72 e nav.js?v=158.
+- [ ] **Prima del merge**: Price Engine e Insights CI verdi sul nuovo HEAD, audit del codice e test installer.
+- [ ] **Prima di Termius**: merge main, CI push verdi, commit finale e blob SHA installer immutabili, check read-only. Seguiranno apply separato, riconciliazione SHA v1.58 e diagnostica privata.
+- [ ] Costi OCI/quote API/Firestore non ancora verificati nel pannello: N/D. Divergenze CVD PR #71 separata.
+
+
 ## Stato operativo consolidato — 02/11/2026, dopo diagnostica privata #24
 
 - **VPS in produzione: v1.57**, installata manualmente; backup SQLite e test di ripristino/rollback superati nel rilascio controllato. **Nessun nuovo deploy** in questa fase.
