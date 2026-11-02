@@ -169,3 +169,16 @@ Il rilascio *riuscito* non dimostra ancora che i volumi cTrader siano stati acqu
 - [ ] Verificare che restino 38/38 mercati con dati validi e che il tasso Squalincome `prices_stale` non aumenti; monitorare timeout, rifiuti e qualità CVD.
 - [ ] Budget: 40 tentativi-simbolo teorici / 2 ore, contro 38 (+5,26%); controllare limiti cTrader e Oracle, senza affermare 0 euro dai soli indicatori RAM/disco. Nessun servizio a pagamento introdotto.
 - [ ] Attivazione del flag e GitHub `main` sono indipendenti: PR #69 ancora draft, `main` e SHA autoupdate ancora da riallineare **dopo** collaudo. Non usare `--init-sha`, né modificare la VPS dalla diagnostica read-only.
+
+
+## 02/11/2026 ore 19:30 Italia — controllo live dopo 2h22 dalla priorità ON
+
+- [x] Diagnostica privata GitHub Actions `remura-collector`: workflow #18, **nuovo tentativo #2** avviato direttamente in sola lettura alle 19:29 CET; run `41476811725`, job `125468399872`, esito `success`; nessuna chiamata aggiuntiva al broker dal workflow.
+- [x] `SERVER_REMURA=ATTIVO`; collector `running`; prezzi **38/38 verified**, **38/38 recent** nella diagnostica generale, 0 mancanti, invalidi, insufficienti.
+- [x] EURUSD e XAUUSD: ultimo tentativo comune **18:01:30Z (19:01:30 CET)**, `ok`; ultima apertura M15 **17:45Z**, età dalla chiusura **30 min**; tick volume entrambi **64/64**, zero assenti o invalidi. Il piano prioritario è ON da 17:08 CET, ma un singolo campione post-attivazione **non** dimostra ancora intervalli esatti di 60 minuti.
+- [x] COT: TFF 11/11 e DISAGG 3/3 pronti; Myfxbook `running`, aggiornamento **18:21:31Z**; Capital VPS disabled/Firestore non verificato.
+- [x] Squalincome **34 monitorati, 5 analizzati, 29 esclusi**, `no_significant_event`. **9 esclusioni `prices_stale`** (erano 0 al precedente campione pre-attivazione). Altre cause non univoche: `price_no_direction=15`, `cot_group_conflict=14`, `cot_no_direction=9`; non sommare come mercati distinti.
+- [!] **Nuovo problema di coordinamento:** `price_store.audit_market` segnala `recent` per ultimo M15 fino a 180 minuti, mentre `signals_monitor.frame_direction` rifiuta *ciascun timeframe* oltre **M15 180 min / H1 120 min / H4 300 min**. Con 36 simboli raccolti ogni ~2h, Squalincome può scartare 9 mercati se l'ultima H1 supera 2h anche quando il controllo generale è tutto verde. **Indagare per simbolo e timeframe con sola diagnostica metadata** prima di cambiare soglie o aumentare le API; possibili soluzioni: scansione coordinata a fine batch/aggiornamenti, migliori tempi per i simboli scartati, misurazione latenze H1/H4. Non mascherare vecchi dati con soglie arbitrarie.
+- [x] VPS RAM **28,1%**, disco **7,9%**. Oracle billing e quote effettive non verificati; basso consumo RAM/disco non dimostra costo 0€. Backup SQLite non verificato dalla diagnostica GET, ma testato durante rilascio v1.57.
+- [ ] Ripetere un altro campione read-only intorno alle **20:15–20:45 CET** per ricavare due orari post-attivazione per EURUSD/XAUUSD e valutare gli intervalli, mantenendo il flag ON se il server resta stabile.
+- [ ] Dopo verifica cadenza e anomalie Squalincome, pianificare il gate PR #69 (rimuovere trigger CI temporaneo, merge con verifica file e successiva riconciliazione SHA autoupdater); **nessuna modifica ora alla VPS**.
