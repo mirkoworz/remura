@@ -132,6 +132,22 @@ def healthy():
         return False
 
 
+def release_stamp(staged, now=None):
+    """Change only the reviewed banner timestamp at actual installation time.
+
+    The source is first verified against the pinned Git tree; the one allowed
+    local transformation is recorded in the rollback manifest's new hash.
+    """
+    from zoneinfo import ZoneInfo
+    pattern = b"02/11/2026 07:43 (Italia, candidato al rilascio)"
+    require(pattern in staged["nav.js"], "EXPECTED_RELEASE_STAMP")
+    current = (now or dt.datetime.now(ZoneInfo("Europe/Rome")))
+    stamp = current.astimezone(ZoneInfo("Europe/Rome")).strftime("%d/%m/%Y %H:%M (Italia)")
+    updated = dict(staged)
+    updated["nav.js"] = staged["nav.js"].replace(pattern, stamp.encode("ascii"))
+    return updated
+
+
 def local_files():
     require(APP.is_dir() and not APP.is_symlink(), "APP_DIRECTORY")
     require(PRIVATE.is_dir() and not PRIVATE.is_symlink(), "PRIVATE_DIRECTORY")
@@ -234,6 +250,7 @@ def apply(sha):
     with (WORK / "lock").open("a+") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         staged, originals = preflight(sha)
+        staged = release_stamp(staged)
         # Run the audited backup module from the verified candidate, not an
         # arbitrary local path. Its __name__ is not '__main__'.
         namespace = {"__name__": "remura_backup_v156"}
