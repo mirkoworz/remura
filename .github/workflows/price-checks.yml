@@ -120,6 +120,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_release_v152.py' -v
       - name: Test v1.56 SQLite live-snapshot and isolated restore, offline
         run: python -m unittest discover -s tests -p 'test_backup_v156.py' -v
+      - name: Test v1.56 guarded manual code release and persistent rollback, offline
+        run: python -m unittest discover -s tests -p 'test_release_v156.py' -v
       - run: python -m py_compile scripts/price_feed.py scripts/ctrader_feed.py scripts/ctrader_tokens.py scripts/configure_ctrader_backup.py scripts/price_store.py scripts/cot_monitor.py scripts/signals_monitor.py scripts/statistical_validation.py scripts/dual24_validation.py scripts/market_validation.py scripts/case_audit.py scripts/weekly_quality.py scripts/cot_week_watch.py scripts/session_gaps.py scripts/private_server.py scripts/resource_monitor.py scripts/update_capital.py
       - run: node --test tests/price.test.js tests/insights.test.js tests/sentiment.test.js tests/capital-cloud.test.js tests/market-expansion.test.js tests/price-status.test.js tests/squalincome-diagnostics.test.js tests/statistica-squali.test.js tests/dual24-ui.test.js tests/market-audit-ui.test.js tests/case-audit-ui.test.js tests/weekly-quality-ui.test.js tests/cot-week-watch-ui.test.js
       - run: python -m unittest discover -s tests -p 'test_price_feed.py' -v
