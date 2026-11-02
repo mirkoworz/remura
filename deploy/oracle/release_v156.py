@@ -58,7 +58,7 @@ def valid_sha(sha):
 
 
 def git_blob(data):
-    return hashlib.sha1(b"blob " + str(len(data)).encode("ascii") + b"\\0" + data).hexdigest()
+    return hashlib.sha1(b"blob " + str(len(data)).encode("ascii") + b"\0" + data).hexdigest()
 
 
 def digest(data):
@@ -248,6 +248,7 @@ def apply(sha):
         stopped = False
         try:
             result = subprocess.run(["systemctl", "stop", SERVICE], capture_output=True, timeout=35)
+            stopped = (unit("is-active", SERVICE) != "active")
             require(result.returncode == 0, "SERVICE_STOP")
             stopped = True
             for name in FILES:
