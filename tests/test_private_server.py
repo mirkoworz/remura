@@ -153,6 +153,61 @@ class PrivateStorageTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             server.collector_batches(["BAD!"])
 
+    def test_priority_38_markets_refresh_both_hot_each_hour(self):
+        selected=sorted(store.MARKETS)
+        self.assertEqual(len(selected),38)
+        batches=server.collector_priority_batches(selected)
+        self.assertEqual(len(batches),8)
+        self.assertTrue(all(len(group)==5 for group in batches))
+        self.assertEqual(sum(map(len,batches)),40)  # 2 extra broker lookups/2h
+        self.assertEqual(batches[0][:2],["EURUSD","XAUUSD"])
+        self.assertEqual(batches[4][:2],["EURUSD","XAUUSD"])
+        flat=[s for group in batches for s in group]
+        for market in selected:
+            self.assertEqual(flat.count(market),2 if market in ("EURUSD","XAUUSD") else 1)
+        self.assertTrue(all(len(set(group))==len(group) for group in batches))
+        self.assertEqual(set(flat),set(selected))
+        self.assertEqual(server.collector_priority_batches(selected),batches)
+
+    def test_priority_fallback_never_drops_markets_or_forces_extra_api_calls(self):
+        selected=sorted(store.MARKETS)[:34]  # 7 groups, capacity 35 < 36
+        self.assertEqual(server.collector_priority_batches(selected),
+                         server.collector_batches(selected))
+        small=["EURUSD","XAUUSD","USDJPY"]
+        self.assertEqual(server.collector_priority_batches(small),
+                         server.collector_batches(small))
+        self.assertEqual(server.collector_priority_batches(["EURUSD","EURUSD"]),
+                         [["EURUSD"]])
+        with self.assertRaises(ValueError):
+            server.collector_priority_batches(["INVALID"])
+
+    def test_priority_mode_requires_explicit_opt_in(self):
+        selected=sorted(store.MARKETS)
+        class StopOnce:
+            stopped=False
+            def is_set(self):return self.stopped
+            def wait(self,seconds):self.stopped=True
+        seen=[]
+        def collect(db_path,symbols,days=2,source="primary"):
+            seen.append(tuple(symbols))
+            return {"saved":{symbol:1 for symbol in symbols},"errors":{}}
+        with patch.dict(os.environ,{"REMURA_SYMBOLS":"ALL",
+                                     "REMURA_PRIORITY_COLLECTOR_ENABLED":"1"},clear=False):
+            with patch.object(server,"collect_once",side_effect=collect), \
+                 patch.object(server,"backup_ctrader_status",
+                              return_value={"configuration":"incomplete","enabled":False}):
+                server.collector_loop(self.path,StopOnce())
+        self.assertEqual(seen[0][:2],("EURUSD","XAUUSD"))
+        self.assertEqual(len(seen[0]),5)
+        seen.clear()
+        with patch.dict(os.environ,{"REMURA_SYMBOLS":"ALL",
+                                     "REMURA_PRIORITY_COLLECTOR_ENABLED":"0"},clear=False):
+            with patch.object(server,"collect_once",side_effect=collect), \
+                 patch.object(server,"backup_ctrader_status",
+                              return_value={"configuration":"incomplete","enabled":False}):
+                server.collector_loop(self.path,StopOnce())
+        self.assertEqual(seen[0],tuple(sorted(store.MARKETS)[:5]))
+
     def test_first_batch_status_is_real_batch_not_next_batch(self):
         selected=sorted(store.MARKETS)[:6]
         class StopOnce:
