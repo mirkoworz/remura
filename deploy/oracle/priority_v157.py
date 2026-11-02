@@ -108,7 +108,7 @@ def edited(data, mode):
     return updated
 
 
-def preflight():
+def preflight(disabling=False):
     guard(os.geteuid()==0,"ROOT_REQUIRED")
     guard(PRIVATE.is_dir() and not PRIVATE.is_symlink(),"PRIVATE_DIRECTORY")
     guard(BACKUPS.is_dir() and not BACKUPS.is_symlink(),"BACKUP_DIRECTORY")
@@ -119,8 +119,16 @@ def preflight():
     guard(SERVER.stat().st_size<100_000,"SERVER_SIZE")
     guard(git_blob(SERVER.read_bytes())==V157_SERVER_BLOB,"SERVER_NOT_V157")
     state=json.loads(STATE.read_text("utf-8"))
-    guard(isinstance(state,dict) and state.get("installedSha")==SHA_V156 and
-          state.get("state")=="up_to_date", "AUTOUPDATE_STATE_UNEXPECTED")
+    exact=(isinstance(state,dict) and state.get("installedSha")==SHA_V156 and
+           state.get("state")=="up_to_date")
+    # A verified emergency disable must remain possible after a future merge
+    # causes autoupdater to report manual_required, as long as the exact
+    # deployed v1.57 server blob is still present.
+    recovery=(disabling and isinstance(state,dict) and
+              isinstance(state.get("installedSha"),str) and
+              re.fullmatch(r"[0-9a-f]{40}",state["installedSha"]) and
+              state.get("state") in ("up_to_date","manual_required"))
+    guard(exact or recovery,"AUTOUPDATE_STATE_UNEXPECTED")
     guard(not (subprocess.run(["systemctl","is-active","remura-autoupdate.service"],
                               capture_output=True,timeout=16).returncode==0),"AUTOUPDATE_BUSY")
     guard(service_active() and health(),"SERVER_UNHEALTHY")
@@ -193,7 +201,7 @@ def change(mode):
     guard(is_regular(lockfile),"LOCK_FILE")
     with lockfile.open("a+") as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-        original,meta,previous=preflight()
+        original,meta,previous=preflight(disabling=(mode=="0"))
         live=running_mode()
         guard(live==previous,"ENV_PROCESS_NOT_ALIGNED")
         if previous==mode:
@@ -231,6 +239,7 @@ def main():
     try:
         if args.check:
             _,_,mode=preflight()
+            guard(running_mode()==mode,"ENV_PROCESS_NOT_ALIGNED")
             print("PRIORITY_PREFLIGHT=OK")
             print("PRIORITA_CONFIGURATA="+("ATTIVA" if mode=="1" else "DISATTIVA"))
             print("SERVIZIO=ATTIVO")
