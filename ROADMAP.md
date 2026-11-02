@@ -1,5 +1,18 @@
 # REMURA — Roadmap operativa unica
 
+
+> **STATO CORRENTE — 02/11/2026 ore 17:27 Italia.** VPS **v1.57** (rilascio manuale riuscito); priorità EURUSD/XAUUSD **ON** dalle 17:08, ma intervalli effettivi ancora da collaudare; backup e rollback verificati. GitHub `main` ha v1.56, PR #69 ancora draft, e SHA autoupdater registrato alla v1.56. **Non** fare merge, `--init-sha` o nuovi deploy finché il collaudo intraday non è concluso. Questa modifica è solo documentazione: non cambia versione né servizi.
+
+### Quadro rapido: fatto / in corso / da costruire
+
+- **Fatto e verificato:** REMURA privata su Oracle, backup SQLite con restore-test, 38/38 mercati validi e recenti nella diagnostica #18, COT TFF (11/11) + Disaggregated (3/3) pronti, Myfxbook running, tick volume cTrader EURUSD/XAUUSD 64/64 M15, CVD **proxy CLV × tick volume** con UI e test.
+- **In corso:** dimostrare la frequenza reale del collector prioritario (due o più giri), stabilità di tutti i 38, latenza M15/H1/H4 per Squalincome, quote cTrader/Oracle, qualità del proxy in diretta, collaudo della UI iPhone e verifica Firestore Capital/OCI billing (non dichiarare verificati).
+- **Da costruire e validare:** rilevatore dedicato **prezzo–CVD** non-repainting, memoria eventi e Radar, misure statistiche prospettiche, notifiche private opt-in. Le "divergenze" Squalincome esistenti riguardano **COT contro prezzo**, non prezzo contro CVD.
+- **Più avanti/opzionale:** tick Bid/Ask a granularità maggiore e vero trade-delta futures con licenze/prezzi, solo se produce un vantaggio verificabile.
+
+**Nuovo progetto prioritario:** [CVD-DIVERGENZE-ROADMAP.md](./CVD-DIVERGENZE-ROADMAP.md) — regole LL/HL e HH/LH, pivot causali M15, controlli qualità, preavviso vs conferma, tracciamento eventi, benchmark prezzo-solo, Web Push iPhone/Telegram privato e anti-spam. **Non ancora implementato.**
+
+
 **Aggiornata:** 01/11/2026 (Europe/Rome)  
 **Baseline:** codice GitHub v1.55; l'installazione effettiva sulla VPS va verificata separatamente.  
 **Scopo:** riconoscere possibili tracce dei grandi operatori combinando posizionamento COT, sentiment retail, struttura del prezzo e — come nuovo filone — volumi e order flow *stimato*; valutare le ipotesi con dati osservabili, test fuori campione e controllo dei costi. Nessun rendimento o anticipo delle mosse istituzionali è garantito.
@@ -47,6 +60,16 @@
 - [ ] Solo dopo test utili, aggiungere notifiche private per eventi significativi con deduplica, limiti di frequenza e spiegazione del motivo.
 
 **Gate P3:** il CVD migliora davvero un benchmark fuori campione con campioni adeguati; in caso contrario resta metrica descrittiva, non filtro operativo.
+
+## P3-bis — Divergenze prezzo–CVD e notifiche (nuova fase prioritaria)
+
+- [ ] **DIV-0:** completare prima la validazione della priorità v1.57 e garantire tick volume, CVD proxy, qualità e freschezza osservabili. Evitare notifiche quando il CVD è `N/D`, `partial` o `stale`.
+- [ ] **DIV-1:** algoritmo a pivot M15 confermati senza look-ahead/repainting: **rialzista** quando prezzo crea LL mentre CVD proxy crea HL; **ribassista** quando prezzo crea HH mentre CVD proxy crea LH. Timestamp pivot e timestamp di conferma distinti, tolleranze ATR e sessioni coerenti; le divergenze nascoste si aggiungono dopo.
+- [ ] **DIV-2:** nuova scheda Radar/Squalincome con *preavviso*, *divergenza confermata*, *invalidazione*, due coppie di pivot, ragioni, qualità e prezzo/CVD affiancati. Non confondere col monitor esistente di divergenze COT/prezzo.
+- [ ] **DIV-3:** salvare eventi privati deduplicati, test completi, ricerca di valore aggiuntivo **fuori campione** rispetto a pivot/prezzo+ATR da solo, misurare falsi positivi e MFE/MAE 1h/4h/24h netti dei costi ipotizzati.
+- [ ] **DIV-4:** solo dopo, avvisi privati opt-in prima nell'app, poi Web Push nella web app iPhone o Telegram privato; cooldown, tetto giornaliero, revoca, consenso, fail-closed se dati insufficienti, nessun ordine automatico.
+
+**Specifiche e criteri di uscita:** [CVD-DIVERGENZE-ROADMAP.md](./CVD-DIVERGENZE-ROADMAP.md). Il CVD basato su `CLV × tick volume` incorpora il prezzo: non considerare le sue divergenze una prova indipendente di acquisti/vendite istituzionali. Prima versione candidata **v1.58** solo dopo la verifica del collector v1.57, senza impegnare nuove API o risorse a pagamento.
 
 ## P4 — Order flow più fedele (opzionale, non presumibilmente gratis)
 
