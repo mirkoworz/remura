@@ -12,6 +12,7 @@ from zoneinfo import ZoneInfo
 ROOT=Path(__file__).resolve().parents[1]
 spec=importlib.util.spec_from_file_location("release_v158",ROOT/"deploy/oracle/release_v158.py")
 m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+ORIGINAL_VERIFY_TARGET=m.verify_target
 TARGET="a"*40
 
 class ReleaseV158Test(unittest.TestCase):
@@ -98,19 +99,19 @@ class ReleaseV158Test(unittest.TestCase):
                 return {"workflow_runs":[{"head_sha":TARGET,"head_branch":"main",
                     "event":"push","status":"completed","conclusion":"success"}]}
             raise AssertionError(path)
-        with patch.object(m,"remote_doc",side_effect=doc):m.verify_target(TARGET)
+        with patch.object(m,"remote_doc",side_effect=doc):ORIGINAL_VERIFY_TARGET(TARGET)
         with patch.object(m,"remote_doc",side_effect=lambda p:
              {"workflow_runs":[]} if "/runs?" in p else doc(p)):
-            with self.assertRaisesRegex(RuntimeError,"CI_NOT_GREEN"):m.verify_target(TARGET)
+            with self.assertRaisesRegex(RuntimeError,"CI_NOT_GREEN"):ORIGINAL_VERIFY_TARGET(TARGET)
         with patch.object(m,"remote_doc",side_effect=lambda p:
              {"sha":"b"*40} if p=="/commits/main" else doc(p)):
-            with self.assertRaisesRegex(RuntimeError,"MAIN_MOVED"):m.verify_target(TARGET)
+            with self.assertRaisesRegex(RuntimeError,"MAIN_MOVED"):ORIGINAL_VERIFY_TARGET(TARGET)
         def untrusted(p):
             result=doc(p)
             if p.startswith("/compare/"):result["files"].append({"filename":"deploy/oracle/autoupdate.py"})
             return result
         with patch.object(m,"remote_doc",side_effect=untrusted):
-            with self.assertRaisesRegex(RuntimeError,"UNREVIEWED_FILES"):m.verify_target(TARGET)
+            with self.assertRaisesRegex(RuntimeError,"UNREVIEWED_FILES"):ORIGINAL_VERIFY_TARGET(TARGET)
     def test_rollback_bundle_persists_checksums(self):
         staged={p:b"new-"+p.encode() for p in m.FILES}
         folder=m.saved_rollback(self.original,staged,TARGET)

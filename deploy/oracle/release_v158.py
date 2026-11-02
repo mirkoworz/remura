@@ -70,7 +70,8 @@ ALLOWED = set(FILES) | {
 "ROADMAP.md","V158-SQUALINCOME-AFTER-INGEST.md","V158-RELEASE-PLAN.md",
 "deploy/oracle/release_v158.py",".github/workflows/price-checks.yml",
 "tests/test_release_v158.py","tests/release-consistency.test.js",
-"tests/test_private_server.py","tests/test_signals_monitor.py"}
+"tests/test_private_server.py","tests/test_signals_monitor.py",
+"tests/statistica-squali.test.js"}
 REQUIRED = {"scripts/private_server.py","scripts/signals_monitor.py","nav.js",
 "sw.js","deploy/oracle/release_v158.py","tests/test_release_v158.py"} | {
 p for p in FILES if p.endswith(".html")}
