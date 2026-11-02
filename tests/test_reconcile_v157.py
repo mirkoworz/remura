@@ -29,7 +29,7 @@ STAMPED=b"02/11/2026 16:55 (Italia)"
 
 def files_fixture():
     base={name:("asset-"+name).encode("ascii") for name in FILES}
-    base["nav.js"]=b'/* Aggiornamento v1.57 · 02/11/2026 16:25 (Italia, preparazione) */'
+    base["nav.js"]=b'/* Aggiornamento v1.57 - 02/11/2026 16:25 (Italia, preparazione) */'
     return base
 
 class ReconcileTests(unittest.TestCase):
