@@ -31,14 +31,50 @@
         const vals=[row.o,row.h,row.l,row.c];
         if(!vals.every(x=>finite(x)&&x>0)||row.h<Math.max(row.o,row.c)||row.l>Math.min(row.o,row.c)||row.h<row.l)
           throw Error("OHLC non valido in "+tf);
+        if(row.v!==undefined&&(!Number.isSafeInteger(row.v)||row.v<0))
+          throw Error("Tick volume non valido in "+tf);
         last=t;
-        return {t, o:row.o,h:row.h,l:row.l,c:row.c};
+        return {t, o:row.o,h:row.h,l:row.l,c:row.c,...(row.v===undefined?{}:{v:row.v})};
       });
     }
     const provider=String(data.provider||"sconosciuto");
     if(!["twelve","oanda","mt5","ctrader","csv"].includes(provider))throw Error("Fonte dati non riconosciuta.");
     return {symbol,provider,providerSymbol:String(data.providerSymbol||symbol),generatedAt:bundle.generatedAt,frames};
   }
+  // CLOSED M15 tick-volume CVD proxy. This cannot reveal executed buy/sell lots.
+  function flow(market,{now=Date.now()}={}){
+    const unavailable=(status,reason)=>({status,reason,points:[],cvd:null,delta:null,lastVolume:null,volumeDay:null});
+    if(market.provider!=="ctrader")return unavailable("missing","Solo i tick volume cTrader sono abilitati in questo pannello.");
+    const rows=market.frames?.M15||[],last=rows[rows.length-1];
+    if(!last)return unavailable("missing","Candele M15 assenti.");
+    const closedAt=last.t+DURATION.M15;
+    if(closedAt>now+300000||now-closedAt>90*60000)
+      return unavailable("stale","Ultima M15 troppo vecchia: non ricostruiamo un CVD live.");
+    const dayKey=new Date(last.t).toISOString().slice(0,10);
+    const day=rows.filter(r=>new Date(r.t).toISOString().slice(0,10)===dayKey);
+    if(day.length<8)return unavailable("missing","Servono almeno 8 M15 della sessione UTC.");
+    if(day.some(r=>!Number.isSafeInteger(r.v)||r.v<0))
+      return unavailable("missing","Alcune M15 non contengono tick volume valido.");
+    let cvd=0,total=0,gaps=0,previous=null;
+    const points=[];
+    for(const bar of day){
+      const gap=previous!==null&&bar.t-previous!==DURATION.M15;
+      if(gap)gaps++;
+      const range=bar.h-bar.l;
+      const clv=range>0?Math.max(-1,Math.min(1,(2*bar.c-bar.h-bar.l)/range)):0;
+      const delta=bar.v*clv;
+      cvd+=delta;
+      total+=bar.v;
+      points.push({t:bar.t,delta,cvd,break:gap});
+      previous=bar.t;
+    }
+    const complete=day[0].t%86400000===0&&gaps===0;
+    return {status:complete?"ok":"partial",
+      reason:complete?"M15 contigue dall'inizio della giornata UTC.":"Sessione UTC parziale o con gap: dati non utilizzabili per conferme.",
+      points,cvd,delta:points[points.length-1].delta,lastVolume:last.v,
+      volumeDay:total,gapCount:gaps,day:dayKey,method:"CLV × tick volume"};
+  }
+
   function ema(values,length){
     if(values.length<length)return null;
     let v=values.slice(0,length).reduce((a,b)=>a+b,0)/length;
@@ -124,5 +160,5 @@
       (contrarian?" Il retail mostra anche una distribuzione contrarian 70/30, che resta soltanto un dato del campione Myfxbook.":"")+
       " Non è una probabilità di successo né un ordine di ingresso."};
   }
-  return {load,analyze,timeframe,cross,ema,atr,DURATION,format};
+  return {load,analyze,timeframe,cross,flow,ema,atr,DURATION,format};
 });

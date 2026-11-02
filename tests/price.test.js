@@ -85,5 +85,35 @@ test("aligned COT, price and retail remain a context, not a trading order",()=>{
   assert.match(out.text,/Non è una probabilità/);
 });
 
+test("cTrader volume preserved, legacy candles valid, invalid volumes rejected",()=>{
+  const b=bundle(series(100));
+  b.markets.EURUSD.provider="ctrader";
+  b.markets.EURUSD.timeframes.M15.forEach(c=>{c.v=14;});
+  assert.equal(core.load(b,"EURUSD",{now}).frames.M15[0].v,14);
+  const malformed=bundle(series(100));malformed.markets.EURUSD.timeframes.M15[0].v=-1;
+  assert.throws(()=>core.load(malformed,"EURUSD",{now}),/volume/);
+  assert.equal(core.load(bundle(series(100)),"EURUSD",{now}).frames.M15[0].v,undefined);
+});
+test("CLV CVD proxy resets by UTC day, treats flat bars as neutral, detects gaps",()=>{
+  const t0=Date.parse("2026-10-16T00:00:00Z");
+  const rows=Array.from({length:16},(_,i)=>({t:t0+i*900000,o:101,h:110,l:90,
+    c:i%2===0?110:90,v:10}));
+  const market={provider:"ctrader",frames:{M15:rows}};
+  let f=core.flow(market,{now:t0+16*900000});
+  assert.equal(f.status,"ok");assert.equal(f.volumeDay,160);
+  assert.equal(f.delta,-10);assert.equal(f.cvd,0);
+  rows[15].h=rows[15].l=rows[15].c=100;
+  assert.equal(core.flow(market,{now:t0+16*900000}).delta,0);
+  rows[8].v=undefined;
+  assert.equal(core.flow(market,{now:t0+16*900000}).status,"missing");
+  rows[8].v=10;rows.splice(5,1);
+  assert.equal(core.flow(market,{now:t0+16*900000}).status,"partial");
+  assert.equal(core.flow(market,{now:t0+16*900000+2*3600000}).status,"stale");
+});
+test("no CVD without actual volume feed",()=>{
+  const market=core.load(bundle(series(100)),"EURUSD",{now});
+  assert.equal(core.flow(market,{now}).status,"missing");
+});
+
 // Run the integrated multi-source verdict regression suite in existing price CI.
 require("./squalo-verdict.test.js");
