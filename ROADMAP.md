@@ -223,3 +223,15 @@ Il rilascio *riuscito* non dimostra ancora che i volumi cTrader siano stati acqu
 - [ ] **Candidato correzione v1.58, esclusivamente offline e con test:** Squalincome event-driven all'**ingest riuscito** dei batch, limitando la scansione ai simboli appena aggiornati (o snapshot causale coerente). Senza nuove API broker, per non perdere le occasioni già fresche; registrare per ogni segnale il timestamp della M15/H1 usata e l'ora reale del calcolo. Mantenere la guardia H1 di 120 minuti, niente finta “freschezza” o alert retroattivi. Occorre verificare lock/concorrenza SQLite, baseline COT e idempotenza.
 - [ ] Per avere **tutti** i 34 strumenti sotto H1 120min in ogni istante sarà probabilmente necessario un feed più frequente (incrementale/live subscribe) o maggiore carico API. Misurare prima costi/rate broker, disponibilità feed e beneficio rispetto al prezzo-only; **non** passare indiscriminatamente a polling dei 38 ogni 15min.
 - [ ] PR #69 v1.57 resta draft e attualmente non mergeabile perché `main` è avanzata su workflow, riconciliazione e dati. Preparare integrazione conservativa con test a commit finale e pianificare riallineamento autoupdater v1.57 separato, **non** fare merge alla cieca. VPS v1.57 attiva e stabile.
+
+
+## 02/11/2026, sera — prototipo v1.58 Squalincome immediato dopo batch, TEST VERDI
+
+- [x] Nuovo ramo `feature/squalincome-after-ingest-v158-offline`, PR **#72** draft (base v1.57 PR #69), senza mutazioni della VPS.
+- [x] Diagnosi precedente conclusa su workflow #23: **14 strumenti esclusi da H1 >120min**, massimo 129min; M15/H4 0 scarti. Rotazione 36 simboli ~2h e scansione ogni 15min possono disallinearsi; non si possono creare artificialmente nuove H1 senza M15 reali.
+- [x] Predisposto `scan_once(...,targets=...)` per analizzare soltanto 1–5 simboli monitorati effettivamente raccolti, preservando COT, guardia H1/M15/H4, history, deduplica e report globale dei 34 mercati.
+- [x] Predisposto hook opzionale di fine batch `REMURA_SQUALINCOME_AFTER_INGEST_ENABLED=1`, **OFF per default**, con lock fra scansione periodica e scansione immediata; nessun nuovo endpoint/API broker, nessun ordine o notifica.
+- [x] Github Actions prezzo + insights **success** su commit di codice e test `10407dbf60d09c3aea20b58f4ae8ecd3f0c61fd1`. Documentazione specifica `V158-SQUALINCOME-AFTER-INGEST.md`.
+- [ ] Non distribuire su VPS finché la v1.57 non è consolidata su `main` e SHA dell'autoupdater riallineato **con script protetto e state check**; mantenere backup, conferma esplicita del flag, versione/data/ora in ogni pagina.
+- [ ] Registrare `detectedAt` lato backend e distinguere visivamente eventi nuovi da batch e snapshot diagnostico full-scan (non sovrascriverlo).
+- [ ] Validare davvero l'utilità dell'hook (nessun incremento di eventi duplicati, nessun impoverimento di copertura, nessun innalzamento soglie) prima di integrarlo con il rilevatore divergenze prezzo–CVD già in PR #71.
