@@ -149,6 +149,44 @@ class ReleaseV158Test(unittest.TestCase):
             self.assertEqual({p:(self.root/p).read_bytes() for p in m.FILES},
                              {p:v[0] for p,v in self.original.items()})
 
+
+    def test_candidate_uses_actual_versioned_pages_and_verified_git_blobs(self):
+        import io
+        import zipfile
+        staged = {}
+        for name in (*m.FILES, m.BACKUP_MODULE):
+            staged[name] = (ROOT/name).read_bytes()
+        self.assertTrue(all(b"nav.js?v=158" in staged[p] for p in m.FILES
+                            if p.endswith(".html")))
+        tree = {"truncated":False,"tree":[
+            {"type":"blob","path":name,"sha":m.git_blob(payload)}
+            for name,payload in staged.items()
+        ]}
+        archive = io.BytesIO()
+        with zipfile.ZipFile(archive,"w") as z:
+            for name,payload in staged.items():
+                z.writestr("pinned-root/"+name,payload)
+        source_blob=m.git_blob(staged[m.BACKUP_MODULE])
+        with patch.object(m,"api_read",side_effect=lambda path,cap=m.MAX_ZIP:
+            json.dumps(tree).encode() if path.startswith("/git/trees/")
+            else archive.getvalue()),patch.object(m,"BACKUP_BLOB",source_blob):
+            self.assertEqual(m.candidate(TARGET),staged)
+            broken=dict(staged)
+            broken["asset.html"]=broken["asset.html"].replace(
+                b"nav.js?v=158",b"nav.js?v=157")
+            bad_archive=io.BytesIO()
+            with zipfile.ZipFile(bad_archive,"w") as z:
+                for name,payload in broken.items():
+                    z.writestr("pinned-root/"+name,payload)
+            broken_tree={"truncated":False,"tree":[
+                {"type":"blob","path":name,"sha":m.git_blob(payload)}
+                for name,payload in broken.items()]}
+            with patch.object(m,"api_read",side_effect=lambda path,cap=m.MAX_ZIP:
+                json.dumps(broken_tree).encode() if path.startswith("/git/trees/")
+                else bad_archive.getvalue()):
+                with self.assertRaisesRegex(RuntimeError,"PAGE_CACHE_VERSION_MISMATCH"):
+                    m.candidate(TARGET)
+
     def test_unsafe_sha_is_rejected(self):
         with self.assertRaisesRegex(RuntimeError,"COMMIT_INVALID"):m.candidate("main")
 

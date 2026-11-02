@@ -140,7 +140,7 @@ def candidate(sha):
     require(set(chosen) == set(selected), "ARCHIVE_FILES_MISSING")
     require(b"Aggiornamento v1.58" in chosen["nav.js"], "WRONG_BANNER")
     require(b"remura-shell-v72-v1.58" in chosen["sw.js"], "WRONG_CACHE")
-    require(all(b"nav.js?v=157" in chosen[p] for p in FILES if p.endswith(".html")),
+    require(all(b"nav.js?v=158" in chosen[p] for p in FILES if p.endswith(".html")),
             "PAGE_CACHE_VERSION_MISMATCH")
     require(git_blob(chosen[BACKUP_MODULE]) == BACKUP_BLOB, "BACKUP_CHANGED")
     require(b"def observe_updated_batch(" in chosen["scripts/private_server.py"],
