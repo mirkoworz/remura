@@ -28,6 +28,8 @@ def source_file(path):
         return b"REMURA Aggiornamento v1.57 02/11/2026 16:25 (Italia, preparazione)"
     if path == "sw.js":
         return b'const CACHE="remura-shell-v71-v1.57-test";'
+    if path.endswith(".html"):
+        return b'<script src="./nav.js?v=157"></script>'
     return ("new " + path).encode("utf-8")
 
 
@@ -52,7 +54,9 @@ class ReleaseTests(unittest.TestCase):
         for name in tool.FILES:
             path = self.base/name
             path.parent.mkdir(exist_ok=True, parents=True)
-            content = b"REMURA Aggiornamento v1.56" if name == "nav.js" else ("old "+name).encode()
+            content = (b"REMURA Aggiornamento v1.56" if name == "nav.js" else
+                       b'const CACHE="remura-shell-v70-v1.56";' if name == "sw.js"
+                       else ("old "+name).encode())
             path.write_bytes(content)
             self.initial[name] = content
         self.staged = {path:source_file(path) for path in (*tool.FILES, tool.BACKUP_MODULE)}
@@ -99,6 +103,20 @@ class ReleaseTests(unittest.TestCase):
         tree["tree"][0]["sha"]="f"*40
         with patch.object(tool,"api_read",side_effect=fetch):
             with self.assertRaisesRegex(RuntimeError,"GIT_BLOB_MISMATCH"):
+                tool.candidate(SHA)
+
+    def test_candidate_rejects_wrong_html_cache_version(self):
+        candidate=dict(self.staged)
+        candidate["asset.html"]=b'<script src="./nav.js?v=156"></script>'
+        archive=io.BytesIO()
+        with zipfile.ZipFile(archive,"w") as z:
+            for name,payload in candidate.items():
+                z.writestr("root/"+name,payload)
+        tree={"truncated":False,"tree":[{"path":name,"type":"blob","sha":tool.git_blob(payload)}
+                                         for name,payload in candidate.items()]}
+        with patch.object(tool,"api_read",side_effect=lambda url, cap=tool.MAX_ZIP:
+                          json.dumps(tree).encode() if url.startswith("/git/trees/") else archive.getvalue()):
+            with self.assertRaisesRegex(RuntimeError,"PAGE_CACHE_VERSION_MISMATCH"):
                 tool.candidate(SHA)
 
     def test_check_only_reads_without_writing_or_restarting(self):
