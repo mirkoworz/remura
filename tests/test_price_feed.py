@@ -37,6 +37,17 @@ class PriceFeedTests(unittest.TestCase):
         self.assertEqual(feed.rollup(bars[:2]+bars[3:],1,now),[])
         self.assertEqual(feed.rollup(bars,4,now),[])
 
+    def test_rollup_only_complete_volumes(self):
+        rows=[feed.candle(f"2026-10-16T00:{15*i:02d}:00Z",1,2,.8,1.3,10+i) for i in range(4)]
+        now=dt.datetime(2026,10,16,1,0,tzinfo=UTC)
+        self.assertEqual(feed.rollup(rows,1,now)[0]["v"],46)
+        incomplete=rows[:2]+[feed.candle(rows[2]["t"],1,2,.8,1.3)]+rows[3:]
+        self.assertNotIn("v",feed.rollup(incomplete,1,now)[0])
+        with self.assertRaisesRegex(ValueError,"volume"):
+            feed.candle(rows[0]["t"],1,2,.8,1.3,True)
+        with self.assertRaisesRegex(ValueError,"volume"):
+            feed.candle(rows[0]["t"],1,2,.8,1.3,-2)
+
     def test_open_h1_candle_is_not_created(self):
         bars=self.make()
         now=dt.datetime(2026,10,16,0,59,tzinfo=UTC)

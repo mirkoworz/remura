@@ -134,7 +134,7 @@ def convert_trendbar(bar, digits):
     return candle(iso(t), round(op / 100000, digits),
                   round(high / 100000, digits),
                   round(low / 100000, digits),
-                  round(close / 100000, digits))
+                  round(close / 100000, digits),getattr(bar,"volume",None))
 
 
 def utc_chunks(now, lookback_days, chunk_hours=24):

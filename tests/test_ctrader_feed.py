@@ -16,7 +16,7 @@ spec.loader.exec_module(feed)
 class CTraderTests(unittest.TestCase):
     def bar(self,minutes=29873410,low=112344,delta_open=20,delta_high=38,delta_close=25):
         return types.SimpleNamespace(
-            utcTimestampInMinutes=minutes,
+            volume=27,utcTimestampInMinutes=minutes,
             low=low,deltaOpen=delta_open,deltaHigh=delta_high,deltaClose=delta_close
         )
 
@@ -120,6 +120,14 @@ class CTraderTests(unittest.TestCase):
         self.assertAlmostEqual(item["l"],1.12344)
         self.assertAlmostEqual(item["c"],1.12369)
         self.assertTrue(item["t"].endswith(":00Z"))
+
+    def test_ctrader_tick_volume_rejects_negative(self):
+        bar=self.bar()
+        bar.volume=137
+        self.assertEqual(feed.convert_trendbar(bar,5)["v"],137)
+        bar.volume=-1
+        with self.assertRaisesRegex(ValueError,"volume"):
+            feed.convert_trendbar(bar,5)
 
     def test_bogus_broker_prices_are_rejected(self):
         with self.assertRaises(ValueError):

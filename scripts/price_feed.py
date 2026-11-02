@@ -60,14 +60,20 @@ def float_price(value: object) -> float:
     return result
 
 
-def candle(t: str, o: object, h: object, l: object, c: object) -> dict:
+def candle(t: str, o: object, h: object, l: object, c: object, volume: object = None) -> dict:
     start = parse_time(t)
     if start.second or start.minute % 15:
         raise ValueError("Unaligned M15 timestamp")
     values = tuple(float_price(x) for x in (o, h, l, c))
     if values[1] < max(values[0], values[3]) or values[2] > min(values[0], values[3]) or values[1] < values[2]:
         raise ValueError("Invalid OHLC high/low")
-    return dict(t=iso(start), o=values[0], h=values[1], l=values[2], c=values[3])
+    bar = dict(t=iso(start), o=values[0], h=values[1], l=values[2], c=values[3])
+    if volume is not None:
+        # cTrader bar volume counts quote ticks, not executed contracts.
+        if type(volume) is not int or not 0 <= volume <= 9_007_199_254_740_991:
+            raise ValueError("Invalid tick volume")
+        bar["v"] = volume
+    return bar
 
 
 def http_json(url: str, headers: dict[str, str] | None = None) -> dict:
@@ -224,8 +230,11 @@ def rollup(rows: list[dict], hours: int, now: dt.datetime) -> list[dict]:
             continue
         if any(parse_time(item["t"]) != t + STEP*i for i,item in enumerate(items)):
             continue
-        result.append({"t": iso(t), "o": items[0]["o"], "h": max(x["h"] for x in items),
-                       "l": min(x["l"] for x in items), "c": items[-1]["c"]})
+        rolled={"t": iso(t), "o": items[0]["o"], "h": max(x["h"] for x in items),
+                "l": min(x["l"] for x in items), "c": items[-1]["c"]}
+        if all(type(x.get("v")) is int and x["v"] >= 0 for x in items):
+            rolled["v"]=sum(x["v"] for x in items)
+        result.append(rolled)
     return result
 
 

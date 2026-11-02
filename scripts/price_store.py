@@ -95,7 +95,7 @@ def ingest(db, input_doc, now=None):
                 raise ValueError("M15 mancanti o quantità anomala.")
             valid=[]
             for row in raw:
-                valid.append(candle(row["t"],row["o"],row["h"],row["l"],row["c"]))
+                valid.append(candle(row["t"],row["o"],row["h"],row["l"],row["c"],row.get("v")))
             valid=closed_m15(valid,now)
             if not valid:
                 raise ValueError("Nessuna candela M15 chiusa.")
@@ -105,7 +105,12 @@ def ingest(db, input_doc, now=None):
             if earlier and earlier.get("provider")==source and earlier.get("providerSymbol")==broker:
                 cache=earlier.get("timeframes",{}).get("M15",[])
             by_date={row["t"]:row for row in cache}
-            by_date.update({row["t"]:row for row in valid})
+            for row in valid:
+                previous=by_date.get(row["t"])
+                if ("v" not in row and previous and "v" in previous
+                    and all(row[k]==previous.get(k) for k in ("o","h","l","c"))):
+                    row["v"]=previous["v"]
+                by_date[row["t"]]=row
             cutoff=now-dt.timedelta(days=MAX_DAYS)
             cleaned=[row for t,row in sorted(by_date.items())
                      if parse_time(t)>=cutoff and parse_time(t)+dt.timedelta(minutes=15)<=now]
@@ -156,6 +161,8 @@ def audit_market(doc, now=None):
                 vals=[row[k] for k in ("o","h","l","c")]
                 if not all(type(v) in (int,float) and math.isfinite(v) and v>0 for v in vals):
                     raise ValueError("bad_price")
+                if "v" in row and (type(row["v"]) is not int or row["v"] < 0 or row["v"] > 9_007_199_254_740_991):
+                    raise ValueError("bad_tick_volume")
                 op,hi,lo,cl=vals
                 if hi<max(op,cl,lo) or lo>min(op,cl,hi):
                     raise ValueError("bad_ohlc")
@@ -181,7 +188,8 @@ def audit_market(doc, now=None):
                 expected=(samples[0]["o"],max(s["h"] for s in samples),
                           min(s["l"] for s in samples),samples[-1]["c"])
                 observed=tuple(row[k] for k in ("o","h","l","c"))
-                if all(math.isclose(a,b,abs_tol=1e-9,rel_tol=1e-9)
+                expected_v=sum(s["v"] for s in samples) if all("v" in s for s in samples) else None
+                if row.get("v")==expected_v and all(math.isclose(a,b,abs_tol=1e-9,rel_tol=1e-9)
                        for a,b in zip(expected,observed)):
                     status["verified"]+=1
                 else:
