@@ -52,6 +52,7 @@
     const frames=input.frames;
     if(!frames || typeof frames!=="object")return fail("frames_unavailable");
     const ages={};
+    const closeTimes={};
     const overdue=[];
     for(const key of ["M15","H1","H4"]) {
       const row=frames[key];
@@ -63,8 +64,15 @@
       const age=(observed-closed)/60000;
       if(!Number.isFinite(age) || age<0 || age>10080)return fail("frame_age_unverified");
       ages[key]=Math.round(age*100)/100;
+      closeTimes[key]=closed;
       if(age>LIMITS[key])overdue.push(key);
     }
+    // H4/H1 cannot close after the newest M15 used to construct them.
+    // A valid H4 close also implies the constituent H1 hours have closed.
+    if(closeTimes.H4>closeTimes.H1 || closeTimes.H1>closeTimes.M15 ||
+       closeTimes.H1>Math.floor(closeTimes.M15/3600000)*3600000 ||
+       closeTimes.H4>Math.floor(closeTimes.M15/14400000)*14400000)
+      return fail("inconsistent_timeframe_closes");
     if(overdue.length===0) {
       return {state:STATES.LIVE,label:LABELS[STATES.LIVE],
         livePriceEligible:true,signalAuthorized:false,
