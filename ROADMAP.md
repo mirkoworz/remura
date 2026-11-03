@@ -1,5 +1,39 @@
 # REMURA — Roadmap operativa unica
 
+## 03/11/2026 — v1.59 preparata per rilascio protetto; VPS ancora v1.58
+
+- [x] **PR #76:** telemetria `post_ingest` e `periodic` distinta, limite 256 misure private, nessun dato di prezzo/segreto o nuova chiamata broker; prototipo + test offline verdi.
+- [x] **Installer candidato** `deploy/oracle/release_v159.py`: verifica SHA GitHub + CI main, 13 file live v1.58 con Git blob immutabili e data reale nav, flag post-ingest ON, backup SQLite e restore-test, lock autoupdater; installa 14 file incluso `scripts/squalincome_timing.py`, rollback conservato e testato.
+- [x] **Riconciliazione candidata** `deploy/oracle/reconcile_v159.py`: pin blob dell'installer a commit Git immutabile, `--check` read-only, backup stato e lock in `--apply` separato; manifest con file nuovo senza sorgente v1.58; CI entrambe verdi su `23689f9404b5deb9e13e374cce84465e462adc16`.
+- [x] Nove pagine preparate con banner v1.59, versionamento JS e cache PWA v73; **l'ora finale sarà quella reale dell'installazione**, non quella della preparazione.
+- [ ] **Prima del deploy:** merge GitHub conservando il commit immutabile dell'installer (NO squash/rebase), entrambe le CI `push` verdi sullo SHA merge, assenza variazioni a `main` nel controllo, preflight VPS `--check`; soltanto dopo `--apply` separato.
+- [ ] **Dopo il deploy:** check/apply riconciliazione SHA separati, diagnostica privata, almeno più cicli di raccolta e verifica tempi/scansioni; misurare se la latenza tecnica si riduce, senza affermare ancora vantaggio operativo o predittivo.
+- [ ] Billing Oracle, consumo Firestore e quote cTrader **non certificati**: nessun nuovo servizio o chiamata broker introdotti.
+
+
+## 03/11/2026 — pacchetto v1.59 preparato su PR #76, NON installato
+
+- **VPS continua su v1.58**: post-ingest attivato, SHA codice `112da31cb10c34477642e2822c78b267cb88978d` (ultima verifica privata #27). GitHub `main` è avanzato con un commit di soli archivi Myfxbook, senza modifiche al codice.
+- **Candidato offline v1.59**: misure di latenza aggregate, percorsi post-ingest e periodici distinti; ritenzione SQLite 256 righe, nessuna nuova chiamata cTrader.
+- Le nove pagine HTML sono predisposte con `nav.js?v=159`; `nav.js` riporta la versione e un timestamp **di preparazione**, da sostituire soltanto con l'ora italiana dell'installazione reale. Cache PWA nuova.
+- **Gate obbligatori ancora aperti:** installer verificato con hash esatti, backup e restore-test SQLite, rollback della nuova unità Python, controllo flag ON, `--check` e `--apply` separati; CI finale verde; riconciliazione SHA e diagnostica privata.
+- PR #71 (divergenze prezzo–CVD proxy M15) resta distinta. Contabilità OCI, quote broker e Firestore non certificati.
+
+
+## 03/11/2026 — stato v1.58 live verificato; telemetria v1.59 solo offline
+
+- [x] VPS v1.58 installata, commit GitHub/SHA autoupdater `112da31cb10c34477642e2822c78b267cb88978d` riconciliato; diagnostica privata #27 `41546105605` verde; server attivo, 38/38 prezzi, TFF 11/11, Disagg 3/3, Myfxbook running, tick-volume M15 EURUSD/XAUUSD 64/64, RAM 27,7%, disco 7,9%.
+- [x] `REMURA_SQUALINCOME_AFTER_INGEST_ENABLED=1` attivato con backup privato e verifica runtime; autoupdater invariato. Scan generale ultima diagnostica: 2 analizzati su 34, 12 prezzi H1 troppo vecchi (146 min massimi contro 120), M15/H4 zero esclusioni stale.
+- [x] Diagnostica privata: 2 osservazioni successive alla scansione generale, **evidenza indiretta** non prova del post-ingest né anticipo di segnale.
+- [ ] **Candidato v1.59:** misurare tempi di scansione periodic/post-ingest, completamento batch→analisi, errori/eventi, con retention limitata; approvare solo dopo CI, review e rilascio protetto con banner versione e ora italiana. Il batch-end non è l'orario del primo prezzo salvato e non misura la latenza candela→segnale.
+- [ ] Prossima integrazione **PR #71** divergenze M15 prezzo–CVD (proxy CLV × tick volume); distinta da divergenze COT/prezzo, ancora offline e non installata.
+- [ ] Radar divergenze: stati potenziale/confermata/invalidata, ID evento, tempi pivot/conferma/rilevamento, prova prospettica contro benchmark prezzo-solo; in seguito notifiche private anti-spam.
+- [ ] Capitale Firestore/sincronizzazione, billing OCI e quote API reali ancora N/D; RAM/disco non certificano gratuità. Nessuna nuova API broker in questa preparazione.
+- [ ] Valutare se archiviare il helper della PR #75 già usato nell'attivazione, senza merge a sorpresa che cambi lo SHA della VPS.
+
+Lo storico che segue è mantenuto a fini di audit; le sezioni precedenti sui candidati v1.57/v1.58 descrivono snapshot superati.
+
+
 ## 02/11/2026 — candidato v1.58: installer protetto su GitHub (non installato)
 
 - [x] Creata PR #74 dalla main v1.57 riconciliata, codice post-ingest identico al prototipo #72; 38 mercati, Myfxbook e autoupdater lasciati invariati sulla VPS.
