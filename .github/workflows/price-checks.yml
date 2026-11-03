@@ -21,6 +21,10 @@ on:
       - 'tests/test_h1_batch_comparison.py'
       - 'scripts/h1_paired_store.py'
       - 'tests/test_h1_paired_store.py'
+      - 'deploy/oracle/release_v162.py'
+      - 'deploy/oracle/reconcile_v162.py'
+      - 'tests/test_release_v162.py'
+      - 'tests/test_reconcile_v162.py'
       - 'scripts/statistical_validation.py'
       - 'scripts/dual24_validation.py'
       - 'scripts/market_validation.py'
@@ -191,6 +195,10 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_h1_batch_comparison.py' -v
       - name: Test v1.62 private opt-in H1 pairing and bounded aggregate store, offline
         run: python -m unittest discover -s tests -p 'test_h1_paired_store.py' -v
+      - name: "Test v1.62 guarded release: pinned base, SQLite, rollback and nine-page banner"
+        run: python -m unittest discover -s tests -p 'test_release_v162.py' -v
+      - name: Test v1.62 pinned SHA-only reconciliation and rollback proof
+        run: python -m unittest discover -s tests -p 'test_reconcile_v162.py' -v
       - run: python -m unittest discover -s tests -p 'test_signals_monitor.py' -v
       - run: python -m unittest discover -s tests -p 'test_statistical_validation.py' -v
       - run: python -m unittest discover -s tests -p 'test_dual24_validation.py' -v
