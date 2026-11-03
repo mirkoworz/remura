@@ -8,7 +8,7 @@
 - Nove pagine con nav.js?v=159, banner v1.59 e stamp reale Europe/Rome in fase --apply; cache PWA v73.
 
 ## Gate GitHub
-1. PR #76 integrata senza squash/rebase; mantenere commit contenente installer immutabile **af39042c036428d479a569621a4c3ae559b76ae2** perché la riconciliazione ne verifica il blob SHA **524dd42ab8821bdf7a0c9d44a4326e0f84f792f6**.
+1. PR #76 integrata senza squash/rebase; mantenere commit contenente installer immutabile **dc6c14604d83a932f25c7cf0ca5c9fcc725faef5** perché la riconciliazione ne verifica il blob SHA **b14ee7b1efab67913c276d9728216df9750c289a**.
 2. Confermare HEAD main esatto e due CI Price Engine/Insights **push** verdi sul commit di merge. Commit solo dati Myfxbook possono avanzare main senza aggiornare codice installato; ogni check deve fissare lo SHA effettivamente verificato.
 3. Controllare diff rispetto a 112da31...: consentire solo file previsti e archivi data/myfxbook. Se cambia installer o altro codice, ripetere audit, aggiornare pin e CI.
 
