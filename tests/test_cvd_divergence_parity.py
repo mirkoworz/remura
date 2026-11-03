@@ -89,7 +89,7 @@ def variants():
     m["frames"]["M15"].extend(day2)
     result.append({"market": m, "now": tick_now(m)})
     rng = random.Random(79044)
-    for n in range(14):
+    for n in range(12):
         rows = []
         previous = 10.0
         for i in range(20+n*3):
