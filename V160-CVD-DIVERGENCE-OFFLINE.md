@@ -19,3 +19,9 @@ Porting pulito della vecchia PR #71 sul main v1.59, senza fondere i commit stori
 5. Solo dopo: Radar e notifiche private iPhone opt-in, nuova versione e data/ora italiana su ciascuna pagina, backup e rollback.
 
 Costi previsti da questo ramo: zero nuove API cTrader e zero nuovi servizi; quote Oracle/Firestore non certificate.
+
+## Portabilità backend (solo offline)
+
+- Aggiunto `scripts/cvd_divergence.py`: stessa logica causale di pivot, CLV × tick volume, ATR e soglie del motore JS, senza dipendenze esterne.
+- Test parità automatici JavaScript ↔ Python su 30 scenari sintetici, con controlli di assenza look-ahead, timestamp di conferma, ID stabili, assenza volume, gap e mercati non supportati. Non sostituiscono la convalida su prezzi reali.
+- Il modulo non è importato nel server live, non ha accesso rete/broker, e la PR resta in bozza.
