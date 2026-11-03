@@ -108,7 +108,7 @@ def record(db_path, comparison, *, post_scan_utc, ingest_returned_utc):
             post_utc, ingest_returned_utc, state, compared,
             full_ready, post_ready, stale_to_ready, advanced,
             unchanged, full_scan_age_seconds)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?)""", (
+            VALUES (?,?,?,?,?,?,?,?,?,?)""", (
                 post.isoformat(), ingest.isoformat(), state, *counts))
         db.execute("""DELETE FROM remura_h1_paired WHERE id NOT IN (
             SELECT id FROM remura_h1_paired ORDER BY id DESC LIMIT ?)""",
