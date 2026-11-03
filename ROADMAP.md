@@ -1,5 +1,24 @@
 # REMURA — Roadmap operativa unica
 
+
+## 03/11/2026 — v1.61 LIVE + PRIMA MISURA BATCH; CONTROLLO H1 APERTO
+
+**Stato attuale, prioritario sulle sezioni storiche sottostanti.** REMURA Oracle v1.61 installata, backup SQLite/restore-test/rollback e riconciliazione autoupdater completati, SHA `106e14a0b58c9e668b421a5982a9ffde22dc9243`; nove banner+cache v161 predisposti. GitHub app main non avanzato oltre lo SHA LIVE.
+
+- [x] Diagnostica privata post-release [#34](https://github.com/mirkoworz/remura-collector/actions/runs/41649580706) verde, 38/38 prezzi recenti, COT TFF 11/11 e Disagg 3/3, Myfxbook running, autoupdater `up_to_date`.
+- [x] Helper protetto su [PR app #83](https://github.com/mirkoworz/remura/pull/83) (separata da `main`, CI verde), comando `--check` read-only poi `--enable`: **attivazione telemetria v1.61 riuscita ore 15:16 Italia** con backup `remura.env`, restart, verifica processo/health e SHA autoupdater invariato. Nessun nuovo endpoint broker; un restart può però alterare il timing del primo giro. La PR app #83 resta separata per non muovere `main`.
+- [x] [PR privata collector #20](https://github.com/mirkoworz/remura-collector/pull/20) integrata dopo CI offline verde: audit read-only degli aggregati `collectorTiming` **nella stessa** GET già presente, stampati senza simboli, token o payload.
+- [x] **Prima misurazione vera:** diagnostica privata [#35](https://github.com/mirkoworz/remura-collector/actions/runs/41653292319) del 03/11 ore **15:24 Italia**, SUCCESS. `SQUALINCOME_BATCH_TIMING_STATO=PRONTA`, **1 batch**, **5 pianificati/5 salvati**, **18.674 ms** da inizio collector a ritorno dopo ingest SQLite (**limite superiore del commit per singolo mercato**), **290 ms** da ritorno ingest a completamento post-scan, 1 successo/0 errori. Nessuna deduzione sul ritardo dei batch futuri da un solo campione. Full-scan `14:16:16Z` precede fine ingest `14:16:35Z`; il monitor post-ingest è separato dalla fotografia della full-scan.
+- [x] Stessa diagnostica #35: 38/38 prezzi recenti, COT 11+3, Myfxbook running, **34 monitorati, 22 price-ready e 12 H1 stale** all'audit atomico, M15/H4 stale 0, **5** analizzati con COT/prezzo, **0** eventi nuovi, 35/35 scansioni post-ingest e periodiche riuscite; RAM 28,4%, disco 8,0%; consumi monetari NON certificati.
+- [ ] **Prossimo gate P1: osservare almeno un intero giro di otto batch, preferibilmente più cicli** e confrontare mediane/picchi, batch 0 salvataggi, età H1 nel full scan vs audit atomico, tempi ingest→post-scan e relative fasi. Nessuna modifica al scheduler/soglie e **nessun allarme BUY/SELL** dai soli tempi. Un solo batch di 18,674 s NON conferma i ritardi sintetici di 6 minuti della [PR privata #19](https://github.com/mirkoworz/remura-collector/pull/19).
+- [ ] **Poi:** decidere se mostrare nel Radar una lettura distinta *post-ingest recente* oltre alla full-scan, dopo avere dimostrato coerenza senza falsi segnali o privilegi di dati. Separare eventi COT/prezzo e futuro CVD proxy; validazione walk-forward e costi/spread prima di notifiche.
+- [ ] **GATE GRATIS:** verificare quote Oracle, cTrader, GitHub Actions e Firestore sui relativi provider; 28,4% RAM e 8% disco NON sono prova di fatturazione zero.
+
+**Nessun ulteriore comando Termius necessario per la diagnostica #35.** Le parti sotto (v1.60 e piani v1.61 antecedenti) sono cronologia storica, non lo stato LIVE corrente.
+
+---
+
+
 ## 03/11/2026 — STATO ATTUALE CERTIFICATO: v1.60 LIVE; v1.61 PROSSIMA RICERCA (NON LIVE)
 
 **Questa sezione è quella aggiornata.** Le sezioni precedenti della roadmap sono mantenute come cronologia e possono descrivere versioni superate.
