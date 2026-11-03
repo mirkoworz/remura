@@ -173,6 +173,8 @@ def candidate(sha):
             "MISSING_SAFE_FRESHNESS_ASSET")
     require(b'squalincome-freshness-core.js?v=160' in chosen["mercati.html"],
             "MISSING_FRESHNESS_UI")
+    require(b'squalincome-diagnostics.js?v=160' in chosen["mercati.html"],
+            "MISSING_FRESHNESS_DIAGNOSTIC_CACHE_KEY")
     require(b'./squalincome-freshness-core.js' in chosen["sw.js"],
             "MISSING_FRESHNESS_PRECACHE")
     require(b'priceQuality' in chosen["scripts/signals_monitor.py"],
