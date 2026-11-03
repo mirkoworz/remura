@@ -12,6 +12,12 @@ Diagnostica privata #27: 2 osservazioni dopo l'ultima full scan, evidenza indire
 - Errori del modulo telemetria non devono impedire una scansione valida; guardie H1/M15/H4, deduplica, storici e 34-mercati diagnostica generale non devono cambiare.
 - Niente nuove API, polling o acquisizioni cTrader. Test solo offline prima di un eventuale installer v1.59 protetto.
 
+## Rilascio manuale predisposto ma non eseguito
+
+Gli script `release_v159.py` e `reconcile_v159.py` sono ora disponibili in PR #76 e hanno superato test offline. L'installer valida il **codice** live v1.58 immutabile, ammette lo stato autoupdater `data_only` (solo Myfxbook) senza cambiare `installedSha`, richiede il flag post-ingest ON, genera backup SQLite con restore-test e rollback per 13 file esistenti + rimozione controllata del nuovo modulo. `reconcile_v159.py` non installa codice, ma verifica 14 file e manifest prima di aggiornare il solo SHA.
+
+**Importante:** `v1.59` in GitHub non significa installata: sulla VPS rimane v1.58. Non fare deploy automatico, non usare `--init-sha` né reinstallare la v1.58.
+
 ## Gate per il rilascio
 1. Entrambe le CI verdi e test su SQLite, tempo UTC, registrazioni multiple, retention e assenza di segreti.
 2. Installer v1.59 immutabile con controllo esatto dei file v1.58 live (comprese eventuali configurazioni private senza esposizione), preflight `--check` e `--apply` separato, snapshot SQLite restore-test e rollback, lock autoupdater.

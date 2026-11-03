@@ -1,5 +1,16 @@
 # REMURA — Roadmap operativa unica
 
+## 03/11/2026 — v1.59 preparata per rilascio protetto; VPS ancora v1.58
+
+- [x] **PR #76:** telemetria `post_ingest` e `periodic` distinta, limite 256 misure private, nessun dato di prezzo/segreto o nuova chiamata broker; prototipo + test offline verdi.
+- [x] **Installer candidato** `deploy/oracle/release_v159.py`: verifica SHA GitHub + CI main, 13 file live v1.58 con Git blob immutabili e data reale nav, flag post-ingest ON, backup SQLite e restore-test, lock autoupdater; installa 14 file incluso `scripts/squalincome_timing.py`, rollback conservato e testato.
+- [x] **Riconciliazione candidata** `deploy/oracle/reconcile_v159.py`: pin blob dell'installer a commit Git immutabile, `--check` read-only, backup stato e lock in `--apply` separato; manifest con file nuovo senza sorgente v1.58; CI entrambe verdi su `23689f9404b5deb9e13e374cce84465e462adc16`.
+- [x] Nove pagine preparate con banner v1.59, versionamento JS e cache PWA v73; **l'ora finale sarà quella reale dell'installazione**, non quella della preparazione.
+- [ ] **Prima del deploy:** merge GitHub conservando il commit immutabile dell'installer (NO squash/rebase), entrambe le CI `push` verdi sullo SHA merge, assenza variazioni a `main` nel controllo, preflight VPS `--check`; soltanto dopo `--apply` separato.
+- [ ] **Dopo il deploy:** check/apply riconciliazione SHA separati, diagnostica privata, almeno più cicli di raccolta e verifica tempi/scansioni; misurare se la latenza tecnica si riduce, senza affermare ancora vantaggio operativo o predittivo.
+- [ ] Billing Oracle, consumo Firestore e quote cTrader **non certificati**: nessun nuovo servizio o chiamata broker introdotti.
+
+
 ## 03/11/2026 — pacchetto v1.59 preparato su PR #76, NON installato
 
 - **VPS continua su v1.58**: post-ingest attivato, SHA codice `112da31cb10c34477642e2822c78b267cb88978d` (ultima verifica privata #27). GitHub `main` è avanzato con un commit di soli archivi Myfxbook, senza modifiche al codice.
