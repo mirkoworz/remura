@@ -31,3 +31,11 @@ Costi previsti da questo ramo: zero nuove API cTrader e zero nuovi servizi; quot
 È stato aggiunto `scripts/cvd_benchmark.py`: per la stessa sessione UTC confronta **tutti i pivot prezzo+ATR causalmente confermati** con il loro **sottoinsieme filtrato dal CVD proxy**. Etichetta soltanto movimenti direzionali di chiusura dopo un orizzonte futuro prefissato (predefinito 4 M15), in ATR nota alla conferma; le osservazioni ancora immature restano pendenti. Tre rotazioni deterministiche dei tick-volume (offset 3, 7, 13) costituiscono controlli negativi *esplorativi*, non un test di significatività. Non espone segnali individuali né broker-ID.
 
 **Forte limite:** nessun rendimento, PnL, spread, commissione, stop, slippage o valutazione out-of-sample; i candidati si sovrappongono e sono correlati. Non mostra percentuali di successo se ci sono meno di 30 osservazioni mature. I test sono sintetici; prima di procedere a Radar serve replay reale su campioni non selezionati, con calendario e fusi coerenti. Il benchmark non è distribuito alla VPS.
+
+## Replay multi-sessione UTC su archivio esistente
+
+- Modulo puro `scripts/cvd_session_replay.py`, **non importato dal server VPS**. Accetta solo il contratto `remura-price-v1` per EURUSD o XAUUSD cTrader, valida timestamp/volumi/OHLC e ripercorre fino a 45 sessioni UTC; massimo 4000 M15 per richiesta.
+- Ogni sessione viene valutata con `now` fissato alla chiusura dell'ultima candela di quel giorno, non all'ora presente. Non combina pivot tra giornate, non fabbrica le barre mancanti e non anticipa i risultati delle quattro M15 future.
+- Baseline prezzo/ATR vs sottoinsieme CVD proxy e 3 rotazioni volume. Output **solo contatori aggregati** e cause di esclusione predefinite; mai OHLC, simbolo broker, prezzi o segnali nominativi.
+- Il replay offline è pronto per essere eseguito su dati cTrader storici del database privato (45 giorni max); il dataset reale e il numero di sessioni idonee **non sono ancora stati verificati**. Per raggiungerlo useremo un workflow privato separato che legge le due GET protette già disponibili, senza chiamate cTrader e senza esporre il payload nei log.
+- Anche dopo questo replay, le statistiche descrittive di quattro M15 successive non sono PnL, walk-forward o evidenza del vantaggio istituzionale.
