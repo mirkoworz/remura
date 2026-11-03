@@ -449,7 +449,7 @@ class SignalTest(unittest.TestCase):
         with patch.object(m,"monitored_symbols",return_value=symbols), \
              patch.object(m,"cot_series",return_value=rows), \
              patch.object(m,"latest",side_effect=lambda db,symbol: docs[symbol]), \
-             patch.object(m,"price_view",side_effect=lambda doc,now:prices[doc["symbol"]]):
+             patch.object(m,"price_view",side_effect=lambda doc,now,quality=None:prices[doc["symbol"]]):
             first=m.scan_once(self.db_path,NOW)
             full=m.status(self.db_path,True,NOW)["diagnostics"]
             self.assertEqual(full["trackedMarkets"],2)
