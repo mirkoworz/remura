@@ -7,7 +7,11 @@
 - [x] Timing Squalincome v1.59: post-ingest 1 campione 341 ms, periodic 1 campione 4580 ms, nessun errore/evento, fine batch→fine analisi 341 ms; diverso perimetro, NON prova di anticipo dei segnali.
 - [ ] Accumulare campioni e monitorare H1: 11 stale su 34, età massima 123 minuti vs soglia 120; M15/H4 nessuno stale.
 - [x] remura-collector PR #12 con nuovi contatori tramite gli stessi GET; nessuna chiamata broker aggiuntiva.
-- [ ] Candidato offline v1.60: portare la vecchia PR #71 su base v1.59, senza deploy, poi integrare backend causale e benchmark prezzo-solo.
+- [x] Candidato offline v1.60 sulla PR #77: vecchia PR #71 portata pulitamente sulla base v1.59, 11 test JavaScript invariati.
+- [x] Backend di ricerca Python `scripts/cvd_divergence.py` allineato al rilevatore JS su **30 scenari sintetici**; orari causali e ID stabili, CI verde. Il modulo non è importato dal server VPS.
+- [x] Benchmark di laboratorio `scripts/cvd_benchmark.py`: stessi pivot prezzo/ATR come baseline, sottoinsieme filtrato CVD, etichette a orizzonte prefissato (4 M15) e 3 rotazioni volumi, 7 test di sicurezza offline; NO PnL, NO profitti dimostrati.
+- [ ] Prossimo gate: portare dati storici reali chiusi e puliti nel replay **senza nuove API broker**, completare campionamento multi-sessione, walk-forward e spread/slippage. Prima dell'integrazione server live serve una nuova release protetta con banner versione/ora italiana.
+- [ ] H1: indagare le 11 esclusioni e ottimizzare il ritmo di ingest **senza aumentare quote cTrader** né rilassare artificiosamente la soglia 120m.
 - [ ] Validazione prospettica, costi di trading, falsi segnali, ID evento, timestamp di conferma/ricezione/avviso, poi Radar e notifiche opt-in con nuova release protetta.
 - [ ] Billing Oracle, consumi Firestore e limiti API cTrader ancora da certificare; Capital sulla VPS disattivato all'ultimo test.
 
