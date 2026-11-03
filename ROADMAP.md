@@ -1,6 +1,14 @@
 # REMURA — Roadmap operativa unica
 
 
+## 03/11/2026 — PROTOTIPO SICURO STATI FRESCHEZZA (PR #78, NON LIVE)
+
+- [x] Diagnostica privata #31 + simulazione PR privata #17: una rotazione ideale dei batch di circa 120 minuti può dare M15 recente mentre H1/H4 oltre soglia, senza necessariamente alcun errore di aggregazione; **non** abbassare le soglie per nasconderlo.
+- [x] **App PR #78** [prototipo offline stati Squalincome](https://github.com/mirkoworz/remura/pull/78), distinto dalla PR #77 CVD. `squalincome-freshness-core.js` *non caricato dalla UI né dal server*. Stati: prezzi idonei alla verifica live, attesa batch **verificata** (sempre non live), prezzo stale (solo storico), non verificabile (fail-closed). Gli input non autorizzano eventi/ordini/notifiche; `signalAuthorized:false` sempre. Test offline e CI nelle due suite. Documentazione `V160-SQUALINCOME-FRESHNESS-PROTOTYPE.md` nel ramo PR #78.
+- [ ] **Gate backend senza nuove API cTrader:** per mostrare stati credibili, esporre metadata di qualità **atomici alla stessa scansione** e il prossimo batch attestato dal collector (quando noto). La v1.59 restituisce `/signals/status` e `/prices/status` a tempi differenti, non possiede un timestamp per il prossimo batch per ciascun mercato: **non** fingere il giallo `in attesa` oppure il verde `idoneo` usando GET non sincronizzate.
+- [ ] Dopo prova backend e test di regressione su 34/38 mercati, sviluppare solo la **vista esplicativa** iPhone con stati, età dei tre timeframe, motivi di esclusione e storico, senza introdurre segnali non validati. Costi: quote broker invariate, nessun nuovo provider a pagamento, controllare budget GitHub Actions e Oracle.
+- [ ] Prima di qualsiasi release: CI verdi, revisione compatibilità con PR #77, numero di versione e data/ora italiane in testa alle **nove pagine**, backup SQLite, restore-test, rollback, pin SHA, riconciliazione autoupdater. **LIVE attuale v1.59 non toccata.**
+
 ## 03/11/2026 — GATE REPLAY #3 REALE e indagine delle 22 sessioni missing (stato odierno)
 
 **LIVE confermata (ultima diagnostica #29): v1.59 su Oracle Always Free, SHA `e924f4cf6f1a384fd84a3cef66c89a16e35de3fd`.** La PR #77 è ancora solo ricerca offline v1.60. Non fondere su main né avviare autoupdater senza rilascio protetto, backup, restore-test e rollback.
