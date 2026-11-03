@@ -83,14 +83,14 @@ class ReleaseV161Tests(unittest.TestCase):
         self.staged[m.BACKUP_MODULE]=(
             b"def create_backup():\n    return ['RESTORE_TEST=OK']\n")
 
-    def test_exact_v158_base_and_new_file_must_not_exist(self):
+    def test_exact_v160_base_and_new_file_must_not_exist(self):
         self.assertEqual(len(m.EXISTING_FILES),12)
         self.assertEqual(len(m.FILES),13)
-        m.verify_live_v159(m.local_files())
+        m.verify_live_v160(m.local_files())
         tampered=self.root/"scripts/private_server.py"
         tampered.write_bytes(b"tampered")
-        with self.assertRaisesRegex(RuntimeError,"LIVE_V159_DIVERGED"):
-            m.verify_live_v159(m.local_files())
+        with self.assertRaisesRegex(RuntimeError,"LIVE_V160_DIVERGED"):
+            m.verify_live_v160(m.local_files())
         tampered.write_bytes(self.previous["scripts/private_server.py"][0])
         new=self.root/m.NEW_FILE
         new.write_bytes(b"unexpected")
