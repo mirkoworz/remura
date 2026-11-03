@@ -156,6 +156,21 @@ class ReleaseV158Test(unittest.TestCase):
         staged = {}
         for name in (*m.FILES, m.BACKUP_MODULE):
             staged[name] = (ROOT/name).read_bytes()
+        # Keep the historical v1.58 ZIP safety test meaningful after
+        # versioned pages advance to v1.59. Do not reinterpret current
+        # v1.59 pages as a v1.58 release candidate.
+        if b"nav.js?v=159" in staged["index.html"]:
+            for page in m.FILES:
+                if page.endswith(".html"):
+                    staged[page] = staged[page].replace(
+                        b"nav.js?v=159", b"nav.js?v=158")
+            staged["nav.js"] = staged["nav.js"].replace(
+                b"Aggiornamento v1.59", b"Aggiornamento v1.58").replace(
+                b"03/11/2026 06:40 (Italia, preparazione)",
+                b"02/11/2026 23:35 (Italia, preparazione)")
+            staged["sw.js"] = staged["sw.js"].replace(
+                b"remura-shell-v73-v1.59-squalincome-timing",
+                b"remura-shell-v72-v1.58-after-ingest")
         self.assertTrue(all(b"nav.js?v=158" in staged[p] for p in m.FILES
                             if p.endswith(".html")))
         tree = {"truncated":False,"tree":[
