@@ -291,7 +291,7 @@ def price_exclusion(doc, now, *, quality=None):
         return "price_error"
 
 
-def scan_once(db_path,now=None,*,targets=None):
+def scan_once(db_path,now=None,*,targets=None,capture_frames=False):
     """Observe all markets on periodic scans, or a small verified fresh batch.
 
     Targeted scans update existing observation/history/event tables, but NEVER
@@ -443,7 +443,15 @@ def scan_once(db_path,now=None,*,targets=None):
                     " VALUES(1,?,?) ON CONFLICT(id) DO UPDATE SET"
                     " scanned_at=excluded.scanned_at,summary=excluded.summary",
                     (now.isoformat(),json.dumps(summary,sort_keys=True)))
-        return {"examined":examined,"baselines":baselines,"newEvents":events}
+        result={"examined":examined,"baselines":baselines,"newEvents":events}
+        if capture_frames and targets is not None:
+            # Internal opt-in: expose only the H1 frame metadata that this
+            # very same scan read, at the very same UTC instant. Never export
+            # broker payloads or read the price database a second time.
+            result["h1Frames"]={
+                symbol:{"H1":frames_by_symbol.get(symbol,{}).get("H1")}
+                for symbol in symbols}
+        return result
     finally:db.close()
 
 
