@@ -32,6 +32,7 @@ from price_feed import MARKETS, UTC, utcnow
 from price_store import connect, get_status, set_status, latest, ingest, api_document, symbols_available, price_overview
 from cot_monitor import collect_once as collect_official_cot, public_status as official_cot_status
 from signals_monitor import (scan_once as observe_squalincome,
+    scan_once_with_h1_frames as observe_squalincome_with_frames,
     monitored_symbols as squalincome_monitored_symbols,
     status as squalincome_status)
 from statistical_validation import update_validation, validation_status
@@ -880,8 +881,8 @@ def observe_updated_batch(db_path, saved, env=None, batch_completed=None):
                 # No additional scan, broker request, or new scheduling work.
                 full_scan=load_h1_full_scan(db_path)
                 pair_now=utcnow()
-                result=observe_squalincome(
-                    db_path,now=pair_now,targets=selected,capture_frames=True)
+                result=observe_squalincome_with_frames(
+                    db_path,now=pair_now,targets=selected)
                 try:
                     comparison=compare_paired_h1(
                         full_scan,result.get("h1Frames") if isinstance(result,dict) else None,
