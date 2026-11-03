@@ -317,6 +317,7 @@ def scan_once(db_path,now=None,*,targets=None):
     examined=baselines=events=updates=0
     exclusions={}
     frames_by_symbol={}
+    price_quality_by_symbol={}
     try:
         for symbol in symbols:
             try:
@@ -324,6 +325,15 @@ def scan_once(db_path,now=None,*,targets=None):
                 cot=cot_view(series,symbol,now)
                 document=latest(db,symbol)
                 frames_by_symbol[symbol]=safe_frame_diagnostics(document,now)
+                # Same immutable loaded document and scan UTC as frame metadata.
+                # Values are allowlisted; never store broker IDs, OHLC or secrets.
+                quality=audit_market(document,now)
+                price_quality_by_symbol[symbol]={
+                    "integrity":quality.get("integrity"),
+                    "freshness":quality.get("freshness"),
+                    "ready":quality.get("ready"),
+                    "checkedAt":now.isoformat()
+                }
                 price=price_view(document,now) if document else None
                 current=classify(cot,price)
                 if current is None:
@@ -416,6 +426,7 @@ def scan_once(db_path,now=None,*,targets=None):
                                for symbol,reasons in sorted(exclusions.items())],
                  "markets":[{"symbol":symbol,
                              "timeframes":frames_by_symbol.get(symbol,safe_frame_diagnostics(None,now)),
+                             "priceQuality":price_quality_by_symbol.get(symbol),
                              "analyzed":symbol not in exclusions}
                             for symbol in symbols],
                  "newBaselines":baselines,"updatedObservations":updates,
