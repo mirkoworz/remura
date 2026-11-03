@@ -262,7 +262,7 @@ class ReleaseV160Tests(unittest.TestCase):
             self.assertIn("nav.js?v=160",source,page)
         nav=(ROOT/"nav.js").read_bytes()
         self.assertEqual(nav.count(m.PREPARED_STAMP),1)
-        self.assertIn(b"REMURA \\xc2\\xb7 Aggiornamento v1.60",nav)
+        self.assertIn("REMURA · Aggiornamento v1.60".encode("utf-8"),nav)
         mercati=(ROOT/"mercati.html").read_text("utf-8")
         self.assertIn("squalincome-freshness-core.js?v=160",mercati)
         self.assertIn("squalincome-diagnostics.js?v=160",mercati)
