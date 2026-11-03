@@ -31,7 +31,7 @@ SERVER=APP/"scripts/private_server.py"
 STATE=PRIVATE/"autoupdate-state.json"
 SERVICE="remura-private.service"
 SHA_V161="106e14a0b58c9e668b421a5982a9ffde22dc9243"
-# v1.61 manually installed candidate, NOT the v1.61 autoupdate-state SHA.
+# Exact v1.61 app SHA confirmed by post-deploy diagnostic #34; no moving refs.
 V161_SERVER_BLOB="4bae49bbe6297a6970c521d0dc9d3bc1d72bbfde"
 V161_MODULE_BLOB="68ef3244b3b4c055121b11be506b436f0551e6ac"
 MODULE=APP/"scripts/batch_timing.py"
@@ -82,7 +82,7 @@ def environment_mode(data):
             found.append(value.strip(b"'\"").decode("ascii"))
         elif (FLAG in item.split(b"=",1)[0] or
               item.lstrip().startswith(b"export "+FLAG)):
-            raise RuntimeError("STOP_PRIORiTY_SYNTAX")
+            raise RuntimeError("STOP_BATCH_TIMING_SYNTAX")
     guard(len(found)<=1,"BATCH_TIMING_DUPLICATE")
     return found[0] if found else "0"
 
@@ -136,9 +136,17 @@ def preflight(disabling=False):
               re.fullmatch(r"[0-9a-f]{40}",state["installedSha"]) and
               state.get("state") in ("up_to_date","manual_required"))
     guard(exact or recovery,"AUTOUPDATE_STATE_UNEXPECTED")
-    guard(b"REMURA_COLLECTOR_ENABLED=1" in ENV.read_bytes() or
-          b"REMURA_COLLECTOR_ENABLED=\"1\"" in ENV.read_bytes(),
-          "COLLECTOR_NOT_OPTED_IN")
+    # Validate actual collector flag, never comments or token substrings.
+    # Do not log any other environment values.
+    configured=ENV.read_bytes()
+    collector_values=[]
+    for raw_line in configured.split(b"\n"):
+        field=raw_line.strip()
+        if field.startswith(b"#") or not field:
+            continue
+        if field.startswith(b"REMURA_COLLECTOR_ENABLED="):
+            collector_values.append(field.split(b"=",1)[1].strip(b"\"' "))
+    guard(collector_values == [b"1"],"COLLECTOR_NOT_OPTED_IN")
     guard(not (subprocess.run(["systemctl","is-active","remura-autoupdate.service"],
                               capture_output=True,timeout=16).returncode==0),"AUTOUPDATE_BUSY")
     guard(service_active() and health(),"SERVER_UNHEALTHY")
