@@ -76,7 +76,8 @@ ALLOWED = set(FILES) | {
     "deploy/oracle/release_v159.py", "deploy/oracle/reconcile_v159.py",
     ".github/workflows/price-checks.yml",
     "tests/test_release_v159.py", "tests/test_reconcile_v159.py",
-    "tests/test_squalincome_timing.py", "tests/release-consistency.test.js",
+    "tests/test_squalincome_timing.py", "tests/test_release_v158.py",
+    "tests/release-consistency.test.js",
     "tests/statistica-squali.test.js", "tests/price-status.test.js"
 }
 REQUIRED = {

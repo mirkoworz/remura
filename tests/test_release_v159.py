@@ -20,6 +20,7 @@ spec=importlib.util.spec_from_file_location(
     "release_v159",ROOT/"deploy/oracle/release_v159.py")
 m=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(m)
+ORIGINAL_VERIFY_TARGET=m.verify_target
 TARGET="a"*40
 
 class ReleaseV159Tests(unittest.TestCase):
@@ -206,6 +207,42 @@ class ReleaseV159Tests(unittest.TestCase):
             m.rollback_from(folder)
         self.assertEqual((self.root/m.NEW_FILE).read_bytes(),
                          b"unexpected-tampering")
+
+
+    def test_target_must_have_exact_main_green_ci_and_reviewed_files(self):
+        calls=[]
+        def documented(endpoint):
+            calls.append(endpoint)
+            if endpoint=="/commits/main":
+                return {"sha":TARGET}
+            if endpoint.startswith("/compare/"):
+                paths=sorted(m.REQUIRED | {"tests/test_release_v158.py",
+                                            "data/myfxbook/latest.json"})
+                return {"status":"ahead","files":[{"filename":p} for p in paths]}
+            if "/runs?" in endpoint:
+                return {"workflow_runs":[{"head_sha":TARGET,
+                    "head_branch":"main","event":"push","status":"completed",
+                    "conclusion":"success"}]}
+            raise AssertionError(endpoint)
+        with patch.object(m,"remote_doc",side_effect=documented):
+            ORIGINAL_VERIFY_TARGET(TARGET)
+        self.assertEqual(sum("/runs?" in call for call in calls),2)
+        with patch.object(m,"remote_doc",side_effect=lambda p:
+                {"workflow_runs":[]} if "/runs?" in p else documented(p)):
+            with self.assertRaisesRegex(RuntimeError,"CI_NOT_GREEN"):
+                ORIGINAL_VERIFY_TARGET(TARGET)
+        def unknown(endpoint):
+            data=documented(endpoint)
+            if endpoint.startswith("/compare/"):
+                data["files"].append({"filename":"deploy/oracle/autoupdate.py"})
+            return data
+        with patch.object(m,"remote_doc",side_effect=unknown):
+            with self.assertRaisesRegex(RuntimeError,"UNREVIEWED_FILES"):
+                ORIGINAL_VERIFY_TARGET(TARGET)
+        with patch.object(m,"remote_doc",side_effect=lambda p:
+                {"sha":"b"*40} if p=="/commits/main" else documented(p)):
+            with self.assertRaisesRegex(RuntimeError,"MAIN_MOVED"):
+                ORIGINAL_VERIFY_TARGET(TARGET)
 
     def test_nonimmutable_sha_is_rejected(self):
         with self.assertRaisesRegex(RuntimeError,"COMMIT_INVALID"):
