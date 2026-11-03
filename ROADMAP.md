@@ -1,5 +1,43 @@
 # REMURA — Roadmap operativa unica
 
+## 03/11/2026 — STATO ATTUALE CERTIFICATO: v1.60 LIVE; v1.61 PROSSIMA RICERCA (NON LIVE)
+
+**Questa sezione è quella aggiornata.** Le sezioni precedenti della roadmap sono mantenute come cronologia e possono descrivere versioni superate.
+
+### P0 — Release affidabile e osservabilità: FATTO
+- [x] **LIVE Oracle v1.60**, installata il 03/11/2026 ore **12:01 Italia** e confermata su iPhone. SHA applicativo e autoupdater `47d48e1b742358c45e04e980a7c81935d496644a` (`up_to_date`). PR [#78](https://github.com/mirkoworz/remura/pull/78) e [#79](https://github.com/mirkoworz/remura/pull/79) integrate in ordine; CVD PR #77 **non integrata**.
+- [x] Installer SHA-only: preflight `PREFLIGHT_V160=OK`, 16 file, backup SQLite verificato, restore-test isolato, manifest rollback, servizio sano, riconciliazione `--check` e `--apply` separate con backup stato. CI `push/main` Insights/Price verdi.
+- [x] Diagnostica privata **#32**, [run 41624984188](https://github.com/mirkoworz/remura-collector/actions/runs/41624984188), dopo deploy: **38/38** prezzi verificati e recenti; COT TFF **11/11**, Disaggregated **3/3**; Myfxbook VPS running; collector running, autoupdater allineato. Tick volume M15 EURUSD/XAUUSD **64/64** nell'ultima finestra campionata (non CVD aggressivo reale). RAM **27,7%**, disco **8,0%**; non certificano il billing Oracle. Capital VPS disabled; Firestore NON controllato da questo workflow.
+- [x] Screenshot iPhone v1.60: banner italiano **03/11/2026 12:01**, pannello freschezza Squalincome coerente col run #32: **34** monitorati, **19** dati prezzo tecnicamente idonei, **15** fuori soglia H1, **0** non verificabili; **6** analizzati con COT/prezzo, **28** esclusi. Le **3** registrazioni di evento nell'archivio e le **2** visibili nello storico corrente NON sono 3 nuove occasioni operative. Nessun nuovo evento nell'ultima scansione; nessuna notifica attiva.
+
+### P1 — v1.61: risolvere *l'osservabilità* della freschezza H1, senza falsi verdi
+- [ ] **PRIVATO / OFFLINE PRIMA:** estendere l'audit su `remura-collector` usando **lo stesso GET** `/private-api/signals/status`: contare atomicamente `price_live_ready`, `price_stale`, `unverified`, età/soglie M15=180/H1=120/H4=300, timestamp della full scan e tempo server. Dati manomessi o non atomici -> `N/D` o `unverified`, mai `ready`. Nessun nuovo endpoint, broker call, secrets o strumento analizzato sul log.
+- [ ] Osservare più full-scan reali in differenti fasi dei batch e confrontare le stesse soglie con i campioni **post-ingest** (attualmente v1.60: 21/21 post-ingest riusciti e 21/21 periodici nella diagnostica #32). Distinguere **tempo batch→analisi** da **candela→evento** e da una reale anticipazione di prezzo.
+- [ ] Verificare sul server la schedulazione effettiva per mercato e gli errori collector, *prima* di usare `waiting_verified_batch`. La UI attuale mostra 0 per attesa attestata, perché il server **non** pubblica un orario successivo verificato. Non stimare `nextExpectedAt` tramite la media dei batch.
+- [ ] Studiare offline una riorganizzazione a **budget broker identico** e dimostrare con misure, non con un'ipotesi, l'eventuale maggior copertura H1. Con 38 mercati, 5 per batch, 8 batch/120 minuti, alcune esclusioni H1 possono essere matematicamente inevitabili nel full-scan: vietato promettere 34/34 solo cambiando la UI o spostando l'orario delle scansioni.
+- [ ] Se emerge un beneficio reale, preparare una release dedicata **v1.61** con test, SHA, backup SQLite+restore-test, rollback, riconciliazione e banner italiano sulle 9 pagine. **Niente deploy o merge di questo ramo ricerca per ora.**
+
+### P2 — CVD proxy e divergenze causali: RICERCA, non segnale LIVE
+- [x] Tick volume cTrader archiviato sulle nuove M15, CVD **proxy** `CLV × tick volume`; il volume non rappresenta ordini aggressori futures. Replay su EURUSD/XAUUSD e allineamento JS/Python del prototipo prezzo–CVD in PR [#77](https://github.com/mirkoworz/remura/pull/77) **draft separata**, non idonea a merge.
+- [ ] Attendere sufficienti sessioni genuinamente complete con volumi (niente ricostruzione sintetica dei vecchi `v` assenti); campionare qualità, sessioni, spread, gap, M15/H1/H4 e contatori di API. Ultima diagnostica #32: solo **ultime 64 M15** con volume 64/64 su EURUSD/XAUUSD, non uno storico plurimensile.
+- [ ] Validare divergenze rialziste LL prezzo/HL CVD e ribassiste HH prezzo/LH CVD con pivot confermati **senza look-ahead**, separando momento del pivot dalla disponibilità dell'informazione. Benchmark prezzo/ATR-only, falsi positivi, replay causale, test walk-forward con embargo e dati non selezionati ex post.
+
+### P3 — Misurare un eventuale vantaggio statistico (prima di notificare)
+- [ ] Registrare *ex ante* i candidati, poi MFE/MAE e outcome 1h/4h/24h con spread/slippage/commissioni realistici. Valutare expectancy, drawdown, numerosità effettiva e stabilità fuori campione, benchmark anche senza CVD/sentiment.
+- [ ] Misurare separatamente il valore aggiunto di COT settimanale (ritardato), sentiment retail Myfxbook/Capital, struttura prezzo, volatilità e DXY/VIX. Non chiamare istituzionali le posizioni retail, né dedurre operazioni future certe.
+- [ ] Solo con qualità e vantaggio almeno plausibile, notifiche private iPhone/Telegram *opt-in*, idempotenti, cooldown, tetto giornaliero e revoca. Nessun ordine automatico.
+
+### P4 — Copertura asset, interfaccia e costi
+- [ ] Verificare DAX/GER30, VIX, DXY, petrolio e indici: feed prezzo ≠ contratto futures CFTC; dove manca un dato comparabile mantenere `N/D`. Conservare fonti e orari di pubblicazione verificati.
+- [ ] Raffinare il Radar in modo che spieghi **quale dato è recente, quali soglie supera e cosa manca**; distinguere divergenze **COT/prezzo** (già storico) da **prezzo/CVD** (ricerca).
+- [ ] **GATE GRATIS:** leggere fatturazione e quote vere Oracle Always Free, minuti/storage GitHub Actions, Firestore read/write/storage e quote cTrader. Ultima misura risorse VPS favorevole, ma `Consumi: N/D` non equivale a costo zero; nessun servizio o acquisto autorizzato.
+- [ ] Ogni release futura mantiene i vincoli: **versione+data/ora italiane in alto in tutte le 9 pagine**, staging CI verde, check SHA GitHub, backup+restore-test+rollback, preflight read-only, installazione separata e autoupdater riconciliato.
+
+**Decisione tecnica:** si parte da P1 con audit privato read-only e nessun nuovo costo; CVD/benchmark P2-P3 procedono solo quando il dato consente inferenze oneste. Questo aggiornamento modifica **solo documentazione su un ramo ricerca**, non l'app LIVE.
+
+---
+
+
 ## 03/11/2026 — v1.60 FRESCHEZZA PREPARATA, MA NON INSTALLATA (PR #79)
 
 - [x] **LIVE ancora v1.59**, SHA `e924f4cf6f1a384fd84a3cef66c89a16e35de3fd` (diagnostica privata #31); `main` è avanzato di un solo commit dati Myfxbook, **non** di codice applicativo.
