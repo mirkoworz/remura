@@ -292,6 +292,22 @@ def verify_flag_on():
     require(len(values)==1 and values[0]=="1", "POST_INGEST_FLAG_NOT_ON")
 
 
+def verify_pair_flag_off():
+    """The new H1 observer MUST remain disabled during initial deployment."""
+    source=PRIVATE/"remura.env"
+    require(source.is_file() and not source.is_symlink() and source.stat().st_size<32768,
+            "PRIVATE_ENV_INVALID")
+    values=[]
+    for line in source.read_text("utf-8").splitlines():
+        line=line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("REMURA_H1_PAIRED_ENABLED="):
+            values.append(line.split("=",1)[1].strip().strip('"').strip("'"))
+    require(len(values)<=1 and (not values or values[0]=="0"),
+            "H1_PAIR_FLAG_MUST_BE_OFF")
+
+
 def preflight(sha, staged=None):
     require(os.geteuid()==0, "ROOT_REQUIRED")
     require(valid_sha(sha), "COMMIT_INVALID")
@@ -300,6 +316,7 @@ def preflight(sha, staged=None):
     originals=local_files()
     verify_live_v161(originals)
     verify_flag_on()
+    verify_pair_flag_off()
     statefile=PRIVATE/"autoupdate-state.json"
     require(statefile.is_file() and not statefile.is_symlink(), "STATE_MISSING")
     state=json.loads(statefile.read_text("utf-8"))
