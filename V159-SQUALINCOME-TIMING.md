@@ -1,6 +1,6 @@
 # REMURA v1.59 — misurazione tempi scansioni Squalincome (prototipo offline)
 
-**Data:** 03/11/2026. **Stato:** branch/PR in bozza; live resta v1.58, post-ingest attivo. Nessun merge, deploy, riavvio o modifica ai dati VPS in questa fase.
+**Data:** 03/11/2026. **Stato:** candidato offline su PR #76, release UI e strumenti di collaudo in preparazione. VPS rimane v1.58, post-ingest già attivo. Nessun deploy o modifica ai dati VPS.
 
 ## Motivazione verificata
 Diagnostica privata #27: 2 osservazioni dopo l'ultima full scan, evidenza indiretta; 12 esclusioni H1 stale e nessuna M15/H4 stale. Dobbiamo distinguere funzionamento tecnico, velocità e utilità statistica.

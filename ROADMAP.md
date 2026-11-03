@@ -1,5 +1,14 @@
 # REMURA — Roadmap operativa unica
 
+## 03/11/2026 — pacchetto v1.59 preparato su PR #76, NON installato
+
+- **VPS continua su v1.58**: post-ingest attivato, SHA codice `112da31cb10c34477642e2822c78b267cb88978d` (ultima verifica privata #27). GitHub `main` è avanzato con un commit di soli archivi Myfxbook, senza modifiche al codice.
+- **Candidato offline v1.59**: misure di latenza aggregate, percorsi post-ingest e periodici distinti; ritenzione SQLite 256 righe, nessuna nuova chiamata cTrader.
+- Le nove pagine HTML sono predisposte con `nav.js?v=159`; `nav.js` riporta la versione e un timestamp **di preparazione**, da sostituire soltanto con l'ora italiana dell'installazione reale. Cache PWA nuova.
+- **Gate obbligatori ancora aperti:** installer verificato con hash esatti, backup e restore-test SQLite, rollback della nuova unità Python, controllo flag ON, `--check` e `--apply` separati; CI finale verde; riconciliazione SHA e diagnostica privata.
+- PR #71 (divergenze prezzo–CVD proxy M15) resta distinta. Contabilità OCI, quote broker e Firestore non certificati.
+
+
 ## 03/11/2026 — stato v1.58 live verificato; telemetria v1.59 solo offline
 
 - [x] VPS v1.58 installata, commit GitHub/SHA autoupdater `112da31cb10c34477642e2822c78b267cb88978d` riconciliato; diagnostica privata #27 `41546105605` verde; server attivo, 38/38 prezzi, TFF 11/11, Disagg 3/3, Myfxbook running, tick-volume M15 EURUSD/XAUUSD 64/64, RAM 27,7%, disco 7,9%.
