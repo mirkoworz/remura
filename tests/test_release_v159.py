@@ -140,6 +140,17 @@ class ReleaseV159Tests(unittest.TestCase):
         # different banner/cache. Build the *old* released fixture explicitly,
         # instead of wrongly requiring today's source to remain v1.59.
         staged={p:(ROOT/p).read_bytes() for p in (*m.FILES,m.BACKUP_MODULE)}
+        # Current v1.61 pages must not weaken the historical v1.59 ZIP test.
+        for p in m.FILES:
+            if p.endswith(".html"):
+                staged[p]=staged[p].replace(b"nav.js?v=161",b"nav.js?v=160")
+        staged["sw.js"]=staged["sw.js"].replace(
+            b"remura-shell-v75-v1.61-batch-timing",
+            b"remura-shell-v74-v1.60-squalincome-freshness")
+        staged["nav.js"]=staged["nav.js"].replace(
+            b"Aggiornamento v1.61",b"Aggiornamento v1.60").replace(
+            b"03/11/2026 13:06 (Italia, preparazione)",
+            b"03/11/2026 11:20 (Italia, preparazione)")
         for p in m.FILES:
             if p.endswith(".html"):
                 staged[p]=staged[p].replace(b"nav.js?v=160",b"nav.js?v=159")
