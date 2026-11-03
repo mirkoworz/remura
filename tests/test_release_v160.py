@@ -137,6 +137,17 @@ class ReleaseV160Tests(unittest.TestCase):
 
     def test_candidate_reads_immutable_zip_and_rejects_old_nav_version(self):
         staged={p:(ROOT/p).read_bytes() for p in (*m.FILES,m.BACKUP_MODULE)}
+        # The v1.60 installer is immutable historical release tooling.
+        # Rebuild its original versioned fixture in-memory when current
+        # source has advanced, retaining the old ZIP, blob and cache guards.
+        for page in (p for p in m.FILES if p.endswith(".html")):
+            staged[page]=staged[page].replace(b"nav.js?v=161",b"nav.js?v=160")
+        staged["nav.js"]=(staged["nav.js"]
+            .replace(b"Aggiornamento v1.61",b"Aggiornamento v1.60")
+            .replace(b"03/11/2026 13:06 (Italia, preparazione)",m.PREPARED_STAMP))
+        staged["sw.js"]=staged["sw.js"].replace(
+            b"remura-shell-v75-v1.61-batch-timing",
+            b"remura-shell-v74-v1.60-squalincome-freshness")
         self.assertTrue(all(b"nav.js?v=160" in staged[p] for p in m.FILES
                             if p.endswith(".html")))
         self.assertIn(b"remura-shell-v74-v1.60",staged["sw.js"])
@@ -259,15 +270,15 @@ class ReleaseV160Tests(unittest.TestCase):
         self.assertEqual(m.NEW_FILE,"squalincome-freshness-core.js")
         for page in pages:
             source=(ROOT/page).read_text("utf-8")
-            self.assertIn("nav.js?v=160",source,page)
+            self.assertIn("nav.js?v=161",source,page)
         nav=(ROOT/"nav.js").read_bytes()
-        self.assertEqual(nav.count(m.PREPARED_STAMP),1)
-        self.assertIn("REMURA · Aggiornamento v1.60".encode("utf-8"),nav)
+        self.assertEqual(nav.count(b"03/11/2026 13:06 (Italia, preparazione)"),1)
+        self.assertIn("REMURA · Aggiornamento v1.61".encode("utf-8"),nav)
         mercati=(ROOT/"mercati.html").read_text("utf-8")
         self.assertIn("squalincome-freshness-core.js?v=160",mercati)
         self.assertIn("squalincome-diagnostics.js?v=160",mercati)
         sw=(ROOT/"sw.js").read_text("utf-8")
-        self.assertIn("remura-shell-v74-v1.60-squalincome-freshness",sw)
+        self.assertIn("remura-shell-v75-v1.61-batch-timing",sw)
         self.assertIn("./squalincome-freshness-core.js",sw)
         self.assertIn('url.pathname.includes("/private-api/")',sw)
         backend=(ROOT/"scripts/private_server.py").read_text("utf-8")
