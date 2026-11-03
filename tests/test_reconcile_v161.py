@@ -146,22 +146,32 @@ class ReconcileTests(unittest.TestCase):
 
     def test_target_allowlist_and_two_ci_gates_are_required(self):
         calls=[]
+        allowed=[
+            "scripts/private_server.py", "scripts/batch_timing.py",
+            "deploy/oracle/reconcile_v161.py", "deploy/oracle/release_v161.py",
+            "nav.js", "sw.js", "index.html", "asset.html", "mercati.html",
+            "forex.html", "catalogo.html", "statistica-squali.html",
+            "stato-prezzi.html", "fonti.html", "impostazioni.html",
+        ]
         def api(endpoint):
             calls.append(endpoint)
-            if endpoint=="/commits/main":return {"sha":TARGET}
+            if endpoint=="/commits/main":
+                return {"sha":TARGET}
+            if endpoint.startswith("/compare/"):
+                return {"status":"ahead","files":[{"filename":p} for p in allowed]}
+            if "/runs?" in endpoint:
+                return {"workflow_runs":[{
+                    "head_sha":TARGET,"head_branch":"main",
+                    "event":"push","status":"completed","conclusion":"success"}]}
+            raise AssertionError(endpoint)
+        with patch.object(m,"json_api",side_effect=api):
+            m.validate_target(TARGET)
+            self.assertEqual(sum("/runs?" in x for x in calls),2)
+        def unsafe(endpoint):
             if endpoint.startswith("/compare/"):
                 return {"status":"ahead","files":[
-                    {"filename":"scripts/private_server.py"},
-                    {"filename":"scripts/batch_timing.py"},
-                    {"filename":"deploy/oracle/reconcile_v161.py"},
-                    {"filename":"deploy/oracle/release_v161.py"},
-                    {"filename":"nav.js"},{"filename":"sw.js"},
-                    {"filename":"index.html"},{"filename":"asset.html"},
-                    {"filename":"mercati.html"},{"filename":"forex.html"},
-                    {"filename":"catalogo.html"},{"filename":"statistica-squali.html"},
-                    {"filename":"stato-prezzi.html"},{"filename":"fonti.html"},
-                    {"filename":"impostazioni.html"},
-                    {"filename":".github/workflows/secret-leaking.yml"}]}
+                    {"filename":p} for p in (
+                    *allowed, ".github/workflows/secret-leaking.yml")]}
             return api(endpoint)
         with patch.object(m,"json_api",side_effect=unsafe):
             with self.assertRaisesRegex(RuntimeError,"UNREVIEWED_FILES"):
