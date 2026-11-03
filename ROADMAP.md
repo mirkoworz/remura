@@ -1,5 +1,19 @@
 # REMURA — Roadmap operativa unica
 
+## 03/11/2026 — v1.59 LIVE verificata; candidato divergenze CVD offline v1.60
+
+- [x] REMURA v1.59 installata sulla VPS (14 file), backup/restore-test/rollback, SHA autoupdater e924f4cf6f1a384fd84a3cef66c89a16e35de3fd riconciliato.
+- [x] Diagnostica privata GitHub #29 (run 41588151515, ore 07:10 Italia): servizio attivo, autoupdater up_to_date, 38/38 prezzi verificati/recenti, TFF 11/11, Disagg 3/3, Myfxbook operativo; EURUSD/XAUUSD tick volume 64/64, RAM 28.1%, disco 8.0%.
+- [x] Timing Squalincome v1.59: post-ingest 1 campione 341 ms, periodic 1 campione 4580 ms, nessun errore/evento, fine batch→fine analisi 341 ms; diverso perimetro, NON prova di anticipo dei segnali.
+- [ ] Accumulare campioni e monitorare H1: 11 stale su 34, età massima 123 minuti vs soglia 120; M15/H4 nessuno stale.
+- [x] remura-collector PR #12 con nuovi contatori tramite gli stessi GET; nessuna chiamata broker aggiuntiva.
+- [ ] Candidato offline v1.60: portare la vecchia PR #71 su base v1.59, senza deploy, poi integrare backend causale e benchmark prezzo-solo.
+- [ ] Validazione prospettica, costi di trading, falsi segnali, ID evento, timestamp di conferma/ricezione/avviso, poi Radar e notifiche opt-in con nuova release protetta.
+- [ ] Billing Oracle, consumi Firestore e limiti API cTrader ancora da certificare; Capital sulla VPS disattivato all'ultimo test.
+
+Le sezioni sottostanti sono storico di progettazione e contengono stati pre-rilascio superati.
+
+
 ## 03/11/2026 — v1.59 preparata per rilascio protetto; VPS ancora v1.58
 
 - [x] **PR #76:** telemetria `post_ingest` e `periodic` distinta, limite 256 misure private, nessun dato di prezzo/segreto o nuova chiamata broker; prototipo + test offline verdi.
