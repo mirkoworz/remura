@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Enable/disable v1.61 batch timing telemetry with private reversible env edit.
 
-This script NEVER changes broker accounts, trading orders, SQLite or Git SHA.
+No direct broker calls or order placement; only private env file is edited.
+A service restart resumes normal collector SQLite writes and may shift one batch.
 --check is read-only. --enable / --disable require an exclusive autoupdate lock.
 The scheduler is inactive until the service is restarted successfully.
 """
@@ -244,7 +245,7 @@ def change(mode):
         print("SERVIZIO=ATTIVO",flush=True)
         print("ENV_PROCESSO=VERIFICATO",flush=True)
         print("BACKUP_PRIVATO=CONSERVATO",flush=True)
-        print("DATABASE_INVARIATO=SI",flush=True)
+        print("DATABASE_NON_RIPRISTINATO=SI",flush=True)
         print("SHA_AUTOUPDATE_INVARIATO=SI",flush=True)
 
 
