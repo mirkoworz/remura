@@ -48,6 +48,7 @@ ALLOWED_CODE={
     "tests/test_h1_batch_comparison.py", "tests/test_h1_paired_store.py",
     "tests/test_release_v162.py", "tests/test_reconcile_v162.py",
     "tests/release-consistency.test.js", "tests/statistica-squali.test.js",
+    "tests/price-status.test.js",
     "tests/test_release_v158.py", "tests/test_release_v159.py",
     "tests/test_release_v160.py", "tests/test_release_v161.py",
 }
