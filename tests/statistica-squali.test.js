@@ -66,7 +66,7 @@ test('native iPhone route, no mock stats, private source and PWA cache wiring',(
  const nav=fs.readFileSync('nav.js','utf8');
  assert.match(html,/statistica-squali-core\.js\?v=152/);
  assert.match(html,/statistica-squali\.js\?v=152/);
- assert.match(html,/nav\.js\?v=160/);
+ assert.match(html,/nav\.js\?v=161/);
  assert.match(js,/private-api\/signals\/validation/);
  assert.match(js,/cache:'no-store'/);
  assert.match(js,/area\.hidden=true/);
