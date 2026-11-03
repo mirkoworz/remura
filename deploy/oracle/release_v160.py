@@ -162,7 +162,7 @@ def candidate(sha):
     require(b"from squalincome_timing import record as record_scan_timing" in
             chosen["scripts/private_server.py"], "MISSING_TELEMETRY_IMPORT")
     require(b"def record(db_path, *, kind, started, completed" in
-            chosen[NEW_FILE], "MISSING_TIMING_MODULE")
+            chosen["scripts/squalincome_timing.py"], "MISSING_TIMING_MODULE")
     require(b"def observe_updated_batch(" in chosen["scripts/private_server.py"],
             "MISSING_POST_INGEST_HOOK")
     require(b"def scan_once(db_path,now=None,*,targets=None)" in chosen["scripts/signals_monitor.py"],
