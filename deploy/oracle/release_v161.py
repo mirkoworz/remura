@@ -74,7 +74,7 @@ ALLOWED = set(FILES) | {
     "tests/test_release_v161.py", "tests/test_reconcile_v161.py",
     "tests/test_release_v158.py", "tests/test_release_v159.py",
     "tests/test_release_v160.py", "tests/release-consistency.test.js",
-    "tests/statistica-squali.test.js",
+    "tests/statistica-squali.test.js", "tests/price-status.test.js",
     "deploy/oracle/release_v161.py", "deploy/oracle/reconcile_v161.py",
     "ROADMAP.md", "V161-BATCH-TELEMETRY-RESEARCH.md",
     "V161-RELEASE-PLAN.md", ".github/workflows/price-checks.yml",
