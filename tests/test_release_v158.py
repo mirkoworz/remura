@@ -156,6 +156,20 @@ class ReleaseV158Test(unittest.TestCase):
         staged = {}
         for name in (*m.FILES, m.BACKUP_MODULE):
             staged[name] = (ROOT/name).read_bytes()
+        # Normalize today's v1.61 assets to the v1.60 source before
+        # reconstructing the historical immutable v1.58 fixture.
+        if b"nav.js?v=161" in staged["index.html"]:
+            for page in m.FILES:
+                if page.endswith(".html"):
+                    staged[page]=staged[page].replace(
+                        b"nav.js?v=161",b"nav.js?v=160")
+            staged["nav.js"]=staged["nav.js"].replace(
+                b"Aggiornamento v1.61",b"Aggiornamento v1.60").replace(
+                b"03/11/2026 13:06 (Italia, preparazione)",
+                b"03/11/2026 11:20 (Italia, preparazione)")
+            staged["sw.js"]=staged["sw.js"].replace(
+                b"remura-shell-v75-v1.61-batch-timing",
+                b"remura-shell-v74-v1.60-squalincome-freshness")
         # Rebuild the historical fixture in two distinct, deterministic steps:
         # current v1.60 source -> previously shipped v1.59 -> target v1.58.
         if b"nav.js?v=160" in staged["index.html"]:
