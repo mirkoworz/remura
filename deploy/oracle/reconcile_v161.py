@@ -32,8 +32,8 @@ BACKUPS=PRIVATE/"predeploy-backups"
 API="https://api.github.com/repos/mirkoworz/remura"
 RAW="https://raw.githubusercontent.com/mirkoworz/remura"
 OLD="47d48e1b742358c45e04e980a7c81935d496644a"
-RELEASE_SHA="9a2a376eefe0f65f79db8a5430aa0ebf195f56a3"
-RELEASE_BLOB="c78091149b0dce6e008d20e2e26f465b1f18af49"
+RELEASE_SHA="851b7bd7eae81dd4bc492e35947893ddfccf1153"
+RELEASE_BLOB="49834cc0f73300b836dbc915cf49fba0d6157298"
 PREPARED_STAMP=b"03/11/2026 13:06 (Italia, preparazione)"
 LIVE_STAMP=re.compile(rb"(?:0[1-9]|[12][0-9]|3[01])/(?:0[1-9]|1[0-2])/20[0-9]{2} (?:[01][0-9]|2[0-3]):[0-5][0-9] \(Italia\)")
 SHA=re.compile(r"^[0-9a-f]{40}$")
@@ -48,6 +48,7 @@ ALLOWED_CODE={
     "tests/test_reconcile_v161.py", "tests/test_release_v158.py",
     "tests/test_release_v159.py", "tests/test_release_v160.py",
     "tests/release-consistency.test.js", "tests/statistica-squali.test.js",
+    "tests/price-status.test.js",
 }
 ALLOWED_DOCS={
     "ROADMAP.md", "V161-BATCH-TELEMETRY-RESEARCH.md",
