@@ -156,6 +156,20 @@ class ReleaseV158Test(unittest.TestCase):
         staged = {}
         for name in (*m.FILES, m.BACKUP_MODULE):
             staged[name] = (ROOT/name).read_bytes()
+        # Rebuild the historical fixture in two distinct, deterministic steps:
+        # current v1.60 source -> previously shipped v1.59 -> target v1.58.
+        if b"nav.js?v=160" in staged["index.html"]:
+            for page in m.FILES:
+                if page.endswith(".html"):
+                    staged[page] = staged[page].replace(
+                        b"nav.js?v=160", b"nav.js?v=159")
+            staged["nav.js"] = staged["nav.js"].replace(
+                b"Aggiornamento v1.60", b"Aggiornamento v1.59").replace(
+                b"03/11/2026 11:20 (Italia, preparazione)",
+                b"03/11/2026 06:40 (Italia, preparazione)")
+            staged["sw.js"] = staged["sw.js"].replace(
+                b"remura-shell-v74-v1.60-squalincome-freshness",
+                b"remura-shell-v73-v1.59-squalincome-timing")
         # Keep the historical v1.58 ZIP safety test meaningful after
         # versioned pages advance to v1.59. Do not reinterpret current
         # v1.59 pages as a v1.58 release candidate.
