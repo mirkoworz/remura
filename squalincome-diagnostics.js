@@ -441,7 +441,7 @@
               [name,{lastClosedAt:frame.lastClosedAt,bars:frame.bars}])),
           });
           if(result && Object.prototype.hasOwnProperty.call(counts,result.state) &&
-             result.livePriceEligible!==(result.state!=="price_live_ready") &&
+             result.livePriceEligible===(result.state==="price_live_ready") &&
              result.signalAuthorized===false){
             stateName=result.state; record=result;
           }
