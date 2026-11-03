@@ -32,6 +32,7 @@ from price_feed import MARKETS, UTC, utcnow
 from price_store import connect, get_status, set_status, latest, ingest, api_document, symbols_available, price_overview
 from cot_monitor import collect_once as collect_official_cot, public_status as official_cot_status
 from signals_monitor import (scan_once as observe_squalincome,
+    scan_once_with_h1_frames as observe_squalincome_with_frames,
     monitored_symbols as squalincome_monitored_symbols,
     status as squalincome_status)
 from statistical_validation import update_validation, validation_status
@@ -45,6 +46,9 @@ from ctrader_tokens import access_token, path_for, read_file
 from resource_monitor import snapshot as resource_snapshot
 from squalincome_timing import record as record_scan_timing, summary as scan_timing_summary
 from batch_timing import record as record_batch_timing, summary as batch_timing_summary, SCHEMA as BATCH_TIMING_SCHEMA
+from h1_batch_comparison import compare_paired_h1
+from h1_paired_store import (load_full_scan as load_h1_full_scan,
+    record as record_h1_pair, summary as h1_pair_summary)
 
 ROOT=Path(__file__).resolve().parents[1]
 STORE=ROOT/"private"/"remura-prices.sqlite3"
@@ -339,6 +343,10 @@ def http_handler(db_path):
                 result["collectorTiming"]=(batch_timing_summary(db_path)
                     if batch_timing_enabled() else
                     {"schema":BATCH_TIMING_SCHEMA,"state":"disabled"})
+                if h1_paired_enabled():
+                    # Same authenticated private status GET: no extra endpoint.
+                    # Only bounded aggregate counts, never symbols or prices.
+                    result["h1Paired"]=h1_pair_summary(db_path)
                 self.response(200,result)
                 return
             if path==VALIDATION_OVERVIEW_PATH:
@@ -837,6 +845,13 @@ def squalincome_post_ingest_enabled(env=None):
         values.get("REMURA_COT_SYNC_ENABLED","1")=="1")
 
 
+def h1_paired_enabled(env=None):
+    """Separate opt-in; requires the existing post-ingest observer to be on."""
+    values=os.environ if env is None else env
+    return (values.get("REMURA_H1_PAIRED_ENABLED","0")=="1" and
+            squalincome_post_ingest_enabled(values))
+
+
 def observe_updated_batch(db_path, saved, env=None, batch_completed=None):
     """Scan ONLY monitored symbols already saved to SQLite.
 
@@ -859,8 +874,33 @@ def observe_updated_batch(db_path, saved, env=None, batch_completed=None):
         started=utcnow()
         t0=time.perf_counter()
         result=None
+        paired=h1_paired_enabled(env)
         try:
-            result=observe_squalincome(db_path,targets=selected)
+            if paired:
+                # Snapshot the LAST complete scan before this targeted scan.
+                # No additional scan, broker request, or new scheduling work.
+                full_scan=load_h1_full_scan(db_path)
+                pair_now=utcnow()
+                result=observe_squalincome_with_frames(
+                    db_path,now=pair_now,targets=selected)
+                try:
+                    comparison=compare_paired_h1(
+                        full_scan,result.get("h1Frames") if isinstance(result,dict) else None,
+                        post_scan_utc=pair_now.isoformat(),
+                        ingest_returned_utc=batch_completed.isoformat())
+                    record_h1_pair(
+                        db_path,comparison,post_scan_utc=pair_now,
+                        ingest_returned_utc=batch_completed)
+                except (ValueError,TypeError,KeyError,OSError,sqlite3.Error,
+                        RuntimeError,OverflowError):
+                    # Pure metrics can NEVER block a successful observation.
+                    # A bad comparison remains unavailable; do not fake zeros.
+                    pass
+                if isinstance(result,dict):
+                    result={k:v for k,v in result.items() if k!="h1Frames"}
+            else:
+                # Preserve v1.61 behavior and mock signature byte-for-byte.
+                result=observe_squalincome(db_path,targets=selected)
             return result
         finally:
             finished=utcnow()
