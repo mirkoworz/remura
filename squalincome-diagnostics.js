@@ -47,6 +47,8 @@
        !Array.isArray(d.exclusions)||d.exclusions.length!==excluded||
        !d.lastScanAt||!OUTCOMES[d.outcome])return {kind:"invalid"};
     const summary={kind:"scanned",analyzed,excluded,tracked,date:itDate(d.lastScanAt),
+      scanAt:typeof d.lastScanAt==="string"?d.lastScanAt:null,
+      observedAt:typeof data.serverTime==="string"?data.serverTime:null,
       outcome:d.outcome,newBaselines:count(d.newBaselines),newEvents:count(d.newEvents),
       baselines:count(data.baselines),events:count(data.eventsTotal),
       updatedObservations:count(d.updatedObservations),
@@ -81,7 +83,15 @@
             row.lastClosedAt:null;
           frames[key]={bars:bars??null,ageMinutes:validAge?age:null,lastClosedAt:date};
         }
-        summary.markets.push({symbol:market.symbol,analyzed:market.analyzed,frames,
+        const q=market.priceQuality;
+        const allowedIntegrity=["verified","partial","invalid","insufficient","missing"];
+        const allowedFreshness=["recent","weekend","stale","missing"];
+        const priceQuality=q && typeof q==="object" &&
+          allowedIntegrity.includes(q.integrity) && allowedFreshness.includes(q.freshness) &&
+          typeof q.ready==="boolean" && typeof q.checkedAt==="string" &&
+          Number.isFinite(Date.parse(q.checkedAt))?
+          {integrity:q.integrity,freshness:q.freshness,ready:q.ready,checkedAt:q.checkedAt}:null;
+        summary.markets.push({symbol:market.symbol,analyzed:market.analyzed,frames,priceQuality,
           reasons:summary.exclusions.find(row=>row.symbol===market.symbol)?.labels||[]});
       }
       summary.markets.sort((a,b)=>a.symbol.localeCompare(b.symbol));
@@ -414,6 +424,46 @@
       section.append(ul,make("p","monitor-caption","Uno stesso mercato può avere più motivi: la somma dei motivi può superare gli esclusi."));
       host.append(section);
     }
+    // Classify price-only readiness using source metadata from ONE full-scan
+    // snapshot. Missing/mismatched timestamps cannot become green or yellow.
+    // This never modifies Squalincome events or the COT qualification.
+    const freshnessCore=root.REMURA_SQUAL_FRESHNESS;
+    const freshnessBySymbol=new Map();
+    if(view.markets.length){
+      const counts={price_live_ready:0,waiting_verified_batch:0,price_stale:0,unverified:0};
+      for(const market of view.markets){
+        let stateName="unverified",record=null;
+        if(freshnessCore && typeof freshnessCore.evaluate==="function"){
+          const result=freshnessCore.evaluate({
+            scanAt:view.scanAt,observedAt:view.observedAt,
+            priceQuality:market.priceQuality,
+            frames:Object.fromEntries(Object.entries(market.frames).map(([name,frame])=>
+              [name,{lastClosedAt:frame.lastClosedAt,bars:frame.bars}])),
+          });
+          if(result && Object.prototype.hasOwnProperty.call(counts,result.state) &&
+             result.livePriceEligible===(result.state==="price_live_ready") &&
+             result.signalAuthorized===false){
+            stateName=result.state; record=result;
+          }
+        }
+        counts[stateName]+=1;
+        freshnessBySymbol.set(market.symbol,record);
+      }
+      const freshness=make("div","monitor-reasons");
+      freshness.append(make("h3",null,"Qualità dei prezzi alla scansione VPS"));
+      const list=make("ul");
+      for(const [stateName,label] of [
+        ["price_live_ready","Prezzo idoneo alla verifica live (non è un segnale)"],
+        ["waiting_verified_batch","Attesa di batch attestato (non live)"],
+        ["price_stale","Prezzo fuori soglia (solo storico)"],
+        ["unverified","Dati non verificabili o snapshot scaduto"]
+      ]) list.append(make("li",null,label+": "+counts[stateName]));
+      freshness.append(list,make("p","monitor-caption",
+        "Valutazione tecnica riferita all'orario di lettura VPS. È distinta dagli "+
+        view.analyzed+" mercati idonei COT/prezzo: non autorizza segnali o ordini. "+
+        "Senza orario del prossimo batch certificato, REMURA non presume che sia in attesa."));
+      host.append(freshness);
+    }
     renderEvolution(view.history,view.historyTotal,host);
     if(view.observations.length){
       const panel=make("details","monitor-exclusions");
@@ -437,7 +487,12 @@
       const list=make("div","monitor-frame-list");
       for(const market of view.markets){
         const row=make("div","monitor-frame-row");
-        row.append(make("strong",null,market.symbol+(market.analyzed?" · idoneo":" · escluso")));
+        row.append(make("strong",null,market.symbol+(market.analyzed?" · idoneo COT/prezzo":" · escluso COT/prezzo")));
+        const freshness=freshnessBySymbol.get(market.symbol);
+        const status=make("span","monitor-frame-state",
+          freshness?.label || "Dati non verificabili (nessuna conferma live)");
+        status.setAttribute("data-freshness",freshness?.state||"unverified");
+        row.append(status);
         const times=make("div","monitor-frame-times");
         for(const name of ["M15","H1","H4"]){
           const frame=market.frames[name];

@@ -199,6 +199,53 @@ class SignalTest(unittest.TestCase):
         self.assertNotIn("new_convergence",str(info))
         self.assertEqual(m.status(self.db_path,True,NOW)["baselines"],0)
 
+    def test_full_scan_records_atomic_whitelisted_price_quality_and_no_new_events(self):
+        import json
+        from unittest.mock import patch
+        # Deliberately injected opaque broker material: NEVER in diagnostics.
+        doc={"provider":"ctrader","providerSymbol":"PRIVATE_BROKER_SECRET",
+             "timeframes":{"M15":[{"t":"2026-10-26T12:00:00Z",
+                 "o":1981.123,"h":1982.123,"l":1980.123,"c":1981.888}],
+                 "H1":[],"H4":[]}}
+        quality={"integrity":"verified","freshness":"recent","ready":True,
+                 "sensitive":"SECRET_OAUTH", "h1":{},"h4":{}}
+        with (patch.object(m,"latest",return_value=doc),
+              patch.object(m,"audit_market",return_value=quality) as audited,
+              patch.object(m,"price_view",return_value=None),
+              patch.object(m,"price_exclusion",return_value="prices_stale"),
+              patch.object(m,"cot_series",return_value=[])):
+            m.scan_once(self.db_path,NOW)
+            diag=m.status(self.db_path,True,NOW)["diagnostics"]
+            self.assertEqual(diag["lastScanAt"],NOW.isoformat())
+            self.assertEqual(diag["analyzed"],0)
+            self.assertEqual(diag["newEvents"],0)
+            self.assertEqual(len(diag["markets"]),len(m.monitored_symbols()))
+            self.assertEqual(audited.call_count,len(m.monitored_symbols()))
+            for item in diag["markets"]:
+                self.assertEqual(item["priceQuality"],{
+                    "integrity":"verified","freshness":"recent","ready":True,
+                    "checkedAt":NOW.isoformat()})
+            self.assertNotIn("PRIVATE_BROKER_SECRET",json.dumps(diag))
+            self.assertNotIn("SECRET_OAUTH",json.dumps(diag))
+            self.assertNotIn("1981.123",json.dumps(diag))
+            # A later targeted post-ingest scan cannot replace this full-scan
+            # snapshot or fabricate a later quality verification timestamp.
+            m.scan_once(self.db_path,NOW+dt.timedelta(minutes=5),targets=("EURUSD",))
+            again=m.status(self.db_path,True,NOW)["diagnostics"]
+            self.assertEqual(again,diag)
+
+    def test_corrupt_quality_audit_never_claims_verified_price_snapshot(self):
+        from unittest.mock import patch
+        doc={"provider":"ctrader","timeframes":{}}
+        with (patch.object(m,"latest",return_value=doc),
+              patch.object(m,"audit_market",side_effect=ValueError("SECRET")),
+              patch.object(m,"cot_series",return_value=[])):
+            m.scan_once(self.db_path,NOW)
+        # An exception is a scan error, not a fabricated quality signal.
+        info=m.status(self.db_path,True,NOW)["diagnostics"]
+        self.assertTrue(all(item.get("priceQuality") is None for item in info["markets"]))
+        self.assertEqual(info["exclusionReasons"].get("scan_error"),len(m.monitored_symbols()))
+
     def test_non_directional_cot_is_not_labeled_missing(self):
         from unittest.mock import patch
         rows=[("2026-10-13",0,0),("2026-10-20",0.01,0.02)]
@@ -402,7 +449,7 @@ class SignalTest(unittest.TestCase):
         with patch.object(m,"monitored_symbols",return_value=symbols), \
              patch.object(m,"cot_series",return_value=rows), \
              patch.object(m,"latest",side_effect=lambda db,symbol: docs[symbol]), \
-             patch.object(m,"price_view",side_effect=lambda doc,now:prices[doc["symbol"]]):
+             patch.object(m,"price_view",side_effect=lambda doc,now,quality=None:prices[doc["symbol"]]):
             first=m.scan_once(self.db_path,NOW)
             full=m.status(self.db_path,True,NOW)["diagnostics"]
             self.assertEqual(full["trackedMarkets"],2)

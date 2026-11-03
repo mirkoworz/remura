@@ -269,6 +269,63 @@ test("v1.38 filter buttons really filter markets, without inventing signals",()=
     globalThis.document=doc;
   }
 });
+test("new atomic scan quality flows into Squalincome mobile states, never COT events",()=>{
+  require("../squalincome-freshness-core.js");
+  const scan=valid();
+  scan.lastScanAt="2026-11-03T09:19:07Z";
+  scan.markets=scan.exclusions.map((row,i)=>({
+    symbol:row.symbol,analyzed:false,
+    priceQuality:{integrity:"verified",freshness:"recent",ready:true,
+      checkedAt:scan.lastScanAt,providerSecret:"PRIVATE_SECRET_"+i},
+    timeframes:{
+      M15:{lastClosedAt:"2026-11-03T07:30:00Z",ageMinutes:109,bars:100},
+      H1:{lastClosedAt:"2026-11-03T07:00:00Z",ageMinutes:139,bars:100},
+      H4:{lastClosedAt:"2026-11-03T04:00:00Z",ageMinutes:319,bars:100}
+    }
+  }));
+  const p=payload(scan,0,0);
+  p.serverTime="2026-11-03T09:19:07Z";
+  const view=diagnostics.read(p);
+  assert.equal(view.markets.length,34);
+  assert.equal(view.markets[0].priceQuality.integrity,"verified");
+  assert.equal(view.markets[0].priceQuality.checkedAt,scan.lastScanAt);
+  assert.ok(!JSON.stringify(view.markets).includes("PRIVATE_SECRET"));
+  const core=globalThis.REMURA_SQUAL_FRESHNESS;
+  const first=view.markets[0];
+  const result=core.evaluate({scanAt:view.scanAt,observedAt:view.observedAt,
+    frames:first.frames,priceQuality:first.priceQuality});
+  assert.equal(result.state,core.STATES.STALE);
+  assert.equal(result.signalAuthorized,false);
+  class Node {
+    constructor(tag){this.tag=tag;this.children=[];this.attributes={};this.handlers={};
+      this.textContent="";this.className="";this.style={};}
+    append(...nodes){this.children.push(...nodes);}
+    replaceChildren(...nodes){this.children=[...nodes];}
+    setAttribute(key,val){this.attributes[key]=val;}
+    addEventListener(key,fn){this.handlers[key]=fn;}
+  }
+  const old=globalThis.document;
+  globalThis.document={createElement:tag=>new Node(tag)};
+  try{
+    const host=new Node("div");
+    assert.equal(diagnostics.render(p,host),true);
+    const all=node=>[node,...node.children.flatMap(all)];
+    const text=all(host).map(node=>node.textContent).join("\\n");
+    const pills=all(host).filter(node=>node.className==="monitor-frame-state");
+    assert.equal(pills.length,34);
+    assert.ok(pills.every(node=>node.attributes["data-freshness"]==="price_stale"));
+    assert.ok(text.includes("Prezzo fuori soglia (solo storico): 34"));
+    assert.ok(text.includes("Prezzo idoneo alla verifica live (non è un segnale): 0"));
+    assert.ok(text.includes("Attesa di batch attestato (non live): 0"));
+    assert.ok(!text.includes("PRIVATE_SECRET"));
+  }finally{globalThis.document=old;}
+  const legacy=payload(scan,0,0);
+  delete legacy.serverTime;
+  const legacyView=diagnostics.read(legacy);
+  assert.equal(core.evaluate({scanAt:legacyView.scanAt,observedAt:legacyView.observedAt,
+    frames:legacyView.markets[0].frames,priceQuality:legacyView.markets[0].priceQuality}).state,
+    core.STATES.UNKNOWN);
+});
 test("v1.39 CSS constrains every ancestor of the scrollable radar and keeps filters readable on iPhone",()=>{
   const html=fs.readFileSync("mercati.html","utf8");
   const css=html.split("<style>")[1].split("</style>")[0];
