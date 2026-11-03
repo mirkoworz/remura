@@ -120,18 +120,26 @@ test("future/unaligned/absent M15 H1 H4 bars fail closed without estimating clos
   const d=data();delete d.frames.H4;
   assert.equal(policy.evaluate(d).state,policy.STATES.UNKNOWN);
 });
-test("exact gate equality passes, but a one-second overrun blocks live",()=>{
-  // At 10:00 UTC, all closes are exactly 180/120/120 minutes old.
+test("exact H1 gate equality passes, but a one-second overrun blocks live",()=>{
+  // At 10:00 UTC, H1 is exactly 120 minutes old, others still valid.
   const d=data();
   d.scanAt="2026-11-03T10:00:00Z";d.observedAt=d.scanAt;
   d.priceQuality.checkedAt=d.scanAt;
-  d.frames={M15:frame("2026-11-03T07:00:00Z"),
+  d.frames={M15:frame("2026-11-03T09:00:00Z"),
             H1:frame("2026-11-03T08:00:00Z"),
             H4:frame("2026-11-03T08:00:00Z")};
   assert.equal(policy.evaluate(d).state,policy.STATES.LIVE);
   d.observedAt="2026-11-03T10:00:01Z";
   assert.equal(policy.evaluate(d).state,policy.STATES.STALE);
-  assert.deepEqual(policy.evaluate(d).overdue,["M15"]);
+  assert.deepEqual(policy.evaluate(d).overdue,["H1"]);
+});
+test("a later H1 or H4 than the available M15 cannot be called live",()=>{
+  const d=data();
+  d.frames.M15.lastClosedAt="2026-11-03T08:15:00Z";
+  assert.equal(policy.evaluate(d).state,policy.STATES.UNKNOWN);
+  const d2=data();
+  d2.frames.H1.lastClosedAt="2026-11-03T07:00:00Z";
+  assert.equal(policy.evaluate(d2).state,policy.STATES.UNKNOWN);
 });
 test("source-backed pure classifier never calls fetch or mutates input",()=>{
   const d=staleData();d.batch=verifiedBatch();
