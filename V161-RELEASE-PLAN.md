@@ -17,7 +17,7 @@ Il codice non aggiunge alcuna API broker, thread, nuovo endpoint o servizio e no
 
 ## Script preparati, non eseguiti
 - `deploy/oracle/release_v161.py`: base v1.60 pinned, 12 blob live prima del rilascio (il banner live originale porta un timestamp diverso da Git), controlli SHA/CI, preflight **`--check`** read-only, verifica SQLite e spazio, backup `backup_v156.py` con restore test isolato, rollback manifest SHA256, installazione dei soli 13 file e health; autoupdater STATE non modificato. Modulo di backup pinnato al Git blob `dc01f2b4767a5427b1d65b96f7a883870b82f608`.
-- `deploy/oracle/reconcile_v161.py`: recupera l'installer verificandolo con **commit immutabile `9a2a376eefe0f65f79db8a5430aa0ebf195f56a3` + Git blob `c78091149b0dce6e008d20e2e26f465b1f18af49`**; controlla i 13 file sul disco, ora italiana realmente timbrata, backup SQLite e rollback, CI `push/main` verdi. `--check` non muta lo stato, `--apply` salva una copia e cambia **solo** `private/autoupdate-state.json` nel lock.
+- `deploy/oracle/reconcile_v161.py`: recupera l'installer verificandolo con **commit immutabile `851b7bd7eae81dd4bc492e35947893ddfccf1153` + Git blob `49834cc0f73300b836dbc915cf49fba0d6157298`**; controlla i 13 file sul disco, ora italiana realmente timbrata, backup SQLite e rollback, CI `push/main` verdi. `--check` non muta lo stato, `--apply` salva una copia e cambia **solo** `private/autoupdate-state.json` nel lock.
 - Versione+data/ora italiana effettiva timbrata nell'installer SOLO al momento dell'installazione, condivisa sulle nove pagine. Le due CI **PR** verdi non sostituiscono le due CI **push/main** da verificare al momento del deploy.
 
 ## Sequenza obbligatoria e condizioni di STOP
