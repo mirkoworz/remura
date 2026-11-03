@@ -136,7 +136,18 @@ class ReleaseV159Tests(unittest.TestCase):
                 m.preflight(TARGET)
 
     def test_candidate_reads_immutable_zip_and_rejects_old_nav_version(self):
+        # Historical v1.59 contract: newer app HEAD intentionally has a
+        # different banner/cache. Build the *old* released fixture explicitly,
+        # instead of wrongly requiring today's source to remain v1.59.
         staged={p:(ROOT/p).read_bytes() for p in (*m.FILES,m.BACKUP_MODULE)}
+        for p in m.FILES:
+            if p.endswith(".html"):
+                staged[p]=staged[p].replace(b"nav.js?v=160",b"nav.js?v=159")
+        staged["sw.js"]=staged["sw.js"].replace(
+            b"remura-shell-v74-v1.60-squalincome-freshness",
+            b"remura-shell-v73-v1.59-squalincome-timing")
+        staged["nav.js"]=staged["nav.js"].replace(b"v1.60",b"v1.59").replace(
+            b"03/11/2026 11:20 (Italia, preparazione)",m.PREPARED_STAMP)
         self.assertTrue(all(b"nav.js?v=159" in staged[p] for p in m.FILES
                             if p.endswith(".html")))
         self.assertIn(b"remura-shell-v73-v1.59",staged["sw.js"])
