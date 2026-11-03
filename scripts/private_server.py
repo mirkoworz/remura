@@ -44,6 +44,7 @@ from session_gaps import session_gap_overview
 from ctrader_tokens import access_token, path_for, read_file
 from resource_monitor import snapshot as resource_snapshot
 from squalincome_timing import record as record_scan_timing, summary as scan_timing_summary
+from batch_timing import record as record_batch_timing, summary as batch_timing_summary, SCHEMA as BATCH_TIMING_SCHEMA
 
 ROOT=Path(__file__).resolve().parents[1]
 STORE=ROOT/"private"/"remura-prices.sqlite3"
@@ -335,6 +336,9 @@ def http_handler(db_path):
             if path==SIGNAL_OVERVIEW_PATH:
                 result=squalincome_status(db_path,squalincome_enabled())
                 result["scanTiming"]=scan_timing_summary(db_path)
+                result["collectorTiming"]=(batch_timing_summary(db_path)
+                    if batch_timing_enabled() else
+                    {"schema":BATCH_TIMING_SCHEMA,"state":"disabled"})
                 self.response(200,result)
                 return
             if path==VALIDATION_OVERVIEW_PATH:
@@ -873,6 +877,12 @@ def observe_updated_batch(db_path, saved, env=None, batch_completed=None):
                 pass
 
 
+def batch_timing_enabled(env=None):
+    """Private opt-in; no broker/API traffic or writes when disabled."""
+    values=os.environ if env is None else env
+    return values.get("REMURA_BATCH_TIMING_ENABLED","0")=="1"
+
+
 def collector_loop(db_path,stop,env=None):
     symbols_text=os.environ.get("REMURA_SYMBOLS","all").strip().upper()
     symbols=sorted(MARKETS) if symbols_text in ("ALL","") else list(dict.fromkeys(
@@ -894,6 +904,7 @@ def collector_loop(db_path,stop,env=None):
         batch_index=cursor % len(batches)
         batch=batches[batch_index]
         cursor+=1
+        batch_started=utcnow()
         db=connect(db_path)
         try:
             stored=set(symbols_available(db))
@@ -925,14 +936,37 @@ def collector_loop(db_path,stop,env=None):
                     if subset and not stop.is_set():
                         fallback=collect_once(db_path,subset,days=horizon,source="backup")
                         saved_this_batch.update(fallback.get("saved",{}))
-        # This offline prototype is disabled by default, including after a
-        # code deploy. Scan only genuinely ingested symbols, no broker calls.
+        # This upper bound is measured AFTER collect_once has returned from
+        # its SQLite ingest, not at the exact per-symbol commit instant.
+        ingest_returned=utcnow()
+        post_scan_state="not_run"
+        post_scan_finished=None
+        # Preserve the existing post-ingest observer and original broker plan.
         if saved_this_batch and not stop.is_set():
             try:
-                observe_updated_batch(db_path,saved_this_batch,batch_completed=utcnow())
+                observed=observe_updated_batch(
+                    db_path,saved_this_batch,batch_completed=ingest_returned)
+                if isinstance(observed,dict):
+                    post_scan_state="ok"
             except Exception as exc:
+                post_scan_state="failed"
                 # Never log provider payload, symbol names or auth values.
                 print("REMURA post-ingest monitor: "+type(exc).__name__,file=sys.stderr)
+            finally:
+                if post_scan_state!="not_run":
+                    post_scan_finished=utcnow()
+        finished=utcnow()
+        if batch_timing_enabled(env):
+            try:
+                record_batch_timing(
+                    db_path,started=batch_started,ingest_returned=ingest_returned,
+                    finished=finished,scheduled_markets=len(batch),
+                    saved_markets=len(saved_this_batch),slot=batch_index+1,
+                    post_scan_state=post_scan_state,
+                    post_scan_finished=post_scan_finished)
+            except (OSError,ValueError,RuntimeError,sqlite3.Error):
+                # A metrics failure must NEVER stop the broker collector.
+                pass
         stop.wait(seconds_to_next_quarter())
 
 
