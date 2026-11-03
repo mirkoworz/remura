@@ -248,4 +248,32 @@ class ReleaseV160Tests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError,"COMMIT_INVALID"):
             m.candidate("main")
 
+
+    def test_pwa_allowlist_and_nine_page_release_guard(self):
+        """Staged iPhone asset must load without exposing API content in SW cache."""
+        pages=(
+            "index.html","asset.html","mercati.html","forex.html","catalogo.html",
+            "statistica-squali.html","stato-prezzi.html","fonti.html","impostazioni.html")
+        self.assertEqual(len(m.FILES),16)
+        self.assertEqual(len(pages),9)
+        self.assertEqual(m.NEW_FILE,"squalincome-freshness-core.js")
+        for page in pages:
+            source=(ROOT/page).read_text("utf-8")
+            self.assertIn("nav.js?v=160",source,page)
+        nav=(ROOT/"nav.js").read_bytes()
+        self.assertEqual(nav.count(m.PREPARED_STAMP),1)
+        self.assertIn(b"REMURA \\xc2\\xb7 Aggiornamento v1.60",nav)
+        mercati=(ROOT/"mercati.html").read_text("utf-8")
+        self.assertIn("squalincome-freshness-core.js?v=160",mercati)
+        self.assertIn("squalincome-diagnostics.js?v=160",mercati)
+        sw=(ROOT/"sw.js").read_text("utf-8")
+        self.assertIn("remura-shell-v74-v1.60-squalincome-freshness",sw)
+        self.assertIn("./squalincome-freshness-core.js",sw)
+        self.assertIn('url.pathname.includes("/private-api/")',sw)
+        backend=(ROOT/"scripts/private_server.py").read_text("utf-8")
+        self.assertIn('"squalincome-freshness-core.js"',backend)
+        core=(ROOT/"squalincome-freshness-core.js").read_text("utf-8")
+        self.assertIn("signalAuthorized:false",core)
+        self.assertFalse(any("cvd" in name.lower() for name in m.FILES))
+
 if __name__=="__main__":unittest.main()
