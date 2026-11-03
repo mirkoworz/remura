@@ -209,11 +209,11 @@ class SignalTest(unittest.TestCase):
                  "H1":[],"H4":[]}}
         quality={"integrity":"verified","freshness":"recent","ready":True,
                  "sensitive":"SECRET_OAUTH", "h1":{},"h4":{}}
-        with patch.object(m,"latest",return_value=doc), \\
-             patch.object(m,"audit_market",return_value=quality) as audited, \\
-             patch.object(m,"price_view",return_value=None), \\
-             patch.object(m,"price_exclusion",return_value="prices_stale"), \\
-             patch.object(m,"cot_series",return_value=[]):
+        with (patch.object(m,"latest",return_value=doc),
+              patch.object(m,"audit_market",return_value=quality) as audited,
+              patch.object(m,"price_view",return_value=None),
+              patch.object(m,"price_exclusion",return_value="prices_stale"),
+              patch.object(m,"cot_series",return_value=[])):
             m.scan_once(self.db_path,NOW)
             diag=m.status(self.db_path,True,NOW)["diagnostics"]
             self.assertEqual(diag["lastScanAt"],NOW.isoformat())
@@ -237,9 +237,9 @@ class SignalTest(unittest.TestCase):
     def test_corrupt_quality_audit_never_claims_verified_price_snapshot(self):
         from unittest.mock import patch
         doc={"provider":"ctrader","timeframes":{}}
-        with patch.object(m,"latest",return_value=doc), \\
-             patch.object(m,"audit_market",side_effect=ValueError("SECRET")),
-             patch.object(m,"cot_series",return_value=[]):
+        with (patch.object(m,"latest",return_value=doc),
+              patch.object(m,"audit_market",side_effect=ValueError("SECRET")),
+              patch.object(m,"cot_series",return_value=[])):
             m.scan_once(self.db_path,NOW)
         # An exception is a scan error, not a fabricated quality signal.
         info=m.status(self.db_path,True,NOW)["diagnostics"]
