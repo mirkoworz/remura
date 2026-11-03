@@ -25,3 +25,9 @@ Costi previsti da questo ramo: zero nuove API cTrader e zero nuovi servizi; quot
 - Aggiunto `scripts/cvd_divergence.py`: stessa logica causale di pivot, CLV × tick volume, ATR e soglie del motore JS, senza dipendenze esterne.
 - Test parità automatici JavaScript ↔ Python su 30 scenari sintetici, con controlli di assenza look-ahead, timestamp di conferma, ID stabili, assenza volume, gap e mercati non supportati. Non sostituiscono la convalida su prezzi reali.
 - Il modulo non è importato nel server live, non ha accesso rete/broker, e la PR resta in bozza.
+
+## Benchmark comparativo causale (solo offline)
+
+È stato aggiunto `scripts/cvd_benchmark.py`: per la stessa sessione UTC confronta **tutti i pivot prezzo+ATR causalmente confermati** con il loro **sottoinsieme filtrato dal CVD proxy**. Etichetta soltanto movimenti direzionali di chiusura dopo un orizzonte futuro prefissato (predefinito 4 M15), in ATR nota alla conferma; le osservazioni ancora immature restano pendenti. Tre rotazioni deterministiche dei tick-volume (offset 3, 7, 13) costituiscono controlli negativi *esplorativi*, non un test di significatività. Non espone segnali individuali né broker-ID.
+
+**Forte limite:** nessun rendimento, PnL, spread, commissione, stop, slippage o valutazione out-of-sample; i candidati si sovrappongono e sono correlati. Non mostra percentuali di successo se ci sono meno di 30 osservazioni mature. I test sono sintetici; prima di procedere a Radar serve replay reale su campioni non selezionati, con calendario e fusi coerenti. Il benchmark non è distribuito alla VPS.

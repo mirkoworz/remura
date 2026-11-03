@@ -12,6 +12,8 @@ on:
       - 'tests/cvd-divergence.test.js'
       - 'scripts/cvd_divergence.py'
       - 'tests/test_cvd_divergence_parity.py'
+      - 'scripts/cvd_benchmark.py'
+      - 'tests/test_cvd_benchmark.py'
       - 'price.js'
       - 'price.css'
       - 'insights.js'
@@ -159,6 +161,8 @@ jobs:
         run: node --test tests/cvd-divergence.test.js
       - name: Test JS/Python causal CVD proxy parity without broker access
         run: python -m unittest discover -s tests -p 'test_cvd_divergence_parity.py' -v
+      - name: Test offline matched price/CVD benchmark, horizon, and volume controls
+        run: python -m unittest discover -s tests -p 'test_cvd_benchmark.py' -v
       - run: node --test tests/price.test.js tests/insights.test.js tests/sentiment.test.js tests/capital-cloud.test.js tests/market-expansion.test.js tests/price-status.test.js tests/squalincome-diagnostics.test.js tests/statistica-squali.test.js tests/dual24-ui.test.js tests/market-audit-ui.test.js tests/case-audit-ui.test.js tests/weekly-quality-ui.test.js tests/cot-week-watch-ui.test.js
       - run: python -m unittest discover -s tests -p 'test_price_feed.py' -v
       - run: python -m unittest discover -s tests -p 'test_ctrader_feed.py' -v
