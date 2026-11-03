@@ -291,7 +291,19 @@ def price_exclusion(doc, now, *, quality=None):
         return "price_error"
 
 
-def scan_once(db_path,now=None,*,targets=None,capture_frames=False):
+def scan_once(db_path,now=None,*,targets=None):
+    """Preserve the exact deployed and pinned legacy entrypoint/signature."""
+    return _scan_once(db_path,now,targets=targets)
+
+
+def scan_once_with_h1_frames(db_path,now=None,*,targets=None):
+    """Opt-in internal targeted scan: one atomic H1 metadata capture."""
+    if targets is None:
+        raise ValueError("H1 paired capture requires targeted scan")
+    return _scan_once(db_path,now,targets=targets,capture_frames=True)
+
+
+def _scan_once(db_path,now=None,*,targets=None,capture_frames=False):
     """Observe all markets on periodic scans, or a small verified fresh batch.
 
     Targeted scans update existing observation/history/event tables, but NEVER
