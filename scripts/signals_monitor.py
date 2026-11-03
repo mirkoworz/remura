@@ -165,9 +165,9 @@ def frame_direction(bars, duration, now):
     return {"side":side,"breakout":breakout,"close_time":(times[-1]+dt.timedelta(seconds=duration)).isoformat()}
 
 
-def price_view(doc, now):
+def price_view(doc, now, *, quality=None):
     if not isinstance(doc,dict):return None
-    quality=audit_market(doc,now)
+    quality=audit_market(doc,now) if quality is None else quality
     if quality["integrity"]!="verified" or quality["freshness"]!="recent" or not quality["ready"]:
         return None
     frames={}
@@ -256,11 +256,11 @@ def safe_frame_diagnostics(doc, now):
     return result
 
 
-def price_exclusion(doc, now):
+def price_exclusion(doc, now, *, quality=None):
     """Report the reason a price was rejected without exporting private bars."""
     if doc is None:
         return "prices_missing"
-    quality=audit_market(doc,now)
+    quality=audit_market(doc,now) if quality is None else quality
     if quality["h1"]["mismatched"] or quality["h4"]["mismatched"]:
         return "ohlc_mismatch"
     if quality["integrity"]=="invalid":
@@ -334,14 +334,14 @@ def scan_once(db_path,now=None,*,targets=None):
                     "ready":quality.get("ready"),
                     "checkedAt":now.isoformat()
                 }
-                price=price_view(document,now) if document else None
+                price=price_view(document,now,quality=quality) if document else None
                 current=classify(cot,price)
                 if current is None:
                     reasons=[]
                     if cot is None:
                         reasons.append(cot_exclusion(series,symbol,now))
                     if price is None:
-                        reasons.append(price_exclusion(document,now))
+                        reasons.append(price_exclusion(document,now,quality=quality))
                     exclusions[symbol]=reasons or ["no_qualifying_setup"]
                     continue
                 examined+=1
