@@ -166,15 +166,14 @@ class H1PairedStoreTest(unittest.TestCase):
         self.assertEqual(store.summary(self.path)["state"], "not_collected")
 
     def test_post_ingest_reuses_one_scan_and_no_broker_calls(self):
-        def captured(db_path, *, now, targets, capture_frames):
+        def captured(db_path, *, now, targets):
             self.assertEqual(now, POST)
             self.assertEqual(targets, ("EURUSD", "XAUUSD"))
-            self.assertTrue(capture_frames)
             self.assertTrue(server._SQUALINCOME_SCAN_LOCK.locked())
             return {"examined": 2, "baselines": 0, "newEvents": 0,
                     "h1Frames": newer()}
         with patch.object(server, "utcnow", return_value=POST), \
-             patch.object(server, "observe_squalincome", side_effect=captured) as scan, \
+             patch.object(server, "observe_squalincome_with_frames", side_effect=captured) as scan, \
              patch.object(server, "collect_once") as broker:
             result = server.observe_updated_batch(
                 self.path, {"XAUUSD", "EURUSD"}, env=enabled(),
@@ -187,7 +186,7 @@ class H1PairedStoreTest(unittest.TestCase):
 
     def test_comparison_error_never_breaks_observer(self):
         with patch.object(server, "utcnow", return_value=POST), \
-             patch.object(server, "observe_squalincome", return_value={
+             patch.object(server, "observe_squalincome_with_frames", return_value={
                  "examined": 1, "baselines": 0, "newEvents": 0,
                  "h1Frames": {"EURUSD": frame("2026-11-03T15:00:00Z")}}), \
              patch.object(server, "record_h1_pair", side_effect=sqlite3.OperationalError):
