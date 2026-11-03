@@ -1,5 +1,25 @@
 # REMURA — Roadmap operativa unica
 
+
+## 03/11/2026 — GATE REPLAY #3 REALE e indagine delle 22 sessioni missing (stato odierno)
+
+**LIVE confermata (ultima diagnostica #29): v1.59 su Oracle Always Free, SHA `e924f4cf6f1a384fd84a3cef66c89a16e35de3fd`.** La PR #77 è ancora solo ricerca offline v1.60. Non fondere su main né avviare autoupdater senza rilascio protetto, backup, restore-test e rollback.
+
+- [x] Replay reale nel repository privato `remura-collector` workflow run #3 `41605130427` completato alle 08:41 UTC del 03/11, **solo due GET VPS già esistenti**, 0 nuove chiamate broker, nessuna scrittura VPS.
+- [x] EURUSD 29 sessioni esaminate, 2 idonee, 22 `missing`, 5 `session_too_short`; 7 candidati prezzo/ATR maturi (5 favorevoli tecnici, 2 sfavorevoli); 0 CVD proxy. XAUUSD 29 sessioni, 1 idonea, 22 `missing`, 5 `session_too_short`, 1 `partial`; 1 candidato prezzo maturo sfavorevole; 0 CVD. **NON calcolare win rate, probabilità di profitto o PnL**. Tre rotazioni-volume non provano predittività; campione insufficiente.
+- [x] Audit del codice: il rilevatore Python emette `missing` anche per tick volume `v` assente (o `null`) in M15 con prezzi presenti, quindi **22 `missing` non significano necessariamente 22 giorni senza prezzi**.
+- [x] PR privata #14 integrata **dopo** il replay #3: introdotti contatori di copertura `SHORT`, `VOLUME_MISSING`, `MIDNIGHT_MISSING`, `M15_GAPS`, `ELIGIBLE`. Il run #3 non li contiene; non attribuire ancora una causa certa ai 22 `missing`.
+- [x] PR privata **#15** in ricerca: separazione barre `v` mancanti/null/zero, sessioni senza volume/parziali/complete, controllo parità indipendente `PARITA_MISSING`, test offline e documentazione senza divulgazione di prezzi o broker IDs.
+- [ ] **PROSSIMO GATE REALE:** verificare CI offline PR #15; integrare **solo in collector privato**; eseguire manualmente workflow CVD su `main` privato e leggere contatori aggregati per EURUSD/XAUUSD. Non aggiungere API broker né interpolare gap o volumi.
+- [ ] Migliorare campione **solo con storico genuino già registrato o con acquisizione futura ai ritmi già esistenti**; nessuna modifica di soglia per produrre segnali; differenziare giorni UTC non negoziati e parziali; riconciliare volume storico con timestamp di origine.
+- [ ] Validare incrementalità con campione adeguato, splitting temporale walk-forward purgato/embargo, controlli negativi, indipendenza eventi, MFE/MAE, spread, slippage, commissioni, equity e drawdown prima di Radar / notifiche iPhone.
+- [ ] Indagare 11 H1 stale in Squalincome (123 vs 120 minuti) comparando timestamp chiusure, aggregazione H1, scheduling e ritardi. Non aumentare quote cTrader né soglie solo per nascondere il problema.
+- [ ] Certificare billing/crediti GitHub Actions, Oracle Always Free, Firestore e quote cTrader: **nessun nuovo costo autorizzato**; Capital VPS resta inattivo nell'ultima diagnostica e Firestore non confermato da quel run.
+- [ ] Per qualsiasi futuro rilascio LIVE (non ora): versione/data/ora italiana sulla parte alta di **tutte le 9 pagine**; check SHA autoupdater, SQLite backup/restore-test e rollback prima di toccare main o VPS.
+
+**Nota:** sezioni che seguono = cronologia dello sviluppo, non sostituiscono lo stato LIVE riportato qui.
+
+
 ## 03/11/2026 — v1.59 LIVE verificata; candidato divergenze CVD offline v1.60
 
 - [x] REMURA v1.59 installata sulla VPS (14 file), backup/restore-test/rollback, SHA autoupdater e924f4cf6f1a384fd84a3cef66c89a16e35de3fd riconciliato.
