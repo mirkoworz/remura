@@ -195,6 +195,11 @@
 .stat-shortcut small{font-size:12px;color:#b0dad0;font-weight:650}
 .stat-shortcut:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
 @media(max-width:700px){.stat-shortcut{padding-left:60px;padding-right:10px}}
+.monitor-frame-state{display:block;margin:6px 0;padding:6px 9px;border:1px solid #476975;border-radius:9px;color:#c2d3db;font-weight:720;font-size:11px;overflow-wrap:anywhere}
+.monitor-frame-state[data-freshness="price_live_ready"]{border-color:#468773;color:#9debd0}
+.monitor-frame-state[data-freshness="waiting_verified_batch"]{border-color:#907646;color:#f2d69c}
+.monitor-frame-state[data-freshness="price_stale"]{border-color:#a87565;color:#ffb8aa}
+.monitor-frame-state[data-freshness="unverified"]{border-color:#476975;color:#c2d3db}
 </style>
 <link rel="stylesheet" href="./nav.css?v=133">
 </head>
