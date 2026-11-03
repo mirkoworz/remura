@@ -146,7 +146,8 @@ def preflight(disabling=False):
             continue
         if field.startswith(b"REMURA_COLLECTOR_ENABLED="):
             collector_values.append(field.split(b"=",1)[1].strip(b"\"' "))
-    guard(collector_values == [b"1"],"COLLECTOR_NOT_OPTED_IN")
+    if not disabling:
+        guard(collector_values == [b"1"],"COLLECTOR_NOT_OPTED_IN")
     guard(not (subprocess.run(["systemctl","is-active","remura-autoupdate.service"],
                               capture_output=True,timeout=16).returncode==0),"AUTOUPDATE_BUSY")
     guard(service_active() and health(),"SERVER_UNHEALTHY")
