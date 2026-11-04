@@ -20,11 +20,20 @@ MAX_DAYS = 45
 MAX_M15 = MAX_DAYS * 96
 
 
-def connect(path: str | Path):
+def connect(path: str | Path, *, timeout: float = 30.0):
+    """SQLite connection with legacy 30s default, bounded opt-in override.
+
+    A research scan may request a lower busy timeout before the WAL and
+    CREATE TABLE setup; otherwise an existing writer can force a 30s wait
+    *before* signals_monitor has a chance to set its PRAGMA.
+    """
+    if (type(timeout) not in (int, float) or not 0 < timeout <= 60
+            or not math.isfinite(timeout)):
+        raise ValueError("sqlite_timeout_invalid")
     location = Path(path).expanduser().resolve()
     location.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-    db = sqlite3.connect(str(location), timeout=30, check_same_thread=False)
-    db.execute("PRAGMA busy_timeout=30000")
+    db = sqlite3.connect(str(location), timeout=timeout, check_same_thread=False)
+    db.execute(f"PRAGMA busy_timeout={int(timeout * 1000)}")
     db.execute("PRAGMA journal_mode=WAL")
     db.execute("CREATE TABLE IF NOT EXISTS prices (symbol TEXT PRIMARY KEY, source TEXT NOT NULL, broker_symbol TEXT NOT NULL, updated_at TEXT NOT NULL, payload TEXT NOT NULL)")
     db.execute("CREATE TABLE IF NOT EXISTS status (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
