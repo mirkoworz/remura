@@ -116,6 +116,7 @@ class LedgerTests(unittest.TestCase):
     def test_capacity_is_bounded_and_rejects_new_identifiers(self):
         with patch.object(ledger, "MAX_EVENTS", 1):
             self.assertEqual(save(self.db)["state"],"RECORDED")
+            self.assertEqual(save(self.db)["state"],"DUPLICATE")
             ev = event()
             ev["providerSymbol"] = "SECOND_PRIVATE_BROKER_CODE"
             ev["id"] = ev["id"].replace(
