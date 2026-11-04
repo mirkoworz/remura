@@ -258,6 +258,72 @@ class CompactScannerTests(unittest.TestCase):
             self.assertEqual(db.execute(
                 "SELECT count(*) FROM research_price_only_batches").fetchone()[0],0)
 
+    def test_optin_sqlite_connect_timeout_also_bounds_schema_setup(self):
+        # WAL/setup happens *inside* price_store.connect(); a PRAGMA set only
+        # after connect() returned could still wait the original 30 seconds.
+        holder=sqlite3.connect(self.new,timeout=1.0)
+        try:
+            holder.execute("BEGIN IMMEDIATE")
+            began=time.perf_counter()
+            with self.assertRaisesRegex(sqlite3.OperationalError,"locked"):
+                self.run_compact(targets=("EURUSD",))
+            waited=time.perf_counter()-began
+            self.assertLess(waited,12.0)  # 5s opt-in + slow CI margin
+            print("REMURA_TRACK_B_BUSY_CONNECT_SECONDS="+str(round(waited,3)))
+        finally:
+            holder.rollback()
+            holder.close()
+        self.assertEqual(standard_state(self.new),standard_state(self.base))
+        with sqlite3.connect(self.new) as db:
+            self.assertEqual(db.execute(
+                "SELECT count(*) FROM squalincome_history").fetchone()[0],0)
+
+    def test_legacy_price_store_connection_default_still_30_seconds(self):
+        # A pure connection contract test, without waiting 30 seconds.
+        import inspect
+        from price_store import connect as original_connect
+        self.assertEqual(inspect.signature(original_connect).parameters[
+            "timeout"].default,30.0)
+        with sqlite3.connect(self.base) as existing:
+            self.assertEqual(existing.execute(
+                "PRAGMA journal_mode").fetchone()[0].lower(),"wal")
+        from price_store import connect
+        normal=connect(self.base)
+        self.assertEqual(normal.execute(
+            "PRAGMA busy_timeout").fetchone()[0],30000)
+        normal.close()
+        research=connect(self.base,timeout=5.0)
+        self.assertEqual(research.execute(
+            "PRAGMA busy_timeout").fetchone()[0],5000)
+        research.close()
+
+    def test_compact_result_reports_actual_sqlite_writer_lock_interval(self):
+        result=self.run_compact()
+        locked=result["priceOnlyResearch"]["sqliteWriterLockMs"]
+        self.assertGreaterEqual(locked,0)
+        self.assertLess(locked,12000)
+        with sqlite3.connect(self.new) as db:
+            self.assertEqual(compact.summary(db)["immutableBatches"],1)
+
+    def test_concurrent_ingest_writer_cannot_partially_modify_scan(self):
+        # Verify the real writer reservation. Use a short second-connection
+        # timeout to avoid slowing the synthetic suite.
+        real_seal=compact.seal
+        def competing_ingest(db,rows,*,full,clock=None):
+            with sqlite3.connect(self.new,timeout=0.2) as other:
+                with self.assertRaisesRegex(sqlite3.OperationalError,"locked"):
+                    other.execute("INSERT OR REPLACE INTO status VALUES (?,?)",
+                                  ("synthetic_ingest","should_rollback"))
+            return real_seal(db,rows,full=full,clock=clock)
+        with patch.object(compact,"seal",side_effect=competing_ingest):
+            result=self.run_compact()
+        self.assertEqual(result["priceOnlyResearch"]["batchStatus"],
+                         "COMPACT_BATCH_SEALED")
+        with sqlite3.connect(self.new) as db:
+            self.assertIsNone(db.execute(
+                "SELECT value FROM status WHERE key='synthetic_ingest'").fetchone())
+            self.assertEqual(compact.summary(db)["fullScanDenominator"],34)
+
     def test_error_on_seal_propagates_not_masked_as_missing_data(self):
         with patch.object(compact,"seal",side_effect=sqlite3.OperationalError("disk_full")):
             with self.assertRaisesRegex(sqlite3.OperationalError,"disk_full"):
