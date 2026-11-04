@@ -184,6 +184,100 @@ class CompactScannerTests(unittest.TestCase):
                 "tradingEdgeEstablished":False,
             },sort_keys=True,separators=(",",":")))
 
+    def test_two_phase_snapshot_detects_competing_ingest_and_never_uses_stale_prices(self):
+        # Another process commits a price revision while the READ snapshot
+        # is held. WAL permits that legitimate writer, but the scanner must
+        # reject its prepared observations before ANY scanner write.
+        original=live.classify
+        updated=[False]
+        with sqlite3.connect(self.new) as source:
+            previous=source.execute(
+                "SELECT payload FROM prices WHERE symbol='EURUSD'").fetchone()[0]
+        def revised_during_read(cot,price):
+            if not updated[0]:
+                with sqlite3.connect(self.new,timeout=1.0) as updater:
+                    updater.execute(
+                        "UPDATE prices SET payload=? WHERE symbol='EURUSD'",
+                        (previous+" ",))
+                updated[0]=True
+            return original(cot,price)
+        with patch.object(live,"classify",side_effect=revised_during_read):
+            with self.assertRaisesRegex(
+                    sqlite3.OperationalError,
+                    "research_source_changed_before_atomic_commit"):
+                self.run_compact()
+        self.assertTrue(updated[0])
+        self.assertEqual(standard_state(self.new),standard_state(self.base))
+        with sqlite3.connect(self.new) as db:
+            self.assertEqual(db.execute(
+                "SELECT count(*) FROM research_price_only_batches").fetchone()[0],0)
+            self.assertEqual(db.execute(
+                "SELECT count(*) FROM squalincome_history").fetchone()[0],0)
+            self.assertEqual(db.execute(
+                "SELECT payload FROM prices WHERE symbol='EURUSD'").fetchone()[0],
+                previous+" ")
+
+    def test_snapshot_allows_concurrent_other_writer_without_partial_scanner_writes(self):
+        # Verify the source read phase DOES NOT hold SQLite's writer
+        # reservation. A disjoint status update must be permitted, but
+        # because it invalidates the read snapshot, the scan fails safely.
+        original=live.price_view
+        injected=[False]
+        def with_external_writer(doc,when,quality=None):
+            if not injected[0]:
+                with sqlite3.connect(self.new,timeout=1.0) as other:
+                    other.execute(
+                        "INSERT OR REPLACE INTO status(key,value) VALUES(?,?)",
+                        ("test_external_writer","observed"))
+                injected[0]=True
+            return original(doc,when,quality=quality)
+        with patch.object(live,"price_view",side_effect=with_external_writer):
+            with self.assertRaisesRegex(
+                    sqlite3.OperationalError,
+                    "research_source_changed_before_atomic_commit"):
+                self.run_compact()
+        self.assertTrue(injected[0])
+        with sqlite3.connect(self.new) as db:
+            self.assertEqual(db.execute(
+                "SELECT value FROM status WHERE key='test_external_writer'"
+            ).fetchone()[0],"observed")
+            self.assertEqual(db.execute(
+                "SELECT count(*) FROM research_price_only_batches").fetchone()[0],0)
+            self.assertEqual(db.execute(
+                "SELECT count(*) FROM squalincome_history").fetchone()[0],0)
+
+    def test_compact_two_phase_uses_one_original_price_and_cot_read_each(self):
+        real_latest=live.latest
+        real_audit=live.audit_market
+        real_view=live.price_view
+        real_cot=live.cot_series
+        counts={"latest":0,"audit":0,"price":0,"cot":0}
+        def latest(*args,**kwargs):
+            counts["latest"]+=1
+            return real_latest(*args,**kwargs)
+        def audit(*args,**kwargs):
+            counts["audit"]+=1
+            return real_audit(*args,**kwargs)
+        def view(*args,**kwargs):
+            counts["price"]+=1
+            return real_view(*args,**kwargs)
+        def cot(*args,**kwargs):
+            counts["cot"]+=1
+            return real_cot(*args,**kwargs)
+        with patch.object(live,"latest",side_effect=latest):
+            with patch.object(live,"audit_market",side_effect=audit):
+                with patch.object(live,"price_view",side_effect=view):
+                    with patch.object(live,"cot_series",side_effect=cot):
+                        result=self.run_compact()
+        # Only EURUSD has prices; the other 33 are absent, not re-fetched.
+        self.assertEqual(counts,{"latest":34,"audit":34,"price":1,"cot":34})
+        metadata=result["priceOnlyResearch"]
+        self.assertTrue(metadata["snapshotVersionValidated"])
+        self.assertGreaterEqual(metadata["readOnlySnapshotMs"],0)
+        self.assertGreaterEqual(metadata["sqliteWriterLockMs"],0)
+        self.assertFalse(metadata["alertsEnabled"])
+        self.assertEqual(metadata["extraBrokerRequests"],0)
+
     def test_late_seal_error_rolls_back_original_squalincome_and_batch(self):
         # The original v1.62 EURUSD baseline would have committed
         # BEFORE the old end-of-scan compact seal. This regression proves
