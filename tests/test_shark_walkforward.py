@@ -34,11 +34,14 @@ def event(i=40, *, cvd=True):
     observed = START+timedelta(minutes=15*i+5)
     out = {"symbol": "EURUSD", "provider": "ctrader",
            "brokerSymbol": "BROKER_PRIVATE_TEST", "qualityVerified": True,
+           "observationVerified": True,
            "side": 1, "confirmedAt": iso(observed-timedelta(minutes=35)),
            "availableAt": iso(observed)}
     if cvd:
         out.update({"cvdQualityVerified": True,
                     "cvdAlgorithm": "cvd-divergence-proxy-m15-v1",
+                    "cvdState": "confirmed_technical_not_trade_signal",
+                    "cvdSide": "bullish",
                     "cvdConfirmedAt": iso(observed-timedelta(minutes=35)),
                     "cvdAvailableAt": iso(observed-timedelta(minutes=2))})
     return out
@@ -80,6 +83,16 @@ class WalkforwardTests(unittest.TestCase):
         report = run([e])
         self.assertEqual(report["folds"]["train"]["priceOnly"]["samples"], 1)
         self.assertEqual(report["folds"]["train"]["cvdFiltered"]["samples"], 0)
+
+    def test_opposite_direction_cvd_or_unverified_observation_never_qualifies(self):
+        e = event(40)
+        e["cvdSide"] = "bearish"
+        report = run([e])
+        self.assertEqual(report["folds"]["train"]["cvdFiltered"]["samples"], 0)
+        e = event(40)
+        e["observationVerified"] = False
+        report = run([e])
+        self.assertEqual(report["excluded"]["invalid_signal_lineage"], 1)
 
     def test_cvd_pivot_time_without_observation_is_not_a_fill(self):
         e = event(40)
