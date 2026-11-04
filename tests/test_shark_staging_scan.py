@@ -170,7 +170,16 @@ class StagingScanTests(unittest.TestCase):
                 self.assertNotIn("099741",serialized)
                 pages=db.execute("PRAGMA page_count").fetchone()[0]
                 page_size=db.execute("PRAGMA page_size").fetchone()[0]
-                self.assertLess(pages*page_size,8*1024*1024)
+                stage_allocated=pages*page_size
+                self.assertLess(stage_allocated,8*1024*1024)
+            with sqlite3.connect(original) as baseline_db:
+                baseline_allocated=(
+                    baseline_db.execute("PRAGMA page_count").fetchone()[0]
+                    *baseline_db.execute("PRAGMA page_size").fetchone()[0]
+                )
+            # 34 synthetic scan records, no price duplications or SQLite
+            # service additions: the delta is a CI-only page-allocation bound.
+            self.assertLess(stage_allocated-baseline_allocated,512*1024)
             # Synthetic GitHub-runner guards only, not Oracle capacity claims.
             self.assertLess(peak,96*1024*1024)
             self.assertLess(elapsed,8.0)
