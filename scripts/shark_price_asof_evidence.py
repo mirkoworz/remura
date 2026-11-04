@@ -95,7 +95,7 @@ def _rollups_valid(m15, rows, n):
             raise ValueError("tick_volume_rollup_mismatch")
 
 
-def _source(db,symbol,at,expected_close):
+def _source(db,symbol,at,expected_close,observed_document):
     row=db.execute(
         "SELECT source,broker_symbol,updated_at,payload FROM prices WHERE symbol=?",
         (symbol,)).fetchone()
@@ -117,6 +117,17 @@ def _source(db,symbol,at,expected_close):
             or doc.get("sourceTimeframe")!="M15"
             or not isinstance(doc.get("timeframes"),dict)):
         raise ValueError("source_mapping_mismatch")
+    if not isinstance(observed_document,dict):
+        raise ValueError("original_scan_document_required")
+    # The caller must pass the SAME in-memory document used by
+    # signals_monitor.price_view() BEFORE its accepted history INSERT.
+    # A later cTrader ingest/revision cannot silently replace that evidence.
+    current_canonical=json.dumps(
+        doc,sort_keys=True,separators=(",",":"),ensure_ascii=True)
+    observed_canonical=json.dumps(
+        observed_document,sort_keys=True,separators=(",",":"),ensure_ascii=True)
+    if current_canonical!=observed_canonical:
+        raise ValueError("price_document_changed_since_scan")
     frames={}
     for frame,seconds in FRAMES.items():
         frames[frame]=_bars(
@@ -143,12 +154,12 @@ def _source(db,symbol,at,expected_close):
         (recent[i][0]-recent[i-1][0]).total_seconds()==900
         for i in range(1,len(recent)))
     return {
-        "sha":hashlib.sha256(raw.encode()).hexdigest(),
+        "sha":hashlib.sha256(current_canonical.encode()).hexdigest(),
         "close":latest_close,"volume16":last16,
     }
 
 
-def capture(db,*,history_id,clock=None):
+def capture(db,*,history_id,observed_document,clock=None):
     """Record ONLY a fresh live observation's price-source and quality context.
 
     No open/close price values or broker symbol are saved. Call inside same
@@ -180,7 +191,7 @@ def capture(db,*,history_id,clock=None):
             or (pstate!="watch" and m15!=side)
             or report is None):
         raise ValueError("invalid_original_signal_or_time")
-    doc=_source(db,sym,observed,closed)
+    doc=_source(db,sym,observed,closed,observed_document)
     if db.execute(
         f"SELECT 1 FROM {TABLE} WHERE symbol=? AND report_date=? "
         "AND price_time=?", (sym,report,price)).fetchone():
@@ -197,6 +208,7 @@ def capture(db,*,history_id,clock=None):
         "m15H1H4FreshAtOriginalObservation":True,
         "h1H4RollupsValidatedAgainstM15":True,
         "sourceMappingObservedLocally":True,
+        "documentMatchedOriginalInMemoryScan":True,
         "candleCollectionTimeIndependentlyKnown":False,
         "sourceBrokerMappingHistoricallyVersioned":False,
         "originalPriceDirectionIndependentlyReproduced":False,
@@ -207,7 +219,7 @@ def capture(db,*,history_id,clock=None):
     }
 
 
-def capture_optional(db,*,history_id,clock=None):
+def capture_optional(db,*,history_id,observed_document,clock=None):
     """On missing/stale proof retain the actual observation but mark N/D.
 
     Only known source/clock/quality ValueError are translated to N/D;
@@ -216,7 +228,8 @@ def capture_optional(db,*,history_id,clock=None):
     if not isinstance(db,sqlite3.Connection) or not db.in_transaction:
         raise ValueError("history_insert_transaction_required")
     try:
-        return capture(db,history_id=history_id,clock=clock)
+        return capture(db,history_id=history_id,
+                       observed_document=observed_document,clock=clock)
     except ValueError:
         return {
             "schema":SCHEMA,"status":"PRICE_PROVENANCE_NOT_VERIFIABLE",
