@@ -114,7 +114,7 @@ class ObservationBundleTests(unittest.TestCase):
                           observed_document=self.original_doc,clock=NOW)
         with self.assertRaisesRegex(ValueError,"history_must_be_last_insert_before_recording"):
             with self.db:
-                self.db.execute("CREATE TABLE IF NOT EXISTS extraneous (id INTEGER)")
+                self.db.execute("CREATE TABLE IF NOT EXISTS extraneous (id INTEGER PRIMARY KEY)")
                 self.db.execute("INSERT INTO extraneous VALUES(421)")
                 bundle.record(self.db,history_id=hid,
                               observed_document=self.original_doc,clock=NOW)
