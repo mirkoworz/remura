@@ -96,6 +96,9 @@ def worker(mode,path):
         "sqliteJournalMode":mode_actual,
         "walFileBytesAfter":_file_bytes(str(database)+"-wal"),
         "shmFileBytesAfter":_file_bytes(str(database)+"-shm"),
+        # Files can checkpoint and shrink at COMMIT/connection cleanup.
+        # These post-scan counters NEVER establish maximum WAL size.
+        "walPeakMeasured":False,
         "sqliteWriterLockMs":(result.get("priceOnlyResearch",{})
                               .get("sqliteWriterLockMs")),
         "readOnlySnapshotMs":(result.get("priceOnlyResearch",{})
@@ -130,6 +133,7 @@ def parent():
         root=Path(folder)
         seed=root/"seed.sqlite"
         fixture(seed,with_cot=False,all_priced=True,m15_count=4000)
+        reports={}
         for mode in ("standard","compact"):
             filename=root/("legacy.sqlite" if mode=="standard" else "compact.sqlite")
             clone(seed,filename)
@@ -148,7 +152,43 @@ def parent():
             parsed=json.loads(matching[0][len(PREFIX):])
             if parsed.get("mode")!=mode or parsed.get("markets")!=34:
                 raise ValueError("synthetic_probe_identity_mismatch")
+            if parsed.get("newBrokerCalls")!=0 or parsed.get("walPeakMeasured") is not False:
+                raise ValueError("resource_probe_claims_are_incorrect")
+            reports[mode]=parsed
             print(matching[0])
+        original,research=reports["standard"],reports["compact"]
+        delta_rss=round(
+            research["processPeakRssMiB"]-original["processPeakRssMiB"],2)
+        cpu_ratio=round(
+            research["cpuSeconds"]/max(original["cpuSeconds"],0.001),2)
+        # Synthetic runner regression budgets, NOT Oracle quota
+        # certification. The < 128 MiB total / < 64 MiB overhead thresholds
+        # provide headroom for measurement jitter but catch large regressions.
+        if (research["processPeakRssMiB"]>=128 or delta_rss>=64
+                or research["sqliteWriterLockMs"]>2000
+                or cpu_ratio>6):
+            raise ValueError("research_scan_exceeds_synthetic_budget")
+        comparison={
+            "schema":"remura-track-b-process-budget-v1",
+            "markets":34,"m15BarsPerMarket":4000,
+            "originalPeakRssMiB":original["processPeakRssMiB"],
+            "compactPeakRssMiB":research["processPeakRssMiB"],
+            "additionalPeakRssMiB":delta_rss,
+            "cpuSecondsRatio":cpu_ratio,
+            "sqliteWriterLockMs":research["sqliteWriterLockMs"],
+            "readOnlySnapshotMs":research["readOnlySnapshotMs"],
+            "maxSyntheticPeakRssMiB":128,
+            "maxSyntheticAdditionalRssMiB":64,
+            "maxSyntheticWriterLockMs":2000,
+            "maxSyntheticCpuSecondsRatio":6,
+            "peakWalBytesNotMeasured":True,
+            "rssMeasuredOnOracle":False,
+            "priceEngineUnmodifiedInProduction":True,
+            "brokerCallsAdded":0,
+            "tradingEdgeVerified":False,
+        }
+        print("REMURA_TRACK_B_PROCESS_BUDGET="+json.dumps(
+            comparison,sort_keys=True,separators=(",",":")))
     print("REMURA_TRACK_B_RSS_WAL_PROBE_COMPLETED=TRUE")
 
 
