@@ -35,6 +35,7 @@ on:
       - 'tests/test_shark_price_asof_evidence.py'
       - 'tests/test_shark_observation_bundle.py'
       - 'tests/test_shark_price_only_universe.py'
+      - 'tests/test_shark_staging_scan.py'
       - 'tests/test_shark_cvd_ledger.py'
       - 'ROADMAP-B-SHARK-SCIENCE.md'
       - '.github/workflows/shark-science-offline.yml'
@@ -91,5 +92,7 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_shark_observation_bundle.py' -v
       - name: Test prospective COT-independent price-only scan universe using live price_view
         run: python -m unittest discover -s tests -p 'test_shark_price_only_universe.py' -v
+      - name: Stage full original 34-market Squalincome against independent price-only record in disposable SQLite
+        run: python -m unittest discover -s tests -p 'test_shark_staging_scan.py' -v
       - name: Test append-only future CVD evidence ledger and privacy
         run: python -m unittest discover -s tests -p 'test_shark_cvd_ledger.py' -v
