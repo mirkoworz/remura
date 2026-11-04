@@ -35,15 +35,16 @@ DATASET_CODES = {
                       "209742", "124603", "098662")),
     "disagg": frozenset(("088691", "084691", "067651")),
 }
-CATALOG = tuple(sorted({
-    *universe.DIRECT.keys(),
-    *(left + right
-      for left in (*universe.FX_CODES, "USD")
-      for right in (*universe.FX_CODES, "USD")
-      if left != right
-      and (left == "USD" or right == "USD"
-           or left in universe.FX_CODES and right in universe.FX_CODES))
-}))
+# Mirror the 28 Forex markets and 6 direct futures in price_feed.py
+# and signals_monitor.py at REMURA v1.62. Verify mapping at coordinated merge.
+MARKETS_FX = (
+    "EURUSD", "GBPUSD", "AUDUSD", "NZDUSD", "USDJPY", "USDCAD", "USDCHF",
+    "EURGBP", "EURJPY", "EURCHF", "EURCAD", "EURAUD", "EURNZD",
+    "GBPJPY", "GBPCHF", "GBPCAD", "GBPAUD", "GBPNZD",
+    "AUDJPY", "AUDCAD", "AUDCHF", "AUDNZD",
+    "NZDJPY", "NZDCAD", "NZDCHF", "CADJPY", "CADCHF", "CHFJPY",
+)
+CATALOG = tuple(sorted((*MARKETS_FX, *universe.DIRECT.keys())))
 
 
 def _clock(clock=None):
