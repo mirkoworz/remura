@@ -18,6 +18,23 @@
 
 **Prossima verifica A1 obbligatoria:** leggere tramite la diagnostica privata schedulata (quando realmente eseguita) o una singola GET locale read-only `/private-api/signals/status` gli aggregati `h1Paired` (totali, validi, N/D, last UTC, readyBefore/After, staleToReady, h1Advanced, h1Unchanged); leggere la full-scan dei 34 al suo timestamp e l'ultimo stato batch. Confrontare età di ogni H1 con M15/H4, fasi UTC e mercati precedentemente problematici. Se >=8 record totali ma validi insufficienti, **proseguire l'osservazione**. Non modificare codice operativo, quote, soglie, cron o produzione sulla base del replay.
 
+## 04/11/2026 — A4 confronto offline a budget invariato: nessun fix operativo giustificato
+
+**Benchmark già disponibile, non ripetere codice:** [PR privata collector #19](https://github.com/mirkoworz/remura-collector/pull/19), simulazione al secondo del collector **8×5=40 acquisizioni nominali ogni 120 min** contro le stesse 40 nella disposizione alternativa; **34 mercati monitorati**. Le 40 acquisizioni nominali sono del modello prioritario/rotazione esistente, NON una misura delle richieste API reali (bootstrap, paginazione e backup possono richiederne di più).
+
+| Scenario sintetico PR #19 | Acquisizioni pianificate / 2h | H1 escluse medie teoriche su 34 in una scansione |
+| --- | ---: | ---: |
+| Lettura appena prima dell'ingest (+104 sec dal quarto, durata fittizia 18s) | 40 | 10,5 |
+| Lettura dopo l'ingest (+150 sec dal quarto, durata fittizia 18s) | 40 | 6,5 |
+| Lettura dopo l'ingest, durata fittizia 29s | 40 | 6,5 |
+| Dopo ingest, ordine gruppi alternativo | 40 | 6,0 |
+
+**Limiti decisivi:** tutti gli esiti della tabella sono sintetici, assumono M15 ideali contigue e durate ipotetiche; `10,5→6,5` riflette soprattutto **il momento della fotografia**, non maggiori informazioni fornite dal broker o minor latenza effettiva del primo segnale. `6,5→6,0` trasferisce il rischio fra mercati; non rappresenta vantaggio dimostrato. **Mai usare questi numeri come impatto LIVE o P&L.** La raccolta di riferimento senza doppie priorità sarebbe 38 strumenti/2h; cambiare da 40 a 38 non è un test a budget pari e potrebbe penalizzare EURUSD/XAUUSD.
+
+**Confronto con prova LIVE attuale:** `50/50` paired comparabili, `185/226` transizioni stale→ready fra foto precedente e post-ingest (sulla stessa UTC); 8/8 strumenti stale alle 09:23 con nuove H1 fresche dopo la successiva raccolta alle 09:48, 0 anomalie del controllo H1. Dunque il monitor post-ingest già implementato agisce sulla disponibilità reale delle candele salvate; non è provato che cambiare ordine o fase migliori la **prima disponibilità** dei dati. Non mettere in produzione alcuna modifica alla schedulazione.
+
+**Decisione A4:** valutazione offline completata per questo scenario; conservare ritmo e soglie, **nessun fix backend H1 identificato**. Un futuro miglioramento può essere solo sulla **chiarezza degli stati visualizzati** (freschezza live vs vecchio snapshot full-scan vs possibile attesa proprio batch), inizialmente come progetto offline, senza trasformare `stale` in `ready` e senza cambiare strategie. A5 allo stato = `NON NECESSARIO`; v1.62 LIVE invariata, nessun costo aggiuntivo o nuova chiamata autorizzati. A6 rimane aperto per risorse, API e M15/H1/H4 nella stessa nuova fotografia e valutazione delle esclusioni.
+
 ## 04/11/2026 ore 09:48 Italia — A3: recupero degli 8 mercati verificato nel ciclo successivo
 
 **Evidenza di follow-up LIVE (screenshot Termius utente, lettura SQLite `mode=ro`):** controllo alle `2026-11-04T08:48:16.619986+00:00`, 09:48:16 Italia, sugli **stessi 8 mercati** che alle 09:23 italiane risultavano H1 stale. Il controllo interroga soltanto la SQLite locale, senza nuove richieste cTrader né modifiche:
@@ -106,7 +123,7 @@ Assicurare che REMURA ragioni su prezzi **realmente verificati** e non su H1 vec
 - [x] **A1 — audit aggiornato (04/11 08:32):** leggere lo stato LIVE **prima** di qualsiasi modifica (health, SHA installato, auto-update, flag nel processo, snapshot e campioni). Non confondere raccolte pre-attivazione con record `remura_h1_paired`; confrontare timestamp/slot. Preferire diagnostica privata read-only già presente, altrimenti un solo comando Termius quando davvero necessario. Verificare se il workflow schedulato è stato eseguito, non assumerlo.
 - [x] **A2 — campione sufficiente (48/48 validi, 216 confronti):** raccogliere **almeno 8 record paired nuovi, reali**, successivi all'attivazione; distinguere `samples`, `comparableSamples`, `unverifiableSamples`, `lastState`, `readyBefore`, `readyAfter`, `staleToReady`, `h1Advanced`, `h1Unchanged`. Se 8 totali ma troppi N/D, prolungare la misura anziché inventare conclusioni.
 - [ ] **A3 — indagine per causa:** correlare gli 8 mercati stale con sessioni/chiusure H1 UTC, momento del full-scan, slot effettivi, finestra M15→H1 (4 barre), sorgente primaria/backup, età all'istante della decisione e weekend. Testare localmente le ipotesi UTC/DST prima di intervenire. Non confondere 26/34 osservati a 20:39 con stato attuale.
-- [ ] **A4 — proposte senza costi:** simulare offline alternative sulla **stessa quantità di chiamate**: prioritaria 8×5=40 acquisizioni programmate/2h (EURUSD e XAUUSD ripetuti) contro 38 standard. Confrontare disponibilità realmente valida e N/D, non soltanto conteggi cosmetici. Rivedere [PR collector #19](https://github.com/mirkoworz/remura-collector/pull/19) (replay sintetico, non effetto LIVE certificato).
+- [x] **A4 — proposte senza costi (solo valutazione offline, nessuna modifica LIVE):** simulare offline alternative sulla **stessa quantità di chiamate**: prioritaria 8×5=40 acquisizioni programmate/2h (EURUSD e XAUUSD ripetuti) contro 38 standard. Confrontare disponibilità realmente valida e N/D, non soltanto conteggi cosmetici. Rivedere [PR collector #19](https://github.com/mirkoworz/remura-collector/pull/19) (replay sintetico, non effetto LIVE certificato).
 - [ ] **A5 — eventuale fix:** solo se supportato da campioni e test, preparare PR focalizzata su raccolta/telemetria; CI verdi e review diff. Un solo track per volta può effettuare merge, version bump e deploy VPS. Ogni rilascio applicativo richiede **v nuova + data/ora italiana effettiva in alto sulle nove pagine**, backup SQLite, restore-test, rollback e riconciliazione autoupdater.
 - [ ] **A6 — conclusione:** report con prima/dopo su campioni reali, impatto M15/H1/H4, differenza sulle esclusioni Squalincome, latenza e uso API/disco. Se non c'è miglioramento dimostrabile, dichiararlo.
 
