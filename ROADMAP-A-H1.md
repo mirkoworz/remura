@@ -1,6 +1,6 @@
 # REMURA — TRACK A: Qualità H1 e raccolta prezzi
 
-**Ultimo stato attestato:** 04/11/2026 ore 09:48 Italia (50/50 paired validi; le 8 H1 stale alle 09:23 recuperate 8/8 alle 09:48, 0 anomalie del rollup verificato). **Roadmap coordinatrice:** [ROADMAP.md](ROADMAP.md). **Track parallelo:** [B — Shark Science](ROADMAP-B-SHARK-SCIENCE.md).
+**Ultimo stato attestato:** 04/11/2026 ore 10:43 Italia (full-scan 10:38:17: M15 34/34, H1 e H4 31/34; collector 395/395, post-scan 79/79, risorse misurate). **Roadmap coordinatrice:** [ROADMAP.md](ROADMAP.md). **Track parallelo:** [B — Shark Science](ROADMAP-B-SHARK-SCIENCE.md).
 
 ## 04/11/2026 ore 07:15 Italia — verifica A1 GitHub e replay offline (NON misura LIVE nuova)
 
@@ -17,6 +17,33 @@
 - Permutando soltanto i 36 strumenti non prioritari fra i medesimi slot, mantenendo esattamente 40 acquisizioni programmate/2h, i **totali sintetici restano invariati** nelle fasi 0, 4 e 14 minuti: cambiano i nomi dei mercati penalizzati, non il numero complessivo. Spostare la scansione per far risultare "verde" un contatore **non è una correzione della freschezza**; serve prova LIVE prima di cambiare pianificazione.
 
 **Prossima verifica A1 obbligatoria:** leggere tramite la diagnostica privata schedulata (quando realmente eseguita) o una singola GET locale read-only `/private-api/signals/status` gli aggregati `h1Paired` (totali, validi, N/D, last UTC, readyBefore/After, staleToReady, h1Advanced, h1Unchanged); leggere la full-scan dei 34 al suo timestamp e l'ultimo stato batch. Confrontare età di ogni H1 con M15/H4, fasi UTC e mercati precedentemente problematici. Se >=8 record totali ma validi insufficienti, **proseguire l'osservazione**. Non modificare codice operativo, quote, soglie, cron o produzione sulla base del replay.
+
+## 04/11/2026 ore 10:43 Italia — A6: audit multisistema LIVE M15/H1/H4 + risorse
+
+**Fonte reale:** screenshot Termius utente, 4 novembre 2026 ore 10:43 italiane, 2 GET *locali* in sola lettura `/private-api/signals/status` e `/private-api/resources`. Data **dello snapshot full-scan**: `2026-11-04T09:38:17.703163+00:00` (**10:38:17 Italia**); non confondere con l'ora della successiva lettura o con altri snapshot del mattino.
+
+| Metrica reale dello snapshot | Dato attestato |
+| --- | ---: |
+| Strumenti Squalincome | 34 |
+| M15 pronte / stale / N/D (soglia 180m) | **34 / 0 / 0** |
+| H1 pronte / stale / N/D (soglia 120m) | **31 / 3 / 0** |
+| H4 pronte / stale / N/D (soglia 300m) | **31 / 3 / 0** |
+| `prices_stale` (dalle `exclusionReasons`) | **3** |
+| `cot_group_conflict` / `cot_no_direction` / `price_no_direction` | **14 / 9 / 16** |
+| Batch registrati in finestra telemetrica | **79** |
+| Acquisizioni nominali pianificate / salvate | **395 / 395** |
+| Post-ingest successi / errori | **79 / 0** |
+| RAM usata / totale | **0,28 / 0,93 GiB** |
+| Disco usato / totale | **3,54 / 44,07 GiB** |
+| Nuove chiamate cTrader dovute a questo audit | **0** |
+
+**Interpretazione:** 395/395 sono **salvataggi nominali per strumenti pianificati**, NON conteggio effettivo di richieste a cTrader (paginazione, retry, sorgenti di backup), né garanzia per futuri batch. `79` è il numero dei campioni nella finestra corrente, non una misura di uptime permanente. I tre `prices_stale` e le tre H1/H4 stale **non sono ancora abbinati per simbolo**, pertanto non sostenere che si tratti precisamente degli stessi tre mercati. I contatori `exclusionReasons` sono **motivi potenzialmente multipli per mercato**: non sommare `14+9+16+3` per dichiarare 42 mercati esclusi. Esclusioni legate a COT o direzione non sono difetti di raccolta prezzi.
+
+**Confronto temporale reale:** il precedente controllo full-scan delle 09:23 italiane aveva **8 H1 stale**; gli stessi otto risultavano **8/8 H1 avanzate e fresche** dopo il loro giro di raccolta alle 09:48 (test su SQLite read-only, 0 anomalie M15→H1 nel controllo). Il nuovo snapshot delle 10:38 italiane ha **3 H1 stale**, ma **non dimostra** che si tratti delle stesse coorti né un progresso permanente o causato da modifiche, perché **nessuna ottimizzazione LIVE è stata distribuita**. Il monitor post-ingest era già attivo prima dell'audit; non attribuire `8→3` a un fix inesistente.
+
+**Capacità/costi:** RAM e disco mostrano margine ma non certificano affatto fatturazione **Oracle Always Free**, quote cTrader, quota Actions condivisa, Firestore o traffico mensile OCI; tali dati richiedono i pannelli dei provider. Non creare ulteriori workflow/cron per colmare questa lacuna, non dichiarare costo zero certificato. Nel repository privato `remura-collector` PR #22/#23 sono integrate ma al controllo GitHub di oggi **non risulta ancora un run diagnostico `event=schedule`**: la raccolta batch LIVE non equivale alla riuscita del workflow schedulato GitHub.
+
+**Esito A6:** rapporto multidimensionale **completato per la fotografia documentata**, senza miglioramento operativo attribuibile e senza bug persistente dimostrato. Restano **due limiti da chiudere in A3**, se vogliamo classificazione diagnostica affidabile delle residuali: (i) individuare tramite **una sola GET già esistente** i simboli di M15/H1/H4 stale e se coincidono con `prices_stale`; (ii) correlare alle sessioni, ultime M15 contigue, esito e turno del batch. A5 = **nessuna correzione backend giustificata**; non cambiare soglie, rotazione, API, versione o VPS. Un'eventuale presentazione "H1 stale / probabile attesa batch" va studiata offline senza convertire stale in READY.
 
 ## 04/11/2026 — A4 confronto offline a budget invariato: nessun fix operativo giustificato
 
@@ -125,7 +152,7 @@ Assicurare che REMURA ragioni su prezzi **realmente verificati** e non su H1 vec
 - [ ] **A3 — indagine per causa:** correlare gli 8 mercati stale con sessioni/chiusure H1 UTC, momento del full-scan, slot effettivi, finestra M15→H1 (4 barre), sorgente primaria/backup, età all'istante della decisione e weekend. Testare localmente le ipotesi UTC/DST prima di intervenire. Non confondere 26/34 osservati a 20:39 con stato attuale.
 - [x] **A4 — proposte senza costi (solo valutazione offline, nessuna modifica LIVE):** simulare offline alternative sulla **stessa quantità di chiamate**: prioritaria 8×5=40 acquisizioni programmate/2h (EURUSD e XAUUSD ripetuti) contro 38 standard. Confrontare disponibilità realmente valida e N/D, non soltanto conteggi cosmetici. Rivedere [PR collector #19](https://github.com/mirkoworz/remura-collector/pull/19) (replay sintetico, non effetto LIVE certificato).
 - [ ] **A5 — eventuale fix:** solo se supportato da campioni e test, preparare PR focalizzata su raccolta/telemetria; CI verdi e review diff. Un solo track per volta può effettuare merge, version bump e deploy VPS. Ogni rilascio applicativo richiede **v nuova + data/ora italiana effettiva in alto sulle nove pagine**, backup SQLite, restore-test, rollback e riconciliazione autoupdater.
-- [ ] **A6 — conclusione:** report con prima/dopo su campioni reali, impatto M15/H1/H4, differenza sulle esclusioni Squalincome, latenza e uso API/disco. Se non c'è miglioramento dimostrabile, dichiararlo.
+- [x] **A6 — conclusione (report sullo snapshot 04/11 ore 10:38, con limiti espliciti):** report con prima/dopo su campioni reali, impatto M15/H1/H4, differenza sulle esclusioni Squalincome, latenza e uso API/disco. Se non c'è miglioramento dimostrabile, dichiararlo.
 
 ## Limiti, costi e coordinamento
 - **Gratis prima di tutto**: zero nuove richieste a cTrader/Capital/Myfxbook per questo audit; non aggiungere polling o cron senza stimare quota/costi e consenso. Oracle Always Free, GitHub Actions e Firestore devono restare nei limiti: le fatture vere non sono verificabili dai soli dati RAM/disco.
