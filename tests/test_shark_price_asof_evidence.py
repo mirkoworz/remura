@@ -99,9 +99,13 @@ class PriceEvidenceTests(unittest.TestCase):
         self.db.close()
 
     def record(self,*,clock=NOW,**kwargs):
+        source=json.loads(self.db.execute(
+            "SELECT payload FROM prices WHERE symbol='EURUSD'").fetchone()[0]
+        ) if self.db.execute("SELECT count(*) FROM prices").fetchone()[0] else None
         with self.db:
             hid=add_observation(self.db,**kwargs)
-            return price.capture(self.db,history_id=hid,clock=clock)
+            return price.capture(
+                self.db,history_id=hid,observed_document=source,clock=clock)
 
     def test_valid_three_timeframe_price_context_is_append_only(self):
         result=self.record()
@@ -126,6 +130,22 @@ class PriceEvidenceTests(unittest.TestCase):
         self.assertNotIn("1.015",out)
         self.assertNotIn("2026-11-04T11:16",out)
         self.assertEqual(price.aggregate(self.db)["recordedEvidence"],1)
+
+    def test_price_document_changed_between_scan_and_evidence_is_rejected(self):
+        original=json.loads(self.db.execute(
+            "SELECT payload FROM prices WHERE symbol='EURUSD'"
+        ).fetchone()[0])
+        # Change a distant historical M15 that cannot affect the latest
+        # 30 H4 rollups; a correct validator must STILL detect this race.
+        def changed(doc):
+            doc["timeframes"]["M15"][0]["h"]=1.03
+        mutate(self.db,changed)
+        with self.assertRaisesRegex(ValueError,"price_document_changed_since_scan"):
+            with self.db:
+                hid=add_observation(self.db)
+                price.capture(self.db,history_id=hid,
+                              observed_document=original,clock=NOW)
+        self.assertEqual(price.aggregate(self.db)["recordedEvidence"],0)
 
     def test_stale_H1_is_rejected_even_when_M15_is_current(self):
         mutate(self.db, lambda d:d["timeframes"]["H1"].__delitem__(slice(-2,None)))
@@ -201,7 +221,8 @@ class PriceEvidenceTests(unittest.TestCase):
         self.db.commit()
         with self.db:
             hid=add_observation(self.db)
-            result=price.capture_optional(self.db,history_id=hid,clock=NOW)
+            result=price.capture_optional(
+                self.db,history_id=hid,observed_document=None,clock=NOW)
             self.assertEqual(result["status"],"PRICE_PROVENANCE_NOT_VERIFIABLE")
         self.assertEqual(self.db.execute(
             "SELECT count(*) FROM squalincome_history").fetchone()[0],1)
@@ -213,7 +234,11 @@ class PriceEvidenceTests(unittest.TestCase):
         with self.assertRaises(sqlite3.OperationalError):
             with self.db:
                 hid=add_observation(self.db)
-                price.capture_optional(self.db,history_id=hid,clock=NOW)
+                price.capture_optional(
+                    self.db,history_id=hid,
+                    observed_document=json.loads(self.db.execute(
+                        "SELECT payload FROM prices WHERE symbol='EURUSD'"
+                    ).fetchone()[0]),clock=NOW)
         self.assertEqual(self.db.execute(
             "SELECT count(*) FROM squalincome_history").fetchone()[0],0)
 
