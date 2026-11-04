@@ -432,8 +432,8 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
             # Phase 1: a single repeatable SQLite READ snapshot. All source
             # documents and COT are classified with exactly the same version
             # and original UTC observation clock, without writer reservation.
-            # The prepared cache stores only tiny classifications and
-            # evidence rows, not 34 copies of raw OHLC documents.
+            # The prepared cache stores only small classifications and
+            # evidence rows, never 34 copies of raw OHLC documents.
             read_started=time.perf_counter()
             source_version=db.execute("PRAGMA data_version").fetchone()[0]
             db.execute("BEGIN")
@@ -451,9 +451,11 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
                         series=cot_series(db,scan_symbol)
                         cot=cot_view(series,scan_symbol,now)
                         current=classify(cot,price)
+                        # Never retain OHLC payloads for all 34 markets:
+                        # only prevalidated research rows, COT and derived
+                        # classifications/missing-price cause are frozen.
                         compact_snapshot[scan_symbol]=(
-                            scanned_row,series,cot,price,current,
-                            document,quality)
+                            scanned_row,series,cot,price,current,reason)
                     except (ValueError,TypeError,KeyError,OverflowError):
                         # A price failure is an explicit unknown. A COT
                         # failure after price preparation keeps its valid
@@ -480,7 +482,7 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
                     compact_row=frozen[0]
                     if len(frozen)==1:
                         raise ValueError("research_source_unverifiable")
-                    _,series,cot,price,current,document,quality=frozen
+                    _,series,cot,price,current,reason=frozen
                 if price_only_research is not None:
                     # The PRICE-ONLY denominator is captured BEFORE ANY
                     # per-symbol COT access. An absent/broken COT must never
@@ -508,7 +510,9 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
                     if cot is None:
                         reasons.append(cot_exclusion(series,symbol,now))
                     if price is None:
-                        reasons.append(price_exclusion(document,now,quality=quality))
+                        reasons.append(
+                            reason if compact_research is not None else
+                            price_exclusion(document,now,quality=quality))
                     exclusions[symbol]=reasons or ["no_qualifying_setup"]
                     continue
                 examined+=1
