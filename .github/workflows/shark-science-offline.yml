@@ -1,0 +1,39 @@
+name: REMURA Track B Shark Science offline
+on:
+  pull_request:
+    paths:
+      - 'cvd-divergence-core.js'
+      - 'scripts/cvd_*.py'
+      - 'scripts/shark_science_gate.py'
+      - 'tests/cvd-divergence.test.js'
+      - 'tests/test_cvd_*.py'
+      - 'tests/test_shark_science_gate.py'
+      - 'ROADMAP-B-SHARK-SCIENCE.md'
+      - '.github/workflows/shark-science-offline.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify offline script syntax
+        run: |
+          node --check cvd-divergence-core.js
+          python -m py_compile scripts/cvd_divergence.py scripts/cvd_benchmark.py scripts/cvd_session_replay.py scripts/shark_science_gate.py
+      - name: Test CVD JS detector
+        run: node --test tests/cvd-divergence.test.js
+      - name: Test CVD parity, benchmark and archive replay
+        run: python -m unittest discover -s tests -p 'test_cvd_*.py' -v
+      - name: Test causal evidence provenance
+        run: python -m unittest discover -s tests -p 'test_shark_science_gate.py' -v
