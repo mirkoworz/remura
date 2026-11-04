@@ -20,6 +20,7 @@ on:
       - 'scripts/shark_price_only_universe.py'
       - 'scripts/shark_price_only_compact.py'
       - 'scripts/shark_prospective_coverage.py'
+      - 'scripts/shark_first_invocation.py'
       - 'scripts/shark_resource_probe.py'
       - 'scripts/shark_digest_ab_benchmark.py'
       - 'scripts/shark_oracle_staging_gate.py'
@@ -43,6 +44,7 @@ on:
       - 'tests/test_shark_price_only_universe.py'
       - 'tests/test_shark_price_only_compact.py'
       - 'tests/test_shark_prospective_coverage.py'
+      - 'tests/test_shark_first_invocation.py'
       - 'tests/test_shark_compact_adapter.py'
       - 'tests/test_shark_single_pass_gate.py'
       - 'scripts/private_server.py'
@@ -79,7 +81,7 @@ jobs:
       - name: Verify offline script syntax
         run: |
           node --check cvd-divergence-core.js
-          python -m py_compile scripts/cvd_divergence.py scripts/cvd_benchmark.py scripts/cvd_session_replay.py scripts/shark_science_gate.py scripts/shark_walkforward.py scripts/shark_data_readiness.py scripts/shark_research_census.py scripts/shark_universe_lineage.py scripts/shark_universe_probe.py scripts/shark_research_probe.py scripts/shark_cot_paired_baseline.py scripts/shark_cot_robustness.py scripts/shark_cot_asof_witness.py scripts/shark_signal_evidence.py scripts/shark_price_asof_evidence.py scripts/shark_observation_bundle.py scripts/shark_price_only_universe.py scripts/shark_price_only_compact.py scripts/shark_prospective_coverage.py scripts/shark_resource_probe.py scripts/shark_digest_ab_benchmark.py scripts/shark_oracle_staging_gate.py scripts/shark_cvd_ledger.py
+          python -m py_compile scripts/cvd_divergence.py scripts/cvd_benchmark.py scripts/cvd_session_replay.py scripts/shark_science_gate.py scripts/shark_walkforward.py scripts/shark_data_readiness.py scripts/shark_research_census.py scripts/shark_universe_lineage.py scripts/shark_universe_probe.py scripts/shark_research_probe.py scripts/shark_cot_paired_baseline.py scripts/shark_cot_robustness.py scripts/shark_cot_asof_witness.py scripts/shark_signal_evidence.py scripts/shark_price_asof_evidence.py scripts/shark_observation_bundle.py scripts/shark_price_only_universe.py scripts/shark_price_only_compact.py scripts/shark_prospective_coverage.py scripts/shark_first_invocation.py scripts/shark_resource_probe.py scripts/shark_digest_ab_benchmark.py scripts/shark_oracle_staging_gate.py scripts/shark_cvd_ledger.py
       - name: Test CVD JS detector
         run: node --test tests/cvd-divergence.test.js
       - name: Test CVD parity, benchmark and archive replay
@@ -114,6 +116,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_shark_price_only_universe.py' -v
       - name: Test immutable lossless compact 34-market scan batches, targeted scope and SHA integrity
         run: python -m unittest discover -s tests -p 'test_shark_price_only_compact.py' -v
+      - name: Test immutable first enabled scanner invocation and no backdated research start
+        run: python -m unittest discover -s tests -p 'test_shark_first_invocation.py' -v
       - name: Test read-only first-recorded FULL-scan coverage, missing slots and unknown market cells
         run: python -m unittest discover -s tests -p 'test_shark_prospective_coverage.py' -v
       - name: Test explicit compact scanner opt-in against original Squalincome, price failures and COT gaps
