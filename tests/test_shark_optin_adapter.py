@@ -12,6 +12,7 @@ from pathlib import Path
 import sqlite3
 import sys
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 
@@ -145,6 +146,52 @@ class OptInScannerTests(unittest.TestCase):
         data=json.dumps(record)
         self.assertNotIn("SYNTHETIC_PRIVATE_BROKER",data)
         self.assertNotIn("099741",data)
+
+    def test_fair_34_market_4000_bar_benchmark_without_one_sided_profiler(self):
+        # Instrumented and legacy scans have the SAME 34 x 4000 M15
+        # synthetic local database. Neither uses tracemalloc, COT or HTTP.
+        # This is not actual Oracle CPU/RSS/broker usage.
+        large_original=Path(self.tmp.name)/"fair_baseline.sqlite"
+        large_research=Path(self.tmp.name)/"fair_research.sqlite"
+        fixture(large_original,with_cot=False,all_priced=True,m15_count=4000)
+        clone(large_original,large_research)
+        started=time.perf_counter()
+        reference=live.scan_once(large_original,NOW)
+        base_seconds=time.perf_counter()-started
+        with patch.object(witness,"_clock",
+                          return_value=NOW+timedelta(seconds=2)):
+            started=time.perf_counter()
+            enabled=live.scan_once_with_price_only_research(
+                large_research,NOW)
+            enabled_seconds=time.perf_counter()-started
+        self.assertEqual(
+            {k:v for k,v in enabled.items() if k!="priceOnlyResearch"},
+            reference)
+        self.assertEqual(standard_state(large_original),
+                         standard_state(large_research))
+        self.assertEqual(reference["examined"],0)
+        self.assertEqual(
+            enabled["priceOnlyResearch"]["byState"]["PRICE_CONTEXT_READY"],34)
+        with sqlite3.connect(large_research) as db:
+            self.assertEqual(research.summary(db)["totalScans"],34)
+            size_enabled=(db.execute("PRAGMA page_count").fetchone()[0]*
+                          db.execute("PRAGMA page_size").fetchone()[0])
+        with sqlite3.connect(large_original) as db:
+            size_base=(db.execute("PRAGMA page_count").fetchone()[0]*
+                       db.execute("PRAGMA page_size").fetchone()[0])
+        overhead_kib=(size_enabled-size_base)/1024
+        self.assertGreaterEqual(overhead_kib,0)
+        self.assertLess(overhead_kib,512)
+        self.assertLess(enabled_seconds,60)
+        print("REMURA_TRACK_B_OPTIN_FAIR4000="+json.dumps({
+            "markets":34,"m15BarsPerMarket":4000,"cotReports":0,
+            "baselineSeconds":round(base_seconds,3),
+            "optinSeconds":round(enabled_seconds,3),
+            "additionalSqliteKiB":round(overhead_kib,2),
+            "profilerOnEitherScan":False,
+            "brokerCallsAdded":0,"actualOracleResourcesMeasured":False,
+            "profitabilityEstablished":False
+        },sort_keys=True,separators=(",",":")))
 
     def test_db_failure_raises_in_optin_and_is_not_converted_to_ND(self):
         with patch.object(research,"capture_optional",
