@@ -134,6 +134,39 @@ class SignalEvidenceTests(unittest.TestCase):
             "SELECT count(*) FROM squalincome_history").fetchone()[0],0)
         self.assertEqual(evidence.summarize(self.db)["total"],0)
 
+    def test_optional_capture_preserves_authentic_observation_without_proof(self):
+        # A future release must NOT disable existing Squalincome observations
+        # just because COT lineage is absent. Evidence remains strictly N/D.
+        with self.db:
+            hid=insert_history(self.db)
+            result=evidence.capture_optional(self.db,history_id=hid,clock=NOW)
+            self.assertEqual(result["status"],"COT_PROVENANCE_NOT_VERIFIABLE")
+            self.assertFalse(result["originalSignalValuesMatched"])
+        self.assertEqual(self.db.execute(
+            "SELECT count(*) FROM squalincome_history").fetchone()[0],1)
+        self.assertEqual(evidence.summarize(self.db)["total"],0)
+        self.assertFalse(result["notificationsEnabled"])
+        self.assertEqual(result["brokerCalls"],0)
+
+    def test_optional_capture_records_real_evidence_after_prior_witness(self):
+        witness.witness(self.db,clock=AT)
+        with self.db:
+            hid=insert_history(self.db)
+            result=evidence.capture_optional(self.db,history_id=hid,clock=NOW)
+        self.assertEqual(result["status"],"FUTURE_OBSERVATION_CERTIFIED_LOCALLY")
+        self.assertEqual(evidence.summarize(self.db)["total"],1)
+
+    def test_database_failures_are_not_masked_as_missing_provenance(self):
+        witness.witness(self.db,clock=AT)
+        self.db.execute("DROP TABLE research_cot_asof_attestations")
+        self.db.commit()
+        with self.assertRaises(sqlite3.OperationalError):
+            with self.db:
+                hid=insert_history(self.db)
+                evidence.capture_optional(self.db,history_id=hid,clock=NOW)
+        self.assertEqual(self.db.execute(
+            "SELECT count(*) FROM squalincome_history").fetchone()[0],0)
+
     def test_cot_revision_must_be_attested_before_new_signal(self):
         witness.witness(self.db,clock=AT)
         self.db.execute(
