@@ -73,27 +73,44 @@ class OptInScannerTests(unittest.TestCase):
     def test_one_price_view_per_market_and_no_extra_cot_or_broker_calls(self):
         original_view=live.price_view
         original_cot=live.cot_series
-        calls={"price":0,"cot":0}
+        original_latest=live.latest
+        original_audit=live.audit_market
+        calls={"price":0,"cot":0,"latest":0,"audit":0}
         def observed_price(*args,**kwargs):
             calls["price"]+=1
             return original_view(*args,**kwargs)
         def observed_cot(*args,**kwargs):
             calls["cot"]+=1
             return original_cot(*args,**kwargs)
+        def observed_latest(*args,**kwargs):
+            calls["latest"]+=1
+            return original_latest(*args,**kwargs)
+        def observed_audit(*args,**kwargs):
+            calls["audit"]+=1
+            return original_audit(*args,**kwargs)
         with patch.object(live,"price_view",side_effect=observed_price):
             with patch.object(live,"cot_series",side_effect=observed_cot):
-                out=self._scan()
-        self.assertEqual(calls,{"price":34,"cot":34})
+                with patch.object(live,"latest",side_effect=observed_latest):
+                    with patch.object(live,"audit_market",side_effect=observed_audit):
+                        out=self._scan()
+        # Legacy scanner deliberately skips price_view(None) for 33 markets;
+        # it must NOT be called an extra time by the research adapter.
+        self.assertEqual(calls,{"price":1,"cot":34,"latest":34,"audit":34})
         self.assertEqual(out["priceOnlyResearch"]["marketsAttempted"],34)
         self.assertFalse(out["priceOnlyResearch"]["cotFilterAppliedToResearch"])
 
     def test_repeated_scans_are_deduplicated_without_legacy_changes(self):
         self._scan()
-        initial=standard_state(self.research)
+        live.scan_once(self.default,NOW)
         second=self._scan()
+        live.scan_once(self.default,NOW)
         self.assertEqual(second["priceOnlyResearch"]["byState"]
                          .get("DUPLICATE_SCAN_SLOT"),34)
-        self.assertEqual(standard_state(self.research),initial)
+        # The normal scan updates its diagnostic summary after the first
+        # baseline (newBaselines switches 1 -> 0). Compare like-for-like
+        # after TWO scans instead of incorrectly claiming it is immutable.
+        self.assertEqual(standard_state(self.research),
+                         standard_state(self.default))
         with sqlite3.connect(self.research) as db:
             self.assertEqual(research.summary(db)["totalScans"],34)
 
