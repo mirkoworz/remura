@@ -243,6 +243,8 @@ class CompactScannerTests(unittest.TestCase):
     def test_sqlite_busy_writer_is_visible_and_does_not_corrupt_either_table(self):
         # Concurrent ingest writer (simulated by a real separate SQLite
         # BEGIN IMMEDIATE) must NEVER cause a partial research/legacy scan.
+        with sqlite3.connect(self.new) as setup:
+            compact.ensure_schema(setup)
         outside=sqlite3.connect(self.new,timeout=1.0)
         try:
             outside.execute("BEGIN IMMEDIATE")
