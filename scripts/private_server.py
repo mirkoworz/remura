@@ -1056,9 +1056,28 @@ def observe_periodic_squalincome(db_path, env=None):
     # produce an unanchored research sample or switch to a duplicate scan.
     # Both imports stay lazy; default v1.62 does no new SQLite work.
     from scripts import shark_first_invocation
-    shark_first_invocation.first_invocation(db_path)
-    from signals_monitor import scan_once_with_compact_price_only_research
-    return scan_once_with_compact_price_only_research(db_path)
+    entered_at=utcnow()
+    stage="ACTIVATION"
+    try:
+        shark_first_invocation.first_invocation(db_path)
+        stage="COMPACT_SCAN"
+        from signals_monitor import scan_once_with_compact_price_only_research
+        return scan_once_with_compact_price_only_research(db_path)
+    except Exception as exc:
+        # Only failures actually seen by THIS process are eligible.
+        # A SIGKILL, missed schedule or failure to acquire the telemetry
+        # writer remains UNKNOWN; never claim inferred reasons for a gap.
+        # The original scanner error is preserved if telemetry fails.
+        try:
+            from scripts import shark_scan_failures
+            shark_scan_failures.record(
+                db_path,stage=stage,exc=exc,started_at=entered_at,
+                logged_at=utcnow())
+        except Exception:
+            # Never expose exception strings, account identifiers or prices.
+            print("REMURA research failure telemetry unavailable",
+                  file=sys.stderr)
+        raise
 
 
 def squalincome_loop(db_path,stop):
