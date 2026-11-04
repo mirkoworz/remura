@@ -43,6 +43,18 @@ def trend(db):
     return doc
 
 
+def exact_flat(db):
+    """Exact binary-representable close: zero real EMA direction, no drift."""
+    doc=original(db)
+    for rows in doc["timeframes"].values():
+        for row in rows:
+            row.update(o=1.0,h=1.02,l=0.98,c=1.0)
+    db.execute("UPDATE prices SET payload=? WHERE symbol='EURUSD'",
+               (json.dumps(doc),))
+    db.commit()
+    return doc
+
+
 def classify(doc,when=OBS):
     quality=audit_market(doc,when)
     candidate=price_view(doc,when,quality=quality) if doc else None
@@ -78,6 +90,8 @@ class PriceOnlyTests(unittest.TestCase):
         self.assertEqual(self.db.execute(
             "SELECT count(*) FROM sqlite_master WHERE name='cot_reports'"
         ).fetchone()[0],0)
+        exact_flat(self.db)
+        self.assertIsNone(classify(original(self.db))[1])
         status=self.record()
         self.assertEqual(status["status"],"PRICE_NO_TREND")
         self.assertTrue(status["noCotDataUsed"])
