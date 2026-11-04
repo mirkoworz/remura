@@ -180,14 +180,17 @@ def capture(db, *, history_id, clock=None):
     closed = witness._parse(closed_at)
     if (not observed <= now <= observed+MAX_OBSERVATION_DELAY
             or not closed <= observed or observed-closed > MAX_CLOSE_DELAY
-            or observed < closed  # cannot use still-open candles
+            or closed.second or closed.microsecond
+            or closed.minute % 15  # expected M15 CLOSE boundary UTC
             or origin not in ("baseline","first_after_upgrade","update")
             or state not in ("aligned","divergent")
             or type(side) is not int or side not in (-1,1)
             or type(price_side) is not int or price_side not in (-1,1)
             or state != ("aligned" if side==price_side else "divergent")
-            or any(type(x) is not int or x not in (-1,1) for x in (h1,h4,m15))
+            or any(type(x) is not int or x not in (-1,1) for x in (h1,h4))
+            or type(m15) is not int or m15 not in (-1,0,1)
             or h1!=h4 or h1!=price_side
+            or (price_state in ("partial","confirmed") and m15 != price_side)
             or price_state not in ("watch","partial","confirmed")
             or type(weekly) not in (float,int) or not math.isfinite(weekly)):
         raise ValueError("signal_observation_not_new_or_invalid")
@@ -206,6 +209,8 @@ def capture(db, *, history_id, clock=None):
     evidence_digest=hashlib.sha256(evidence_json.encode()).hexdigest()
     # A duplicate is a logical error: the live unique history row must be
     # inserted once, and no future event may replace its original evidence.
+    # Production integration MUST check history INSERT rowcount == 1 and only
+    # then call this function before committing the transaction.
     if db.execute(
             f"SELECT 1 FROM {TABLE} WHERE symbol=? AND cot_week=? "
             "AND price_closed_at=?", (symbol,cot_week,closed_at)).fetchone():
