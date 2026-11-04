@@ -25,6 +25,7 @@ import private_server as server
 import signals_monitor as scanner
 from scripts import shark_cot_asof_witness as witness
 from scripts import shark_price_only_compact as compact
+from scripts import shark_first_invocation as first_gate
 from test_shark_staging_scan import fixture, clone, standard_state, NOW
 
 ON={
@@ -65,12 +66,27 @@ class PeriodicSinglePassTests(unittest.TestCase):
         with patch.object(server,"observe_squalincome",
                           side_effect=AssertionError("duplicate_scan")) as legacy:
             with patch.object(
-                    scanner,"scan_once_with_compact_price_only_research",
-                    return_value={"research":True}) as research:
-                self.assertEqual(server.observe_periodic_squalincome(
-                    "test.sqlite",env=ON),{"research":True})
+                    first_gate,"first_invocation",
+                    return_value={"status":"FIRST_INVOCATION_WITNESSED"}) as activation:
+                with patch.object(
+                        scanner,"scan_once_with_compact_price_only_research",
+                        return_value={"research":True}) as research:
+                    self.assertEqual(server.observe_periodic_squalincome(
+                        "test.sqlite",env=ON),{"research":True})
+        activation.assert_called_once_with("test.sqlite")
         research.assert_called_once_with("test.sqlite")
         legacy.assert_not_called()
+
+    def test_witness_failure_blocks_research_without_legacy_fallback(self):
+        with patch.object(first_gate,"first_invocation",
+                          side_effect=sqlite3.OperationalError("database is locked")):
+            with patch.object(server,"observe_squalincome") as old:
+                with patch.object(
+                        scanner,"scan_once_with_compact_price_only_research") as new:
+                    with self.assertRaisesRegex(sqlite3.OperationalError,"locked"):
+                        server.observe_periodic_squalincome("test.sqlite",env=ON)
+        old.assert_not_called()
+        new.assert_not_called()
 
     def test_real_synthetic_single_pass_preserves_all_legacy_tables(self):
         with tempfile.TemporaryDirectory(prefix="remura-route-") as scratch:
@@ -94,7 +110,11 @@ class PeriodicSinglePassTests(unittest.TestCase):
                 self.assertFalse(db.execute(
                     "SELECT 1 FROM sqlite_master WHERE name=?",
                     (compact.TABLE,)).fetchone())
+                self.assertIsNone(first_gate.read(db))
             with sqlite3.connect(routed) as db:
+                activation=first_gate.read(db)
+                self.assertIsNotNone(activation)
+                self.assertEqual(activation, witness._iso(NOW+timedelta(seconds=2)))
                 snapshot=compact.summary(db)
                 self.assertEqual(snapshot["fullScanDenominator"],34)
                 self.assertEqual(snapshot["immutableBatches"],1)
