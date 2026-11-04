@@ -67,6 +67,7 @@ class PriceOnlyTests(unittest.TestCase):
         if candidate=="auto": candidate=actual_candidate
         if reason=="auto": reason=actual_reason
         with self.db:
+            self.db.execute("BEGIN")  # read-only scan must explicitly open tx
             return universe.capture(
                 self.db,symbol=symbol,scan_at=stamp(when),
                 observed_document=doc,quality=qa,
@@ -148,6 +149,7 @@ class PriceOnlyTests(unittest.TestCase):
         quality,px,reason=classify(doc)
         with self.assertRaisesRegex(ValueError,"price_document_race"):
             with self.db:
+                self.db.execute("BEGIN")
                 universe.capture(
                     self.db,symbol="EURUSD",scan_at=stamp(OBS),
                     observed_document=doc,quality=quality,
@@ -172,6 +174,7 @@ class PriceOnlyTests(unittest.TestCase):
     def test_optional_keeps_real_monitoring_on_invalid_quality(self):
         doc=original(self.db)
         with self.db:
+            self.db.execute("BEGIN")
             out=universe.capture_optional(
                 self.db,symbol="EURUSD",scan_at=stamp(OBS),
                 observed_document=doc,quality={"ready":True},
@@ -187,6 +190,7 @@ class PriceOnlyTests(unittest.TestCase):
         qa,px,reason=classify(doc)
         with self.assertRaises(sqlite3.OperationalError):
             with self.db:
+                self.db.execute("BEGIN")
                 universe.capture_optional(
                     self.db,symbol="EURUSD",scan_at=stamp(OBS),
                     observed_document=doc,quality=qa,
