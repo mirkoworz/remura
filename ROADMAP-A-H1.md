@@ -1,6 +1,6 @@
 # REMURA — TRACK A: Qualità H1 e raccolta prezzi
 
-**Ultimo stato attestato:** 04/11/2026 ore 09:30 Italia (50/50 paired validi; full-scan 09:23, 8 H1 stale allineate a due gruppi di raccolta OK). **Roadmap coordinatrice:** [ROADMAP.md](ROADMAP.md). **Track parallelo:** [B — Shark Science](ROADMAP-B-SHARK-SCIENCE.md).
+**Ultimo stato attestato:** 04/11/2026 ore 09:48 Italia (50/50 paired validi; le 8 H1 stale alle 09:23 recuperate 8/8 alle 09:48, 0 anomalie del rollup verificato). **Roadmap coordinatrice:** [ROADMAP.md](ROADMAP.md). **Track parallelo:** [B — Shark Science](ROADMAP-B-SHARK-SCIENCE.md).
 
 ## 04/11/2026 ore 07:15 Italia — verifica A1 GitHub e replay offline (NON misura LIVE nuova)
 
@@ -17,6 +17,23 @@
 - Permutando soltanto i 36 strumenti non prioritari fra i medesimi slot, mantenendo esattamente 40 acquisizioni programmate/2h, i **totali sintetici restano invariati** nelle fasi 0, 4 e 14 minuti: cambiano i nomi dei mercati penalizzati, non il numero complessivo. Spostare la scansione per far risultare "verde" un contatore **non è una correzione della freschezza**; serve prova LIVE prima di cambiare pianificazione.
 
 **Prossima verifica A1 obbligatoria:** leggere tramite la diagnostica privata schedulata (quando realmente eseguita) o una singola GET locale read-only `/private-api/signals/status` gli aggregati `h1Paired` (totali, validi, N/D, last UTC, readyBefore/After, staleToReady, h1Advanced, h1Unchanged); leggere la full-scan dei 34 al suo timestamp e l'ultimo stato batch. Confrontare età di ogni H1 con M15/H4, fasi UTC e mercati precedentemente problematici. Se >=8 record totali ma validi insufficienti, **proseguire l'osservazione**. Non modificare codice operativo, quote, soglie, cron o produzione sulla base del replay.
+
+## 04/11/2026 ore 09:48 Italia — A3: recupero degli 8 mercati verificato nel ciclo successivo
+
+**Evidenza di follow-up LIVE (screenshot Termius utente, lettura SQLite `mode=ro`):** controllo alle `2026-11-04T08:48:16.619986+00:00`, 09:48:16 Italia, sugli **stessi 8 mercati** che alle 09:23 italiane risultavano H1 stale. Il controllo interroga soltanto la SQLite locale, senza nuove richieste cTrader né modifiche:
+- `TENTATIVI=8`: per tutti gli otto è stato registrato un **nuovo tentativo** rispetto alla full-scan `2026-11-04T08:23:02 UTC`. Negli output per mercato visibili, `ESITO=ok` per tutti.
+- `AVANZATE=8`: l'ultima chiusura H1 registrata per ciascuno è **successiva alle 06:00 UTC** pre-controllo. La loro età alla lettura risulta circa **48,3 minuti**, coerente con chiusura UTC circa 08:00. `FRESCHE=8`: tutte entro la soglia **immutata di 120 minuti**, con almeno 55 H1 secondo il gate usato dal comando.
+- `ANOMALIE=0`: il test mirato non trova alcuna H1 più arretrata rispetto all'ultima ora completa ricavabile da quattro M15 contigue presenti negli ultimi 32 record. Non è audit retroattivo di tutte le H4 né prova di assenza di ogni possibile gap storico.
+- Le due coorti viste alle 09:30 (tentativi `06:31/06:46 UTC`, H1 stale all'atto della full-scan `08:23 UTC`) vengono dunque **recuperate dopo un nuovo tentativo di raccolta** nella successiva finestra osservata. Questo dimostra concretamente che la condizione stale di quegli 8 era **transitoria**, non permanentemente bloccata. Non attribuisce con precisione al secondo il momento del salvataggio, né dimostra automaticamente che tutte le future esclusioni abbiano la stessa causa.
+
+**Decisione tecnica A3:** causa prioritaria per questa coorte è la **fase delle acquisizioni a gruppi (rotazione ~120 minuti) rispetto alla full-scan di tutti i 34** e alla soglia H1 rigida di 120 minuti. Confronti paired LIVE precedenti: 50/50 campioni validi, 185 transizioni stale→ready su 226 confronti ripetuti; nessun N/D. La contiguità M15 e assenza anomalia sono verificate limitatamente al test di follow-up; nessun bug UTC/DST o rollup H1 dimostrato. **A3 completato per gli 8 mercati di questa verifica; monitoraggio di altre sessioni/market closures/H4 rimane distinto.**
+
+**Decisione A4/A5 per ora:**
+1. **Non serve correggere il rollup né innalzare le soglie.** Il sistema recupera da sé i gruppi osservati; un fix senza un difetto dimostrato introdurrebbe rischio inutile.
+2. Non spostare soltanto la full-scan per rendere più gradevole il conteggio H1. La full-scan deve restare una fotografia *as-of* con soglie genuine; l'osservatore post-ingest esistente ha già mostrato 50 confronti validi.
+3. Studiare **solo offline** una presentazione più leggibile dei due stati separati: `H1 attualmente non idonea` (vero) e `compatibile con attesa del prossimo batch` (ipotesi condizionata a timestamp, fonte primaria e ultima riuscita). Non mostrare mai `READY` a chi è sopra 120 minuti, né promettere l'ora del prossimo tentativo; le sessioni chiuse hanno un trattamento separato.
+4. Prima di ogni eventuale rilascio chiedere ulteriori prove sulla freschezza dei 34 mercati, sulle H4, sugli errori di provider e sui consumi. Il beneficio misurato di una diversa UI/stato deve essere reale. Nessun aumento cTrader oltre gli 8 batch già previsti, nessuna nuova API/cron, nessun deploy in parallelo al TRACK B.
+5. **Criterio A5:** senza problema operativo dimostrato, chiudere il fix come `NON NECESSARIO` anziché generare artificialmente una release. Il TRACK A può proseguire con rapporto A6 e verifiche di budget senza modifiche LIVE.
 
 ## 04/11/2026 ore 09:30 Italia — A3: otto H1 stale in due coorti, tentativi OK
 
