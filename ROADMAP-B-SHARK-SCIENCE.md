@@ -1,5 +1,35 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
+## 04/11/2026 — GATE B-P0: audit prospettico degli slot e censimento costi — codice OFFLINE, CI
+
+**Stato e scope:** PR B #89 DRAFT, branch `research/track-b-shark-science-20261104`, nessun deploy, main, TRACK A #88, collector privato e VM Oracle invariati. Questa modifica NON abilita il recorder, NON garantisce copertura LIVE, NON registra retroattivamente COT, non genera alert/trade né chiama provider.
+
+### Nuovo strumento: copertura registrazione senza falsi segnali
+
+- [x] `scripts/shark_prospective_coverage.py` è **solo API Python esplicita di lettura** sul database passatogli, senza collegamenti a `private_server.py`, senza cron, senza query broker e senza apertura automatica del DB LIVE.
+- [x] `audit(db,as_of=<UTC>,days=1..7)` scatta una transazione di snapshot READ (solo se il chiamante non l'ha già aperta), legge esclusivamente `sqlite_master` e la tabella compattata `research_price_only_batches`; riutilizza `shark_price_only_compact.audit_slot_coverage()` per verificare **SHA e metadati di ogni batch FULL_34** nell'intervallo, e rifiuta archivi corrotti. In futuro usare una connessione con `mode=ro` e `PRAGMA query_only=ON`, non installare uno scheduler addizionale.
+- [x] Se non c'è tabella o non ci sono batch **FULL finalizzati**, restituisce `NO_RESEARCH_TABLE` / `NO_FINALIZED_FULL_BATCH` con denominatore **N/D**, non 0%, non dati inventati. Un batch **TARGETED** non conta come prova di 34 mercati.
+- [x] Il calcolo parte **solo dal primo batch FULL effettivamente archiviato**, senza presumere la data di attivazione: `preFirstBatchCoverageKnown=false`, `activationTimeCertified=false`. Il primo batch NON dimostra che non sia stato perso uno slot prima di esso. Il limite è 1..7 giorni di calendario; quando il campione reale è più lungo dichiara `auditWindowTruncated=true`. Senza primo batch NON si può stimare frequenza reale dei failure.
+- [x] Solo slot completamente maturati (**15 min + 3 min di margine per sigillo**) entrano nel denominatore; nessun buco inventato per il quarto d'ora in corso. Restituisce `verifiedFullScanSlots`, `unrecordedCalendarSlots`, massimo **12 timestamp esempio di slot assenti**, `unknownMarketCellsInsideRecordedBatches`, `priceContextReadyCells`. **Mancanza di un blocco non è uguale a 1/34 mercati incerti** e nessuno dei due prova un'occasione di trading persa: weekend, orari e problemi di scheduler restano N/D.
+- [x] `tests/test_shark_prospective_coverage.py` usa solo SQLite sintetiche temporanee; copre ricerca assente, targeted-only, slot non finalizzato, prime prove FULL con successivi gap, unknown cell dentro batch integro, intervallo > 7gg limitato, checksum corrotto, parametri UTC/limiti invalidi e nessuna modifica SQLite. CI aggiunta a `.github/workflows/shark-science-offline.yml`. **Non attribuire operatività LIVE a questi test**.
+- [ ] **Prossimo gate qualità della ricerca:** quando un giorno sarà attivata una fonte FULL per la prima volta, registrare in modo autenticato e indipendente il vero `enabledAt` UTC (oggi NON esiste), oppure marcare come N/D tutti gli slot antecedenti al primo archivio; contare gli slot scartati per `source_changed` e `busy` solo da eventi osservabili, mai dedurli automaticamente da gap. Denominatore completo e controlli negativi prima dell'edge.
+
+### Costi: separare limite documentato, chiamate effettive, fatture non visibili
+
+- [x] Repository `mirkoworz/remura` **public** e `mirkoworz/remura-collector` **private**, verificati dal campo `visibility` delle rispettive API GitHub. Gli standard runner GitHub del pubblico sono gratuiti; il privato consuma il budget mensile del piano (piano Free: 2.000 min/mese e 500 MB storage Actions). Fonti: https://docs.github.com/en/actions/concepts/billing-and-usage e https://docs.github.com/en/billing/reference/product-usage-included .
+- [x] Dall'elenco Actions nel repository collector privato, dal 01/11/2026 al 04/11/2026 sono emerse **71 esecuzioni di workflow** (12 pubblicazioni Firestore, 12 cicli Capital, 41 diagnostiche VPS, 6 replay CVD). **Non significa 71 minuti**, non comprende pienamente tutti i tentativi/rerun fatturabili, non è un estratto contabile. Le chiamate di lettura GitHub per censirle non hanno avviato workflow né broker.
+- [x] Firestore Standard documentato: **50.000 reads/die, 20.000 writes/die, 1 GiB storage, 10 GiB egress/mese** per unico DB eleggibile al gratuito; TTL/PITR/backup/restore/clone esclusi. Il publisher privato è circoscritto a massimo 36 scritture per run, con 32 documenti davvero scritti nell'ultima esecuzione verificata (#41883171457). Senza numero reale delle letture client e dei documenti/spazio **non certifica** assenza di spese. Fonte: https://firebase.google.com/docs/firestore/pricing .
+- [x] Oracle Always Free documentato: E2 Micro fino a 2 istanze AMD, A1 Arm fino a 1.500 OCPU-ore + 9.000 GB-ore/mese, 200 GB di boot/block volume gratuiti combinati in home region. La shape e la regione della VM devono risultare dalle impostazioni account, NON dedotte dalla RAM `~1 GiB`. Fonte: https://docs.oracle.com/it-it/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm .
+- [ ] **P0c billing effettivo resta APERTO:** verificare solo con dati del pannello proprietario GitHub Billing/Usage (minuti privati del mese), Firebase Usage/Billing (reads/writes/storage/egress e piano) e OCI Billing/Cost Analysis/Compute + Block Volumes (shape, home region, risorse allocate/credito). Il connettore GitHub non dà accesso a tali account/quota: non simulare consumi o creare automazioni/servizi a pagamento. Non aumentare quota né cambiare piano senza consenso.
+
+### Conseguenze
+
+- [x] Baseline SQL/SQLite e singola scansione OFF di default rimangono come già descritte sotto; nessuna seconda scansione pesante.
+- [ ] P0b LIVE su Oracle: collisioni reali e impatto sul flusso ingest NON verificati; scansione sperimentale FULL rimane **OFF**.
+- [ ] P0c: spesa e quota di account NON certificate, monitoraggio documentale non equivale a billing.
+- [ ] P1: raccolta P-I-T vera, prima conoscenza COT, CVD proxy e prezzi provenienti da feed realmente osservati, senza retrodatazioni né operazioni/notifiche prima del walk-forward OOS cost-aware.
+- [ ] Una sola release A+B quando autorizzata, dopo merge review, CI, backup SQLite+restore-test+rollback, autoupdater e versione/data/ora reale italiana su tutte e nove le pagine. v1.62 LIVE invariata.
+
 ## 04/11/2026 — B-P0b: gate di integrazione Shark Science nel SOLO scanner periodico, OFF default — TEST SUPERATI
 
 **Stato:** preparato solo nella PR #89 DRAFT; nessun deploy VPS LIVE, modifica a `main`, TRACK A #88, `remura-collector`, credenziali o cTrader. Questa fase **NON chiude** P0b LIVE né P0c billing. Non pubblicare come versione REMURA o abilitarla sulla macchina attuale.
