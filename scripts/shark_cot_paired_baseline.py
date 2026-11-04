@@ -95,32 +95,21 @@ def _summarize(items):
     }
 
 
-def evaluate(db, *, as_of, costs):
-    """Summarize paired historical outcomes already validated and persisted.
 
-    Cost numbers must come from caller; no invented defaults. Records are
-    checked against COT first_seen and recorded observation/entry/outcome.
-    No train/test fitting or independent confirmation of historical broker
-    quotes, COT revisions, or order fills is possible from these tables.
+def _verified_cases(db, now):
+    """PRIVATE row-level provenance gate shared by baseline and robustness.
+
+    Never return these cases from an API or log them: times and historical
+    returns are retained only in memory during offline research.
     """
-    if not isinstance(db, sqlite3.Connection):
-        raise ValueError("sqlite_connection_required")
-    now = _utc(as_of)
-    if not isinstance(costs, dict) or set(costs) != set(PILOT):
-        raise ValueError("exact_pilot_costs_required")
-    priced = {symbol: _cost(costs[symbol]) for symbol in PILOT}
-    names = _table_names(db)
     necessary = {"cot_first_seen", "squalincome_validation_cohorts",
                  "squalincome_validation_outcomes"}
-    if not necessary <= names:
-        return {"schema": SCHEMA, "status": "UNAVAILABLE",
-                "missingTables": sorted(necessary-names),
-                "edge": "NOT_ESTABLISHED", "newBrokerCalls": 0}
+    absent = sorted(necessary - _table_names(db))
+    if absent:
+        return [], Counter(), 0, absent
     seen = _seen(db)
     reasons = Counter()
-    pairs = defaultdict(list)
-    # Stage observation only: technical/qualified arms overlap with it.
-    # SQL join keeps only same symbol+COT week+stage+period.
+    cases = []
     records = db.execute(
         "SELECT c.symbol,c.report_date,c.observed_at,c.price_time,"
         "c.cot_side,c.relationship,c.broker_symbol,c.entry_at,c.entry_open,"
@@ -154,8 +143,8 @@ def evaluate(db, *, as_of, costs):
                     or obs.date() - repdate > timedelta(days=14)
                     or not price <= obs <= entry < outcome <= now
                     or obs - price > timedelta(hours=3)
-                    or entry - obs > MAX_DELAY or
-                    entry.minute % 15 or entry.second or entry.microsecond
+                    or entry - obs > MAX_DELAY
+                    or entry.minute % 15 or entry.second or entry.microsecond
                     or outcome < entry + timedelta(hours=hours)
                     or type(side) is not int or side not in (-1, 1)
                     or relation not in ("aligned", "divergent")
@@ -173,18 +162,47 @@ def evaluate(db, *, as_of, costs):
             if cot_first > obs:
                 reasons["cot_first_seen_future"] += 1
                 continue
-            # Original signal direction is known at obs. Never use the
-            # realized outcome to select a direction or choose a cohort.
-            cost = priced[sym]
-            pairs[hours].append({
-                "week": week, "cot": directional-cost, "long": long_bps-cost
+            cases.append({
+                "symbol": sym, "week": week, "observed": obs,
+                "entry": entry, "evaluated": outcome,
+                "horizon": hours, "side": side, "relationship": relation,
+                "cotGrossBps": float(directional),
+                "longGrossBps": float(long_bps),
             })
             reasons["paired_valid"] += 1
         except (ValueError, TypeError, OverflowError):
             reasons["invalid_cohort_or_outcome"] += 1
+    return cases, reasons, len(records), []
+
+
+def evaluate(db, *, as_of, costs):
+    """Paired observational COT vs long, both charged the same explicit costs.
+
+    No execution claims: selected cohorts are conditioned on COT readiness,
+    so this is NOT a neutral-universe strategy comparison.
+    """
+    if not isinstance(db, sqlite3.Connection):
+        raise ValueError("sqlite_connection_required")
+    now = _utc(as_of)
+    if not isinstance(costs, dict) or set(costs) != set(PILOT):
+        raise ValueError("exact_pilot_costs_required")
+    priced = {symbol: _cost(costs[symbol]) for symbol in PILOT}
+    cases, reasons, received, absent = _verified_cases(db, now)
+    if absent:
+        return {"schema": SCHEMA, "status": "UNAVAILABLE",
+                "missingTables": absent,
+                "edge": "NOT_ESTABLISHED", "newBrokerCalls": 0}
+    pairs = defaultdict(list)
+    for case in cases:
+        cost = priced[case["symbol"]]
+        pairs[case["horizon"]].append({
+            "week": case["week"],
+            "cot": case["cotGrossBps"]-cost,
+            "long": case["longGrossBps"]-cost,
+        })
     return {
         "schema": SCHEMA, "status": "DESCRIPTIVE_ONLY",
-        "received": len(records), "reasons": dict(sorted(reasons.items())),
+        "received": received, "reasons": dict(sorted(reasons.items())),
         "horizons": [{"hours": hours, **_summarize(pairs[hours])}
                      for hours in HORIZONS],
         "selection": "same_original_observation_and_horizon",
