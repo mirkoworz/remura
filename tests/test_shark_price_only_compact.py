@@ -158,6 +158,55 @@ class CompactLedgerTests(unittest.TestCase):
         self.assertEqual(state["fullScanDenominator"],34)
         self.assertEqual(state["targetedScansExcludedFromMainDenominator"],1)
 
+    def test_weekly_slot_coverage_is_bounded_verified_and_never_backfills(self):
+        _,rows=self._full()
+        start=rows[0][1]
+        from datetime import datetime,timezone
+        start_date=datetime.fromisoformat(start.replace("Z","+00:00"))
+        last=(start_date+timedelta(minutes=30)).isoformat().replace("+00:00","Z")
+        result=compact.audit_slot_coverage(
+            self.db,first_slot=start,last_slot=last)
+        self.assertEqual(result["potential15MinRecordingSlots"],3)
+        self.assertEqual(result["verifiedFullScanSlots"],1)
+        self.assertEqual(result["missingFullScanSlots"],2)
+        self.assertTrue(result["allStoredBatchesIntegrityChecked"])
+        self.assertFalse(result["missedPeriodsBackfilled"])
+        self.assertFalse(result["liveMarketSamplingCompletenessProven"])
+        self.assertEqual(result["brokerCalls"],0)
+        self.assertNotIn("EURUSD",json.dumps(result))
+
+    def test_targeted_scan_is_excluded_from_full_slot_coverage(self):
+        from datetime import datetime,timezone
+        rows=prepared(self.db)
+        with self.db:
+            self.db.execute("BEGIN")
+            compact.seal(self.db,rows[:2],full=False,
+                         clock=NOW+timedelta(seconds=6))
+        start=rows[0][1]
+        result=compact.audit_slot_coverage(
+            self.db,first_slot=start,last_slot=start)
+        self.assertEqual(result["potential15MinRecordingSlots"],1)
+        self.assertEqual(result["verifiedFullScanSlots"],0)
+        self.assertEqual(result["missingFullScanSlots"],1)
+
+    def test_coverage_window_over_seven_days_fails_closed(self):
+        from datetime import datetime,timezone
+        start="2026-10-01T00:00:00Z"
+        end="2026-10-09T00:00:00Z"
+        with self.assertRaisesRegex(ValueError,"unbounded_coverage_window"):
+            compact.audit_slot_coverage(
+                self.db,first_slot=start,last_slot=end)
+
+    def test_coverage_refuses_corrupt_archive_instead_of_counting_it(self):
+        _,rows=self._full()
+        self.db.execute("DROP TRIGGER research_compact_no_update")
+        self.db.execute(
+            "UPDATE research_price_only_batches SET payload_sha256=?",
+            ("0"*64,))
+        with self.assertRaises(ValueError):
+            compact.audit_slot_coverage(
+                self.db,first_slot=rows[0][1],last_slot=rows[0][1])
+
     def test_append_only_sqlite_triggers_and_corrupt_blob_detection(self):
         self._full()
         with self.assertRaises(sqlite3.IntegrityError):
