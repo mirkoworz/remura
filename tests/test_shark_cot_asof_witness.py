@@ -51,6 +51,13 @@ class CotWitnessTests(unittest.TestCase):
     def tearDown(self):
         self.db.close()
 
+    def test_catalog_matches_34_live_markets_not_all_possible_crosses(self):
+        self.assertEqual(len(w.CATALOG),34)
+        self.assertIn("EURJPY",w.CATALOG)
+        self.assertIn("NAS100",w.CATALOG)
+        self.assertNotIn("GER30",w.CATALOG)
+        self.assertNotIn("USDEUR",w.CATALOG)
+
     def test_local_existing_legacy_reports_are_witnessed_only_from_now(self):
         before=self.db.execute("SELECT count(*) FROM cot_first_seen").fetchone()[0]
         self.assertEqual(before,0)
