@@ -237,6 +237,29 @@ def capture(db, *, history_id, clock=None):
     }
 
 
+def capture_optional(db, *, history_id, clock=None):
+    """For a coordinated future opt-in: keep original monitoring operational.
+
+    Missing/late/revised COT evidence returns N/D and records NO evidence,
+    rather than rolling back an authentic Squalincome observation. The caller
+    must still check its INSERT rowcount==1 before calling. Unexpected SQLite
+    errors MUST propagate so operational DB failures cannot be concealed.
+    """
+    if not isinstance(db, sqlite3.Connection) or not db.in_transaction:
+        raise ValueError("caller_transaction_required")
+    try:
+        return capture(db, history_id=history_id, clock=clock)
+    except ValueError:
+        return {
+            "schema": SCHEMA, "status": "COT_PROVENANCE_NOT_VERIFIABLE",
+            "cotReportsVersionedForSignal": 0,
+            "originalSignalValuesMatched": False,
+            "tradingEdge": "NOT_ESTABLISHED",
+            "brokerCalls": 0, "notificationsEnabled": False,
+            "ordersEnabled": False,
+        }
+
+
 def summarize(db):
     """Only aggregate counters; never print private event clock or broker."""
     if not isinstance(db,sqlite3.Connection):
