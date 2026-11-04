@@ -11,6 +11,7 @@ import datetime as dt
 import json
 import math
 import sqlite3
+from contextlib import contextmanager
 
 from price_feed import MARKETS, parse_time, utcnow
 from price_store import connect, latest, audit_market
@@ -376,6 +377,32 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
     price_quality_by_symbol={}
     research_totals={}
     compact_rows=[]
+    scan_savepoint_counter=0
+
+    @contextmanager
+    def scan_write():
+        """Preserve legacy commits; compact mode keeps the outer transaction.
+
+        Per-symbol SAVEPOINT prevents an error inside a symbol's multi-write
+        sequence from leaking partial changes into the final atomic commit.
+        """
+        nonlocal scan_savepoint_counter
+        if compact_research is None:
+            with db:
+                yield
+            return
+        scan_savepoint_counter+=1
+        name=f"remura_scan_{scan_savepoint_counter}"
+        db.execute(f"SAVEPOINT {name}")
+        try:
+            yield
+        except BaseException:
+            db.execute(f"ROLLBACK TO SAVEPOINT {name}")
+            db.execute(f"RELEASE SAVEPOINT {name}")
+            raise
+        else:
+            db.execute(f"RELEASE SAVEPOINT {name}")
+
     def read_original_price(symbol):
         # Exactly the original v1.62 price operations, with no broker GETs.
         document=latest(db,symbol)
@@ -393,6 +420,13 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
         return document,quality,price
 
     try:
+        if compact_research is not None:
+            # Acquire a SQLite write reservation before the first price/COT
+            # observation. Roll back *all* original Squalincome changes if
+            # the compact block fails to seal, if SQLite is busy, or if a
+            # worker terminates before COMMIT. No historical backfill.
+            db.execute("PRAGMA busy_timeout=5000")
+            db.execute("BEGIN IMMEDIATE")
         for symbol in symbols:
             compact_row=None
             try:
@@ -403,9 +437,7 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
                     document,quality,price=read_original_price(symbol)
                     reason=("price_present" if price is not None else
                             price_exclusion(document,now,quality=quality))
-                    with db:
-                        db.execute("BEGIN")
-                        compact_row,_=compact_preparer.prepare(
+                    compact_row,_=compact_preparer.prepare(
                             db,symbol=symbol,scan_at=now.isoformat(),
                             observed_document=document,quality=quality,
                             price_result=price,price_reason=reason)
@@ -458,7 +490,7 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
                         prior=None
                 change=transition(prior,current)
                 stamp=now.isoformat()
-                with db:
+                with scan_write():
                     if change:
                         cur=db.execute("INSERT OR IGNORE INTO squalincome_events"
                            "(symbol,event_type,side,report_date,price_time,observed_at,detail) VALUES(?,?,?,?,?,?,?)",
@@ -541,7 +573,7 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
                             for symbol in symbols],
                  "newBaselines":baselines,"updatedObservations":updates,
                  "newEvents":events,"outcome":outcome}
-        with db:
+        with scan_write():
             db.execute("DELETE FROM squalincome_events WHERE observed_at < ?",
                 ((now-dt.timedelta(days=EVENT_KEEP_DAYS)).isoformat(),))
             db.execute("DELETE FROM squalincome_history WHERE observed_at < ?",
@@ -557,10 +589,10 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
         if compact_research is not None:
             if len(compact_rows)!=len(symbols):
                 raise ValueError("incomplete_price_only_compact_scan")
-            with db:
-                db.execute("BEGIN")
-                compressed=compact_research.seal(
-                    db,compact_rows,full=(targets is None))
+            # Within the very same BEGIN IMMEDIATE transaction as all prior
+            # Squalincome writes. The next db.commit() is the only commit.
+            compressed=compact_research.seal(
+                db,compact_rows,full=(targets is None))
             result["priceOnlyResearch"]={
                 "marketsAttempted":len(symbols),
                 "batchStatus":compressed["status"],
@@ -590,7 +622,13 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
             result["h1Frames"]={
                 symbol:{"H1":frames_by_symbol.get(symbol,{}).get("H1")}
                 for symbol in symbols}
+        if compact_research is not None:
+            db.commit()
         return result
+    except BaseException:
+        if compact_research is not None:
+            db.rollback()
+        raise
     finally:db.close()
 
 
