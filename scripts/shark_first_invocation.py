@@ -95,13 +95,17 @@ def first_invocation(db_path, *, clock=None):
             db.execute(f"""CREATE TRIGGER IF NOT EXISTS {name}
                 BEFORE {action} ON {TABLE}
                 BEGIN SELECT RAISE(ABORT,'immutable_research_activation'); END""")
-        db.execute(
+        inserted=db.execute(
             f"INSERT OR IGNORE INTO {TABLE} "
             "(id,kind,observed_at,schema_version) VALUES (1,?,?,?)",
-            (KIND,witness._iso(now),SCHEMA))
+            (KIND,witness._iso(now),SCHEMA)).rowcount
         recorded=read(db,at=now)
         db.commit()
-        return {"status":"FIRST_INVOCATION_WITNESSED","observedAt":recorded}
+        # If another server won a first-launch race, it owns the earlier
+        # timestamp. Do not claim this process inserted that immutable event.
+        return {"status":("FIRST_INVOCATION_WITNESSED" if inserted==1
+                          else "EXISTING_FIRST_INVOCATION"),
+                "observedAt":recorded}
     except BaseException:
         db.rollback()
         raise
