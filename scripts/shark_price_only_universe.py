@@ -15,12 +15,10 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 import hashlib
 import json
-import math
 import sqlite3
 
 from scripts import shark_cot_asof_witness as witness
 from scripts import shark_price_asof_evidence as prices
-from scripts import shark_universe_lineage as universe
 
 SCHEMA = "remura-price-only-universe-v1"
 TABLE = "research_price_only_universe"
@@ -95,7 +93,7 @@ def _document_digest(db,symbol,document):
 
 
 def capture(db, *, symbol, scan_at, observed_document,
-            quality, price_result, clock=None):
+            quality, price_result, price_reason, clock=None):
     """Write ONE record per market / observed 15-min UTC scan slot.
 
     Caller MUST use existing scan_at and the same document/quality/price_view
@@ -107,8 +105,7 @@ def capture(db, *, symbol, scan_at, observed_document,
     """
     if not isinstance(db,sqlite3.Connection) or not db.in_transaction:
         raise ValueError("scan_transaction_required")
-    if symbol not in (universe.contracts(s) and s
-                      for s in prices_monitored()):
+    if symbol not in prices_monitored():
         raise ValueError("symbol_not_monitored")
     observed=witness._parse(scan_at)
     now=witness._clock(clock)
@@ -122,6 +119,11 @@ def capture(db, *, symbol, scan_at, observed_document,
     if (integrity not in ALLOWED_QUALITY or freshness not in ALLOWED_FRESHNESS
             or type(ready) is not bool):
         raise ValueError("invalid_original_quality")
+    if type(price_reason) is not str or price_reason not in (
+            "price_present","price_no_direction","trend_disagreement",
+            "prices_stale","prices_missing","candles_insufficient",
+            "price_error","ohlc_mismatch","market_closed"):
+        raise ValueError("price_only_reason_not_allowlisted")
     source_sha=_document_digest(db,symbol,observed_document)
     price_side=h1=h4=m15=0
     price_state=None
@@ -129,9 +131,16 @@ def capture(db, *, symbol, scan_at, observed_document,
     complete=False
     if ready and integrity=="verified" and freshness=="recent":
         if price_result is None:
-            state="PRICE_NO_TREND"
-            # This is part of the DENOMINATOR, not an eligible trade.
+            if price_reason in ("price_no_direction","trend_disagreement"):
+                state="PRICE_NO_TREND"
+            else:
+                # Even with M15 recent and aggregate quality verified, LIVE
+                # price_view can reject H1 by its own tighter clock guard.
+                state="PRICE_QUALITY_BLOCKED"
+            # Both are denominator entries; neither is a trading signal.
         else:
+            if price_reason!="price_present":
+                raise ValueError("price_reason_must_match_ready_candidate")
             if not isinstance(price_result,dict):
                 raise ValueError("price_signal_not_a_dict")
             price_side=price_result.get("side")
@@ -156,7 +165,7 @@ def capture(db, *, symbol, scan_at, observed_document,
             complete=proof["volume16"]
             state="PRICE_CONTEXT_READY"
     else:
-        if price_result is not None:
+        if price_result is not None or price_reason=="price_present":
             raise ValueError("price_signal_from_stale_or_missing_quality")
         state="PRICE_QUALITY_BLOCKED"
     bucket=int(observed.timestamp())//900*900
