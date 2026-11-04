@@ -99,6 +99,20 @@ class PriceOnlyTests(unittest.TestCase):
         self.assertEqual(universe.summary(self.db)["byState"]["PRICE_NO_TREND"],1)
         self.assertEqual(status["newBrokerCalls"],0)
 
+    def test_roundoff_on_identically_flat_prices_is_not_a_real_candidate(self):
+        # The LIVE v1.62 EMA can report a direction for 1.015 exactly
+        # constant closes because e20 and e50 differ by ~machine epsilon.
+        # Keep what was ACTUALLY observed but do not count it as a candidate.
+        doc=original(self.db)
+        qa,candidate,reason=classify(doc)
+        self.assertEqual(qa["integrity"],"verified")
+        self.assertIsNotNone(candidate)  # documents current LIVE behavior
+        out=self.record()
+        self.assertEqual(out["status"],"PRICE_NUMERIC_AMBIGUOUS")
+        self.assertFalse(out["priceQualifiedWithoutCot"])
+        self.assertFalse(out["emaSeparationAboveNumericalTolerance"])
+        self.assertEqual(universe.summary(self.db)["byState"]["PRICE_NUMERIC_AMBIGUOUS"],1)
+
     def test_existing_live_price_view_supplies_independent_candidate(self):
         doc=trend(self.db)
         quality,candidate,reason=classify(doc)
@@ -111,6 +125,7 @@ class PriceOnlyTests(unittest.TestCase):
         result=self.record()
         self.assertEqual(result["status"],"PRICE_CONTEXT_READY")
         self.assertTrue(result["priceQualifiedWithoutCot"])
+        self.assertTrue(result["emaSeparationAboveNumericalTolerance"])
         self.assertTrue(result["last16TickVolumeComplete"])
         self.assertFalse(result["originalPriceDirectionReproducedIndependently"])
         self.assertFalse(result["independentCollectionTimeKnown"])
