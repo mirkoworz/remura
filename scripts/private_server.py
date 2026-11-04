@@ -1051,7 +1051,12 @@ def observe_periodic_squalincome(db_path, env=None):
               "ACK_UNVALIDATED_PROSPECTIVE_RESEARCH")
     if not opted_in:
         return observe_squalincome(db_path)
-    # Lazy import: zero experimental code load on the legacy default path.
+    # First actual periodic opt-in entry is committed BEFORE any source
+    # reads. If the immutable witness is busy/broken, fail CLOSED: never
+    # produce an unanchored research sample or switch to a duplicate scan.
+    # Both imports stay lazy; default v1.62 does no new SQLite work.
+    from scripts import shark_first_invocation
+    shark_first_invocation.first_invocation(db_path)
     from signals_monitor import scan_once_with_compact_price_only_research
     return scan_once_with_compact_price_only_research(db_path)
 
