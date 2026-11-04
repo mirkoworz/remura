@@ -106,6 +106,7 @@ def evaluate(db, *, as_of, train_end, validation_end, costs,
     contaminated_weeks = {week for week, folds in by_week.items()
                           if len(folds) > 1}
     excluded = Counter(rejected)
+    originally_eligible = excluded.pop("paired_valid", 0)
     buckets = {f: defaultdict(list)
                for f in ("train", "validation", "test")}
     for c, fold in proposed:
@@ -131,6 +132,7 @@ def evaluate(db, *, as_of, train_end, validation_end, costs,
     return {
         "schema": SCHEMA, "status": "RESEARCH_ONLY",
         "received": received,
+        "eligibleProvenance": originally_eligible,
         "excluded": dict(sorted(excluded.items())),
         "folds": folds,
         "design": "fixed_chronological_windows_outcome_purged",
