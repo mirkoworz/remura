@@ -132,7 +132,7 @@ def _ema_direction_not_roundoff(doc,side):
     return True
 
 
-def capture(db, *, symbol, scan_at, observed_document,
+def prepare(db, *, symbol, scan_at, observed_document,
             quality, price_result, price_reason, clock=None):
     """Write ONE record per market / observed 15-min UTC scan slot.
 
@@ -212,20 +212,12 @@ def capture(db, *, symbol, scan_at, observed_document,
         state="PRICE_QUALITY_BLOCKED"
     bucket=int(observed.timestamp())//900*900
     slot=witness._iso(datetime.fromtimestamp(bucket,tz=timezone.utc))
-    if db.execute(
-        f"SELECT 1 FROM {TABLE} WHERE symbol=? AND observed_slot=?",
-        (symbol,slot)).fetchone():
-        return {"schema":SCHEMA,"status":"DUPLICATE_SCAN_SLOT",
-                "newRows":0,"newBrokerCalls":0,
-                "edge":"NOT_ESTABLISHED","alertsEnabled":False}
-    if db.execute(f"SELECT count(*) FROM {TABLE}").fetchone()[0]>=MAX_EVENTS:
-        raise ValueError("price_only_capacity_reached")
-    db.execute(
-        f"INSERT INTO {TABLE} VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-        (symbol,slot,witness._iso(observed),witness._iso(now),state,
+    # One deterministic 16-field row: the legacy per-market writer and
+    # future compact scan-batch writer MUST share this exact validation.
+    row=(symbol,slot,witness._iso(observed),witness._iso(now),state,
          integrity,freshness,witness._iso(witness._parse(last_close)) if last_close else None,
-         price_side,price_state,h1,h4,m15,source_sha,int(complete),ALGORITHM))
-    return {"schema":SCHEMA,"status":state,"newRows":1,
+         price_side,price_state,h1,h4,m15,source_sha,int(complete),ALGORITHM)
+    status={"schema":SCHEMA,"status":state,"newRows":1,
             "priceQualifiedWithoutCot":state=="PRICE_CONTEXT_READY",
             "existingPriceCadenceOnly":True,
             "last16TickVolumeComplete":complete,
@@ -236,6 +228,26 @@ def capture(db, *, symbol, scan_at, observed_document,
             "noCotDataUsed":True,
             "edge":"NOT_ESTABLISHED","newBrokerCalls":0,
             "alertsEnabled":False,"ordersEnabled":False}
+    return row,status
+
+
+def capture(db, *, symbol, scan_at, observed_document,
+            quality, price_result, price_reason, clock=None):
+    """Legacy research writer; unchanged semantics, same shared preparation."""
+    row,result=prepare(
+        db,symbol=symbol,scan_at=scan_at,observed_document=observed_document,
+        quality=quality,price_result=price_result,price_reason=price_reason,
+        clock=clock)
+    if db.execute(
+        f"SELECT 1 FROM {TABLE} WHERE symbol=? AND observed_slot=?",
+        (symbol,row[1])).fetchone():
+        return {"schema":SCHEMA,"status":"DUPLICATE_SCAN_SLOT",
+                "newRows":0,"newBrokerCalls":0,
+                "edge":"NOT_ESTABLISHED","alertsEnabled":False}
+    if db.execute(f"SELECT count(*) FROM {TABLE}").fetchone()[0]>=MAX_EVENTS:
+        raise ValueError("price_only_capacity_reached")
+    db.execute(f"INSERT INTO {TABLE} VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",row)
+    return result
 
 
 def prices_monitored():
