@@ -1,6 +1,6 @@
 # REMURA — TRACK A: Qualità H1 e raccolta prezzi
 
-**Ultimo stato attestato:** 04/11/2026 ore 09:08 Italia (SQLite LIVE, 50/50 paired validi sugli 8 slot, 185 recuperi; full-scan 27/34 H1 alle 08:22:50). **Roadmap coordinatrice:** [ROADMAP.md](ROADMAP.md). **Track parallelo:** [B — Shark Science](ROADMAP-B-SHARK-SCIENCE.md).
+**Ultimo stato attestato:** 04/11/2026 ore 09:30 Italia (50/50 paired validi; full-scan 09:23, 8 H1 stale allineate a due gruppi di raccolta OK). **Roadmap coordinatrice:** [ROADMAP.md](ROADMAP.md). **Track parallelo:** [B — Shark Science](ROADMAP-B-SHARK-SCIENCE.md).
 
 ## 04/11/2026 ore 07:15 Italia — verifica A1 GitHub e replay offline (NON misura LIVE nuova)
 
@@ -17,6 +17,20 @@
 - Permutando soltanto i 36 strumenti non prioritari fra i medesimi slot, mantenendo esattamente 40 acquisizioni programmate/2h, i **totali sintetici restano invariati** nelle fasi 0, 4 e 14 minuti: cambiano i nomi dei mercati penalizzati, non il numero complessivo. Spostare la scansione per far risultare "verde" un contatore **non è una correzione della freschezza**; serve prova LIVE prima di cambiare pianificazione.
 
 **Prossima verifica A1 obbligatoria:** leggere tramite la diagnostica privata schedulata (quando realmente eseguita) o una singola GET locale read-only `/private-api/signals/status` gli aggregati `h1Paired` (totali, validi, N/D, last UTC, readyBefore/After, staleToReady, h1Advanced, h1Unchanged); leggere la full-scan dei 34 al suo timestamp e l'ultimo stato batch. Confrontare età di ogni H1 con M15/H4, fasi UTC e mercati precedentemente problematici. Se >=8 record totali ma validi insufficienti, **proseguire l'osservazione**. Non modificare codice operativo, quote, soglie, cron o produzione sulla base del replay.
+
+## 04/11/2026 ore 09:30 Italia — A3: otto H1 stale in due coorti, tentativi OK
+
+**Fonte reale:** screenshot lettura privata `/private-api/signals/status` e `/private-api/prices/status`, senza chiamate broker aggiuntive, eseguita dall'utente 04/11 ore 09:30 Italia. La scansione full-scan `2026-11-04T08:23:02.710633+00:00` (= **09:23:02 Italia**) aveva **8/34 H1 oltre soglia**:
+`EURJPY`, `EURNZD`, `GBPAUD`, `GBPCAD`, `GBPCHF`, `GBPJPY`, `GBPNZD`, `GBPUSD`.
+
+- Tutti e otto: **fonte `primary`, ultimo esito `ok`, ultimo tentativo registrato prima della scansione**. Cinque (`EURJPY,EURNZD,GBPAUD,GBPCAD,GBPCHF`) con `lastAttempt≈06:31:30 UTC`; tre (`GBPJPY,GBPNZD,GBPUSD`) con `lastAttempt≈06:46:30 UTC`. Questi sono timestamp dell'ultimo *tentativo* riportato dallo status letto dopo la full-scan, non timestamp esatti di commit candela o prova definitiva dello stato alle 08:23. Il test conferma che a lettura 09:30 non compariva un tentativo successivo per questi otto.
+- A `08:23:02 UTC`, **H1 ≈143 minuti**, **M15 ≈98–113 minuti**, **H4 ≈263 minuti**. Soglie inalterate: H1 120m (**stale**), M15 180m (**entro**), H4 300m (**entro**). Chiusura ultima H1 coerente con le **06:00 UTC**, timestamp M15 coerente con ultime chiusure **06:15** o **06:30 UTC**; questo spiega la divergenza tra età M15 e H1 senza postulare bug UTC/DST.
+- I valori `lastComplete` stampati da `prices/status` rappresentano **l'apertura dell'ultima M15**, e sono stati letti *dopo* la scansione. Non scambiarli per la sua chiusura né per un campione storico perfettamente simultaneo alla full-scan.
+- Il ciclo di raccolta attuale è nominalmente **120 minuti per gli strumenti non duplicati**. Se il gruppo delle 06:31:30/06:46:30 si ripete puntualmente, i **prossimi tentativi previsti** sarebbero intorno alle **08:31:30 e 08:46:30 UTC** (09:31 e 09:46 Italia), **dopo la scansione** delle 08:23. Questa è una previsione di *schedule*, NON una prova che il batch sia effettivamente riuscito o che la prossima H1 divenga eligible. Non aggiungere timer/polling per verificarla.
+- Gli otto simboli sono coerenti con **due gruppi consecutivi** di aggiornamento, uno di cinque e uno di tre osservati da Squalincome, ma lo slot/market mapping effettivo non è qui verificato. Un ultimo esito `ok` non prova continuità di ogni candela M15, integrità completa H4 o assenza di errori futuri.
+- Evidenza ora **fortemente favorevole al disallineamento temporale fra full-scan, batch e rollup H1** come causa principale dei gruppi stale che ruotano; **nessun errore UTC, corruzione OHLC o sorgente primaria difettosa dimostrato**. Il comportamento non giustifica modifiche di soglia, API, scheduling o banner.
+
+**Gate A3 successivo (una lettura, no polling):** confrontare per questi otto strumenti le coppie `lastAttempt`/`lastOutcome` e la reale ultima H1 chiusa **dopo il successivo slot** attraverso SQLite read-only o le GET private esistenti. Contare `nuovo tentativo`, `ingest riuscito`, `H1 avanzata`, `H1 ancora stale` all'istante del nuovo controllo; non confrontare timestamp da scansioni diverse come se fossero simultanei. Se il giro successivo conferma tutti gli 8 aggiornati con H1 genuina, A3 può concludersi per questa coorte, quindi A4 deve verificare offline una migliore **informazione sullo stato di attesa del batch** e il tempo fino al post-ingest, non spostare le letture per rendere verdi dati vecchi.
 
 ## 04/11/2026 ore 09:08 Italia — A3: 50 campioni paired ripartiti sui veri 8 slot
 
