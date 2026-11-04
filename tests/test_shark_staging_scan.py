@@ -184,6 +184,18 @@ class StagingScanTests(unittest.TestCase):
             self.assertLess(peak,96*1024*1024)
             self.assertLess(elapsed,8.0)
             self.assertGreaterEqual(baseline_seconds,0.0)
+            # Public synthetic CI numbers ONLY: tracemalloc measures traced
+            # Python allocations, NOT real resident memory or Oracle billing.
+            print("REMURA_TRACK_B_SYNTHETIC_STAGE_METRICS="+json.dumps({
+                "markets":len(states),
+                "baselineSeconds":round(baseline_seconds,4),
+                "instrumentedSeconds":round(elapsed,4),
+                "incrementalSqliteKiB":round(
+                    (stage_allocated-baseline_allocated)/1024,2),
+                "tracedPeakMiB":round(peak/(1024*1024),3),
+                "runnerOnlyNotOracleMeasurements":True,
+                "realTradingEdgeProven":False,
+            },sort_keys=True,separators=(",",":")))
 
             # Repeat unchanged source in SAME scan slot: same LIVE observation
             # and same 34 research rows; originals still byte-wise equivalent.
