@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 import hashlib
+import math
 import json
 import sqlite3
 
@@ -29,7 +30,9 @@ ALLOWED_QUALITY = frozenset(
     ("verified","partial","invalid","insufficient","missing"))
 ALLOWED_FRESHNESS = frozenset(("recent","weekend","stale","missing"))
 DIRECTIONS = frozenset((-1,0,1))
-STATES = ("PRICE_CONTEXT_READY","PRICE_NO_TREND","PRICE_QUALITY_BLOCKED")
+STATES = ("PRICE_CONTEXT_READY","PRICE_NO_TREND",
+          "PRICE_QUALITY_BLOCKED","PRICE_NUMERIC_AMBIGUOUS")
+EMA_RELATIVE_EPS = 1e-12  # numerical noise, NOT optimized trading threshold
 
 
 def ensure_schema(db):
@@ -43,7 +46,8 @@ def ensure_schema(db):
             observed_at TEXT NOT NULL,
             witnessed_at TEXT NOT NULL,
             state TEXT NOT NULL CHECK(state IN
-                ('PRICE_CONTEXT_READY','PRICE_NO_TREND','PRICE_QUALITY_BLOCKED')),
+                ('PRICE_CONTEXT_READY','PRICE_NO_TREND','PRICE_QUALITY_BLOCKED',
+                 'PRICE_NUMERIC_AMBIGUOUS')),
             quality_integrity TEXT NOT NULL,
             quality_freshness TEXT NOT NULL,
             m15_close_at TEXT,
@@ -90,6 +94,42 @@ def _document_digest(db,symbol,document):
     if left!=right:
         raise ValueError("price_document_race")
     return hashlib.sha256(left.encode()).hexdigest()
+
+
+def _ema(values,length):
+    if len(values)<length:
+        raise ValueError("not_enough_closed_bars_for_ema")
+    value=sum(values[:length])/length
+    mult=2/(length+1)
+    for cl in values[length:]:
+        value=cl*mult+value*(1-mult)
+    return value
+
+
+def _ema_direction_not_roundoff(doc,side):
+    """Protect research denominators from spurious IEEE754 EMA ordering.
+
+    A tiny EMA ordering in an EXACTLY FLAT market is not a directional
+    observation. This ~1e-12 relative numerical tolerance is NOT an
+    empirically optimized profitability threshold; returns remain unproven.
+    """
+    for frame in ("H1","H4"):
+        closes=[row["c"] for row in doc["timeframes"][frame]]
+        a,b=_ema(closes,20),_ema(closes,50)
+        cl=closes[-1]
+        scale=max(abs(cl),abs(a),abs(b))
+        gap=EMA_RELATIVE_EPS*scale
+        if not (math.isfinite(scale) and math.isfinite(gap) and gap>0):
+            return False
+        if side==1:
+            if not (cl-a>gap and a-b>gap):
+                return False
+        elif side==-1:
+            if not (a-cl>gap and b-a>gap):
+                return False
+        else:
+            return False
+    return True
 
 
 def capture(db, *, symbol, scan_at, observed_document,
@@ -163,7 +203,9 @@ def capture(db, *, symbol, scan_at, observed_document,
             proof=prices._source(
                 db,symbol,observed,closed,observed_document)
             complete=proof["volume16"]
-            state="PRICE_CONTEXT_READY"
+            state=("PRICE_CONTEXT_READY"
+                   if _ema_direction_not_roundoff(observed_document,price_side)
+                   else "PRICE_NUMERIC_AMBIGUOUS")
     else:
         if price_result is not None or price_reason=="price_present":
             raise ValueError("price_signal_from_stale_or_missing_quality")
@@ -188,6 +230,8 @@ def capture(db, *, symbol, scan_at, observed_document,
             "existingPriceCadenceOnly":True,
             "last16TickVolumeComplete":complete,
             "originalPriceDirectionReproducedIndependently":False,
+            "emaSeparationAboveNumericalTolerance":(
+                state=="PRICE_CONTEXT_READY"),
             "independentCollectionTimeKnown":False,
             "noCotDataUsed":True,
             "edge":"NOT_ESTABLISHED","newBrokerCalls":0,
