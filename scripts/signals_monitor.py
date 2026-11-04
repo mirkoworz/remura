@@ -382,8 +382,10 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
     price_quality_by_symbol={}
     research_totals={}
     compact_rows=[]
+    compact_snapshot={}
     scan_savepoint_counter=0
     compact_write_lock_start=None
+    compact_read_snapshot_ms=None
 
     @contextmanager
     def scan_write():
@@ -427,26 +429,58 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
 
     try:
         if compact_research is not None:
-            # Acquire a SQLite write reservation before the first price/COT
-            # observation. Roll back *all* original Squalincome changes if
-            # the compact block fails to seal, if SQLite is busy, or if a
-            # worker terminates before COMMIT. No historical backfill.
+            # Phase 1: a single repeatable SQLite READ snapshot. All source
+            # documents and COT are classified with exactly the same version
+            # and original UTC observation clock, without writer reservation.
+            # The prepared cache stores only tiny classifications and
+            # evidence rows, not 34 copies of raw OHLC documents.
+            read_started=time.perf_counter()
+            source_version=db.execute("PRAGMA data_version").fetchone()[0]
+            db.execute("BEGIN")
+            try:
+                for scan_symbol in symbols:
+                    scanned_row=None
+                    try:
+                        document,quality,price=read_original_price(scan_symbol)
+                        reason=("price_present" if price is not None else
+                                price_exclusion(document,now,quality=quality))
+                        scanned_row,_=compact_preparer.prepare(
+                            db,symbol=scan_symbol,scan_at=now.isoformat(),
+                            observed_document=document,quality=quality,
+                            price_result=price,price_reason=reason)
+                        series=cot_series(db,scan_symbol)
+                        cot=cot_view(series,scan_symbol,now)
+                        current=classify(cot,price)
+                        compact_snapshot[scan_symbol]=(
+                            scanned_row,series,cot,price,current,
+                            document,quality)
+                    except (ValueError,TypeError,KeyError,OverflowError):
+                        # A price failure is an explicit unknown. A COT
+                        # failure after price preparation keeps its valid
+                        # price-only evidence without a COT prefilter.
+                        compact_snapshot[scan_symbol]=(scanned_row,)
+            finally:
+                db.rollback()  # end READ only; no writes have been issued
+            compact_read_snapshot_ms=round(
+                (time.perf_counter()-read_started)*1000,1)
+            # Phase 2: commit all original Squalincome changes and the batch
+            # atomically, holding the SQLite writer reservation ONLY here.
+            # Any external committed write after the read snapshot invalidates
+            # every prepared provenance claim, including already-seen COT.
             db.execute("BEGIN IMMEDIATE")
             compact_write_lock_start=time.perf_counter()
+            if db.execute("PRAGMA data_version").fetchone()[0]!=source_version:
+                raise sqlite3.OperationalError(
+                    "research_source_changed_before_atomic_commit")
         for symbol in symbols:
             compact_row=None
             try:
                 if compact_research is not None:
-                    # All price data are calculated BEFORE COT. The exact
-                    # shared price-only validation is reused, but there are
-                    # NO per-market research SQL writes or separate DBs.
-                    document,quality,price=read_original_price(symbol)
-                    reason=("price_present" if price is not None else
-                            price_exclusion(document,now,quality=quality))
-                    compact_row,_=compact_preparer.prepare(
-                            db,symbol=symbol,scan_at=now.isoformat(),
-                            observed_document=document,quality=quality,
-                            price_result=price,price_reason=reason)
+                    frozen=compact_snapshot[symbol]
+                    compact_row=frozen[0]
+                    if len(frozen)==1:
+                        raise ValueError("research_source_unverifiable")
+                    _,series,cot,price,current,document,quality=frozen
                 if price_only_research is not None:
                     # The PRICE-ONLY denominator is captured BEFORE ANY
                     # per-symbol COT access. An absent/broken COT must never
@@ -463,11 +497,12 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
                     result_status=research_result["status"]
                     research_totals[result_status]=research_totals.get(
                         result_status,0)+1
-                series=cot_series(db,symbol)
-                cot=cot_view(series,symbol,now)
-                if price_only_research is None and compact_research is None:
-                    document,quality,price=read_original_price(symbol)
-                current=classify(cot,price)
+                if compact_research is None:
+                    series=cot_series(db,symbol)
+                    cot=cot_view(series,symbol,now)
+                    if price_only_research is None:
+                        document,quality,price=read_original_price(symbol)
+                    current=classify(cot,price)
                 if current is None:
                     reasons=[]
                     if cot is None:
@@ -635,6 +670,9 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
             # does not measure network/latency/billing.
             result["priceOnlyResearch"]["sqliteWriterLockMs"]=round(
                 (time.perf_counter()-compact_write_lock_start)*1000,1)
+            result["priceOnlyResearch"]["readOnlySnapshotMs"]=(
+                compact_read_snapshot_ms)
+            result["priceOnlyResearch"]["snapshotVersionValidated"]=True
         return result
     except BaseException:
         if compact_research is not None:
