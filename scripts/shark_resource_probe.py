@@ -24,6 +24,9 @@ import time
 from unittest.mock import patch
 
 ROOT=Path(__file__).resolve().parents[1]
+# Running as 'python scripts/foo.py' does not reliably include the repo root
+# for the 'from scripts import ...' research namespace used by existing tests.
+sys.path.insert(0,str(ROOT))
 sys.path.insert(0,str(ROOT/"scripts"))
 sys.path.insert(0,str(ROOT/"tests"))
 
