@@ -1,6 +1,6 @@
 # REMURA — TRACK A: Qualità H1 e raccolta prezzi
 
-**Ultimo stato attestato:** 04/11/2026 ore 10:43 Italia (full-scan 10:38:17: M15 34/34, H1 e H4 31/34; collector 395/395, post-scan 79/79, risorse misurate). **Roadmap coordinatrice:** [ROADMAP.md](ROADMAP.md). **Track parallelo:** [B — Shark Science](ROADMAP-B-SHARK-SCIENCE.md).
+**Ultimo stato attestato:** 04/11/2026 ore 10:47 Italia (3/3 H1 stale = 3/3 H4 stale = 3/3 prices_stale: AUDCAD/AUDCHF/AUDJPY; H1 avanzate di 2h tra 2 full-scan). **Roadmap coordinatrice:** [ROADMAP.md](ROADMAP.md). **Track parallelo:** [B — Shark Science](ROADMAP-B-SHARK-SCIENCE.md).
 
 ## 04/11/2026 ore 07:15 Italia — verifica A1 GitHub e replay offline (NON misura LIVE nuova)
 
@@ -17,6 +17,23 @@
 - Permutando soltanto i 36 strumenti non prioritari fra i medesimi slot, mantenendo esattamente 40 acquisizioni programmate/2h, i **totali sintetici restano invariati** nelle fasi 0, 4 e 14 minuti: cambiano i nomi dei mercati penalizzati, non il numero complessivo. Spostare la scansione per far risultare "verde" un contatore **non è una correzione della freschezza**; serve prova LIVE prima di cambiare pianificazione.
 
 **Prossima verifica A1 obbligatoria:** leggere tramite la diagnostica privata schedulata (quando realmente eseguita) o una singola GET locale read-only `/private-api/signals/status` gli aggregati `h1Paired` (totali, validi, N/D, last UTC, readyBefore/After, staleToReady, h1Advanced, h1Unchanged); leggere la full-scan dei 34 al suo timestamp e l'ultimo stato batch. Confrontare età di ogni H1 con M15/H4, fasi UTC e mercati precedentemente problematici. Se >=8 record totali ma validi insufficienti, **proseguire l'osservazione**. Non modificare codice operativo, quote, soglie, cron o produzione sulla base del replay.
+
+## 04/11/2026 ore 10:47 Italia — A3 finale: coincidono esattamente i tre insiemi stale
+
+**Fonte:** screenshot dell'utente dal comando GET locale read-only `/private-api/signals/status`, eseguito alle 10:47 italiane e riferito alla medesima *full-scan* salvata delle `2026-11-04T09:38:17.703163+00:00` (10:38:17 Italia). Nessuna nuova chiamata cTrader.
+
+- `M15_STALE = NESSUNO`.
+- `H1_STALE = AUDCAD, AUDCHF, AUDJPY`.
+- `H4_STALE = AUDCAD, AUDCHF, AUDJPY`.
+- `PREZZI_STALE = AUDCAD, AUDCHF, AUDJPY`.
+- Intersezione H1∩H4 = **3/3**, ed è identica alle esclusioni `prices_stale`; non sono 9 strumenti distinti. **La coincidenza mancava nell'A6 e ora è verificata**.
+- Per ciascuno: `M15_age≈113,3m` (**entro** soglia 180m), `H1_age≈158,3m` (**oltre** 120m), `H4_age≈338,3m` (**oltre** 300m). Tutti i timestamp sono relativi alla stessa full-scan UTC.
+- Le chiusure corrispondono a M15 **07:45 UTC**, H1 **07:00 UTC**, H4 **04:00 UTC**. La H1/H4 successiva chiuderebbe alle **08:00 UTC**, ma la M15 più recente disponibile alla scansione chiude alle **07:45 UTC**: manca almeno il quarto d'ora finale necessario per completare il bucket orario/quadrorario, senza imputare automaticamente un *gap anomalo*. Non creare né anticipare artificiosamente la 08:00.
+- **Confronto longitudinale utile per gli stessi tre mercati**: alla precedente full-scan `2026-11-04T07:22:50 UTC` la H1 era vecchia di ≈142,8m (chiusura ≈**05:00 UTC**); alla nuova full-scan `09:38:17 UTC` la H1 ha chiusura ≈**07:00 UTC**. La chiusura reale H1 è dunque **avanzata di due ore** fra le due fotografie, pur risultando ancora temporaneamente stale al secondo controllo. Questo dimostra che non è una H1 definitivamente bloccata per questi tre strumenti; **non certifica** esattamente a che secondo il batch sia arrivato.
+- L'osservazione rafforza la causa principale **rotazione dei batch ~120m + chiusure UTC + soglie genuine**. Non dimostra un bug nel rollup né un'API rotta; test precedenti della coorte GBP/EUR delle 09:23→09:48 avevano già mostrato 8/8 H1 avanzate/fresche dopo il batch, senza anomalie di rollup sul controllo mirato.
+- **Limite residuo:** questo audit riguarda mercati/fotografie di una sessione aperta, non ogni futura chiusura di mercato, weekend o incongruenza H4; casi futuri anomali devono tornare `N/D` o `stale` fino a prova, senza presunzione di innocuità.
+
+**Decisione di uscita TRACK A per le cause H1 osservate:** A3 completato per i casi attuali; A4 simulazione a pari budget già documentata, A5 = **nessun fix necessario e nessuna release**, A6 rapporto con metriche LIVE completato. L'ottimizzazione del **solo numero mostrato nella full-scan** sarebbe cosmetica; i dati post-ingest reali vengono già verificati dal monitor esistente. Lasciare la PR A #88 **draft e isolata** finché non si coordina il merge documentale con TRACK B #89, senza toccare la VPS o i banner v1.62. Continuare a sorvegliare disponibilità e quote nel normale monitor, senza nuovo cron o richieste broker. La fatturazione Oracle/GitHub/Firestore rimane **non verificata** dai soli contatori tecnici.
 
 ## 04/11/2026 ore 10:43 Italia — A6: audit multisistema LIVE M15/H1/H4 + risorse
 
@@ -149,9 +166,9 @@ Assicurare che REMURA ragioni su prezzi **realmente verificati** e non su H1 vec
 ## Passi e criteri di completamento (A)
 - [x] **A1 — audit aggiornato (04/11 08:32):** leggere lo stato LIVE **prima** di qualsiasi modifica (health, SHA installato, auto-update, flag nel processo, snapshot e campioni). Non confondere raccolte pre-attivazione con record `remura_h1_paired`; confrontare timestamp/slot. Preferire diagnostica privata read-only già presente, altrimenti un solo comando Termius quando davvero necessario. Verificare se il workflow schedulato è stato eseguito, non assumerlo.
 - [x] **A2 — campione sufficiente (48/48 validi, 216 confronti):** raccogliere **almeno 8 record paired nuovi, reali**, successivi all'attivazione; distinguere `samples`, `comparableSamples`, `unverifiableSamples`, `lastState`, `readyBefore`, `readyAfter`, `staleToReady`, `h1Advanced`, `h1Unchanged`. Se 8 totali ma troppi N/D, prolungare la misura anziché inventare conclusioni.
-- [ ] **A3 — indagine per causa:** correlare gli 8 mercati stale con sessioni/chiusure H1 UTC, momento del full-scan, slot effettivi, finestra M15→H1 (4 barre), sorgente primaria/backup, età all'istante della decisione e weekend. Testare localmente le ipotesi UTC/DST prima di intervenire. Non confondere 26/34 osservati a 20:39 con stato attuale.
+- [x] **A3 — indagine per causa (chiusa per le coorti osservate il 04/11; restano monitoraggi ordinari per sessioni e anomalie future):** correlare gli 8 mercati stale con sessioni/chiusure H1 UTC, momento del full-scan, slot effettivi, finestra M15→H1 (4 barre), sorgente primaria/backup, età all'istante della decisione e weekend. Testare localmente le ipotesi UTC/DST prima di intervenire. Non confondere 26/34 osservati a 20:39 con stato attuale.
 - [x] **A4 — proposte senza costi (solo valutazione offline, nessuna modifica LIVE):** simulare offline alternative sulla **stessa quantità di chiamate**: prioritaria 8×5=40 acquisizioni programmate/2h (EURUSD e XAUUSD ripetuti) contro 38 standard. Confrontare disponibilità realmente valida e N/D, non soltanto conteggi cosmetici. Rivedere [PR collector #19](https://github.com/mirkoworz/remura-collector/pull/19) (replay sintetico, non effetto LIVE certificato).
-- [ ] **A5 — eventuale fix:** solo se supportato da campioni e test, preparare PR focalizzata su raccolta/telemetria; CI verdi e review diff. Un solo track per volta può effettuare merge, version bump e deploy VPS. Ogni rilascio applicativo richiede **v nuova + data/ora italiana effettiva in alto sulle nove pagine**, backup SQLite, restore-test, rollback e riconciliazione autoupdater.
+- [x] **A5 — valutazione fix: NON NECESSARIO (nessun bug H1 dimostrato; nessuna modifica LIVE):** solo se supportato da campioni e test, preparare PR focalizzata su raccolta/telemetria; CI verdi e review diff. Un solo track per volta può effettuare merge, version bump e deploy VPS. Ogni rilascio applicativo richiede **v nuova + data/ora italiana effettiva in alto sulle nove pagine**, backup SQLite, restore-test, rollback e riconciliazione autoupdater.
 - [x] **A6 — conclusione (report sullo snapshot 04/11 ore 10:38, con limiti espliciti):** report con prima/dopo su campioni reali, impatto M15/H1/H4, differenza sulle esclusioni Squalincome, latenza e uso API/disco. Se non c'è miglioramento dimostrabile, dichiararlo.
 
 ## Limiti, costi e coordinamento
