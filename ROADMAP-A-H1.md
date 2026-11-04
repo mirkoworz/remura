@@ -2,6 +2,22 @@
 
 **Ultimo stato attestato:** 03/11/2026 ore 20:54 Italia. **Roadmap coordinatrice:** [ROADMAP.md](ROADMAP.md). **Track parallelo:** [B — Shark Science](ROADMAP-B-SHARK-SCIENCE.md).
 
+## 04/11/2026 ore 07:15 Italia — verifica A1 GitHub e replay offline (NON misura LIVE nuova)
+
+**Controlli eseguiti sul branch A, senza accesso SSH, senza broker/API nuovi e senza deploy:**
+- Branch `research/track-a-h1-20261104` e GitHub `main` sullo SHA `43829313b41813776017e4a43a20204052a360bd` alla verifica; il ramo B lavora separatamente. Lo SHA corrente GitHub non sostituisce lo SHA LIVE `1568edefabc7bbdb7d06485d2b863b196a4e6155`.
+- `remura-collector` PR [#22](https://github.com/mirkoworz/remura-collector/pull/22) e [#23](https://github.com/mirkoworz/remura-collector/pull/23) **merged**, controlli offline di PR **success**. La diagnostica programmata è su `main` con `37 6 * * 1-5` UTC (07:37 Italia il 04/11), condizionata a `REMURA_VPS_DIAG_ENABLED=1`. **Al controllo delle 07:15 non era ancora presente un run `schedule` della diagnostica dopo il merge**; i run CI PR non interrogano la VPS. Il primo run automatico effettivo e il suo risultato vanno verificati, non presunti.
+- Il **solo campione LIVE H1 paired attestato** resta quello delle 20:54 del 03/11: `samples=1`, `comparableSamples=1`, `unverifiableSamples=0`, `5→5`, `staleToReady=0`, `h1Advanced=0`, `h1Unchanged=5`. **NON si afferma che oggi i campioni siano ancora uno**: non è stato ancora letto un nuovo snapshot della VPS. A1 e A2 **non completati**.
+- Revisionati `scripts/private_server.py`, `scripts/price_feed.py`, `scripts/price_store.py`, `scripts/h1_batch_comparison.py` e il vecchio report privato [#31](https://github.com/mirkoworz/remura-collector/actions/runs/41611353786). Il codice ricostruisce H1 da 4 M15 UTC contigue e complete, H4 da 16. Nel #31 tutti gli 8 H1 stale erano coerenti con l'ora teorica ricavabile dall'ultima M15; questo **non esclude** gap H4 o cause nuove, da verificare con campioni recenti.
+- La pianificazione prioritaria attuale ha 8 batch × 5 = **40 acquisizioni programmate/2 ore** (38 strumenti unici; EURUSD/XAUUSD 2 volte), non 40 GET effettivi garantiti. Il post-ingest riusa SQLite e la full-scan resta distinta. Una nuova rotazione **non è giustificata** dai soli aggregati storici.
+
+**Replay locale di sola matematica, 04/11 (dati sintetici, non mercato reale):**
+- 38 strumenti teorici, 8 gruppi da 5 con due priorità ripetute, 96 scansioni ogni 15 minuti in 24h = **3648 valutazioni sintetiche**; soglie invariate M15=180m, H1=120m, H4=300m, tutte le M15 disponibili in modo ideale al batch. Nessuna chiamata API e nessun accesso Oracle.
+- Scansione teorica sul minuto esatto `:00`: `H1 stale=360/3648`, `H4 stale=90/3648`, `M15 stale=0`. Scansione quattro minuti dopo: `H1 stale=720/3648`, `H4 stale=180/3648`, `M15 stale=0`. **Queste cifre NON sono osservazioni dei 34 mercati LIVE** e mostrano quanto il conteggio cambi vicino alle soglie con l'ora di lettura, senza recuperare una sola candela.
+- Permutando soltanto i 36 strumenti non prioritari fra i medesimi slot, mantenendo esattamente 40 acquisizioni programmate/2h, i **totali sintetici restano invariati** nelle fasi 0, 4 e 14 minuti: cambiano i nomi dei mercati penalizzati, non il numero complessivo. Spostare la scansione per far risultare "verde" un contatore **non è una correzione della freschezza**; serve prova LIVE prima di cambiare pianificazione.
+
+**Prossima verifica A1 obbligatoria:** leggere tramite la diagnostica privata schedulata (quando realmente eseguita) o una singola GET locale read-only `/private-api/signals/status` gli aggregati `h1Paired` (totali, validi, N/D, last UTC, readyBefore/After, staleToReady, h1Advanced, h1Unchanged); leggere la full-scan dei 34 al suo timestamp e l'ultimo stato batch. Confrontare età di ogni H1 con M15/H4, fasi UTC e mercati precedentemente problematici. Se >=8 record totali ma validi insufficienti, **proseguire l'osservazione**. Non modificare codice operativo, quote, soglie, cron o produzione sulla base del replay.
+
 ## Scopo
 Assicurare che REMURA ragioni su prezzi **realmente verificati** e non su H1 vecchie, incomplete o con orologi incoerenti. Priorità alla causa dei problemi, non a rendere artificialmente verdi gli indicatori. Questo track NON introduce nuovi segnali né modifica il modello trading.
 
