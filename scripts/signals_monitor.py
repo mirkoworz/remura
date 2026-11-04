@@ -360,6 +360,10 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
         symbols=tuple(sorted(set(targets)))
     # Safe to run even when the upstream collector is not ready: no invented report.
     db=connect(db_path)
+    if compact_research is not None:
+        # Bound SQLite contention even during CREATE TABLE IF NOT EXISTS:
+        # the original monitor/schema entrypoint must remain unchanged.
+        db.execute("PRAGMA busy_timeout=5000")
     ensure_tables(db)
     from cot_monitor import ensure_table as ensure_cot_table
     ensure_cot_table(db)
@@ -425,7 +429,6 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
             # observation. Roll back *all* original Squalincome changes if
             # the compact block fails to seal, if SQLite is busy, or if a
             # worker terminates before COMMIT. No historical backfill.
-            db.execute("PRAGMA busy_timeout=5000")
             db.execute("BEGIN IMMEDIATE")
         for symbol in symbols:
             compact_row=None
