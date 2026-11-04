@@ -1,5 +1,47 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
+## 04/11/2026 ore 22:25 Italia — GATE B-P0b: secondo staging Oracle ottimizzato PASS, CPU −26,4% osservato
+
+**Evidenza diretta:** tre screenshot Termius ricevuti dall'utente dopo il comando one-shot pin al commit `f8adaa882857c7851cf26133f4dd41337e0d700a` con controllo Git blob `scripts/shark_oracle_staging_gate.py = 0f446ad4d1f712cbd3bd3abfaaee3ad087a79ec3`. Footer `REMURA_TRACK_B_ORACLE_STAGING_COMPLETED=TRUE`, `status=ORACLE_SYNTHETIC_GATE_ONLY`. Non rieseguire automaticamente: già verificato dal processo dell'utente. Questa è prova sull'host Oracle, **ma le 34×4000 M15 sono sintetiche, con COT sintetico assente**, `squalincomeExamined=0`: nessuna analisi di edge istituzionale né prova del flusso cTrader LIVE.
+
+### Dati numerici P0b su Oracle (seconda prova vs prima del 04/11 ore 20:54)
+
+| Metrica | Prima (vecchio codice) | Seconda (ottimizzato) | Interpretazione |
+| --- | ---: | ---: | --- |
+| CPU compact | 9,648 s | **7,100 s** | osservato **−26,41%** in due run distinte, non A/B simultaneo |
+| Wall compact | 9,683 s | **7,114 s** | circa −26,53% osservato |
+| Snapshot READ | 9.601,2 ms | **7.092,3 ms** | tempo prevalente della scansione |
+| CPU baseline legacy | circa 2,897 s (da rapporto 3,33, non misura indipendente qui) | **2,878 s** | secondo run screenshot; rapporto CPU compact/baseline 2,47× (prima 3,33×) |
+| Picco RSS compact | 39,42 MiB | **39,28 MiB** | sostanzialmente invariato |
+| Writer lock compact | 8,8 ms | **4,9 ms** | valori per-run; non prova massimo reale |
+| Sample WAL massimo | 64,41 KiB | **32,22 KiB** | oscillazione del campionamento; **picco reale assoluto NON noto** |
+| Writer sintetici riusciti / busy | 171 / 0 | **123 / 0** | finestra più corta; non confrontare il numero di tentativi come prestazione |
+| Writer probe max | 49,5 ms | **47,37 ms** | include scheduling della sonda, non solo lock DB |
+| Reader sintetici falliti | 0 | **0** | senza conflitti osservati in campione |
+| Host MemAvailable min | 621,55 MiB | **620,79 MiB** | campione, non minimo assoluto VPS |
+| /tmp scratch | 61,58 MiB | **61,58 MiB** | directory eliminata dal one-shot |
+| Broker calls / OPEN live DB | 0 / false | **0 / false** | isolamento confermato dal percorso di test |
+
+Nel secondo screenshot sono presenti `baseline.cpuSeconds=2.878`, `compact.cpuSeconds=7.1`, `compact.cpuSecondsRatio=2.47`, `sourceDataVersionValidated=true`, `sqliteJournalMode=wal`, `sqliteWriterLockMs=4.9`, `syntheticWriterBusy=0`, `syntheticReaderFailures=0`, `backupRestoreRollback.sqliteBackupRestore=PASS`, `sqliteRollback=PASS`, `integrityCheck=ok`, `immutableTriggersPreserved=true`. 34 mercati × 4.000 barre; `oracleBillingVerified=false`, `githubActionsBillingVerified=false`, `firestoreBillingVerified=false`, `realInstitutionalEdgeEstablished=false`, `liveIngestInterferenceVerified=false`. **Il rapporto CPU e il calo % non devono essere usati per affermare una riduzione delle fatture OCI**.
+
+### Diagnostica LIVE già disponibile, senza nuove connessioni o dispatch
+
+Ho letto via GitHub gli output già pubblicati dal **collector privato diagnostica #51**, eseguito il 04/11 tra ~18:31 e 18:45 italiane, [run #41851256335](https://github.com/mirkoworz/remura-collector/actions/runs/41851256335), anteriori al nuovo collaudo delle 22:25. Questo è **baseline della v1.62**, non monitoraggio del secondo staging:
+
+- Squalincome `periodic` **128/128 successi**, 0 errori, **mediana durata 1.723 ms**; `post_ingest` **128/128 successi**, 0 errori, **mediana 239 ms**. Nessuna prova diretta di interferenze del nuovo scanner (mai integrato nel LIVE).
+- `collectorTiming`: **110 batch**, **550 mercati programmati, 550 salvati**, 0 batch senza salvataggio, 0 errori post-ingest; mediana collector+ingest **17.055 ms**, massimo campionato **28.930 ms**, mediana dopo ingest alla scansione **250 ms**.
+- Le durate dello scanner sperimentale full (7,114 s sul dataset artificiale da 34×4k) sono sensibilmente superiori al valore mediano del monitor LIVE esistente (1,723 s). Non sono confronti controllati né una predizione di slot saltati; **sconsigliata una seconda scansione ridondante in parallelo**.
+- Nessun errore dimostrato nella diagnostica prima delle 22:25, ma non ci sono misurazioni LIVE **successive** e non è disponibile una distribuzione collisioni `PRAGMA data_version` del recorder (che è OFF). In particolare 0 errori storici del monitor precedente non predice 0 collisioni del futuro algoritmo.
+
+**Decisioni di gate, senza promozione:** 
+- [x] **P0a** synthetic Oracle v1.62 safety / backup / restore / rollback PASS.
+- [x] **P0b-sintetico** sul nuovo codice Oracle PASS, risparmio CPU osservato −26,4% e 0 conflitti sintetici nei 123 tentativi; A/B stesso runner GitHub precedente −25,6% supporta il meccanismo del risparmio.
+- [x] **P0b-API ingest sintetico**: test che usa davvero `price_store.ingest` contro una SQLite sintetica, fail-closed e nuova osservazione senza backfill.
+- [ ] **P0b LIVE**: resta da qualificare impatto sull'ingest e sugli slot con carico reale, considerando che la ricerca non è ancora installata. Preferire i **GET scheduled esistenti** della diagnostica successiva, senza modificare collector/Tailscale e senza chiamate broker o deploy; solo una futura integrazione OFF default, con una sola scansione, potrà fornire misure di conflitto reali dopo gate review. **Non dichiarare completato P0b LIVE**.
+- [ ] **P0c account/billing reale** Oracle shape, GitHub Actions privato e Firestore: i limiti teorici/codice publisher sotto non equivalgono a quota account e fatturazione certificata.
+- [ ] **P1/P2** continuità del witness point-in-time COT/price/CVD proxy, campioni veri, validation walk-forward OOS cost-aware, solo quindi eventuali alert. Nessuna probabilità inventata.
+- [ ] **Rilascio** SOLO coordinato con TRACK A, successivo a backup SQLite LIVE, restore-test, rollback, CI e autoupdater. Incremento versione e **data/ora reale italiana su tutte le nove pagine**. PR #89 deve restare DRAFT; non mergiare, non cambiare main/v1.62, collector o TRACK A.
+
 ## 04/11/2026 — GATE B-P0b/P0c: ingest reale sul DB sintetico PASS; costo Capital/Firestore verificato nel codice (non fatturazione)
 
 **Lavoro sul solo branch B, PR #89 DRAFT.** Nessuna modifica a `main`, TRACK A #88, `remura-collector`, VPS LIVE v1.62, collector cTrader, Tailscale, quota cloud, credenziali o scheduler. Le uniche nuove chiamate sono letture GitHub di file e log preesistenti; nessun nuovo workflow VPS/collector forzato.
