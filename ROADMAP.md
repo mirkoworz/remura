@@ -1,5 +1,33 @@
 # REMURA — Roadmap operativa unica
 
+## 04/11/2026 — DUE BINARI PARALLELI A/B, ROADMAP ATTIVA
+
+**Questo blocco è la fonte di stato corrente, mentre le sezioni datate 03/11 e precedenti sotto rimangono lo storico.** Il progetto non è bloccato da costi accertati: nessuna fattura aggiuntiva è stata verificata, ma i consumi reali su GitHub Actions/Oracle/Firestore/cTrader vanno periodicamente controllati. Si procede gratis ove possibile e si interrompe qualsiasi cambiamento che richieda pagamento senza consenso.
+
+### TRACK A — H1: finire la diagnosi, NON aspettare per lavorare sul B
+**Documento di lavoro:** [ROADMAP-A-H1.md](ROADMAP-A-H1.md).
+
+- [x] REMURA **LIVE v1.62**, nove pagine, backup/restore-test/rollback, SHA applicazione/autoupdater `1568edefabc7bbdb7d06485d2b863b196a4e6155`, collaudo completo 03/11 ore 20:39 Italia; 34 mercati monitorati, 26 H1 ready e 8 stale >120m al momento del collaudo.
+- [x] `REMURA_H1_PAIRED_ENABLED=1` dal 03/11 ore 20:50, con health e API verificati; **1 confronto realmente attestato** letto alle 20:54: 5 H1 pronte prima e dopo, 0 recuperate, 5 invariate, 0 N/D. Non asserire che ancora oggi il conteggio sia uno: ricontrollare il dato prima di ogni conclusione.
+- [x] Repository privato `remura-collector`, PR **#22 e #23** integrate: contatori aggregati H1 dalla **GET privata esistente**, controllo read-only schedulato lun–ven 06:37 UTC subordinato a gate di configurazione; primo run schedulato va verificato, non assunto.
+- [ ] **A1:** misurare almeno 8 campioni nuovi post-attivazione, distinguendo confronti validi da N/D e recuperi effettivi; identificare se gli 8 H1 stale dipendono da sessione, chiusura UTC, fase scansione, M15→H1 o rotazione.
+- [ ] **A2:** solo su evidenza, valutare correzione con test offline **a budget chiamate invariato**. Priorità attuale preesistente: 40 acquisizioni per 2h contro 38 standard. Niente nuove API, cambio soglie o riavvio VPS non pianificato.
+
+### TRACK B — SHARK SCIENCE: procedere DA SUBITO, indipendentemente dal campione A
+**Documento di lavoro:** [ROADMAP-B-SHARK-SCIENCE.md](ROADMAP-B-SHARK-SCIENCE.md).
+
+- [x] Sistemi base già presenti: COT ufficiale, sentiment retail separato, prezzi cTrader M15/H1/H4, Radar/Squalincome; primo impianto di validazione. [PR #77](https://github.com/mirkoworz/remura/pull/77) contiene già laboratorio **offline** per divergenze prezzo/CVD proxy; non ripartire da zero né unirla senza audit.
+- [ ] **B1:** audit del codice CVD esistente e delle fonti; test causali barre chiuse, campioni genuini, niente future data, tick-volume proxy ≠ vero delta aggressore.
+- [ ] **B2:** combinare contesto COT, variazione sentiment retail, prezzo e possibili assorbimenti/dissonanze senza presentarli come prova di movimenti istituzionali.
+- [ ] **B3:** backtest walk-forward purgato con spread, slippage, regime, falsi positivi, precisione e rischio/rendimento; verificare che aggiungere CVD migliori davvero una baseline.
+- [ ] **B4:** solo dopo dati solidi, sviluppare Radar spiegabile e progettare notifiche iPhone private su segnali validati, senza ordini o promesse di profitto.
+
+### Regola comune: due chat, UNA SOLA produzione
+- Track A e B lavorano ciascuno con **branch/PR separati**. Non aggiornare simultaneamente `ROADMAP.md`; usare i rispettivi file A/B. Prima di ogni merge, verificare SHA `main`, dipendenze tra PR, CI e l'eventuale lavoro dell'altro track.
+- **Niente due deploy paralleli:** solo un responsabile alla volta può modificare VPS, autoupdater, flag, chiamate broker o fare un rilascio. Ogni aggiornamento applicativo nuovo impone **versione incrementata + data/ora effettiva italiana ben visibile in alto su tutte le nove pagine**, backup SQLite, restore-test e rollback.
+- La distinzione `main GitHub` / `LIVE VPS` rimane obbligatoria: commit periodici Myfxbook di soli dati e modifiche documentali **non** implicano un aggiornamento del codice LIVE.
+- Nessun servizio a pagamento, aumento di quota o task ricorrente aggiuntivo senza valutazione costi preventiva ed esplicita approvazione. Risorse hardware e quota consumata non bastano a confermare fatturazione zero.
+
 ## 03/11/2026 — 20:50 Italia: v1.62 LIVE, H1 paired ATTIVO, MISURE IN ATTESA
 
 **Questa sezione sostituisce lo stato operativo, non cancella le cronologie del 03/11 sottostanti.**
