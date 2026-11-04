@@ -151,7 +151,9 @@ def evaluate(db, *, as_of, costs):
             outcome = _utc(evaluated)
             repdate = datetime.fromisoformat(week).date()
             if (repdate.isoformat() != week or repdate > obs.date()
+                    or obs.date() - repdate > timedelta(days=14)
                     or not price <= obs <= entry < outcome <= now
+                    or obs - price > timedelta(hours=3)
                     or entry - obs > MAX_DELAY or
                     entry.minute % 15 or entry.second or entry.microsecond
                     or outcome < entry + timedelta(hours=hours)
