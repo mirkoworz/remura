@@ -85,14 +85,19 @@ def _simulate(signal, doc, rows, cost, asof, horizon, stop_atr, target_atr):
         if (signal.get("provider") != "ctrader" or
                 signal.get("brokerSymbol") != doc["providerSymbol"] or
                 signal.get("qualityVerified") is not True or
+                signal.get("observationVerified") is not True or
                 type(signal.get("side")) is not int or signal["side"] not in (-1, 1)):
             return None, "invalid_signal_lineage"
         confirmed = _utc(signal["confirmedAt"])
         observed = _utc(signal["availableAt"])
         if confirmed > observed or observed > asof:
             return None, "signal_not_known_asof"
+        if observed - confirmed > timedelta(minutes=90):
+            return None, "stale_detection"
         eligible_cvd = (signal.get("cvdQualityVerified") is True and
-                        signal.get("cvdAlgorithm") == "cvd-divergence-proxy-m15-v1")
+                        signal.get("cvdAlgorithm") == "cvd-divergence-proxy-m15-v1" and
+                        signal.get("cvdState") == "confirmed_technical_not_trade_signal" and
+                        signal.get("cvdSide") == ("bullish" if signal["side"] == 1 else "bearish"))
         if eligible_cvd:
             cvd_confirmed = _utc(signal["cvdConfirmedAt"])
             cvd_known = _utc(signal["cvdAvailableAt"])
