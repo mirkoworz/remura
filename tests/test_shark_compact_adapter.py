@@ -180,6 +180,9 @@ class CompactScannerTests(unittest.TestCase):
                 "rawScanSeconds":round(raw_time,3),
                 "compactScanSeconds":round(batch_time,3),
                 "sameSqualincomeState":True,
+                "snapshotVersionValidated":batch["priceOnlyResearch"]["snapshotVersionValidated"],
+                "readOnlySnapshotMs":batch["priceOnlyResearch"]["readOnlySnapshotMs"],
+                "sqliteWriterLockMs":batch["priceOnlyResearch"]["sqliteWriterLockMs"],
                 "profilerUsed":False,"oracleMeasured":False,
                 "tradingEdgeEstablished":False,
             },sort_keys=True,separators=(",",":")))
