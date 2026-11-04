@@ -39,6 +39,9 @@ def insert(db, sym="EURUSD", side=1, long=8., week="2026-10-27",
     ds, code = baseline.PILOT.get(sym, ("tff", "000000"))
     db.execute("INSERT INTO cot_first_seen VALUES(?,?,?,?)",
                (ds,code,week,first_seen))
+    previous = (datetime.fromisoformat(week).date()-timedelta(days=7)).isoformat()
+    db.execute("INSERT INTO cot_first_seen VALUES(?,?,?,?)",
+               (ds,code,previous,"2026-10-25T20:00:00+00:00"))
     db.execute("INSERT INTO squalincome_validation_cohorts VALUES(?,?,?,?,?,?,?,?,?,?)",
                (sym,week,stage,observed,"2026-11-02T09:00:00+00:00",
                 side,"aligned",cohort_broker,
@@ -62,6 +65,15 @@ class CotBaselineTests(unittest.TestCase):
             self.assertEqual(result["edge"],"NOT_ESTABLISHED")
             self.assertFalse(result["returnsExecutable"])
             self.assertNotIn("TEST_BROKER_SECRET",json.dumps(result))
+
+    def test_prior_cot_report_must_also_be_known_before_observation(self):
+        with fixture() as db:
+            insert(db)
+            db.execute("UPDATE cot_first_seen SET first_seen_at=? WHERE report_date=?",
+                       ("2026-11-03T20:00:00+00:00", "2026-10-20"))
+            out = baseline.evaluate(db,as_of=ASOF,costs=COST)
+            self.assertEqual(out["reasons"]["cot_previous_week_not_known"],1)
+            self.assertEqual(out["horizons"][1]["samples"],0)
 
     def test_never_backfill_cot_after_actual_observation(self):
         with fixture() as db:
