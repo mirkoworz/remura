@@ -26,7 +26,7 @@ class ProspectiveCoverageTests(unittest.TestCase):
         self.scratch=tempfile.TemporaryDirectory(prefix="remura-coverage-")
         self.addCleanup(self.scratch.cleanup)
         self.path=Path(self.scratch.name)/"synthetic.sqlite"
-        fixture(self.path,with_cot=False,all_priced=True,m15_count=512)
+        fixture(self.path,with_cot=False,all_priced=True,m15_count=1024)
 
     def _read(self, **kw):
         with sqlite3.connect(
@@ -68,8 +68,7 @@ class ProspectiveCoverageTests(unittest.TestCase):
         report=self._read(as_of=stamp(NOW+timedelta(hours=1)))
         self.assertEqual(report["status"],"NO_FINALIZED_FULL_BATCH")
         self.assertIsNone(report["recordingOpportunities"])
-        self.assertFalse(report["statisticalCompletenessCertified"] if
-                         "statisticalCompletenessCertified" in report else False)
+        self.assertFalse(report["preFirstBatchCoverageKnown"])
 
     def test_unfinished_slot_is_not_reported_missing(self):
         self._seal()
@@ -86,12 +85,12 @@ class ProspectiveCoverageTests(unittest.TestCase):
         self._seal()
         report=self._read(as_of="2026-11-04T12:05:00Z")
         self.assertEqual(report["firstKnownFullBatchSlot"],
-                         "2026-11-04T11:15:00Z")
+                         "2026-11-04T11:15:00.000000Z")
         self.assertEqual(report["recordingOpportunities"],3)
         self.assertEqual(report["verifiedFullScanSlots"],1)
         self.assertEqual(report["unrecordedCalendarSlots"],2)
         self.assertEqual(report["firstMissingSlotExamples"],[
-            "2026-11-04T11:30:00Z","2026-11-04T11:45:00Z"])
+            "2026-11-04T11:30:00.000000Z","2026-11-04T11:45:00.000000Z"])
         self.assertEqual(report["verifiedMarketCells"],34)
         self.assertEqual(report["unknownMarketCellsInsideRecordedBatches"],0)
         self.assertFalse(report["activationTimeCertified"])
