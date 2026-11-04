@@ -71,6 +71,20 @@ def _seen(db):
     return source
 
 
+def _prior_cot_known(seen, dataset, code, report_date, observed):
+    """Direction uses two consecutive report weeks, BOTH already observed."""
+    for (kind, market, older), known_at in seen.items():
+        if kind != dataset or market != code or known_at > observed:
+            continue
+        try:
+            prior = datetime.fromisoformat(older).date()
+        except (TypeError, ValueError):
+            continue
+        if 6 <= (report_date-prior).days <= 10:
+            return True
+    return False
+
+
 def _mean(items):
     return round(sum(items)/len(items), 4) if items else None
 
@@ -161,6 +175,11 @@ def _verified_cases(db, now):
                 continue
             if cot_first > obs:
                 reasons["cot_first_seen_future"] += 1
+                continue
+            # Weekly delta needs the PREVIOUS known report as well. A later
+            # historical backfill cannot be treated as available at obs.
+            if not _prior_cot_known(seen, *PILOT[sym], repdate, obs):
+                reasons["cot_previous_week_not_known"] += 1
                 continue
             cases.append({
                 "symbol": sym, "week": week, "observed": obs,
