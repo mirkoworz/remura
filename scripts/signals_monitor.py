@@ -320,8 +320,26 @@ def scan_once_with_price_only_research(db_path, now=None, *, targets=None):
                       price_only_research=research)
 
 
+def scan_once_with_compact_price_only_research(db_path, now=None, *, targets=None):
+    """Future-only, explicit compact research mode; LIVE default unchanged.
+
+    Complete 34-market scan becomes ONE SHA-verified zlib SQLite record,
+    distinct from targeted scans. No legacy per-symbol research table.
+    """
+    import sys
+    from pathlib import Path
+    root = str(Path(__file__).resolve().parents[1])
+    if root not in sys.path:
+        sys.path.insert(0, root)
+    from scripts import shark_price_only_universe as preparer
+    from scripts import shark_price_only_compact as compact
+    return _scan_once(db_path, now, targets=targets,
+                      compact_research=compact, compact_preparer=preparer)
+
+
 def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
-               price_only_research=None):
+               price_only_research=None,compact_research=None,
+               compact_preparer=None):
     """Observe all markets on periodic scans, or a small verified fresh batch.
 
     Targeted scans update existing observation/history/event tables, but NEVER
@@ -348,11 +366,16 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
         # Schema + new writes are enabled ONLY by the explicit research entry
         # point. No migration, import or new request on legacy scan_once.
         price_only_research.ensure_schema(db)
+    if compact_research is not None:
+        if price_only_research is not None or compact_preparer is None:
+            raise ValueError("exclusive_research_store_required")
+        compact_research.ensure_schema(db)
     examined=baselines=events=updates=0
     exclusions={}
     frames_by_symbol={}
     price_quality_by_symbol={}
     research_totals={}
+    compact_rows=[]
     def read_original_price(symbol):
         # Exactly the original v1.62 price operations, with no broker GETs.
         document=latest(db,symbol)
@@ -371,7 +394,21 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
 
     try:
         for symbol in symbols:
+            compact_row=None
             try:
+                if compact_research is not None:
+                    # All price data are calculated BEFORE COT. The exact
+                    # shared price-only validation is reused, but there are
+                    # NO per-market research SQL writes or separate DBs.
+                    document,quality,price=read_original_price(symbol)
+                    reason=("price_present" if price is not None else
+                            price_exclusion(document,now,quality=quality))
+                    with db:
+                        db.execute("BEGIN")
+                        compact_row,_=compact_preparer.prepare(
+                            db,symbol=symbol,scan_at=now.isoformat(),
+                            observed_document=document,quality=quality,
+                            price_result=price,price_reason=reason)
                 if price_only_research is not None:
                     # The PRICE-ONLY denominator is captured BEFORE ANY
                     # per-symbol COT access. An absent/broken COT must never
@@ -390,7 +427,7 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
                         result_status,0)+1
                 series=cot_series(db,symbol)
                 cot=cot_view(series,symbol,now)
-                if price_only_research is None:
+                if price_only_research is None and compact_research is None:
                     document,quality,price=read_original_price(symbol)
                 current=classify(cot,price)
                 if current is None:
@@ -461,7 +498,7 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
             except sqlite3.Error:
                 # A broken research evidence table is an operational database
                 # failure, NOT an innocent N/D. Never mask it when opt-in.
-                if price_only_research is not None:
+                if price_only_research is not None or compact_research is not None:
                     raise
                 exclusions[symbol]=["scan_error"]
                 continue
@@ -469,6 +506,15 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
                 # Never expose provider exceptions, prices or credentials.
                 exclusions[symbol]=["scan_error"]
                 continue
+            finally:
+                if compact_research is not None:
+                    # Even when price processing or COT fails for a symbol,
+                    # preserve a marked UNKNOWN cell in the full denominator.
+                    # Missing means observation failed NOW, never a backfill.
+                    if compact_row is None:
+                        compact_row=compact_research.missing_row(
+                            symbol=symbol,scan_at=now.isoformat())
+                    compact_rows.append(compact_row)
         # Keep counters internally consistent even if a single market errors.
         examined=len(symbols)-len(exclusions)
         counts={}
@@ -508,6 +554,25 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
                     " scanned_at=excluded.scanned_at,summary=excluded.summary",
                     (now.isoformat(),json.dumps(summary,sort_keys=True)))
         result={"examined":examined,"baselines":baselines,"newEvents":events}
+        if compact_research is not None:
+            if len(compact_rows)!=len(symbols):
+                raise ValueError("incomplete_price_only_compact_scan")
+            with db:
+                db.execute("BEGIN")
+                compressed=compact_research.seal(
+                    db,compact_rows,full=(targets is None))
+            result["priceOnlyResearch"]={
+                "marketsAttempted":len(symbols),
+                "batchStatus":compressed["status"],
+                "storedMarkets":compressed["storedMarkets"],
+                "eligiblePriceCandidates":compressed.get("eligiblePriceCandidates",0),
+                "unknownObservations":compressed.get("unverifiableMarketObservations",0),
+                "fullMarketDenominator":targets is None,
+                "cotFilterAppliedToResearch":False,
+                "extraBrokerRequests":0,
+                "ordersEnabled":False,
+                "alertsEnabled":False,
+            }
         if price_only_research is not None:
             # Only aggregate allowlisted statuses; no quotes or account names.
             result["priceOnlyResearch"]={
