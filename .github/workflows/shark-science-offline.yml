@@ -36,6 +36,7 @@ on:
       - 'tests/test_shark_observation_bundle.py'
       - 'tests/test_shark_price_only_universe.py'
       - 'tests/test_shark_staging_scan.py'
+      - 'tests/test_shark_optin_adapter.py'
       - 'tests/test_shark_cvd_ledger.py'
       - 'ROADMAP-B-SHARK-SCIENCE.md'
       - '.github/workflows/shark-science-offline.yml'
@@ -94,5 +95,7 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_shark_price_only_universe.py' -v
       - name: Stage full original 34-market Squalincome against independent price-only record in disposable SQLite
         run: python -m unittest discover -s tests -p 'test_shark_staging_scan.py' -v
+      - name: Verify off-by-default real Squalincome opt-in against COT failures and all 34 markets
+        run: python -m unittest discover -s tests -p 'test_shark_optin_adapter.py' -v
       - name: Test append-only future CVD evidence ledger and privacy
         run: python -m unittest discover -s tests -p 'test_shark_cvd_ledger.py' -v
