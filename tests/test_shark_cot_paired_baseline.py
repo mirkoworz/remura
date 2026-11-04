@@ -99,6 +99,20 @@ class CotBaselineTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     baseline.evaluate(db,as_of=ASOF,costs=bad)
 
+    def test_stale_cot_week_or_stale_m15_cannot_fake_valid_cohort(self):
+        with fixture() as db:
+            insert(db,week="2026-10-01")
+            out = baseline.evaluate(db,as_of=ASOF,costs=COST)
+            self.assertEqual(out["horizons"][1]["samples"],0)
+            self.assertEqual(out["reasons"]["invalid_cohort_or_outcome"],1)
+        with fixture() as db:
+            insert(db)
+            db.execute("UPDATE squalincome_validation_cohorts SET price_time=?",
+                       ("2026-11-02T03:00:00+00:00",))
+            out = baseline.evaluate(db,as_of=ASOF,costs=COST)
+            self.assertEqual(out["horizons"][1]["samples"],0)
+            self.assertEqual(out["reasons"]["invalid_cohort_or_outcome"],1)
+
     def test_outcomes_are_not_known_before_they_mature(self):
         with fixture() as db:
             insert(db,evaluated="2026-11-05T20:00:00+00:00")
