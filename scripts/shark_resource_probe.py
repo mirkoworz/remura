@@ -98,15 +98,27 @@ def worker(mode,path):
         "shmFileBytesAfter":_file_bytes(str(database)+"-shm"),
         "sqliteWriterLockMs":(result.get("priceOnlyResearch",{})
                               .get("sqliteWriterLockMs")),
+        "readOnlySnapshotMs":(result.get("priceOnlyResearch",{})
+                              .get("readOnlySnapshotMs")),
+        "sourceDataVersionValidated":(result.get("priceOnlyResearch",{})
+                                      .get("snapshotVersionValidated",False)),
         "squalincomeExamined":result["examined"],
         "newBrokerCalls":0,
         "rssMeasuredOnOracle":False,
         "oracleBillingVerified":False,
         "returnsOrEdgeProven":False,
     }
-    if mode=="compact" and (report["sqliteWriterLockMs"] is None
-                            or report["sqliteWriterLockMs"]<=0):
-        raise ValueError("missing_lock_measurement")
+    if mode=="compact":
+        if (report["sqliteWriterLockMs"] is None
+                or report["sqliteWriterLockMs"]<=0
+                or report["readOnlySnapshotMs"] is None
+                or report["readOnlySnapshotMs"]<0
+                or report["sourceDataVersionValidated"] is not True):
+            raise ValueError("missing_two_phase_snapshot_attestation")
+        # GitHub-runner guard only: a writer lock over five seconds would
+        # be unacceptable for periodic Oracle price ingest even here.
+        if report["sqliteWriterLockMs"]>5000:
+            raise ValueError("writer_reservation_too_long_for_small_vps")
     if (report["processPeakRssMiB"]>=850 or
             elapsed>=60 or mode_actual.lower()!="wal"):
         raise ValueError("runner_budget_gate_exceeded")
