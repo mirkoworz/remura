@@ -5,9 +5,11 @@ on:
       - 'cvd-divergence-core.js'
       - 'scripts/cvd_*.py'
       - 'scripts/shark_science_gate.py'
+      - 'scripts/shark_walkforward.py'
       - 'tests/cvd-divergence.test.js'
       - 'tests/test_cvd_*.py'
       - 'tests/test_shark_science_gate.py'
+      - 'tests/test_shark_walkforward.py'
       - 'ROADMAP-B-SHARK-SCIENCE.md'
       - '.github/workflows/shark-science-offline.yml'
   workflow_dispatch:
@@ -30,10 +32,12 @@ jobs:
       - name: Verify offline script syntax
         run: |
           node --check cvd-divergence-core.js
-          python -m py_compile scripts/cvd_divergence.py scripts/cvd_benchmark.py scripts/cvd_session_replay.py scripts/shark_science_gate.py
+          python -m py_compile scripts/cvd_divergence.py scripts/cvd_benchmark.py scripts/cvd_session_replay.py scripts/shark_science_gate.py scripts/shark_walkforward.py
       - name: Test CVD JS detector
         run: node --test tests/cvd-divergence.test.js
       - name: Test CVD parity, benchmark and archive replay
         run: python -m unittest discover -s tests -p 'test_cvd_*.py' -v
       - name: Test causal evidence provenance
         run: python -m unittest discover -s tests -p 'test_shark_science_gate.py' -v
+      - name: Test chronological cost-aware simulation and embargo
+        run: python -m unittest discover -s tests -p 'test_shark_walkforward.py' -v
