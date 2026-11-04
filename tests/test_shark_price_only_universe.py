@@ -4,11 +4,13 @@ No COT table exists in these SQLite fixtures: proof of no COT preselection.
 All timestamps, quotes and symbols are test data, never live broker data.
 """
 from datetime import datetime,timedelta,timezone
+import hashlib
 import json
 from pathlib import Path
 import sqlite3
 import sys
 import unittest
+from unittest.mock import patch
 
 # Production uses these as top-level modules from scripts/, so the offline
 # test deliberately runs the SAME classifier with that compatible import path.
@@ -136,6 +138,33 @@ class PriceOnlyTests(unittest.TestCase):
         self.assertNotIn("099741",safe)
         self.assertFalse(result["alertsEnabled"])
         self.assertFalse(result["ordersEnabled"])
+
+    def test_ready_candidate_reuses_full_price_attestation_and_identical_sha(self):
+        # The already-required _source() check validates the complete
+        # canonical OHLC document, source identity, rollups and M15 timing.
+        # A SECOND copy/hash of the same data is redundant and costly.
+        document=trend(self.db)
+        expected=hashlib.sha256(json.dumps(
+            document,sort_keys=True,ensure_ascii=True,
+            separators=(",",":")).encode()).hexdigest()
+        with patch.object(universe,"_document_digest",
+                          side_effect=AssertionError("duplicate_full_source_hash")):
+            result=self.record()
+        self.assertEqual(result["status"],"PRICE_CONTEXT_READY")
+        stored=self.db.execute(
+            "SELECT original_source_sha256 FROM research_price_only_universe "
+            "WHERE symbol='EURUSD'").fetchone()[0]
+        self.assertEqual(stored,expected)
+        self.assertEqual(len(stored),64)
+
+    def test_noncandidate_still_requires_original_document_attestation(self):
+        exact_flat(self.db)
+        existing=universe._document_digest
+        with patch.object(universe,"_document_digest",wraps=existing) as digest:
+            status=self.record()
+        self.assertEqual(status["status"],"PRICE_NO_TREND")
+        self.assertEqual(digest.call_count,1)
+        self.assertEqual(digest.call_args.args[1],"EURUSD")
 
     def test_stale_h1_not_mislabelled_as_no_trend(self):
         doc=original(self.db)
