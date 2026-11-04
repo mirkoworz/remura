@@ -52,6 +52,30 @@
 4. Avere un campione sufficiente per simbolo/sessione/regime, successivamente confrontare prezzo/ATR-only, filtro CVD e negativi su *identici* candidati, con latenza reale, spread/slippage e test walk-forward purgato/out-of-sample. Applicare controllo di correlazione per settimana/simbolo e stress test. Notifiche e Radar predittivo restano disabilitati.
 5. Controllo costo: il repo `remura` pubblico usa Actions standard, ma il replay PRIVATO può consumare minuti; **nessuna prova di billing zero** senza verifica fatture e quote.
 
+## Diario 04/11/2026 — TRACK B, esperimento COT abbinato + memoria futura CVD (terzo intervento)
+
+**Stato prima dell'intervento:** main `43829313b41813776017e4a43a20204052a360bd`; PR B [#89](https://github.com/mirkoworz/remura/pull/89) draft; PR A [#88](https://github.com/mirkoworz/remura/pull/88) draft e separata; nessuna modifica LIVE v1.62. Non sono state avviate GET private, collector VPS né nuove richieste broker.
+
+### Nuovo B: confronto COT versus long di riferimento (offline, su coorti realmente osservate)
+- `scripts/shark_cot_paired_baseline.py` e `tests/test_shark_cot_paired_baseline.py` riusano le **coorti autentiche già persistite** in `squalincome_validation_cohorts` e le relative `squalincome_validation_outcomes` senza modificare le tabelle. Solo stage `observation`, un gruppo per simbolo/report COT/orizzonte (1, 4, 24h).
+- Verifica conservativamente che il COT sia stato acquisito (`cot_first_seen`) **prima** dell'osservazione, che il report abbia massimo 14 giorni, che l'M15 usata abbia massimo 3 ore, che la posizione inizi **dopo** l'osservazione, che il risultato maturi ed esista già al tempo del test e che il segno del rendimento corrisponda all'orientamento originario. Non usare la data martedì COT come pubblicazione venerdì: `first_seen` è un timestamp di conoscibilità conservativo, non la pubblicazione ufficiale.
+- **Stessi campioni e costi obbligatori per entrambe le braccia**: direzione COT contro long sempre, con spread positivo, slippage bilaterale e commissione roundtrip espliciti per EURUSD e XAUUSD. I costi sono **ipotesi da fornire e stressare**, non quote misurate; nessun default zero. Statistiche aggregate in bps, differenza abbinata e conteggio positivi; percentuali soltanto da >=30 coorti e >=8 settimane COT; `edge=NOT_ESTABLISHED` sempre.
+- Limite cruciale: le coorti storiche non conservano versioni immutabili del COT, snapshot broker/OHLC originali né fill simulabili verificati. Il confronto è **descrittivo e con bias di selezione** (entrambi gli esperimenti usano osservazioni create dal filtro COT); non è un confronto contro un universo tradabile neutro, non è una strategia intraday provata e non è un test fuori campione.
+
+### Nuovo B: prototipo archivio append-only futuro
+- `scripts/shark_cvd_ledger.py` e `tests/test_shark_cvd_ledger.py`: modulo **non importato dal server**, per un eventuale futuro database di ricerca distinto dal SQLite LIVE. Non crea automaticamente una tabella su REMURA: `ensure_schema` è opt-in e richiede un collegamento futuro autorizzato.
+- Registra soltanto `symbol`, `algorithm`, direzione/tipo, pivot/confirmed/collected/detected UTC e HMAC del broker/evento; **non conserva prezzi, tick, nomi broker, account, ID originali, token né chiave HMAC**. Richiede una chiave stabile privata fornita dal runtime futuro, mai da commit o UI pubblica.
+- Il tempo `detectedAt` è timbrato dal clock di esecuzione del recorder; `collectedAt` è fornito dalla strumentazione futura (oggi NON esiste); pivot M15 e `confirmedAt` rispettano la regola 2 barre a destra del detector, nessun evento oltre 90 minuti o antecedente alla raccolta. Richiede qualità indipendente M15 chiuse, sessione contigua, tick volume completo e H1 idonea. Senza queste attestazioni **non salva nulla**.
+- Trigger SQLite impediscono UPDATE/DELETE e UNIQUE su HMAC impedisce doppi eventi; tetto iniziale 4096 osservazioni, nessuna rotazione che cancelli dati. Al raggiungimento del limite il recorder rifiuta nuovi eventi: archiviazione/retention/backup vanno progettati e verificati prima dell'uso LIVE.
+- La possibilità di iniettare un clock nei **test sintetici** non certifica che il prototipo sia anti-manomissione in produzione: occorrerà integrare un clock affidabile, misurare raccolta e rilevamento reali e testare integrità/backup in una futura release coordinata. **Non retrodatare eventi dai pivot storici**.
+
+### Gate successivi
+1. CI B e regressioni Insights verdi sullo SHA finale della PR #89, poi lasciare tutto **draft**. Nessun merge/deploy ora.
+2. Non eseguire nella chat B il workflow privato CVD in parallelo al TRACK A senza coordinamento e verifica dei minuti a pagamento; usare i report esistenti del 03/11 come misura storica, non come stato di oggi.
+3. Progettare un audit di fattibilità dello storage della futura memoria CVD (4096 righe e relativi indici/backup) e schema del clock `collectedAt`/qualità; approvazione necessaria prima di integrazione LIVE.
+4. Quando il dataset reale contiene più sedute cTrader con volume e osservazioni realmente timbrate, confrontare price-only vs CVD filtrato con split temporali, purging/embargo, negativi, costi e stima delle dipendenze. Valutare Wyckoff/VSA come ipotesi separate prima di incorporarle.
+5. Non alimentare Radar/Squalincome con segnali e non attivare notifiche finché non esiste un vantaggio statistico riproducibile fuori campione. **Nessuna promessa di rendimento**.
+
 ## Missione
 Evolvere Radar Squali / Squalincome da presentazione di numeri a **ipotesi misurabili** su movimenti rilevanti, divergenze prezzo/CVD, conferme e condizioni di rischio. **Obiettivo: probabilità empiriche, non promesse di guadagno, né segnali attribuiti con certezza alle istituzioni.** Non aspettare che il track A finisca per lavorare **offline**; non utilizzare come conferma dati H1 vecchi o N/D.
 
