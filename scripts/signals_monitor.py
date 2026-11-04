@@ -303,7 +303,25 @@ def scan_once_with_h1_frames(db_path,now=None,*,targets=None):
     return _scan_once(db_path,now,targets=targets,capture_frames=True)
 
 
-def _scan_once(db_path,now=None,*,targets=None,capture_frames=False):
+def scan_once_with_price_only_research(db_path, now=None, *, targets=None):
+    """FUTURE-ONLY explicit opt-in; never called by LIVE v1.62.
+
+    No import, table or extra SQL on the default scan_once code path.
+    App integration would require an audited feature flag set to OFF by default.
+    The import fallback is necessary because private_server runs from scripts/.
+    """
+    import sys
+    from pathlib import Path
+    root = str(Path(__file__).resolve().parents[1])
+    if root not in sys.path:
+        sys.path.insert(0, root)
+    from scripts import shark_price_only_universe as research
+    return _scan_once(db_path, now, targets=targets,
+                      price_only_research=research)
+
+
+def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
+               price_only_research=None):
     """Observe all markets on periodic scans, or a small verified fresh batch.
 
     Targeted scans update existing observation/history/event tables, but NEVER
@@ -326,27 +344,54 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False):
     ensure_tables(db)
     from cot_monitor import ensure_table as ensure_cot_table
     ensure_cot_table(db)
+    if price_only_research is not None:
+        # Schema + new writes are enabled ONLY by the explicit research entry
+        # point. No migration, import or new request on legacy scan_once.
+        price_only_research.ensure_schema(db)
     examined=baselines=events=updates=0
     exclusions={}
     frames_by_symbol={}
     price_quality_by_symbol={}
+    research_totals={}
+    def read_original_price(symbol):
+        # Exactly the original v1.62 price operations, with no broker GETs.
+        document=latest(db,symbol)
+        frames_by_symbol[symbol]=safe_frame_diagnostics(document,now)
+        # Same immutable loaded document and scan UTC as frame metadata.
+        # Values are allowlisted; never store broker IDs, OHLC or secrets.
+        quality=audit_market(document,now)
+        price_quality_by_symbol[symbol]={
+            "integrity":quality.get("integrity"),
+            "freshness":quality.get("freshness"),
+            "ready":quality.get("ready"),
+            "checkedAt":now.isoformat()
+        }
+        price=price_view(document,now,quality=quality) if document else None
+        return document,quality,price
+
     try:
         for symbol in symbols:
             try:
+                if price_only_research is not None:
+                    # The PRICE-ONLY denominator is captured BEFORE ANY
+                    # per-symbol COT access. An absent/broken COT must never
+                    # preselect the population of price candidates.
+                    document,quality,price=read_original_price(symbol)
+                    reason=("price_present" if price is not None else
+                            price_exclusion(document,now,quality=quality))
+                    with db:
+                        db.execute("BEGIN")
+                        research_result=price_only_research.capture_optional(
+                            db,symbol=symbol,scan_at=now.isoformat(),
+                            observed_document=document,quality=quality,
+                            price_result=price,price_reason=reason)
+                    result_status=research_result["status"]
+                    research_totals[result_status]=research_totals.get(
+                        result_status,0)+1
                 series=cot_series(db,symbol)
                 cot=cot_view(series,symbol,now)
-                document=latest(db,symbol)
-                frames_by_symbol[symbol]=safe_frame_diagnostics(document,now)
-                # Same immutable loaded document and scan UTC as frame metadata.
-                # Values are allowlisted; never store broker IDs, OHLC or secrets.
-                quality=audit_market(document,now)
-                price_quality_by_symbol[symbol]={
-                    "integrity":quality.get("integrity"),
-                    "freshness":quality.get("freshness"),
-                    "ready":quality.get("ready"),
-                    "checkedAt":now.isoformat()
-                }
-                price=price_view(document,now,quality=quality) if document else None
+                if price_only_research is None:
+                    document,quality,price=read_original_price(symbol)
                 current=classify(cot,price)
                 if current is None:
                     reasons=[]
@@ -413,7 +458,14 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False):
                         "observed_at=excluded.observed_at",
                         (symbol,current["state"],current["side"],current["report_date"],current["price_time"],
                          current["price_state"],stamp))
-            except (ValueError,TypeError,KeyError,sqlite3.Error,OverflowError):
+            except sqlite3.Error:
+                # A broken research evidence table is an operational database
+                # failure, NOT an innocent N/D. Never mask it when opt-in.
+                if price_only_research is not None:
+                    raise
+                exclusions[symbol]=["scan_error"]
+                continue
+            except (ValueError,TypeError,KeyError,OverflowError):
                 # Never expose provider exceptions, prices or credentials.
                 exclusions[symbol]=["scan_error"]
                 continue
@@ -456,6 +508,16 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False):
                     " scanned_at=excluded.scanned_at,summary=excluded.summary",
                     (now.isoformat(),json.dumps(summary,sort_keys=True)))
         result={"examined":examined,"baselines":baselines,"newEvents":events}
+        if price_only_research is not None:
+            # Only aggregate allowlisted statuses; no quotes or account names.
+            result["priceOnlyResearch"]={
+                "marketsAttempted":len(symbols),
+                "byState":dict(sorted(research_totals.items())),
+                "cotFilterAppliedToResearch":False,
+                "extraBrokerRequests":0,
+                "ordersEnabled":False,
+                "alertsEnabled":False,
+            }
         if capture_frames and targets is not None:
             # Internal opt-in: expose only the H1 frame metadata that this
             # very same scan read, at the very same UTC instant. Never export
