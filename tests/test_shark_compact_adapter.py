@@ -298,6 +298,59 @@ class CompactScannerTests(unittest.TestCase):
             self.assertEqual(db.execute(
                 "SELECT count(*) FROM squalincome_last_scan").fetchone()[0],0)
 
+    def test_real_process_sigkill_before_commit_keeps_db_atomic(self):
+        # Stronger than a caught SystemExit: kill a separate Linux process
+        # AFTER SQLite has written BOTH the original Squalincome changes and
+        # the final research block, but BEFORE the single outer COMMIT.
+        # WAL recovery must show NEITHER group of uncommitted writes.
+        import multiprocessing
+        import os
+        import signal
+        if "fork" not in multiprocessing.get_all_start_methods():
+            self.skipTest("Linux fork required for disposable crash test")
+        expected=standard_state(self.base)
+        def crash_child():
+            real_seal=compact.seal
+            def after_insert(db,rows,*,full,clock=None):
+                real_seal(db,rows,full=full,clock=clock)
+                # Verify both original history and research batch were
+                # written to this connection before the hard kill.
+                assert db.execute(
+                    "SELECT count(*) FROM squalincome_history").fetchone()[0]==1
+                assert db.execute(
+                    "SELECT count(*) FROM research_price_only_batches").fetchone()[0]==1
+                os.kill(os.getpid(),signal.SIGKILL)
+            with patch.object(compact,"seal",side_effect=after_insert):
+                self.run_compact()
+        child=multiprocessing.get_context("fork").Process(target=crash_child)
+        child.start()
+        child.join(timeout=15)
+        if child.is_alive():
+            child.kill()
+            child.join(timeout=5)
+            self.fail("crashed_writer_child_hung")
+        self.assertEqual(child.exitcode,-signal.SIGKILL)
+        self.assertEqual(standard_state(self.new),expected)
+        with sqlite3.connect(self.new) as db:
+            self.assertEqual(db.execute("PRAGMA integrity_check").fetchone()[0],"ok")
+            self.assertEqual(db.execute(
+                "SELECT count(*) FROM research_price_only_batches").fetchone()[0],0)
+            self.assertEqual(db.execute(
+                "SELECT count(*) FROM squalincome_history").fetchone()[0],0)
+            self.assertEqual(db.execute(
+                "SELECT count(*) FROM squalincome_last_scan").fetchone()[0],0)
+        # An ordinary *fresh* retry is allowed after WAL recovery. No
+        # fabricated past observation or retroactive data repair.
+        recovered=self.run_compact()
+        self.assertEqual(recovered["priceOnlyResearch"]["batchStatus"],
+                         "COMPACT_BATCH_SEALED")
+        with sqlite3.connect(self.new) as db:
+            verified=compact.verify(
+                db,scan_slot=stamp(NOW.replace(
+                    minute=15,second=0,microsecond=0)))
+            self.assertEqual(verified["marketObservations"],34)
+            self.assertEqual(db.execute("PRAGMA integrity_check").fetchone()[0],"ok")
+
     def test_interrupt_after_batch_write_rolls_back_all_origins(self):
         baseline_state=standard_state(self.base)
         real_seal=compact.seal
