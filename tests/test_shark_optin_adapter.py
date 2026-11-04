@@ -193,6 +193,31 @@ class OptInScannerTests(unittest.TestCase):
             "profitabilityEstablished":False
         },sort_keys=True,separators=(",",":")))
 
+    def test_full_research_capacity_is_explicit_not_silent_denominator_gap(self):
+        # An actual 15-minute periodic schedule means the initial 50k cap
+        # covers ~15.3 calendar days of all-34 full scans, NOT 122 days.
+        with patch.object(research,"MAX_EVENTS",0):
+            out=self._scan(targets=("EURUSD",))
+            self.assertEqual(
+                out["priceOnlyResearch"]["byState"]["PRICE_UNIVERSE_CAPACITY_REACHED"],1)
+            with sqlite3.connect(self.research) as db:
+                counters=research.summary(db)
+                self.assertEqual(counters["remainingRows"],0)
+                self.assertTrue(counters["capacityExhausted"])
+                self.assertEqual(counters["totalScans"],0)
+        with sqlite3.connect(self.research) as db:
+            self.assertEqual(db.execute(
+                "SELECT count(*) FROM squalincome_history").fetchone()[0],1)
+
+    def test_research_capacity_budget_counts_15min_scan_cadence(self):
+        self._scan(targets=("EURUSD",))
+        with sqlite3.connect(self.research) as db:
+            metrics=research.summary(db)
+        self.assertEqual(metrics["maxConfiguredRows"],50000)
+        self.assertEqual(metrics["fullUniverseMarkets"],34)
+        self.assertEqual(metrics["remainingRows"],49999)
+        self.assertLess(metrics["theoreticalDaysAtEvery15MinFullScan"],16)
+
     def test_db_failure_raises_in_optin_and_is_not_converted_to_ND(self):
         with patch.object(research,"capture_optional",
                           side_effect=sqlite3.OperationalError("DB_CONSTRAINT")):
