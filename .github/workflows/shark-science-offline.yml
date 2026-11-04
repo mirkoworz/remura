@@ -9,6 +9,7 @@ on:
       - 'scripts/shark_data_readiness.py'
       - 'scripts/shark_research_census.py'
       - 'scripts/shark_universe_lineage.py'
+      - 'scripts/shark_universe_probe.py'
       - 'scripts/shark_research_probe.py'
       - 'scripts/shark_cot_paired_baseline.py'
       - 'scripts/shark_cot_robustness.py'
@@ -20,6 +21,7 @@ on:
       - 'tests/test_shark_data_readiness.py'
       - 'tests/test_shark_research_census.py'
       - 'tests/test_shark_universe_lineage.py'
+      - 'tests/test_shark_universe_probe.py'
       - 'tests/test_shark_research_probe.py'
       - 'tests/test_shark_cot_paired_baseline.py'
       - 'tests/test_shark_cot_robustness.py'
@@ -46,7 +48,7 @@ jobs:
       - name: Verify offline script syntax
         run: |
           node --check cvd-divergence-core.js
-          python -m py_compile scripts/cvd_divergence.py scripts/cvd_benchmark.py scripts/cvd_session_replay.py scripts/shark_science_gate.py scripts/shark_walkforward.py scripts/shark_data_readiness.py scripts/shark_research_census.py scripts/shark_universe_lineage.py scripts/shark_research_probe.py scripts/shark_cot_paired_baseline.py scripts/shark_cot_robustness.py scripts/shark_cvd_ledger.py
+          python -m py_compile scripts/cvd_divergence.py scripts/cvd_benchmark.py scripts/cvd_session_replay.py scripts/shark_science_gate.py scripts/shark_walkforward.py scripts/shark_data_readiness.py scripts/shark_research_census.py scripts/shark_universe_lineage.py scripts/shark_universe_probe.py scripts/shark_research_probe.py scripts/shark_cot_paired_baseline.py scripts/shark_cot_robustness.py scripts/shark_cvd_ledger.py
       - name: Test CVD JS detector
         run: node --test tests/cvd-divergence.test.js
       - name: Test CVD parity, benchmark and archive replay
@@ -61,6 +63,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_shark_research_census.py' -v
       - name: Test point-in-time COT provenance across complete monitored FX and futures universe
         run: python -m unittest discover -s tests -p 'test_shark_universe_lineage.py' -v
+      - name: Test pinned no-deploy whole-universe COT runner with offline SQLite
+        run: python -m unittest discover -s tests -p 'test_shark_universe_probe.py' -v
       - name: Test one-shot research probe with pinned Git blobs and no network
         run: python -m unittest discover -s tests -p 'test_shark_research_probe.py' -v
       - name: Test real-cohort paired COT baseline with explicit costs
