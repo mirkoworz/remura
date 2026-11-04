@@ -1,6 +1,6 @@
 # REMURA — TRACK A: Qualità H1 e raccolta prezzi
 
-**Ultimo stato attestato:** 03/11/2026 ore 20:54 Italia. **Roadmap coordinatrice:** [ROADMAP.md](ROADMAP.md). **Track parallelo:** [B — Shark Science](ROADMAP-B-SHARK-SCIENCE.md).
+**Ultimo stato attestato:** 04/11/2026 ore 08:32 Italia (GET locale LIVE, 48 paired comparabili; full-scan 27/34 H1). **Roadmap coordinatrice:** [ROADMAP.md](ROADMAP.md). **Track parallelo:** [B — Shark Science](ROADMAP-B-SHARK-SCIENCE.md).
 
 ## 04/11/2026 ore 07:15 Italia — verifica A1 GitHub e replay offline (NON misura LIVE nuova)
 
@@ -18,6 +18,23 @@
 
 **Prossima verifica A1 obbligatoria:** leggere tramite la diagnostica privata schedulata (quando realmente eseguita) o una singola GET locale read-only `/private-api/signals/status` gli aggregati `h1Paired` (totali, validi, N/D, last UTC, readyBefore/After, staleToReady, h1Advanced, h1Unchanged); leggere la full-scan dei 34 al suo timestamp e l'ultimo stato batch. Confrontare età di ogni H1 con M15/H4, fasi UTC e mercati precedentemente problematici. Se >=8 record totali ma validi insufficienti, **proseguire l'osservazione**. Non modificare codice operativo, quote, soglie, cron o produzione sulla base del replay.
 
+## 04/11/2026 ore 08:32 Italia — A1/A2: RISULTATI LIVE CONFERMATI DALLA VPS
+
+**Fonte:** comando `python3` in sola lettura dell'utente sulla VPS (1 GET locale `/private-api/signals/status`), screenshot terminale 04/11 ore 08:32 italiane. Valori osservati, non sintetici.
+
+**H1 paired, ultimo post-scan 2026-11-04T07:31:58.224658+00:00 (08:31:58 Italia):**
+- `state=ready`, `samples=48`, `comparableSamples=48`, `unverifiableSamples=0`, `lastState=COMPARABLE`. **Traguardo >=8 confronti reali e validi: RAGGIUNTO**. Registro bounded di campioni; le righe possono riguardare più volte gli stessi mercati e non sono 48 cicli indipendenti né 48 trade.
+- In 48 confronti paired: `marketsCompared=216`, `readyBefore=39`, `readyAfter=216`, `staleToReady=177`, `h1Advanced=210`, `h1Unchanged=6`. I 177 sono **passaggi da stale a ready nel confronto alla stessa UTC** tra precedente full-scan e successivo post-ingest, non 177 mercati unici, e NON dimostrano da soli causalità esclusiva del batch, opportunità profittevoli o anticipo istituzionale.
+- **Fotografia distinta full-scan** alle `2026-11-04T07:22:50.199499+00:00` (08:22:50 Italia): **27/34 H1 ready**, **7/34 H1 stale**, **0 H1 non verificabili**. I 7 stale: `AUDCAD`, `AUDCHF`, `AUDJPY`, `USDCHF`, `USDJPY`, `USOIL`, `XAGUSD`. Ognuno ha `H1_age≈142.8 min` e `lag_vs_M15_teorico_min=0`: chiusura H1 allineata all'ora UTC teorica dell'ultima M15. L'allineamento dell'ultimo timestamp NON certifica la contiguità di tutte le barre storiche H4.
+- I sette simboli di questa fotografia non coincidono con gli otto simboli stale del 03/11 ore 20:46: **compatibile con coorti rotanti e fase dei batch**, ma richiede correlazione con orari di raccolta effettivi. Non confrontare 26/34 e 27/34 come prova di miglioramento di un mercato sempre uguale; sono istanti e strumenti diversi.
+- I **48 campioni provano che la telemetria paired è operativa** e che nei post-ingest osservati il frame H1 dei gruppi confrontati risultava sempre pronto dopo il controllo, mentre il full-scan anteriore poteva essere stale alla stessa UTC. Resta da verificare per mercati e fasi se il post-ingest sta riducendo la *latenza del primo controllo utile*, non semplicemente la posizione della scansione. Niente cambio gate 120m, niente prezzi interpolati.
+
+**A3 — diagnosi in corso:** verificare con una nuova lettura *read-only* della stessa API già presente `collectorTiming` (8 slot, successo ingest, durata), `scanTiming` (fase, esiti), e `diagnostics.markets[].timeframes` H1/M15/H4, con timestamp UTC di misura. Distinguere `M15 presente ma H1 necessariamente più vecchia` da `4 M15 mancanti`, condizioni di chiusura/sessione del broker e strumento in attesa del proprio slot. **Non incrementare il polling**. Confronto offline già disponibile su PR app [#84](https://github.com/mirkoworz/remura/pull/84) (UTC/DST) e PR collector [#19](https://github.com/mirkoworz/remura-collector/pull/19) (fase al secondo / 40 acquisizioni); riusare e validare prima di scrivere un nuovo algoritmo.
+
+**A4 — decisione attuale:** 48/48 comparabili consentono di avanzare alla diagnosi temporale; **non giustificano da soli modifiche a rotazione o scansioni**. La priorità è identificare se la full-scan possa essere distinta chiaramente dalla freschezza *post-ingest* già osservata, senza aumentare chiamate cTrader, senza false H1 verdi e senza toccare lo Shark Science B.
+
+**Automazione:** PR collector #23 è integrata, ma alle verifiche GitHub della mattina del 04/11 non risultava ancora una esecuzione `event=schedule` del workflow diagnostico; i test `event=pull_request` non leggono lo stato LIVE. Per questa rilevazione è stato usato il comando locale; la schedulazione resta da verificare separatamente senza aggiungere nuovi cron.
+
 ## Scopo
 Assicurare che REMURA ragioni su prezzi **realmente verificati** e non su H1 vecchie, incomplete o con orologi incoerenti. Priorità alla causa dei problemi, non a rendere artificialmente verdi gli indicatori. Questo track NON introduce nuovi segnali né modifica il modello trading.
 
@@ -30,8 +47,8 @@ Assicurare che REMURA ragioni su prezzi **realmente verificati** e non su H1 vec
 - Diagnostica privata sul repository `mirkoworz/remura-collector`: PR **#22** aggiunge campioni/validi/N/D/recuperi usando la **GET già esistente**; PR **#23** aggiunge **una** schedulazione lun–ven 06:37 UTC, condizionata a `REMURA_VPS_DIAG_ENABLED=1`. Le PR erano integrate al 03/11; l'esito del primo run schedulato **non era attestato**.
 
 ## Passi e criteri di completamento (A)
-- [ ] **A1 — audit aggiornato:** leggere lo stato LIVE **prima** di qualsiasi modifica (health, SHA installato, auto-update, flag nel processo, snapshot e campioni). Non confondere raccolte pre-attivazione con record `remura_h1_paired`; confrontare timestamp/slot. Preferire diagnostica privata read-only già presente, altrimenti un solo comando Termius quando davvero necessario. Verificare se il workflow schedulato è stato eseguito, non assumerlo.
-- [ ] **A2 — campione sufficiente:** raccogliere **almeno 8 record paired nuovi, reali**, successivi all'attivazione; distinguere `samples`, `comparableSamples`, `unverifiableSamples`, `lastState`, `readyBefore`, `readyAfter`, `staleToReady`, `h1Advanced`, `h1Unchanged`. Se 8 totali ma troppi N/D, prolungare la misura anziché inventare conclusioni.
+- [x] **A1 — audit aggiornato (04/11 08:32):** leggere lo stato LIVE **prima** di qualsiasi modifica (health, SHA installato, auto-update, flag nel processo, snapshot e campioni). Non confondere raccolte pre-attivazione con record `remura_h1_paired`; confrontare timestamp/slot. Preferire diagnostica privata read-only già presente, altrimenti un solo comando Termius quando davvero necessario. Verificare se il workflow schedulato è stato eseguito, non assumerlo.
+- [x] **A2 — campione sufficiente (48/48 validi, 216 confronti):** raccogliere **almeno 8 record paired nuovi, reali**, successivi all'attivazione; distinguere `samples`, `comparableSamples`, `unverifiableSamples`, `lastState`, `readyBefore`, `readyAfter`, `staleToReady`, `h1Advanced`, `h1Unchanged`. Se 8 totali ma troppi N/D, prolungare la misura anziché inventare conclusioni.
 - [ ] **A3 — indagine per causa:** correlare gli 8 mercati stale con sessioni/chiusure H1 UTC, momento del full-scan, slot effettivi, finestra M15→H1 (4 barre), sorgente primaria/backup, età all'istante della decisione e weekend. Testare localmente le ipotesi UTC/DST prima di intervenire. Non confondere 26/34 osservati a 20:39 con stato attuale.
 - [ ] **A4 — proposte senza costi:** simulare offline alternative sulla **stessa quantità di chiamate**: prioritaria 8×5=40 acquisizioni programmate/2h (EURUSD e XAUUSD ripetuti) contro 38 standard. Confrontare disponibilità realmente valida e N/D, non soltanto conteggi cosmetici. Rivedere [PR collector #19](https://github.com/mirkoworz/remura-collector/pull/19) (replay sintetico, non effetto LIVE certificato).
 - [ ] **A5 — eventuale fix:** solo se supportato da campioni e test, preparare PR focalizzata su raccolta/telemetria; CI verdi e review diff. Un solo track per volta può effettuare merge, version bump e deploy VPS. Ogni rilascio applicativo richiede **v nuova + data/ora italiana effettiva in alto sulle nove pagine**, backup SQLite, restore-test, rollback e riconciliazione autoupdater.
