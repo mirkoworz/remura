@@ -304,3 +304,44 @@ def summary(db):
             "old50kRowCapBypassedWithoutDeletingRows":True,
             "newBrokerCalls":0,"profitabilityVerified":False,
             "storageBudgetCertifiedOnOracle":False}
+
+
+def audit_slot_coverage(db, *, first_slot, last_slot):
+    """Read-only verification of 15m expected FULL recording slots only.
+
+    THIS IS NOT 15m quote/market opportunity coverage. It only evaluates
+    whether the future opt-in Squalincome scanner actually persisted its
+    research evidence. Never silently backfill missing hours or weekends.
+    Bounded to one UTC week to protect the small Oracle Always Free VPS.
+    """
+    if not isinstance(db,sqlite3.Connection):
+        raise ValueError("sqlite_required")
+    start=_slot(first_slot)
+    finish=_slot(last_slot)
+    a,b=witness._parse(start),witness._parse(finish)
+    if not a<=b or b-a>timedelta(days=7):
+        raise ValueError("invalid_or_unbounded_coverage_window")
+    expected=int((b-a).total_seconds()//900)+1
+    rows=db.execute(
+        f"SELECT scan_slot FROM {TABLE} WHERE scope=? "
+        "AND scan_slot BETWEEN ? AND ? ORDER BY scan_slot",
+        (FULL_SCOPE,start,finish)).fetchall()
+    if len(rows)>expected:
+        raise ValueError("duplicate_or_invalid_coverage")
+    for (slot,) in rows:
+        proof=verify(db,scan_slot=slot)
+        if proof["status"]!="ARCHIVE_VERIFIED":
+            raise ValueError("incomplete_batch_integrity")
+    covered=len(rows)
+    return {
+        "schema":SCHEMA,"status":"FULL_SCAN_ARCHIVE_COVERAGE_AUDITED",
+        "potential15MinRecordingSlots":expected,
+        "verifiedFullScanSlots":covered,
+        "missingFullScanSlots":expected-covered,
+        "allStoredBatchesIntegrityChecked":True,
+        "marketObservationsCertifiedByBroker":False,
+        "liveMarketSamplingCompletenessProven":False,
+        "missedPeriodsBackfilled":False,
+        "brokerCalls":0,
+        "edge":"NOT_ESTABLISHED",
+    }
