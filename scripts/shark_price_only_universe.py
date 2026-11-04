@@ -249,8 +249,13 @@ def capture_optional(db,**kwargs):
         raise ValueError("scan_transaction_required")
     try:
         return capture(db,**kwargs)
-    except ValueError:
-        return {"schema":SCHEMA,"status":"PRICE_UNIVERSE_NOT_RECORDED",
+    except ValueError as exc:
+        # Capacity exhaustion is not generic N/D; future operators must see
+        # that sampling STOPPED before treating its denominator as complete.
+        status=("PRICE_UNIVERSE_CAPACITY_REACHED"
+                if str(exc)=="price_only_capacity_reached"
+                else "PRICE_UNIVERSE_NOT_RECORDED")
+        return {"schema":SCHEMA,"status":status,
                 "newRows":0,"noCotDataUsed":True,"edge":"NOT_ESTABLISHED",
                 "newBrokerCalls":0,"alertsEnabled":False}
 
@@ -261,9 +266,21 @@ def summary(db):
     rows=db.execute(
         f"SELECT state,count(*),count(DISTINCT symbol) FROM {TABLE} "
         "GROUP BY state").fetchall()
+    total=sum(x[1] for x in rows)
+    # Current private_server.squalincome_loop is scheduled every 15 minutes.
+    # Not a real-time ETA: weekends, outages and targeted scans may vary.
+    # A silent 50k-row cap could otherwise invalidate the denominator.
+    remaining=max(0,MAX_EVENTS-total)
+    full_market_count=len(prices_monitored())
     return {"schema":SCHEMA,
-            "totalScans":sum(x[1] for x in rows),
+            "totalScans":total,
             "byState":{state:count for state,count,_ in rows},
+            "maxConfiguredRows":MAX_EVENTS,
+            "remainingRows":remaining,
+            "fullUniverseMarkets":full_market_count,
+            "theoreticalDaysAtEvery15MinFullScan":round(
+                remaining/(full_market_count*96),2),
+            "capacityExhausted":remaining==0,
             "tradingObservationsValidated":0,
             "conditionalOnCot":False,
             "retrospectiveHistoryReconstructed":False,
