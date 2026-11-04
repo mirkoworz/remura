@@ -16,6 +16,7 @@ import sqlite3
 
 from scripts import shark_cot_asof_witness as witness
 from scripts import shark_price_only_compact as compact
+from scripts import shark_first_invocation as first_gate
 
 SCHEMA = "remura-track-b-prospective-recording-coverage-v1"
 MINUTES_PER_SLOT = 15
@@ -50,100 +51,134 @@ def _result(status, **details):
 
 
 def audit(db, *, as_of, days=1):
-    """Audit only finalizable UTC slots, within at most seven calendar days.
+    """Audit finalized UTC slots, with an immutable first-invocation witness.
 
-    as_of MUST be an explicit UTC observation clock. A slot is finalized for
-    this audit only once the entire 15-minute interval plus up to 3 minutes
-    for sealing has elapsed. Thus an in-flight archive is not falsely absent.
+    With no witness, retains the conservative FIRST STORED full-batch anchor:
+    any period before that batch stays N/D. With a valid first-invocation
+    witness, expect calendar recording slots ONLY FROM the first 15-minute
+    boundary ON/AFTER that observed invocation. An initial partial slot is
+    excluded rather than retroactively treated as a scheduled requirement.
 
-    The first actually archived FULL batch anchors the earliest lower bound.
-    A missing first batch cannot be reconstructed, even if a config flag
-    was enabled earlier. An eligible PRICE_CONTEXT_READY is not a trade.
-    No SELECT touches the original prices or COT tables.
+    Witness is local host-clock evidence, NOT an independently notarized
+    timestamp of a configuration change. Gaps do not prove a skipped job,
+    broker/ingest outage, open market or lost trading opportunity. All
+    queries run in the same bounded read-only snapshot, no backfill.
     """
-    if not isinstance(db, sqlite3.Connection):
+    if not isinstance(db,sqlite3.Connection):
         raise ValueError("sqlite_connection_required")
-    if type(days) is not int or not 1 <= days <= MAX_DAYS:
+    if type(days) is not int or not 1<=days<=MAX_DAYS:
         raise ValueError("invalid_coverage_days")
-    instant = witness._parse(as_of)
-    if instant.utcoffset() != timedelta(0):
-        raise ValueError("UTC_clock_required")
-    cutoff = _utc_slot(instant - SLOT_SPAN - SEAL_GRACE)
-    until = witness._iso(cutoff)
-    # Respect any caller's existing transaction. A single read snapshot
-    # prevents partial interpretation if an independent writer commits.
-    started = not db.in_transaction
+    instant=witness._parse(as_of)
+    cutoff=_utc_slot(instant-SLOT_SPAN-SEAL_GRACE)
+    until=witness._iso(cutoff)
+    started=not db.in_transaction
     if started:
         db.execute("BEGIN")
     try:
-        exists = db.execute(
+        activation=first_gate.read(db,at=instant)
+        activation_time=witness._parse(activation) if activation else None
+        activation_details={
+            "firstEnabledScannerInvocationWitnessed":activation is not None,
+            "firstEnabledScannerInvocationAt":activation,
+            "configurationSwitchTimeKnown":False,
+            "continuousEnablementEstablished":False,
+            "externallyNotarizedActivation":False,
+            "asOfClockExternallyVerified":False,
+        }
+        table=db.execute(
             "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
             (compact.TABLE,)).fetchone()
-        if exists is None:
+        if not table and activation is None:
             return _result("NO_RESEARCH_TABLE",
                            finalizedThroughSlot=until,
                            recordingOpportunities=None,
                            verifiedFullScanSlots=None,
-                           unrecordedCalendarSlots=None)
-        first_row = db.execute(
-            f"SELECT min(scan_slot) FROM {compact.TABLE} "
-            "WHERE scope=? AND scan_slot<=?",
-            (compact.FULL_SCOPE, until)).fetchone()
-        earliest = first_row[0] if first_row else None
-        if earliest is None:
+                           unrecordedCalendarSlots=None,
+                           **activation_details)
+        first=None
+        if table:
+            first_row=db.execute(
+                f"SELECT min(scan_slot) FROM {compact.TABLE} "
+                "WHERE scope=? AND scan_slot<=?",
+                (compact.FULL_SCOPE,until)).fetchone()
+            if first_row and first_row[0] is not None:
+                first=compact._slot(first_row[0])
+        if activation is None and first is None:
             return _result("NO_FINALIZED_FULL_BATCH",
                            finalizedThroughSlot=until,
                            recordingOpportunities=None,
                            verifiedFullScanSlots=None,
-                           unrecordedCalendarSlots=None)
-        # An archived batch from an invalid timestamp must fail rather
-        # than silently shifting the start of an apparent clean sample.
-        first = compact._slot(earliest)
-        earliest_dt = witness._parse(first)
-        start_dt = max(earliest_dt, cutoff - timedelta(days=days) + SLOT_SPAN)
-        first_in_window = witness._iso(start_dt)
-        coverage = compact.audit_slot_coverage(
-            db, first_slot=first_in_window, last_slot=until)
-        rows = db.execute(
-            f"SELECT scan_slot,scope_count,eligible_count,uncertain_count "
-            f"FROM {compact.TABLE} WHERE scope=? "
-            "AND scan_slot BETWEEN ? AND ? ORDER BY scan_slot",
-            (compact.FULL_SCOPE, first_in_window, until)).fetchall()
-        # All archive bytes and metadata were already verified by the
-        # bounded audit above; this second query is inside its snapshot.
-        observed = {slot for slot,_,_,_ in rows}
-        unknown = sum(n for _,_,_,n in rows)
-        eligible = sum(n for _,_,n,_ in rows)
-        expected = coverage["potential15MinRecordingSlots"]
-        missing_total = coverage["missingFullScanSlots"]
-        examples = []
+                           unrecordedCalendarSlots=None,
+                           **activation_details)
+        if activation_time is not None:
+            # Never include an incomplete first slot merely because the
+            # feature flag was observed AFTER that slot started.
+            first_slot=_utc_slot(activation_time)
+            if first_slot<activation_time:
+                first_slot+=SLOT_SPAN
+        else:
+            # Legacy standalone/offline research archives have no reliable
+            # activation event, so pre-first-batch intervals are unknown.
+            first_slot=witness._parse(first)
+        start_dt=max(first_slot,cutoff-timedelta(days=days)+SLOT_SPAN)
+        if start_dt>cutoff:
+            return _result(
+                "NO_FINALIZED_EXPECTED_SLOTS_AFTER_START"
+                if activation else "NO_FINALIZED_FULL_BATCH",
+                finalizedThroughSlot=until,
+                recordingOpportunities=None,
+                verifiedFullScanSlots=None,
+                unrecordedCalendarSlots=None,
+                firstKnownFullBatchSlot=first,
+                **activation_details)
+        first_in_window=witness._iso(start_dt)
+        if table:
+            coverage=compact.audit_slot_coverage(
+                db,first_slot=first_in_window,last_slot=until)
+            rows=db.execute(
+                f"SELECT scan_slot,scope_count,eligible_count,uncertain_count "
+                f"FROM {compact.TABLE} WHERE scope=? "
+                "AND scan_slot BETWEEN ? AND ? ORDER BY scan_slot",
+                (compact.FULL_SCOPE,first_in_window,until)).fetchall()
+            expected=coverage["potential15MinRecordingSlots"]
+            missing_total=coverage["missingFullScanSlots"]
+            if len(rows)!=coverage["verifiedFullScanSlots"]:
+                raise ValueError("coverage_snapshot_mismatch")
+        else:
+            rows=[]
+            expected=int((cutoff-start_dt).total_seconds()//900)+1
+            missing_total=expected
+        observed={slot for slot,_,_,_ in rows}
+        if (len(observed)!=len(rows)
+                or any(count!=34 for _,count,_,_ in rows)
+                or missing_total!=expected-len(observed)):
+            raise ValueError("coverage_snapshot_mismatch")
+        examples=[]
         for index in range(expected):
-            if len(examples) >= MAX_EXAMPLE_MISSING:
+            if len(examples)>=MAX_EXAMPLE_MISSING:
                 break
-            slot = witness._iso(start_dt + SLOT_SPAN * index)
+            slot=witness._iso(start_dt+SLOT_SPAN*index)
             if slot not in observed:
                 examples.append(slot)
-        if (len(rows) != coverage["verifiedFullScanSlots"]
-                or any(count != 34 for _,count,_,_ in rows)
-                or missing_total != expected-len(observed)):
-            raise ValueError("coverage_snapshot_mismatch")
         return _result(
-            "RECORDED_CALENDAR_COVERAGE_AUDITED",
+            "WITNESSED_CALENDAR_COVERAGE_AUDITED" if activation
+            else "RECORDED_CALENDAR_COVERAGE_AUDITED",
             finalizedThroughSlot=until,
             firstKnownFullBatchSlot=first,
             examinedFromSlot=first_in_window,
-            auditWindowTruncated=(start_dt > earliest_dt),
+            auditWindowTruncated=(start_dt>first_slot),
             recordingOpportunities=expected,
             verifiedFullScanSlots=len(rows),
             unrecordedCalendarSlots=missing_total,
             firstMissingSlotExamples=examples,
-            omittedMissingSlotExamples=max(0, missing_total-len(examples)),
+            omittedMissingSlotExamples=max(0,missing_total-len(examples)),
             verifiedMarketCells=34*len(rows),
-            unknownMarketCellsInsideRecordedBatches=unknown,
-            priceContextReadyCells=eligible,
+            unknownMarketCellsInsideRecordedBatches=sum(x[3] for x in rows),
+            priceContextReadyCells=sum(x[2] for x in rows),
             fullBatchIntegrityChecked=True,
-            fullBatchFraction=round(len(rows)/expected, 5),
+            fullBatchFraction=round(len(rows)/expected,5),
             statisticalCompletenessCertified=False,
+            **activation_details,
         )
     finally:
         if started:
