@@ -184,6 +184,78 @@ class CompactScannerTests(unittest.TestCase):
                 "tradingEdgeEstablished":False,
             },sort_keys=True,separators=(",",":")))
 
+    def test_late_seal_error_rolls_back_original_squalincome_and_batch(self):
+        # The original v1.62 EURUSD baseline would have committed
+        # BEFORE the old end-of-scan compact seal. This regression proves
+        # the new single BEGIN IMMEDIATE boundary really rolls it back.
+        baseline_state=standard_state(self.base)
+        with patch.object(compact,"seal",side_effect=sqlite3.OperationalError("disk_full")):
+            with self.assertRaisesRegex(sqlite3.OperationalError,"disk_full"):
+                self.run_compact()
+        self.assertEqual(standard_state(self.new),baseline_state)
+        with sqlite3.connect(self.new) as db:
+            self.assertEqual(db.execute(
+                "SELECT count(*) FROM research_price_only_batches").fetchone()[0],0)
+            self.assertEqual(db.execute(
+                "SELECT count(*) FROM squalincome_history").fetchone()[0],0)
+            self.assertEqual(db.execute(
+                "SELECT count(*) FROM squalincome_last_scan").fetchone()[0],0)
+
+    def test_interrupt_after_batch_write_rolls_back_all_origins(self):
+        baseline_state=standard_state(self.base)
+        real_seal=compact.seal
+        def interrupted(db,rows,*,full,clock=None):
+            result=real_seal(db,rows,full=full,clock=clock)
+            self.assertEqual(result["status"],"COMPACT_BATCH_SEALED")
+            raise SystemExit("simulated_worker_termination_before_commit")
+        with patch.object(compact,"seal",side_effect=interrupted):
+            with self.assertRaisesRegex(SystemExit,"before_commit"):
+                self.run_compact()
+        self.assertEqual(standard_state(self.new),baseline_state)
+        with sqlite3.connect(self.new) as db:
+            self.assertEqual(db.execute(
+                "SELECT count(*) FROM research_price_only_batches").fetchone()[0],0)
+            self.assertEqual(db.execute(
+                "SELECT count(*) FROM squalincome_history").fetchone()[0],0)
+
+    def test_other_sqlite_reader_never_sees_a_half_filled_scan(self):
+        # The original Squalincome baseline and the compact batch have
+        # already been written on the scanner connection when seal runs,
+        # but neither should be visible to an independent SQLite reader.
+        real_seal=compact.seal
+        def inspect_before_commit(db,rows,*,full,clock=None):
+            with sqlite3.connect(self.new,timeout=1.0) as outside:
+                self.assertEqual(outside.execute(
+                    "SELECT count(*) FROM squalincome_history").fetchone()[0],0)
+                self.assertEqual(outside.execute(
+                    "SELECT count(*) FROM squalincome_last_scan").fetchone()[0],0)
+                self.assertEqual(outside.execute(
+                    "SELECT count(*) FROM research_price_only_batches").fetchone()[0],0)
+            return real_seal(db,rows,full=full,clock=clock)
+        with patch.object(compact,"seal",side_effect=inspect_before_commit):
+            self.run_compact()
+        with sqlite3.connect(self.new) as db:
+            self.assertEqual(db.execute(
+                "SELECT count(*) FROM squalincome_history").fetchone()[0],1)
+            self.assertEqual(db.execute(
+                "SELECT count(*) FROM research_price_only_batches").fetchone()[0],1)
+
+    def test_sqlite_busy_writer_is_visible_and_does_not_corrupt_either_table(self):
+        # Concurrent ingest writer (simulated by a real separate SQLite
+        # BEGIN IMMEDIATE) must NEVER cause a partial research/legacy scan.
+        outside=sqlite3.connect(self.new,timeout=1.0)
+        try:
+            outside.execute("BEGIN IMMEDIATE")
+            with self.assertRaisesRegex(sqlite3.OperationalError,"locked"):
+                self.run_compact(targets=("EURUSD",))
+        finally:
+            outside.rollback()
+            outside.close()
+        self.assertEqual(standard_state(self.new),standard_state(self.base))
+        with sqlite3.connect(self.new) as db:
+            self.assertEqual(db.execute(
+                "SELECT count(*) FROM research_price_only_batches").fetchone()[0],0)
+
     def test_error_on_seal_propagates_not_masked_as_missing_data(self):
         with patch.object(compact,"seal",side_effect=sqlite3.OperationalError("disk_full")):
             with self.assertRaisesRegex(sqlite3.OperationalError,"disk_full"):
