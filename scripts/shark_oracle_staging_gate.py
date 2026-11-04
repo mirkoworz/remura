@@ -69,6 +69,17 @@ def file_size(path):
         return 0
 
 
+def proc_io_bytes(pid):
+    """Sample process I/O counters from Linux procfs (not an I/O peak)."""
+    try:
+        with open("/proc/%d/io" % pid, encoding="ascii") as file:
+            entries = dict(line.strip().split(": ", 1) for line in file if ": " in line)
+        return (int(entries.get("read_bytes", 0)),
+                int(entries.get("write_bytes", 0)))
+    except (OSError, ValueError, IndexError):
+        return None
+
+
 def mem_available_kib():
     try:
         with open("/proc/meminfo", encoding="ascii") as f:
@@ -97,6 +108,7 @@ def run_worker(mode, path):
     rss_max = 0
     wal_max = 0
     mem_min = None
+    sampled_read_bytes = sampled_write_bytes = 0
     write_probes = busy = read_failures = 0
     write_max_ms = 0.0
     try:
@@ -109,15 +121,22 @@ def run_worker(mode, path):
             if sample is not None:
                 rss_max = max(rss_max, sample)
             wal_max = max(wal_max, file_size(str(path) + "-wal"))
+            io = proc_io_bytes(process.pid)
+            if io is not None:
+                sampled_read_bytes = max(sampled_read_bytes, io[0])
+                sampled_write_bytes = max(sampled_write_bytes, io[1])
             mem = mem_available_kib()
             if mem is not None:
                 mem_min = mem if mem_min is None else min(mem_min, mem)
             if mode == "compact" and write_probes < 100:
                 try:
                     t0 = time.perf_counter()
-                    with sqlite3.connect(path, timeout=0.005) as probe:
+                    probe = sqlite3.connect(path, timeout=0.005)
+                    try:
                         probe.execute("BEGIN IMMEDIATE")
                         probe.rollback()
+                    finally:
+                        probe.close()
                     write_max_ms = max(write_max_ms,
                                        (time.perf_counter() - t0) * 1000)
                 except sqlite3.OperationalError as e:
@@ -126,10 +145,12 @@ def run_worker(mode, path):
                     busy += 1
                 write_probes += 1
                 try:
-                    with sqlite3.connect(
-                            "file:%s?mode=ro" % path, uri=True,
-                            timeout=0.005) as reader:
+                    reader = sqlite3.connect(
+                        "file:%s?mode=ro" % path, uri=True, timeout=0.005)
+                    try:
                         reader.execute("SELECT count(*) FROM prices").fetchone()
+                    finally:
+                        reader.close()
                 except sqlite3.OperationalError:
                     read_failures += 1
             time.sleep(0.01)
@@ -153,6 +174,8 @@ def run_worker(mode, path):
     return report, {
         "sampledPeakRssMiB": round(rss_max / 1024, 2),
         "sampledMaxWalKiB": round(wal_max / 1024, 2),
+        "sampledProcessReadMiB": round(sampled_read_bytes / 1048576, 2),
+        "sampledProcessWriteMiB": round(sampled_write_bytes / 1048576, 2),
         "minHostMemAvailableMiB": (
             round(mem_min / 1024, 2) if mem_min is not None else None),
         "syntheticWriterProbes": write_probes,
