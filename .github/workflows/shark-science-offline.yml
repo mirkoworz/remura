@@ -16,6 +16,7 @@ on:
       - 'scripts/shark_cot_asof_witness.py'
       - 'scripts/shark_signal_evidence.py'
       - 'scripts/shark_price_asof_evidence.py'
+      - 'scripts/shark_observation_bundle.py'
       - 'scripts/shark_cvd_ledger.py'
       - 'tests/cvd-divergence.test.js'
       - 'tests/test_cvd_*.py'
@@ -31,6 +32,7 @@ on:
       - 'tests/test_shark_cot_asof_witness.py'
       - 'tests/test_shark_signal_evidence.py'
       - 'tests/test_shark_price_asof_evidence.py'
+      - 'tests/test_shark_observation_bundle.py'
       - 'tests/test_shark_cvd_ledger.py'
       - 'ROADMAP-B-SHARK-SCIENCE.md'
       - '.github/workflows/shark-science-offline.yml'
@@ -54,7 +56,7 @@ jobs:
       - name: Verify offline script syntax
         run: |
           node --check cvd-divergence-core.js
-          python -m py_compile scripts/cvd_divergence.py scripts/cvd_benchmark.py scripts/cvd_session_replay.py scripts/shark_science_gate.py scripts/shark_walkforward.py scripts/shark_data_readiness.py scripts/shark_research_census.py scripts/shark_universe_lineage.py scripts/shark_universe_probe.py scripts/shark_research_probe.py scripts/shark_cot_paired_baseline.py scripts/shark_cot_robustness.py scripts/shark_cot_asof_witness.py scripts/shark_signal_evidence.py scripts/shark_price_asof_evidence.py scripts/shark_cvd_ledger.py
+          python -m py_compile scripts/cvd_divergence.py scripts/cvd_benchmark.py scripts/cvd_session_replay.py scripts/shark_science_gate.py scripts/shark_walkforward.py scripts/shark_data_readiness.py scripts/shark_research_census.py scripts/shark_universe_lineage.py scripts/shark_universe_probe.py scripts/shark_research_probe.py scripts/shark_cot_paired_baseline.py scripts/shark_cot_robustness.py scripts/shark_cot_asof_witness.py scripts/shark_signal_evidence.py scripts/shark_price_asof_evidence.py scripts/shark_observation_bundle.py scripts/shark_cvd_ledger.py
       - name: Test CVD JS detector
         run: node --test tests/cvd-divergence.test.js
       - name: Test CVD parity, benchmark and archive replay
@@ -83,5 +85,7 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_shark_signal_evidence.py' -v
       - name: Test prospective closed M15 H1 H4 price-source timestamps and rollup evidence
         run: python -m unittest discover -s tests -p 'test_shark_price_asof_evidence.py' -v
+      - name: Test two-source COT and OHLC bundle with partial proof and SQLite atomic rollback
+        run: python -m unittest discover -s tests -p 'test_shark_observation_bundle.py' -v
       - name: Test append-only future CVD evidence ledger and privacy
         run: python -m unittest discover -s tests -p 'test_shark_cvd_ledger.py' -v
