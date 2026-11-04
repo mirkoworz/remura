@@ -56,7 +56,7 @@ class CompactScannerTests(unittest.TestCase):
                 "SELECT count(*) FROM sqlite_master "
                 "WHERE name='research_price_only_universe'").fetchone()[0],0)
             integrity=compact.verify(
-                db,scan_slot=compact._slot(stamp(NOW)))
+                db,scan_slot=compact._slot(stamp(NOW.replace(minute=15,second=0,microsecond=0))))
             self.assertEqual(integrity["status"],"ARCHIVE_VERIFIED")
             payload=db.execute(
                 "SELECT payload_zlib FROM research_price_only_batches"
