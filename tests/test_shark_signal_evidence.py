@@ -164,6 +164,7 @@ class SignalEvidenceTests(unittest.TestCase):
         self.capture()
         with self.assertRaisesRegex(ValueError,"observation_evidence_already_recorded"):
             with self.db:
+                self.db.execute("BEGIN")  # SELECT alone does not open a transaction
                 hid=self.db.execute(
                     "SELECT id FROM squalincome_history LIMIT 1").fetchone()[0]
                 evidence.capture(self.db,history_id=hid,clock=NOW)
@@ -200,7 +201,7 @@ class SignalEvidenceTests(unittest.TestCase):
             self.capture(weekly=12.)
         with self.assertRaisesRegex(ValueError,"original_signal_does_not_match_present_cot"):
             self.capture(side=-1,price_side=-1,h1=-1,h4=-1,m15=-1)
-        with self.assertRaisesRegex(ValueError,"cot_signal_week_not_latest_common"):
+        with self.assertRaisesRegex(ValueError,"cot_report_not_recent"):
             self.capture(report=PRIOR)
 
     def test_no_previous_week_or_missing_leg_is_rejected(self):
