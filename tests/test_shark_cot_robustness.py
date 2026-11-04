@@ -2,6 +2,7 @@
 import json
 import sqlite3
 import unittest
+from datetime import date, timedelta
 
 from scripts import shark_cot_paired_baseline as base
 from scripts import shark_cot_robustness as research
@@ -60,6 +61,9 @@ def insert(conn, fold="train", *, sym="EURUSD", side=-1,
     entry_at = clock + "15:00+00:00"
     conn.execute("INSERT INTO cot_first_seen VALUES (?,?,?,?)",
                  (ds, code, report, seen))
+    prior = (date.fromisoformat(report)-timedelta(days=7)).isoformat()
+    conn.execute("INSERT INTO cot_first_seen VALUES (?,?,?,?)",
+                 (ds, code, prior, "2026-10-25T20:00:00+00:00"))
     conn.execute(
         "INSERT INTO squalincome_validation_cohorts VALUES (?,?,?,?,?,?,?,?,?,?)",
         (sym,report,"observation",observed,closed_at,side,
@@ -105,6 +109,15 @@ class RobustnessTests(unittest.TestCase):
             self.assertIsNone(out["probability"])
             self.assertIsNone(next(s for s in out["folds"]["train"][1]["costScenarios"]
                                   if s["costMultiple"] == 1)["arms"]["cot"]["positivePct"])
+
+    def test_previous_week_backfill_cannot_enter_a_fold(self):
+        with db_fixture() as db:
+            insert(db, "train")
+            db.execute("UPDATE cot_first_seen SET first_seen_at=? WHERE report_date=?",
+                       ("2026-11-15T20:00:00+00:00","2026-10-20"))
+            out = evaluate(db)
+            self.assertEqual(out["excluded"]["cot_previous_week_not_known"],1)
+            self.assertIsNone(arm(out,"train",1)["meanNetBps"])
 
     def test_same_cot_week_cannot_contribute_to_two_folds(self):
         with db_fixture() as db:
