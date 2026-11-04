@@ -104,6 +104,21 @@ def _first_seen(db, exists):
     return data
 
 
+
+def _previous_report_available(known, dataset, code, report_day, observed):
+    """Weekly COT deltas need TWO reports already seen before observation."""
+    for (kind, contract, prior), first_seen in known.items():
+        if kind != dataset or contract != code or first_seen > observed:
+            continue
+        try:
+            prior_date = datetime.fromisoformat(prior).date()
+        except (ValueError, TypeError):
+            continue
+        if 6 <= (report_day - prior_date).days <= 10:
+            return True
+    return False
+
+
 def audit_connection(db):
     """Aggregate-only audit. Requires NO new state or collector functionality."""
     if not isinstance(db, sqlite3.Connection):
@@ -148,6 +163,8 @@ def audit_connection(db):
                     reasons["cot_first_seen_not_recorded"] += 1
                 elif known[dataset, code, report_date] > obs:
                     reasons["cot_first_seen_after_observation"] += 1
+                elif not _previous_report_available(known, dataset, code, report, obs):
+                    reasons["cot_previous_week_not_known"] += 1
                 else:
                     reasons["price_context_research_possible"] += 1
         outputs[symbol] = {
