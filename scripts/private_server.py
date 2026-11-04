@@ -1034,6 +1034,28 @@ def squalincome_enabled(env=None):
             values.get("REMURA_COT_SYNC_ENABLED","1")=="1")
 
 
+def observe_periodic_squalincome(db_path, env=None):
+    """Single-pass research feature gate; not a second scanner or scheduler.
+
+    The deployed v1.62 path remains the default. Both independent explicit
+    switches are required for future research; any missing, unexpected or
+    stale value fails CLOSED to the unchanged original observer. No import,
+    migration, research SQL, cTrader request or extra loop when disabled.
+    Only the existing FULL 34-market periodic scan can use compact mode;
+    targeted post-ingest and H1 paired tracking are deliberately unchanged.
+    This branch is research-only; do not enable before P0b/P0c/release gates.
+    """
+    values=os.environ if env is None else env
+    opted_in=(values.get("REMURA_SHARK_COMPACT_RESEARCH_ENABLED")=="1" and
+              values.get("REMURA_SHARK_COMPACT_RESEARCH_ACK")==
+              "ACK_UNVALIDATED_PROSPECTIVE_RESEARCH")
+    if not opted_in:
+        return observe_squalincome(db_path)
+    # Lazy import: zero experimental code load on the legacy default path.
+    from signals_monitor import scan_once_with_compact_price_only_research
+    return scan_once_with_compact_price_only_research(db_path)
+
+
 def squalincome_loop(db_path,stop):
     # No network requests: this only reads the local COT and cTrader caches.
     while not stop.is_set():
@@ -1043,7 +1065,7 @@ def squalincome_loop(db_path,stop):
                 t0=time.perf_counter()
                 result=None
                 try:
-                    result=observe_squalincome(db_path)
+                    result=observe_periodic_squalincome(db_path)
                 finally:
                     finished=utcnow()
                     try:
