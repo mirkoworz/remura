@@ -138,6 +138,12 @@ def append(db, event, quality, *, source_collected_at, hmac_secret, now=None):
     opaque = hmac.new(secret, canonical.encode(), hashlib.sha256).hexdigest()
     source_hash = hmac.new(secret, provider.encode(), hashlib.sha256).hexdigest()
     with db:
+        existing = db.execute(
+            "SELECT 1 FROM research_cvd_observations WHERE key=?", (opaque,)
+        ).fetchone()
+        if existing:
+            return {"schema": SCHEMA, "state": "DUPLICATE",
+                    "newBrokerCalls": 0, "alertsEnabled": False}
         count = db.execute("SELECT count(*) FROM research_cvd_observations").fetchone()[0]
         if count >= MAX_EVENTS:
             raise ValueError("private_ledger_capacity_reached")
