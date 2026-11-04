@@ -16,6 +16,39 @@ class PriceFeedTests(unittest.TestCase):
     def make(self, day="2026-10-16"):
         return [feed.candle(f"{day}T00:{i*15:02d}:00Z", 1.1, 1.2, 1.0, 1.15) for i in range(4)]
 
+    def test_dst_autumn_repeated_rome_hour_is_distinct_utc_h1(self):
+        from zoneinfo import ZoneInfo
+        # 25 October 2026: Italy repeats local 02:00 but UTC never repeats.
+        start=dt.datetime(2026,10,25,0,0,tzinfo=UTC)
+        bars=[feed.candle(feed.iso(start+dt.timedelta(minutes=15*i)),
+                         1.1,1.2,1.0,1.15) for i in range(12)]
+        h1=feed.rollup(bars,1,start+dt.timedelta(hours=3))
+        self.assertEqual([x["t"] for x in h1],[
+            "2026-10-25T00:00:00Z","2026-10-25T01:00:00Z",
+            "2026-10-25T02:00:00Z"])
+        rome=ZoneInfo("Europe/Rome")
+        local=[feed.parse_time(x["t"]).astimezone(rome) for x in h1]
+        self.assertEqual([x.hour for x in local],[2,2,3])
+        self.assertEqual([x.utcoffset().total_seconds() for x in local],
+                         [7200,3600,3600])
+        self.assertEqual(len(set(x["t"] for x in h1)),3)
+
+    def test_dst_spring_skipped_rome_hour_cannot_skip_utc_h1(self):
+        from zoneinfo import ZoneInfo
+        start=dt.datetime(2026,3,29,0,0,tzinfo=UTC)
+        bars=[feed.candle(feed.iso(start+dt.timedelta(minutes=15*i)),
+                         1.1,1.2,1.0,1.15) for i in range(12)]
+        h1=feed.rollup(bars,1,start+dt.timedelta(hours=3))
+        self.assertEqual(len(h1),3)
+        self.assertEqual([x["t"] for x in h1],[
+            "2026-03-29T00:00:00Z","2026-03-29T01:00:00Z",
+            "2026-03-29T02:00:00Z"])
+        rome=ZoneInfo("Europe/Rome")
+        self.assertEqual([feed.parse_time(x["t"]).astimezone(rome).hour
+                          for x in h1],[1,3,4])
+        self.assertEqual((feed.parse_time(h1[2]["t"])-
+                          feed.parse_time(h1[1]["t"])).total_seconds(),3600)
+
     def test_vix_replaces_retired_russell_without_losing_dax(self):
         self.assertEqual(len(feed.MARKETS),38)
         self.assertIn("VIX",feed.MARKETS)

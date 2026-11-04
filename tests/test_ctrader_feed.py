@@ -20,6 +20,25 @@ class CTraderTests(unittest.TestCase):
             low=low,deltaOpen=delta_open,deltaHigh=delta_high,deltaClose=delta_close
         )
 
+    def test_ctrader_utc_minute_timestamp_survives_rome_dst_fall_back(self):
+        from zoneinfo import ZoneInfo
+        # cTrader Open API utcTimestampInMinutes is an absolute UTC minute
+        # index, not a Rome local wall clock or an offset-free datetime.
+        rome=ZoneInfo("Europe/Rome")
+        first=dt.datetime(2026,10,25,0,15,tzinfo=dt.timezone.utc)
+        second=dt.datetime(2026,10,25,1,15,tzinfo=dt.timezone.utc)
+        result=[]
+        for stamp in (first,second):
+            raw=self.bar(minutes=int(stamp.timestamp())//60)
+            result.append(feed.convert_trendbar(raw,5)["t"])
+        self.assertEqual(result,[
+            "2026-10-25T00:15:00Z","2026-10-25T01:15:00Z"])
+        local=[dt.datetime.fromisoformat(x.replace("Z","+00:00"))
+               .astimezone(rome) for x in result]
+        self.assertEqual([x.hour for x in local],[2,2])
+        self.assertEqual([int(x.utcoffset().total_seconds()) for x in local],
+                         [7200,3600])
+
     def test_protocol_failure_exposes_only_approved_phase_and_error_type(self):
         original=ValueError("MY_SECRET_TOKEN=test123, account 123456")
         reason=feed.protocol_failure("account_list",original)
