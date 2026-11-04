@@ -17,6 +17,7 @@ import sqlite3
 from scripts import shark_cot_asof_witness as witness
 from scripts import shark_price_only_compact as compact
 from scripts import shark_first_invocation as first_gate
+from scripts import shark_scan_failures as failures
 
 SCHEMA = "remura-track-b-prospective-recording-coverage-v1"
 MINUTES_PER_SLOT = 15
@@ -77,7 +78,13 @@ def audit(db, *, as_of, days=1):
     try:
         activation=first_gate.read(db,at=instant)
         activation_time=witness._parse(activation) if activation else None
+        # This is independent evidence from the first-enable witness.
+        # A logged failure can coincide with a later valid batch; it must
+        # never be attributed automatically to a calendar gap.
+        observed_failures=failures.summary(
+            db,as_of=witness._iso(instant),days=days)
         activation_details={
+            "observedScanFailures":observed_failures,
             "firstEnabledScannerInvocationWitnessed":activation is not None,
             "firstEnabledScannerInvocationAt":activation,
             "configurationSwitchTimeKnown":False,
