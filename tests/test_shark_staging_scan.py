@@ -40,13 +40,13 @@ def stamp(when):
     return when.isoformat().replace("+00:00","Z")
 
 
-def fixture(path, *, with_cot=True, all_priced=False):
+def fixture(path, *, with_cot=True, all_priced=False, m15_count=1024):
     db=connect(path)
     live.ensure_tables(db)
     ensure_cot(db)
     m15=[]
-    for i in range(1024):
-        started=END-timedelta(minutes=15*(1024-i))
+    for i in range(m15_count):
+        started=END-timedelta(minutes=15*(m15_count-i))
         op=1.01+i*0.00004
         cl=op+0.000025
         m15.append({"t":stamp(started),"o":op,"h":cl+0.00001,
