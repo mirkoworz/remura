@@ -117,7 +117,7 @@ Il replay archivio privato [#41608623429](https://github.com/mirkoworz/remura-co
 
 **Comando unico copiabile in Termius, solo dopo il controllo ordinario di accesso alla VPS** (non eseguito dalla chat):
 ```bash
-sudo -u remura /opt/remura/.venv/bin/python3 -c 'import urllib.request as u,hashlib as h;d=u.urlopen("https://raw.githubusercontent.com/mirkoworz/remura/df6a9efee3b6a1f61534a03384947e1c8f4cfe35/scripts/shark_research_probe.py",timeout=12).read(7000);assert h.sha1(b"blob "+str(len(d)).encode()+b"\\0"+d).hexdigest()=="642cfec74149549a17f4577283cd890646994763";exec(compile(d,"<remura-track-b-probe>","exec"))'
+sudo -u remura /opt/remura/.venv/bin/python3 -c 'import urllib.request as u,hashlib as h;d=u.urlopen("https://raw.githubusercontent.com/mirkoworz/remura/df6a9efee3b6a1f61534a03384947e1c8f4cfe35/scripts/shark_research_probe.py",timeout=12).read(7000);assert h.sha1(b"blob "+str(len(d)).encode()+b"\0"+d).hexdigest()=="642cfec74149549a17f4577283cd890646994763";exec(compile(d,"<remura-track-b-probe>","exec"))'
 ```
 Il confronto SHA Git blob è una misura di integrità (non protezione contro compromissione del fornitore). **Non aggiungere `-O` a Python** (disattiverebbe `assert`). Il comando NON contiene credenziali o hostname Tailscale ed esegue codice della sola PR B; conferma `REMURA_TRACK_B_CENSIMENTO=COMPLETATO` seguita da report JSON aggregato, altrimenti `NON_COMPLETATO`. Non tentare di recuperare/trasmettere SQLite o credenziali. Se la connessione a GitHub è bloccata, il comando fallisce senza modificare il servizio; **non** allentare permessi o aprire port di rete.
 
