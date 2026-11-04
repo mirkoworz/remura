@@ -72,7 +72,7 @@ def _iso(clock):
 
 def _digest(row):
     """Fingerprint the ACTUAL six COT values, without persisting them twice."""
-    if len(row) != 6:
+    if len(row) != 5:
         raise ValueError("wrong_cot_value_shape")
     fields = []
     for idx, v in enumerate(row):
