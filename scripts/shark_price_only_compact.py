@@ -227,7 +227,10 @@ def _decode(comp, sha):
         raise ValueError("invalid_compressed_payload")
     # Limit output while decompressing (zip bomb protection).
     decoder=zlib.decompressobj()
-    raw=decoder.decompress(comp,MAX_UNCOMPRESSED_BYTES+1)
+    try:
+        raw=decoder.decompress(comp,MAX_UNCOMPRESSED_BYTES+1)
+    except zlib.error as exc:
+        raise ValueError("corrupt_compressed_archive") from exc
     if (len(raw)>MAX_UNCOMPRESSED_BYTES or not decoder.eof
             or decoder.unused_data or decoder.unconsumed_tail):
         raise ValueError("corrupt_or_oversize_archive")
