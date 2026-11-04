@@ -6,10 +6,12 @@ on:
       - 'scripts/cvd_*.py'
       - 'scripts/shark_science_gate.py'
       - 'scripts/shark_walkforward.py'
+      - 'scripts/shark_data_readiness.py'
       - 'tests/cvd-divergence.test.js'
       - 'tests/test_cvd_*.py'
       - 'tests/test_shark_science_gate.py'
       - 'tests/test_shark_walkforward.py'
+      - 'tests/test_shark_data_readiness.py'
       - 'ROADMAP-B-SHARK-SCIENCE.md'
       - '.github/workflows/shark-science-offline.yml'
   workflow_dispatch:
@@ -32,7 +34,7 @@ jobs:
       - name: Verify offline script syntax
         run: |
           node --check cvd-divergence-core.js
-          python -m py_compile scripts/cvd_divergence.py scripts/cvd_benchmark.py scripts/cvd_session_replay.py scripts/shark_science_gate.py scripts/shark_walkforward.py
+          python -m py_compile scripts/cvd_divergence.py scripts/cvd_benchmark.py scripts/cvd_session_replay.py scripts/shark_science_gate.py scripts/shark_walkforward.py scripts/shark_data_readiness.py
       - name: Test CVD JS detector
         run: node --test tests/cvd-divergence.test.js
       - name: Test CVD parity, benchmark and archive replay
@@ -41,3 +43,5 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_shark_science_gate.py' -v
       - name: Test chronological cost-aware simulation and embargo
         run: python -m unittest discover -s tests -p 'test_shark_walkforward.py' -v
+      - name: Test read-only live-archive research readiness and COT first-seen
+        run: python -m unittest discover -s tests -p 'test_shark_data_readiness.py' -v
