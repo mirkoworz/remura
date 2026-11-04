@@ -102,8 +102,11 @@ def _simulate(signal, doc, rows, cost, asof, horizon, stop_atr, target_atr):
         if future is None or rows[future][0] - observed > timedelta(minutes=45):
             return None, "no_executable_next_open"
         # First entry candle must not have been open when observation occurred.
-        last_closed = future - 1
-        if last_closed < 14 or rows[last_closed][0] + STEP > observed:
+        # The immediately preceding row may still be forming at observedAt.
+        # Search backwards for the last bar that was FULLY CLOSED then.
+        last_closed = next((i for i in range(future-1, -1, -1)
+                            if rows[i][0] + STEP <= observed), None)
+        if last_closed is None or last_closed < 14:
             return None, "missing_closed_atr_history"
         atr = _atr_before(rows, observed, last_closed)
         if atr is None:
