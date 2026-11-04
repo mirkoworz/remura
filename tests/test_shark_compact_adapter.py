@@ -9,6 +9,7 @@ from pathlib import Path
 import sqlite3
 import sys
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 
@@ -132,6 +133,56 @@ class CompactScannerTests(unittest.TestCase):
         with sqlite3.connect(self.new) as db:
             self.assertEqual(compact.summary(db)["fullScanUnknowns"],1)
             self.assertEqual(compact.summary(db)["fullScanDenominator"],34)
+
+    def test_fair_34x4000_old_rows_vs_new_compact_batches(self):
+        # Both scanners use the SAME 34 synthetic market sources (4k M15
+        # each), no profiler on either path, no COT/HTTP/broker requests.
+        with tempfile.TemporaryDirectory() as root:
+            raw_path=Path(root)/"raw_rows.sqlite"
+            cmp_path=Path(root)/"compact_batches.sqlite"
+            fixture(raw_path,with_cot=False,all_priced=True,m15_count=4000)
+            clone(raw_path,cmp_path)
+            with patch.object(witness,"_clock",return_value=NOW+timedelta(seconds=2)):
+                started=time.perf_counter()
+                raw=live.scan_once_with_price_only_research(raw_path,NOW)
+                raw_time=time.perf_counter()-started
+                started=time.perf_counter()
+                batch=live.scan_once_with_compact_price_only_research(cmp_path,NOW)
+                batch_time=time.perf_counter()-started
+            self.assertEqual(standard_state(raw_path),standard_state(cmp_path))
+            self.assertEqual(raw["priceOnlyResearch"]["marketsAttempted"],34)
+            self.assertEqual(batch["priceOnlyResearch"]["storedMarkets"],34)
+            with sqlite3.connect(raw_path) as db:
+                raw_bytes=db.execute("PRAGMA page_count").fetchone()[0]*db.execute(
+                    "PRAGMA page_size").fetchone()[0]
+                rows=legacy_research.summary(db)
+                self.assertEqual(rows["totalScans"],34)
+            with sqlite3.connect(cmp_path) as db:
+                compact_bytes=db.execute("PRAGMA page_count").fetchone()[0]*db.execute(
+                    "PRAGMA page_size").fetchone()[0]
+                batches=compact.summary(db)
+                self.assertEqual(batches["fullScanDenominator"],34)
+                self.assertEqual(batches["fullScanPriceCandidates"],34)
+                self.assertEqual(batches["immutableBatches"],1)
+                self.assertLess(batches["compressedBytes"],8192)
+                check=compact.verify(
+                    db,scan_slot=stamp(NOW.replace(minute=15,second=0,microsecond=0)))
+                self.assertEqual(check["marketObservations"],34)
+            self.assertLess(compact_bytes,raw_bytes)
+            self.assertLess(raw_time,40)
+            self.assertLess(batch_time,40)
+            print("REMURA_TRACK_B_COMPACT_FAIR4000="+json.dumps({
+                "markets":34,"m15BarsPerMarket":4000,
+                "rawMarketRows":34,"compactBatchRows":1,
+                "rawDbBytes":raw_bytes,
+                "compactDbBytes":compact_bytes,
+                "compressedBatchBytes":batches["compressedBytes"],
+                "rawScanSeconds":round(raw_time,3),
+                "compactScanSeconds":round(batch_time,3),
+                "sameSqualincomeState":True,
+                "profilerUsed":False,"oracleMeasured":False,
+                "tradingEdgeEstablished":False,
+            },sort_keys=True,separators=(",",":")))
 
     def test_error_on_seal_propagates_not_masked_as_missing_data(self):
         with patch.object(compact,"seal",side_effect=sqlite3.OperationalError("disk_full")):
