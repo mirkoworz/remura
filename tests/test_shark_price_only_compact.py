@@ -31,18 +31,25 @@ def make_db(path):
 
 def prepared(db,markets=None,*,timestamp=NOW):
     markets=live.monitored_symbols() if markets is None else markets
+    started=not db.in_transaction
+    if started:
+        db.execute("BEGIN")  # original price validation requires a snapshot
     rows=[]
-    for symbol in markets:
-        doc=live.latest(db,symbol)
-        qa=live.audit_market(doc,timestamp)
-        px=live.price_view(doc,timestamp,quality=qa) if doc else None
-        reason=("price_present" if px is not None
-                else live.price_exclusion(doc,timestamp,quality=qa))
-        row,_=universe.prepare(
-            db,symbol=symbol,scan_at=stamp(timestamp),observed_document=doc,
-            quality=qa,price_result=px,price_reason=reason,
-            clock=timestamp+timedelta(seconds=2))
-        rows.append(row)
+    try:
+        for symbol in markets:
+            doc=live.latest(db,symbol)
+            qa=live.audit_market(doc,timestamp)
+            px=live.price_view(doc,timestamp,quality=qa) if doc else None
+            reason=("price_present" if px is not None
+                    else live.price_exclusion(doc,timestamp,quality=qa))
+            row,_=universe.prepare(
+                db,symbol=symbol,scan_at=stamp(timestamp),observed_document=doc,
+                quality=qa,price_result=px,price_reason=reason,
+                clock=timestamp+timedelta(seconds=2))
+            rows.append(row)
+    finally:
+        if started:
+            db.rollback()  # discard read-only snapshot; never mutate sources
     return rows
 
 
