@@ -47,6 +47,12 @@ on:
       - '.github/workflows/shark-science-offline.yml'
   workflow_dispatch:
 
+# Only the newest revision of this large offline research suite should run.
+# Prevent branch-only CI updates from consuming extra hosted runner minutes.
+concurrency:
+  group: remura-shark-offline-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
