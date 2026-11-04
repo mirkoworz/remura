@@ -57,6 +57,10 @@ def seen(db, symbol="EURUSD", date="2026-10-27",
     dataset, code = r.PILOT[symbol]
     db.execute("INSERT INTO cot_first_seen VALUES (?,?,?,?)",
                (dataset,code,date,when))
+    from datetime import date as _date
+    prior = (_date.fromisoformat(date)-dt.timedelta(days=7)).isoformat()
+    db.execute("INSERT INTO cot_first_seen VALUES (?,?,?,?)",
+               (dataset,code,prior,"2026-10-25T20:00:00+00:00"))
 
 
 class ReadinessTests(unittest.TestCase):
@@ -81,6 +85,16 @@ class ReadinessTests(unittest.TestCase):
         self.assertEqual(self.db.execute("SELECT payload FROM prices WHERE symbol='EURUSD'").fetchone()[0], saved)
         self.assertNotIn("SECRET_BROKER_IDENTIFIER", json.dumps(out))
         self.assertNotIn("1.13", json.dumps(out))
+
+    def test_weekly_cot_delta_requires_prior_report_already_known(self):
+        observed(self.db)
+        seen(self.db)
+        self.db.execute(
+            "UPDATE cot_first_seen SET first_seen_at=? WHERE report_date=?",
+            ("2026-11-04T20:00:00+00:00", "2026-10-20"))
+        result = r.audit_connection(self.db)["markets"]["EURUSD"]
+        self.assertEqual(result["priceContextOnly"], 0)
+        self.assertEqual(result["cohortReasons"]["cot_previous_week_not_known"], 1)
 
     def test_cot_first_seen_after_observation_blocks_lookahead(self):
         observed(self.db)
