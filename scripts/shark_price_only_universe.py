@@ -164,7 +164,14 @@ def prepare(db, *, symbol, scan_at, observed_document,
             "prices_stale","prices_missing","candles_insufficient",
             "price_error","ohlc_mismatch","market_closed"):
         raise ValueError("price_only_reason_not_allowlisted")
-    source_sha=_document_digest(db,symbol,observed_document)
+    # Accepted price candidates already require the stricter _source()
+    # attestation: same SQLite snapshot, canonical source identity, mapping,
+    # closed M15/H1/H4, rollups and SHA-256. Do NOT re-fetch and canonicalize
+    # the entire OHLC document a second time in _document_digest().
+    # For rejected/missing price cases, _document_digest() remains mandatory
+    # so every denominator row is independently bound to its original source.
+    source_sha=None
+    price_source_attested=False
     price_side=h1=h4=m15=0
     price_state=None
     last_close=None
@@ -200,8 +207,17 @@ def prepare(db, *, symbol, scan_at, observed_document,
             closed=witness._parse(last_close)
             if closed>observed:
                 raise ValueError("future_price_bar")
-            proof=prices._source(
-                db,symbol,observed,closed,observed_document)
+            try:
+                proof=prices._source(
+                    db,symbol,observed,closed,observed_document)
+            except ValueError as exc:
+                # Preserve original source-race failure semantics for the
+                # shared legacy/compact research preparation contract.
+                if str(exc)=="price_document_changed_since_scan":
+                    raise ValueError("price_document_race") from exc
+                raise
+            source_sha=proof["sha"]
+            price_source_attested=True
             complete=proof["volume16"]
             state=("PRICE_CONTEXT_READY"
                    if _ema_direction_not_roundoff(observed_document,price_side)
@@ -210,6 +226,8 @@ def prepare(db, *, symbol, scan_at, observed_document,
         if price_result is not None or price_reason=="price_present":
             raise ValueError("price_signal_from_stale_or_missing_quality")
         state="PRICE_QUALITY_BLOCKED"
+    if not price_source_attested:
+        source_sha=_document_digest(db,symbol,observed_document)
     bucket=int(observed.timestamp())//900*900
     slot=witness._iso(datetime.fromtimestamp(bucket,tz=timezone.utc))
     # One deterministic 16-field row: the legacy per-market writer and
