@@ -278,6 +278,29 @@ class CompactScannerTests(unittest.TestCase):
                 "SELECT count(*) FROM sqlite_master "
                 "WHERE name='research_price_only_batches'").fetchone()[0],0)
 
+    def test_isolated_sqlite_backup_and_restore_recovers_both_scanner_and_batch(self):
+        # Simulate the native SQLite online backup API. This tests data
+        # correctness only; it does NOT operate on or certify Oracle backups.
+        self.run_compact()
+        restored=self.new.with_name("restored_compact.sqlite")
+        with sqlite3.connect(self.new) as original, sqlite3.connect(restored) as dest:
+            original.backup(dest)
+        self.assertEqual(standard_state(restored),standard_state(self.new))
+        with sqlite3.connect(restored) as db:
+            self.assertEqual(db.execute("PRAGMA integrity_check").fetchone()[0],"ok")
+            audit=compact.verify(
+                db,scan_slot=stamp(NOW.replace(minute=15,second=0,microsecond=0)))
+            self.assertEqual(audit["status"],"ARCHIVE_VERIFIED")
+            self.assertEqual(audit["marketObservations"],34)
+            self.assertEqual(compact.summary(db)["fullScanDenominator"],34)
+            self.assertEqual(db.execute(
+                "SELECT count(*) FROM squalincome_history").fetchone()[0],1)
+            with self.assertRaises(sqlite3.IntegrityError):
+                db.execute("DELETE FROM research_price_only_batches")
+        with sqlite3.connect(self.new) as original:
+            self.assertEqual(original.execute(
+                "SELECT count(*) FROM research_price_only_batches").fetchone()[0],1)
+
     def test_production_entrypoint_has_not_changed(self):
         self.assertEqual(live.scan_once.__name__,"scan_once")
         self.assertEqual(live.scan_once_with_h1_frames.__name__,
