@@ -9,6 +9,7 @@ per-candle ingestion timestamps. This is NOT a backtest or proof of an edge.
 from __future__ import annotations
 
 from collections import Counter
+from contextlib import closing
 from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path
@@ -165,6 +166,9 @@ def audit_connection(db):
         "cotProvenance": "first_seen_observation_timestamp_not_publication_time",
         "cotValueRevisionSnapshots": False,
         "m15PerBarCollectionTimestamps": False,
+        "historicalBrokerMappingSnapshots": False,
+        "historicalCandleVersionsAttested": False,
+        "h1QualityAtEachObservation": "inferred_from_accepted_monitor_state_not_independent_snapshot",
         "cvdDetectionHistoryRecorded": False,
         "eligibleForRealCvdWalkForward": False,
         "edge": "NOT_ESTABLISHED", "pnl": "NOT_COMPUTED",
@@ -181,6 +185,6 @@ def audit_path(path):
     if not local.is_file():
         raise ValueError("not_a_database_file")
     uri = "file:" + quote(str(local), safe="/") + "?mode=ro"
-    with sqlite3.connect(uri, uri=True, timeout=3) as db:
+    with closing(sqlite3.connect(uri, uri=True, timeout=3)) as db:
         db.execute("PRAGMA query_only=ON")
         return audit_connection(db)
