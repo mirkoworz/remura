@@ -1,6 +1,6 @@
 # REMURA — TRACK A: Qualità H1 e raccolta prezzi
 
-**Ultimo stato attestato:** 04/11/2026 ore 08:32 Italia (GET locale LIVE, 48 paired comparabili; full-scan 27/34 H1). **Roadmap coordinatrice:** [ROADMAP.md](ROADMAP.md). **Track parallelo:** [B — Shark Science](ROADMAP-B-SHARK-SCIENCE.md).
+**Ultimo stato attestato:** 04/11/2026 ore 09:08 Italia (SQLite LIVE, 50/50 paired validi sugli 8 slot, 185 recuperi; full-scan 27/34 H1 alle 08:22:50). **Roadmap coordinatrice:** [ROADMAP.md](ROADMAP.md). **Track parallelo:** [B — Shark Science](ROADMAP-B-SHARK-SCIENCE.md).
 
 ## 04/11/2026 ore 07:15 Italia — verifica A1 GitHub e replay offline (NON misura LIVE nuova)
 
@@ -17,6 +17,31 @@
 - Permutando soltanto i 36 strumenti non prioritari fra i medesimi slot, mantenendo esattamente 40 acquisizioni programmate/2h, i **totali sintetici restano invariati** nelle fasi 0, 4 e 14 minuti: cambiano i nomi dei mercati penalizzati, non il numero complessivo. Spostare la scansione per far risultare "verde" un contatore **non è una correzione della freschezza**; serve prova LIVE prima di cambiare pianificazione.
 
 **Prossima verifica A1 obbligatoria:** leggere tramite la diagnostica privata schedulata (quando realmente eseguita) o una singola GET locale read-only `/private-api/signals/status` gli aggregati `h1Paired` (totali, validi, N/D, last UTC, readyBefore/After, staleToReady, h1Advanced, h1Unchanged); leggere la full-scan dei 34 al suo timestamp e l'ultimo stato batch. Confrontare età di ogni H1 con M15/H4, fasi UTC e mercati precedentemente problematici. Se >=8 record totali ma validi insufficienti, **proseguire l'osservazione**. Non modificare codice operativo, quote, soglie, cron o produzione sulla base del replay.
+
+## 04/11/2026 ore 09:08 Italia — A3: 50 campioni paired ripartiti sui veri 8 slot
+
+**Fonte osservata:** comando locale read-only dell'utente su SQLite privata `remura_h1_paired` LEFT JOIN `remura_batch_timing` sulla stessa `ingest_returned_utc`, massimo 64 record; output terminale delle 09:08 italiane. Il codice ha attestato `SOLO_LETTURA=OK` e `CHIAMATE_BROKER_AGGIUNTIVE=0`. Campioni effettivamente presenti: **50**, ultimo `2026-11-04T08:01:47.071618+00:00` (**09:01:47 Italia**); **50 validi, 0 N/D, 0 senza slot**. Il JOIN individua un batch corrispondente per tutti i campioni letti; non attribuire automaticamente un singolo batch come unica causa di tutte le variazioni.
+
+| Slot batch | Validati | N/D | H1 pronte prima | H1 pronte dopo | Stale→ready | Mediana distanza full-scan→paired (s) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 7 | 0 | 17 | 35 | 18 | 580 |
+| 2 | 7 | 0 | 5 | 35 | 30 | 601 |
+| 3 | 6 | 0 | 0 | 24 | 24 | 621 |
+| 4 | 6 | 0 | 5 | 30 | 25 | 607 |
+| 5 | 6 | 0 | 14 | 30 | 16 | 604 |
+| 6 | 6 | 0 | 0 | 24 | 24 | 600 |
+| 7 | 6 | 0 | 0 | 24 | 24 | 598 |
+| 8 | 6 | 0 | 0 | 24 | 24 | 606 |
+| **Totale** | **50** | **0** | **41** | **226** | **185** | — |
+
+**Interpretazione prudente, senza falsi positivi:**
+- `226` rappresenta **osservazioni ripetute di mercato**, non 226 mercati unici o operazioni; alcuni mercati possono essere raccolti due volte per giro. `185` sono transizioni *stale→ready* a parità di orologio di valutazione UTC, cioè **81,9% delle 226 comparazioni**, non una percentuale di profitto. I conteggi sono internamente coerenti `41+185=226`.
+- L'età `full_scan_age_seconds` di circa **580–621 secondi** è la **distanza fra il full-scan salvato e il momento del confronto**, NON l'età della candela H1. Una scansione generale può essere distante ~10 minuti dall'analisi post-ingest: la coorte raccolta nel frattempo presenta H1 autenticamente nuove, mentre la vecchia fotografia generale resta ancorata alla situazione precedente.
+- Recuperi osservati in **tutti gli otto slot**; in tutti i 50 confronti validi gli H1 dei gruppi confrontati erano ready *dopo*. Questo **non** dimostra che 34/34 H1 siano ready contemporaneamente nella full-scan, né misura la disponibilità continua del prezzo. L'ultima full-scan attestata precedentemente era 27/34 ready alle 08:22:50 italiane; i due dati misurano popolazioni e tempi differenti.
+- L'associazione esatta `post_utc`/batch, il numero di slot ripetuti e la coerenza di timestamp H1/M15 rendono la **fase di raccolta vs fotografia periodica** l'ipotesi di lavoro principale. Senza un controllo temporale per mercato e presenza delle 4 M15 contigue, nessuna affermazione definitiva sulla causa esclusiva di ogni H1 stale. Non allentare soglia 120 minuti, non ritardare artificialmente il full scan per ottenere più verdi.
+- Riusare il replay in PR collector [#19](https://github.com/mirkoworz/remura-collector/pull/19) e i test UTC/DST in PR app [#84](https://github.com/mirkoworz/remura/pull/84), **non fare deploy dei branch datati**. Nessun bisogno dimostrato di nuove richieste cTrader, provider o Firebase.
+
+**Prossimo gate mirato A3:** confrontare, usando la GET privata `/private-api/prices/status` **già esistente** e il medesimo timestamp UTC di lettura, `lastAttempt`, `lastOutcome`, `lastComplete` e stato H1/M15/H4 per i **7 stale identificati alle 08:22:50**; verificare se l'ultimo `lastAttempt` è antecedente al proprio slot e se provider, sessione o errori spiegano un dato rimasto vecchio. I sette possono essere già cambiati: NON trattarli come stale attuali senza una nuova fotografia. Se coerenti e senza errori, passare A4 a modellare offline il *tempo di effettiva analisi post-ingest*, non ridisegnare le 40 acquisizioni programmate per rendere verde la full-scan. A5 fix **non autorizzato né giustificato** dai soli 50 campioni; LIVE resta v1.62.
 
 ## 04/11/2026 ore 08:32 Italia — A1/A2: RISULTATI LIVE CONFERMATI DALLA VPS
 
