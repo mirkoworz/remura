@@ -143,6 +143,12 @@ Il confronto SHA Git blob è una misura di integrità (non protezione contro com
 - `scripts/shark_universe_probe.py`, `tests/test_shark_universe_probe.py`: sonda monouso opzionale per **secondo censimento reale**; carica solo due moduli da commit pubblico immutabile, controlla Git blob SHA, nessuna installazione e sola lettura della stessa SQLite. Output contatori aggregate per famiglia/mercato senza dati grezzi. Il codice non è stato eseguito sulla VPS: **idoneità delle 73 righe fuori pilota ancora N/D**. 
 - `shark-science-offline.yml` testata senza chiamate broker. `main`, PR/branch A, Oracle, collector privato e release LIVE restano invariati. Nessun nuovo servizio a pagamento, billing Oracle non verificato.
 
+**Secondo comando di censimento esteso**, opzionale, senza deploy, quando si vuole qualificare i 73 outcome fuori pilota (Termius con account e permessi esistenti, esecuzione sotto utente `remura`):
+```bash
+sudo -u remura /opt/remura/.venv/bin/python3 -c 'import urllib.request as u,hashlib as h;d=u.urlopen("https://raw.githubusercontent.com/mirkoworz/remura/c81e6cdfc8322e8e72e9a57d2eab786a9d60c66a/scripts/shark_universe_probe.py",timeout=12).read(7000);assert h.sha1(b"blob "+str(len(d)).encode()+b"\0"+d).hexdigest()=="dffbb5274f3fa96798a5c5409fcf621e69d2452b";exec(compile(d,"<remura-track-b-universe-probe>","exec"))'
+```
+Codice wrapper **immutabile** al commit `c81e6cdfc8322e8e72e9a57d2eab786a9d60c66a`, SHA blob `dffbb5274f3fa96798a5c5409fcf621e69d2452b`. Il comando fa GET di wrapper + due moduli pinned da GitHub pubblico, **zero broker** e soltanto lettura SQLite privata; produce `REMURA_TRACK_B_UNIVERSO_COT=COMPLETATO` e una riga JSON di contatori per famiglia/mercato oppure errore sanificato. Non eseguire sotto Python `-O` perché la prima verifica hash usa `assert`. Non trasmettere DB, account o credenziali. **Da eseguire una sola volta, non in loop.**
+
 **Priorità vera ora:** applicare una volta il censimento esteso in sola lettura ai **73 outcome fuori dal pilota**, senza falsi backfill; in parallelo progettare la telemetria **futura** di un universo prezzo-only non condizionato dal COT e di CVD osservato per davvero. In caso di dataset insufficiente, non impostare Radar predittivo/notifiche. Prima di ogni successivo merge/deploy servono controlli CI, gating Track A, budget, backup/restore e banner versione+ora su tutte le pagine.
 
 ## Missione
