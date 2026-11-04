@@ -49,6 +49,9 @@ def guard_host():
         raise RuntimeError("linux_procfs_required")
     if shutil.disk_usage("/tmp").free < MIN_FREE_BYTES:
         raise RuntimeError("insufficient_tmp_disk_headroom")
+    available = mem_available_kib()
+    if available is None or available < 256 * 1024:
+        raise RuntimeError("insufficient_host_memory_headroom")
 
 
 def rss_kib(pid):
@@ -111,6 +114,7 @@ def run_worker(mode, path):
     sampled_read_bytes = sampled_write_bytes = 0
     write_probes = busy = read_failures = 0
     write_max_ms = 0.0
+    last_probe_at = 0.0
     try:
         while process.poll() is None:
             elapsed = time.monotonic() - started
@@ -128,7 +132,8 @@ def run_worker(mode, path):
             mem = mem_available_kib()
             if mem is not None:
                 mem_min = mem if mem_min is None else min(mem_min, mem)
-            if mode == "compact" and write_probes < 100:
+            if mode == "compact" and time.monotonic() - last_probe_at >= 0.05:
+                last_probe_at = time.monotonic()
                 try:
                     t0 = time.perf_counter()
                     probe = sqlite3.connect(path, timeout=0.005)
