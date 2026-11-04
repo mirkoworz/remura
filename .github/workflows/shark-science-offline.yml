@@ -8,6 +8,7 @@ on:
       - 'scripts/shark_walkforward.py'
       - 'scripts/shark_data_readiness.py'
       - 'scripts/shark_cot_paired_baseline.py'
+      - 'scripts/shark_cot_robustness.py'
       - 'scripts/shark_cvd_ledger.py'
       - 'tests/cvd-divergence.test.js'
       - 'tests/test_cvd_*.py'
@@ -15,6 +16,7 @@ on:
       - 'tests/test_shark_walkforward.py'
       - 'tests/test_shark_data_readiness.py'
       - 'tests/test_shark_cot_paired_baseline.py'
+      - 'tests/test_shark_cot_robustness.py'
       - 'tests/test_shark_cvd_ledger.py'
       - 'ROADMAP-B-SHARK-SCIENCE.md'
       - '.github/workflows/shark-science-offline.yml'
@@ -38,7 +40,7 @@ jobs:
       - name: Verify offline script syntax
         run: |
           node --check cvd-divergence-core.js
-          python -m py_compile scripts/cvd_divergence.py scripts/cvd_benchmark.py scripts/cvd_session_replay.py scripts/shark_science_gate.py scripts/shark_walkforward.py scripts/shark_data_readiness.py scripts/shark_cot_paired_baseline.py scripts/shark_cvd_ledger.py
+          python -m py_compile scripts/cvd_divergence.py scripts/cvd_benchmark.py scripts/cvd_session_replay.py scripts/shark_science_gate.py scripts/shark_walkforward.py scripts/shark_data_readiness.py scripts/shark_cot_paired_baseline.py scripts/shark_cot_robustness.py scripts/shark_cvd_ledger.py
       - name: Test CVD JS detector
         run: node --test tests/cvd-divergence.test.js
       - name: Test CVD parity, benchmark and archive replay
@@ -51,5 +53,7 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_shark_data_readiness.py' -v
       - name: Test real-cohort paired COT baseline with explicit costs
         run: python -m unittest discover -s tests -p 'test_shark_cot_paired_baseline.py' -v
+      - name: Test chronological COT weeks, inverted control and cost stress
+        run: python -m unittest discover -s tests -p 'test_shark_cot_robustness.py' -v
       - name: Test append-only future CVD evidence ledger and privacy
         run: python -m unittest discover -s tests -p 'test_shark_cvd_ledger.py' -v
