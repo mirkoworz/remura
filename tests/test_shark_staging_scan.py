@@ -40,7 +40,7 @@ def stamp(when):
     return when.isoformat().replace("+00:00","Z")
 
 
-def fixture(path, *, with_cot=True):
+def fixture(path, *, with_cot=True, all_priced=False):
     db=connect(path)
     live.ensure_tables(db)
     ensure_cot(db)
@@ -51,10 +51,13 @@ def fixture(path, *, with_cot=True):
         cl=op+0.000025
         m15.append({"t":stamp(started),"o":op,"h":cl+0.00001,
                     "l":op-0.00001,"c":cl,"v":101})
-    doc=market_document("EURUSD","ctrader","SYNTHETIC_PRIVATE_BROKER",m15,NOW)
-    db.execute("INSERT INTO prices VALUES(?,?,?,?,?)",
-               ("EURUSD","ctrader","SYNTHETIC_PRIVATE_BROKER",
-                doc["lastComplete"],json.dumps(doc,separators=(",",":"))))
+    targets=live.monitored_symbols() if all_priced else ("EURUSD",)
+    for symbol in targets:
+        broker="SYNTHETIC_PRIVATE_BROKER"
+        doc=market_document(symbol,"ctrader",broker,m15,NOW)
+        db.execute("INSERT INTO prices VALUES(?,?,?,?,?)",
+                   (symbol,"ctrader",broker,doc["lastComplete"],
+                    json.dumps(doc,separators=(",",":"))))
     if with_cot:
         for week,manager in (("2026-10-20",120.0),("2026-10-27",160.0)):
             db.execute("INSERT INTO cot_reports VALUES(?,?,?,?,?,?,?,?)",
@@ -206,6 +209,60 @@ class StagingScanTests(unittest.TestCase):
             self.assertEqual(repeated.count("DUPLICATE_SCAN_SLOT"),34)
             with sqlite3.connect(stage) as db:
                 self.assertEqual(universe.summary(db)["totalScans"],34)
+
+    def test_full_34_market_ohlc_stress_without_cot_is_not_false_signal(self):
+        # All 34 have complete 1024-M15 OHLC + H1/H4. Unlike the lean
+        # rehearsal, this stresses JSON decoding, source hashes and rollups.
+        with tempfile.TemporaryDirectory() as root:
+            base=Path(root)/"large_baseline.sqlite"
+            staged=Path(root)/"large_stage.sqlite"
+            fixture(base,with_cot=False,all_priced=True)
+            clone(base,staged)
+            with sqlite3.connect(staged) as db:
+                universe.ensure_schema(db)
+            self.assertGreater(base.stat().st_size,1024*1024)
+            started=time.perf_counter()
+            baseline=live.scan_once(base,NOW)
+            baseline_seconds=time.perf_counter()-started
+            tracemalloc.start()
+            try:
+                begun=time.perf_counter()
+                instrumented,results=staged_scan(staged,NOW)
+                elapsed=time.perf_counter()-begun
+                _,peak=tracemalloc.get_traced_memory()
+            finally:
+                tracemalloc.stop()
+            self.assertEqual(instrumented,baseline)
+            self.assertEqual(standard_state(staged),standard_state(base))
+            self.assertEqual(baseline["examined"],0)  # no COT at all
+            self.assertEqual(len(results),34)
+            self.assertEqual(results.count("PRICE_CONTEXT_READY"),34)
+            with sqlite3.connect(staged) as db:
+                self.assertEqual(universe.summary(db)["totalScans"],34)
+                self.assertEqual(
+                    universe.summary(db)["byState"]["PRICE_CONTEXT_READY"],34)
+                stage_size=(
+                    db.execute("PRAGMA page_count").fetchone()[0]
+                    *db.execute("PRAGMA page_size").fetchone()[0])
+            with sqlite3.connect(base) as db:
+                base_size=(
+                    db.execute("PRAGMA page_count").fetchone()[0]
+                    *db.execute("PRAGMA page_size").fetchone()[0])
+            delta=stage_size-base_size
+            self.assertGreaterEqual(delta,0)
+            self.assertLess(delta,512*1024)
+            self.assertLess(peak,128*1024*1024)
+            self.assertLess(elapsed,45)
+            print("REMURA_TRACK_B_SYNTHETIC_FULL34_METRICS="+json.dumps({
+                "markets":34,"completeM15BarsPerMarket":1024,
+                "cotReportRows":0,"priceOnlyCandidates":34,
+                "baselineSeconds":round(baseline_seconds,4),
+                "instrumentedSeconds":round(elapsed,4),
+                "incrementalSqliteKiB":round(delta/1024,2),
+                "tracedPeakMiB":round(peak/(1024*1024),3),
+                "runnerOnlyNotOracleMeasurements":True,
+                "realTradingEdgeProven":False
+            },sort_keys=True,separators=(",",":")))
 
     def test_no_cot_reports_still_registers_price_only_candidate(self):
         with tempfile.TemporaryDirectory() as root:
