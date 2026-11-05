@@ -6,7 +6,7 @@ const script=fs.readFileSync('splash.js','utf8');
 const page=fs.readFileSync('index.html','utf8');
 const css=fs.readFileSync('splash.css','utf8');
 
-function sandbox({referrer='',healthOk=true}={}) {
+function sandbox({referrer='',healthOk=true,reducedMotion=true}={}) {
   const nodes=new Map();
   const createNode=() => {
     const attrs={},style={},classes=new Set();
@@ -39,7 +39,7 @@ function sandbox({referrer='',healthOk=true}={}) {
   };
   vm.runInNewContext(script,{
     document,location:{origin:'https://remura.example',protocol:'https:'},URL,
-    window:{matchMedia:()=>({matches:true}),addEventListener:()=>{}},
+    window:{matchMedia:()=>({matches:reducedMotion}),addEventListener:()=>{}},
     fetch,AbortController,setTimeout,clearTimeout,
   },{timeout:1000});
   return {body,nodes,requests};
@@ -65,7 +65,7 @@ test('health check is internal and never calls brokers or refreshes financial da
   assert.deepEqual(endpoints,['./private-api/health']);
   assert.match(script,/credentials:"same-origin"/);
   assert.match(script,/AbortController/);
-  assert.match(script,/setTimeout\(close,4500\)/);
+  assert.match(script,/failSafeTimer=setTimeout\(close,6200\)/);
 });
 
 test('internal Home navigation bypasses splash without GET',()=>{
@@ -93,4 +93,36 @@ test('unavailable backend cannot falsely claim health and does not block Home',a
   assert.equal(app.nodes.get('[role=progressbar]').getAttribute('aria-valuenow'),'100');
   assert.match(app.nodes.get('.rm-splash-state').textContent,/verifica la connessione/);
   assert.equal(app.body.appended[0].classList.contains('rm-splash-exit'),true);
+});
+
+test('option B gradually swims for ~3.3 seconds and holds attachment before fade',async()=>{
+  const app=sandbox({reducedMotion:false});
+  assert.equal(app.requests.length,1);
+  const track=app.nodes.get('[role=progressbar]');
+  const splash=app.body.appended[0];
+  await sleep(900);
+  const first=Number(track.getAttribute('aria-valuenow'));
+  assert.ok(first>0&&first<100,'progress must not falsely jump to 100');
+  assert.equal(splash.classList.contains('rm-splash-exit'),false);
+  await sleep(2900);
+  assert.equal(track.getAttribute('aria-valuenow'),'100');
+  assert.equal(app.nodes.get('.rm-splash-fish').classList.contains('rm-splash-attached'),true);
+  assert.equal(splash.classList.contains('rm-splash-exit'),false,'attachment is held visibly');
+  await sleep(650);
+  assert.equal(splash.classList.contains('rm-splash-exit'),true);
+});
+
+test('reduced motion skips the cinematic delay, without skipping server verification',async()=>{
+  const app=sandbox({healthOk:false,reducedMotion:true});
+  await sleep(300);
+  assert.equal(app.nodes.get('[role=progressbar]').getAttribute('aria-valuenow'),'100');
+  assert.match(app.nodes.get('.rm-splash-state').textContent,/verifica la connessione/);
+});
+
+test('one health request regardless of six animated milestones',()=>{
+  assert.match(script,/ATTACHED_HOLD_MS = reduced \? 80 : 700/);
+  assert.match(script,/VISUAL_STAGES = \[/);
+  assert.match(css,/transition:left \.72s linear/);
+  assert.match(css,/transition:width \.72s linear/);
+  assert.doesNotMatch(script,/fetch\([^)]*myfxbook|fetch\([^)]*ctrader/i);
 });
