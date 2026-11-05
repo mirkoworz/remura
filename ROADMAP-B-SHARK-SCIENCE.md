@@ -1,5 +1,16 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
+## 05/11/2026 — Rafforzamento walk-forward: gap M15 fra osservazione ed esecuzione
+
+**Solo ricerca offline su PR #89 DRAFT; nessun merge, VPS, collector o nuovo polling broker.**
+
+- **Problema concreto:** il backtest `scripts/shark_walkforward.py` già controllava ATR su 15 candele chiuse, finestra di ingresso entro 45 minuti e continuità delle barre **dopo** l'ingresso, ma non la contiguità delle M15 **tra l'ultima candela completamente chiusa all'osservazione e la prima candela di ingresso**. Con una barra mancante in quel ponte, un dataset OHLC incompleto poteva produrre un fill simulato che non rispettava la continuità storica.
+- **Correzione:** prima di usare le future M15, verificare ogni salto M15 tra `last_closed` e `future` (inclusi estremi). Se una M15 è assente, escludere con `entry_history_gap`, senza creare candele, retrodatare l'esecuzione, allentare la qualità o usare prezzi futuri per ricostruire il passato. `scripts/shark_walkforward.py`, commit codice `2d158a3b`.
+- **Regressioni:** tre casi aggiunti in `tests/test_shark_walkforward.py`, commit `eb179165`: assenza della M15 in corso durante l'osservazione, assenza dell'ultima M15 già chiusa pur con ATR storico valido, controllo positivo della serie completa. Restano anche i test preesistenti su gap in holding, stop-first, costi e lookahead.
+- **CI**: sul commit `eb179165f757414908d4e4a27d1fe923742701bb`, Insights #42028976528 e Price #42028976773 risultavano **SUCCESS**, Shark Science #42028976398 **in_progress** al controllo. Non dichiarare Shark PASS finché non conclusa, e riverificare la HEAD documentale finale.
+- **Limite scientifico:** anche una simulazione corretta con prezzi storici non è esecuzione broker verificata, campione OOS indipendente o prova di trading edge. Dati reali con timestamp acquisizione, spread/slippage effettivi, completezza COT/CVD e freeze cronologico restano indispensabili. Stato P0b/P0c Oracle **NO_GO** per LIVE fino ai gate originali.
+- **Release:** LIVE v1.62 intatta, nessun aggiornamento banner necessario per soli test/roadmap di branch; alla futura release vera nuovo numero e data/ora italiana visibili in alto su tutte le nove pagine, backup+restore/rollback e CI finale.
+
 ## 05/11/2026 — Verifica Firebase Spark da pannello utente e anomalia metriche
 
 **Evidenza del 05/11/2026 (~11:51–11:52 Italia) — schermate Firebase Console, progetto denominato REMURA:**
