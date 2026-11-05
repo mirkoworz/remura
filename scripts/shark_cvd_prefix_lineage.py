@@ -244,3 +244,115 @@ def capture_main(db, *, history_id, original_doc, clock=None):
     return {"status":"FUTURE_ORIGINAL_M15_PREFIXES_RECORDED",
             "prefixCount":len(candidate),"brokerCalls":0,
             "tradingEdgeEstablished":False}
+
+
+def verified_main_prefixes(db, *, pairs, as_of):
+    """Return bounded PRIVATE internal digest map for pre-verified COT pairs.
+
+    Never emitted in an HTTP response or serialized into public summaries.
+    Pair identity is supplied by the exact original-observation COT+OHLC
+    auditor, NOT an unverified symbol/date lookup. No source data fetched.
+    """
+    if not isinstance(db,sqlite3.Connection):
+        raise ValueError("sqlite_connection_required")
+    now=witness._parse(as_of)
+    if not _protected(db,MAIN_TABLE):
+        return None
+    accepted={(s,w,c,o) for s,w,c,o,_,_ in pairs}
+    rows=db.execute(
+        f"SELECT symbol,report_date,price_time,observed_at,"
+        f"m15_closed_at,prefix_sha256,recorded_at,schema_version "
+        f"FROM {MAIN_TABLE} ORDER BY observed_at,symbol,m15_closed_at "
+        "LIMIT ?",(MAX_MAIN_ROWS+1,)).fetchall()
+    if len(rows)>MAX_MAIN_ROWS:
+        raise ValueError("main_prefix_archive_unbounded")
+    result={}
+    for sym,week,closed,observed,cutoff,sha,recorded,version in rows:
+        key=(sym,week,closed,observed)
+        if key not in accepted:
+            continue
+        event_clock=witness._parse(observed)
+        sealed=witness._parse(recorded)
+        cutoff_clock=witness._parse(cutoff)
+        last=witness._parse(closed)
+        if (version!=VERSION or not isinstance(sha,str)
+                or len(sha)!=64
+                or any(ch not in "0123456789abcdef" for ch in sha)
+                or not event_clock<=sealed<=event_clock+timedelta(seconds=30)
+                or cutoff_clock>last
+                or not 0<= (last-cutoff_clock).total_seconds()<=90*60
+                or cutoff_clock.minute%15 or cutoff_clock.second
+                or cutoff_clock.microsecond):
+            raise ValueError("main_prefix_provenance_or_clock_invalid")
+        # A row only becomes visible as-of when written; no future
+        # main proof can be used to re-qualify an earlier report.
+        if sealed>now:
+            continue
+        index=(*key,cutoff)
+        if index in result:
+            raise ValueError("duplicate_original_prefix_proof")
+        result[index]=sha
+    return result
+
+
+def verified_private_prefixes(db, *, events, as_of):
+    """Return event_key -> (cutoff, HMAC) for ORIGINAL new private events.
+
+    A proof not accompanied by the original full-document HMAC is rejected;
+    neither table may be supplied retroactively or revised.
+    """
+    if not isinstance(db,sqlite3.Connection):
+        raise ValueError("sqlite_connection_required")
+    now=witness._parse(as_of)
+    if not _protected(db,PRIVATE_TABLE):
+        return None
+    from scripts import shark_cvd_source_lineage as full
+    if not full._has_protected_schema(db):
+        raise ValueError("private_full_source_proof_required")
+    full_rows=db.execute(
+        f"SELECT event_key,document_hmac,bound_at,algorithm "
+        f"FROM {full.TABLE}").fetchall()
+    full_keys={}
+    for key,digest,at,algorithm in full_rows:
+        if (algorithm!=full.ALG or not isinstance(digest,str)
+                or len(digest)!=64 or any(
+                    ch not in "0123456789abcdef" for ch in digest)):
+            raise ValueError("private_full_document_binding_corrupt")
+        full_keys[key]=at
+    keys={row[0]:row for row in events}
+    rows=db.execute(
+        f"SELECT event_key,m15_closed_at,prefix_hmac,bound_at,schema_version "
+        f"FROM {PRIVATE_TABLE} ORDER BY event_key LIMIT ?",
+        (len(keys)+1,)).fetchall()
+    # The table is bounded by the original CVD MAX_EVENTS upper limit,
+    # including entries outside this audit's as-of window.
+    if len(rows)>len(keys):
+        # Old events outside the current window may legitimately exist:
+        # caller must supply full population or use an independent max cap.
+        rows=db.execute(
+            f"SELECT event_key,m15_closed_at,prefix_hmac,bound_at,schema_version "
+            f"FROM {PRIVATE_TABLE} ORDER BY event_key LIMIT 4097").fetchall()
+        if len(rows)>4096:
+            raise ValueError("private_prefix_archive_unbounded")
+    result={}
+    for key,closed,mac,bound,version in rows:
+        original=keys.get(key)
+        if original is None:
+            continue
+        detected=witness._parse(original[4])
+        confirmed=witness._parse(original[3])
+        cutoff=witness._parse(closed)
+        bound_at=witness._parse(bound)
+        if (version!=VERSION or not isinstance(mac,str)
+                or len(mac)!=64
+                or any(ch not in "0123456789abcdef" for ch in mac)
+                or bound_at!=detected
+                or full_keys.get(key)!=bound
+                or not confirmed<=cutoff<=detected
+                or detected-cutoff>timedelta(minutes=90)
+                or cutoff.minute%15 or cutoff.second or cutoff.microsecond):
+            raise ValueError("private_prefix_binding_not_from_event")
+        if bound_at>now:
+            continue
+        result[key]=(closed,mac)
+    return result
