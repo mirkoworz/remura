@@ -1,0 +1,24 @@
+name: REMURA splash-only checks
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'splash.js'
+      - 'splash.css'
+      - 'splash-mascot.webp'
+      - 'sw.js'
+      - 'tests/splash.test.js'
+      - '.github/workflows/splash-checks.yml'
+permissions:
+  contents: read
+jobs:
+  splash:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check splash.js && node --check tests/splash.test.js
+      - run: node --test tests/splash.test.js tests/release-consistency.test.js
