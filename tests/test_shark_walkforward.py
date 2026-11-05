@@ -229,6 +229,72 @@ class WalkforwardTests(unittest.TestCase):
         self.assertIsNotNone(touch_r)
         self.assertEqual(gap_r, touch_r)
 
+    def test_repeat_alerts_do_not_manufacture_30_independent_trades(self):
+        start = START + timedelta(hours=9)
+        one = {"symbol": "EURUSD", "observed": start-timedelta(minutes=5),
+               "entry": start, "exit": start+timedelta(minutes=15),
+               "netR": 1.0}
+        report = wf._stats([one.copy() for _ in range(40)])
+        self.assertEqual(report["samples"], 40)
+        self.assertEqual(report["timeDisjointEpisodeCount"], 1)
+        self.assertEqual(report["timeDisjointIsoWeeks"], 1)
+        self.assertIsNone(report["netHitPct"])
+        self.assertIsNone(report["timeDisjointHitPct"])
+        self.assertFalse(report["timeDisjointIsIndependentSampling"])
+
+    def test_many_nonoverlapping_alerts_from_one_week_not_enough(self):
+        start = START + timedelta(hours=9)
+        rows = []
+        for i in range(35):
+            t = start + timedelta(minutes=30*i)
+            rows.append({"symbol": "EURUSD",
+                         "observed": t-timedelta(minutes=5),
+                         "entry": t, "exit": t+timedelta(minutes=15),
+                         "netR": 1.0 if i%2 == 0 else -0.5})
+        report = wf._stats(rows)
+        self.assertEqual(report["timeDisjointEpisodeCount"], 35)
+        self.assertEqual(report["timeDisjointIsoWeeks"], 1)
+        self.assertIsNone(report["netHitPct"])
+        self.assertIsNone(report["timeDisjointHitPct"])
+        self.assertEqual(report["hitRateGate"],
+                         "INSUFFICIENT_DISJOINT_WEEKS")
+
+    def test_eight_weeks_are_only_descriptive_not_independent_proof(self):
+        start = datetime(2026, 1, 5, 8, tzinfo=UTC)
+        rows = []
+        for i in range(40):
+            t = start + timedelta(weeks=i//5, hours=2*(i%5))
+            rows.append({"symbol": "EURUSD",
+                         "observed": t-timedelta(minutes=5),
+                         "entry": t, "exit": t+timedelta(minutes=15),
+                         "netR": 1.0 if i%2 else -0.5})
+        report = wf._stats(rows)
+        self.assertEqual(report["timeDisjointEpisodeCount"], 40)
+        self.assertEqual(report["timeDisjointIsoWeeks"], 8)
+        self.assertEqual(report["netHitPct"], 50.0)
+        self.assertEqual(report["timeDisjointHitPct"], 50.0)
+        self.assertFalse(report["timeDisjointIsIndependentSampling"])
+        self.assertEqual(report["hitRateGate"],
+                         "DESCRIPTIVE_ONLY_NOT_INDEPENDENT")
+        # A duplicate cannot inflate the all-alert percentage.
+        duplicated = wf._stats(rows + [rows[0].copy()])
+        self.assertEqual(duplicated["samples"], 41)
+        self.assertEqual(duplicated["timeDisjointEpisodeCount"], 40)
+        self.assertIsNone(duplicated["netHitPct"])
+        self.assertEqual(duplicated["timeDisjointHitPct"], 50.0)
+
+    def test_simultaneous_markets_cannot_inflate_disjoint_episode_count(self):
+        t = datetime(2026, 1, 5, 8, tzinfo=UTC)
+        observations = [
+            {"symbol": symbol, "observed": t-timedelta(minutes=5),
+             "entry": t, "exit": t+timedelta(minutes=15), "netR": 1.0}
+            for symbol in ("EURUSD", "XAUUSD")
+        ]
+        out = wf._stats(observations)
+        self.assertEqual(out["samples"], 2)
+        self.assertEqual(out["timeDisjointEpisodeCount"], 1)
+        self.assertEqual(out["overlappingAlertsExcludedOnlyFromEpisodeScreen"],1)
+
     def test_historical_close_is_required_to_compute_atr(self):
         e = event(14)
         out = run([e])
