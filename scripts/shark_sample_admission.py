@@ -109,6 +109,20 @@ def audit(db, *, as_of, days=1):
                            excludedMarketCells=None,
                            exclusionReasons=None, **common)
 
+        # A first-invocation witness can survive an aborted first scan
+        # without creating the compact table at all. Its calendar gaps are
+        # observable, but there is NO stored population to admit.
+        batch_table=db.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+            (compact.TABLE,)).fetchone()
+        if batch_table is None:
+            return _report("NO_FINALIZED_PRICE_BATCH_WITH_WITNESSED_START",
+                           slot_report,fullBatchMarketCells=None,
+                           priceContextDescriptiveCandidates=None,
+                           priceContextWithCompleteTickVolume=None,
+                           excludedMarketCells=None,
+                           exclusionReasons=None,**common)
+
         # Without a first-invocation witness the first stored batch is NOT
         # proof of when research was enabled. Old standalone/offline archives
         # can be inspected for integrity but never admitted to the sample.
