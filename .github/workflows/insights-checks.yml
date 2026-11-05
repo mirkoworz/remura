@@ -42,6 +42,9 @@ on:
       - 'impostazioni.html'
       - 'feed-health-core.js'
       - 'tests/**'
+      - 'splash.js'
+      - 'splash.css'
+      - 'splash-mascot.webp'
       - '.github/workflows/insights-checks.yml'
   workflow_dispatch:
 
@@ -63,6 +66,7 @@ jobs:
           node --check insights.js
           node --check retail.js
           node --check nav.js
+          node --check splash.js
           node --check squalincome-diagnostics.js && node --check squalincome-freshness-core.js
           node --check statistica-squali-core.js
           node --check statistica-squali.js
@@ -78,6 +82,8 @@ jobs:
           node --check cot-week-watch-ui.js
           node --check impostazioni.js
           node --check feed-health-core.js
+      - name: Verify splash and nine-page release wiring
+        run: node --test tests/splash.test.js tests/release-consistency.test.js
       - name: Verify COT analysis rules
         run: node --test tests/insights.test.js tests/retail-chart.test.js tests/cot-indices.test.js tests/cot-scanner.test.js tests/squalincome-shortlist.test.js tests/feed-health.test.js tests/release-consistency.test.js tests/squalincome-diagnostics.test.js tests/squalincome-freshness.test.js tests/statistica-squali.test.js tests/dual24-ui.test.js tests/market-audit-ui.test.js tests/case-audit-ui.test.js tests/weekly-quality-ui.test.js tests/cot-week-watch-ui.test.js
       - name: Verify wiring on all market detail pages
