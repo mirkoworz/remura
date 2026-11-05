@@ -25,7 +25,10 @@ import sqlite3
 import tempfile
 import zipfile
 
-SCHEMA="remura-private-causal-evidence-export-v1"
+SCHEMA="remura-private-causal-evidence-export-v2"
+LEGACY_SCHEMA="remura-private-causal-evidence-export-v1"
+SCAN_TABLE="research_cvd_scan_attempts"
+MAX_SCAN_ATTEMPTS=10000
 MAIN_TABLES=(
     "squalincome_history",
     "research_cot_asof_attestations",
@@ -33,11 +36,12 @@ MAIN_TABLES=(
     "research_squalincome_price_evidence",
     "research_squalincome_m15_prefix_proofs",
 )
-PRIVATE_TABLES=(
+LEGACY_PRIVATE_TABLES=(
     "research_cvd_observations",
     "research_cvd_price_bindings",
     "research_cvd_m15_prefix_proofs",
 )
+PRIVATE_TABLES=(*LEGACY_PRIVATE_TABLES,SCAN_TABLE)
 ALLOW={"main":MAIN_TABLES,"private":PRIVATE_TABLES}
 MAX_TOTAL_ROWS=120000
 MAX_TOTAL_BYTES=40_000_000
@@ -76,10 +80,28 @@ def _checks(db, tables):
         # is a legacy source table and is not immutable.
         if table.startswith("research_"):
             triggers=db.execute(
-                "SELECT sql FROM sqlite_master WHERE type='trigger' "
+                "SELECT name,sql FROM sqlite_master WHERE type='trigger' "
                 "AND tbl_name=?",(table,)).fetchall()
-            if len(triggers)<2 or any(not x[0] for x in triggers):
+            if len(triggers)<2 or any(not x[1] for x in triggers):
                 raise ValueError("causal_provenance_triggers_missing:"+table)
+            if table==SCAN_TABLE:
+                expected={"research_cvd_scan_no_update",
+                          "research_cvd_scan_no_delete"}
+                if not expected.issubset({name for name,_ in triggers}):
+                    raise ValueError("cvd_scan_archive_immutability_missing")
+                columns=tuple(c[1] for c in db.execute(
+                    f"PRAGMA table_info({SCAN_TABLE})"))
+                if columns!=("symbol","closed_at","attempted_at","state",
+                            "source_hmac","session_prefix_hmac",
+                            "new_confirmations","reason","schema_version"):
+                    raise ValueError("cvd_scan_archive_v2_schema_required")
+                versions=db.execute(
+                    f"SELECT DISTINCT schema_version FROM {SCAN_TABLE} LIMIT 2").fetchall()
+                if any(v[0]!="remura-track-b-cvd-scan-attempt-coverage-v2"
+                       for v in versions):
+                    raise ValueError("cvd_scan_archive_v2_rows_required")
+                if db.execute(f"SELECT count(*) FROM {SCAN_TABLE}").fetchone()[0]>MAX_SCAN_ATTEMPTS:
+                    raise ValueError("cvd_scan_archive_capacity_corrupt")
 
 
 def _table_meta(db,table):
@@ -96,6 +118,13 @@ def _table_meta(db,table):
         "table":table,"columns":[c[1] for c in cols],
         "createTableSql":source,"triggers":triggers
     }
+
+
+def _stable_order(db,table):
+    """Sort by PRIMARY KEY: compatible with immutable WITHOUT ROWID tables."""
+    cols=db.execute(f"PRAGMA table_info({table})").fetchall()
+    keys=[c[1] for c in sorted(cols,key=lambda c:c[5]) if c[5]>0]
+    return ",".join('"' + c.replace('"','""') + '"' for c in keys) if keys else "rowid"
 
 
 def export_bundle(db_main,db_private,target, *,
@@ -140,6 +169,8 @@ def export_bundle(db_main,db_private,target, *,
             "includesRawOHLCOrOutcomePaths":False,
             "includesPriceOnlyFull34Cohorts":False,
             "privateHmacSecretIncluded":False,
+            "scanAttemptCoverageIncluded":True,
+            "scanAttemptHmacCanBeRecomputedWithoutPrivateKey":False,
             "sourceDataDeleted":False,
             "freesSqliteCapacity":False,
             "completeOCIBackupOrRestore":False,
@@ -163,7 +194,7 @@ def export_bundle(db_main,db_private,target, *,
                             n=0
                             entry_bytes=0
                             with archive.open(entry,"w") as dest_data:
-                                for row in db.execute(f"SELECT * FROM {table} ORDER BY rowid"):
+                                for row in db.execute(f"SELECT * FROM {table} ORDER BY {_stable_order(db,table)}"):
                                     packed=_json({"values":[_encode(v) for v in row]})
                                     n+=1
                                     total_rows+=1
