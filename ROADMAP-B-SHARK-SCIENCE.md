@@ -1,5 +1,45 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
+## 05/11/2026 — B-P0b/P0c preparatorio: costo CPU/storage del collegamento CVD e rischio cap registri, NO LIVE
+
+**Ambito:** PR #89 DRAFT soltanto, branch `research/track-b-shark-science-20261104`. REMURA v1.62 LIVE, `main`, PR TRACK A #88, `remura-collector`, account, OCI, cTrader e Firestore **invariati**. Non è stato eseguito alcun nuovo test sulla VPS. Zero nuove richieste broker, ordini o notifiche. I dati del benchmark sono sintetici, sulla macchina GitHub Actions, non su Oracle; non sono un costo fatturato né un test di contesa con il collector reale.
+
+### Microbenchmark A/B bilanciato su stesso runner GitHub, DONE
+
+Aggiunto `scripts/shark_prefix_cost_probe.py` e test `tests/test_shark_prefix_cost_probe.py` con 8 round A/B alternati, SQLITE **:memory:** sintetiche indipendenti; confronto esatto della stessa cattura COT+prezzo e dello stesso evento CVD privato, con e senza attivazione sperimentale delle prove. Output è un JSON aggregato senza broker mapping o password. Convalida status entrambe prove, righe e integrità `PRAGMA integrity_check`, modello conservativo cap. Test dedicati PASS al [run #41994566746](https://github.com/mirkoworz/remura/actions/runs/41994566746); le tre CI della HEAD `8aeb1f81971227a1c7c965c0b9f40accb6eaf052` erano SUCCESS. Prima esecuzione diretta fallita solo per PYTHONPATH dello script CLI, non per test logico (test unittest 3/3 già PASS): corretto esplicitando la root in `sys.path`, nessun deploy.
+
+| Misura (mediana 8 round, GitHub runner) | Normale | Modalità con nuove prove | Differenza osservata |
+| --- | ---: | ---: | ---: |
+| COT+prezzo, CPU | 12,0009 ms | **37,7526 ms** | **+25,7517 ms** per osservazione sintetica |
+| COT+prezzo, wall | 11,9977 ms | **37,7497 ms** | **+25,7520 ms** |
+| SQLite main pagine totali in memoria per la prova | 294.912 B | 294.912 B | **0 nuove pagine allocate nel singolo test**, NON significa zero crescita archivio |
+| Evento CVD, CPU | 0,1004 ms | **18,3555 ms** | **+18,2551 ms** (include replay detector, HMAC documento originale, prefix, NON è costo del solo prefix) |
+| Evento CVD, wall | 0,0979 ms | **18,3561 ms** | **+18,2582 ms** |
+| SQLite CVD pagine totali in memoria per la prova | 12.288 B | 28.672 B | **+16.384 B** (nuove tabelle/prove, snapshot primo evento) |
+| Nuove righe prefix per segnale COT+prezzo | 0 | **7** | nell'esempio il segnale è su pilota EURUSD |
+| Nuove righe prefix per evento CVD | 0 | **1** | stesso commit SQLite del nuovo evento |
+| Broker calls, alert, ordini | 0 | 0 | invariati |
+
+`peakProcessRssKiB=32204` nel benchmark, ma è picco dell'**intero processo** e non RAM attribuibile al prefix. Non proiettare il costo CPU GitHub su Oracle né dedurre quote OCI/Firestore da page_count di una SQLite in memoria.
+
+### Rischio di capacità: bloccare prima di perdere la raccolta
+
+- [x] `research_squalincome_m15_prefix_proofs` conserva fino a **15.000 righe append-only**. A 7 prefissi per nuovo segnale e al massimo due mercati pilota (EURUSD e XAUUSD), scenario **non osservato e volutamente estremo** di un segnale per ciascun mercato ogni M15: `2 × 96 × 7 = 1.344` righe/giorno → capacità in **~11,16 giorni**. Non è consumo previsto: il numero reale dei nuovi segnali COT+OHLC validi può essere molto minore, ma l'interruzione al raggiungimento del cap va pianificata prima del LIVE. Il limite privato CVD eventi è 4.096. Nessuna cancellazione automatica di prove immutabili, nessun archivio pagato introdotto.
+- [x] Nuova funzione esplicita **sola lettura** `shark_cvd_prefix_lineage.capacity_status(db,ledger='main'|'private')`, non schedulata: restituisce conteggio, hard cap, posti residui e `WARNING_80_PERCENT`, `WARNING_95_PERCENT`, `AT_HARD_LIMIT`. Se tabella assente restituisce **N/D**, non 0%; rifiuta trigger di immutabilità rotti e non dichiara billing OCI. Test nuovi con soglie sintetiche e `query_only=ON`. Nessuna notifica automatica LIVE: la funzione è disponibile **solo nel ramo B**.
+- [ ] **PRIMA DELL'ATTIVAZIONE continua:** disegnare una retention/archivio immutabile locale (preferibilmente esportazione e verifica SHA su spazio già disponibile, non acquisti automatici), rotazione controllata e monitoraggio cap; testare che non scarti i campioni OOS e non crei buchi. Eventuale aumento cap soltanto dopo misurazione vera spazio/WAL e backup+restore.
+
+### Verifica già disponibile sul collector (non fatture)
+
+- [x] [Firestore publish #41983853934](https://github.com/mirkoworz/remura-collector/actions/runs/41983853934) del **05/11/2026 ore 06:57 UTC** concluso SUCCESS, **32 documenti sincronizzati** nel job log. Non è conteggio delle letture dell'app, traffico, storage totale o fattura. I report GitHub Actions privati e Firestore Billing/Usage restano richiesti per chiudere P0c.
+
+### Restano gate APERTI, senza promozione
+
+- [ ] **B-P0b ingest LIVE:** nessun overlap con cTrader reale/CPU/SQLite lock misurato per il nuovo percorso; i test GitHub sintetici **non** autorizzano scanner CVD, raccolta o 34x24 LIVE. La nuova ricerca rimane OFF per default.
+- [ ] **B-P0c spesa reale:** quote e fatturazione effettive Oracle, Actions del repo privato e Firebase/Firestore non visibili dal solo codice. Nessun piano modificato, servizio acquistato o broker call aggiuntivo.
+- [ ] **B-P1/B-P2:** osservazioni reali COT+OHLC+CVD con provenienza, missingness e no-lookahead, poi outcome indipendenti, costi/slippage e walk-forward OOS; nessun edge statistico/PNL dimostrato.
+- [ ] **Release A+B unica:** PR #89 ancora DRAFT; dopo review, backup LIVE SQLite + restore-test/rollback, CI, riconciliazione autoupdater, nuova versione e data/ora reale `Europe/Rome` scritte **in alto su tutte le nove pagine**. Nessuna modifica al LIVE v1.62.
+- [ ] **CI finale della HEAD documentale**: ricontrollare i tre checks su questo commit prima di dichiarare passo concluso.
+
 ## 05/11/2026 — B-P1: CVD rilevato da un documento PRECEDENTE e segnale Squalincome su uno snapshot SUCCESSIVO (OFFLINE)
 
 **Problema risolto nel laboratorio:** la prova `full_document_sha256` cambia a ogni nuova candela, anche se tutto lo storico precedente è identico; quindi il precedente confronto `exactSnapshotTriples` era conservativo ma poteva escludere CVD realmente rilevati 15–90 minuti prima del segnale. Una semplice corrispondenza simbolo/orario sarebbe invece inaffidabile. Soluzione: **secondo livello di prova distinto**, non equiparato alla stessa sorgente completa, senza leggere/retrodatare i dati correnti.
