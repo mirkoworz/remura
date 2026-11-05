@@ -96,19 +96,42 @@ def audit(db_main,db_cvd,*,as_of,days=1,secret):
         if not {"research_cvd_no_update",
                 "research_cvd_no_delete"}.issubset(triggers):
             raise ValueError("private_cvd_event_triggers_missing")
+        # Private CVD observations RECORDED AFTER the requested as_of are
+        # strictly invisible, even in aggregate counts. Bound the query to
+        # 90 minutes before the requested cohort window, since a technical
+        # event may precede a valid Squalincome observation by that much.
+        earliest=now-timedelta(days=days,minutes=90)
+        low=earliest.strftime("%Y-%m-%dT%H:%M:%S")
+        high=now.strftime("%Y-%m-%dT%H:%M:%S")
         seen=db_cvd.execute(
             "SELECT key,symbol,side,confirmed_at,detected_at "
-            "FROM research_cvd_observations ORDER BY detected_at,key "
-            "LIMIT ?",(MAX_PRIVATE_EVENTS+1,)).fetchall()
+            "FROM research_cvd_observations "
+            "WHERE substr(detected_at,1,19)>=? "
+            "AND substr(detected_at,1,19)<=? "
+            "ORDER BY detected_at,key LIMIT ?",
+            (low,high,MAX_PRIVATE_EVENTS+1)).fetchall()
         if len(seen)>MAX_PRIVATE_EVENTS:
             raise ValueError("private_cvd_events_unbounded")
+        seen=[row for row in seen
+              if earliest<=witness._parse(row[4])<=now]
         if not source._has_protected_schema(db_cvd):
             return _result("PRIVATE_CVD_DOCUMENT_BINDINGS_UNAVAILABLE",
                 validLocalCotPricePairs=len(accepted),
                 privateCvdEvents=len(seen),sourceBoundCvdEvents=None,
                 exactSnapshotTriples=None,distinctSignalsWithExactCVD=None)
-        bound=db_cvd.execute(
-            f"SELECT count(*) FROM {source.TABLE}").fetchone()[0]
+        selected_keys={row[0] for row in seen}
+        # One bounded HMAC binding per real event. Do not count records
+        # created in the future or unrelated old private sessions.
+        binding_rows=db_cvd.execute(
+            f"SELECT b.event_key,b.bound_at FROM {source.TABLE} b "
+            "JOIN research_cvd_observations e ON e.key=b.event_key "
+            "WHERE substr(e.detected_at,1,19)>=? "
+            "AND substr(e.detected_at,1,19)<=? LIMIT ?",
+            (low,high,MAX_PRIVATE_EVENTS+1)).fetchall()
+        if len(binding_rows)>MAX_PRIVATE_EVENTS:
+            raise ValueError("source_bindings_over_limit")
+        bound=sum(1 for key,created in binding_rows
+                  if key in selected_keys and witness._parse(created)<=now)
         if bound>len(seen):
             raise ValueError("source_bindings_without_real_cvd_event")
         by_market=defaultdict(list)
@@ -127,7 +150,9 @@ def audit(db_main,db_cvd,*,as_of,days=1,secret):
             for key,_,side,confirmed_at,detected_at in by_market[sym]:
                 # Must have been confirmed on closed prices not later than
                 # the original signal's last M15 close.
-                if witness._parse(confirmed_at)>closed_time:
+                detected=witness._parse(detected_at)
+                if (witness._parse(confirmed_at)>closed_time
+                        or not original-timedelta(minutes=90)<=detected<=original):
                     continue
                 candidate=source.match(
                     db_cvd,event_key=key,original_price_sha=sha,
