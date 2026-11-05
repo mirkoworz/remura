@@ -243,7 +243,8 @@ class WalkforwardTests(unittest.TestCase):
         self.assertFalse(report["timeDisjointIsIndependentSampling"])
 
     def test_many_nonoverlapping_alerts_from_one_week_not_enough(self):
-        start = START + timedelta(hours=9)
+        # Monday: all 35 consecutive intraday entries remain in ONE ISO week.
+        start = datetime(2026, 11, 2, 9, tzinfo=UTC)
         rows = []
         for i in range(35):
             t = start + timedelta(minutes=30*i)
