@@ -20,6 +20,12 @@
 - [x] `tests/test_shark_cvd_cot_price_triage.py`: stessa fonte OHLC artificiale con divergenza CLV×tick volume **realmente prodotta dal detector** e H1/H4 rollup ricostruiti, insieme al COT versionato e alla cattura vera `shark_observation_bundle.record`. Test positivi/negativi per HMAC sbagliato, prova COT assente, detection dopo l'osservazione, CVD non certificato, archivio inesistente, trigger privato alterato e nessuna mutazione in fase di audit. Per test e benchmark, **non usare mai quel risultato come performance reale**.
 - [x] Workflow `.github/workflows/shark-science-offline.yml` attiva gli step di regressione, `py_compile` per i nuovi moduli e mantiene tutti i precedenti test di 34×4k con WAL/CPU. **Risultato definitivo SHA e 3 CI da verificare dopo aggiornamento roadmap**, non dichiarare success prima di run conclusa.
 
+### Protezione addizionale contro il *future leakage* nei conteggi
+
+- [x] In `shark_cvd_cot_price_triage.audit` anche il **denominatore** dei CVD privati e quello dei source binding vengono ora filtrati sull'UTC `detected_at <= as_of`, con finestre massimo 7 giorni + 90 minuti preliminari. Una `CVD` rilevata alle 11:17 non compare in un audit delle 11:16 **neppure come evento privato osservato**. I millisecondi vengono validati dopo il filtro per secondo UTC così da non sbagliare i confini `Z` / `.000Z`.
+- [x] Prima di fare query HMAC `match` per una coppia, il CVD dev'essere stato rilevato negli ultimi 90 minuti, non dopo `observed_at`, e confermato su candele chiuse al più tardi alla chiusura M15 del segnale. Questo evita query inutili su 4.096 eventi privati durante gli audit grandi.
+- [x] Due casi negativi in `tests/test_shark_cvd_cot_price_triage.py`: **stesso simbolo, stesso orario e stesso evento CVD ma documento OHLC H1 differente** → zero triplette; **evento CVD scritto dopo `as_of`** → zero anche nei contatori CVD/binding del passato (mentre nella successiva finestra viene contato come evento ma non promosso a causa della detection tardiva). Controllare la CI definitiva, non dedurre PASS da HEAD precedente.
+
 ### Gate ancora aperti
 
 - [ ] B-P0b LIVE: contesa SQLite e CPU con ingest autentico e nuova raccolta CVD non misurate; tutti i moduli rimangono OFF. Il sintetico Oracle precedente −26,4% CPU non dimostra una scansione CVD/nuovo binding gratuita sotto carico reale.
