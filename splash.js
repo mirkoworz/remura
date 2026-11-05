@@ -94,7 +94,7 @@
     splash.querySelector(".rm-splash-release").textContent="REMURA · Caricamento app";
     syncRelease();
     document.addEventListener("DOMContentLoaded",() => setTimeout(syncRelease,0),{once:true});
-    let progress=0,closed=false;
+    let progress=0,closed=false,failSafeTimer=null;
     function update(value,message) {
       if(closed)return;
       progress=Math.max(progress,Math.min(value,100));
@@ -107,6 +107,7 @@
     function close() {
       if(closed)return;
       closed=true;
+      if (failSafeTimer!==null) clearTimeout(failSafeTimer);
       splash.classList.add("rm-splash-exit");
       setTimeout(() => splash.remove(),reduced?0:340);
     }
@@ -139,7 +140,7 @@
     }
     playIntro().catch(close);
     // Fail-open even if unexpected JS or network failures occur.
-    setTimeout(close,6200);
+    failSafeTimer=setTimeout(close,6200);
     window.addEventListener("pagehide",close,{once:true});
   }
   // Script is loaded immediately after <body>, before page content: no first-frame flash.
