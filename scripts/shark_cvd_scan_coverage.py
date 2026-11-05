@@ -21,7 +21,6 @@ import sqlite3
 from scripts import cvd_divergence as detector
 from scripts import shark_cot_asof_witness as witness
 from scripts import shark_cvd_source_lineage as lineage
-from scripts import shark_price_asof_evidence as price
 
 TABLE = "research_cvd_scan_attempts"
 SCHEMA = "remura-track-b-cvd-scan-attempt-coverage-v1"
@@ -110,13 +109,24 @@ def record(db, *, symbol, slot_closed_at, source_document, secret, clock=None):
             raise ValueError("original_source_identity_or_slot_mismatch")
         # The OHLC rows must come from the actual source document. Do not
         # reconstruct older records or trust a precomputed detector result.
-        bars = price._bars(doc["timeframes"].get("M15"), 900, 4320)
+        # The CVD detector needs fewer M15 than the price/H1/H4 evidence
+        # auditor (which requires >=55). Do not silently make the detector's
+        # 15-candle warm-up look like a missing scan by using that stricter
+        # price-audit minimum here.
+        bars = doc["timeframes"].get("M15")
+        if not isinstance(bars, list) or not 1 <= len(bars) <= 4320:
+            raise ValueError("m15_source_missing_or_unbounded")
+        normalized = []
+        for bar in bars:
+            if not isinstance(bar, dict):
+                raise ValueError("non_mapping_original_m15")
+            at = witness._parse(bar.get("t"))
+            normalized.append({**bar, "t": int(at.timestamp()*1000)})
+        if witness._parse(bars[-1]["t"]) + STEP != closed:
+            raise ValueError("original_last_m15_does_not_match_slot")
         market = {"symbol": symbol, "provider": "ctrader",
                   "providerSymbol": doc["providerSymbol"],
-                  "frames": {"M15": [
-                      {**bar, "t": int(t.timestamp()*1000)}
-                      for t, bar in bars
-                  ]}}
+                  "frames": {"M15": normalized}}
         analysis = detector.analyze(market, now=int(now.timestamp()*1000))
         if analysis.get("algorithm") != detector.VERSION:
             raise ValueError("detector_version_mismatch")
