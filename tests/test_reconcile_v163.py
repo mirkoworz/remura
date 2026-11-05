@@ -31,6 +31,35 @@ class ReconcileV163Tests(unittest.TestCase):
         self.assertTrue({"ROADMAP.md","ROADMAP-A-H1.md","ROADMAP-B-SHARK-SCIENCE.md"}<=m.ALLOWED_DOCS)
         self.assertNotIn("scripts/ctrader_feed.py",m.ALLOWED_DOCS)
 
+    def test_explicit_ci_gate_checks_both_existing_workflows(self):
+        self.assertEqual(m.WORKFLOWS,("price-checks.yml","insights-checks.yml"))
+        required={
+            "scripts/private_server.py",
+            "deploy/oracle/release_v163.py","deploy/oracle/reconcile_v163.py",
+            "nav.js","sw.js","splash.js","splash.css","splash-mascot.webp",
+            "index.html","asset.html","mercati.html","forex.html",
+            "catalogo.html","statistica-squali.html","stato-prezzi.html",
+            "fonti.html","impostazioni.html"
+        }
+        checked=[]
+        def fake_api(path):
+            if path=="/commits/main":return {"sha":TARGET}
+            if path.startswith("/compare/"):
+                return {"status":"ahead",
+                        "files":[{"filename":p} for p in sorted(required)]}
+            if "/actions/workflows/" in path:
+                checked.append(path)
+                return {"workflow_runs":[{
+                    "head_sha":TARGET,"head_branch":"main",
+                    "event":"push","status":"completed","conclusion":"success"
+                }]}
+            raise AssertionError("unexpected endpoint")
+        with patch.object(m,"json_api",side_effect=fake_api):
+            m.validate_target(TARGET)
+        self.assertEqual(len(checked),2)
+        self.assertTrue(any("/price-checks.yml/" in p for p in checked))
+        self.assertTrue(any("/insights-checks.yml/" in p for p in checked))
+
     def test_exact_15_installed_files_and_stamped_banner(self):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td);staged={p:b"file:"+p.encode() for p in FILES}
