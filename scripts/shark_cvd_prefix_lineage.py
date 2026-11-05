@@ -186,8 +186,10 @@ def capture_main(db, *, history_id, original_doc, clock=None):
         raise ValueError("original_signal_transaction_required")
     if type(history_id) is not int or history_id<=0:
         raise ValueError("original_signal_history_id_required")
-    if db.execute("SELECT last_insert_rowid()").fetchone()[0]!=history_id:
-        raise ValueError("not_original_signal_insert")
+    # The original history insert was verified by observation_bundle.record
+    # BEFORE the two proof INSERTs. Those inserts change last_insert_rowid,
+    # so require the matching original row+both proofs instead of incorrectly
+    # expecting last_insert_rowid to still point at history_id.
     now=witness._clock(clock)
     row=db.execute(
         "SELECT symbol,report_date,price_time,observed_at "
