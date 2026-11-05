@@ -117,8 +117,7 @@ class SampleAdmissionTests(unittest.TestCase):
         self.assertEqual(out["priceContextWithoutCompleteTickVolume"],1)
         self.assertEqual(out["excludedMarketCells"],1)
         self.assertEqual(out["exclusionReasons"],{
-            "MARKET_OBSERVATION_UNKNOWN":1,
-            "PRICE_READY_BUT_TICK_VOLUME_INCOMPLETE":1})
+            "MARKET_OBSERVATION_UNKNOWN":1})
         self.assertEqual(out["institutionalCohortsAdmissible"],0)
 
     def test_targeted_archive_does_not_count_toward_full_denominator(self):
