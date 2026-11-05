@@ -168,6 +168,67 @@ class WalkforwardTests(unittest.TestCase):
         report = run([event(40)], sources=d)
         self.assertLess(report["folds"]["train"]["priceOnly"]["meanNetR"], 0)
 
+    def test_long_stop_gap_through_open_is_worse_than_stop_level(self):
+        # Both have a valid continuous M15 series and the same ATR / entry.
+        # Only the stop-hit bar differs: intrabar touch versus opening lower.
+        touched = markets()
+        touched["EURUSD"]["M15"][42]["l"] -= 0.01
+        gapped = markets()
+        entry = gapped["EURUSD"]["M15"][41]["o"]
+        bar = gapped["EURUSD"]["M15"][42]
+        bar["o"] = entry - 0.003
+        bar["c"] = bar["o"] + 0.00004
+        bar["h"] = bar["c"] + 0.00002
+        bar["l"] = bar["o"] - 0.00002
+        at_stop = run([event(40)], sources=touched)
+        beyond_stop = run([event(40)], sources=gapped)
+        regular_r = at_stop["folds"]["train"]["priceOnly"]["meanNetR"]
+        gap_r = beyond_stop["folds"]["train"]["priceOnly"]["meanNetR"]
+        self.assertIsNotNone(regular_r)
+        self.assertIsNotNone(gap_r)
+        self.assertLess(gap_r, regular_r)
+        self.assertLess(gap_r, -1.0)
+        self.assertEqual(beyond_stop["folds"]["train"]["priceOnly"]["samples"], 1)
+
+    def test_short_stop_gap_through_open_is_worse_than_stop_level(self):
+        short = event(40, cvd=False)
+        short["side"] = -1
+        touched = markets()
+        touched["EURUSD"]["M15"][42]["h"] += 0.01
+        gapped = markets()
+        entry = gapped["EURUSD"]["M15"][41]["o"]
+        bar = gapped["EURUSD"]["M15"][42]
+        bar["o"] = entry + 0.003
+        bar["c"] = bar["o"] - 0.00004
+        bar["h"] = bar["o"] + 0.00002
+        bar["l"] = bar["c"] - 0.00002
+        at_stop = run([short], sources=touched)
+        beyond_stop = run([short], sources=gapped)
+        self.assertLess(
+            beyond_stop["folds"]["train"]["priceOnly"]["meanNetR"],
+            at_stop["folds"]["train"]["priceOnly"]["meanNetR"])
+        self.assertLess(
+            beyond_stop["folds"]["train"]["priceOnly"]["meanNetR"], -1.0)
+        self.assertEqual(beyond_stop["folds"]["train"]["priceOnly"]["samples"], 1)
+
+    def test_target_gap_does_not_award_unverified_better_fill(self):
+        # Favourable opening beyond take-profit is still capped at target.
+        touched = markets()
+        entry = touched["EURUSD"]["M15"][41]["o"]
+        touched["EURUSD"]["M15"][42]["h"] = entry + 0.003
+        gapped = markets()
+        bar = gapped["EURUSD"]["M15"][42]
+        bar["o"] = entry + 0.003
+        bar["c"] = bar["o"] + 0.00004
+        bar["h"] = bar["c"] + 0.00002
+        bar["l"] = bar["o"] - 0.00002
+        touch_r = run([event(40)], sources=touched)[
+            "folds"]["train"]["priceOnly"]["meanNetR"]
+        gap_r = run([event(40)], sources=gapped)[
+            "folds"]["train"]["priceOnly"]["meanNetR"]
+        self.assertIsNotNone(touch_r)
+        self.assertEqual(gap_r, touch_r)
+
     def test_historical_close_is_required_to_compute_atr(self):
         e = event(14)
         out = run([e])
