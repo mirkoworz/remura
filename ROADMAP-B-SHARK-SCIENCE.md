@@ -1,5 +1,17 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
+## 05/11/2026 — Stop-loss gap-through nel walk-forward e costi portali segnalati 0 €
+
+**Risultato: ricerca offline soltanto, nessuna modifica LIVE o nuove richieste API.**
+- Corretto `scripts/shark_walkforward.py` **solo branch B / PR #89 DRAFT**. Prima il simulatore, quando una M15 successiva apriva già oltre il prezzo di stop, conteggiava l'uscita idealmente allo stop. Ora registra il prezzo d'apertura peggiore (`min(open,stop)` per long, `max(open,stop)` per short). Spread, commissioni e slippage previsti dal modello restano applicati. Se stop e target sono entrambi nella stessa M15, prevale lo stop. Se il prezzo apre più favorevole del target, si conserva prudentemente il target e non si regala un miglior fill.
+- Aggiunti **3 test sintetici** in `tests/test_shark_walkforward.py`: gap sfavorevole long, gap sfavorevole short, gap favorevole oltre target senza extra-profitto. La protezione contro la mancanza M15 tra osservazione e ingresso, introdotta nel commit precedente, resta attiva.
+- **Controlli sul commit `a3d3c426b4872dacbcd423d6e371417a5ac6ccf7`:** Shark Science offline [#42030865246](https://github.com/mirkoworz/remura/actions/runs/42030865246) **SUCCESS**, Insights [#42030865266](https://github.com/mirkoworz/remura/actions/runs/42030865266) **SUCCESS**, Price [#42030865379](https://github.com/mirkoworz/remura/actions/runs/42030865379) **SUCCESS**. Rivalidare la HEAD documentale successiva prima del merge.
+- **Limiti:** uscita al prezzo d'apertura oltre stop è un'ipotesi prudente su OHLC M15, non fill broker né garanzia che basti a modellare volatilità/sli​ppage estremo; OHLC e timestamp possono essere revisionati. Nessun nuovo risultato empirico o edge dimostrato.
+
+**Aggiornamento costi comunicato dall'utente:** il 05/11/2026 riferisce di aver controllato **più mesi** dei portali rilevanti e di vedere **0 €** di costi. La sua verifica sostiene il mantenimento delle soluzioni gratuite, ma l'accesso diretto a tutti i pannelli, la corrispondenza di tutte le risorse Oracle alle shape idonee e i contatori completi Firestore storage/egress **non sono stati indipendentemente attestati qui**. Non inserire valori inventati nel gate `shark_p0_go_no_go`: restano `NO_GO` per **release/ricerca LIVE** il test prestazionale reale P0b, la prova di risorse Oracle eleggibili e la continuità/limiti. GitHub Actions privato già verificato sotto quota, Firebase Spark visto in screenshot.
+
+**Stato rilascio:** `main`, REMURA LIVE **v1.62**, raccolta H1/collector, PR A #88, VPS, Firestore e servizi invariati. Nessun ordine o notifica. Prima del primo eventuale deploy B: CI, backup SQLite, restore-test, rollback, SHA autoupdater e nuovo **numero versione+data/ora italiana in alto su tutte le 9 pagine**.
+
 ## 05/11/2026 — Rafforzamento walk-forward: gap M15 fra osservazione ed esecuzione
 
 **Solo ricerca offline su PR #89 DRAFT; nessun merge, VPS, collector o nuovo polling broker.**
