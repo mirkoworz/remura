@@ -107,12 +107,13 @@ class TripleCausalTriageTests(unittest.TestCase):
                                  observed_document=self.doc,clock=NOW)
         self.assertEqual(result["state"],"BOTH_LOCAL_PROOFS_PRESENT")
 
-    def _cvd(self,*,bound=True,secret=SECRET,now=OBSERVED):
+    def _cvd(self,*,bound=True,secret=SECRET,now=OBSERVED,doc=None):
         return cvd.append(
             self.private,self.event,QUALITY,
             source_collected_at=iso(OBSERVED),
             hmac_secret=secret,now=now,
-            source_document=self.doc if bound else None)
+            source_document=(self.doc if doc is None else doc)
+            if bound else None)
 
     def _triage(self,at=NOW+timedelta(seconds=5),secret=SECRET):
         a=self.main.total_changes
@@ -162,6 +163,32 @@ class TripleCausalTriageTests(unittest.TestCase):
         report=self._triage(secret=b"other-authorized-private-secret!!")
         self.assertEqual(report["exactSnapshotTriples"],0)
         self.assertEqual(report["sourceBoundCvdEvents"],1)
+
+    def test_same_market_and_detection_but_different_document_is_unknown(self):
+        self._proof()
+        changed=json.loads(json.dumps(self.doc))
+        # This H1 change leaves the exact M15 CVD event intact, but the
+        # full source document is NOT the source of the price evidence.
+        changed["timeframes"]["H1"][-1]["h"]+=0.001
+        self._cvd(doc=changed)
+        out=self._triage()
+        self.assertEqual(out["validLocalCotPricePairs"],1)
+        self.assertEqual(out["privateCvdEvents"],1)
+        self.assertEqual(out["exactSnapshotTriples"],0)
+        self.assertEqual(out["distinctSignalsWithExactCVD"],0)
+
+    def test_future_cvd_event_is_invisible_in_earlier_asof_counts(self):
+        self._proof()
+        self._cvd(now=NOW+timedelta(seconds=30))
+        before=self._triage(at=NOW+timedelta(seconds=5))
+        self.assertEqual(before["validLocalCotPricePairs"],1)
+        self.assertEqual(before["privateCvdEvents"],0)
+        self.assertEqual(before["sourceBoundCvdEvents"],0)
+        self.assertEqual(before["exactSnapshotTriples"],0)
+        after=self._triage(at=NOW+timedelta(seconds=60))
+        self.assertEqual(after["privateCvdEvents"],1)
+        self.assertEqual(after["sourceBoundCvdEvents"],1)
+        self.assertEqual(after["exactSnapshotTriples"],0)
 
     def test_later_event_cannot_create_an_earlier_signal(self):
         self._proof()
