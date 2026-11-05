@@ -73,6 +73,9 @@ PREPARED_STAMP = b"05/11/2026 16:00 (Italia, preparazione)"
 WORKFLOWS = ("price-checks.yml", "insights-checks.yml")
 ALLOWED = set(FILES) | {
     "tests/splash.test.js", "tests/release-consistency.test.js",
+    "tests/test_release_v158.py", "tests/test_release_v159.py",
+    "tests/test_release_v160.py", "tests/test_release_v161.py",
+    "tests/price-status.test.js", "tests/statistica-squali.test.js",
     "tests/test_release_v162.py", "tests/test_release_v163.py",
     "tests/test_reconcile_v163.py",
     "deploy/oracle/release_v163.py", "deploy/oracle/reconcile_v163.py",
