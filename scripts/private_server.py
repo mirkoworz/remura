@@ -64,7 +64,7 @@ SAFE_ASSETS={
     "sources.js","sources.css","capital-cloud-config.js","capital-cloud.js",
     "impostazioni.html","impostazioni.js","feed-health-core.js","price.js","price.css","price-core.js","sw.js",
     "stato-prezzi.html","stato-prezzi.js","price-status-core.js",
-    "manifest.webmanifest","icon.svg",
+    "manifest.webmanifest","icon.svg","splash.js","splash.css","splash-mascot.webp",
     "statistica-squali.html","statistica-squali.js","statistica-squali-core.js",
     "dual24-core.js","dual24-ui.js",
     "market-audit-core.js","market-audit-ui.js",
