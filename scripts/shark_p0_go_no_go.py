@@ -81,9 +81,11 @@ def evaluate(evidence, *, as_of):
         blockers.append("TIMEFRAME_COVERAGE_NOT_34_OF_34_FRESH")
     if (not _number(diag.get("collectorBatches"),low=MIN_SAMPLES,
                     integer=True)
+            or type(diag.get("collectorBatchFailures")) is not int
             or diag.get("collectorBatchFailures")!=0
             or not _number(diag.get("squalincomeScans"),low=MIN_SAMPLES,
                            integer=True)
+            or type(diag.get("squalincomeFailures")) is not int
             or diag.get("squalincomeFailures")!=0):
         blockers.append("BASELINE_COLLECTOR_AND_SQUALINCOME_NOT_CERTIFIED")
     if (diag.get("researchOffOnLive") is not True
@@ -98,7 +100,9 @@ def evaluate(evidence, *, as_of):
             or not _fresh(pilot.get("measuredAt"),now,FRESH)
             or not _number(pilot.get("independentOverlapWindows"),
                            low=MIN_PAIRED_OVERLAPS,integer=True)
+            or type(pilot.get("newBrokerCalls")) is not int
             or pilot.get("newBrokerCalls")!=0
+            or type(pilot.get("scannerBusyErrors")) is not int
             or pilot.get("scannerBusyErrors")!=0):
         blockers.append("REAL_INGEST_OVERLAP_UNMEASURED_OR_UNSAFE")
     if (not _number(pilot.get("baselinePostIngestMedianMs"),low=1)
@@ -129,7 +133,7 @@ def evaluate(evidence, *, as_of):
     firestore=costs.get("firestoreStandard")
     firestore=firestore if isinstance(firestore,dict) else {}
     if (firestore.get("onlyFreeEligibleDatabase") is not True
-            or firestore.get("billingCharge")!=0
+            or not _number(firestore.get("billingCharge"),upper=0)
             or any(not _number(firestore.get(metric),integer=True,
                                upper=int(quota*MAX_QUOTA_FRACTION))
                    for metric,quota in FIRESTORE_STANDARD.items())):
