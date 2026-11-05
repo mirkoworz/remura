@@ -102,7 +102,8 @@ def estimate(*, volume_total, volume_free, price_bytes,
         raise ValueError("capacity_inputs_invalid")
 
     reserve=max(storage.MIN_RESERVE_BYTES,
-                (volume_total+storage.RESERVE_FRACTION_DENOMINATOR-1)
+                (volume_total*storage.RESERVE_FRACTION_NUMERATOR
+                 +storage.RESERVE_FRACTION_DENOMINATOR-1)
                 // storage.RESERVE_FRACTION_DENOMINATOR)
     transient=2*shards.MAX_SHARD_FILE_BYTES
     price_copies=2*price_bytes
