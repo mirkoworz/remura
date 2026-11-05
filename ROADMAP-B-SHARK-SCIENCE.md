@@ -1,12 +1,52 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
 
+## 05/11/2026 ore 20:42 italiane — P0c: riscontro REALE spazio/RAM Oracle, capacity preflight PASS (NO-GO per pilot LIVE)
+
+**Origine:** screenshot Termius fornito dall'utente dalla shell `ubuntu@remura-vnic`, dopo avvio della sonda SHA-pinned **con `sudo -u remura`**. I valori seguenti sono osservazioni di sola lettura di filesystem e /proc, non telemetria cronologica, non fatture e non prove di concorrenza reale.
+
+| Metrica sonda | Risultato |
+|---|---:|
+| `dataVolumeTotalMiB` | **45129 MiB** (~44,1 GiB) |
+| `dataVolumeAvailableMiB` | **41459 MiB** (~40,5 GiB) |
+| `priceSqliteAndCurrentSidecarsMiB` | **10 MiB** |
+| `hostMemAvailableMiB` | **665 MiB** |
+| `reservePolicyMiB` | **4513 MiB** (~4,4 GiB) |
+| `oneShardWithTwoCopiesAndReserveMiB` | **4838 MiB**, `oneShardEnvelopeFitsCurrentFree: true` |
+| `full64ShardsWithTwoCopiesAndReserveMiB` | **16373 MiB**, `full64ShardEnvelopeFitsCurrentFree: true` |
+| `additionalPriceBackupAndRestoreMiB` | **20 MiB** |
+| `tmpSameFilesystemAsPrivate` | **true** |
+| `actualExistingCvdShardCount` | **null / NON osservato** |
+| `actualOracleChargesVerified`, `volumeAlwaysFreeEligibleVerified` | **false / NON verificati** |
+| `livePriceIngestInterferenceMeasured` | **false** |
+| `researchMayBeEnabled` | **false** |
+| `status` | **NO_GO_REAL_P0B_P0C_UNVERIFIED** |
+
+- [x] Sonda autorizzata ora ha ottenuto metadati reali. Il precedente `NO_GO_METADATA_UNVERIFIED` era **coerente con la directory 0700 di remura**; la seconda lettura con utenza di servizio è riuscita. Il risultato non richiede correzioni sui permessi, né `sudo` root, né alterazioni database.
+- [x] **P0c sottogate SPAZIO LOCALE = PRECHECK PASS:** il modello conservativo (1 segmento o cap massimo 64 con snapshot+restore e margine, su **quello stesso filesystem** `/tmp`/dati) rientra nello spazio osservato. Il modello di 16373 MiB è un envelope teorico, **non** 16 GiB realmente allocati o CVD già registrato; non prova capienza su crescita indefinita, budget cloud, COT extra, snapshot intera VM o power-loss.
+- [ ] **P0b RAM/CPU = NO-GO:** `MemAvailable=665 MiB` è un singolo campione Linux e non identifica `MemTotal`, lo swap, pressione, consumo della unità `remura-private.service` o CPU; vietato iniziare test 34×4000, replay o CVD live senza conoscere margine per collector/sito. Screenshot mostra `x86_64`, compatibile con AMD E2.1.Micro ma **shape NON attestata**. Oracle documenta per E2.1.Micro 1 GB RAM e 1/8 OCPU: https://docs.oracle.com/it-it/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm.
+- [ ] **PROSSIMO PASSO A RISCHIO MINIMO:** unico comando Linux senza `sudo`, esclusivamente `free`, `systemctl show` e lettura `/proc/pressure/memory` e `uptime` per osservare RAM totale, swap, stato e memoria di REMURA e load corrente. Non aprire database, non testare saturazione, non cambiare servizi o orari, non esportare nomi file, OHLC o segreti.
+
+~~~bash
+printf 'REMURA_P0B_MEMORY_READONLY\n'
+free -m
+systemctl show remura-private.service -p ActiveState -p MainPID -p MemoryCurrent -p MemoryPeak --no-pager
+cat /proc/pressure/memory
+uptime
+~~~
+
+- [ ] **P0c COSTI/QUOTE = NO-GO:** la capacità locale non attesta disponibilità risorse Always Free, tipo istanza, volume boot e block combinati, console OCI, storage/egress Firestore o minuti/archivi GitHub Actions; 0€ riferiti precedentemente non verificano nuove risorse. Nessun nuovo volume/servizio richiesto; conservare vecchi budget e alert.
+- [ ] **P0b raccolta prezzi reale = NO-GO:** prima adottare come baseline il sito/collector esistente senza simulare carichi di mercato; considerare eventuale elaborazione pesante **offline** su runner gratuito entro quota, invece di caricare VPS micro. Indipendentemente da capienza, NON abilitare recorder CVD finché non passano gate origine dati, backup HMAC/recovery e OOS.
+- [x] Nessun cambiamento alla LIVE v1.64 comunicata, loading/notifiche intatti; branch B resta PR #89 DRAFT, nessun merge né attivazione CVD. Dati empirici di vantaggio trader istituzionale ancora insufficienti.
+
+
+
 ## 05/11/2026 ore ~20:35 italiane — Prima prova P0c LIVE: NO_GO_METADATA_UNVERIFIED, accesso non privilegiato
 
 - [x] Ricevuto screenshot Termius (utente shell `ubuntu@remura-vnic`) del comando SHA-pinned: output **`REMURA_B_ORACLE_CAPACITY=NO_GO_METADATA_UNVERIFIED`**. Non sono apparsi valori reali di spazio/RAM. Il valore attesta che il modulo `inspect` non ha potuto leggere almeno un metadato; NON dimostra spazio esaurito, database assente, costo o danno. Nessuna modifica dei dati effettuata dalla sonda.
 - [x] Verifica statica del codice corrente in `deploy/oracle/install.sh`: la cartella `/opt/remura/private` appartiene all'utente di servizio `remura` e ha permessi **0700**; il server usa `/opt/remura/private/remura-prices.sqlite3` (`scripts/private_server.py`), quindi il percorso hardcoded della sonda era corretto per la configurazione standard. L'utente `ubuntu` non può attraversare quella cartella salvo ACL/privilegi specifici. **Causa probabile** del NO_GO: PermissionError, non accertabile con certezza poiché gli errori della sonda sono intenzionalmente redatti.
-- [ ] **Ritenta una sola volta in modalità strettamente limitata usando `sudo -u remura python3 -B - <<'PY'` al posto di `python3 -B - <<'PY'`**; lascia il resto del codice immutabile e con SHA256 verificato nel comando del punto P0c successivo. Non utilizzare `sudo python3`, non concedere chmod o chown, non stampare file segreti e non aprire SQLite. Se ancora NO_GO, ispezionare gli stati di accesso in modo redatto, non forzare permessi. `sudo -u remura` esegue la sola sonda come account del servizio, non come root.
-- [ ] Attendere dati aggregati reali per applicare il gate di capacità. **P0b/P0c rimangono NO-GO**; costo Always Free non certificato; video loading e LIVE v1.64 non toccati. La schermata SSH indica sistema **x86_64**: non attribuire automaticamente il shape ARM A1 della guida all'istanza effettiva; verificare in console OCI shape/Always Free e volumi prima di qualsiasi modifica.
+- [x] **Ripetizione effettuata alle 20:42 con `sudo -u remura` e SHA256 verificato; lettura completata, valori registrati nella nuova sezione.** lascia il resto del codice immutabile e con SHA256 verificato nel comando del punto P0c successivo. Non utilizzare `sudo python3`, non concedere chmod o chown, non stampare file segreti e non aprire SQLite. Se ancora NO_GO, ispezionare gli stati di accesso in modo redatto, non forzare permessi. `sudo -u remura` esegue la sola sonda come account del servizio, non come root.
+- [x] **Ottenuti dati aggregati reali sul disco; PASS solo del sottogate capienza locale.** **P0b/P0c rimangono NO-GO**; costo Always Free non certificato; video loading e LIVE v1.64 non toccati. La schermata SSH indica sistema **x86_64**: non attribuire automaticamente il shape ARM A1 della guida all'istanza effettiva; verificare in console OCI shape/Always Free e volumi prima di qualsiasi modifica.
 
 ## 05/11/2026 — Gate P0c, handoff: una SOLA lettura Oracle, codice immutabile e verificato (nessun deploy)
 
