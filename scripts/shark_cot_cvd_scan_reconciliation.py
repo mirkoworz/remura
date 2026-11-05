@@ -5,6 +5,10 @@ signals must already pass shark_causal_pair_audit (immutable local evidence).
 An original M15 close is joined to the actual, separately stamped CVD
 evaluation attempt on that exact slot. Both original full OHLC SHA and private
 HMAC must match and the attempt must precede the ORIGINAL signal observation.
+In addition, a FIXED seven-slot window (latest close plus previous six M15)
+checks whether all evaluation attempts existed before the same original
+observation. Earlier documents are NOT presumed source-identical merely
+because the slot clocks and original detector statuses are present.
 
 The detector's "new confirmations on this exact closed M15" is NOT a proof
 of no CVD in previous slots, no institutional activity, or lack of a future
@@ -26,8 +30,13 @@ from scripts import shark_cot_asof_witness as witness
 from scripts import shark_cvd_scan_coverage as scans
 from scripts import shark_cvd_source_lineage as lineage
 
-SCHEMA = "remura-track-b-cot-price-cvd-scan-asof-join-v1"
+SCHEMA = "remura-track-b-cot-price-cvd-scan-asof-join-v2"
 MAX_ROWS = scans.MAX_ROWS
+# Six previous M15 closes plus the last close for the original COT signal.
+# A fixed 90-minute lookback, NOT a tuned threshold or an institutional
+# negative-label window. Older intraday pivots may still influence CVD.
+WINDOW_PRIOR_SLOTS = 6
+WINDOW_SLOTS = WINDOW_PRIOR_SLOTS + 1
 
 
 def _report(status, *, valid_pairs=None, groups=None, **extra):
@@ -35,6 +44,12 @@ def _report(status, *, valid_pairs=None, groups=None, **extra):
         "schema": SCHEMA, "status": status,
         "validOriginalCotPricePairs": valid_pairs,
         "joinedScanGroups": groups,
+        "preSignalWindowGroups": None,
+        "preSignalWindowM15Slots": WINDOW_SLOTS,
+        "preSignalWindowSpanMinutes": WINDOW_PRIOR_SLOTS*15,
+        "windowEarlierSourcesCryptographicallyLinked": False,
+        "windowFullEvaluationProvesNoHistoricalDivergence": False,
+        "windowIsCompleteTradingNegativeControl": False,
         "matchedScansProveDirectionalCvdSignal": False,
         "zeroNewTechnicalConfirmationsProveNoPriorCvd": False,
         "noLocalScanIsAnInstitutionalNegative": False,
@@ -88,7 +103,11 @@ def audit(db_main, db_private, *, as_of, days=1, secret):
                            valid_pairs=total)
         # Fetch no more than the maximum bounded append-only scan ledger.
         # One row per market / M15 slot (protected by SQLite PK).
-        low = (now-timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%S")
+        # COT observations can be up to 3h after their original M15 close.
+        # Include that allowed lag PLUS the fixed 90m pre-signal window;
+        # otherwise boundary cohorts could falsely appear to have no scans.
+        low = (now-timedelta(days=days)-cotprice.cot.MAX_CLOSE_DELAY
+               -WINDOW_PRIOR_SLOTS*scans.STEP).strftime("%Y-%m-%dT%H:%M:%S")
         high = now.strftime("%Y-%m-%dT%H:%M:%S")
         rows = db_private.execute(
             f"""SELECT symbol,closed_at,attempted_at,state,source_hmac,
@@ -138,11 +157,45 @@ def audit(db_main, db_private, *, as_of, days=1, secret):
             "UNKNOWN_DIFFERENT_PRICE_SOURCE",
         )
         counts = Counter({n: 0 for n in names})
+        windows = Counter({n: 0 for n in (
+            "WINDOW_ALL_7_LOCALLY_EVALUATED_EARLIER_SOURCES_UNLINKED",
+            "UNKNOWN_WINDOW_MISSING_ATTEMPT",
+            "UNKNOWN_WINDOW_LATE_ATTEMPT",
+            "UNKNOWN_WINDOW_NOT_EVALUABLE",
+            "UNKNOWN_WINDOW_LAST_SOURCE_MISMATCH",
+            "UNKNOWN_WINDOW_NOT_PILOT",
+        )})
         for sym, week, closed, observed, sha, cot_side in original:
             # Do NOT re-read mutable prices or use historical COT cache.
             close_time = witness._parse(closed)
             original_seen = witness._parse(observed)
             entry = indexed.get((sym, close_time))
+            # Window data are a *separate* conservative denominator screen,
+            # not event-level CVD, direction or a verified negative cohort.
+            if sym not in scans.PILOT:
+                windows["UNKNOWN_WINDOW_NOT_PILOT"] += 1
+            else:
+                window = [indexed.get(
+                    (sym, close_time-scans.STEP*i))
+                    for i in range(WINDOW_SLOTS)]
+                if any(row is None for row in window):
+                    windows["UNKNOWN_WINDOW_MISSING_ATTEMPT"] += 1
+                elif any(row[0] > original_seen or row[0] > now
+                         for row in window):
+                    windows["UNKNOWN_WINDOW_LATE_ATTEMPT"] += 1
+                elif any(row[1] != "EVALUATED" for row in window):
+                    windows["UNKNOWN_WINDOW_NOT_EVALUABLE"] += 1
+                elif not hmac.compare_digest(
+                        window[0][2], lineage._mac(secret, sha)):
+                    windows["UNKNOWN_WINDOW_LAST_SOURCE_MISMATCH"] += 1
+                else:
+                    # All seven attempts existed on time and ran the
+                    # detector. Earlier full-document HMACs necessarily
+                    # differ as more M15 arrive, so this does NOT establish
+                    # a common causal source chain or absence of divergence.
+                    windows[
+                        "WINDOW_ALL_7_LOCALLY_EVALUATED_EARLIER_SOURCES_UNLINKED"
+                    ] += 1
             if entry is None:
                 counts["UNKNOWN_MISSING_ATTEMPT"] += 1
                 continue
@@ -160,10 +213,15 @@ def audit(db_main, db_private, *, as_of, days=1, secret):
                 counts["MATCHED_EVALUATION_ZERO_NEW_LOCAL_CVD"] += 1
         if sum(counts.values()) != total:
             raise ValueError("nonconserving_original_signal_denominator")
+        if sum(windows.values()) != total:
+            raise ValueError("nonconserving_presignal_window_denominator")
         return _report(
             "LOCAL_M15_SCAN_TO_ORIGINAL_COT_PRICE_AUDITED_ONLY",
             valid_pairs=total,
             groups=dict(sorted(counts.items())),
+            preSignalWindowGroups=dict(sorted(windows.items())),
+            windowObservedSlotsOnlyNotCertifiedInstitutionalNoSignal=True,
+            windowDoesNotCoverAllSessionPivotHistory=True,
             allMatchedScansStillOnlyTechnicalCLVTickProxy=True,
             full34PriceOnlyDenominatorChanged=False,
             originalSignalMarketUniverse="original_cot_price_pairs_not_34_markets",
