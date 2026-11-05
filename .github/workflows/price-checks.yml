@@ -23,6 +23,10 @@ on:
       - 'tests/test_h1_paired_store.py'
       - 'deploy/oracle/release_v162.py'
       - 'deploy/oracle/release_v163.py'
+      - 'deploy/oracle/release_v164.py'
+      - 'deploy/oracle/reconcile_v164.py'
+      - 'tests/test_release_v164.py'
+      - 'tests/test_reconcile_v164.py'
       - 'deploy/oracle/reconcile_v163.py'
       - 'tests/test_release_v163.py'
       - 'tests/test_reconcile_v163.py'
@@ -210,6 +214,10 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_release_v163.py' -v
       - name: Test v1.63 immutable reconciliation, offline
         run: python -m unittest discover -s tests -p 'test_reconcile_v163.py' -v
+      - name: Test v1.64 cinematic guarded release and DB restore gate, offline
+        run: python -m unittest discover -s tests -p 'test_release_v164.py' -v
+      - name: Test v1.64 exact 15-file SHA state reconciliation, offline
+        run: python -m unittest discover -s tests -p 'test_reconcile_v164.py' -v
       - run: python -m unittest discover -s tests -p 'test_signals_monitor.py' -v
       - run: python -m unittest discover -s tests -p 'test_statistical_validation.py' -v
       - run: python -m unittest discover -s tests -p 'test_dual24_validation.py' -v

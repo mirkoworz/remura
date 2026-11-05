@@ -64,18 +64,18 @@ class ReleaseV163Tests(unittest.TestCase):
         nav=(ROOT/"nav.js").read_text()
         home=(ROOT/"index.html").read_text()
         backend=(ROOT/"scripts/private_server.py").read_text()
-        self.assertIn("Aggiornamento v1.63",nav)
-        self.assertIn("remura-shell-v77-v1.63-shark-splash",sw)
+        self.assertIn("Aggiornamento v1.64",nav)
+        self.assertIn("remura-shell-v78-v1.64-shark-cinematic",sw)
         self.assertIn('url.pathname.includes("/private-api/")',sw)
         for name in m.NEW_FILES:
             self.assertIn('"'+name+'"',backend)
             self.assertIn('./'+name,sw)
             self.assertTrue((ROOT/name).is_file())
-        self.assertIn("splash.js?v=163",home)
-        self.assertIn("splash.css?v=163",home)
+        self.assertIn("splash.js?v=164",home)
+        self.assertIn("splash.css?v=164",home)
         for name in m.FILES:
             if name.endswith(".html"):
-                self.assertIn("nav.js?v=163",(ROOT/name).read_text(),name)
+                self.assertIn("nav.js?v=164",(ROOT/name).read_text(),name)
 
     def test_existing_h1_gate_is_preserved_and_not_disabled(self):
         backend=(ROOT/"scripts/private_server.py").read_text()

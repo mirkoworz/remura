@@ -1,4 +1,4 @@
-/* REMURA splash v1 preview - isolated to the installed application's start page. */
+/* REMURA splash v1.64 cinematic Option B - isolated to the installed application's start page. */
 #rm-splash[hidden]{display:none!important}
 #rm-splash{position:fixed;inset:0;z-index:30000;display:grid;place-items:center;
   overflow:auto;background:radial-gradient(ellipse at 50% 12%,#0e596c 0%,#082c43 36%,#041421 80%);
@@ -22,11 +22,11 @@
 .rm-splash-shark,.rm-splash-fish{position:absolute;display:block;filter:drop-shadow(0 1px 10px #35f5df55)}
 .rm-splash-shark{left:2%;top:16%;width:36%;height:75%}
 .rm-splash-fish{left:var(--rm-fish-left,84%);top:51%;width:16%;height:36%;transform:translateY(-50%);
-  transition:left 1.15s cubic-bezier(.2,.78,.18,1),filter .22s}
+  transition:left .72s linear,filter .22s}
 .rm-splash-fish.rm-splash-attached{filter:drop-shadow(0 0 16px #8bf9dc)}
 .rm-splash-progress-wrap{width:100%;margin-top:10px}
 .rm-splash-progress-track{height:11px;border:1px solid #64ddceaa;border-radius:99px;overflow:hidden;background:#164253;box-shadow:0 0 12px #14a9c455}
-.rm-splash-progress-fill{width:var(--rm-progress,0%);height:100%;border-radius:99px;transition:width .6s ease;
+.rm-splash-progress-fill{width:var(--rm-progress,0%);height:100%;border-radius:99px;transition:width .72s linear;
   background:linear-gradient(90deg,#1fc9b6,#83ffe2);box-shadow:0 0 14px #71ffca}
 .rm-splash-progress-meta{display:flex;justify-content:space-between;gap:12px;margin:8px 0 0;font-size:12px;color:#bbede3;font-weight:700}
 .rm-splash-state{color:#d5f9f2;font-size:13px;margin:0;min-height:19px}
