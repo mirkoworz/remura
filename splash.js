@@ -83,7 +83,7 @@
     };
     splash.querySelector(".rm-splash-release").textContent="REMURA · Caricamento app";
     syncRelease();
-    document.addEventListener("DOMContentLoaded",syncRelease,{once:true});
+    document.addEventListener("DOMContentLoaded",() => setTimeout(syncRelease,0),{once:true});
     let progress=0,closed=false;
     function update(value,message) {
       if(closed)return;
