@@ -42,6 +42,40 @@ class CvdSignalScanJoinTests(unittest.TestCase):
             source_document=self.doc if doc is None else doc,
             clock=at, secret=SECRET)
 
+    def record_window(self, *, missing=(), unavailable=(),
+                      altered_latest=False, late_latest=False):
+        """Seven genuine detector invocations, each from its OWN past slice.
+
+        The earlier snapshots have different complete-document SHA values;
+        do not reuse the eventual 11:00 source for older M15 closes.
+        """
+        for distance in range(join.WINDOW_PRIOR_SLOTS, -1, -1):
+            if distance in missing:
+                continue
+            closed = CLOSE - timedelta(minutes=15*distance)
+            earlier = copy.deepcopy(self.doc)
+            if distance:
+                earlier["timeframes"]["M15"] = earlier[
+                    "timeframes"]["M15"][:-distance]
+                earlier["lastComplete"] = earlier["timeframes"]["M15"][-1]["t"]
+                for frame, span in (
+                        ("H1", timedelta(hours=1)),
+                        ("H4", timedelta(hours=4))):
+                    earlier["timeframes"][frame] = [
+                        bar for bar in earlier["timeframes"][frame]
+                        if witness._parse(bar["t"])+span <= closed]
+            if distance == 0 and altered_latest:
+                earlier["timeframes"]["H1"][-1]["h"] += 0.001
+            at = closed + timedelta(minutes=2 if
+                                    (distance == 0 and late_latest) else 1)
+            result = scans.record(
+                self.private, symbol="EURUSD", slot_closed_at=iso(closed),
+                source_document=None if distance in unavailable else earlier,
+                clock=at, secret=SECRET)
+            self.assertEqual(
+                result["status"],
+                "NOT_EVALUABLE" if distance in unavailable else "EVALUATED")
+
     def audit(self, *, at=NOW+timedelta(seconds=5)):
         before = self.main.total_changes, self.private.total_changes
         result = join.audit(self.main, self.private, as_of=iso(at),
@@ -65,6 +99,73 @@ class CvdSignalScanJoinTests(unittest.TestCase):
         self.assertEqual(out["edge"], "NOT_ESTABLISHED")
         self.assertNotIn(self.doc["providerSymbol"], json.dumps(out))
         self.assertNotIn("1.015", json.dumps(out))
+
+    def test_seven_consecutive_real_detector_invocations_are_only_local_coverage(self):
+        self.prove()
+        self.record_window()
+        out = self.audit()
+        groups = out["preSignalWindowGroups"]
+        self.assertEqual(out["preSignalWindowM15Slots"], 7)
+        self.assertEqual(out["preSignalWindowSpanMinutes"], 90)
+        self.assertEqual(sum(groups.values()), 1)
+        self.assertEqual(groups[
+            "WINDOW_ALL_7_LOCALLY_EVALUATED_EARLIER_SOURCES_UNLINKED"], 1)
+        self.assertEqual(out["joinedScanGroups"][
+            "MATCHED_EVALUATION_ZERO_NEW_LOCAL_CVD"], 1)
+        self.assertFalse(out["windowEarlierSourcesCryptographicallyLinked"])
+        self.assertFalse(out["windowFullEvaluationProvesNoHistoricalDivergence"])
+        self.assertFalse(out["windowIsCompleteTradingNegativeControl"])
+        self.assertFalse(out["independentBrokerClockVerified"])
+        self.assertEqual(out["institutionalNegativeControlsAdmissible"], 0)
+        self.assertNotIn(self.doc["providerSymbol"], json.dumps(out))
+
+    def test_one_missing_older_m15_invalidates_pre_signal_window_only(self):
+        self.prove()
+        self.record_window(missing=(3,))
+        out = self.audit()
+        self.assertEqual(out["preSignalWindowGroups"][
+            "UNKNOWN_WINDOW_MISSING_ATTEMPT"], 1)
+        # The terminal single-slot proof is still valid; earlier history
+        # CANNOT be declared complete just because the terminal one matches.
+        self.assertEqual(out["joinedScanGroups"][
+            "MATCHED_EVALUATION_ZERO_NEW_LOCAL_CVD"], 1)
+        self.assertEqual(out["institutionalNegativeControlsAdmissible"], 0)
+
+    def test_one_explicit_not_evaluable_m15_invalidates_window(self):
+        self.prove()
+        self.record_window(unavailable=(3,))
+        out = self.audit()
+        self.assertEqual(out["preSignalWindowGroups"][
+            "UNKNOWN_WINDOW_NOT_EVALUABLE"], 1)
+        self.assertEqual(out["joinedScanGroups"][
+            "MATCHED_EVALUATION_ZERO_NEW_LOCAL_CVD"], 1)
+
+    def test_last_m15_source_mutation_invalidates_window_without_changing_clocks(self):
+        self.prove()
+        self.record_window(altered_latest=True)
+        out = self.audit()
+        self.assertEqual(out["preSignalWindowGroups"][
+            "UNKNOWN_WINDOW_LAST_SOURCE_MISMATCH"], 1)
+        self.assertEqual(out["joinedScanGroups"][
+            "UNKNOWN_DIFFERENT_PRICE_SOURCE"], 1)
+
+    def test_one_late_scan_cannot_create_pre_signal_window_retroactively(self):
+        early = CLOSE + timedelta(minutes=1)
+        self.prove(observed=early)
+        self.record_window(late_latest=True)
+        out = self.audit()
+        self.assertEqual(out["preSignalWindowGroups"][
+            "UNKNOWN_WINDOW_LATE_ATTEMPT"], 1)
+        self.assertEqual(out["joinedScanGroups"][
+            "UNKNOWN_ATTEMPT_NOT_YET_KNOWN_AT_SIGNAL"], 1)
+
+    def test_no_pilot_window_without_scans_is_never_a_negative(self):
+        self.prove()
+        out = self.audit()
+        self.assertEqual(out["preSignalWindowGroups"][
+            "UNKNOWN_WINDOW_MISSING_ATTEMPT"], 1)
+        self.assertEqual(out["institutionalNegativeControlsAdmissible"], 0)
+        self.assertEqual(out["netOutcomesAdmissible"], 0)
 
     def test_no_scan_is_unknown_not_negative(self):
         self.prove()
