@@ -1,6 +1,46 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
 
+## 05/11/2026 ore 20:46 italiane — P0b: baseline REALE memoria, swap, servizio e carico VPS (nessun benchmark)
+
+**Origine:** screenshot Termius inviato dall'utente con il comando read-only `free -m; systemctl show remura-private.service ...; cat /proc/pressure/memory; uptime`. Questi sono **un campione** della VPS, non un carico di ricerca CVD e non una serie durante ingest di cTrader. La precedente misura di spazio reale alle 20:42 rimane valida soltanto come snapshot del volume.
+
+| Voce | Osservato |
+|---|---|
+| Mem totale VPS | **952 MiB** |
+| Mem usata secondo `free -m` | **315 MiB** |
+| Mem libera stretta | **116 MiB** |
+| Mem buff/cache | **548 MiB** (recuperabile almeno in parte, NON perdita) |
+| Mem disponibile | **636 MiB** (rispetto ai 665 MiB del campione precedente) |
+| Swap totale/usata/libera | **1023 / 15 / 1008 MiB** |
+| `remura-private.service` | **ActiveState=active**, MainPID=89776 al momento dello screenshot |
+| Memoria cgroup servizio (MemoryCurrent) | **103.751.680 B = 98,95 MiB** |
+| Picco memoria cgroup servizio (MemoryPeak) | **124.469.248 B = 118,70 MiB** |
+| PSI memory some/full | **avg10/avg60/avg300 = 0,00%** al momento dello screenshot; contatori total storici non zero, non indicano pressione recente |
+| Load average macchina 1/5/15 min | **0,13 / 0,09 / 0,08** |
+| Uptime | **16 giorni 3h45** |
+
+- [x] **P0b baseline idle/resource observation = PASS raccolta evidenza:** REMURA attiva, uso RAM cgroup ~99 MiB, nessuna pressione di memoria negli intervalli PSI osservati, swap limitato. Sono dati rassicuranti sul funzionamento CORRENTE; `load average` **non** è una misura diretta di percentuale CPU né prova margine di quota 1/8 OCPU.
+- [ ] **P0b performance sotto ingest reale = NO-GO:** non sono stati misurati latenze batch prezzi, coesistenza con recorder, crescita RAM durante ingest o quota CPU effettiva; rimangono vietati esperimenti intensivi 34×4000 o attivazioni CVD sulla micro istanza. Possibile alternativa progettuale: calcoli pesanti OFFLINE GitHub Actions, sotto quote già verificate e senza inviare dati privati nei log.
+- [ ] **PROSSIMA MISURA SICURA senza scritture:** tre campioni a intervalli di 15s del servizio e PSI CPU/I/O, solo lettura e senza broker calls. La macchina continua a svolgere normalmente il suo lavoro; se CPUUsageNSec risulta n/a, NON concludere CPU=0.
+
+~~~bash
+printf 'REMURA_P0B_CPU_PASSIVE_THREE_SAMPLES\n'
+for i in 1 2 3; do
+  printf 'CAMPIONE_%s\n' "$i"
+  date -u '+UTC=%Y-%m-%dT%H:%M:%SZ'
+  systemctl show remura-private.service -p ActiveState -p CPUUsageNSec -p MemoryCurrent -p TasksCurrent --no-pager
+  cat /proc/pressure/cpu
+  cat /proc/pressure/io
+  if [ "$i" -lt 3 ]; then sleep 15; fi
+done
+~~~
+
+- [ ] **P0c billing = NON ATTESTATO**: la macchina è x86_64 con ~1 GiB, dunque compatibile con Oracle E2.1.Micro ma NON ancora shape verificata. Oracle documenta 1/8 OCPU con possibilità di utilizzare capacità CPU extra, non un carico garantito; verificare **Compute → Instances → Shape** e stato Always Free in console. Fonte: https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm. Costi console/account separati da prestazioni, piano gratuito non deducibile da `free`.
+- [x] Nessun codice LIVE, daemon, DB, credenziale o file modificato da questa verifica. Versione LIVE di riferimento **v1.64**, loading personalizzato e notifiche intatti, PR #89 DRAFT. Nessuna pretesa di edge statistico COT/CVD.
+
+
+
 ## 05/11/2026 ore 20:42 italiane — P0c: riscontro REALE spazio/RAM Oracle, capacity preflight PASS (NO-GO per pilot LIVE)
 
 **Origine:** screenshot Termius fornito dall'utente dalla shell `ubuntu@remura-vnic`, dopo avvio della sonda SHA-pinned **con `sudo -u remura`**. I valori seguenti sono osservazioni di sola lettura di filesystem e /proc, non telemetria cronologica, non fatture e non prove di concorrenza reale.
@@ -25,7 +65,7 @@
 - [x] Sonda autorizzata ora ha ottenuto metadati reali. Il precedente `NO_GO_METADATA_UNVERIFIED` era **coerente con la directory 0700 di remura**; la seconda lettura con utenza di servizio è riuscita. Il risultato non richiede correzioni sui permessi, né `sudo` root, né alterazioni database.
 - [x] **P0c sottogate SPAZIO LOCALE = PRECHECK PASS:** il modello conservativo (1 segmento o cap massimo 64 con snapshot+restore e margine, su **quello stesso filesystem** `/tmp`/dati) rientra nello spazio osservato. Il modello di 16373 MiB è un envelope teorico, **non** 16 GiB realmente allocati o CVD già registrato; non prova capienza su crescita indefinita, budget cloud, COT extra, snapshot intera VM o power-loss.
 - [ ] **P0b RAM/CPU = NO-GO:** `MemAvailable=665 MiB` è un singolo campione Linux e non identifica `MemTotal`, lo swap, pressione, consumo della unità `remura-private.service` o CPU; vietato iniziare test 34×4000, replay o CVD live senza conoscere margine per collector/sito. Screenshot mostra `x86_64`, compatibile con AMD E2.1.Micro ma **shape NON attestata**. Oracle documenta per E2.1.Micro 1 GB RAM e 1/8 OCPU: https://docs.oracle.com/it-it/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm.
-- [ ] **PROSSIMO PASSO A RISCHIO MINIMO:** unico comando Linux senza `sudo`, esclusivamente `free`, `systemctl show` e lettura `/proc/pressure/memory` e `uptime` per osservare RAM totale, swap, stato e memoria di REMURA e load corrente. Non aprire database, non testare saturazione, non cambiare servizi o orari, non esportare nomi file, OHLC o segreti.
+- [x] **Diagnostica RAM read-only eseguita alle 20:46**: risultato sintetizzato nella sezione P0b sopra; nessun impatto sui servizi. Non aprire database, non testare saturazione, non cambiare servizi o orari, non esportare nomi file, OHLC o segreti.
 
 ~~~bash
 printf 'REMURA_P0B_MEMORY_READONLY\n'
@@ -45,7 +85,7 @@ uptime
 
 - [x] Ricevuto screenshot Termius (utente shell `ubuntu@remura-vnic`) del comando SHA-pinned: output **`REMURA_B_ORACLE_CAPACITY=NO_GO_METADATA_UNVERIFIED`**. Non sono apparsi valori reali di spazio/RAM. Il valore attesta che il modulo `inspect` non ha potuto leggere almeno un metadato; NON dimostra spazio esaurito, database assente, costo o danno. Nessuna modifica dei dati effettuata dalla sonda.
 - [x] Verifica statica del codice corrente in `deploy/oracle/install.sh`: la cartella `/opt/remura/private` appartiene all'utente di servizio `remura` e ha permessi **0700**; il server usa `/opt/remura/private/remura-prices.sqlite3` (`scripts/private_server.py`), quindi il percorso hardcoded della sonda era corretto per la configurazione standard. L'utente `ubuntu` non può attraversare quella cartella salvo ACL/privilegi specifici. **Causa probabile** del NO_GO: PermissionError, non accertabile con certezza poiché gli errori della sonda sono intenzionalmente redatti.
-- [x] **Ripetizione effettuata alle 20:42 con `sudo -u remura` e SHA256 verificato; lettura completata, valori registrati nella nuova sezione.** lascia il resto del codice immutabile e con SHA256 verificato nel comando del punto P0c successivo. Non utilizzare `sudo python3`, non concedere chmod o chown, non stampare file segreti e non aprire SQLite. Se ancora NO_GO, ispezionare gli stati di accesso in modo redatto, non forzare permessi. `sudo -u remura` esegue la sola sonda come account del servizio, non come root.
+- [x] **Ripetizione effettuata alle 20:42 con `sudo -u remura`** e codice SHA256 verificato: lettura completata e valori P0c registrati. Non sono stati modificati permessi o dati; il vecchio NO_GO era coerente con il permesso 0700 della directory privata.
 - [x] **Ottenuti dati aggregati reali sul disco; PASS solo del sottogate capienza locale.** **P0b/P0c rimangono NO-GO**; costo Always Free non certificato; video loading e LIVE v1.64 non toccati. La schermata SSH indica sistema **x86_64**: non attribuire automaticamente il shape ARM A1 della guida all'istanza effettiva; verificare in console OCI shape/Always Free e volumi prima di qualsiasi modifica.
 
 ## 05/11/2026 — Gate P0c, handoff: una SOLA lettura Oracle, codice immutabile e verificato (nessun deploy)
