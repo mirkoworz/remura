@@ -18,6 +18,11 @@ from pathlib import Path
 import stat
 import sys
 
+# Direct execution as python scripts/<tool>.py must import the repository
+# namespace, not a system-wide package with the same name.
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
 from scripts import shark_cvd_storage_gate as storage
 from scripts import shark_cvd_sharded_ledger as shards
 
