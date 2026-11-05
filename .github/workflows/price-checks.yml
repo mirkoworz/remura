@@ -22,6 +22,13 @@ on:
       - 'scripts/h1_paired_store.py'
       - 'tests/test_h1_paired_store.py'
       - 'deploy/oracle/release_v162.py'
+      - 'deploy/oracle/release_v163.py'
+      - 'deploy/oracle/reconcile_v163.py'
+      - 'tests/test_release_v163.py'
+      - 'tests/test_reconcile_v163.py'
+      - 'splash.js'
+      - 'splash.css'
+      - 'splash-mascot.webp'
       - 'deploy/oracle/reconcile_v162.py'
       - 'tests/test_release_v162.py'
       - 'tests/test_reconcile_v162.py'
@@ -199,6 +206,10 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_release_v162.py' -v
       - name: Test v1.62 pinned SHA-only reconciliation and rollback proof
         run: python -m unittest discover -s tests -p 'test_reconcile_v162.py' -v
+      - name: Test v1.63 splash release safety and VPS rollback, offline
+        run: python -m unittest discover -s tests -p 'test_release_v163.py' -v
+      - name: Test v1.63 immutable reconciliation, offline
+        run: python -m unittest discover -s tests -p 'test_reconcile_v163.py' -v
       - run: python -m unittest discover -s tests -p 'test_signals_monitor.py' -v
       - run: python -m unittest discover -s tests -p 'test_statistical_validation.py' -v
       - run: python -m unittest discover -s tests -p 'test_dual24_validation.py' -v
