@@ -24,7 +24,8 @@ from scripts import shark_price_asof_evidence as price
 SCHEMA = "remura-research-observation-bundle-v1"
 
 
-def record(db, *, history_id, observed_document, clock=None):
+def record(db, *, history_id, observed_document, clock=None,
+           capture_cvd_prefix=False):
     """Record two distinct proofs with one real clock and transaction.
 
     The caller must check the squalincome_history INSERT rowcount==1.
@@ -44,6 +45,21 @@ def record(db, *, history_id, observed_document, clock=None):
         observed_document=observed_document, clock=now)
     available_cot = cot_result["status"] == "FUTURE_OBSERVATION_CERTIFIED_LOCALLY"
     available_price = price_result["status"] == "PRICE_ASOF_SOURCE_VERIFIED"
+    # Only explicitly enabled FUTURE research observations save prefix
+    # proofs. This runs in the SAME original-history SQLite transaction.
+    # No standalone backfill, DB attachment or private CVD database access.
+    prefix_state="OFF"
+    if capture_cvd_prefix:
+        if type(capture_cvd_prefix) is not bool:
+            raise ValueError("explicit_prefix_bool_required")
+        if not (available_cot and available_price):
+            prefix_state="NO_COMPLETE_COT_AND_PRICE_PROOFS"
+        else:
+            from scripts import shark_cvd_prefix_lineage as prefix
+            result_prefix=prefix.capture_main(
+                db,history_id=history_id,original_doc=observed_document,
+                clock=now)
+            prefix_state=result_prefix["status"]
     if available_cot and available_price:
         state = "BOTH_LOCAL_PROOFS_PRESENT"
     elif available_cot or available_price:
@@ -60,6 +76,7 @@ def record(db, *, history_id, observed_document, clock=None):
             available_price and price_result["m15H1H4FreshAtOriginalObservation"]),
         "last16TickVolumeComplete": bool(
             available_price and price_result["last16TickVolumeComplete"]),
+        "cvdSessionPrefixProof": prefix_state,
         "cvdAggressorFlowMeasured": False,
         "pricedExecutionCostsKnown": False,
         "historicEventBackfillPerformed": False,
