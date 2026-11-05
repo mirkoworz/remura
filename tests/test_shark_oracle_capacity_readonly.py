@@ -10,6 +10,8 @@ from pathlib import Path
 import os
 import sqlite3
 import tempfile
+import subprocess
+import sys
 import unittest
 from unittest.mock import patch
 
@@ -157,6 +159,18 @@ class CapacityReadOnlyTests(unittest.TestCase):
         self.assertEqual(output.getvalue().strip(),
                          "REMURA_B_ORACLE_CAPACITY=NO_GO_METADATA_UNVERIFIED")
         self.assertNotIn("private-sensitive-path",output.getvalue())
+
+    def test_standalone_executes_outside_repository_without_pycache(self):
+        script=Path(capacity.__file__).resolve()
+        with tempfile.TemporaryDirectory(prefix="remura-standalone-check-") as folder:
+            completed=subprocess.run(
+                [sys.executable,"-B",str(script),"--self-check"],
+                cwd=folder,env={**os.environ,"PYTHONPATH":""},
+                capture_output=True,text=True,timeout=10,check=False)
+            self.assertEqual(completed.returncode,0,completed.stderr)
+            self.assertEqual(completed.stdout.strip(),
+                             "REMURA_B_ORACLE_CAPACITY_SELF_CHECK=PASS")
+            self.assertEqual(list(Path(folder).iterdir()),[])
 
     def test_self_check_is_offline_and_produces_no_files(self):
         output=io.StringIO()
