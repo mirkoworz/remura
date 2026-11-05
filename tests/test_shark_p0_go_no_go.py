@@ -132,6 +132,29 @@ class P0GateTests(unittest.TestCase):
                        "GITHUB_PRIVATE_BILLED_MINUTES_OR_COST_UNKNOWN"):
             self.assertIn(reason,out["unresolvedChecks"])
 
+    def test_boolean_false_is_not_a_valid_measured_zero(self):
+        for scope,field,reason in (
+            ("liveDiagnostic","collectorBatchFailures",
+             "BASELINE_COLLECTOR_AND_SQUALINCOME_NOT_CERTIFIED"),
+            ("liveDiagnostic","squalincomeFailures",
+             "BASELINE_COLLECTOR_AND_SQUALINCOME_NOT_CERTIFIED"),
+            ("controlledLiveOverlap","newBrokerCalls",
+             "REAL_INGEST_OVERLAP_UNMEASURED_OR_UNSAFE"),
+            ("controlledLiveOverlap","scannerBusyErrors",
+             "REAL_INGEST_OVERLAP_UNMEASURED_OR_UNSAFE"),
+        ):
+            with self.subTest(field=field):
+                doc=prospective_synthetic()
+                doc[scope][field]=False
+                self.assertIn(
+                    reason,
+                    gate.evaluate(doc,as_of=NOW)["unresolvedChecks"])
+        doc=prospective_synthetic()
+        doc["accountConsoleUsage"]["firestoreStandard"]["billingCharge"]=False
+        self.assertIn(
+            "FIRESTORE_READ_WRITE_STORAGE_OR_EGRESS_UNKNOWN",
+            gate.evaluate(doc,as_of=NOW)["unresolvedChecks"])
+
     def test_unbounded_or_unzoned_clock_cannot_qualify(self):
         d=prospective_synthetic()
         with self.assertRaises(ValueError):
