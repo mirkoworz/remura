@@ -183,6 +183,25 @@ def _fold(row, train_end, validate_end, embargo):
     return "test" if observed >= validate_end+embargo else "purged"
 
 
+def _chronological_nonoverlap(rows):
+    """Conservative single-exposure screen, NEVER a portfolio backtest.
+
+    The earliest observed entry wins; skip any later candidate while it is
+    active. A known exit is consulted only to decide whether the next entry
+    occurs AFTER that exit. No optimizing the subset on returns, profit,
+    direction or which trade happened to end first. Cross-market simultaneity
+    is treated as overlap, deliberately reducing false sample confidence.
+    """
+    kept = []
+    active_until = None
+    for row in sorted(rows, key=lambda r: (
+            r["entry"], r["symbol"], r["observed"], r["exit"])):
+        if active_until is None or row["entry"] >= active_until:
+            kept.append(row)
+            active_until = row["exit"]
+    return kept
+
+
 def _stats(rows):
     n = len(rows)
     wins = sum(x["netR"] > 0 for x in rows)
@@ -193,12 +212,33 @@ def _stats(rows):
         cumulative += x["netR"]
         peak = max(peak, cumulative)
         max_dd = max(max_dd, peak-cumulative)
+    # 30 alerts are NOT 30 exposures: duplicates and overlapping signal
+    # windows can inflate sample size. This is only an information screen,
+    # not proof of independence or a confidence interval.
+    disjoint = _chronological_nonoverlap(rows)
+    iso_weeks = len({
+        (r["entry"].isocalendar().year, r["entry"].isocalendar().week)
+        for r in disjoint
+    })
+    sufficient = (len(disjoint) >= MIN_OBSERVATIONS and iso_weeks >= 8)
+    disjoint_wins = sum(x["netR"] > 0 for x in disjoint)
     return {
         "samples": n, "netPositive": wins, "netNonPositive": n-wins,
         "meanNetR": round(sum(x["netR"] for x in rows)/n, 5) if n else None,
         "profitFactor": round(positive/negative, 5) if negative else None,
         "maxSequentialDrawdownR": round(max_dd, 5) if n else None,
-        "netHitPct": round(100*wins/n, 2) if n >= MIN_OBSERVATIONS else None,
+        # Keep the original all-alert rate hidden if any alerts overlap.
+        "netHitPct": (round(100*wins/n, 2)
+                      if sufficient and len(disjoint) == n else None),
+        # Chronologically selected, non-overlapping *descriptive* subset.
+        "timeDisjointEpisodeCount": len(disjoint),
+        "timeDisjointIsoWeeks": iso_weeks,
+        "timeDisjointHitPct": (round(100*disjoint_wins/len(disjoint), 2)
+                               if sufficient else None),
+        "hitRateGate": ("DESCRIPTIVE_ONLY_NOT_INDEPENDENT"
+                        if sufficient else "INSUFFICIENT_DISJOINT_WEEKS"),
+        "timeDisjointIsIndependentSampling": False,
+        "overlappingAlertsExcludedOnlyFromEpisodeScreen": n-len(disjoint),
         "sampleWarning": "DESCRIPTIVE_CORRELATED_NOT_PORTFOLIO",
     }
 
