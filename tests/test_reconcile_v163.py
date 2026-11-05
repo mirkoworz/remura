@@ -23,8 +23,8 @@ STAMP=b"05/11/2026 19:15 (Italia)"
 class ReconcileV163Tests(unittest.TestCase):
     def test_pins_and_strict_diff_policy(self):
         self.assertEqual(m.OLD,"1568edefabc7bbdb7d06485d2b863b196a4e6155")
-        self.assertEqual(m.RELEASE_SHA,"378a3a3fa29802565b8d3990c9c2dfe476cd2777")
-        self.assertEqual(m.RELEASE_BLOB,"8ee75ef7964805431d19f2c725baa017a663797c")
+        self.assertEqual(m.RELEASE_SHA,"21281734e8e10540e57fef15d0cb728b890f8cd0")
+        self.assertEqual(m.RELEASE_BLOB,"0214b8baf5ed3bdefebb21bbfd08204c8d99dd45")
         self.assertEqual(m.PREPARED_STAMP,b"05/11/2026 16:00 (Italia, preparazione)")
         self.assertIn("splash-mascot.webp",m.ALLOWED_CODE)
         self.assertNotIn("scripts/update_capital.py",m.ALLOWED_CODE)
