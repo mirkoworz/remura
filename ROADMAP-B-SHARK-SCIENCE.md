@@ -1,5 +1,39 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
+## 05/11/2026 — Gate B-P0 LIVE e COSTI: prima valutazione con evidenze REALI + NO-GO automatizzato solo offline
+
+**Stato reale:** PR [#89](https://github.com/mirkoworz/remura/pull/89) DRAFT, LIVE v1.62 e `main` invariati, TRACK A #88 non toccato, collector privato invariato. NESSUN nuovo test Oracle, segnale, broker GET, deploy o servizio cloud. Non si è abilitata la ricerca. Obiettivo: smettere di promuovere il semplice «CI verde» a prova di sicurezza operativa o gratuità.
+
+### Diagnostica già disponibile — baseline, NON test di nuovo codice
+
+- [x] Ultima diagnostica privata `remura-collector` [#41851256335](https://github.com/mirkoworz/remura-collector/actions/runs/41851256335), dati scanner fino a **04/11/2026 17:24 UTC**: Squalincome periodico **128/128** riuscito, mediana **1.723 ms**; post-ingest **128/128**, mediana **239 ms**; raccolta **110 batch, 550 mercati pianificati/salvati**, zero errori post-ingest, mediana collector+ingest **17.055 ms**. RAM utilizzata **33,1%**, disco **8,0%** nella fotografia. Tick-volume M15 presente 64/64 su EURUSD e XAUUSD; è tick volume, NON volume eseguito.
+- [x] In quella diagnostica **M15 stale 0/34, H1 stale 7/34, H4 stale 7/34**. Il TRACK A ha lavorato sulla qualità H1 nella PR #88 DRAFT, ma il fix **NON risulta certificato sul LIVE v1.62**; questi sette mercati non vengono spacciati per aggiornati. L'ultimo run di diagnostica disponibile nel repo privato è ancora quello del 4 novembre, quindi una nuova misurazione è necessaria prima di ogni autorizzazione.
+- [x] Il workflow `remura-vps-diagnostic.yml` è già configurato su **feriali alle 06:37 UTC** (orario approssimato GitHub), via Tailscale `tag:remura-ci-read`, **sei GET aggregati + tre GET di readiness**, nessuna chiamata cTrader, nessuna modifica SQLite. Questo controlla la salute del flusso v1.62, **non il carico dei nuovi moduli non installati**. Non si è aggiunto alcun cron, job o chiamata; non è stato avviato un run manuale a pagamento.
+- [x] GitHub repo privato: **75 run** nel periodo 1–5 novembre 2026 osservabili tramite API dei repository (41 diagnostiche di cui 1 fallita, 14 Capital, 14 publisher Firestore, 6 replay CVD). **75 run ≠ 75 minuti fatturati**: job concorrenti, skip, code, runner e altri repository influiscono, e un conteggio repo non legge il pannello Billing dell'ACCOUNT.
+- [x] Sync Firestore già avvenuta [#41983853934](https://github.com/mirkoworz/remura-collector/actions/runs/41983853934) SUCCESS il 5 novembre con **32 documenti sincronizzati**; non si conoscono qui le letture effettive da iPhone, dati memorizzati o egress.
+- [x] Limiti ufficiali da rivedere periodicamente: Firestore Standard **50.000 reads/giorno, 20.000 writes/giorno, 1 GiB dati, 10 GiB egress/mese**: <https://cloud.google.com/firestore/pricing>. GitHub Free, runner Linux standard privati: **2.000 min/mese** + 500 MB storage Actions; pubblico standard gratuito: <https://docs.github.com/en/billing/reference/product-usage-included>. Oracle Always Free richiede **shape effettivamente idonea, home region, volumi entro quota e verifica Cost Analysis**: <https://docs.oracle.com/it-it/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm>. I materiali Oracle online possono descrivere quote A1 diverse; la console **dell'account reale**, non una cifra scelta da una pagina, decide il controllo. Nessuna quota ufficiale equivale a conferma di spesa zero per il tuo account.
+
+### Nuovo P0 REVIEW GATE tecnico OFFLINE, senza accessi e senza abilitazione
+
+- [x] Creato `scripts/shark_p0_go_no_go.py`, funzione pura `evaluate(evidence,as_of=<UTC>)`, con prove aggregate esplicite e **fail-closed**. Non esegue richieste, non legge account, non apre SQLite, non invia log, non controlla la VPS e NON autorizza mai automaticamente un deploy. Qualunque misura assente, vecchia, booleano al posto del numero, costo ignoto o fonte non verificata produce `NO_GO`.
+- [x] Richiede diagnostica VPS autentica entro **24 ore**, 34/34 candele M15/H1/H4 non stale, almeno 64 batch/scan senza errori, RAM e disco <=70% (soglia cautelativa INTERNA, non limite Oracle), v1.62 o versione attuale identificata e flag ricerca ancora OFF.
+- [x] Richiede almeno **8 finestre di sovrapposizione** osservate con ingest reale, zero nuovi broker calls e zero busy/errori, cadenza invariata e latenza post-ingest mediana non superiore al **120% della baseline**. Soglie d'analisi prudenziali interne, non dimostrazione statistica di SLA; un benchmark GitHub sintetico NON soddisfa questa prova.
+- [x] Richiede schermate/valori verificati da operatore **entro 3 giorni** dai pannelli account: OCI risorse Always Free e spesa reale 0, minuti privati GitHub entro **80% della quota effettiva del proprio piano** e spese 0, Firestore Standard reads/writes/storage/egress entro **80% dei limiti** con costi 0 e database idoneo. Mancano ancora queste prove account. Il codice NON può verificare la veridicità dei valori forniti: anche il caso sintetico «tutto verde» restituisce `PRECHECK_REVIEW_ONLY`, con `releaseOrDeploymentAuthorized=false` e `liveResearchAutomaticallyEnabled=false`.
+- [x] Test `tests/test_shark_p0_go_no_go.py`: input mancanti/stale, H1/H4 stale 7, costi non dimostrati, traffico ingest NON misurato, valori fake/NaN/bool, soglie quote oltre 80%, clock con timezone obbligatorio, percorso completamente sintetico che **non** autorizza comunque rilascio o trade. Aggiunti al workflow `.github/workflows/shark-science-offline.yml`.
+- [ ] **P0 stato operativo: NO_GO**, non perché sia stato trovato un costo reale o un malfunzionamento LIVE, ma perché mancano baseline H1 fresche verificata sul server, sovrapposizione ingest reale del nuovo codice e fatture/usage account. Non attivare ricerca per «fare una prova veloce» sulla VPS da 1GB senza il piano di backup, rollback e misure.
+
+### Dati richiesti per chiudere P0c, senza credenziali e senza Termius
+
+- [ ] **OCI**: console → Billing & Cost Management / Cost Analysis (spesa corrente) + Compute Instance (shape, etichetta idoneità Always Free, home region, boot/block volume totali).
+- [ ] **GitHub**: Settings → Billing & licensing → Usage → Actions, minuti privati effettivi nel ciclo corrente + spesa; se possibile budget impostato a 0 con stop usage.
+- [ ] **Firebase**: Usage/Firestore → document reads/writes/storage/network, più Google Cloud Billing/Cost breakdown per il progetto. Per la policy in uso, non abilitare funzioni Firestore a pagamento (TTL, PITR, backup automatici).
+- [ ] Non copiare ID account, credenziali, URL Tailscale, numeri di carta o contenuti di segreti. Il codice del gate consuma solo metriche aggregate, mai screenshot originali o dati privati.
+
+### Prossimo gate
+
+- [ ] P0b: nuova diagnosi feriale GET e confronto LIVE vs baseline pre-release; **se e solo se** P0c e freschezza sono verificati, progettare una finestra di osservazione **controllata** con piccole coorti pilota e misura real overlap, stop/rollback fail-closed; non raddoppiare scanner, evitare nuove richieste broker e installazioni non coordinate.
+- [ ] P1: attivazione prospettica non automatica, solo dopo release coordinata A+B con backup+restore test, rollback e versione/data/ora italiana visibile in alto su tutte le 9 pagine; nessun edge/CVD reale o PnL rivendicato senza OOS cost-aware.
+
 ## 05/11/2026 — B-P0 archivio di sicurezza locale delle prove COT↔OHLC↔CVD (OFFLINE, nessuna cancellazione)
 
 **Perché:** il registro della nuova prova CVD/M15 ha un limite di 15.000 righe. Prima di scegliere qualsiasi retention o modifica al limite dobbiamo dimostrare che le prove possano essere conservate senza corrompere la catena di provenienza o inventare una coorte OOS. **Questa fase NON libera ancora spazio** e **NON è un backup completo Oracle**: è una prima esportazione in laboratorio dei ledger prospettici causalmente collegati.
