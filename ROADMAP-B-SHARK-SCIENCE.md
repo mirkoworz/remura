@@ -1,6 +1,30 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
 
+## 05/11/2026 ore 21:03 italiane — P0b: baseline post-ingest verificata su 219 batch REALI
+
+**Fonte:** screenshot Termius dall'utente, **un solo GET localhost** di `/private-api/signals/status`, output whitelist del già esistente `collectorTiming` con stato `READY`. Nessun broker request addizionale, nessun deploy, ordine, background watcher o raccolta CVD.
+
+| Campo reale | Valore |
+|---|---|
+| `samples` | **219** (un nuovo batch rispetto alla lettura di 20:58: 218) |
+| `postScanSuccesses` | **219** |
+| `postScanFailures` | **0** |
+| `postScanNotRun` | **0** |
+| `windowMax` | **256** record massimo, finestra LIMITATA |
+| `medianIngestReturnToPostScanMs` | **255 ms** |
+| `lastIngestReturnedUtc` | **2026-11-05T20:01:47Z** = **21:01:47 CET** |
+
+- [x] **Coerenza interna riuscita:** 219 successi + 0 fallimenti + 0 scansioni saltate = 219 campioni registrati. Anche il nuovo batch ha raggiunto il ritorno dall'ingest entro la finestra nominale **21:01:30 CET**, con timestamp di fine 21:01:47 CET: scarto di circa 17s; tale differenza è compatibile con la mediana precedente, ma non prova una durata esatta del batch, perché l'ora di partenza non è stata letta.
+- [x] **Baseline misurata combinata:** alla lettura precedente di 20:58 erano `samples=218`, `scheduledMarkets=1090`, `savedMarkets=1090`, `zeroSavedBatches=0`, `medianCollectorToIngestReturnMs=17087`, `maxCollectorToIngestReturnMs=28930`; tali conteggi/durate non sono stati riletti a 219 e **NON** si devono proiettare automaticamente come 1095/1095 o ricalcolare una nuova mediana. `medianIngestReturnToPostScanMs=255` deriva dalle 219 scansioni con `ok`, non da p95, p99, ogni singola candela o una sessione sotto CVD.
+- [x] Baseline **stabilità funzionale attuale** osservata: 38/38 mercati classificati recenti e verificati, collector running, servizio attivo, disk 40,5 GiB disponibili, RAM MemAvailable 636-665 MiB a riposo, CPU/PSI minimi fuori dal batch, 219 su 219 post-scan eseguiti senza errori registrati. La fotografia è promettente ma NON costituisce una prova di simultaneità del collector cTrader con un recorder CVD o di congruità della shape Free.
+- [ ] **Prossimo gate P0b (misurazione a impatto minimo):** sviluppare/validare OFFLINE un osservatore passivo di **un ciclo NATURALE** cTrader, CPU/RSS/PSI e durata ingest, senza lanciare scanner né attivare CVD, con timeout, nessun file persistente e output aggregate; necessarie almeno più finestre reali confrontabili prima di qualsiasi carico aggiuntivo. Un'unica raccolta osservata non dimostra ancora assenza di regressioni.
+- [ ] **P0b co-load e ricerca CVD OFF** finché mancano prove di overlap reali, valutazione cap processor/scheduling, recovery/backup HMAC e verifica billing. `shark_p0_go_no_go.py` rimane strettamente `NO_GO` su evidenza incompleta; evitare di inventare un vantaggio statistico o promuovere CI/simulazioni a proof-of-live.
+- [ ] **P0c quota e costi:** verifica separata console Oracle per shape E2.1.Micro ipotizzata (non confermata), idoneità Always Free, volumi e spesa effettiva; Firestore e GitHub Actions restano da riconciliare. Nessun piano/risorsa a pagamento aggiunto.
+- [x] Nessun rilascio: PR #89 DRAFT e LIVE comunicata v1.64 intatta, loading personalizzato e notifiche invariati.
+
+
+
 ## 05/11/2026 ore 20:58 italiane — P0b: registro reale batch cTrader attivo, 218 campioni
 
 **Evidenza diretta:** screenshot Termius utente dopo singola GET solo localhost su `/private-api/signals/status` e stampa di soli sette valori whitelist del campo esistente `collectorTiming`. Nessuna chiamata broker o nuovo batch provocato. Valori osservati:
@@ -18,7 +42,7 @@
 
 - [x] **P0b baseline temporale, dati reali = PASS acquisizione:** il recorder privato già esistente registra 218 batch naturali e 1090/1090 slot programmati/salvati (5 per batch nell'aggregato), 0 batch senza salvataggi e 0 errori post-scan registrati. Non attribuire queste misure a 218 batch consecutivi senza verificarne l'ultimo timestamp e la continuità; la memoria degli eventi è limitata a 256 righe, non illimitata.
 - [x] Codice `scripts/batch_timing.py` verificato: `batch_elapsed_ms` è tempo dall'avvio del batch al **ritorno di collect_once dopo ingest SQLite**, non tempo per simbolo né durata delle sole API, non benchmark di CVD o misura di latenza di Trading. `median` e `max` non rivelano p95/p99, distribuzione, eventuali batch mancanti o rallentamenti fuori campione.
-- [ ] **Integrare la baseline senza cambiare produzione:** richiedere dalla *stessa* GET già disponibile soltanto `lastIngestReturnedUtc`, `postScanSuccesses`, `postScanNotRun`, `medianIngestReturnToPostScanMs` e `windowMax`, con controllo della freschezza e coerenza `postScanSuccesses+postScanFailures+postScanNotRun=samples`. Non stampare raw JSON, simboli, OHLC, credenziali o URL privati.
+- [x] **Baseline completata ore 21:03**: 219/219 scansioni post-ingest OK, 0 fallimenti, mediana 255 ms, ultimo batch 21:01:47 CET, finestra 256. Dati esatti nella nuova sezione. Non stampare raw JSON, simboli, OHLC, credenziali o URL privati.
 - [ ] **P0b overlap reale e CVD restano NO-GO:** 17,087 s mediana/28,930 s massimo in batch osservati è un riferimento per proteggere la raccolta, non prova di risorse libere mentre lavora. Un benchmark CVD insieme al collector reale non è stato eseguito; non attivare nuovi recorder, nuovi volumi, traffico o servizi. Se si programma un test passivo, deve usare un ciclo ordinario e misure con minimo overhead, senza causare nuove richieste cTrader.
 - [ ] P0c Oracle Always Free, forma VM, volumi e addebiti ancora non attestati dalla console; prezzi/sentiment e Squalincome LIVE v1.64 preservati; research solo PR #89 DRAFT. Nessuna validazione statistica di edge COT/istituzionali ancora disponibile.
 
