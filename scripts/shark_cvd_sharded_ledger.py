@@ -28,6 +28,7 @@ from urllib.parse import quote
 
 from scripts import shark_cvd_scan_coverage as scan
 from scripts import shark_cot_asof_witness as witness
+from scripts import shark_cvd_storage_gate as storage
 
 SCHEMA="remura-private-cvd-scan-shards-v1"
 META="research_cvd_shard_metadata"
@@ -445,6 +446,11 @@ def record(root, *, symbol, slot_closed_at, source_document, secret, clock=None)
         segments,last_by_market,total,previous=_inspect(folder)
         if symbol in last_by_market and closed<=last_by_market[symbol]:
             raise ValueError("duplicate_or_backfilled_scan_across_shards")
+        # Conservative admission BEFORE sealing, rollover or append. A
+        # positive check is advisory: external disk consumers remain a race.
+        storage.assess(folder, [], copies=0,
+                       max_shard_file_bytes=MAX_SHARD_FILE_BYTES,
+                       future_growth_bytes=MAX_SHARD_FILE_BYTES)
         if not segments:
             path=_create(folder,1,None)
         else:
