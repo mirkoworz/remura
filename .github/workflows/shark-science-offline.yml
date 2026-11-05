@@ -38,6 +38,7 @@ on:
       - 'scripts/shark_research_local_archive.py'
       - 'scripts/shark_cvd_sharded_ledger.py'
       - 'scripts/shark_cvd_storage_gate.py'
+      - 'scripts/shark_cvd_shard_resource_probe.py'
       - 'scripts/shark_cvd_shard_backup.py'
       - 'scripts/shark_p0_go_no_go.py'
       - 'tests/cvd-divergence.test.js'
@@ -108,7 +109,7 @@ jobs:
       - name: Verify offline script syntax
         run: |
           node --check cvd-divergence-core.js
-          python -m py_compile scripts/cvd_divergence.py scripts/cvd_benchmark.py scripts/cvd_session_replay.py scripts/shark_science_gate.py scripts/shark_walkforward.py scripts/shark_data_readiness.py scripts/shark_research_census.py scripts/shark_universe_lineage.py scripts/shark_universe_probe.py scripts/shark_research_probe.py scripts/shark_cot_paired_baseline.py scripts/shark_cot_robustness.py scripts/shark_cot_asof_witness.py scripts/shark_signal_evidence.py scripts/shark_price_asof_evidence.py scripts/shark_observation_bundle.py scripts/shark_price_only_universe.py scripts/shark_price_only_compact.py scripts/shark_prospective_coverage.py scripts/shark_first_invocation.py scripts/shark_scan_failures.py scripts/shark_sample_admission.py scripts/shark_causal_pair_audit.py scripts/shark_resource_probe.py scripts/shark_digest_ab_benchmark.py scripts/shark_oracle_staging_gate.py scripts/shark_cvd_ledger.py scripts/shark_cvd_source_lineage.py scripts/shark_cvd_cot_price_triage.py scripts/shark_cvd_scan_coverage.py scripts/shark_cot_cvd_scan_reconciliation.py scripts/shark_cvd_prefix_lineage.py scripts/shark_prefix_cost_probe.py scripts/shark_research_local_archive.py scripts/shark_cvd_sharded_ledger.py scripts/shark_cvd_shard_backup.py scripts/shark_cvd_storage_gate.py scripts/shark_p0_go_no_go.py
+          python -m py_compile scripts/cvd_divergence.py scripts/cvd_benchmark.py scripts/cvd_session_replay.py scripts/shark_science_gate.py scripts/shark_walkforward.py scripts/shark_data_readiness.py scripts/shark_research_census.py scripts/shark_universe_lineage.py scripts/shark_universe_probe.py scripts/shark_research_probe.py scripts/shark_cot_paired_baseline.py scripts/shark_cot_robustness.py scripts/shark_cot_asof_witness.py scripts/shark_signal_evidence.py scripts/shark_price_asof_evidence.py scripts/shark_observation_bundle.py scripts/shark_price_only_universe.py scripts/shark_price_only_compact.py scripts/shark_prospective_coverage.py scripts/shark_first_invocation.py scripts/shark_scan_failures.py scripts/shark_sample_admission.py scripts/shark_causal_pair_audit.py scripts/shark_resource_probe.py scripts/shark_digest_ab_benchmark.py scripts/shark_oracle_staging_gate.py scripts/shark_cvd_ledger.py scripts/shark_cvd_source_lineage.py scripts/shark_cvd_cot_price_triage.py scripts/shark_cvd_scan_coverage.py scripts/shark_cot_cvd_scan_reconciliation.py scripts/shark_cvd_prefix_lineage.py scripts/shark_prefix_cost_probe.py scripts/shark_research_local_archive.py scripts/shark_cvd_sharded_ledger.py scripts/shark_cvd_shard_backup.py scripts/shark_cvd_storage_gate.py scripts/shark_cvd_shard_resource_probe.py scripts/shark_p0_go_no_go.py
       - name: Test CVD JS detector
         run: node --test tests/cvd-divergence.test.js
       - name: Test CVD parity, benchmark and archive replay
@@ -187,6 +188,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_shark_cvd_storage_gate.py' -v
       - name: Test interrupted CVD shard rollover and complete private SQLite snapshot and restore
         run: python -m unittest discover -s tests -p 'test_shark_cvd_shard_backup.py' -v
+      - name: Measure private CVD shard synthetic CPU RSS WAL journal locks snapshot restore and disk-full
+        run: python scripts/shark_cvd_shard_resource_probe.py
       - name: Probe isolated optional CVD prefix CPU and SQLite page bytes with balanced synthetic pairs
         run: |
           python -m unittest discover -s tests -p 'test_shark_prefix_cost_probe.py' -v
