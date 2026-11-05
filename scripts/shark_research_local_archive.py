@@ -253,29 +253,40 @@ def verify_bundle(path):
     total_rows=0
     try:
         with zipfile.ZipFile(target,"r") as z:
+            # Inspect a bounded manifest before determining the exact table list.
+            # Old v1 packs are verifiable but have NO CVD scan attempts.
+            if MANIFEST not in z.namelist() or z.getinfo(MANIFEST).file_size>150000:
+                raise ValueError("archive_manifest_missing_or_unbounded")
+            raw=z.read(MANIFEST)
+            if len(raw)>150000 or not raw.endswith(b"\n"):
+                raise ValueError("archive_manifest_unbounded")
+            doc=json.loads(raw)
+            version=doc.get("schema")
+            if version not in (SCHEMA,LEGACY_SCHEMA):
+                raise ValueError("archive_manifest_schema_unrecognized")
+            included={"main":MAIN_TABLES,
+                      "private":PRIVATE_TABLES if version==SCHEMA
+                      else LEGACY_PRIVATE_TABLES}
             expected={MANIFEST}
             expected.update(f"{ENTRY_PREFIX}/{scope}/{t}.jsonl"
-                            for scope,tables in ALLOW.items() for t in tables)
+                            for scope,tables in included.items() for t in tables)
             if set(z.namelist())!=expected or len(z.namelist())!=len(expected):
                 raise ValueError("archive_entries_or_crc_invalid")
-            # Refuse ZIP bombs before inflating any table. ZipFile.open()
-            # independently checks each entry's CRC as it is consumed.
+            # ZIP size cap checked before inflating any data entry.
             if (any(z.getinfo(name).file_size>MAX_TOTAL_BYTES
                     for name in expected if name!=MANIFEST)
                     or sum(z.getinfo(name).file_size for name in expected
                            if name!=MANIFEST)>MAX_TOTAL_BYTES):
                 raise ValueError("uncompressed_archive_resource_limit")
-            raw=z.read(MANIFEST)
-            if len(raw)>150000 or not raw.endswith(b"\n"):
-                raise ValueError("archive_manifest_unbounded")
-            doc=json.loads(raw)
-            if (doc.get("schema")!=SCHEMA
-                or set(doc["main"])!=set(MAIN_TABLES)
-                or set(doc["private"])!=set(PRIVATE_TABLES)
+            if (set(doc["main"])!=set(MAIN_TABLES)
+                or set(doc["private"])!=set(included["private"])
                 or doc.get("sourceDataDeleted") is not False
-                or doc.get("includesRawOHLCOrOutcomePaths") is not False):
+                or doc.get("includesRawOHLCOrOutcomePaths") is not False
+                or (version==SCHEMA and
+                    (doc.get("scanAttemptCoverageIncluded") is not True
+                     or doc.get("scanAttemptHmacCanBeRecomputedWithoutPrivateKey") is not False))):
                 raise ValueError("archive_manifest_contract_invalid")
-            for scope,tables in ALLOW.items():
+            for scope,tables in included.items():
                 for t in tables:
                     m=doc[scope][t]
                     entry=f"{ENTRY_PREFIX}/{scope}/{t}.jsonl"
@@ -317,6 +328,8 @@ def verify_bundle(path):
                             or length!=m.get("uncompressedBytes")
                             or hasher.hexdigest()!=m.get("sha256")):
                         raise ValueError("archive_hash_or_count_mismatch")
+                    if t==SCAN_TABLE and count>MAX_SCAN_ATTEMPTS:
+                        raise ValueError("archive_cvd_scan_attempts_exceed_hard_limit")
                     hashes[f"{scope}.{t}"]=count
     except (zipfile.BadZipFile,KeyError,TypeError,json.JSONDecodeError) as e:
         raise ValueError("invalid_archive_bundle") from e
@@ -324,12 +337,26 @@ def verify_bundle(path):
     with target.open("rb") as f:
         for part in iter(lambda:f.read(1024*1024),b""):
             blob.update(part)
+    scan_count=hashes.get("private."+SCAN_TABLE)
+    scan_capacity=None if scan_count is None else {
+        "archivedAttempts":scan_count,
+        "hardLimitRows":MAX_SCAN_ATTEMPTS,
+        "remainingRowsInArchivedSnapshot":MAX_SCAN_ATTEMPTS-scan_count,
+        "status":("AT_HARD_LIMIT" if scan_count==MAX_SCAN_ATTEMPTS
+                  else "WARNING_95_PERCENT" if scan_count*100>=95*MAX_SCAN_ATTEMPTS
+                  else "WARNING_80_PERCENT" if scan_count*100>=80*MAX_SCAN_ATTEMPTS
+                  else "WITHIN_LOCAL_HARD_LIMIT"),
+        "doesNotFreeOriginalSQLiteCapacity":True,
+        "isNotLiveDiskOrBillingUsage":True,
+    }
     return {
-        "schema":SCHEMA,
+        "schema":version,
         "status":"LOCAL_ARCHIVE_INTEGRITY_VERIFIED",
         "sha256":blob.hexdigest(),
         "rows":total_rows,
         "tableRowCounts":hashes,
+        "cvdScanAttemptCapacity":scan_capacity,
+        "cvdScanAttemptHmacIndependentVerification":False,
         "sourceIndependentTimestampAuthenticated":False,
         "sourceDatabaseModified":False,
         "freesSqliteCapacity":False,
