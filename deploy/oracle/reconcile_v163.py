@@ -32,8 +32,8 @@ BACKUPS=PRIVATE/"predeploy-backups"
 API="https://api.github.com/repos/mirkoworz/remura"
 RAW="https://raw.githubusercontent.com/mirkoworz/remura"
 OLD="1568edefabc7bbdb7d06485d2b863b196a4e6155"
-RELEASE_SHA="378a3a3fa29802565b8d3990c9c2dfe476cd2777"
-RELEASE_BLOB="8ee75ef7964805431d19f2c725baa017a663797c"
+RELEASE_SHA="21281734e8e10540e57fef15d0cb728b890f8cd0"
+RELEASE_BLOB="0214b8baf5ed3bdefebb21bbfd08204c8d99dd45"
 PREPARED_STAMP=b"05/11/2026 16:00 (Italia, preparazione)"
 LIVE_STAMP=re.compile(rb"(?:0[1-9]|[12][0-9]|3[01])/(?:0[1-9]|1[0-2])/20[0-9]{2} (?:[01][0-9]|2[0-3]):[0-5][0-9] \(Italia\)")
 SHA=re.compile(r"^[0-9a-f]{40}$")
@@ -44,6 +44,9 @@ ALLOWED_CODE={
     "fonti.html", "impostazioni.html",
     "splash.js", "splash.css", "splash-mascot.webp",
     "tests/splash.test.js", "tests/release-consistency.test.js",
+    "tests/test_release_v158.py", "tests/test_release_v159.py",
+    "tests/test_release_v160.py", "tests/test_release_v161.py",
+    "tests/price-status.test.js", "tests/statistica-squali.test.js",
     "tests/test_release_v162.py", "tests/test_release_v163.py",
     "tests/test_reconcile_v163.py",
     "deploy/oracle/release_v163.py", "deploy/oracle/reconcile_v163.py",
