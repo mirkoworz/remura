@@ -23,11 +23,13 @@ STAMP=b"05/11/2026 19:15 (Italia)"
 class ReconcileV163Tests(unittest.TestCase):
     def test_pins_and_strict_diff_policy(self):
         self.assertEqual(m.OLD,"1568edefabc7bbdb7d06485d2b863b196a4e6155")
-        self.assertEqual(m.RELEASE_SHA,"21281734e8e10540e57fef15d0cb728b890f8cd0")
-        self.assertEqual(m.RELEASE_BLOB,"0214b8baf5ed3bdefebb21bbfd08204c8d99dd45")
+        self.assertEqual(m.RELEASE_SHA,"65f08544534837ebd8a428723ee5be3dac1ce194")
+        self.assertEqual(m.RELEASE_BLOB,"19d538c167550e5c3c9326d7cfc3ab5582347e9a")
         self.assertEqual(m.PREPARED_STAMP,b"05/11/2026 16:00 (Italia, preparazione)")
         self.assertIn("splash-mascot.webp",m.ALLOWED_CODE)
         self.assertNotIn("scripts/update_capital.py",m.ALLOWED_CODE)
+        self.assertTrue({"ROADMAP.md","ROADMAP-A-H1.md","ROADMAP-B-SHARK-SCIENCE.md"}<=m.ALLOWED_DOCS)
+        self.assertNotIn("scripts/ctrader_feed.py",m.ALLOWED_DOCS)
 
     def test_exact_15_installed_files_and_stamped_banner(self):
         with tempfile.TemporaryDirectory() as td:
