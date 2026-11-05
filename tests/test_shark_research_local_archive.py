@@ -19,6 +19,8 @@ from scripts import shark_research_local_archive as archive
 from scripts import shark_cot_asof_witness as witness
 from scripts import shark_observation_bundle as bundle
 from scripts import shark_cvd_ledger as cvd
+from scripts import shark_cvd_scan_coverage as scans
+from test_shark_cvd_scan_coverage import make_doc, stamp, DAY, KEY
 from test_shark_cvd_cot_price_triage import (
     source_with_verified_divergence, original_cvd_event,
 )
@@ -63,6 +65,13 @@ class LocalResearchArchiveTests(unittest.TestCase):
         self.main,original=create()
         self.private=sqlite3.connect(":memory:")
         cvd.ensure_schema(self.private)
+        scans.ensure_schema(self.private)
+        scan_doc=make_doc(count=60)
+        scan_end=DAY+__import__("datetime").timedelta(minutes=900)
+        scans.record(
+            self.private,symbol="EURUSD",slot_closed_at=stamp(scan_end),
+            source_document=scan_doc,secret=KEY,
+            clock=scan_end+__import__("datetime").timedelta(minutes=1))
         doc=source_with_verified_divergence(self.main,original)
         event=original_cvd_event(doc)
         witness.witness(self.main,clock=AT)
@@ -102,12 +111,17 @@ class LocalResearchArchiveTests(unittest.TestCase):
         self.assertEqual(p_changes,self.private.total_changes)
         self.assertGreater(out["rows"],8)
         self.assertEqual(archive.verify_bundle(self.path)["sha256"],out["sha256"])
+        self.assertEqual(out["tableRowCounts"]["private.research_cvd_scan_attempts"],1)
+        self.assertEqual(out["cvdScanAttemptCapacity"]["archivedAttempts"],1)
+        self.assertFalse(out["cvdScanAttemptHmacIndependentVerification"])
         with zipfile.ZipFile(self.path) as z:
             meta=json.loads(z.read("manifest.json"))
             self.assertFalse(meta["includesRawOHLCOrOutcomePaths"])
             self.assertFalse(meta["includesPriceOnlyFull34Cohorts"])
             self.assertFalse(meta["privateHmacSecretIncluded"])
             self.assertFalse(meta["completeOCIBackupOrRestore"])
+            self.assertTrue(meta["scanAttemptCoverageIncluded"])
+            self.assertFalse(meta["scanAttemptHmacCanBeRecomputedWithoutPrivateKey"])
             self.assertFalse(meta["sourceDataDeleted"])
             self.assertEqual(set(meta["main"]),set(archive.MAIN_TABLES))
             self.assertEqual(set(meta["private"]),set(archive.PRIVATE_TABLES))
@@ -115,10 +129,11 @@ class LocalResearchArchiveTests(unittest.TestCase):
             rebuilt=rebuild_in_memory(self.path,scope)
             try:
                 for table in archive.ALLOW[scope]:
+                    order=archive._stable_order(source,table)
                     left=source.execute(
-                        f"SELECT * FROM {table} ORDER BY rowid").fetchall()
+                        f"SELECT * FROM {table} ORDER BY {order}").fetchall()
                     right=rebuilt.execute(
-                        f"SELECT * FROM {table} ORDER BY rowid").fetchall()
+                        f"SELECT * FROM {table} ORDER BY {order}").fetchall()
                     self.assertEqual(left,right,table)
                     self.assertEqual(
                         sorted(x[0] for x in source.execute(
@@ -163,6 +178,36 @@ class LocalResearchArchiveTests(unittest.TestCase):
 
     def test_missing_required_proof_does_not_label_export_complete(self):
         self.private.execute("DROP TABLE research_cvd_m15_prefix_proofs")
+        self.private.execute("PRAGMA query_only=ON")
+        self.main.execute("PRAGMA query_only=ON")
+        with self.assertRaisesRegex(ValueError,"causal_provenance_table_missing"):
+            archive.export_bundle(self.main,self.private,self.path)
+        self.assertFalse(self.path.exists())
+
+    def test_scan_ledger_v2_is_required_and_private_hmac_survives_replay(self):
+        self._archive()
+        replay=rebuild_in_memory(self.path,"private")
+        try:
+            original=self.private.execute(
+                "SELECT * FROM research_cvd_scan_attempts").fetchone()
+            restored=replay.execute(
+                "SELECT * FROM research_cvd_scan_attempts").fetchone()
+            self.assertEqual(original,restored)
+            self.assertEqual(len(original),9)
+            self.assertEqual(len(original[5]),64)  # session_prefix_hmac
+            self.assertEqual(original[8],scans.SCHEMA)
+            with self.assertRaises(sqlite3.IntegrityError):
+                replay.execute("UPDATE research_cvd_scan_attempts SET reason='DATA_MISSING'")
+            replay.rollback()
+            with self.assertRaises(sqlite3.IntegrityError):
+                replay.execute("DELETE FROM research_cvd_scan_attempts")
+        finally:
+            replay.close()
+        self.assertNotIn("PRIVATE_TEST_BROKER_DO_NOT_EXPORT",self.path.read_bytes().decode("latin1"))
+        self.assertNotIn(KEY.decode(),self.path.read_bytes().decode("latin1"))
+
+    def test_missing_v2_scan_table_or_trigger_is_fail_closed(self):
+        self.private.execute("DROP TABLE research_cvd_scan_attempts")
         self.private.execute("PRAGMA query_only=ON")
         self.main.execute("PRAGMA query_only=ON")
         with self.assertRaisesRegex(ValueError,"causal_provenance_table_missing"):
