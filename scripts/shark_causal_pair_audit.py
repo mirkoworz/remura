@@ -134,7 +134,7 @@ def _proof_valid(db, source, observed, *, market, report):
     return True, None
 
 
-def audit(db, *, as_of, days=1):
+def audit(db, *, as_of, days=1, _verified_pairs=None):
     """Read-only bounded audit of already-recorded signal COT/price pairings.
 
     A co-occurring pair is counted only after verifying exact observation
@@ -262,6 +262,12 @@ def audit(db, *, as_of, days=1):
             if type(tick) is not int or tick not in (0,1):
                 raise ValueError("tick_volume_state_invalid")
             joint+=1
+            if _verified_pairs is not None:
+                # Private sink for a future cross-database CVD verifier.
+                # NEVER emitted in public aggregates; callers need the
+                # already checked ORIGINAL price digest and event clock.
+                _verified_pairs.append(
+                    (sym,week,closed,observed_at,sha,side))
             if tick==1:
                 ready_with_tick+=1
         unpaired=sum(1 for key in prices if key not in used)
