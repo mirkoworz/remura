@@ -179,7 +179,7 @@ class TripleCausalTriageTests(unittest.TestCase):
         # Modify a prior M15 tick count and keep H1/H4 rollups
         # internally consistent BEFORE the genuine Squalincome proof.
         altered=self.doc["timeframes"]["M15"]
-        target=next(x for x in altered if x["t"].endswith("T05:00:00Z"))
+        target=next(x for x in altered if x["t"].startswith("2026-11-04T05:00:00"))
         target["v"]+=1
         for frame,span in (("H1",3600),("H4",14400)):
             t=datetime.fromisoformat(target["t"].replace("Z","+00:00"))
