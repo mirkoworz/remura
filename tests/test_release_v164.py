@@ -51,6 +51,23 @@ class ReleaseV164Tests(unittest.TestCase):
             if file.endswith(".html"):
                 self.assertIn("nav.js?v=164",(ROOT/file).read_text(),file)
 
+    def test_cinematic_guard_accepts_6200ms_and_rejects_old_or_missing_safety(self):
+        script=(ROOT/"splash.js").read_bytes()
+        m.verify_splash_safety(script)
+        self.assertNotIn(b"setTimeout(close,4500)",script)
+        for corrupt in (
+            script.replace(b"failSafeTimer=setTimeout(close,6200)",
+                           b"failSafeTimer=setTimeout(close,4500)"),
+            script.replace(b'fetch("./private-api/health"',
+                           b'fetch("./private-api/unknown"'),
+            script.replace(b"playIntro().catch(close)",b"playIntro()"),
+            script.replace(b"ATTACHED_HOLD_MS = reduced ? 80 : 700",
+                           b"ATTACHED_HOLD_MS = 0"),
+        ):
+            self.assertNotEqual(corrupt,script)
+            with self.assertRaisesRegex(RuntimeError,"STOP_SPLASH_SAFETY_GUARD"):
+                m.verify_splash_safety(corrupt)
+
     def test_historical_live_v163_sha_mismatch_rejected(self):
         original={p:((p+"-v163").encode(),0,0,0o644) for p in m.FILES}
         original["nav.js"]=(b"REMURA v1.63 05/11/2026 17:48 (Italia)",0,0,0o644)

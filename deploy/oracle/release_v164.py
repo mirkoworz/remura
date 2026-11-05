@@ -152,6 +152,19 @@ def api_read(path, cap=MAX_ZIP):
     return data
 
 
+def verify_splash_safety(script):
+    """Fail closed unless the approved cinematic splash retains its health and exit safety."""
+    require(
+        b'fetch("./private-api/health"' in script and
+        script.count(b'fetch("./private-api/health"') == 1 and
+        b"VISUAL_STAGES" in script and
+        b"ATTACHED_HOLD_MS = reduced ? 80 : 700" in script and
+        b"failSafeTimer=setTimeout(close,6200)" in script and
+        b"playIntro().catch(close)" in script,
+        "SPLASH_SAFETY_GUARD"
+    )
+
+
 def candidate(sha):
     require(valid_sha(sha), "COMMIT_INVALID")
     raw = json.loads(api_read("/git/trees/" + sha + "?recursive=1", 6 * 1024 * 1024))
@@ -202,8 +215,7 @@ def candidate(sha):
     require(b'REMURA_H1_PAIRED_ENABLED' in server and
             b'if h1_paired_enabled():' in server, "H1_OBSERVER_REMOVED")
     require(b'if batch_timing_enabled(env):' in server, "BATCH_MONITOR_REMOVED")
-    require(b'fetch("./private-api/health"' in chosen["splash.js"] and
-            b"setTimeout(close,4500)" in chosen["splash.js"], "SPLASH_SAFETY_GUARD")
+    verify_splash_safety(chosen["splash.js"])
     compile(chosen[BACKUP_MODULE], BACKUP_MODULE, "exec")
     for item in FILES:
         if item.endswith(".py"):

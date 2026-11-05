@@ -20,8 +20,8 @@ FILES=("scripts/private_server.py","nav.js","sw.js","index.html","asset.html",
 class ReconcileV164Tests(unittest.TestCase):
     def test_pins_and_no_unreviewed_code(self):
         self.assertEqual(m.OLD,"16fb7c84a130a2e54f849fa7eadddba4f62455bf")
-        self.assertEqual(m.RELEASE_SHA,"bb3c35da03eb9c28e86fe9f5dd52765441ca9391")
-        self.assertEqual(m.RELEASE_BLOB,"5aeb523d92d27405564ebddcaef5c9e44971c60d")
+        self.assertEqual(m.RELEASE_SHA,"883336a4e956a9e50c94dcfebf8d7ba78910fb65")
+        self.assertEqual(m.RELEASE_BLOB,"5cad0abdff8a30f9e7dc583c872c213807863dc4")
         self.assertEqual(m.PREPARED_STAMP,b"05/11/2026 18:03 (Italia, preparazione)")
         self.assertEqual(m.WORKFLOWS,("price-checks.yml","insights-checks.yml"))
         self.assertNotIn("scripts/private_server.py",m.ALLOWED_CODE)
