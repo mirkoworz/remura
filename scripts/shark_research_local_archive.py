@@ -263,7 +263,7 @@ def verify_bundle(path):
                             line=data.readline(500001)
                             if not line:
                                 break
-                            if len(line)>500000 or not line.endswith(b"\\n"):
+                            if len(line)>500000 or not line.endswith(b"\n"):
                                 raise ValueError("archive_row_unbounded_or_noncanonical")
                             count+=1
                             total_rows+=1
