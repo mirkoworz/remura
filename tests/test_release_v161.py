@@ -137,6 +137,19 @@ class ReleaseV161Tests(unittest.TestCase):
 
     def test_candidate_reads_immutable_zip_and_rejects_old_nav_version(self):
         staged={p:(ROOT/p).read_bytes() for p in (*m.FILES,m.BACKUP_MODULE)}
+        # First reconstruct v1.62 from the current v1.63 source;
+        # historical installer safety fixtures still check their original SHA/version.
+        if b"nav.js?v=163" in staged["index.html"]:
+            for page in m.FILES:
+                if page.endswith(".html"):
+                    staged[page]=staged[page].replace(b"nav.js?v=163",b"nav.js?v=162")
+            staged["nav.js"]=staged["nav.js"].replace(
+                b"Aggiornamento v1.63",b"Aggiornamento v1.62").replace(
+                b"05/11/2026 16:00 (Italia, preparazione)",
+                b"03/11/2026 19:20 (Italia, preparazione)")
+            staged["sw.js"]=staged["sw.js"].replace(
+                b"remura-shell-v77-v1.63-shark-splash",
+                b"remura-shell-v76-v1.62-h1-paired")
         # Normalize the current v1.62 shell to the unchanged v1.61
         # historical fixture; older guarded release tests remain strict.
         if b"nav.js?v=162" in staged["index.html"]:
@@ -272,15 +285,15 @@ class ReleaseV161Tests(unittest.TestCase):
         self.assertEqual(m.NEW_FILE,"scripts/batch_timing.py")
         for page in pages:
             source=(ROOT/page).read_text("utf-8")
-            self.assertIn("nav.js?v=162",source,page)
+            self.assertIn("nav.js?v=163",source,page)
         nav=(ROOT/"nav.js").read_bytes()
-        self.assertEqual(nav.count(b"03/11/2026 19:20 (Italia, preparazione)"),1)
-        self.assertIn("REMURA · Aggiornamento v1.62".encode("utf-8"),nav)
+        self.assertEqual(nav.count(b"05/11/2026 16:00 (Italia, preparazione)"),1)
+        self.assertIn("REMURA · Aggiornamento v1.63".encode("utf-8"),nav)
         mercati=(ROOT/"mercati.html").read_text("utf-8")
         self.assertIn("squalincome-freshness-core.js?v=160",mercati)
         self.assertIn("squalincome-diagnostics.js?v=160",mercati)
         sw=(ROOT/"sw.js").read_text("utf-8")
-        self.assertIn("remura-shell-v76-v1.62-h1-paired",sw)
+        self.assertIn("remura-shell-v77-v1.63-shark-splash",sw)
         self.assertIn("./squalincome-freshness-core.js",sw)
         self.assertIn('url.pathname.includes("/private-api/")',sw)
         backend=(ROOT/"scripts/private_server.py").read_text("utf-8")
