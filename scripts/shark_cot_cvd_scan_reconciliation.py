@@ -229,7 +229,7 @@ def audit(db_main, db_private, *, as_of, days=1, secret):
             if entry is None:
                 counts["UNKNOWN_MISSING_ATTEMPT"] += 1
                 continue
-            attempted, state, private_mac, confirmations = entry
+            attempted, state, private_mac, confirmations, _prefix_mac = entry
             if attempted > original_seen or attempted > now:
                 counts["UNKNOWN_ATTEMPT_NOT_YET_KNOWN_AT_SIGNAL"] += 1
             elif state != "EVALUATED":
