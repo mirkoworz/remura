@@ -18,15 +18,13 @@ from pathlib import Path
 import stat
 import sys
 
-# Direct execution as python scripts/<tool>.py must import the repository
-# namespace, not a system-wide package with the same name.
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
-
-from scripts import shark_cvd_storage_gate as storage
-from scripts import shark_cvd_sharded_ledger as shards
-
+# Deliberately standalone: the VPS does not have to install the draft Track B
+# branch to inspect metadata. CI checks these constants against the prototype.
 SCHEMA = "remura-track-b-oracle-readonly-capacity-v1"
+SHARD_MAX_FILE_BYTES = 64_000_000
+MAX_SHARDS = 64
+MIN_RESERVE_BYTES = 256 * 1024 * 1024
+RESERVE_DENOMINATOR = 10
 LIVE_PRIVATE = Path("/opt/remura/private")
 LIVE_PRICE_DB_NAME = "remura-prices.sqlite3"
 STAGING = Path("/tmp")
@@ -106,14 +104,13 @@ def estimate(*, volume_total, volume_free, price_bytes,
                 (type(staging_free) is not int or staging_free < 0))):
         raise ValueError("capacity_inputs_invalid")
 
-    reserve=max(storage.MIN_RESERVE_BYTES,
-                (volume_total*storage.RESERVE_FRACTION_NUMERATOR
-                 +storage.RESERVE_FRACTION_DENOMINATOR-1)
-                // storage.RESERVE_FRACTION_DENOMINATOR)
-    transient=2*shards.MAX_SHARD_FILE_BYTES
+    reserve=max(MIN_RESERVE_BYTES,
+                (volume_total+RESERVE_DENOMINATOR-1)
+                // RESERVE_DENOMINATOR)
+    transient=2*SHARD_MAX_FILE_BYTES
     price_copies=2*price_bytes
-    single=3*shards.MAX_SHARD_FILE_BYTES+price_copies+transient+reserve
-    maximal=(3*shards.MAX_SHARDS*shards.MAX_SHARD_FILE_BYTES
+    single=3*SHARD_MAX_FILE_BYTES+price_copies+transient+reserve
+    maximal=(3*MAX_SHARDS*SHARD_MAX_FILE_BYTES
              +price_copies+transient+reserve)
     # Conservatively use metadata: no estimated private storage may be
     # created merely because an estimate passed.
