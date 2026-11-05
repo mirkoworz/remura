@@ -1,6 +1,21 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
 
+## 05/11/2026 — Proseguimento gate P0c: inventario **solo metadati** VPS (OFFLINE, non ancora eseguito su Oracle)
+
+**Stato iniziale verificato:** main SHA e762a1c2927ca8e27501b73139675867751bfe90, PR B #89 DRAFT/non merge e PR A #88 DRAFT; LIVE di riferimento comunicata v1.64, SSH non verificato. Questa tappa non ha aperto alcun DB LIVE, modificato /opt/remura, abilitato recorder, avviato servizi o broker API.
+
+- [x] Nuovo scripts/shark_oracle_capacity_readonly.py: futura ispezione volontaria --inspect, sola lettura **metadata** tramite lstat, statvfs e MemAvailable. Legge solo la dimensione logica/allocata del file noto /opt/remura/private/remura-prices.sqlite3 e sidecar SQLite (-wal, -shm, -journal) se presenti; NON apre SQLite, non legge contenuti né crea file/cartelle, non fa rete. Output aggregato con spazio libero sul volume dati e /tmp, compatibilità mount, dimensione DB prezzi+sidecar, memoria disponibile; NO percorsi, account, OHLC o credenziali nei risultati.
+- [x] Calcola **due scenari cautelativi**: un pilota con uno shard di massimo 64.000.000 bytes e il progetto massimo 64 shard. Entrambi includono **originale+backup+restore** dei segmenti CVD, **due copie aggiuntive** del DB prezzi esistente, buffer di 2 shard per transitori e riserva max(256 MiB,10% filesystem). Il DB prezzi già presente è sottratto allo spazio libero in statvfs e non contato come nuovo. Non stimano future crescita prezzi, picchi WAL, backup cloud, chiavi HMAC, altri servizi o tariffe OCI: un check disco positivo NON autorizza un rilascio.
+- [x] --self-check usa solo un esempio sintetico e non accede a Oracle. --inspect è **facoltativo**, va eseguito solo esplicitamente con checkout trusted; l'invocazione con python -B evita la scrittura dei pycache. Non è stata predisposta alcuna schedulazione o azione remota.
+- [x] Test tests/test_shark_oracle_capacity_readonly.py: soglia esatta e insufficiente di un byte, /tmp stesso/diverso mount, file assente/symlink, sidecar symlink, metriche volume errate, no path e segreti in output, sqlite3.connect proibito, byte/mtime invariati. Errori di osservazione comportano NO_GO_METADATA_UNVERIFIED; mai dichiarare spazio OCI verificato dalla CI GitHub.
+- [ ] Verificare SHA e CI completi sul nuovo codice prima di dichiararlo collaudato; non confondere CI pubblica con un benchmark della VPS.
+- [ ] Misurazioni reali Oracle **ancora da fare** su metadata e poi su staging sintetico isolato, senza scrivere DB LIVE né riempire il disco per test di esaurimento. CPU/RSS/contesa SQLite con carico del collector reale non sono certificati dallo spazio libero o da un runner GitHub.
+- [ ] P0c **NO-GO fatturazione reale**: controllare Oracle shape e volumi Always Free, costi console, storage/egress Firebase e archivio GitHub Actions. Segnalazione utente 0 € su più mesi non prova che ogni futura modifica resti gratis. I budget OCI sono avvisi, non blocco automatico.
+- [ ] Test power-loss reale, gestione HMAC, storico campioni prospettici COT/prezzo/CVD e validazione OOS cost-aware ancora aperti. Nessun trading edge verificato. PR #89 sempre DRAFT, nessun merge/deploy e la v1.64 con loading/notifiche resta intatta.
+
+
+
 ## 05/11/2026 — P0b/P0c: gate preventivo spazio per shard CVD + benchmark sintetico (nessun deploy)
 
 **GitHub verificato prima del lavoro:** main SHA e762a1c2927ca8e27501b73139675867751bfe90, PR B #89 DRAFT e PR A #88 DRAFT, entrambe non unite. LIVE di riferimento **v1.64 comunicata dall'utente**, con loading personalizzato e notifiche: effettivo SHA VPS non verificato via SSH. Nessuna modifica alla LIVE, Oracle, collector, Firebase, chiamate broker, ordini o alert. Codice nuovo solo su branch B.
