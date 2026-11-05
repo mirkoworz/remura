@@ -165,6 +165,7 @@ class ShardedSnapshotTests(unittest.TestCase):
     def test_unpublished_zero_byte_file_is_retained_not_silently_deleted(self):
         path=self.root/".cvd-init-synthetic.sqlite3"
         path.write_bytes(b"")
+        path.chmod(0o600)
         with self.assertRaisesRegex(ValueError,"unpublished_initialization"):
             shards.verify(self.root)
         result=shards.recover_interrupted_rollover(self.root,acknowledge=True)
