@@ -47,8 +47,8 @@ function sandbox({referrer='',healthOk=true}={}) {
 const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
 
 test('splash attaches only to Home launch, uses local assets, and is offline-capable',()=>{
-  assert.match(page,/splash\.css\?v=splash1/);
-  assert.match(page,/<body><script src="\.\/splash\.js\?v=splash1"><\/script>/);
+  assert.match(page,/splash\.css\?v=163/);
+  assert.match(page,/<body><script src="\.\/splash\.js\?v=163"><\/script>/);
   assert.match(script,/splash-mascot\.webp/);
   assert.match(css,/prefers-reduced-motion/);
   assert.match(css,/safe-area-inset-top/);
