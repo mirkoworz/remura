@@ -1,6 +1,13 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
 
+## 05/11/2026 ore ~20:35 italiane — Prima prova P0c LIVE: NO_GO_METADATA_UNVERIFIED, accesso non privilegiato
+
+- [x] Ricevuto screenshot Termius (utente shell `ubuntu@remura-vnic`) del comando SHA-pinned: output **`REMURA_B_ORACLE_CAPACITY=NO_GO_METADATA_UNVERIFIED`**. Non sono apparsi valori reali di spazio/RAM. Il valore attesta che il modulo `inspect` non ha potuto leggere almeno un metadato; NON dimostra spazio esaurito, database assente, costo o danno. Nessuna modifica dei dati effettuata dalla sonda.
+- [x] Verifica statica del codice corrente in `deploy/oracle/install.sh`: la cartella `/opt/remura/private` appartiene all'utente di servizio `remura` e ha permessi **0700**; il server usa `/opt/remura/private/remura-prices.sqlite3` (`scripts/private_server.py`), quindi il percorso hardcoded della sonda era corretto per la configurazione standard. L'utente `ubuntu` non può attraversare quella cartella salvo ACL/privilegi specifici. **Causa probabile** del NO_GO: PermissionError, non accertabile con certezza poiché gli errori della sonda sono intenzionalmente redatti.
+- [ ] **Ritenta una sola volta in modalità strettamente limitata usando `sudo -u remura python3 -B - <<'PY'` al posto di `python3 -B - <<'PY'`**; lascia il resto del codice immutabile e con SHA256 verificato nel comando del punto P0c successivo. Non utilizzare `sudo python3`, non concedere chmod o chown, non stampare file segreti e non aprire SQLite. Se ancora NO_GO, ispezionare gli stati di accesso in modo redatto, non forzare permessi. `sudo -u remura` esegue la sola sonda come account del servizio, non come root.
+- [ ] Attendere dati aggregati reali per applicare il gate di capacità. **P0b/P0c rimangono NO-GO**; costo Always Free non certificato; video loading e LIVE v1.64 non toccati. La schermata SSH indica sistema **x86_64**: non attribuire automaticamente il shape ARM A1 della guida all'istanza effettiva; verificare in console OCI shape/Always Free e volumi prima di qualsiasi modifica.
+
 ## 05/11/2026 — Gate P0c, handoff: una SOLA lettura Oracle, codice immutabile e verificato (nessun deploy)
 
 - [x] Verificato GitHub: PR B #89 DRAFT head di partenza 9007f6a42aedf11f00b697375e8e4aca69d76d58; PR A #88 DRAFT. Main nel frattempo avanzato al commit b41324fc7e548b2e7d1428dbbca0a21ec99580dd (aggiornamento dati storici Myfxbook, NON una conferma di nuova release LIVE). Versione LIVE di riferimento v1.64 comunicata dall'utente, SHA VPS ancora N/D. Non toccare loading/notifiche.
