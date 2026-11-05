@@ -19,6 +19,16 @@ from scripts import shark_cvd_storage_gate as storage
 
 
 class CapacityReadOnlyTests(unittest.TestCase):
+    def test_standalone_constants_match_the_cvd_prototype(self):
+        self.assertEqual(capacity.SHARD_MAX_FILE_BYTES,
+                         shards.MAX_SHARD_FILE_BYTES)
+        self.assertEqual(capacity.MAX_SHARDS,shards.MAX_SHARDS)
+        self.assertEqual(capacity.MIN_RESERVE_BYTES,
+                         storage.MIN_RESERVE_BYTES)
+        self.assertEqual(capacity.RESERVE_DENOMINATOR,
+                         storage.RESERVE_FRACTION_DENOMINATOR)
+        self.assertEqual(storage.RESERVE_FRACTION_NUMERATOR,1)
+
     def setUp(self):
         temp=tempfile.TemporaryDirectory(prefix="remura-readonly-oracle-unit-")
         self.addCleanup(temp.cleanup)
