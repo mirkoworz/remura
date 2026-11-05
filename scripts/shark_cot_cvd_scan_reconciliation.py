@@ -29,8 +29,9 @@ from scripts import shark_causal_pair_audit as cotprice
 from scripts import shark_cot_asof_witness as witness
 from scripts import shark_cvd_scan_coverage as scans
 from scripts import shark_cvd_source_lineage as lineage
+from scripts import shark_cvd_prefix_lineage as prefix
 
-SCHEMA = "remura-track-b-cot-price-cvd-scan-asof-join-v2"
+SCHEMA = "remura-track-b-cot-price-cvd-scan-asof-join-v3"
 MAX_ROWS = scans.MAX_ROWS
 # Six previous M15 closes plus the last close for the original COT signal.
 # A fixed 90-minute lookback, NOT a tuned threshold or an institutional
@@ -111,7 +112,7 @@ def audit(db_main, db_private, *, as_of, days=1, secret):
         high = now.strftime("%Y-%m-%dT%H:%M:%S")
         rows = db_private.execute(
             f"""SELECT symbol,closed_at,attempted_at,state,source_hmac,
-                       new_confirmations,reason,schema_version FROM {scans.TABLE}
+                       session_prefix_hmac,new_confirmations,reason,schema_version FROM {scans.TABLE}
                 WHERE substr(closed_at,1,19)>=?
                   AND substr(closed_at,1,19)<=?
                 ORDER BY symbol,closed_at LIMIT ?""",
@@ -119,7 +120,7 @@ def audit(db_main, db_private, *, as_of, days=1, secret):
         if len(rows)>MAX_ROWS:
             raise ValueError("scan_attempt_rows_over_limit")
         indexed = {}
-        for sym, closed, attempted, state, mac, count, reason, version in rows:
+        for sym, closed, attempted, state, mac, session_mac, count, reason, version in rows:
             t = witness._parse(closed)
             at = witness._parse(attempted)
             if (sym not in scans.PILOT or version != scans.SCHEMA
@@ -131,13 +132,16 @@ def audit(db_main, db_private, *, as_of, days=1, secret):
             if state == "EVALUATED":
                 if (reason != "DETECTOR_OK" or
                         not isinstance(mac, str) or not scans.HEX.fullmatch(mac)
-                        or type(count) is not int or count < 0):
+                        or type(count) is not int or count < 0
+                        or (session_mac is not None
+                            and (not isinstance(session_mac, str)
+                                 or not scans.HEX.fullmatch(session_mac)))):
                     raise ValueError("evaluated_scan_evidence_invalid")
             elif state == "NOT_EVALUABLE":
                 if (reason not in ("SOURCE_ABSENT", "DATA_INVALID",
                                    "DATA_MISSING", "DATA_STALE",
                                    "DATA_PARTIAL", "DATA_INSUFFICIENT")
-                        or count is not None
+                        or count is not None or session_mac is not None
                         or (mac is not None
                             and (not isinstance(mac, str)
                                  or not scans.HEX.fullmatch(mac)))):
@@ -147,7 +151,7 @@ def audit(db_main, db_private, *, as_of, days=1, secret):
             key = (sym, t)
             if key in indexed:
                 raise ValueError("duplicate_scan_slot")
-            indexed[key] = (at, state, mac, count)
+            indexed[key] = (at, state, mac, count, session_mac)
         names = (
             "MATCHED_EVALUATION_NEW_LOCAL_CVD",
             "MATCHED_EVALUATION_ZERO_NEW_LOCAL_CVD",
@@ -159,12 +163,18 @@ def audit(db_main, db_private, *, as_of, days=1, secret):
         counts = Counter({n: 0 for n in names})
         windows = Counter({n: 0 for n in (
             "WINDOW_ALL_7_LOCALLY_EVALUATED_EARLIER_SOURCES_UNLINKED",
+            "WINDOW_ALL_7_M15_PREFIXES_VERIFIED_LOCAL_ONLY",
+            "UNKNOWN_WINDOW_PREFIX_MISMATCH",
             "UNKNOWN_WINDOW_MISSING_ATTEMPT",
             "UNKNOWN_WINDOW_LATE_ATTEMPT",
             "UNKNOWN_WINDOW_NOT_EVALUABLE",
             "UNKNOWN_WINDOW_LAST_SOURCE_MISMATCH",
             "UNKNOWN_WINDOW_NOT_PILOT",
         )})
+        # These main prefixes must have been captured in the ORIGINAL
+        # Squalincome transaction. Never regenerate from today's OHLC.
+        main_prefixes = prefix.verified_main_prefixes(
+            db_main, pairs=original, as_of=witness._iso(now))
         for sym, week, closed, observed, sha, cot_side in original:
             # Do NOT re-read mutable prices or use historical COT cache.
             close_time = witness._parse(closed)
@@ -189,13 +199,33 @@ def audit(db_main, db_private, *, as_of, days=1, secret):
                         window[0][2], lineage._mac(secret, sha)):
                     windows["UNKNOWN_WINDOW_LAST_SOURCE_MISMATCH"] += 1
                 else:
-                    # All seven attempts existed on time and ran the
-                    # detector. Earlier full-document HMACs necessarily
-                    # differ as more M15 arrive, so this does NOT establish
-                    # a common causal source chain or absence of divergence.
-                    windows[
-                        "WINDOW_ALL_7_LOCALLY_EVALUATED_EARLIER_SOURCES_UNLINKED"
-                    ] += 1
+                    # BOTH sides of every prefix proof were immutably
+                    # captured: private when each scan actually ran, main
+                    # within the later original Squalincome transaction.
+                    # Missing proofs do not imply matching OHLC history.
+                    if (main_prefixes is None or
+                            any(row[4] is None for row in window) or
+                            any(main_prefixes.get((
+                                sym, week, closed, observed,
+                                witness._iso(close_time-scans.STEP*i))) is None
+                                for i in range(WINDOW_SLOTS))):
+                        windows[
+                            "WINDOW_ALL_7_LOCALLY_EVALUATED_EARLIER_SOURCES_UNLINKED"
+                        ] += 1
+                    elif any(not hmac.compare_digest(
+                            row[4], prefix._mac(secret, main_prefixes[(
+                                sym, week, closed, observed,
+                                witness._iso(close_time-scans.STEP*i))]))
+                            for i, row in enumerate(window)):
+                        windows["UNKNOWN_WINDOW_PREFIX_MISMATCH"] += 1
+                    else:
+                        # Confirms SAME UTC-session M15 price/tick history
+                        # for 7 slots ONLY; not independent broker timing,
+                        # H1/H4 identity, full-session CVD completeness,
+                        # direction, or a negative trading control.
+                        windows[
+                            "WINDOW_ALL_7_M15_PREFIXES_VERIFIED_LOCAL_ONLY"
+                        ] += 1
             if entry is None:
                 counts["UNKNOWN_MISSING_ATTEMPT"] += 1
                 continue
@@ -222,6 +252,8 @@ def audit(db_main, db_private, *, as_of, days=1, secret):
             preSignalWindowGroups=dict(sorted(windows.items())),
             windowObservedSlotsOnlyNotCertifiedInstitutionalNoSignal=True,
             windowDoesNotCoverAllSessionPivotHistory=True,
+            windowProofMatchesOnlyOriginalUTCSessionM15Prefixes=True,
+            windowFullOHLCAndBrokerCollectionTimeIndependentlyVerified=False,
             allMatchedScansStillOnlyTechnicalCLVTickProxy=True,
             full34PriceOnlyDenominatorChanged=False,
             originalSignalMarketUniverse="original_cot_price_pairs_not_34_markets",
