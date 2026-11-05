@@ -148,7 +148,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_shark_oracle_staging_gate.py' -v
       - name: Verify off-by-default real Squalincome opt-in against COT failures and all 34 markets
         run: python -m unittest discover -s tests -p 'test_shark_optin_adapter.py' -v
-      - name: Test private CVD source lineage: original detector replay, exact OHLC HMAC and no retrospective binding
+      - name: 'Test private CVD source lineage - original detector replay, exact OHLC HMAC, no retrospective binding'
         run: python -m unittest discover -s tests -p 'test_shark_cvd_source_lineage.py' -v
       - name: Test append-only future CVD evidence ledger and privacy
         run: python -m unittest discover -s tests -p 'test_shark_cvd_ledger.py' -v
