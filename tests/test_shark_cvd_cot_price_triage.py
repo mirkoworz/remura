@@ -160,6 +160,12 @@ class TripleCausalTriageTests(unittest.TestCase):
         self.assertEqual(report["earlierSnapshotOrientations"],
                          {"SAME_TECHNICAL_DIRECTION":1})
         self.assertEqual(report["verifiedTriplesAnyTier"],1)
+        self.assertEqual(report["minimumSignalsWithVerifiedCVD"],1)
+        self.assertEqual(report["distinctSignalsWithAnyVerifiedCVD"],1)
+        self.assertEqual(report["verifiedCvdSignalGroups"],
+                         {"exactOnly":0,"earlierOnly":1,"bothEvidenceTiers":0})
+        self.assertEqual(report["signalsWithoutAnyVerifiedLocalCVD"],0)
+        self.assertFalse(report["signalsWithoutMatchingLocalCvdProofAreNegatives"])
         self.assertFalse(report["earlierTierIsSameEntireOHLCSource"])
         self.assertFalse(report["tradingEdgeEstablished"])
         text=json.dumps(report)
@@ -174,6 +180,10 @@ class TripleCausalTriageTests(unittest.TestCase):
         self.assertFalse(report["earlierSnapshotPrefixProofsAvailable"])
         self.assertIsNone(report["verifiedEarlierSnapshotTriples"])
         self.assertIsNone(report["verifiedTriplesAnyTier"])
+        self.assertIsNone(report["distinctSignalsWithAnyVerifiedCVD"])
+        self.assertIsNone(report["verifiedCvdSignalGroups"])
+        self.assertIsNone(report["signalsWithoutAnyVerifiedLocalCVD"])
+        self.assertFalse(report["signalsWithoutMatchingLocalCvdProofAreNegatives"])
 
     def test_earlier_snapshot_with_mutated_prior_m15_is_not_promoted(self):
         # Modify a prior M15 tick count and keep H1/H4 rollups
@@ -243,6 +253,12 @@ class TripleCausalTriageTests(unittest.TestCase):
         self.assertEqual(result["sourceBoundCvdEvents"],1)
         self.assertEqual(result["exactSnapshotTriples"],1)
         self.assertEqual(result["distinctSignalsWithExactCVD"],1)
+        self.assertEqual(result["minimumSignalsWithVerifiedCVD"],1)
+        # Without the earlier tier, this is a LOWER BOUND, not complete
+        # union across different original price snapshots.
+        self.assertIsNone(result["distinctSignalsWithAnyVerifiedCVD"])
+        self.assertIsNone(result["verifiedCvdSignalGroups"])
+        self.assertIsNone(result["signalsWithoutAnyVerifiedLocalCVD"])
         self.assertEqual(result["orientations"],{
             "SAME_TECHNICAL_DIRECTION":1})
         self.assertFalse(result["cvdAggressorFlowMeasured"])
@@ -255,6 +271,38 @@ class TripleCausalTriageTests(unittest.TestCase):
         self.assertNotIn(self.event["id"],text)
         self.assertNotIn(lineage._document_sha(self.doc),text)
         self.assertNotIn("0.995",text)
+
+    def test_exact_verified_signal_is_one_even_with_prefix_tier_available(self):
+        self._proof(prefix_enabled=True)
+        self._cvd()
+        result=self._triage()
+        self.assertTrue(result["earlierSnapshotPrefixProofsAvailable"])
+        self.assertEqual(result["distinctSignalsWithAnyVerifiedCVD"],1)
+        self.assertEqual(result["verifiedCvdSignalGroups"],
+                         {"exactOnly":1,"earlierOnly":0,"bothEvidenceTiers":0})
+        self.assertEqual(result["signalsWithoutAnyVerifiedLocalCVD"],0)
+        self.assertFalse(result["signalsWithoutMatchingLocalCvdProofAreNegatives"])
+
+    def test_nonmatching_proof_is_unknown_not_no_divergence_control(self):
+        self._proof(prefix_enabled=True)
+        changed=json.loads(json.dumps(self.doc))
+        # Different full OHLC H1 source document; same M15 end is NOT an
+        # earlier-snapshot evidence match and cannot become a control group.
+        changed["timeframes"]["H1"][-1]["h"]+=0.001
+        self._cvd(doc=changed)
+        report=self._triage()
+        self.assertEqual(report["validLocalCotPricePairs"],1)
+        self.assertEqual(report["exactSnapshotTriples"],0)
+        self.assertEqual(report["verifiedEarlierSnapshotTriples"],0)
+        self.assertEqual(report["distinctSignalsWithAnyVerifiedCVD"],0)
+        self.assertEqual(report["minimumSignalsWithVerifiedCVD"],0)
+        self.assertEqual(report["signalsWithoutAnyVerifiedLocalCVD"],1)
+        self.assertEqual(report["verifiedCvdSignalGroups"],
+                         {"exactOnly":0,"earlierOnly":0,"bothEvidenceTiers":0})
+        self.assertEqual(report["missingLocalCvdProofMeaning"],
+                         "UNKNOWN_NOT_A_NEGATIVE_CLASS")
+        self.assertFalse(report["signalsWithoutMatchingLocalCvdProofAreNegatives"])
+        self.assertEqual(report["institutionalPredictiveCohortsAdmissible"],0)
 
     def test_legacy_event_with_same_market_time_is_still_unknown(self):
         self._proof()
