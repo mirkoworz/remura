@@ -12,7 +12,7 @@
 ## Codice protetto
 
 - `deploy/oracle/release_v163.py`: installer derivato da v1.62, base SHA v1.62 e dodici Git blob LIVE pinnati, tre nuovi asset assenti obbligatori, tree/zip sha verificati, compare diff allowlist, Price e Insights CI *push/main* verdi. `--check` è sola lettura; `--apply` controlla nuovamente sotto lock autoupdater, backup SQLite e restore-test, registra rollback codici/hashes, ferma solo il servizio web per la sostituzione atomica, lo riavvia e verifica health; in caso di errore tenta rollback. **Non riconcilia lo stato autoupdater**.
-- `deploy/oracle/reconcile_v163.py`: verifica il blob immutabile dell'installer v1.63 `8ee75ef7964805431d19f2c725baa017a663797c` leggendo il commit immutabile `378a3a3fa29802565b8d3990c9c2dfe476cd2777`; convalida i 15 file installati, banner Italia, manifest rollback, SQLite backup, CI push/main e SHA target. `--check` non scrive; `--apply` aggiorna **soltanto** `autoupdate-state.json` con backup dello stato. Non reinstalla codice né riavvia.
+- `deploy/oracle/reconcile_v163.py`: verifica il blob immutabile dell'installer v1.63 `0214b8baf5ed3bdefebb21bbfd08204c8d99dd45` leggendo il commit immutabile `21281734e8e10540e57fef15d0cb728b890f8cd0`; convalida i 15 file installati, banner Italia, manifest rollback, SQLite backup, CI push/main e SHA target. `--check` non scrive; `--apply` aggiorna **soltanto** `autoupdate-state.json` con backup dello stato. Non reinstalla codice né riavvia.
 - CI offline: vecchi test v1.62 ancora attivi, `tests/test_release_v163.py`, `tests/test_reconcile_v163.py`, `tests/splash.test.js`, test release consistency e suite Price/Insights; nessun segreto o account trading nei workflow.
 
 ## Gate prima dell'installazione (ancora NON eseguiti)
