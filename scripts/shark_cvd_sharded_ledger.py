@@ -364,7 +364,7 @@ def recover_interrupted_rollover(root, *, acknowledge=False):
         segments,_,_,_=_inspect(
             folder,allow_pending_latest_seal=True,ignore_unpublished=True)
         for p in staged:
-            retained=folder/("unpublished-retained-"+p.name[1:])
+            retained=folder/("unpublished-retained-"+p.name)
             os.link(p,retained)  # fail if evidence is already retained
             os.unlink(p)
         if staged:
