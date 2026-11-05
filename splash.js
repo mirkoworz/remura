@@ -8,7 +8,17 @@
   // Navigating back to Home from within REMURA must not replay the splash.
   if (ownOrigin) return;
   const reduced = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  const MIN_MS = reduced ? 180 : 1850;
+  // Option B: a deliberate ~4.3 s cinematic entrance, not slower network checks.
+  // Visual milestones are presentation progress; health retains its real outcome.
+  const VISUAL_STAGES = [
+    [550,24,"Preparazione interfaccia"],
+    [600,43,"Caricamento grafica"],
+    [650,62,"Verifica connessione"],
+    [650,81,"Preparazione dashboard"],
+    [600,95,"Avvicinamento allo squalo"],
+    [250,97,"Aggancio in corso"]
+  ];
+  const ATTACHED_HOLD_MS = reduced ? 80 : 700;
   const CHECK_TIMEOUT_MS = 1100;
   const sharkSvg = `<svg viewBox="0 0 240 104" aria-hidden="true" focusable="false" width="100%" height="100%">
     <defs><linearGradient id="rmSharkPaint" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#a3e5e9"/><stop offset=".72" stop-color="#448ca8"/><stop offset="1" stop-color="#1e466d"/></linearGradient></defs>
@@ -100,21 +110,36 @@
       splash.classList.add("rm-splash-exit");
       setTimeout(() => splash.remove(),reduced?0:340);
     }
-    update(20,"Interfaccia avviata");
-    // Only one GET to an existing same-origin health endpoint. No scans or provider calls.
+    update(8,"Avvio interfaccia");
+    // Exactly one GET to existing health; never add a paid financial provider call.
     const health = pingExistingHealth().then(result => {
-      update(82,result.ok?"Server interno raggiungibile":"Server: controllo non riuscito");
-      status.textContent=result.ok?"Preparazione dashboard…":"I dati potrebbero non essere disponibili.";
+      status.textContent = result.ok
+        ? "Server interno raggiungibile"
+        : "Verifica server non riuscita; la dashboard rimane accessibile.";
       return result;
     });
-    Promise.all([health,wait(MIN_MS)]).then(([result]) => {
+    async function playIntro() {
+      if (!reduced) {
+        // The remora and progress bar advance together; health is never faked.
+        for (const [delay,pct,message] of VISUAL_STAGES) {
+          await wait(delay);
+          if (closed) return;
+          update(pct,message);
+        }
+      }
+      const result = await health;
+      if (closed) return;
       update(100,"Avvio completato");
       fish.classList.add("rm-splash-attached");
-      status.textContent=result.ok?"Squali individuati. Si parte! 🦈":"Interfaccia pronta · verifica la connessione";
-      setTimeout(close,reduced?80:420);
-    }).catch(close);
-    // Never trap the user on a splash when unexpected JS or network failures occur.
-    setTimeout(close,4500);
+      status.textContent = result.ok
+        ? "Squali individuati. Si parte! 🦈"
+        : "Interfaccia pronta · verifica la connessione";
+      await wait(ATTACHED_HOLD_MS);
+      close();
+    }
+    playIntro().catch(close);
+    // Fail-open even if unexpected JS or network failures occur.
+    setTimeout(close,6200);
     window.addEventListener("pagehide",close,{once:true});
   }
   // Script is loaded immediately after <body>, before page content: no first-frame flash.
