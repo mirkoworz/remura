@@ -21,9 +21,10 @@ import sqlite3
 from scripts import cvd_divergence as detector
 from scripts import shark_cot_asof_witness as witness
 from scripts import shark_cvd_source_lineage as lineage
+from scripts import shark_cvd_prefix_lineage as prefix
 
 TABLE = "research_cvd_scan_attempts"
-SCHEMA = "remura-track-b-cvd-scan-attempt-coverage-v1"
+SCHEMA = "remura-track-b-cvd-scan-attempt-coverage-v2"
 TRIGGERS = ("research_cvd_scan_no_update", "research_cvd_scan_no_delete")
 PILOT = ("EURUSD", "XAUUSD")
 STEP = timedelta(minutes=15)
@@ -44,6 +45,7 @@ def ensure_schema(db):
             attempted_at TEXT NOT NULL,
             state TEXT NOT NULL CHECK(state IN ('EVALUATED','NOT_EVALUABLE')),
             source_hmac TEXT,
+            session_prefix_hmac TEXT,
             new_confirmations INTEGER,
             reason TEXT NOT NULL,
             schema_version TEXT NOT NULL CHECK(schema_version='{SCHEMA}'),
@@ -95,7 +97,8 @@ def record(db, *, symbol, slot_closed_at, source_document, secret, clock=None):
         raise ValueError("not_a_current_closed_m15_attempt")
     # Validate HMAC key even when this particular source is missing.
     lineage._mac(secret, "0"*64)
-    state, count, reason, mac = "NOT_EVALUABLE", None, "SOURCE_ABSENT", None
+    state, count, reason, mac, session_mac = (
+        "NOT_EVALUABLE", None, "SOURCE_ABSENT", None, None)
     if source_document is not None:
         doc = source_document
         if (not isinstance(doc, dict) or doc.get("symbol") != symbol
@@ -138,6 +141,15 @@ def record(db, *, symbol, slot_closed_at, source_document, secret, clock=None):
             # NEW confirmations on THIS closed slot, not repeated old ones.
             count = sum(witness._parse(ev["confirmedAt"]) == closed
                         for ev in analysis["events"])
+            # Stamp the ORIGINAL causal M15-session prefix AT THE SCAN, not
+            # from subsequently mutated cached prices. Reuse the exact
+            # canonical prefix algorithm captured by Squalincome.
+            # Short detector warm-up sources (<55 archived M15) cannot
+            # satisfy that independent prefix contract: keep evaluation
+            # but its cross-snapshot lineage remains N/D, never "same".
+            if len(bars) >= 55:
+                session_mac = prefix._mac(
+                    secret, prefix._sha(doc, witness._iso(closed)))
         elif analysis["status"] in {
                 "invalid", "missing", "stale", "partial", "insufficient"}:
             reason = "DATA_" + analysis["status"].upper()
@@ -155,10 +167,10 @@ def record(db, *, symbol, slot_closed_at, source_document, secret, clock=None):
             raise ValueError("private_cvd_coverage_capacity_reached")
         db.execute(f"""INSERT INTO {TABLE}
             (symbol,closed_at,attempted_at,state,source_hmac,
-             new_confirmations,reason,schema_version)
-            VALUES (?,?,?,?,?,?,?,?)""",
+             session_prefix_hmac,new_confirmations,reason,schema_version)
+            VALUES (?,?,?,?,?,?,?,?,?)""",
             (symbol, witness._iso(closed), witness._iso(now), state,
-             mac, count, reason, SCHEMA))
+             mac, session_mac, count, reason, SCHEMA))
     return {"schema": SCHEMA, "status": state,
             "newConfirmationsOnThisClosedSlot": count,
             "isAProvenNegativeTradingControl": False,
@@ -202,7 +214,7 @@ def audit(db, *, as_of, days=1):
             int((now-GRACE).timestamp())//900*900, tz=now.tzinfo)
         rows = db.execute(
             f"""SELECT symbol,closed_at,attempted_at,state,source_hmac,
-                       new_confirmations,reason,schema_version FROM {TABLE}
+                       session_prefix_hmac,new_confirmations,reason,schema_version FROM {TABLE}
                 WHERE substr(closed_at,1,19)>=?
                   AND substr(closed_at,1,19)<=?
                 ORDER BY symbol,closed_at LIMIT ?""",
@@ -212,7 +224,7 @@ def audit(db, *, as_of, days=1):
         if len(rows) > MAX_ROWS:
             raise ValueError("cvd_coverage_audit_unbounded")
         by_symbol = {sym: [] for sym in PILOT}
-        for sym, closed, attempted, state, mac, count, reason, version in rows:
+        for sym, closed, attempted, state, mac, session_mac, count, reason, version in rows:
             at, seen = witness._parse(closed), witness._parse(attempted)
             if (sym not in by_symbol or version != SCHEMA
                     or witness._iso(at) != closed
@@ -223,14 +235,19 @@ def audit(db, *, as_of, days=1):
             if state == "EVALUATED":
                 if (reason != "DETECTOR_OK" or not isinstance(mac, str)
                         or not HEX.fullmatch(mac) or type(count) is not int
-                        or count < 0):
+                        or count < 0
+                        or (session_mac is not None and
+                            (not isinstance(session_mac, str)
+                             or not HEX.fullmatch(session_mac)))):
+
                     raise ValueError("cvd_evaluated_proof_corrupt")
             elif (state != "NOT_EVALUABLE" or count is not None or
                   reason not in ("SOURCE_ABSENT", "DATA_INVALID",
                                  "DATA_MISSING", "DATA_STALE",
                                  "DATA_PARTIAL", "DATA_INSUFFICIENT") or
                   (mac is not None and
-                   (not isinstance(mac, str) or not HEX.fullmatch(mac)))):
+                   (not isinstance(mac, str) or not HEX.fullmatch(mac))) or
+                  session_mac is not None):
                 raise ValueError("cvd_missing_proof_corrupt")
             by_symbol[sym].append((at, state, count))
         result = {}
