@@ -26,6 +26,8 @@ from scripts import shark_causal_pair_audit as cotprice
 from scripts import shark_cot_asof_witness as witness
 from scripts import shark_cvd_ledger as cvd
 from scripts import shark_cvd_source_lineage as source
+from scripts import shark_cvd_prefix_lineage as prefix
+import hmac
 
 SCHEMA = "remura-track-b-cot-price-cvd-exact-snapshot-triage-v1"
 MAX_DAYS = 7
@@ -143,10 +145,20 @@ def audit(db_main,db_cvd,*,as_of,days=1,secret):
         triple_count=0
         distinct=0
         orientations=Counter()
+        main_prefix=prefix.verified_main_prefixes(
+            db_main,pairs=accepted,as_of=witness._iso(now))
+        private_prefix=prefix.verified_private_prefixes(
+            db_cvd,events=seen,as_of=witness._iso(now))
+        earlier_available=(main_prefix is not None and
+                           private_prefix is not None)
+        earlier_triples=0
+        earlier_signals=0
+        earlier_orientations=Counter()
         for sym,week,closed,observed_at,sha,cot_side in accepted:
             original=witness._parse(observed_at)
             closed_time=witness._parse(closed)
             matching=0
+            earlier_matches=0
             for key,_,side,confirmed_at,detected_at in by_market[sym]:
                 # Must have been confirmed on closed prices not later than
                 # the original signal's last M15 close.
@@ -158,16 +170,39 @@ def audit(db_main,db_cvd,*,as_of,days=1,secret):
                     db_cvd,event_key=key,original_price_sha=sha,
                     observed_at=observed_at,as_of=witness._iso(now),
                     secret=secret)
-                if candidate["state"]!="EXACT_LOCAL_SOURCE_AND_CHRONOLOGY":
-                    continue
-                matching+=1
-                orientations["SAME_TECHNICAL_DIRECTION" if (
+                orientation=("SAME_TECHNICAL_DIRECTION" if (
                     (side=="bullish" and cot_side==1) or
                     (side=="bearish" and cot_side==-1)
-                ) else "OPPOSITE_TECHNICAL_DIRECTION"]+=1
+                ) else "OPPOSITE_TECHNICAL_DIRECTION")
+                if candidate["state"]=="EXACT_LOCAL_SOURCE_AND_CHRONOLOGY":
+                    matching+=1
+                    orientations[orientation]+=1
+                    continue
+                # A changed full document is NOT evidence of a match.
+                # An earlier-snapshot tier needs TWO immutable, prospectively
+                # captured M15 session-prefix proofs with identical HMAC.
+                # It never re-reads mutable OHLC or retrofits old CVD events.
+                if not earlier_available:
+                    continue
+                prior=private_prefix.get(key)
+                if prior is None:
+                    continue
+                cutoff,private_mac=prior
+                if witness._parse(cutoff)>=closed_time:
+                    continue  # same latest close, not earlier snapshot
+                main_sha=main_prefix.get(
+                    (sym,week,closed,observed_at,cutoff))
+                if main_sha is None or not hmac.compare_digest(
+                        private_mac,prefix._mac(secret,main_sha)):
+                    continue
+                earlier_matches+=1
+                earlier_orientations[orientation]+=1
             if matching:
                 distinct+=1
                 triple_count+=matching
+            if earlier_matches:
+                earlier_signals+=1
+                earlier_triples+=earlier_matches
         return _result(
             "EXACT_LOCAL_COT_PRICE_CVD_SOURCE_MATCHES_AUDITED_NOT_PREDICTIVE",
             validLocalCotPricePairs=len(accepted),
@@ -177,6 +212,18 @@ def audit(db_main,db_cvd,*,as_of,days=1,secret):
             exactSnapshotTriples=triple_count,
             distinctSignalsWithExactCVD=distinct,
             orientations=dict(sorted(orientations.items())),
+            earlierSnapshotPrefixProofsAvailable=earlier_available,
+            verifiedEarlierSnapshotTriples=(
+                earlier_triples if earlier_available else None),
+            distinctSignalsWithEarlierCVD=(
+                earlier_signals if earlier_available else None),
+            earlierSnapshotOrientations=(
+                dict(sorted(earlier_orientations.items()))
+                if earlier_available else None),
+            verifiedTriplesAnyTier=(
+                triple_count+earlier_triples if earlier_available else None),
+            earlierTierIsSameEntireOHLCSource=False,
+            earlierTierOnlyIdenticalUTCSessionM15Prefix=True,
             sameSourceHMACAndChronologyVerified=True,
             localEvidenceOnly=True,
             coverageFromBothDatabasesNotExternallyCertified=True,
