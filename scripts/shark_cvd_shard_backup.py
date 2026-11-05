@@ -40,12 +40,14 @@ def _private_parent(target):
     return path
 
 
-def _inventory(folder,segments):
+def _inventory(folder,segments, *, is_snapshot=False):
     valid={shards._name(seq) for seq,_,_ in segments}
     valid.update(shards._seal_name(seq) for seq,_,sealed in segments if sealed)
     valid.update(p.name for p in folder.iterdir() if RETAINED.fullmatch(p.name))
     actual={p.name for p in folder.iterdir()}
     actual.discard(".cvd-shards.lock")
+    if is_snapshot:
+        actual.discard(MANIFEST)
     if actual!=valid:
         raise ValueError("unexpected_or_missing_cvd_archive_files")
     for name in valid:
@@ -207,7 +209,7 @@ def verify_snapshot(destination):
     if (len(segments)!=doc["allArchivedSegments"]
             or sum(int(x[2]) for x in segments)!=doc["sealedSegments"]
             or count!=doc["totalObservedAttempts"]
-            or set(file_names)!=set(_inventory(root,segments))):
+            or set(file_names)!=set(_inventory(root,segments,is_snapshot=True))):
         raise ValueError("cvd_snapshot_chain_or_count_mismatch")
     return {
         "status":"PRIVATE_CVD_SHARD_SNAPSHOT_VERIFIED_LOCAL_ONLY",
