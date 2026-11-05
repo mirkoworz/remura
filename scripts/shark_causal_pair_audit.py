@@ -168,23 +168,32 @@ def audit(db, *, as_of, days=1):
                 "WHERE type='trigger' AND tbl_name=?", (table,))}
             if not set(triggers).issubset(existing):
                 raise ValueError("local_proof_immutability_missing")
-        min_stamp=witness._iso(since)
-        max_stamp=witness._iso(now)
+        # Legacy observed_at may end in 'Z' while prospective evidence
+        # uses '.000000Z'. Lexical RFC3339 comparisons can silently exclude
+        # an observation exactly at an as_of second. Filter on the UTC
+        # calendar-second prefix, then enforce the precise time in Python.
+        # Never promote a future fractional-second event.
+        from_second=since.strftime("%Y-%m-%dT%H:%M:%S")
+        until_second=now.strftime("%Y-%m-%dT%H:%M:%S")
         links=db.execute(
             f"SELECT symbol,cot_week,price_closed_at,observed_at,linked_at,"
             f"cot_side,price_state,source_version_evidence,evidence_digest,algorithm "
-            f"FROM {cot.TABLE} WHERE observed_at>=? AND observed_at<=? "
+            f"FROM {cot.TABLE} WHERE substr(observed_at,1,19)>=? "
+            "AND substr(observed_at,1,19)<=? "
             "ORDER BY observed_at,symbol LIMIT ?",
-            (min_stamp,max_stamp,MAX_ROWS+1)).fetchall()
+            (from_second,until_second,MAX_ROWS+1)).fetchall()
         price_rows=db.execute(
             f"SELECT symbol,report_date,price_time,observed_at,witnessed_at,"
             f"source_document_sha256,m15_closed_at,h1_closed_at,h4_closed_at,"
             f"last16_tick_volume_complete,algorithm "
-            f"FROM {price.TABLE} WHERE observed_at>=? AND observed_at<=? "
+            f"FROM {price.TABLE} WHERE substr(observed_at,1,19)>=? "
+            "AND substr(observed_at,1,19)<=? "
             "ORDER BY observed_at,symbol LIMIT ?",
-            (min_stamp,max_stamp,MAX_ROWS+1)).fetchall()
+            (from_second,until_second,MAX_ROWS+1)).fetchall()
         if len(links)>MAX_ROWS or len(price_rows)>MAX_ROWS:
             raise ValueError("local_proof_rows_over_limit")
+        links=[row for row in links if since<=_time(row[3])<=now]
+        price_rows=[row for row in price_rows if since<=_time(row[3])<=now]
         prices={(p[0],p[1],p[2]):p for p in price_rows}
         if len(prices)!=len(price_rows):
             raise ValueError("duplicate_price_proof_key")
