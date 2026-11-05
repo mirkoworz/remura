@@ -193,15 +193,14 @@ def audit(db, *, as_of, days=1):
                     descriptive += 1
                     if checked[14] == 1:
                         volume_complete += 1
-                    else:
-                        counts["PRICE_READY_BUT_TICK_VOLUME_INCOMPLETE"] += 1
+                    # Incomplete tick volume disqualifies a future
+                    # volume-dependent analysis, NOT price-only context.
+                    # Report it in a separate non-exclusion count below.
 
         total = len(data)*34
         excluded = total-descriptive
         if (descriptive < 0 or volume_complete > descriptive
-                or sum(v for k,v in counts.items()
-                       if k != "PRICE_READY_BUT_TICK_VOLUME_INCOMPLETE"
-                       ) != excluded):
+                or sum(counts.values()) != excluded):
             raise ValueError("nonconserving_admission_denominator")
 
         return _report(
