@@ -45,6 +45,14 @@ def _result(status, **kwargs):
         "cotCFTCReleaseTimeExternallyNotarized":False,
         "crossDatabaseAtomicCommit":False,
         "exactSourceDocumentIsCausalMarketEdge":False,
+        # Missing private or prefix evidence is UNKNOWN, never proof that
+        # no technical divergence occurred or a negative training label.
+        "signalsWithoutMatchingLocalCvdProofAreNegatives":False,
+        "missingLocalCvdProofMeaning":"UNKNOWN_NOT_A_NEGATIVE_CLASS",
+        "minimumSignalsWithVerifiedCVD":None,
+        "distinctSignalsWithAnyVerifiedCVD":None,
+        "verifiedCvdSignalGroups":None,
+        "signalsWithoutAnyVerifiedLocalCVD":None,
         "institutionalPredictiveCohortsAdmissible":0,
         "netWalkForwardOutcomesAdmissible":0,
         "tradingEdgeEstablished":False,
@@ -154,6 +162,10 @@ def audit(db_main,db_cvd,*,as_of,days=1,secret):
         earlier_triples=0
         earlier_signals=0
         earlier_orientations=Counter()
+        any_signal_count=0
+        exact_only=0
+        earlier_only=0
+        both_tiers=0
         for sym,week,closed,observed_at,sha,cot_side in accepted:
             original=witness._parse(observed_at)
             closed_time=witness._parse(closed)
@@ -203,6 +215,25 @@ def audit(db_main,db_cvd,*,as_of,days=1,secret):
             if earlier_matches:
                 earlier_signals+=1
                 earlier_triples+=earlier_matches
+            # Match COUNTS above refer to CVD events; the following group
+            # counts refer to ORIGINAL COT+price signals. One signal can
+            # match several events or both evidence tiers but contributes
+            # once to the union. Incomplete earlier-tier proof means groups
+            # remain N/D rather than treating exact matches as exhaustive.
+            if earlier_available:
+                if matching or earlier_matches:
+                    any_signal_count+=1
+                if matching and earlier_matches:
+                    both_tiers+=1
+                elif matching:
+                    exact_only+=1
+                elif earlier_matches:
+                    earlier_only+=1
+        if earlier_available:
+            if (exact_only+earlier_only+both_tiers!=any_signal_count
+                    or any_signal_count>len(accepted)
+                    or any_signal_count>distinct+earlier_signals):
+                raise ValueError("verified_cvd_signal_group_denominator_mismatch")
         return _result(
             "EXACT_LOCAL_COT_PRICE_CVD_SOURCE_MATCHES_AUDITED_NOT_PREDICTIVE",
             validLocalCotPricePairs=len(accepted),
@@ -220,6 +251,16 @@ def audit(db_main,db_cvd,*,as_of,days=1,secret):
             earlierSnapshotOrientations=(
                 dict(sorted(earlier_orientations.items()))
                 if earlier_available else None),
+            minimumSignalsWithVerifiedCVD=(
+                any_signal_count if earlier_available else distinct),
+            distinctSignalsWithAnyVerifiedCVD=(
+                any_signal_count if earlier_available else None),
+            verifiedCvdSignalGroups=(
+                {"exactOnly":exact_only, "earlierOnly":earlier_only,
+                 "bothEvidenceTiers":both_tiers}
+                if earlier_available else None),
+            signalsWithoutAnyVerifiedLocalCVD=(
+                len(accepted)-any_signal_count if earlier_available else None),
             verifiedTriplesAnyTier=(
                 triple_count+earlier_triples if earlier_available else None),
             earlierTierIsSameEntireOHLCSource=False,
