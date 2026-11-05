@@ -1,6 +1,36 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
 
+## 05/11/2026 ore 20:50 italiane — P0b: tre campioni CPU/PSI solo lettura, baseline a riposo PASS
+
+**Evidenza:** screenshot Termius dell'utente dopo `REMURA_P0B_CPU_PASSIVE_THREE_SAMPLES`. Nello screenshot sono visibili i campioni 2 e 3, intervallati da 15 secondi, e le ultime righe PSI del campione 1. Non attribuire valori del servizio al campione 1 senza il suo inizio visibile.
+
+| Misura | Campione 2 | Campione 3 |
+|---|---:|---:|
+| Ora UTC | 19:49:43 | 19:49:58 |
+| ActiveState | active | active |
+| MemoryCurrent (bytes) | 60.289.024 | 60.289.024 |
+| Memoria cgroup approssimata | 57,5 MiB | 57,5 MiB |
+| TasksCurrent | 5 | 5 |
+| CPUUsageNSec (cumulativo) | 53.261.952.000 | 53.263.649.000 |
+| CPUUsageNSec differenza | — | **1.697.000 ns = 1,697 ms in 15 s** |
+| CPU quota di un core intero nel periodo | — | ~**0,0113%** (NON la quota effettiva OCI) |
+| CPU PSI some avg10/60/300 | 0,00% | 0,00% |
+| CPU PSI some total (microsecondi) | 753.219.095 | 753.226.346 (+7.251 us) |
+| CPU PSI full avg10/60/300 | 0,00% | 0,00% |
+| I/O PSI some avg10/60/300 | 0,00% | 0,00% |
+| I/O PSI some total (microsecondi) | 418.302.234 | 418.302.234 (invariato) |
+| I/O PSI full avg10/60/300 | 0,00% | 0,00% |
+| I/O PSI full total (microsecondi) | 382.421.874 | 382.421.874 (invariato) |
+
+- [x] **P0b CPU/IO idle PASS evidenza puntuale:** servizio attivo; nei 15 s osservati CPU cumulativa cresce pochissimo e memoria stabile. Non ci sono attese I/O né pressione PSI recente misurata durante questi campioni. Non interpretare il valore cumulativo di CPUUsageNSec come velocità istantanea, né `some avg10=0` come prova di assenza permanente di contesa.
+- [ ] **Concorrenza reale prezzi/CVD ancora NON misurata.** Questo intervallo potrebbe essere tra due batch cTrader, senza carico; è scorretto certificare 34 mercati, tempi di ingest, H1 o sicurezza sotto lavoro di ricerca da uno snapshot inattivo. La strategia consigliata è evitare benchmark intensivi sulla micro VPS finché non è accertata la CPU OCI e la qualità dei dati, mantenendo i prezzi e Squalincome prioritari.
+- [ ] **Prossimo step più economico/sicuro:** un GET di stato preesistente **solo su localhost**, restituendo pochi campi whitelist di `/private-api/prices/status` per identificare stato del collector, eventuale ultimo tentativo, timestamp server, quantità e qualità senza prezzi/OHLC e senza nuove chiamate cTrader. La GET già esistente apre normalmente la connessione interna SQLite di REMURA; non manipolare database direttamente, non duplicare feed e non forzare un batch. Solo se risulta raccolta attiva, progettare un sampler passivo leggero durante un ingest naturalmente pianificato (nessun cron installato).
+- [ ] **Billing P0c ancora NO-GO**: i circa 40,5 GiB liberi e ~952 MiB RAM non attestano shape, quote OCI o fatture. Non comprare/ridimensionare alcunché; ricontrollare in console tipologia `E2.1.Micro` (da confermare), volumi ed eleggibilità Always Free.
+- [x] PR #89 ancora DRAFT nel branch B; LIVE v1.64 con loading/notifiche intatta, nessun merge/deploy/abilitazione CVD, nessuna prova di edge statisticamente validato.
+
+
+
 ## 05/11/2026 ore 20:46 italiane — P0b: baseline REALE memoria, swap, servizio e carico VPS (nessun benchmark)
 
 **Origine:** screenshot Termius inviato dall'utente con il comando read-only `free -m; systemctl show remura-private.service ...; cat /proc/pressure/memory; uptime`. Questi sono **un campione** della VPS, non un carico di ricerca CVD e non una serie durante ingest di cTrader. La precedente misura di spazio reale alle 20:42 rimane valida soltanto come snapshot del volume.
@@ -22,7 +52,7 @@
 
 - [x] **P0b baseline idle/resource observation = PASS raccolta evidenza:** REMURA attiva, uso RAM cgroup ~99 MiB, nessuna pressione di memoria negli intervalli PSI osservati, swap limitato. Sono dati rassicuranti sul funzionamento CORRENTE; `load average` **non** è una misura diretta di percentuale CPU né prova margine di quota 1/8 OCPU.
 - [ ] **P0b performance sotto ingest reale = NO-GO:** non sono stati misurati latenze batch prezzi, coesistenza con recorder, crescita RAM durante ingest o quota CPU effettiva; rimangono vietati esperimenti intensivi 34×4000 o attivazioni CVD sulla micro istanza. Possibile alternativa progettuale: calcoli pesanti OFFLINE GitHub Actions, sotto quote già verificate e senza inviare dati privati nei log.
-- [ ] **PROSSIMA MISURA SICURA senza scritture:** tre campioni a intervalli di 15s del servizio e PSI CPU/I/O, solo lettura e senza broker calls. La macchina continua a svolgere normalmente il suo lavoro; se CPUUsageNSec risulta n/a, NON concludere CPU=0.
+- [x] **Tre campioni CPU/PSI effettuati alle 20:50**: dettagli esatti nella nuova sezione; solo baseline a riposo, NON overlap ingest.
 
 ~~~bash
 printf 'REMURA_P0B_CPU_PASSIVE_THREE_SAMPLES\n'
