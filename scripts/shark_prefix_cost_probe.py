@@ -22,6 +22,9 @@ import sys
 import time
 
 ROOT=Path(__file__).resolve().parents[1]
+# Direct "python scripts/<tool>.py" starts with scripts/ on sys.path,
+# unlike unittest from repository root. Add the package parent explicitly.
+sys.path.insert(0,str(ROOT))
 sys.path.insert(0,str(ROOT/"scripts"))
 sys.path.insert(0,str(ROOT/"tests"))
 
