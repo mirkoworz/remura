@@ -111,6 +111,32 @@ class WalkforwardTests(unittest.TestCase):
         result = run([e], sources=doc)
         self.assertGreater(result["excluded"].get("future_session_gap", 0), 0)
 
+    def test_missing_m15_at_observation_blocks_unexecutable_entry_bridge(self):
+        # Event is observed five minutes into M15 #40, with planned
+        # execution at the opening of #41. Deleting #40 must NOT allow
+        # the simulator to jump from the last closed bar #39 to #41.
+        missing_current = markets()
+        missing_current["EURUSD"]["M15"].pop(40)
+        report = run([event(40)], sources=missing_current)
+        self.assertEqual(report["excluded"].get("entry_history_gap"), 1)
+        self.assertEqual(report["folds"]["train"]["priceOnly"]["samples"], 0)
+        self.assertEqual(report["folds"]["train"]["cvdFiltered"]["samples"], 0)
+
+    def test_missing_last_closed_m15_cannot_be_ignored_by_old_atr_window(self):
+        # #39 would have closed at the observation's latest eligible
+        # boundary, but earlier #38 still gives a valid contiguous ATR.
+        # The bridge to opening #41 must fail nevertheless.
+        missing_closed = markets()
+        missing_closed["EURUSD"]["M15"].pop(39)
+        report = run([event(40)], sources=missing_closed)
+        self.assertEqual(report["excluded"].get("entry_history_gap"), 1)
+        self.assertEqual(report["folds"]["train"]["priceOnly"]["samples"], 0)
+
+    def test_complete_observation_to_next_open_bridge_still_admitted(self):
+        baseline = run([event(40)])
+        self.assertEqual(baseline["excluded"].get("entry_history_gap", 0), 0)
+        self.assertEqual(baseline["folds"]["train"]["priceOnly"]["samples"], 1)
+
     def test_spread_and_slippage_reduce_net_return(self):
         cheap = run([event(40)], costs={"EURUSD": {
             "spreadBps": 0.1, "slippageEachSideBps": 0,
