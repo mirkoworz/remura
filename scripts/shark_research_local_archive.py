@@ -82,13 +82,14 @@ def _checks(db, tables):
             triggers=db.execute(
                 "SELECT name,sql FROM sqlite_master WHERE type='trigger' "
                 "AND tbl_name=?",(table,)).fetchall()
-            if len(triggers)<2 or any(not x[1] for x in triggers):
-                raise ValueError("causal_provenance_triggers_missing:"+table)
             if table==SCAN_TABLE:
                 expected={"research_cvd_scan_no_update",
                           "research_cvd_scan_no_delete"}
                 if not expected.issubset({name for name,_ in triggers}):
                     raise ValueError("cvd_scan_archive_immutability_missing")
+            if len(triggers)<2 or any(not x[1] for x in triggers):
+                raise ValueError("causal_provenance_triggers_missing:"+table)
+            if table==SCAN_TABLE:
                 columns=tuple(c[1] for c in db.execute(
                     f"PRAGMA table_info({SCAN_TABLE})"))
                 if columns!=("symbol","closed_at","attempted_at","state",
