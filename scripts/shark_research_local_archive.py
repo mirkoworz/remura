@@ -225,8 +225,15 @@ def verify_bundle(path):
             expected={MANIFEST}
             expected.update(f"{ENTRY_PREFIX}/{scope}/{t}.jsonl"
                             for scope,tables in ALLOW.items() for t in tables)
-            if set(z.namelist())!=expected or z.testzip() is not None:
+            if set(z.namelist())!=expected or len(z.namelist())!=len(expected):
                 raise ValueError("archive_entries_or_crc_invalid")
+            # Refuse ZIP bombs before inflating any table. ZipFile.open()
+            # independently checks each entry's CRC as it is consumed.
+            if (any(z.getinfo(name).file_size>MAX_TOTAL_BYTES
+                    for name in expected if name!=MANIFEST)
+                    or sum(z.getinfo(name).file_size for name in expected
+                           if name!=MANIFEST)>MAX_TOTAL_BYTES):
+                raise ValueError("uncompressed_archive_resource_limit")
             raw=z.read(MANIFEST)
             if len(raw)>150000 or not raw.endswith(b"\n"):
                 raise ValueError("archive_manifest_unbounded")
@@ -252,7 +259,12 @@ def verify_bundle(path):
                     count=0
                     length=0
                     with z.open(entry) as data:
-                        for line in data:
+                        while True:
+                            line=data.readline(500001)
+                            if not line:
+                                break
+                            if len(line)>500000 or not line.endswith(b"\\n"):
+                                raise ValueError("archive_row_unbounded_or_noncanonical")
                             count+=1
                             total_rows+=1
                             length+=len(line)
