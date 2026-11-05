@@ -140,6 +140,19 @@ class ReleaseV159Tests(unittest.TestCase):
         # different banner/cache. Build the *old* released fixture explicitly,
         # instead of wrongly requiring today's source to remain v1.59.
         staged={p:(ROOT/p).read_bytes() for p in (*m.FILES,m.BACKUP_MODULE)}
+        # First reconstruct v1.62 from the current v1.63 source;
+        # historical installer safety fixtures still check their original SHA/version.
+        if b"nav.js?v=163" in staged["index.html"]:
+            for page in m.FILES:
+                if page.endswith(".html"):
+                    staged[page]=staged[page].replace(b"nav.js?v=163",b"nav.js?v=162")
+            staged["nav.js"]=staged["nav.js"].replace(
+                b"Aggiornamento v1.63",b"Aggiornamento v1.62").replace(
+                b"05/11/2026 16:00 (Italia, preparazione)",
+                b"03/11/2026 19:20 (Italia, preparazione)")
+            staged["sw.js"]=staged["sw.js"].replace(
+                b"remura-shell-v77-v1.63-shark-splash",
+                b"remura-shell-v76-v1.62-h1-paired")
         # Normalize the current v1.62 shell to the unchanged v1.61
         # historical fixture; older guarded release tests remain strict.
         if b"nav.js?v=162" in staged["index.html"]:
