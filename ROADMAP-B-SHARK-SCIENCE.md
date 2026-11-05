@@ -1,6 +1,40 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
 
+## 05/11/2026 — Gate P0c, handoff: una SOLA lettura Oracle, codice immutabile e verificato (nessun deploy)
+
+- [x] Verificato GitHub: PR B #89 DRAFT head di partenza 9007f6a42aedf11f00b697375e8e4aca69d76d58; PR A #88 DRAFT. Main nel frattempo avanzato al commit b41324fc7e548b2e7d1428dbbca0a21ec99580dd (aggiornamento dati storici Myfxbook, NON una conferma di nuova release LIVE). Versione LIVE di riferimento v1.64 comunicata dall'utente, SHA VPS ancora N/D. Non toccare loading/notifiche.
+- [x] Verificata la diagnostica privata già esistente in remura-collector: run schedule #42049427920 segnato SUCCESS, ma job di accesso VPS "diagnose" SKIPPED. La conclusione verde NON attesta misurazioni remote. Il collegamento è subordinato al gate vars.REMURA_VPS_DIAG_ENABLED=1; NON disabilitare il gate, NON usare segreti/SSH senza autorizzazione e NON inventare capacità Oracle da log offline.
+- [x] Sonda pubblica standalone **a commit immutabile** 9007f6a42aedf11f00b697375e8e4aca69d76d58, scripts/shark_oracle_capacity_readonly.py; SHA256 del file UTF-8 **5371e707340b59fd5dacc412b536d2796248f39c29c525e64d315aaad7318276**. Nuovo test nel branch B verifica ogni byte dell'eseguibile di futura lettura, per non distribuire per errore un sorgente diverso da quello verificato. Nessun dato LIVE o chiave entra nel repository pubblico.
+- [ ] **PROSSIMA OPERAZIONE REALE (una volta sola, quando l'utente ha Termius disponibile):** eseguire il seguente comando Python dalla shell della VPS, preferibilmente come utente non-root autorizzato a leggere i metadata. Fa UN SOLO GET HTTPS di sorgente pubblico pinned + SHA256 prima dell'esecuzione IN RAM, poi solo metadata lstat/statvfs e MemAvailable. **Non scarica file su disco**, non importa il branch, non scrive SQLite, non invia dati verso GitHub o API, non modifica daemon/autoupdater e NON attiva il CVD. Non usare il vecchio comando staging --run, perché esegue test di scrittura su /tmp: la misurazione iniziale deve restare read-only.
+
+~~~bash
+python3 -B - <<'PY'
+import hashlib, sys, urllib.request
+u = 'https://raw.githubusercontent.com/mirkoworz/remura/9007f6a42aedf11f00b697375e8e4aca69d76d58/scripts/shark_oracle_capacity_readonly.py'
+digest = '5371e707340b59fd5dacc412b536d2796248f39c29c525e64d315aaad7318276'
+try:
+    req = urllib.request.Request(u, headers={'User-Agent': 'REMURA-B-P0c-readonly/1'})
+    with urllib.request.urlopen(req, timeout=15) as response:
+        if response.status != 200:
+            raise ValueError('unexpected_HTTP_response')
+        body = response.read(16385)
+    if not 0 < len(body) <= 16384 or hashlib.sha256(body).hexdigest() != digest:
+        raise ValueError('pinned_code_mismatch')
+except Exception:
+    print('REMURA_B_ORACLE_CAPACITY=NO_GO_FETCH_OR_HASH')
+    raise SystemExit(2)
+sys.argv = ['remura_capacity_readonly', '--inspect']
+exec(compile(body, '<verified-remura-p0c>', 'exec'), {'__name__': '__main__'})
+PY
+~~~
+
+- [ ] Solo dopo avere visto una riga REMURA_B_ORACLE_CAPACITY con valori aggregati: interpretare spazio libero attuale e rischio, ma **non** promuovere P0b/P0c. Se N/D, fermarsi senza riprovare in loop. Valutare poi se /tmp e data usano la stessa partizione e se è sicuro fare uno staging sintetico isolato con carico LIMITATO. NON riempire il disco, NON toccare database LIVE, NON cambiare cadenza di raccolta.
+- [ ] Certificare a parte Oracle shape/boot+block volumes Always Free, quote e fatture 0€ dalle console; il singolo numero statvfs NON misura costi, billing o tutti i volumi OCI. Firestore storage/egress e GitHub Actions storage separati. Registrare NO_GO fino alla conferma. P0b, power-loss recovery, chiavi HMAC private, CVD prospettico, comparazione statistica cost-aware OOS sono ancora aperti.
+- [ ] Ripetere CI solo sulle nuove revisioni del branch e conservare PR #89 DRAFT. Nessun merge, nuova versione LIVE, ordine, segnale trading o notifica abilitati.
+
+
+
 ## 05/11/2026 — Proseguimento gate P0c: inventario **solo metadati** VPS (OFFLINE, non ancora eseguito su Oracle)
 
 **Stato iniziale verificato:** main SHA e762a1c2927ca8e27501b73139675867751bfe90, PR B #89 DRAFT/non merge e PR A #88 DRAFT; LIVE di riferimento comunicata v1.64, SSH non verificato. Questa tappa non ha aperto alcun DB LIVE, modificato /opt/remura, abilitato recorder, avviato servizi o broker API.
