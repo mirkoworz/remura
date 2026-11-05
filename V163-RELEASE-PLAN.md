@@ -6,13 +6,14 @@
 
 - 15 file installati: `scripts/private_server.py`, `nav.js`, `sw.js`, nove pagine HTML e tre nuovi file `splash.js`, `splash.css`, `splash-mascot.webp`.
 - Le nove pagine importano `nav.js?v=163`; banner comune `v1.63` con timestamp preparatorio `05/11/2026 16:00 (Italia, preparazione)`, sostituito **esclusivamente in fase --apply** con la vera ora italiana. La Home importa solo `splash.js/css?v=163`.
+- **Correzione preflight 05/11/2026:** STOP_UNREVIEWED_FILES sul primo SHA era causato esclusivamente da tre documenti già presenti rispetto alla base v1.62: `ROADMAP.md`, `ROADMAP-A-H1.md` e `ROADMAP-B-SHARK-SCIENCE.md`. Entrambe le allowlist (installer e riconciliazione) autorizzano **solo questi tre nomi esatti**; test separato verifica che modifiche non previste a codice e collector restino bloccate. Nessuna opzione `--force`, nessuna riduzione dei controlli.
 - PWA cache con nuovo nome `remura-shell-v77-v1.63-shark-splash`; la cache non conserva `/private-api/`. L'unica richiesta aggiuntiva in avvio è una **GET interna** a `/private-api/health` con timeout 1,1 s. Non legge dati finanziari, non chiama provider.
 - Il monitor H1 già attivato al Track A rimane nel suo stato attuale: **nessun obbligo di spegnerlo**, nessuna modifica ai parametri H1, broker, segreti, SQLite o file ambientali.
 
 ## Codice protetto
 
 - `deploy/oracle/release_v163.py`: installer derivato da v1.62, base SHA v1.62 e dodici Git blob LIVE pinnati, tre nuovi asset assenti obbligatori, tree/zip sha verificati, compare diff allowlist, Price e Insights CI *push/main* verdi. `--check` è sola lettura; `--apply` controlla nuovamente sotto lock autoupdater, backup SQLite e restore-test, registra rollback codici/hashes, ferma solo il servizio web per la sostituzione atomica, lo riavvia e verifica health; in caso di errore tenta rollback. **Non riconcilia lo stato autoupdater**.
-- `deploy/oracle/reconcile_v163.py`: verifica il blob immutabile dell'installer v1.63 `0214b8baf5ed3bdefebb21bbfd08204c8d99dd45` leggendo il commit immutabile `21281734e8e10540e57fef15d0cb728b890f8cd0`; convalida i 15 file installati, banner Italia, manifest rollback, SQLite backup, CI push/main e SHA target. `--check` non scrive; `--apply` aggiorna **soltanto** `autoupdate-state.json` con backup dello stato. Non reinstalla codice né riavvia.
+- `deploy/oracle/reconcile_v163.py`: verifica il blob immutabile dell'installer v1.63 `19d538c167550e5c3c9326d7cfc3ab5582347e9a` leggendo il commit immutabile `65f08544534837ebd8a428723ee5be3dac1ce194`; convalida i 15 file installati, banner Italia, manifest rollback, SQLite backup, CI push/main e SHA target. `--check` non scrive; `--apply` aggiorna **soltanto** `autoupdate-state.json` con backup dello stato. Non reinstalla codice né riavvia.
 - CI offline: vecchi test v1.62 ancora attivi, `tests/test_release_v163.py`, `tests/test_reconcile_v163.py`, `tests/splash.test.js`, test release consistency e suite Price/Insights; nessun segreto o account trading nei workflow.
 
 ## Gate prima dell'installazione (ancora NON eseguiti)

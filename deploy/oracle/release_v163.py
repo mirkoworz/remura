@@ -82,6 +82,7 @@ ALLOWED = set(FILES) | {
     ".github/workflows/splash-checks.yml", ".github/workflows/price-checks.yml",
     ".github/workflows/insights-checks.yml",
     "SPLASH-RELEASE-CANDIDATE.md", "V163-RELEASE-PLAN.md",
+    "ROADMAP.md", "ROADMAP-A-H1.md", "ROADMAP-B-SHARK-SCIENCE.md",
 }
 REQUIRED = set(FILES) | {
     "tests/test_release_v163.py", "tests/release-consistency.test.js",

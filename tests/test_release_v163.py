@@ -26,6 +26,28 @@ class ReleaseV163Tests(unittest.TestCase):
         self.assertTrue(m.REQUIRED<=m.ALLOWED)
         self.assertTrue(all(path.endswith((".html",".js",".css",".py",".webp")) for path in m.FILES))
 
+    def test_only_reviewed_roadmap_docs_pass_diff_gate(self):
+        target="a"*40
+        required=set(m.REQUIRED)
+        docs={"ROADMAP.md","ROADMAP-A-H1.md","ROADMAP-B-SHARK-SCIENCE.md"}
+        self.assertTrue(docs<=m.ALLOWED)
+        self.assertNotIn("scripts/ctrader_feed.py",m.ALLOWED)
+        self.assertNotIn("private/remura.env",m.ALLOWED)
+        def fake_remote(path,extra=()):
+            if path=="/commits/main": return {"sha":target}
+            if path.startswith("/compare/"):
+                return {"status":"ahead","files":[{"filename":p}
+                    for p in sorted(required|docs|set(extra))]}
+            return {"workflow_runs":[{"head_sha":target,"head_branch":"main",
+                "event":"push","status":"completed","conclusion":"success"}]}
+        with patch.object(m,"remote_doc",side_effect=fake_remote):
+            m.verify_target(target)
+        def unapproved(path):
+            return fake_remote(path,{"scripts/ctrader_feed.py"})
+        with patch.object(m,"remote_doc",side_effect=unapproved):
+            with self.assertRaisesRegex(RuntimeError,"UNREVIEWED_FILES"):
+                m.verify_target(target)
+
     def test_install_stamp_uses_real_italian_clock(self):
         staged={"nav.js":b"REMURA Aggiornamento v1.63 "+m.PREPARED_STAMP,
                 "sw.js":b"remura-shell-v77-v1.63-shark-splash"}
