@@ -80,7 +80,8 @@ def ensure_schema(db):
           BEGIN SELECT RAISE(ABORT,'append_only'); END""")
 
 
-def append(db, event, quality, *, source_collected_at, hmac_secret, now=None):
+def append(db, event, quality, *, source_collected_at, hmac_secret,
+           now=None, source_document=None):
     """Persist actual detection time, never trust externally supplied detectedAt.
 
     Source collection time still depends on truthful future instrumentation.
@@ -137,11 +138,22 @@ def append(db, event, quality, *, source_collected_at, hmac_secret, now=None):
         raise ValueError("event_id_lineage_mismatch")
     opaque = hmac.new(secret, canonical.encode(), hashlib.sha256).hexdigest()
     source_hash = hmac.new(secret, provider.encode(), hashlib.sha256).hexdigest()
+    # Only future source-document binding, always coupled to the new
+    # event in one SQLite transaction; legacy calls remain unchanged.
+    lineage = None
+    source_mac = None
+    if source_document is not None:
+        from scripts import shark_cvd_source_lineage as lineage
+        source_mac = lineage.prepare(
+            event, source_document, detected_at=detected, secret=secret)
     with db:
         existing = db.execute(
             "SELECT 1 FROM research_cvd_observations WHERE key=?", (opaque,)
         ).fetchone()
         if existing:
+            if lineage is not None:
+                # This proof MUST NOT be added after an event was persisted.
+                raise ValueError("cvd_event_cannot_gain_later_source_proof")
             return {"schema": SCHEMA, "state": "DUPLICATE",
                     "newBrokerCalls": 0, "alertsEnabled": False}
         count = db.execute("SELECT count(*) FROM research_cvd_observations").fetchone()[0]
@@ -155,9 +167,15 @@ def append(db, event, quality, *, source_collected_at, hmac_secret, now=None):
             (opaque, source_hash, event["symbol"], VERSION, kind, side,
              _iso(first), _iso(second), _iso(confirmed), _iso(collected),
              _iso(detected), _iso(detected)))
+        if lineage is not None:
+            if cur.rowcount != 1:
+                raise ValueError("cvd_source_proof_requires_new_record")
+            lineage.insert(db, event_key=opaque, doc_hmac=source_mac,
+                           recorded_at=detected)
     return {
         "schema": SCHEMA,
         "state": "RECORDED" if cur.rowcount == 1 else "DUPLICATE",
+        "sourceDocumentBound": bool(lineage is not None),
         "newBrokerCalls": 0, "alertsEnabled": False,
     }
 
