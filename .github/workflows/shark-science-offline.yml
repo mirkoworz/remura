@@ -29,6 +29,7 @@ on:
       - 'scripts/shark_oracle_staging_gate.py'
       - 'scripts/price_store.py'
       - 'scripts/shark_cvd_ledger.py'
+      - 'scripts/shark_cvd_source_lineage.py'
       - 'tests/cvd-divergence.test.js'
       - 'tests/test_cvd_*.py'
       - 'tests/test_shark_science_gate.py'
@@ -59,6 +60,7 @@ on:
       - 'tests/test_shark_oracle_staging_gate.py'
       - 'tests/test_shark_optin_adapter.py'
       - 'tests/test_shark_cvd_ledger.py'
+      - 'tests/test_shark_cvd_source_lineage.py'
       - 'ROADMAP-B-SHARK-SCIENCE.md'
       - '.github/workflows/shark-science-offline.yml'
   workflow_dispatch:
@@ -87,7 +89,7 @@ jobs:
       - name: Verify offline script syntax
         run: |
           node --check cvd-divergence-core.js
-          python -m py_compile scripts/cvd_divergence.py scripts/cvd_benchmark.py scripts/cvd_session_replay.py scripts/shark_science_gate.py scripts/shark_walkforward.py scripts/shark_data_readiness.py scripts/shark_research_census.py scripts/shark_universe_lineage.py scripts/shark_universe_probe.py scripts/shark_research_probe.py scripts/shark_cot_paired_baseline.py scripts/shark_cot_robustness.py scripts/shark_cot_asof_witness.py scripts/shark_signal_evidence.py scripts/shark_price_asof_evidence.py scripts/shark_observation_bundle.py scripts/shark_price_only_universe.py scripts/shark_price_only_compact.py scripts/shark_prospective_coverage.py scripts/shark_first_invocation.py scripts/shark_scan_failures.py scripts/shark_sample_admission.py scripts/shark_causal_pair_audit.py scripts/shark_resource_probe.py scripts/shark_digest_ab_benchmark.py scripts/shark_oracle_staging_gate.py scripts/shark_cvd_ledger.py
+          python -m py_compile scripts/cvd_divergence.py scripts/cvd_benchmark.py scripts/cvd_session_replay.py scripts/shark_science_gate.py scripts/shark_walkforward.py scripts/shark_data_readiness.py scripts/shark_research_census.py scripts/shark_universe_lineage.py scripts/shark_universe_probe.py scripts/shark_research_probe.py scripts/shark_cot_paired_baseline.py scripts/shark_cot_robustness.py scripts/shark_cot_asof_witness.py scripts/shark_signal_evidence.py scripts/shark_price_asof_evidence.py scripts/shark_observation_bundle.py scripts/shark_price_only_universe.py scripts/shark_price_only_compact.py scripts/shark_prospective_coverage.py scripts/shark_first_invocation.py scripts/shark_scan_failures.py scripts/shark_sample_admission.py scripts/shark_causal_pair_audit.py scripts/shark_resource_probe.py scripts/shark_digest_ab_benchmark.py scripts/shark_oracle_staging_gate.py scripts/shark_cvd_ledger.py scripts/shark_cvd_source_lineage.py
       - name: Test CVD JS detector
         run: node --test tests/cvd-divergence.test.js
       - name: Test CVD parity, benchmark and archive replay
@@ -146,6 +148,8 @@ jobs:
           python -m unittest discover -s tests -p 'test_shark_oracle_staging_gate.py' -v
       - name: Verify off-by-default real Squalincome opt-in against COT failures and all 34 markets
         run: python -m unittest discover -s tests -p 'test_shark_optin_adapter.py' -v
+      - name: Test private CVD source lineage: original detector replay, exact OHLC HMAC and no retrospective binding
+        run: python -m unittest discover -s tests -p 'test_shark_cvd_source_lineage.py' -v
       - name: Test append-only future CVD evidence ledger and privacy
         run: python -m unittest discover -s tests -p 'test_shark_cvd_ledger.py' -v
       - name: Measure synthetic RSS, CPU, WAL and writer lock with two clean 34x4000 scan processes
