@@ -1,6 +1,29 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
 
+## 05/11/2026 ore 20:55 italiane — P0b: collector cTrader REALE `running`, prezzi 38/38 recenti e verificati
+
+**Evidenza:** screenshot Termius dell'utente dopo **un GET verso `http://127.0.0.1:8765/private-api/prices/status`**, filtro locale whitelist-only, nessuna nuova richiesta broker e nessun accesso diretto SQLite da Termius.
+
+| Campo | Valore osservato |
+|---|---|
+| `REMURA_P0B_COLLECTOR_STATUS` | **OK** |
+| `COLLECTOR` | **running** |
+| `MERCATI` | **38** |
+| `ULTIMO_TENTATIVO` | **2026-11-05T19:46:30Z** (= ore **20:46:30 italiane**) |
+| `RECENTI` | **38** |
+| `DATATI` | **0** |
+| `VERIFICATI` | **38** |
+
+- [x] **Baseline integrità prezzi e collector = snapshot PASS, 38/38**, senza avviare ingest forzato. Il responso `verified` e `recent` deriva dal riepilogo esistente dello stato prezzi; non equivale a rendimenti, garanzia CVD reale o a prova che 38 mercati siano stati ricampionati nello stesso minuto.
+- [x] Verificata nel codice `scripts/private_server.py` la schedulazione standard: un batch di massimo 5 mercati dopo ogni chiusura del quarto d'ora UTC, con **90 secondi di tolleranza** (`seconds_to_next_quarter`), quindi orari nominali italiani **:01:30, :16:30, :31:30, :46:30** ogni ora. L'ultimo tentativo osservato coincide con **:46:30**. Gli orari sono nominali, non promesse: se un batch supera la finestra o il processo viene riavviato, il successivo può slittare; non provocare nuovi batch.
+- [x] Identificato un **strumento esistente e potenzialmente più economico** per la prova di tempo ingest: il campo `collectorTiming` dell'endpoint `/private-api/signals/status` aggrega `remura_batch_timing` via `batch_timing.summary` con lettura SQLite RO **soltanto se** `REMURA_BATCH_TIMING_ENABLED=1`; altrimenti è `disabled`. `batch_elapsed_ms` rappresenta un **limite superiore** fino al ritorno della raccolta e del salvataggio, non latenza per singola candela. Non abilitare nuove variabili o riavviare il servizio senza audit/deploy e consenso.
+- [ ] **PROSSIMA OPERAZIONE (una sola lettura):** controllare il solo riepilogo `collectorTiming` da `http://127.0.0.1:8765/private-api/signals/status` stampando soltanto schema/stato e contatori numerici consentiti. Nessuna API cTrader aggiunta, nessuna modifica database/credenziali, nessun nuovo cron, nessun sampler CPU invasivo. Se `disabled` o `not_collected`, registrare **N/D**, non inventare latenze; valutare in seguito una osservazione passiva CPU durante un batch naturale con limiti rigidi e misura della freschezza prima/dopo.
+- [ ] **P0b coesistenza reale del nuovo recorder CVD = NO-GO**; la qualità attuale è baseline preziosa, non una prova che un carico aggiuntivo non faccia slittare l'ingest. P0c OCI shape, billing reale, Firestore/GitHub quote e backup HMAC ancora NO-GO. Lato research preferire calcolo offline su infrastruttura gratuita verificata e salvaguardia del collector prezzi.
+- [x] Nessun merge/release: PR #89 DRAFT, LIVE v1.64 riferita dall'utente intatta, loading/notifiche invariati, nessun edge statistico dimostrato.
+
+
+
 ## 05/11/2026 ore 20:50 italiane — P0b: tre campioni CPU/PSI solo lettura, baseline a riposo PASS
 
 **Evidenza:** screenshot Termius dell'utente dopo `REMURA_P0B_CPU_PASSIVE_THREE_SAMPLES`. Nello screenshot sono visibili i campioni 2 e 3, intervallati da 15 secondi, e le ultime righe PSI del campione 1. Non attribuire valori del servizio al campione 1 senza il suo inizio visibile.
@@ -25,7 +48,7 @@
 
 - [x] **P0b CPU/IO idle PASS evidenza puntuale:** servizio attivo; nei 15 s osservati CPU cumulativa cresce pochissimo e memoria stabile. Non ci sono attese I/O né pressione PSI recente misurata durante questi campioni. Non interpretare il valore cumulativo di CPUUsageNSec come velocità istantanea, né `some avg10=0` come prova di assenza permanente di contesa.
 - [ ] **Concorrenza reale prezzi/CVD ancora NON misurata.** Questo intervallo potrebbe essere tra due batch cTrader, senza carico; è scorretto certificare 34 mercati, tempi di ingest, H1 o sicurezza sotto lavoro di ricerca da uno snapshot inattivo. La strategia consigliata è evitare benchmark intensivi sulla micro VPS finché non è accertata la CPU OCI e la qualità dei dati, mantenendo i prezzi e Squalincome prioritari.
-- [ ] **Prossimo step più economico/sicuro:** un GET di stato preesistente **solo su localhost**, restituendo pochi campi whitelist di `/private-api/prices/status` per identificare stato del collector, eventuale ultimo tentativo, timestamp server, quantità e qualità senza prezzi/OHLC e senza nuove chiamate cTrader. La GET già esistente apre normalmente la connessione interna SQLite di REMURA; non manipolare database direttamente, non duplicare feed e non forzare un batch. Solo se risulta raccolta attiva, progettare un sampler passivo leggero durante un ingest naturalmente pianificato (nessun cron installato).
+- [x] **GET stato prezzi su localhost eseguita alle 20:55**: `running`, 38/38 recenti, 0 datati, 38 verificati; dettagli nella sezione sopra. La GET già esistente apre normalmente la connessione interna SQLite di REMURA; non manipolare database direttamente, non duplicare feed e non forzare un batch. Solo se risulta raccolta attiva, progettare un sampler passivo leggero durante un ingest naturalmente pianificato (nessun cron installato).
 - [ ] **Billing P0c ancora NO-GO**: i circa 40,5 GiB liberi e ~952 MiB RAM non attestano shape, quote OCI o fatture. Non comprare/ridimensionare alcunché; ricontrollare in console tipologia `E2.1.Micro` (da confermare), volumi ed eleggibilità Always Free.
 - [x] PR #89 ancora DRAFT nel branch B; LIVE v1.64 con loading/notifiche intatta, nessun merge/deploy/abilitazione CVD, nessuna prova di edge statisticamente validato.
 
