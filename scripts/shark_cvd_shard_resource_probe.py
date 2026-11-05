@@ -73,7 +73,33 @@ def run():
         dest=parent/"backup"
         restored=parent/"restore"
         source.mkdir(mode=0o700)
-        peak={"rssKiB":0,"walBytes":0,"journalBytes":0,"totalScratchBytes":0}
+        # Synthetic stand-in for periodic price ingest, on an independent
+        # WAL-backed SQLite. It is deliberately NOT the LIVE price collector.
+        price_db=parent/"synthetic-price-collector.sqlite3"
+        with sqlite3.connect(price_db) as price:
+            price.execute("PRAGMA journal_mode=WAL")
+            price.execute("CREATE TABLE heartbeat(sequence INTEGER PRIMARY KEY)")
+        price_stop=threading.Event()
+        price_stats={"writes":0,"errors":0,"maxCommitMs":0.0}
+
+        def price_loop():
+            try:
+                with sqlite3.connect(price_db,timeout=0.1) as db:
+                    while not price_stop.is_set():
+                        begin=time.perf_counter()
+                        db.execute("INSERT INTO heartbeat DEFAULT VALUES")
+                        db.commit()
+                        price_stats["writes"]+=1
+                        price_stats["maxCommitMs"]=max(price_stats["maxCommitMs"],
+                            (time.perf_counter()-begin)*1000)
+                        price_stop.wait(0.02)
+            except (sqlite3.Error,OSError):
+                price_stats["errors"]+=1
+
+        price_thread=threading.Thread(target=price_loop,daemon=True)
+        price_thread.start()
+        peak={"rssKiB":0,"walBytes":0,"priceWalBytes":0,
+              "journalBytes":0,"totalScratchBytes":0}
         stopped=threading.Event()
 
         def sample():
@@ -82,8 +108,11 @@ def run():
                 if rss is not None:
                     peak["rssKiB"]=max(peak["rssKiB"],rss)
                 peak["walBytes"]=max(peak["walBytes"],sum(
-                    p.stat().st_size for p in parent.rglob("*.sqlite3-wal")
+                    p.stat().st_size for p in source.glob("*.sqlite3-wal")
                     if p.is_file()))
+                wal=Path(str(price_db)+"-wal")
+                if wal.is_file():
+                    peak["priceWalBytes"]=max(peak["priceWalBytes"],wal.stat().st_size)
                 peak["journalBytes"]=max(peak["journalBytes"],sum(
                     p.stat().st_size for p in parent.rglob("*.sqlite3-journal")
                     if p.is_file()))
@@ -146,6 +175,26 @@ def run():
                 if shards.verify(source)!=before:
                     raise ValueError("disk_full_changed_private_scan_ledger")
 
+                # Simulated worker termination exactly between the new shard
+                # publication and its first scan INSERT; no slot invented.
+                crashed=parent/"interrupted-shard"
+                crashed.mkdir(mode=0o700)
+                _attempt(crashed,0)
+                _attempt(crashed,1)
+                with patch.object(shards.scan,"record",side_effect=SystemExit(
+                        "synthetic_worker_interrupted")):
+                    try:
+                        _attempt(crashed,2)
+                    except SystemExit:
+                        pass
+                    else:
+                        raise ValueError("synthetic_worker_crash_missing")
+                crash_report=shards.verify(crashed)
+                if (crash_report["totalObservedAttempts"]!=2
+                        or crash_report["segments"]!=2
+                        or not crash_report["missingCalendarSlotsRemainUnknown"]):
+                    raise ValueError("synthetic_crash_fabricated_attempts")
+
                 journal_modes=set()
                 for item in source.glob("scan-*.sqlite3"):
                     with sqlite3.connect(item) as db:
@@ -161,7 +210,15 @@ def run():
                         copies=2,max_shard_file_bytes=shards.MAX_SHARD_FILE_BYTES)
         finally:
             stopped.set()
+            price_stop.set()
             observer.join(timeout=2)
+            price_thread.join(timeout=2)
+
+        if price_thread.is_alive() or price_stats["errors"] or price_stats["writes"]<2:
+            raise ValueError("synthetic_price_heartbeat_incomplete")
+        with sqlite3.connect(price_db) as check:
+            if check.execute("SELECT count(*) FROM heartbeat").fetchone()[0]!=price_stats["writes"]:
+                raise ValueError("synthetic_price_heartbeat_inconsistent")
 
         result={
             "schema":SCHEMA,
@@ -175,6 +232,11 @@ def run():
                 resource.RUSAGE_SELF).ru_maxrss/1024,2),
             "sampledPeakRssMiB":round(peak["rssKiB"]/1024,2),
             "sampledPeakWalBytes":peak["walBytes"],
+            "sampledPeakSyntheticPriceWalBytes":peak["priceWalBytes"],
+            "syntheticPriceHeartbeatWrites":price_stats["writes"],
+            "syntheticPriceMaxCommitMs":round(price_stats["maxCommitMs"],3),
+            "syntheticPriceWriteErrors":price_stats["errors"],
+            "syntheticPriceCollectorConcurrentLoad":True,
             "sampledPeakJournalBytes":peak["journalBytes"],
             "sampledPeakScratchBytes":peak["totalScratchBytes"],
             "sampledPeaksAreGuaranteed":False,
@@ -187,6 +249,7 @@ def run():
             "twoCopyEnvelopeObservedFreeBytes":envelope["observedFreeBytes"],
             "syntheticWriterContention":contention,
             "simulatedDiskFull":insufficient,
+            "syntheticCrashAfterNewShard":"UNKNOWN_PRESERVED_NO_FABRICATED_ATTEMPT",
             "sqliteBackupRestoreIntegrity":"PASS",
             "actualPowerLossRecoveryVerified":False,
             "realPriceCollectorConcurrentLoadMeasured":False,
