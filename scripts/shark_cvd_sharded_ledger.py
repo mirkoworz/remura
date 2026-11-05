@@ -347,6 +347,7 @@ def recover_interrupted_rollover(root, *, acknowledge=False):
             raise ValueError("multiple_unpublished_initializations_manual_review")
         for p in staged:
             if (p.is_symlink() or not p.is_file()
+                    or stat.S_IMODE(p.stat().st_mode)&0o077
                     or p.stat().st_size>MAX_SHARD_FILE_BYTES):
                 raise ValueError("unpublished_initialization_untrusted")
             if p.stat().st_size:
