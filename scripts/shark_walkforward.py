@@ -116,6 +116,14 @@ def _simulate(signal, doc, rows, cost, asof, horizon, stop_atr, target_atr):
         atr = _atr_before(rows, observed, last_closed)
         if atr is None:
             return None, "invalid_prior_atr"
+        # A closed ATR window is not enough: the last known candle and the
+        # simulated next opening must also be connected by every M15 slot.
+        # Otherwise missing candles in the observation/entry bridge could
+        # silently turn an unexecutable gap into a favourable simulated fill.
+        # Do not synthesize/interpolate any M15 or shift the entry backwards.
+        if any(rows[i][0] - rows[i-1][0] != STEP
+               for i in range(last_closed + 1, future + 1)):
+            return None, "entry_history_gap"
         if future + horizon > len(rows):
             return None, "outcome_pending"
         future_rows = rows[future:future+horizon]
