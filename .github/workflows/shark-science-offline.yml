@@ -31,6 +31,7 @@ on:
       - 'scripts/shark_cvd_ledger.py'
       - 'scripts/shark_cvd_source_lineage.py'
       - 'scripts/shark_cvd_cot_price_triage.py'
+      - 'scripts/shark_cvd_scan_coverage.py'
       - 'scripts/shark_cvd_prefix_lineage.py'
       - 'scripts/shark_prefix_cost_probe.py'
       - 'scripts/shark_research_local_archive.py'
@@ -67,6 +68,7 @@ on:
       - 'tests/test_shark_cvd_ledger.py'
       - 'tests/test_shark_cvd_source_lineage.py'
       - 'tests/test_shark_cvd_cot_price_triage.py'
+      - 'tests/test_shark_cvd_scan_coverage.py'
       - 'tests/test_shark_prefix_cost_probe.py'
       - 'tests/test_shark_research_local_archive.py'
       - 'tests/test_shark_p0_go_no_go.py'
@@ -98,7 +100,7 @@ jobs:
       - name: Verify offline script syntax
         run: |
           node --check cvd-divergence-core.js
-          python -m py_compile scripts/cvd_divergence.py scripts/cvd_benchmark.py scripts/cvd_session_replay.py scripts/shark_science_gate.py scripts/shark_walkforward.py scripts/shark_data_readiness.py scripts/shark_research_census.py scripts/shark_universe_lineage.py scripts/shark_universe_probe.py scripts/shark_research_probe.py scripts/shark_cot_paired_baseline.py scripts/shark_cot_robustness.py scripts/shark_cot_asof_witness.py scripts/shark_signal_evidence.py scripts/shark_price_asof_evidence.py scripts/shark_observation_bundle.py scripts/shark_price_only_universe.py scripts/shark_price_only_compact.py scripts/shark_prospective_coverage.py scripts/shark_first_invocation.py scripts/shark_scan_failures.py scripts/shark_sample_admission.py scripts/shark_causal_pair_audit.py scripts/shark_resource_probe.py scripts/shark_digest_ab_benchmark.py scripts/shark_oracle_staging_gate.py scripts/shark_cvd_ledger.py scripts/shark_cvd_source_lineage.py scripts/shark_cvd_cot_price_triage.py scripts/shark_cvd_prefix_lineage.py scripts/shark_prefix_cost_probe.py scripts/shark_research_local_archive.py scripts/shark_p0_go_no_go.py
+          python -m py_compile scripts/cvd_divergence.py scripts/cvd_benchmark.py scripts/cvd_session_replay.py scripts/shark_science_gate.py scripts/shark_walkforward.py scripts/shark_data_readiness.py scripts/shark_research_census.py scripts/shark_universe_lineage.py scripts/shark_universe_probe.py scripts/shark_research_probe.py scripts/shark_cot_paired_baseline.py scripts/shark_cot_robustness.py scripts/shark_cot_asof_witness.py scripts/shark_signal_evidence.py scripts/shark_price_asof_evidence.py scripts/shark_observation_bundle.py scripts/shark_price_only_universe.py scripts/shark_price_only_compact.py scripts/shark_prospective_coverage.py scripts/shark_first_invocation.py scripts/shark_scan_failures.py scripts/shark_sample_admission.py scripts/shark_causal_pair_audit.py scripts/shark_resource_probe.py scripts/shark_digest_ab_benchmark.py scripts/shark_oracle_staging_gate.py scripts/shark_cvd_ledger.py scripts/shark_cvd_source_lineage.py scripts/shark_cvd_cot_price_triage.py scripts/shark_cvd_scan_coverage.py scripts/shark_cvd_prefix_lineage.py scripts/shark_prefix_cost_probe.py scripts/shark_research_local_archive.py scripts/shark_p0_go_no_go.py
       - name: Test CVD JS detector
         run: node --test tests/cvd-divergence.test.js
       - name: Test CVD parity, benchmark and archive replay
@@ -157,6 +159,8 @@ jobs:
           python -m unittest discover -s tests -p 'test_shark_oracle_staging_gate.py' -v
       - name: Verify off-by-default real Squalincome opt-in against COT failures and all 34 markets
         run: python -m unittest discover -s tests -p 'test_shark_optin_adapter.py' -v
+      - name: Test append-only M15 CVD evaluation coverage without manufactured negatives
+        run: python -m unittest discover -s tests -p 'test_shark_cvd_scan_coverage.py' -v
       - name: 'Test strict same-snapshot COT-price-CVD triage across two synthetic private databases'
         run: python -m unittest discover -s tests -p 'test_shark_cvd_cot_price_triage.py' -v
       - name: 'Test private CVD source lineage - original detector replay, exact OHLC HMAC, no retrospective binding'
