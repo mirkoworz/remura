@@ -9,9 +9,13 @@ must match the original price proof SHA. The detection must have been
 observed BEFORE/AT the Squalincome original observation, not merely share
 a symbol or M15 boundary.
 
-This is a strict SAME SNAPSHOT filter; an event from a different valid price
-snapshot is UNKNOWN, not necessarily false. No private event identifiers,
-source digests, prices, timestamps or broker mapping are returned.
+There are two DISTINCT local proof tiers: same original OHLC document,
+or a prospectively committed matching earlier M15-session prefix. A different
+source with no matching certified prefix is UNKNOWN, not proof of no CVD.
+Even a complete local tier union is a lower bound on detected events, never
+a certified negative-control cohort. Event counts and original signal counts
+are kept separate; no private event identifiers, source digests, prices,
+timestamps or broker mappings are returned.
 No notifications, orders, profit, genuine buy/sell aggressor volume, CFTC
 timestamp authority, executed spread or statistically validated edge.
 No production imports, cron, network, credentials or schema writes.
