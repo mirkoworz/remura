@@ -1,5 +1,15 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
+## 05/11/2026 — Verifica GitHub Billing dal pannello account, 11:14 Italia
+
+**Evidenza utente dal pannello GitHub personale (novembre 2026, screenshot ore 11:14 Italia):**
+- Piano **GitHub Free**, `Current metered usage` lordo **$7,52**, `Current included usage` sconti **$7,52**, `Billed amount` **$0** nei dettagli visibili. Sono valori osservati fino al 05/11, NON garanzia per tutto il mese o per servizi esterni.
+- Breakdown Linux Actions a **$0,006/min**: `mirkoworz/remura` **1.170 min / $7,02 lordo / $0 fatturati**; `mirkoworz/remura-collector` **79 min / $0,47 / $0**; `mirkoworz/mirko-trading-automation` **4 min / $0,02 / $0** (arrotondamenti di visualizzazione).
+- **Visibilità verificata via API GitHub**: `remura` **public**; `remura-collector` e `mirko-trading-automation` **private**. Per runner GitHub-hosted Linux **standard**, le Actions dei repository pubblici sono gratuite e **non vanno scalate dai 2.000 minuti privati GitHub Free**. Il totale di tutti e tre è 1.253 min di esecuzione visualizzata, ma **quota privata osservata: 79+4=83/2.000 min (4,15%), residuo nominale 1.917 min**. NON interpretare erroneamente 1.253/2.000 (62,65%) come budget privato esaurito.
+- Fonte ufficiale quota e pubblici: <https://docs.github.com/en/billing/reference/product-usage-included> e <https://docs.github.com/en/actions/concepts/billing-and-usage>. Risorse premium/larger runner, Actions storage (500 MB GitHub Free), altri repository e successivi utilizzi non sono tutti certificati da questi screenshot; non dichiarare billing futuro garantito.
+- **Gate P0c GITHUB-ACTIONS-MINUTI = verificato e sotto quota alla data indicata**, `billed=$0` per la vista Billing; **P0c complessivo ANCORA APERTO**: verificare uso/costi di **Oracle (Cost Analysis, shape e volumi Always Free)** e **Firestore/Firebase (reads/writes/storage/egress + Cloud Billing)**, oltre a eventuali budget GitHub e storage Actions. Nessun servizio o runner nuovo autorizzato, nessun costo imputato senza prova, nessun obbligo di ridurre la CI pubblica per questi 1.170 minuti.
+- Questo aggiornamento è **solo documentale nel branch B DRAFT**; non modifica app LIVE v1.62, scanner, prezzi, VPS, Tailscale, branch A o requisiti per il futuro rilascio (nuovo banner versione/data/ora italiana su nove pagine soltanto a deploy reale).
+
 ## 05/11/2026 — Gate B-P0 LIVE e COSTI: prima valutazione con evidenze REALI + NO-GO automatizzato solo offline
 
 **Stato reale:** PR [#89](https://github.com/mirkoworz/remura/pull/89) DRAFT, LIVE v1.62 e `main` invariati, TRACK A #88 non toccato, collector privato invariato. NESSUN nuovo test Oracle, segnale, broker GET, deploy o servizio cloud. Non si è abilitata la ricerca. Obiettivo: smettere di promuovere il semplice «CI verde» a prova di sicurezza operativa o gratuità.
