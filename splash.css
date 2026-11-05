@@ -1,0 +1,35 @@
+/* REMURA splash v1 preview - isolated to the installed application's start page. */
+#rm-splash[hidden]{display:none!important}
+#rm-splash{position:fixed;inset:0;z-index:30000;display:grid;place-items:center;
+  overflow:auto;background:radial-gradient(ellipse at 50% 12%,#0e596c 0%,#082c43 36%,#041421 80%);
+  color:#eafffa;font:15px/1.4 system-ui,-apple-system,sans-serif;padding:calc(16px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom));
+  opacity:1;transition:opacity .32s ease}
+#rm-splash.rm-splash-exit{opacity:0;pointer-events:none}
+#rm-splash *{box-sizing:border-box}
+.rm-splash-panel{width:min(100%,470px);max-height:100%;display:flex;flex-direction:column;align-items:center;text-align:center;gap:9px}
+.rm-splash-overline{color:#8deed8;text-transform:uppercase;letter-spacing:.24em;font-size:10px;font-weight:800}
+.rm-splash-art{position:relative;width:clamp(156px,42vw,235px);aspect-ratio:1;border-radius:28px;overflow:hidden;
+  border:1px solid #53d7ca7d;box-shadow:0 0 40px #2fffd122;background:#032035}
+.rm-splash-art img{width:100%;height:100%;object-fit:cover}
+.rm-splash-art .rm-splash-mascot-placeholder{position:absolute;inset:0;display:grid;place-items:center;font-size:75px}
+.rm-splash-logo{margin:0;color:#e9fffa;letter-spacing:-.06em;font-weight:900;font-size:clamp(29px,6vw,43px);line-height:1}
+.rm-splash-logo span{color:#64ead1}
+.rm-splash-release{color:#accfce;font-size:10px;min-height:14px}
+.rm-splash-ocean{position:relative;width:100%;height:clamp(80px,19vw,125px);margin-top:9px;
+  border-bottom:1px solid #55e5d44d;background:linear-gradient(180deg,transparent 30%,#21a9b70a 70%,#45e1cd19);
+  overflow:hidden}
+.rm-splash-ocean:after{content:"";position:absolute;inset:auto 0 3px;height:4px;background:repeating-linear-gradient(90deg,#4af1d39a 0 30px,transparent 30px 45px);opacity:.3}
+.rm-splash-shark,.rm-splash-fish{position:absolute;display:block;filter:drop-shadow(0 1px 10px #35f5df55)}
+.rm-splash-shark{left:2%;top:16%;width:36%;height:75%}
+.rm-splash-fish{left:var(--rm-fish-left,84%);top:51%;width:16%;height:36%;transform:translateY(-50%);
+  transition:left 1.15s cubic-bezier(.2,.78,.18,1),filter .22s}
+.rm-splash-fish.rm-splash-attached{filter:drop-shadow(0 0 16px #8bf9dc)}
+.rm-splash-progress-wrap{width:100%;margin-top:10px}
+.rm-splash-progress-track{height:11px;border:1px solid #64ddceaa;border-radius:99px;overflow:hidden;background:#164253;box-shadow:0 0 12px #14a9c455}
+.rm-splash-progress-fill{width:var(--rm-progress,0%);height:100%;border-radius:99px;transition:width .6s ease;
+  background:linear-gradient(90deg,#1fc9b6,#83ffe2);box-shadow:0 0 14px #71ffca}
+.rm-splash-progress-meta{display:flex;justify-content:space-between;gap:12px;margin:8px 0 0;font-size:12px;color:#bbede3;font-weight:700}
+.rm-splash-state{color:#d5f9f2;font-size:13px;margin:0;min-height:19px}
+.rm-splash-note{font-size:10px;color:#87b7bf;margin:0;max-width:340px}
+@media(max-height:620px){.rm-splash-panel{gap:4px}.rm-splash-art{width:115px}.rm-splash-ocean{height:60px;margin-top:0}}
+@media(prefers-reduced-motion:reduce){#rm-splash,#rm-splash .rm-splash-fish,#rm-splash .rm-splash-progress-fill{transition:none!important}}
