@@ -1,6 +1,29 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
 
+## 05/11/2026 ore 20:58 italiane — P0b: registro reale batch cTrader attivo, 218 campioni
+
+**Evidenza diretta:** screenshot Termius utente dopo singola GET solo localhost su `/private-api/signals/status` e stampa di soli sette valori whitelist del campo esistente `collectorTiming`. Nessuna chiamata broker o nuovo batch provocato. Valori osservati:
+
+| Campo | Valore |
+|---|---:|
+| `REMURA_P0B_TIMING` | **READY** |
+| `samples` | **218** |
+| `scheduledMarkets` | **1090** |
+| `savedMarkets` | **1090** |
+| `zeroSavedBatches` | **0** |
+| `medianCollectorToIngestReturnMs` | **17087 ms = 17,087 s** |
+| `maxCollectorToIngestReturnMs` | **28930 ms = 28,930 s** |
+| `postScanFailures` | **0** |
+
+- [x] **P0b baseline temporale, dati reali = PASS acquisizione:** il recorder privato già esistente registra 218 batch naturali e 1090/1090 slot programmati/salvati (5 per batch nell'aggregato), 0 batch senza salvataggi e 0 errori post-scan registrati. Non attribuire queste misure a 218 batch consecutivi senza verificarne l'ultimo timestamp e la continuità; la memoria degli eventi è limitata a 256 righe, non illimitata.
+- [x] Codice `scripts/batch_timing.py` verificato: `batch_elapsed_ms` è tempo dall'avvio del batch al **ritorno di collect_once dopo ingest SQLite**, non tempo per simbolo né durata delle sole API, non benchmark di CVD o misura di latenza di Trading. `median` e `max` non rivelano p95/p99, distribuzione, eventuali batch mancanti o rallentamenti fuori campione.
+- [ ] **Integrare la baseline senza cambiare produzione:** richiedere dalla *stessa* GET già disponibile soltanto `lastIngestReturnedUtc`, `postScanSuccesses`, `postScanNotRun`, `medianIngestReturnToPostScanMs` e `windowMax`, con controllo della freschezza e coerenza `postScanSuccesses+postScanFailures+postScanNotRun=samples`. Non stampare raw JSON, simboli, OHLC, credenziali o URL privati.
+- [ ] **P0b overlap reale e CVD restano NO-GO:** 17,087 s mediana/28,930 s massimo in batch osservati è un riferimento per proteggere la raccolta, non prova di risorse libere mentre lavora. Un benchmark CVD insieme al collector reale non è stato eseguito; non attivare nuovi recorder, nuovi volumi, traffico o servizi. Se si programma un test passivo, deve usare un ciclo ordinario e misure con minimo overhead, senza causare nuove richieste cTrader.
+- [ ] P0c Oracle Always Free, forma VM, volumi e addebiti ancora non attestati dalla console; prezzi/sentiment e Squalincome LIVE v1.64 preservati; research solo PR #89 DRAFT. Nessuna validazione statistica di edge COT/istituzionali ancora disponibile.
+
+
+
 ## 05/11/2026 ore 20:55 italiane — P0b: collector cTrader REALE `running`, prezzi 38/38 recenti e verificati
 
 **Evidenza:** screenshot Termius dell'utente dopo **un GET verso `http://127.0.0.1:8765/private-api/prices/status`**, filtro locale whitelist-only, nessuna nuova richiesta broker e nessun accesso diretto SQLite da Termius.
@@ -18,7 +41,7 @@
 - [x] **Baseline integrità prezzi e collector = snapshot PASS, 38/38**, senza avviare ingest forzato. Il responso `verified` e `recent` deriva dal riepilogo esistente dello stato prezzi; non equivale a rendimenti, garanzia CVD reale o a prova che 38 mercati siano stati ricampionati nello stesso minuto.
 - [x] Verificata nel codice `scripts/private_server.py` la schedulazione standard: un batch di massimo 5 mercati dopo ogni chiusura del quarto d'ora UTC, con **90 secondi di tolleranza** (`seconds_to_next_quarter`), quindi orari nominali italiani **:01:30, :16:30, :31:30, :46:30** ogni ora. L'ultimo tentativo osservato coincide con **:46:30**. Gli orari sono nominali, non promesse: se un batch supera la finestra o il processo viene riavviato, il successivo può slittare; non provocare nuovi batch.
 - [x] Identificato un **strumento esistente e potenzialmente più economico** per la prova di tempo ingest: il campo `collectorTiming` dell'endpoint `/private-api/signals/status` aggrega `remura_batch_timing` via `batch_timing.summary` con lettura SQLite RO **soltanto se** `REMURA_BATCH_TIMING_ENABLED=1`; altrimenti è `disabled`. `batch_elapsed_ms` rappresenta un **limite superiore** fino al ritorno della raccolta e del salvataggio, non latenza per singola candela. Non abilitare nuove variabili o riavviare il servizio senza audit/deploy e consenso.
-- [ ] **PROSSIMA OPERAZIONE (una sola lettura):** controllare il solo riepilogo `collectorTiming` da `http://127.0.0.1:8765/private-api/signals/status` stampando soltanto schema/stato e contatori numerici consentiti. Nessuna API cTrader aggiunta, nessuna modifica database/credenziali, nessun nuovo cron, nessun sampler CPU invasivo. Se `disabled` o `not_collected`, registrare **N/D**, non inventare latenze; valutare in seguito una osservazione passiva CPU durante un batch naturale con limiti rigidi e misura della freschezza prima/dopo.
+- [x] **Lettura `collectorTiming` effettuata ore 20:58**: `READY`, 218 batch, 1090/1090 salvataggi, tempi 17,087 s mediana / 28,930 s massimo. Dettaglio nella sezione superiore. Nessuna API cTrader aggiunta, nessuna modifica database/credenziali, nessun nuovo cron, nessun sampler CPU invasivo. Se `disabled` o `not_collected`, registrare **N/D**, non inventare latenze; valutare in seguito una osservazione passiva CPU durante un batch naturale con limiti rigidi e misura della freschezza prima/dopo.
 - [ ] **P0b coesistenza reale del nuovo recorder CVD = NO-GO**; la qualità attuale è baseline preziosa, non una prova che un carico aggiuntivo non faccia slittare l'ingest. P0c OCI shape, billing reale, Firestore/GitHub quote e backup HMAC ancora NO-GO. Lato research preferire calcolo offline su infrastruttura gratuita verificata e salvaguardia del collector prezzi.
 - [x] Nessun merge/release: PR #89 DRAFT, LIVE v1.64 riferita dall'utente intatta, loading/notifiche invariati, nessun edge statistico dimostrato.
 
