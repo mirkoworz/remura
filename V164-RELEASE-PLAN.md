@@ -15,6 +15,12 @@
 - Installer `deploy/oracle/release_v164.py`: origine immutabile **v1.63** con 15 Git blob pinnati, update soli 15 file autorizzati (di cui modifica effettiva soltanto lato UI), compare whitelist stretta, SHA main/CI Price+Insights, backup SQLite con restore-test, registro rollback e riavvio verificato; non cambia autoupdater state.
 - Riconciliazione separata `deploy/oracle/reconcile_v164.py`: pin di SHA/blob dello script installer, verifica hash 15 file e unico timestamp release, manifest rollback e backup SQLite, verifica CI, backup dello stato e modifica **esclusiva** di `autoupdate-state.json`.
 
+## Correzione preflight STOP_SPLASH_SAFETY_GUARD — 05/11/2026
+- Diagnosi: l'installer v1.64 cercava `setTimeout(close,4500)`, residuo dello splash v1.63; il caricamento cinematico approvato utilizza `failSafeTimer=setTimeout(close,6200)`, per consentire ~4,3 secondi di scena e sempre chiudere in caso di errore.
+- Correzione limitata al **guard di verifica dell'installer**, non al client: conferma una sola GET health locale, il timer di emergenza 6200 ms, la pausa di aggancio e la gestione del fallimento. Regressioni negative bloccano un timer errato o la rimozione dei controlli.
+- Nuovo installer immutabile: commit `883336a4e956a9e50c94dcfebf8d7ba78910fb65`, blob `5cad0abdff8a30f9e7dc583c872c213807863dc4`. Il riconciliatore v1.64 contiene entrambi i pin aggiornati. La PR deve passare la CI e poi essere unita a main prima di ritentare il preflight con **nuovo SHA target**.
+- Il precedente `STOP_SPLASH_SAFETY_GUARD` è avvenuto in `--check`: nessuna installazione o backup nuovo v1.64 eseguiti; v1.63 ancora LIVE, riconciliata.
+  
 ## Gate obbligatori
 1. Lavorare in PR isolata; prima di merge/rilascio ricontrollare main e PR dei Track A/B. Non unire la PR hotfix #93 del vecchio riconciliatore prima del rilascio v1.64.
 2. CI PR Price, Insights e splash tutte verdi; dopo merge richiedere specificamente CI **push/main** verdi sul commit target.
