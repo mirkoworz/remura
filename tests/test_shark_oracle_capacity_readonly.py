@@ -5,6 +5,7 @@ All fixtures are temporary: no OCI, LIVE DB, trading account, broker or API.
 from __future__ import annotations
 
 from contextlib import redirect_stdout
+import hashlib
 import io
 from pathlib import Path
 import os
@@ -21,6 +22,16 @@ from scripts import shark_cvd_storage_gate as storage
 
 
 class CapacityReadOnlyTests(unittest.TestCase):
+    # Frozen source at GitHub commit 9007f6a4: future operator preflight
+    # downloads this file only after SHA-256 verification. Any modification
+    # MUST result in a new independently verified immutable pin.
+    IMMUTABLE_CODE_SHA256 = "5371e707340b59fd5dacc412b536d2796248f39c29c525e64d315aaad7318276"
+
+    def test_pinned_readonly_oracle_source_sha256(self):
+        source = Path(capacity.__file__).read_bytes()
+        self.assertEqual(hashlib.sha256(source).hexdigest(),
+                         self.IMMUTABLE_CODE_SHA256)
+
     def test_standalone_constants_match_the_cvd_prototype(self):
         self.assertEqual(capacity.SHARD_MAX_FILE_BYTES,
                          shards.MAX_SHARD_FILE_BYTES)
