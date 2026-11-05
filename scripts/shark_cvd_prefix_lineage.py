@@ -320,20 +320,13 @@ def verified_private_prefixes(db, *, events, as_of):
             raise ValueError("private_full_document_binding_corrupt")
         full_keys[key]=at
     keys={row[0]:row for row in events}
+    # Always check the ENTIRE bounded private archive, not just the
+    # first N keys: old archived events can precede the audit window.
     rows=db.execute(
         f"SELECT event_key,m15_closed_at,prefix_hmac,bound_at,schema_version "
-        f"FROM {PRIVATE_TABLE} ORDER BY event_key LIMIT ?",
-        (len(keys)+1,)).fetchall()
-    # The table is bounded by the original CVD MAX_EVENTS upper limit,
-    # including entries outside this audit's as-of window.
-    if len(rows)>len(keys):
-        # Old events outside the current window may legitimately exist:
-        # caller must supply full population or use an independent max cap.
-        rows=db.execute(
-            f"SELECT event_key,m15_closed_at,prefix_hmac,bound_at,schema_version "
-            f"FROM {PRIVATE_TABLE} ORDER BY event_key LIMIT 4097").fetchall()
-        if len(rows)>4096:
-            raise ValueError("private_prefix_archive_unbounded")
+        f"FROM {PRIVATE_TABLE} ORDER BY event_key LIMIT 4097").fetchall()
+    if len(rows)>4096:
+        raise ValueError("private_prefix_archive_unbounded")
     result={}
     for key,closed,mac,bound,version in rows:
         original=keys.get(key)
