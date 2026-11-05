@@ -164,8 +164,9 @@ class CVDSourceBindingTests(unittest.TestCase):
                                         "synthetic_sqlite"):
                 self._save()
         self.assertEqual(ledger.aggregate(self.db)["events"],0)
-        self.assertEqual(self.db.execute(
-            f"SELECT count(*) FROM {lineage.TABLE}").fetchone()[0],0)
+        self.assertIsNone(self.db.execute(
+            "SELECT name FROM sqlite_master WHERE name=?",
+            (lineage.TABLE,)).fetchone())
 
     def test_tampered_trigger_is_detected_and_no_secret_leaked(self):
         self._save()
