@@ -1,5 +1,24 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
+
+## 05/11/2026 — P0b/P0c: gate preventivo spazio per shard CVD + benchmark sintetico (nessun deploy)
+
+**GitHub verificato prima del lavoro:** main SHA e762a1c2927ca8e27501b73139675867751bfe90, PR B #89 DRAFT e PR A #88 DRAFT, entrambe non unite. LIVE di riferimento **v1.64 comunicata dall'utente**, con loading personalizzato e notifiche: effettivo SHA VPS non verificato via SSH. Nessuna modifica alla LIVE, Oracle, collector, Firebase, chiamate broker, ordini o alert. Codice nuovo solo su branch B.
+
+- [x] Ispezionati i moduli shard e snapshot/restore esistenti. Gli script preesistenti shark_resource_probe.py e shark_oracle_staging_gate.py misurano lo scanner prezzo-only su dati sintetici: non certificano il nuovo archivio segmentato CVD né OCI.
+- [x] Nuovo scripts/shark_cvd_storage_gate.py: preflight fail-closed su spazio libero del filesystem di destinazione, inventario dei file sorgente, margine interno di sicurezza di **max(256 MiB, 10% del filesystem)** e buffer provvisorio di **2 × 64.000.000 byte** per journal/temp/rollover; per ogni nuovo tentativo aggiunge capienza teorica di un nuovo segmento. Sono parametri conservativi DI PROGETTO, non limiti ufficiali OCI né picchi WAL misurati.
+- [x] Integrato in shards.record prima di append/seal/rollover: se manca spazio, rifiuta scrittura senza inventare tentativi non osservati. Non arresta la raccolta prezzi LIVE perché il recorder CVD è offline e non installato.
+- [x] Integrato in create_snapshot PRIMA di creare la cartella, richiedendo spazio per **due copie aggiuntive** contemporanee (snapshot + restore-test), oltre all'archivio originale sul disco. Restore in nuova directory richiede una copia e riserva. Preflight sul filesystem target, nessuna garanzia atomica fra filesystem o contro consumo concorrente di spazio.
+- [x] Test sintetici tests/test_shark_cvd_storage_gate.py: soglia esatta, sotto soglia, symlink e inventario sospetto, metriche mancanti, disco pieno simulato durante record/backup/restore, verifica nessuna alterazione dei dati e nessuna directory di backup/ripristino creata se il controllo fallisce.
+- [x] Nuovo scripts/shark_cvd_shard_resource_probe.py, solo temporanei: misure wall/CPU/RSS, copie di tutti i segmenti e restore, bytes di tre archivi coesistenti, campioni periodici -wal/-journal, vera contesa SQLite writer con SQLITE_BUSY, disco pieno simulato e verifica di catena/restauro. Campionamento ogni 5ms NON prova il vero picco; gli shard utilizzano journal DELETE, non il WAL del collector prezzi.
+- [ ] **Controllare CI su nuovo SHA preciso** prima di dichiarare test PASS. Non trasferire i numeri del runner GitHub alle risorse Oracle.
+- [ ] **P0b rimane NO-GO LIVE:** rilevare CPU/RSS/journal/lock reali su **staging isolato Oracle** con raccolta prezzi concorrente; valutare crash/power loss, replica, spazio delle altre SQLite e segreti HMAC. Fermare soltanto la futura ricerca CVD quando il margine scarseggia, non il normale ingest.
+- [ ] **P0c rimane NO-GO LIVE:** misurare filesystem/volumi Oracle, backup completi, spazio preesistente di prezzi/COT, quote OCI e costi; confermare Firestore storage/egress e GitHub Actions storage. Spese riferite dall'utente 0€ su più mesi, ma i budget OCI 1€ e allerta 0,10€ non sono hard cap. Cap 64 × 10.000 tentativi non dimostra capienza economica o fisica.
+- [ ] Dati COT+OHLC+CVD prospettici, provenienza reale, continuità M15, confronto prezzo-only/prezzo+COT/prezzo+COT+CVD, costi e OOS indipendente ancora da validare: **nessun edge o probabilità di profitto stabiliti**.
+
+**Rilascio invariato:** PR #89 DRAFT senza merge/deploy. Prima di una reale nuova LIVE verificare v1.64 e SHA VPS, aggiornare numero versione+ora Italia visibili in alto su tutte le 9 pagine, conservare loading/notifiche, eseguire backup/restore-test/rollback, CI, autoupdater e coordinamento TRACK A.
+
+
 ## 05/11/2026 — Recovery controllato e backup/ripristino di tutti i segmenti CVD (solo offline)
 
 **Versione produzione di riferimento comunicata dall'utente: v1.64**, con modifiche alle notifiche del loading personalizzato. La branch `main` GitHub contiene le PR v1.64 (HEAD osservata `e762a1c2927ca8e27501b73139675867751bfe90`), **ma non è stata verificata via SSH la versione effettivamente installata sulla VPS**. Non modificare né sovrascrivere loading, notifiche o banner della v1.64. Track B rimane confinato a PR #89 DRAFT; zero deploy, zero merge su main, nessuna nuova chiamata broker o servizio acquistato.
