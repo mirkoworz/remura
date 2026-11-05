@@ -77,9 +77,13 @@
     const status=splash.querySelector(".rm-splash-state");
     const stage=splash.querySelector(".rm-splash-progress-meta span");
     const percent=splash.querySelector(".rm-splash-percent");
-    const release=document.getElementById("rm-release");
-    splash.querySelector(".rm-splash-release").textContent =
-      release ? release.textContent : "Versione e data visibili nel banner dell'app";
+    const syncRelease=() => {
+      const release=document.getElementById("rm-release");
+      if(release) splash.querySelector(".rm-splash-release").textContent=release.textContent;
+    };
+    splash.querySelector(".rm-splash-release").textContent="REMURA · Caricamento app";
+    syncRelease();
+    document.addEventListener("DOMContentLoaded",syncRelease,{once:true});
     let progress=0,closed=false;
     function update(value,message) {
       if(closed)return;
@@ -113,6 +117,7 @@
     setTimeout(close,4500);
     window.addEventListener("pagehide",close,{once:true});
   }
-  if (document.readyState==="loading") document.addEventListener("DOMContentLoaded",boot,{once:true});
-  else boot();
+  // Script is loaded immediately after <body>, before page content: no first-frame flash.
+  if (document.body) boot();
+  else document.addEventListener("DOMContentLoaded",boot,{once:true});
 })();
