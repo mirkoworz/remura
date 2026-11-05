@@ -99,12 +99,13 @@ class TripleCausalTriageTests(unittest.TestCase):
         self.main.close()
         self.private.close()
 
-    def _proof(self):
+    def _proof(self, *, prefix_enabled=False):
         witness.witness(self.main,clock=AT)
         with self.main:
             hid=insert_history(self.main)
             result=bundle.record(self.main,history_id=hid,
-                                 observed_document=self.doc,clock=NOW)
+                                 observed_document=self.doc,clock=NOW,
+                                 capture_cvd_prefix=prefix_enabled)
         self.assertEqual(result["state"],"BOTH_LOCAL_PROOFS_PRESENT")
 
     def _cvd(self,*,bound=True,secret=SECRET,now=OBSERVED,doc=None):
@@ -123,6 +124,113 @@ class TripleCausalTriageTests(unittest.TestCase):
         self.assertEqual(self.main.total_changes,a)
         self.assertEqual(self.private.total_changes,b)
         return report
+
+    def _earlier_cvd(self,*,changed_source=None,detected=None):
+        earlier=json.loads(json.dumps(self.doc))
+        # CVD first sees M15 through 10:30 (close 10:45), whereas
+        # Squalincome later sees an extra M15 (close 11:00).
+        earlier["timeframes"]["M15"].pop()
+        earlier["lastComplete"]=earlier["timeframes"]["M15"][-1]["t"]
+        clock=detected or OBSERVED-timedelta(minutes=26)
+        # Never smuggle later H1/H4 into the earlier CVD source document.
+        for frame,span in (("H1",timedelta(hours=1)),
+                           ("H4",timedelta(hours=4))):
+            earlier["timeframes"][frame]=[
+                bar for bar in earlier["timeframes"][frame]
+                if datetime.fromisoformat(
+                    bar["t"].replace("Z","+00:00"))+span<=clock]
+        earlier_ev=original_cvd_event(earlier)
+        self.assertEqual(earlier_ev["id"],self.event["id"])
+        self.assertNotEqual(lineage._document_sha(earlier),
+                            lineage._document_sha(self.doc))
+        return cvd.append(
+            self.private,earlier_ev,QUALITY,
+            source_collected_at=iso(clock-timedelta(minutes=1)),
+            hmac_secret=SECRET,now=clock,
+            source_document=earlier if changed_source is None else changed_source)
+
+    def test_earlier_snapshot_accepted_only_with_two_prospective_prefixes(self):
+        self._proof(prefix_enabled=True)
+        self._earlier_cvd()
+        report=self._triage()
+        self.assertEqual(report["exactSnapshotTriples"],0)
+        self.assertTrue(report["earlierSnapshotPrefixProofsAvailable"])
+        self.assertEqual(report["verifiedEarlierSnapshotTriples"],1)
+        self.assertEqual(report["distinctSignalsWithEarlierCVD"],1)
+        self.assertEqual(report["earlierSnapshotOrientations"],
+                         {"SAME_TECHNICAL_DIRECTION":1})
+        self.assertEqual(report["verifiedTriplesAnyTier"],1)
+        self.assertFalse(report["earlierTierIsSameEntireOHLCSource"])
+        self.assertFalse(report["tradingEdgeEstablished"])
+        text=json.dumps(report)
+        self.assertNotIn(self.doc["providerSymbol"],text)
+        self.assertNotIn("0.995",text)
+
+    def test_earlier_snapshot_no_original_main_prefix_is_not_negative_event(self):
+        self._proof()
+        self._earlier_cvd()
+        report=self._triage()
+        self.assertEqual(report["exactSnapshotTriples"],0)
+        self.assertFalse(report["earlierSnapshotPrefixProofsAvailable"])
+        self.assertIsNone(report["verifiedEarlierSnapshotTriples"])
+        self.assertIsNone(report["verifiedTriplesAnyTier"])
+
+    def test_earlier_snapshot_with_mutated_prior_m15_is_not_promoted(self):
+        # Modify a prior M15 tick count and keep H1/H4 rollups
+        # internally consistent BEFORE the genuine Squalincome proof.
+        altered=self.doc["timeframes"]["M15"]
+        target=next(x for x in altered if x["t"].endswith("T05:00:00Z"))
+        target["v"]+=1
+        for frame,span in (("H1",3600),("H4",14400)):
+            t=datetime.fromisoformat(target["t"].replace("Z","+00:00"))
+            bucket=int(t.timestamp())//span*span
+            for x in self.doc["timeframes"][frame]:
+                at=datetime.fromisoformat(x["t"].replace("Z","+00:00"))
+                if int(at.timestamp())==bucket:
+                    x["v"]+=1
+        self.main.execute("UPDATE prices SET payload=? WHERE symbol='EURUSD'",
+                          (json.dumps(self.doc),))
+        self.main.commit()
+        self._proof(prefix_enabled=True)
+        # Build the PREVIOUS source using the original volume in that bar.
+        prior=json.loads(json.dumps(self.doc))
+        for row in prior["timeframes"]["M15"]:
+            if row["t"]==target["t"]:
+                row["v"]-=1
+        prior["timeframes"]["M15"].pop()
+        prior["lastComplete"]=prior["timeframes"]["M15"][-1]["t"]
+        for frame,span in (("H1",timedelta(hours=1)),
+                           ("H4",timedelta(hours=4))):
+            prior["timeframes"][frame]=[
+                row for row in prior["timeframes"][frame]
+                if datetime.fromisoformat(row["t"].replace("Z","+00:00"))
+                +span<=OBSERVED-timedelta(minutes=26)]
+        # Revert rollup volume on the historical source too.
+        for frame,span in (("H1",3600),("H4",14400)):
+            t=datetime.fromisoformat(target["t"].replace("Z","+00:00"))
+            bucket=int(t.timestamp())//span*span
+            for x in prior["timeframes"][frame]:
+                at=datetime.fromisoformat(x["t"].replace("Z","+00:00"))
+                if int(at.timestamp())==bucket:
+                    x["v"]-=1
+        ev=original_cvd_event(prior)
+        cvd.append(self.private,ev,QUALITY,
+                   source_collected_at=iso(
+                       OBSERVED-timedelta(minutes=27)),
+                   hmac_secret=SECRET,
+                   now=OBSERVED-timedelta(minutes=26),
+                   source_document=prior)
+        report=self._triage()
+        self.assertTrue(report["earlierSnapshotPrefixProofsAvailable"])
+        self.assertEqual(report["exactSnapshotTriples"],0)
+        self.assertEqual(report["verifiedEarlierSnapshotTriples"],0)
+
+    def test_earlier_snapshot_does_not_invent_a_past_detection(self):
+        self._proof(prefix_enabled=True)
+        self._earlier_cvd(detected=OBSERVED+timedelta(minutes=1))
+        report=self._triage(at=OBSERVED+timedelta(minutes=2))
+        self.assertEqual(report["exactSnapshotTriples"],0)
+        self.assertEqual(report["verifiedEarlierSnapshotTriples"],0)
 
     def test_same_original_snapshot_real_detector_and_cot_price_proofs(self):
         self._proof()
