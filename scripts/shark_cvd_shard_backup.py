@@ -24,6 +24,7 @@ import sqlite3
 import stat
 
 from scripts import shark_cvd_sharded_ledger as shards
+from scripts import shark_cvd_storage_gate as storage
 
 SCHEMA="remura-private-cvd-shard-snapshot-v1"
 MANIFEST="snapshot-manifest.json"
@@ -144,6 +145,10 @@ def create_snapshot(source_root,destination):
     with shards._exclusive(source_root) as root:
         segments,_,total,_=shards._inspect(root)
         names=_inventory(root,segments)
+        # Require room for snapshot AND an independent restore-test on this
+        # filesystem; fail before creating even an incomplete directory.
+        storage.assess(destination.parent,[root/name for name in names],
+                       copies=2,max_shard_file_bytes=shards.MAX_SHARD_FILE_BYTES)
         _new_dir(destination)
         for name in names:
             src=root/name
@@ -231,6 +236,9 @@ def restore_snapshot(snapshot,target):
     dest=_private_parent(target)
     source=shards._root(snapshot)
     manifest=json.loads((source/MANIFEST).read_bytes())
+    storage.assess(dest.parent,
+                   [source/entry["name"] for entry in manifest["files"]],
+                   copies=1,max_shard_file_bytes=shards.MAX_SHARD_FILE_BYTES)
     _new_dir(dest)
     for entry in manifest["files"]:
         name=entry["name"]
