@@ -23,7 +23,7 @@ function sandbox({referrer='',healthOk=true,reducedMotion=true}={}) {
     };
   };
   const body={appended:[],append(node){this.appended.push(node);}};
-  const release={textContent:'REMURA · Aggiornamento v1.62 · 03/11/2026 19:20 (Italia, preparazione)'};
+  const release={textContent:'REMURA · Aggiornamento v1.64 · 05/11/2026 18:03 (Italia, preparazione)'};
   const document={
     referrer,body,readyState:'loading',createElement:createNode,
     getElementById(id){return id==='rm-release'?release:null;},
@@ -47,8 +47,8 @@ function sandbox({referrer='',healthOk=true,reducedMotion=true}={}) {
 const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
 
 test('splash attaches only to Home launch, uses local assets, and is offline-capable',()=>{
-  assert.match(page,/splash\.css\?v=163/);
-  assert.match(page,/<body><script src="\.\/splash\.js\?v=163"><\/script>/);
+  assert.match(page,/splash\.css\?v=164/);
+  assert.match(page,/<body><script src="\.\/splash\.js\?v=164"><\/script>/);
   assert.match(script,/splash-mascot\.webp/);
   assert.match(css,/prefers-reduced-motion/);
   assert.match(css,/safe-area-inset-top/);
