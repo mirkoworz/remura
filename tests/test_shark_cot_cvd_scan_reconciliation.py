@@ -27,13 +27,14 @@ class CvdSignalScanJoinTests(unittest.TestCase):
         self.main.close()
         self.private.close()
 
-    def prove(self, *, observed=OBSERVED):
+    def prove(self, *, observed=OBSERVED, capture_prefix=False):
         witness.witness(self.main, clock=AT)
         with self.main:
             hid = insert_history(self.main, observed=observed)
             result = bundle.record(
                 self.main, history_id=hid,
-                observed_document=self.doc, clock=observed+timedelta(seconds=2))
+                observed_document=self.doc, clock=observed+timedelta(seconds=2),
+                capture_cvd_prefix=capture_prefix)
         self.assertEqual(result["state"], "BOTH_LOCAL_PROOFS_PRESENT")
 
     def record(self, doc=None, *, at=CLOSE+timedelta(minutes=1)):
@@ -43,7 +44,8 @@ class CvdSignalScanJoinTests(unittest.TestCase):
             clock=at, secret=SECRET)
 
     def record_window(self, *, missing=(), unavailable=(),
-                      altered_latest=False, late_latest=False):
+                      altered_latest=False, late_latest=False,
+                      mutate_earlier=None):
         """Seven genuine detector invocations, each from its OWN past slice.
 
         The earlier snapshots have different complete-document SHA values;
@@ -66,6 +68,12 @@ class CvdSignalScanJoinTests(unittest.TestCase):
                         if witness._parse(bar["t"])+span <= closed]
             if distance == 0 and altered_latest:
                 earlier["timeframes"]["H1"][-1]["h"] += 0.001
+            if distance == mutate_earlier:
+                # Corrupt a prior CVD source's existing original M15 tick
+                # volume without editing the later main observation. Each
+                # scan remains technically evaluable, but historical M15
+                # provenance must no longer match.
+                earlier["timeframes"]["M15"][-12]["v"] += 1
             at = closed + timedelta(minutes=2 if
                                     (distance == 0 and late_latest) else 1)
             result = scans.record(
@@ -118,6 +126,45 @@ class CvdSignalScanJoinTests(unittest.TestCase):
         self.assertFalse(out["independentBrokerClockVerified"])
         self.assertEqual(out["institutionalNegativeControlsAdmissible"], 0)
         self.assertNotIn(self.doc["providerSymbol"], json.dumps(out))
+
+    def test_seven_private_prefixes_match_original_main_price_history(self):
+        self.prove(capture_prefix=True)
+        self.record_window()
+        result = self.audit()
+        groups = result["preSignalWindowGroups"]
+        self.assertEqual(sum(groups.values()), 1)
+        self.assertEqual(
+            groups["WINDOW_ALL_7_M15_PREFIXES_VERIFIED_LOCAL_ONLY"], 1)
+        self.assertEqual(
+            groups["WINDOW_ALL_7_LOCALLY_EVALUATED_EARLIER_SOURCES_UNLINKED"], 0)
+        self.assertFalse(result["windowFullEvaluationProvesNoHistoricalDivergence"])
+        self.assertFalse(result["windowFullOHLCAndBrokerCollectionTimeIndependentlyVerified"])
+        self.assertEqual(result["institutionalNegativeControlsAdmissible"], 0)
+        self.assertEqual(result["netOutcomesAdmissible"], 0)
+
+    def test_one_mutated_earlier_m15_tick_is_not_a_matching_window(self):
+        self.prove(capture_prefix=True)
+        self.record_window(mutate_earlier=3)
+        result = self.audit()
+        self.assertEqual(
+            result["preSignalWindowGroups"]["UNKNOWN_WINDOW_PREFIX_MISMATCH"], 1)
+        self.assertEqual(
+            result["preSignalWindowGroups"][
+                "WINDOW_ALL_7_M15_PREFIXES_VERIFIED_LOCAL_ONLY"], 0)
+        self.assertEqual(result["joinedScanGroups"][
+            "MATCHED_EVALUATION_ZERO_NEW_LOCAL_CVD"], 1)
+        self.assertEqual(result["institutionalNegativeControlsAdmissible"], 0)
+
+    def test_missing_immutable_main_prefix_table_does_not_invent_match(self):
+        self.prove()
+        self.record_window()
+        result = self.audit()
+        self.assertEqual(
+            result["preSignalWindowGroups"][
+                "WINDOW_ALL_7_LOCALLY_EVALUATED_EARLIER_SOURCES_UNLINKED"], 1)
+        self.assertEqual(
+            result["preSignalWindowGroups"][
+                "WINDOW_ALL_7_M15_PREFIXES_VERIFIED_LOCAL_ONLY"], 0)
 
     def test_one_missing_older_m15_invalidates_pre_signal_window_only(self):
         self.prove()
