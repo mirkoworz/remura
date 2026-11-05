@@ -110,6 +110,16 @@ class CausalJointProofTests(unittest.TestCase):
         self.assertEqual(early["exclusionReasons"],
                          {"COT_LINK_CREATED_AFTER_ASOF":1})
 
+    def test_exact_observation_second_is_counted_but_proof_not_future(self):
+        self._record()
+        # Squalincome stores 11:16:00Z, newer proof clocks .000000Z.
+        # A lexical whole-string SQLite filter would lose this row here.
+        early=self._audit(at=OBSERVED)
+        self.assertEqual(early["observedCotLinks"],1)
+        self.assertEqual(early["locallyJoinedCausalPairs"],0)
+        self.assertEqual(early["exclusionReasons"],
+                         {"COT_LINK_CREATED_AFTER_ASOF":1})
+
     def test_cross_observation_join_is_not_valid_even_when_week_matches(self):
         self._record()
         self.db.execute("DROP TRIGGER research_price_asof_no_update")
@@ -168,7 +178,7 @@ class CausalJointProofTests(unittest.TestCase):
 
     def test_no_hidden_sqlite_writes_and_bounded_utc_clock(self):
         self._record()
-        before=self.db.execute("PRAGMA total_changes").fetchone() if False else self.db.total_changes
+        before=self.db.total_changes
         report=self._audit()
         self.assertEqual(before,self.db.total_changes)
         self.assertEqual(report["locallyJoinedCausalPairs"],1)
