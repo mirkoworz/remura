@@ -172,6 +172,13 @@ def append(db, event, quality, *, source_collected_at, hmac_secret,
                 raise ValueError("cvd_source_proof_requires_new_record")
             lineage.insert(db, event_key=opaque, doc_hmac=source_mac,
                            recorded_at=detected)
+            # Independently bind the complete UTC M15 prefix available
+            # when the detector observed THIS new event. No retroactive
+            # append and no new broker reads; same private transaction.
+            from scripts import shark_cvd_prefix_lineage as prefix
+            prefix.bind_private(
+                db,event_key=opaque,original_doc=source_document,
+                detected_at=detected,secret=secret)
     return {
         "schema": SCHEMA,
         "state": "RECORDED" if cur.rowcount == 1 else "DUPLICATE",
