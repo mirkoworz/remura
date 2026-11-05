@@ -349,3 +349,67 @@ def verified_private_prefixes(db, *, events, as_of):
             continue
         result[key]=(closed,mac)
     return result
+
+
+def capacity_status(db, *, ledger):
+    """Read-only local archive-pressure gate; NEVER a billing meter.
+
+    Not invoked by production. A missing table means N/D, not zero writes.
+    Explicit preflight can later block opt-in when nearing hard append-only
+    limits without evicting immutable research evidence.
+    """
+    if not isinstance(db,sqlite3.Connection):
+        raise ValueError("sqlite_connection_required")
+    if ledger not in ("main","private"):
+        raise ValueError("invalid_ledger_scope")
+    if ledger=="main":
+        target=MAIN_TABLE
+        limit=MAX_MAIN_ROWS
+        exists=_protected(db,target)
+    else:
+        from scripts import shark_cvd_ledger as cvd
+        target="research_cvd_observations"
+        limit=cvd.MAX_EVENTS
+        exists=bool(db.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+            (target,)).fetchone())
+        if exists:
+            present={x[0] for x in db.execute(
+                "SELECT name FROM sqlite_master WHERE type='trigger' "
+                "AND tbl_name=?",(target,))}
+            if not {"research_cvd_no_update",
+                    "research_cvd_no_delete"}.issubset(present):
+                raise ValueError("private_event_integrity_unverifiable")
+    if not exists:
+        return {
+            "schema":"remura-local-research-archive-capacity-v1",
+            "status":"LEDGER_NOT_CREATED",
+            "ledger":ledger,
+            "currentRows":None,
+            "hardLimitRows":limit,
+            "remainingRows":None,
+            "capacityPercent":None,
+            "storageBillingCertified":False,
+            "liveAccountUsageKnown":False,
+            "brokerCalls":0,
+        }
+    total=db.execute(f"SELECT count(*) FROM {target}").fetchone()[0]
+    if not 0<=total<=limit:
+        raise ValueError("research_ledger_capacity_corrupt")
+    percent=round(100*total/limit,2)
+    state=("AT_HARD_LIMIT" if total==limit
+           else "WARNING_95_PERCENT" if 100*total>=95*limit
+           else "WARNING_80_PERCENT" if 100*total>=80*limit
+           else "WITHIN_LOCAL_HARD_LIMIT")
+    return {
+        "schema":"remura-local-research-archive-capacity-v1",
+        "status":state,
+        "ledger":ledger,
+        "currentRows":total,
+        "hardLimitRows":limit,
+        "remainingRows":limit-total,
+        "capacityPercent":percent,
+        "storageBillingCertified":False,
+        "liveAccountUsageKnown":False,
+        "brokerCalls":0,
+    }
