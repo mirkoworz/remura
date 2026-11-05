@@ -137,11 +137,19 @@ def _simulate(signal, doc, rows, cost, asof, horizon, stop_atr, target_atr):
         target = entry + side*target_atr*atr
         exit_mid, last_bar = None, None
         for bar in future_rows:
-            # Stop takes precedence if stop and target are both touched in M15.
+            # A protective stop is not guaranteed to execute at its level:
+            # a later M15 can OPEN beyond it. Book the worse opening price
+            # in that case, with the existing round-trip costs still charged.
+            # If both levels trade in one bar, stop takes precedence.
+            # An opening beyond a target does NOT grant a favourable fill:
+            # the target remains the conservative take-profit price.
             stopped = bar[3] <= stop if side == 1 else bar[2] >= stop
             reached = bar[2] >= target if side == 1 else bar[3] <= target
             if stopped or reached:
-                exit_mid = stop if stopped else target
+                if stopped:
+                    exit_mid = min(bar[1], stop) if side == 1 else max(bar[1], stop)
+                else:
+                    exit_mid = target
                 last_bar = bar
                 break
         if last_bar is None:
