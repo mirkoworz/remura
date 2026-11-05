@@ -11,6 +11,7 @@
 - Se health fallisce o va in timeout, lo splash conclude e apre l'app con avviso di disponibilità non verificata. Fail-safe massimo 4,5 s.
 - Banner reale con versione e data/ora viene letto dal banner condiviso di `nav.js` (non contiene timestamp fittizi). `nav.js` e gli altri otto HTML non cambiano.
 - `sw.js` include i tre asset in STATIC mantenendo **per ora** il nome cache v1.62: il bump SW/ver/versione si effettua solo nella release coordinata.
+- `scripts/private_server.py` aggiunge soltanto `splash.js`, `splash.css` e `splash-mascot.webp` alla allowlist statica: nessuna modifica al collector, alle API né agli endpoint privati. Questo risolve il test di servibilità del service worker.
 
 ## Passaggio successivo: gate v1.63 (NON eseguito)
 1. Eseguire CI `splash-checks` e le CI Price/Insights, fare verifica manuale su PWA Safari iPhone: cold start, warm start, ritorno alla Home, connessione assente e modalità riduzione movimento.
