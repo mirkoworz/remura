@@ -113,7 +113,10 @@ def _metadata(db):
     return seq,previous
 
 
-def _inspect(root):
+def _inspect(root, *, allow_pending_latest_seal=False, ignore_unpublished=False):
+    if not ignore_unpublished and any(
+            p.name.startswith(".cvd-init-") for p in root.iterdir()):
+        raise ValueError("cvd_shard_unpublished_initialization_requires_recovery")
     names={}
     for p in root.iterdir():
         if p.name.startswith("scan-") and p.name.endswith(".sqlite3"):
@@ -213,6 +216,10 @@ def _inspect(root):
             if _digest(path)!=doc["sha256"]:
                 raise ValueError("cvd_shard_sealed_bytes_changed")
             previous_seal=doc["sha256"]
+        elif sealed and seq==indexes[-1] and allow_pending_latest_seal:
+            # Crash after durable seal trigger, before its local manifest.
+            # Only an EXPLICIT recovery may publish today's file hash.
+            previous_seal=None
         elif sealed or seq!=indexes[-1]:
             raise ValueError("cvd_shard_seal_missing_fail_closed")
         else:
@@ -222,31 +229,65 @@ def _inspect(root):
     return segments,last_by_market,total,previous_seal
 
 
+def _fsync_dir(folder):
+    fd=os.open(folder,os.O_RDONLY|getattr(os,"O_DIRECTORY",0))
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
 def _create(root,seq,previous):
+    """Build a validated *unpublished* SQLite and no-clobber link it last.
+
+    SIGKILL before os.link leaves no visible scan-NNNNNN database; a .cvd-init-
+    temporary file may remain and must be explicitly recovered, not ignored.
+    """
     if not 1<=seq<=MAX_SHARDS:
         raise ValueError("cvd_shard_sequence_capacity_reached")
     path=root/_name(seq)
-    fd=os.open(path,os.O_CREAT|os.O_EXCL|os.O_WRONLY|getattr(os,"O_NOFOLLOW",0),0o600)
-    os.close(fd)
-    # If interrupted now, an uninitialized file is intentionally fail-closed.
-    with sqlite3.connect(path,timeout=2) as db:
-        if db.execute("PRAGMA journal_mode=DELETE").fetchone()[0]!="delete":
-            raise ValueError("cvd_shard_delete_journal_required")
-        db.execute("PRAGMA synchronous=FULL")
-        scan.ensure_schema(db)
-        with db:
-            db.execute(f"""CREATE TABLE {META} (
-                seq INTEGER PRIMARY KEY,
-                previous_sha256 TEXT,
-                row_cap INTEGER NOT NULL,
-                schema_version TEXT NOT NULL
-            )""")
-            db.execute(f"INSERT INTO {META} VALUES (?,?,?,?)",
-                       (seq,previous,PER_SHARD,SCHEMA))
-            for op,name in zip(("UPDATE","DELETE"),META_TRIGGERS):
-                db.execute(f"""CREATE TRIGGER {name} BEFORE {op} ON {META}
-                    BEGIN SELECT RAISE(ABORT,'immutable_shard_metadata'); END""")
-    return path
+    if path.exists() or path.is_symlink():
+        raise FileExistsError("cvd_shard_never_overwrite")
+    fd,temp=tempfile.mkstemp(prefix=".cvd-init-",suffix=".sqlite3",dir=root)
+    staged=Path(temp)
+    try:
+        os.fchmod(fd,0o600)
+        os.close(fd)
+        fd=None
+        with sqlite3.connect(staged,timeout=2) as db:
+            if db.execute("PRAGMA journal_mode=DELETE").fetchone()[0]!="delete":
+                raise ValueError("cvd_shard_delete_journal_required")
+            db.execute("PRAGMA synchronous=FULL")
+            scan.ensure_schema(db)
+            with db:
+                db.execute(f"""CREATE TABLE {META} (
+                    seq INTEGER PRIMARY KEY,
+                    previous_sha256 TEXT,
+                    row_cap INTEGER NOT NULL,
+                    schema_version TEXT NOT NULL
+                )""")
+                db.execute(f"INSERT INTO {META} VALUES (?,?,?,?)",
+                           (seq,previous,PER_SHARD,SCHEMA))
+                for op,name in zip(("UPDATE","DELETE"),META_TRIGGERS):
+                    db.execute(f"""CREATE TRIGGER {name} BEFORE {op} ON {META}
+                        BEGIN SELECT RAISE(ABORT,'immutable_shard_metadata'); END""")
+            if db.execute("PRAGMA integrity_check").fetchone()[0]!="ok":
+                raise ValueError("cvd_shard_unpublished_integrity_check_failed")
+            if not scan._protected(db) or _metadata(db)!=(seq,previous):
+                raise ValueError("cvd_shard_unpublished_metadata_invalid")
+            if db.execute(f"SELECT count(*) FROM {scan.TABLE}").fetchone()[0]!=0:
+                raise ValueError("cvd_shard_unpublished_not_empty")
+        with staged.open("rb") as stream:
+            os.fsync(stream.fileno())
+        os.link(staged,path)  # atomic no-clobber publication
+        _fsync_dir(root)
+        return path
+    finally:
+        if fd is not None:
+            os.close(fd)
+        # Cleanup only *our own temporary initialization metadata*, never
+        # actual scan attempts. SIGKILL may leave it: explicit recovery only.
+        staged.unlink(missing_ok=True)
 
 
 def _publish(root,path,payload):
@@ -277,7 +318,7 @@ def _seal(root,seq):
             raise ValueError("cvd_shard_not_full_cannot_seal")
         _,previous=_metadata(db)
         with db:
-            db.execute(f"""CREATE TRIGGER {SEAL_TRIGGER}
+            db.execute(f"""CREATE TRIGGER IF NOT EXISTS {SEAL_TRIGGER}
                 BEFORE INSERT ON {scan.TABLE}
                 BEGIN SELECT RAISE(ABORT,'sealed_shard'); END""")
     digest=_digest(path)
@@ -286,6 +327,73 @@ def _seal(root,seq):
         "sha256":digest,"rows":PER_SHARD,"previousSha256":previous
     })
     return digest
+
+
+def recover_interrupted_rollover(root, *, acknowledge=False):
+    """EXPLICIT, conservative local-only recovery; never invents attempts.
+
+    It can finish the last shard seal if its trigger and full scan rows are
+    already durable. It can retain an unpublished initialization artifact
+    with ZERO proven scan records under a new forensic filename, then allow
+    a new initialization later. Anything ambiguous stays fail-closed.
+    This does NOT repair hot journals, tampered historical seals or OCI data.
+    """
+    if acknowledge is not True:
+        raise ValueError("explicit_recovery_acknowledgement_required")
+    with _exclusive(root) as folder:
+        staged=sorted(p for p in folder.iterdir()
+                      if p.name.startswith(".cvd-init-"))
+        if len(staged)>1:
+            raise ValueError("multiple_unpublished_initializations_manual_review")
+        for p in staged:
+            if (p.is_symlink() or not p.is_file()
+                    or p.stat().st_size>MAX_SHARD_FILE_BYTES):
+                raise ValueError("unpublished_initialization_untrusted")
+            if p.stat().st_size:
+                with _readonly(p) as db:
+                    if db.execute("PRAGMA integrity_check").fetchone()[0]!="ok":
+                        raise ValueError("unpublished_initialization_corrupt")
+                    if not scan._protected(db):
+                        raise ValueError("unpublished_initialization_incomplete")
+                    _metadata(db)
+                    if db.execute(f"SELECT count(*) FROM {scan.TABLE}").fetchone()[0]!=0:
+                        raise ValueError("unpublished_initialization_contains_scans")
+            # Zero bytes or fully-formed empty SQLite: the staged file can
+            # never have been used for record(); preserve it for forensics.
+        segments,_,_,_=_inspect(
+            folder,allow_pending_latest_seal=True,ignore_unpublished=True)
+        for p in staged:
+            retained=folder/("unpublished-retained-"+p.name[1:])
+            os.link(p,retained)  # fail if evidence is already retained
+            os.unlink(p)
+        if staged:
+            _fsync_dir(folder)
+        if not segments:
+            return {
+                "status":"EMPTY_INITIALIZATION_RETAINED" if staged else "NOTHING_TO_RECOVER",
+                "retainedUnpublishedFiles":len(staged),
+                "sourceRowsDeleted":0,"attemptsReconstructed":0,
+                "completeExternalAttestation":False,
+            }
+        seq,rows,sealed=segments[-1]
+        marker=folder/_seal_name(seq)
+        if sealed and not marker.exists() and not marker.is_symlink():
+            # Same protected SQLite as before crash; the newly generated
+            # SHA is from *recovery time*, not an earlier notarized hash.
+            if rows!=PER_SHARD:
+                raise ValueError("pending_seal_has_wrong_row_count")
+            _seal(folder,seq)
+            result="LAST_FULL_SHARD_SEAL_REPAIRED_LOCAL_ONLY"
+        elif staged:
+            result="UNPUBLISHED_EMPTY_INITIALIZATION_RETAINED"
+        else:
+            result="NOTHING_TO_RECOVER"
+        _inspect(folder)
+        return {
+            "status":result,"retainedUnpublishedFiles":len(staged),
+            "sourceRowsDeleted":0,"attemptsReconstructed":0,
+            "completeExternalAttestation":False,
+        }
 
 
 def _report(segments,total):
