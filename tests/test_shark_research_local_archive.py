@@ -7,12 +7,14 @@ No GitHub artifact uploaded and no real user account or broker document.
 from __future__ import annotations
 
 import base64
+from datetime import timedelta
 import json
 import os
 from pathlib import Path
 import sqlite3
 import tempfile
 import unittest
+from unittest.mock import patch
 import zipfile
 
 from scripts import shark_research_local_archive as archive
@@ -67,7 +69,7 @@ class LocalResearchArchiveTests(unittest.TestCase):
         cvd.ensure_schema(self.private)
         scans.ensure_schema(self.private)
         scan_doc=make_doc(count=60)
-        scan_end=DAY+__import__("datetime").timedelta(minutes=900)
+        scan_end=DAY+timedelta(minutes=900)
         scans.record(
             self.private,symbol="EURUSD",slot_closed_at=stamp(scan_end),
             source_document=scan_doc,secret=KEY,
@@ -213,6 +215,82 @@ class LocalResearchArchiveTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"causal_provenance_table_missing"):
             archive.export_bundle(self.main,self.private,self.path)
         self.assertFalse(self.path.exists())
+
+    def test_v1_bundle_remains_verifiable_without_claiming_new_scan_coverage(self):
+        self._archive()
+        old=self.path.parent/"legacy-v1.zip"
+        with zipfile.ZipFile(self.path) as source:
+            manifest=json.loads(source.read(archive.MANIFEST))
+            manifest["schema"]=archive.LEGACY_SCHEMA
+            manifest["private"].pop(archive.SCAN_TABLE)
+            manifest.pop("scanAttemptCoverageIncluded")
+            manifest.pop("scanAttemptHmacCanBeRecomputedWithoutPrivateKey")
+            with zipfile.ZipFile(old,"w",compression=zipfile.ZIP_DEFLATED) as dest:
+                for item in source.namelist():
+                    if item==archive.MANIFEST:
+                        dest.writestr(item,archive._json(manifest))
+                    elif item!=f"evidence/private/{archive.SCAN_TABLE}.jsonl":
+                        dest.writestr(item,source.read(item))
+        report=archive.verify_bundle(old)
+        self.assertEqual(report["schema"],archive.LEGACY_SCHEMA)
+        self.assertIsNone(report["cvdScanAttemptCapacity"])
+        self.assertNotIn("private."+archive.SCAN_TABLE,report["tableRowCounts"])
+
+    def test_scan_hmac_zip_tamper_rejected_even_when_zip_crc_is_valid(self):
+        self._archive()
+        edited=self.path.parent/"tampered.zip"
+        with zipfile.ZipFile(self.path) as source:
+            with zipfile.ZipFile(edited,"w",compression=zipfile.ZIP_DEFLATED) as dest:
+                for item in source.namelist():
+                    data=source.read(item)
+                    if item==f"evidence/private/{archive.SCAN_TABLE}.jsonl":
+                        row=json.loads(data)
+                        self.assertEqual(len(row["values"][5]),64)
+                        row["values"][5]="0"*64
+                        data=archive._json(row)
+                    dest.writestr(item,data)
+        with self.assertRaisesRegex(ValueError,"archive_hash_or_count_mismatch"):
+            archive.verify_bundle(edited)
+
+    def test_missing_scan_immutability_trigger_or_capacity_preflight_rejected(self):
+        with patch.object(archive,"MAX_SCAN_ATTEMPTS",0):
+            self.main.execute("PRAGMA query_only=ON")
+            self.private.execute("PRAGMA query_only=ON")
+            with self.assertRaisesRegex(ValueError,"cvd_scan_archive_capacity_corrupt"):
+                archive.export_bundle(self.main,self.private,self.path)
+        self.assertFalse(self.path.exists())
+        self.private.execute("PRAGMA query_only=OFF")
+        self.private.execute("DROP TRIGGER research_cvd_scan_no_delete")
+        self.private.execute("PRAGMA query_only=ON")
+        with self.assertRaisesRegex(ValueError,"cvd_scan_archive_immutability_missing"):
+            archive.export_bundle(self.main,self.private,self.path)
+        self.assertFalse(self.path.exists())
+
+    def test_private_sqlite_disk_restore_from_verified_archive(self):
+        self._archive()
+        self.assertEqual(archive.verify_bundle(self.path)["status"],
+                         "LOCAL_ARCHIVE_INTEGRITY_VERIFIED")
+        replay=rebuild_in_memory(self.path,"private")
+        saved=self.path.parent/"restored-private.sqlite3"
+        disk=sqlite3.connect(saved)
+        try:
+            replay.backup(disk)
+            self.assertEqual(disk.execute("PRAGMA integrity_check").fetchone()[0],"ok")
+            self.assertEqual(
+                disk.execute("SELECT * FROM research_cvd_scan_attempts").fetchall(),
+                self.private.execute("SELECT * FROM research_cvd_scan_attempts").fetchall())
+            self.assertEqual(
+                disk.execute("SELECT count(*) FROM research_cvd_m15_prefix_proofs").fetchone(),
+                self.private.execute("SELECT count(*) FROM research_cvd_m15_prefix_proofs").fetchone())
+            for trigger in scans.TRIGGERS:
+                self.assertIsNotNone(disk.execute(
+                    "SELECT 1 FROM sqlite_master WHERE type='trigger' AND name=?",
+                    (trigger,)).fetchone())
+            with self.assertRaises(sqlite3.IntegrityError):
+                disk.execute("DELETE FROM research_cvd_scan_attempts")
+        finally:
+            disk.close()
+            replay.close()
 
     def test_corrupted_or_incomplete_zip_is_rejected(self):
         self._archive()
