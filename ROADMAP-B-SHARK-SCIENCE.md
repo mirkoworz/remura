@@ -1,5 +1,16 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
+## 06/11/2026 — B3: adattatore CVD OFFLINE opt-in, stesso documento originale, 2/34 (NO-GO VPS)
+
+- [x] Creato scripts/shark_cvd_same_source_adapter.py, NON integrato nella produzione. Di default DISATTIVATO, richiede opt-in esplicito e input gia in memoria dalla stessa osservazione cTrader, quindi ZERO GET broker, ZERO scheduler, nessun trade e nessuna notifica. Il preflight SHA gia esistente vincola il documento originale alle 34 righe price-only; CVD continua limitato a EURUSD e XAUUSD, gli altri 32 restano sconosciuti e non negativi.
+- [x] Esegue il detector originale tramite shark_cvd_scan_coverage.record su una SQLite usa-e-getta in memoria. Solo dopo entrambi i tentativi inserisce insieme le due righe nel ledger privato preesistente in un singolo BEGIN IMMEDIATE / COMMIT con timeout lock limitato a 250ms; non crea tabelle nel DB destinatario e richiede trigger anti-UPDATE/DELETE. Duplicati, slot precedenti, durata oltre 30s, clock incoerente, sorgente alterata, volume prezzo incompleto, limiti di capienza e lock falliscono senza evidenze posticce. Eccezioni, inclusi SystemExit, fanno ROLLBACK. Non e una prova contro ogni interruzione fisica o filesystem corrotto.
+- [x] Sorgente originale assente al momento della scansione esplicita: tentativo NOT_EVALUABLE con new_confirmations NULL (UNKNOWN). Scansione non invocata, scanner bloccato, deadline passata o contesto perso: UNKNOWN non retrocompilato. Una scansione EVALUATED con zero conferme locali non significa assenza di flusso istituzionale o un controllo negativo trading.
+- [x] Nuova suite tests/test_shark_cvd_same_source_adapter.py con soli documenti sintetici, SHA/HMAC privato, mancanze, contaminazione strumenti, duplicazione/retrodatazione, lock reale secondo writer, trigger secondo INSERT, interruzione prima COMMIT, input sovradimensionato e clock drift. CI Shark Science collegata a syntax check e nuovo test.
+- [ ] Dopo commit verificare su esatto SHA tutte le CI Shark Science, Price Engine e Insights; successo CI significa correttezza dei test sintetici, NON raccolta prospettica attiva o profitto. Orario del broker e separazione dei database prezzo/CVD non hanno attestazione esterna ne transazione atomica comune.
+- [ ] Prima di qualsiasi LIVE o staging Oracle: misure REALI coesistenza con collector, CPU 1/8 OCPU, memoria RSS/PSI e lock, backup/restauro completo su DB separato, rollback, retention delle prove e certificazione effettiva di volumi Oracle boot/block, fatture, Github Actions e Firestore. No nuove chiamate o acquisti; la data 09/11 UTC del protocollo congelato NON abilita automaticamente la registrazione. PR #89 resta DRAFT. LIVE v1.64, main, Track A e personalizzazioni invariati.
+- [ ] Nessun edge scientifico o profitto validato; proxy CLV per tick-volume, 2 mercati pilota e 32 senza coverage, nessun risultato indipendente fuori campione.
+
+
 
 ## 06/11/2026 — B3: preflight ZERO-I/O per riutilizzo documenti ORIGINALI dei 34 prezzi, 2 mercati CVD (non attivo)
 
