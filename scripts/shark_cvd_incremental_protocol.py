@@ -90,6 +90,10 @@ PROTOCOL = {
     "tradingAuthorization": False,
 }
 
+# Frozen BEFORE any observations under this future-only study. Any change to
+# the plan requires a consciously revised fingerprint and new protocol version.
+FROZEN_PROTOCOL_SHA256 = "09d833dafdd426254bc8fedccc367e41fa451ac8f2e6c99a9dac27f7387e2905"
+
 
 def protocol_bytes():
     return json.dumps(PROTOCOL,sort_keys=True,separators=(",",":"),
@@ -255,7 +259,8 @@ def assess(records, *, as_of, expected_protocol_sha256):
     """Check forward-only collection coverage, never report trade quality."""
     now=_time(as_of)
     start=_time(START)
-    if expected_protocol_sha256 != protocol_sha256():
+    if (protocol_sha256() != FROZEN_PROTOCOL_SHA256 or
+            expected_protocol_sha256 != FROZEN_PROTOCOL_SHA256):
         raise ValueError("research_protocol_digest_changed")
     if type(records) is not list or len(records) > MAX_RECORDS:
         raise ValueError("invalid_records")
@@ -321,7 +326,10 @@ def assess(records, *, as_of, expected_protocol_sha256):
 def main(argv=None):
     args=sys.argv[1:] if argv is None else argv
     if args==["--self-check"]:
-        print("REMURA_CVD_PREREGISTRATION="+protocol_sha256())
+        if protocol_sha256() != FROZEN_PROTOCOL_SHA256:
+            print("REMURA_CVD_PREREGISTRATION=NO_GO_FROZEN_PROTOCOL_CHANGED")
+            return 2
+        print("REMURA_CVD_PREREGISTRATION="+FROZEN_PROTOCOL_SHA256)
         return 0
     if args!=["--audit-stdin"]:
         print("usage: python -B scripts/shark_cvd_incremental_protocol.py --self-check|--audit-stdin")
