@@ -56,6 +56,9 @@ def observation_v2(target="2026-11-06T08:46:30Z", **changes):
         "schema":"remura-track-b-p0b-passive-natural-batch-v2",
         "maxSampledFiveSecondCpuMs":800.0,
         "maxSampledFiveSecondCpuPctOfOneFullCore":16.0,
+        "minObservedSampleIntervalSeconds":5.0,
+        "maxObservedSampleIntervalSeconds":5.0,
+        "observedSamplingSpanSeconds":85.0,
         "cgroupCpuThrottleObservable":True,
         "cgroupCpuThrottlePeriodDelta":2,
         "cgroupCpuThrottledMsDelta":12.2,
@@ -153,6 +156,11 @@ class CensusTests(unittest.TestCase):
             {"cgroupCpuThrottledMsDelta":-1},
             {"cgroupCpuThrottleObservable":False},
             {"providerHypervisorThrottleMeasured":True},
+            {"minObservedSampleIntervalSeconds":2.8},
+            {"minObservedSampleIntervalSeconds":7.2},
+            {"maxObservedSampleIntervalSeconds":8.0},
+            {"observedSamplingSpanSeconds":122.0},
+            {"observedSamplingSpanSeconds":60.0},
         ]
         for updates in cases:
             with self.subTest(update=repr(updates)):
