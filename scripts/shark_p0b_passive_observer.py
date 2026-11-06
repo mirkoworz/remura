@@ -205,6 +205,14 @@ def aggregate(samples, *, target, window_start, window_end,
             type(sample.get(k)) is not int or sample[k] < 0 for k in names)
            for sample in samples):
         raise ValueError("invalid_observation")
+    sample_times = [sample.get("sampleMonotonicSeconds") for sample in samples]
+    if any(type(t) not in (int,float) or not math.isfinite(t) or t < 0
+           for t in sample_times):
+        raise ValueError("invalid_sample_clock")
+    elapsed_intervals = [sample_times[i+1]-sample_times[i]
+                         for i in range(len(samples)-1)]
+    if any(not 3 <= seconds <= 7 for seconds in elapsed_intervals):
+        raise ValueError("invalid_five_second_interval")
     throttle_keys=("cgroupThrottlePeriods", "cgroupThrottleUsec")
     throttle_missing = all(
         sample.get("cgroupThrottlePeriods") is None and
@@ -233,8 +241,12 @@ def aggregate(samples, *, target, window_start, window_end,
                  (before["samples"] == after["samples"] == 256)))
     stable = pid_before == pid_after
     delta = samples[-1]["cpuUsec"]-samples[0]["cpuUsec"]
-    burst = max(samples[i+1]["cpuUsec"]-samples[i]["cpuUsec"]
-                for i in range(len(samples)-1))
+    cpu_intervals = [samples[i+1]["cpuUsec"]-samples[i]["cpuUsec"]
+                     for i in range(len(samples)-1)]
+    burst = max(cpu_intervals)
+    burst_core_pct = max(100*usec/(seconds*1_000_000)
+                         for usec,seconds in zip(cpu_intervals,
+                                                 elapsed_intervals))
     duration = BEFORE_SECONDS+AFTER_SECONDS
     return {
         "schema":SCHEMA,
@@ -250,8 +262,9 @@ def aggregate(samples, *, target, window_start, window_end,
         "serviceCpuPctOfOneFullCore":round(
             100*delta/(duration*1_000_000), 4),
         "maxSampledFiveSecondCpuMs":round(burst/1000, 3),
-        "maxSampledFiveSecondCpuPctOfOneFullCore":round(
-            100*burst/(SAMPLE_STEP_SECONDS*1_000_000), 4),
+        "maxSampledFiveSecondCpuPctOfOneFullCore":round(burst_core_pct, 4),
+        "minObservedSampleIntervalSeconds":round(min(elapsed_intervals),4),
+        "maxObservedSampleIntervalSeconds":round(max(elapsed_intervals),4),
         "cgroupCpuThrottleObservable":throttle_present,
         "cgroupCpuThrottlePeriodDelta":(
             samples[-1]["cgroupThrottlePeriods"]-
@@ -284,6 +297,7 @@ def aggregate(samples, *, target, window_start, window_end,
 
 
 def observe(*, clock=time.time, sleeper=time.sleep,
+            monotonic=time.monotonic,
             sampler=read_host_counters, status=local_batch_status,
             identity=service_identity):
     """One observation, no loop over batches and no daemon installation."""
@@ -304,7 +318,12 @@ def observe(*, clock=time.time, sleeper=time.sleep,
         # Very late wakeup indicates unstable VM; do NOT claim overlap.
         if abs(clock()-due) > 2.5:
             raise ValueError("passive_sampling_deadline_missed")
-        samples.append(sampler())
+        reading=sampler()
+        if type(reading) is not dict:
+            raise ValueError("invalid_counter_snapshot")
+        # Monotonic timestamps give the ACTUAL interval, not the nominal
+        # five seconds when a micro VM is briefly delayed by scheduling.
+        samples.append({**reading, "sampleMonotonicSeconds":monotonic()})
     if clock() > window_end+3:
         raise ValueError("passive_sampling_overran")
     after = status()
