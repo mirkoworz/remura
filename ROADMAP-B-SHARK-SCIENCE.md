@@ -1,6 +1,47 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
 
+## 06/11/2026 ore 10:32 italiane — P0b: SECONDO batch NATURALE cTrader misurato con sonda V2, PASS evidenza (2/8)
+
+**Provenienza reale:** screenshot Termius utente della sonda read-only **schema `remura-track-b-p0b-passive-natural-batch-v2`** eseguita sulla VM Oracle `VM.Standard.E2.1.Micro` tramite il codice SHA256-pinned e senza installazione. Sorgente immutabile commit `270f718b16d7fe24b06f9f0563966aa3b5f641e6`, SHA256 `633fc34c44cba43dc64527c3740a25aa40c0f4bb9afaa2cd0c95b29b3a35ab83`. L'output dichiara `NATURAL_INGEST_BASELINE_OBSERVED`; screenshot non contenente identificativi account, prezzi o segreti. L'aggregazione resta **testo screenshot**, non file JSON firmato e non audit automatico su server.
+
+| Campo | Primo batch V1 (06/11 ore 09:31:30 CET) | Secondo batch V2 (06/11 ore 10:31:30 CET) |
+|---|---:|---:|
+| Ora target UTC | `2026-11-06T08:31:30Z` | `2026-11-06T09:31:30Z` |
+| `status` | `NATURAL_INGEST_BASELINE_OBSERVED` | `NATURAL_INGEST_BASELINE_OBSERVED` |
+| Finestra / numero campioni | 85s / 18 | 85s / 18 |
+| `collectorRecordAdvancedInWindow` | true | **true** |
+| `servicePidUnchanged` | true | **true** |
+| `serviceCpuDuringWindowMs` | **1740.784** | **3184.195** |
+| `serviceCpuPctOfOneFullCore` | **2.048%** | **3.7461%** |
+| `maxSampledFiveSecondCpuMs` | **N/D: V1 non misurava** | **851.236 ms** |
+| `maxSampledFiveSecondCpuPctOfOneFullCore` | **N/D** | **17.0278%** |
+| `minObservedSampleIntervalSeconds` | **N/D** | **4.9979 s** |
+| `maxObservedSampleIntervalSeconds` | **N/D** | **5.0022 s** |
+| `observedSamplingSpanSeconds` | **N/D** | **84.9995 s** |
+| `maxSampledServiceMemMiB` | 113.33 MiB | **114.74 MiB** |
+| `minSampledHostAvailableMiB` | 621.24 MiB | **620.0 MiB** |
+| `cpuPsiSomeTotalDeltaMs` | 42.604 | **44.817** |
+| `ioPsiSomeTotalDeltaMs` | 88.052 | **140.642** |
+| `memoryPsiSomeTotalDeltaMs` | 0.0 | **0.0** |
+| `cgroupCpuThrottleObservable` | N/D | **false** |
+| `cgroupCpuThrottlePeriodDelta` / `cgroupCpuThrottledMsDelta` | N/D | **null / null** |
+| `providerHypervisorThrottleMeasured` | false / non misurato | **false** |
+| `additionalBrokerCalls` (della sonda) | 0 | **0** |
+| `localReadOnlyStatusGets` | 2 | **2** |
+| `writesOrServiceChanges` | false | **false** |
+| `oracleBillingVerified` / `realCvdCollectorCoLoadTested` | false / false | **false / false** |
+| `cvdResearchMayBeEnabled` | false | **false** |
+
+- [x] **Secondo campione naturale confermato**, con CPU media maggiore (3,7461% vs 2,048% di UN intero core), **picco in intervallo di ~5s del 17,0278% di un core**: sono misure di CPU cgroup del servizio, NON frazione utilizzata della quota 1/8 OCPU Oracle. La CPU cgroup media è calcolata su 85 s, la RAM massima è **solo campionata**, non massimo assoluto. PSI CPU/I/O riferiti all'intero host. Nessun riavvio rilevato, nuovo record batch presente.
+- [x] **Throttling non misurabile dai contatori disponibili:** la coppia `cgroupCpuThrottleObservable=false` e delta `null` è **N/D**, non prova throttling zero o assenza di limitazioni dell'hypervisor. Un picco oltre 12,5% di un core NON significa addebito, upgrade o CPU disponibile garantita: Oracle shape micro può ricevere capacità aggiuntiva non garantita.
+- [x] **Copertura osservazionale attuale 2/8** finestre naturali, entrambe in **data UTC 06/11/2026**, ore UTC 08 e 09, stessa fascia UTC 06–12. Non soddisfa ancora il criterio interno di diversificazione (almeno due giorni, tre ore distinte e due fasce da 6 ore); questo è un obiettivo **ingegneristico descrittivo** e non prova statistica. Non affermare che l'analizzatore offline abbia letto automaticamente lo screenshot o che esista un file verificato v1/v2 sul server.
+- [ ] **Prossima osservazione passiva:** una sessione europea/americana differente, preferibilmente **nel pomeriggio di mercato** e poi in un secondo giorno, **solo su esplicita iniziativa utente** con lo stesso codice V2 immutabile e verificato; nessun cron, sampler sempre acceso o nuova chiamata broker. Se il mercato è chiuso, non forzare il batch.
+- [ ] **P0b/P0c permangono NO-GO per co-load CVD:** nessun nuovo recorder avviato, nessun confronto con latenza reale quando CVD attivo, nessuna prova di zero `SQLITE_BUSY` con doppio carico; fatture OCI, boot+block volumes, storage Firebase/GitHub non verificati da queste misure. Preferire elaborazioni CVD offline a quota gratuita verificata. Nessun segnale/profitto statistico dimostrato.
+- [x] **LIVE v1.64 riferita dall'utente rimane non modificata** con loading/notifiche; PR #89 DRAFT/unmerged, niente release, nessun costo nuovo introdotto da questa osservazione.
+
+
+
 ## 06/11/2026 — P0b: baseline CPU **micro-picchi 5s** e throttling Linux, retrocompatibile con prima prova reale
 
 **Motivo:** la prima osservazione naturale del 06/11 alle 09:31:30 CET (85s, CPU cgroup 1740,784 ms, 2,048% di UN intero core medio; max RAM campionata 113,33 MiB; minimo RAM host disponibile 621,24 MiB; PSI CPU/I/O/memoria host 42,604/88,052/0 ms) NON consente di vedere picchi CPU brevi o giudicare i limiti di una VM Oracle **VM.Standard.E2.1.Micro** a 1/8 OCPU di base. Baseline originale **conservata e non reinterpretata**.
@@ -11,7 +52,7 @@
 - [x] Aggiunte prove offline: burst sintetico 40% su 5s con media appena 2,3529% su 85s, counter throttling mancante vs zero osservato, regressione contatori, mixed v1/v2, CPU units coerenti, falsi dati di quota CPU, JSON schema non valido o non hashable. Non leggere la VPS in CI; nessun collector o processo LIVE viene avviato.
 - [x] **Sorgente v2 immutabile identificato:** `scripts/shark_p0b_passive_observer.py` al commit `270f718b16d7fe24b06f9f0563966aa3b5f641e6`, file UTF-8 **15.976 byte**, SHA256 `633fc34c44cba43dc64527c3740a25aa40c0f4bb9afaa2cd0c95b29b3a35ab83`. Test offline aggiunto che controlla byte-per-byte questo SHA256; eventuali modifiche richiederanno ripin consapevole. Il file V1 già usato il 06/11 resta preservato al precedente commit; non è stato modificato su Oracle.
 - [x] **Gate CI sul commit completo `c8af03b54ba07f2b2ce22d54a8c2c475fb65d840` SUPERATO:** [Shark Science #42192827479](https://github.com/mirkoworz/remura/actions/runs/42192827479), [Price Engine #42192827979](https://github.com/mirkoworz/remura/actions/runs/42192827979), [Insights #42192827769](https://github.com/mirkoworz/remura/actions/runs/42192827769) tutti SUCCESS. Include hash SHA256 pinned, burst CPU con clock monotono e censimento misto v1/v2. Eventuale nuovo commit solo documentale richiede sua riconciliazione separata. Un PASS offline NON è una misura reale della VPS.
-- [ ] **Prossima eventuale misura:** quando opportuno, una sola nuova osservazione NATURALE da Termius con sorgente V2 pinned + SHA256 verificato, **non** un monitor che gira in background. Fare solo su esplicita richiesta/approvazione dell'operatore e dopo CI. Conservare intatta la prima prova V1.
+- [x] **Seconda osservazione naturale V2 eseguita il 06/11 alle 10:31:30 CET** con SHA256 pinned, senza installazione; v1 originale intatta. Nuovi dati reali nella sezione sopra, ora **2/8** copertura descrittiva, ancora insufficienti per co-load CVD.
 - [ ] **Gate real CVD + costi:** rimane NO-GO finché assenti osservazioni in diversi periodi, effettivi test di co-load con rollback sicuro, backup/restore/HMAC, prova billing volumi Always Free e limiti cloud, più test statistici OOS con costi/spread. Nessun segnale istituzionale/profitto provato.
 - [x] Nessuna versione LIVE pubblicata, nessun merge PR #89 DRAFT. Versione LIVE di riferimento comunicata **v1.64** con loading personalizzato/notifiche **non toccati**.
 
