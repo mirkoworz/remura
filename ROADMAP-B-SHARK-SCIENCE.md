@@ -1,5 +1,14 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
+## 06/11/2026 — B-P0: prova OFFLINE di coesistenza ingest prezzo + pilota CVD su due SQLite isolate
+
+- [x] Aggiunta nuova suite tests/test_shark_cvd_coload_rehearsal.py e relativa CI Shark Science. Non duplica il benchmark scanner 34×4000 già esistente: usa 34 mercati sintetici ×160 M15, il VERO codice price_store.ingest e il nuovo adattatore shark_cvd_same_source_adapter.capture (2 originali EURUSD/XAUUSD) in concorrenza su due database temporanei separati. Controlla parità degli archivi prezzo seriale/parallelo, origine SHA/HMAC, 2 tentativi CVD, 32 mercati non coperti, e report anonimizzato CPU/wall/RSS del processo CI. GitHub runner NON e VM Oracle; queste misure non certificano quota 1/8 OCPU o PSI reale.
+- [x] Test sintetico di vera contesa SQLite sul DB prezzi: writer occupato con BEGIN IMMEDIATE, ingest originale fallisce database is locked senza dati incompleti e ledger CVD privato separato resta integro. Terminato il lock, il collector sintetico può ritentare il proprio ingest; non si ricostruiscono scansioni CVD a posteriori. Backup SQLite API per ENTRAMBI i DB con integrity_check, parità dati, ripristino trigger anti-modifica e cancellazione respinta su ledger ripristinato.
+- [x] Test esplicito del limite critico: CVD può committare mentre la transazione prezzo fallisce; i due DB non condividono commit. Quindi record CVD NON equivale a osservazione prospettica prezzo+CVD prima della verifica indipendente del join documento originale. Nessuna asserzione che coesistenza significhi scansione completa o flusso istituzionale.
+- [ ] Riconciliare CI sul nuovo HEAD. Interferenza reale collector e RSS/CPU/PSI Oracle NON eseguiti. Rimangono NO-GO: attivazione CVD, raccolta prospettica, deploy, quote effettive boot/block/fatture Oracle e consumi Firestore/GitHub, backup/restore LIVE e rollback release. Zero nuovi servizi, zero nuovi GET broker. Protocollo futuro del 09/11 e SHA congelata invariati. LIVE v1.64, PR #89 DRAFT, Track A separata.
+- [ ] La prova sintetica non valida causalità multi-DB, vantaggio statistico su 34 mercati, ritorni fuori campione o profitti.
+
+
 ## 06/11/2026 — B3: adattatore CVD OFFLINE opt-in, stesso documento originale, 2/34 (NO-GO VPS)
 
 - [x] Creato scripts/shark_cvd_same_source_adapter.py, NON integrato nella produzione. Di default DISATTIVATO, richiede opt-in esplicito e input gia in memoria dalla stessa osservazione cTrader, quindi ZERO GET broker, ZERO scheduler, nessun trade e nessuna notifica. Il preflight SHA gia esistente vincola il documento originale alle 34 righe price-only; CVD continua limitato a EURUSD e XAUUSD, gli altri 32 restano sconosciuti e non negativi.
