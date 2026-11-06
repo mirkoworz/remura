@@ -167,6 +167,13 @@ class ProspectiveCvdProtocolTests(unittest.TestCase):
                 result=check([data])
                 self.assertEqual(result["rowsCoreAdmitted"],0)
 
+    def test_cot_report_cannot_be_known_before_its_report_date(self):
+        fake=event(cotFirstSeenAtUtc="2026-11-02T12:00:00Z")
+        out=check([fake])
+        self.assertEqual(out["rowsCoreAdmitted"],0)
+        self.assertEqual(out["exclusionReasons"]["cot_first_seen_predates_report"],1)
+        self.assertFalse(out["cotOriginalFirstSeenVerifiedIndependently"])
+
     def test_two_cot_versions_or_duplicate_signal_at_same_instant_not_independent(self):
         duplicate=event(cotReportDate="2026-10-28",cvdResult="NO_CONFIRMED_DIVERGENCE")
         r=check([event(),duplicate])
