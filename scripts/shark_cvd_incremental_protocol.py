@@ -135,6 +135,11 @@ def _raw_core(row, start, now):
         return None,"invalid_cot_report_date"
     if report_date > observed.date() or observed.date()-report_date > timedelta(days=21):
         return None,"cot_report_date_not_asof"
+    # A COT document cannot genuinely have first been seen before the
+    # Tuesday report date it describes. Prevent an invented pre-report
+    # timestamp from providing fake early access to institutional data.
+    if cot.date() < report_date:
+        return None,"cot_first_seen_predates_report"
     return (observed,report),None
 
 
