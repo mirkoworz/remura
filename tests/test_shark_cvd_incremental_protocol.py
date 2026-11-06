@@ -54,7 +54,7 @@ def event(**changes):
     if ("cotMappedLegWitnesses" not in changes and
             payload["symbol"] in p.FROZEN_UNIVERSE):
         payload["cotMappedLegWitnesses"]=[
-            {"dataset":ds,"code":code,
+            {"dataset":ds,"code":code,"reportDate":payload["cotReportDate"],
              "firstSeenAtUtc":payload["cotFirstSeenAtUtc"]}
             for ds,code in p.expected_cot_legs(payload["symbol"])
         ]
@@ -168,6 +168,10 @@ class ProspectiveCvdProtocolTests(unittest.TestCase):
         bad["cotMappedLegWitnesses"][1]["code"]="000000"
         self.assertEqual(
             check([bad])["exclusionReasons"]["cot_legs_incomplete_or_unmapped"],1)
+        mixed=copy.deepcopy(full)
+        mixed["cotMappedLegWitnesses"][1]["reportDate"]="2026-10-27"
+        self.assertEqual(
+            check([mixed])["exclusionReasons"]["cot_legs_incomplete_or_unmapped"],1)
         mismatch=copy.deepcopy(full)
         mismatch["cotMappedLegWitnesses"][1]["firstSeenAtUtc"]="2026-11-07T20:00:00Z"
         self.assertEqual(
