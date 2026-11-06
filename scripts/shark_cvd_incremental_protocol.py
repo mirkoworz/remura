@@ -153,7 +153,8 @@ def _cvd_label(row,observed):
         witnessed=_time(row.get("cvdScanWitnessAtUtc"))
     except ValueError:
         return "UNKNOWN"
-    if (witnessed > observed or observed-witnessed > MAX_CVD_AGE or
+    if (witnessed < _time(START) or
+            witnessed > observed or observed-witnessed > MAX_CVD_AGE or
             row.get("cvdAlgorithm") != CVD_VERSION or
             row.get("cvdQualityVerified") is not True or
             row.get("cvdOriginalClosedBarsVerified") is not True or
@@ -171,7 +172,7 @@ def _cvd_label(row,observed):
         confirmed=_time(row.get("cvdConfirmedAtUtc"))
     except ValueError:
         return "UNKNOWN"
-    if confirmed > witnessed or confirmed > observed:
+    if confirmed < _time(START) or confirmed > witnessed or confirmed > observed:
         return "UNKNOWN"
     aligned=(result == "BULLISH_CONFIRMED" and row["direction"] == 1
              or result == "BEARISH_CONFIRMED" and row["direction"] == -1)
@@ -186,24 +187,28 @@ def assess(records, *, as_of, expected_protocol_sha256):
         raise ValueError("research_protocol_digest_changed")
     if type(records) is not list or len(records) > MAX_RECORDS:
         raise ValueError("invalid_records")
-    seen=set()
     excluded=Counter()
     eligible=Counter()
     dates=set()
     cot_weeks=set()
+    parsed=[]
+    duplicate_keys=Counter()
     for row in records:
         core,why=_raw_core(row,start,now)
         if why:
             excluded[why]+=1
             continue
         observed,report=core
-        # One candidate per original symbol/decision instant; duplicate
-        # rows must never boost denominators or implied sample size.
+        # ALL rows at a duplicated (market, decision) are quarantined.
+        # Otherwise order of input could select whichever CVD result looks
+        # more favourable and manufacture a positive/negative control.
         key=(row["symbol"],observed)
-        if key in seen:
-            excluded["duplicate_observation"]+=1
+        duplicate_keys[key]+=1
+        parsed.append((row,observed,report,key))
+    for row,observed,report,key in parsed:
+        if duplicate_keys[key] != 1:
+            excluded["ambiguous_duplicate_observation"]+=1
             continue
-        seen.add(key)
         dates.add(observed.date().isoformat())
         cot_weeks.add(report)
         eligible["coreCandidates"]+=1
