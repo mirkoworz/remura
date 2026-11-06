@@ -24,6 +24,8 @@ def samples():
     for i in range(p.SAMPLE_COUNT):
         result.append({
             "cpuUsec":12_000_000+i*5_000,
+            "cgroupThrottlePeriods":3+i//6,
+            "cgroupThrottleUsec":100+i*25,
             "serviceMemBytes":60*1024*1024+i*1024,
             "hostMemAvailableKiB":655360-i*8,
             "cpuPsiSomeUsec":20000+i,
@@ -77,6 +79,14 @@ class ObserverTests(unittest.TestCase):
         self.assertEqual(out["serviceCpuDuringWindowMs"],85)
         self.assertEqual(out["serviceCpuPctOfOneFullCore"],0.1)
         self.assertEqual(out["cpuPsiSomeTotalDeltaMs"],0.017)
+        self.assertEqual(out["schema"],
+                         "remura-track-b-p0b-passive-natural-batch-v2")
+        self.assertEqual(out["maxSampledFiveSecondCpuMs"],5.0)
+        self.assertEqual(out["maxSampledFiveSecondCpuPctOfOneFullCore"],0.1)
+        self.assertTrue(out["cgroupCpuThrottleObservable"])
+        self.assertEqual(out["cgroupCpuThrottlePeriodDelta"],2)
+        self.assertEqual(out["cgroupCpuThrottledMsDelta"],0.425)
+        self.assertFalse(out["providerHypervisorThrottleMeasured"])
         self.assertEqual(out["ioPsiSomeTotalDeltaMs"],0.034)
         self.assertFalse(out["realCvdCollectorCoLoadTested"])
         self.assertFalse(out["cvdResearchMayBeEnabled"])
@@ -167,6 +177,44 @@ class ObserverTests(unittest.TestCase):
         bad=samples();bad[0]["serviceMemBytes"]=True
         with self.assertRaisesRegex(ValueError,"invalid_observation"):
             call(bad)
+
+    def test_true_five_second_cpu_burst_not_hidden_by_85_second_mean(self):
+        target,begin,end=p.planned_window(20*3600+3*60)
+        arr=samples()
+        for i, item in enumerate(arr):
+            item["cpuUsec"]=12_000_000+(0 if i < 7 else 2_000_000)
+        out=p.aggregate(arr,target=target,window_start=begin,window_end=end,
+                        before={"samples":1,"ingestUtcSeconds":target-900},
+                        after={"samples":2,"ingestUtcSeconds":target+10},
+                        pid_before=100,pid_after=100)
+        self.assertEqual(out["serviceCpuDuringWindowMs"],2000.0)
+        self.assertAlmostEqual(out["serviceCpuPctOfOneFullCore"],2.3529,places=4)
+        self.assertEqual(out["maxSampledFiveSecondCpuMs"],2000.0)
+        self.assertEqual(out["maxSampledFiveSecondCpuPctOfOneFullCore"],40.0)
+        self.assertFalse(out["cvdResearchMayBeEnabled"])
+
+    def test_missing_linux_throttling_fields_are_unknown_not_zero(self):
+        target,begin,end=p.planned_window(20*3600+3*60)
+        arr=samples()
+        for item in arr:
+            item["cgroupThrottlePeriods"]=None
+            item["cgroupThrottleUsec"]=None
+        kw=dict(target=target,window_start=begin,window_end=end,
+                before={"samples":1,"ingestUtcSeconds":target-900},
+                after={"samples":2,"ingestUtcSeconds":target+10},
+                pid_before=100,pid_after=100)
+        out=p.aggregate(arr,**kw)
+        self.assertFalse(out["cgroupCpuThrottleObservable"])
+        self.assertIsNone(out["cgroupCpuThrottlePeriodDelta"])
+        self.assertIsNone(out["cgroupCpuThrottledMsDelta"])
+        self.assertFalse(out["oracleCpuEntitlementMeasured"])
+        arr[9]["cgroupThrottlePeriods"]=12
+        with self.assertRaisesRegex(ValueError,"partial_or_invalid"):
+            p.aggregate(arr,**kw)
+        arr=samples()
+        arr[9]["cgroupThrottleUsec"]=0
+        with self.assertRaisesRegex(ValueError,"counter_reset"):
+            p.aggregate(arr,**kw)
 
     def test_deadline_miss_fails_before_falsely_reporting_overlap(self):
         t=FakeClock(20*3600+3*60)
