@@ -118,6 +118,8 @@ class ProspectiveCvdProtocolTests(unittest.TestCase):
             dict(cvdConfirmedAtUtc="2026-11-09T10:02:00Z"),
             dict(cvdScanWitnessAtUtc="2026-11-09T10:02:00Z"),
             dict(cvdScanWitnessAtUtc="2026-11-09T06:01:00Z"),
+            dict(cvdScanWitnessAtUtc="2026-11-08T23:59:59Z"),
+            dict(cvdConfirmedAtUtc="2026-11-08T23:59:59Z"),
             dict(cvdConfirmedAtUtc="2026-11-09T10:00:55Z"),
             dict(cvdAlgorithm="impostor_real_aggressor_flow"),
             dict(cvdSourceWitnessSha256="123"),
@@ -168,10 +170,13 @@ class ProspectiveCvdProtocolTests(unittest.TestCase):
     def test_two_cot_versions_or_duplicate_signal_at_same_instant_not_independent(self):
         duplicate=event(cotReportDate="2026-10-28",cvdResult="NO_CONFIRMED_DIVERGENCE")
         r=check([event(),duplicate])
-        self.assertEqual(r["rowsCoreAdmitted"],1)
-        self.assertEqual(r["exclusionReasons"]["duplicate_observation"],1)
-        self.assertEqual(r["coreDistinctObservationDates"],1)
-        self.assertEqual(r["coreDistinctCotReportDates"],1)
+        self.assertEqual(r["rowsCoreAdmitted"],0)
+        self.assertEqual(r["exclusionReasons"]["ambiguous_duplicate_observation"],2)
+        self.assertEqual(r["coreDistinctObservationDates"],0)
+        self.assertEqual(r["coreDistinctCotReportDates"],0)
+        r_reverse=check([duplicate,event()])
+        self.assertEqual(r_reverse["rowsCoreAdmitted"],0)
+        self.assertEqual(r_reverse["exclusionReasons"]["ambiguous_duplicate_observation"],2)
 
     def test_invalid_clock_dst_ambiguity_and_nonutc_are_not_assumed(self):
         cases=[
