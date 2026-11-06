@@ -50,6 +50,21 @@ def observation(target="2026-11-06T08:31:30Z", **changes):
     return report
 
 
+def observation_v2(target="2026-11-06T08:46:30Z", **changes):
+    record=observation(target=target)
+    record.update({
+        "schema":"remura-track-b-p0b-passive-natural-batch-v2",
+        "maxSampledFiveSecondCpuMs":800.0,
+        "maxSampledFiveSecondCpuPctOfOneFullCore":16.0,
+        "cgroupCpuThrottleObservable":True,
+        "cgroupCpuThrottlePeriodDelta":2,
+        "cgroupCpuThrottledMsDelta":12.2,
+        "providerHypervisorThrottleMeasured":False,
+    })
+    record.update(changes)
+    return record
+
+
 def diversified_records():
     ts=[
         "2026-11-05T07:01:30Z",
@@ -70,6 +85,11 @@ class CensusTests(unittest.TestCase):
         result=census.summarize([observation()])
         self.assertEqual(result["status"],"BASELINE_COVERAGE_INCOMPLETE")
         self.assertEqual(result["windows"],1)
+        self.assertEqual(result["windowsWithFiveSecondBurstData"],0)
+        self.assertIsNone(result["maxSampledFiveSecondCpuPctOfOneCore"])
+        self.assertEqual(result["windowsWithKernelThrottleCounters"],0)
+        self.assertIsNone(result["maxCgroupCpuThrottledMsDelta"])
+        self.assertFalse(result["providerHypervisorThrottleMeasured"])
         self.assertEqual(result["engineeringTargetWindows"],8)
         self.assertEqual(result["maxMeanServiceCpuPctOfOneCore"],2.048)
         self.assertEqual(result["maxServiceCpuWindowMs"],1740.784)
@@ -96,6 +116,48 @@ class CensusTests(unittest.TestCase):
         self.assertFalse(out["cvdResearchMayBeEnabled"])
         self.assertFalse(out["peakCpuQuotaUtilizationMeasured"])
         self.assertFalse(out["oracleFreeTierBillingVerified"])
+
+    def test_v1_and_v2_are_comparable_but_v1_bursts_remain_unknown(self):
+        out=census.summarize([observation(),observation_v2()])
+        self.assertEqual(out["status"],"BASELINE_COVERAGE_INCOMPLETE")
+        self.assertEqual(out["windows"],2)
+        self.assertEqual(out["windowsWithFiveSecondBurstData"],1)
+        self.assertEqual(out["maxSampledFiveSecondCpuPctOfOneCore"],16.0)
+        self.assertEqual(out["windowsWithKernelThrottleCounters"],1)
+        self.assertEqual(out["maxCgroupCpuThrottlePeriodDelta"],2)
+        self.assertEqual(out["maxCgroupCpuThrottledMsDelta"],12.2)
+        self.assertTrue(out["kernelThrottlingNotHypervisorThrottle"])
+        self.assertFalse(out["peakCpuQuotaUtilizationMeasured"])
+        self.assertFalse(out["cvdResearchMayBeEnabled"])
+
+    def test_missing_linux_throttle_counters_are_unknown_not_zero(self):
+        out=census.summarize([observation_v2(
+            cgroupCpuThrottleObservable=False,
+            cgroupCpuThrottlePeriodDelta=None,
+            cgroupCpuThrottledMsDelta=None)])
+        self.assertEqual(out["windowsWithFiveSecondBurstData"],1)
+        self.assertEqual(out["windowsWithKernelThrottleCounters"],0)
+        self.assertIsNone(out["maxCgroupCpuThrottledMsDelta"])
+        self.assertIsNone(out["maxCgroupCpuThrottlePeriodDelta"])
+        self.assertFalse(out["oracleFreeTierBillingVerified"])
+
+    def test_forged_v2_burst_and_quota_metrics_fail_closed(self):
+        cases=[
+            {"maxSampledFiveSecondCpuMs":1600},
+            {"maxSampledFiveSecondCpuPctOfOneFullCore":99},
+            {"maxSampledFiveSecondCpuMs":1741},
+            {"maxSampledFiveSecondCpuPctOfOneFullCore":1},
+            {"cgroupCpuThrottleObservable":"true"},
+            {"cgroupCpuThrottleObservable":True,
+             "cgroupCpuThrottlePeriodDelta":None},
+            {"cgroupCpuThrottledMsDelta":-1},
+            {"cgroupCpuThrottleObservable":False},
+            {"providerHypervisorThrottleMeasured":True},
+        ]
+        for updates in cases:
+            with self.subTest(update=repr(updates)):
+                with self.assertRaises(ValueError):
+                    census.summarize([observation_v2(**updates)])
 
     def test_eight_in_one_date_are_not_diversified(self):
         stamps=[
