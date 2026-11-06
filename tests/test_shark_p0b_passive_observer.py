@@ -5,6 +5,7 @@ No Oracle, cTrader, SQLite, secrets, network, real systemd, sleeps or LIVE.
 from __future__ import annotations
 
 from contextlib import redirect_stdout
+import hashlib
 from datetime import datetime, timezone
 import io
 import json
@@ -50,6 +51,13 @@ class FakeClock:
 
 
 class ObserverTests(unittest.TestCase):
+    # Source v2 frozen at immutable research commit 270f718b. Future edits
+    # require deliberate re-pin of the operator's one-shot SHA256 checker.
+    def test_pinned_observer_v2_source_sha256(self):
+        expected="633fc34c44cba43dc64527c3740a25aa40c0f4bb9afaa2cd0c95b29b3a35ab83"
+        self.assertEqual(hashlib.sha256(Path(p.__file__).read_bytes()).hexdigest(),
+                         expected)
+
     def test_next_complete_natural_quarter_and_near_deadline(self):
         # In a local arbitrary day 20:03:00 -> 20:16:30.
         target,begin,end=p.planned_window(20*3600+3*60)
