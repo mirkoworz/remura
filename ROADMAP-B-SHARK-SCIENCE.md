@@ -1,6 +1,40 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
 
+## 06/11/2026 ore 09:34 italiane — P0b: PRIMO overlap passivo con un batch NATURALE cTrader, confermato da screenshot LIVE
+
+**Origine:** screenshot Termius dell'utente dalla shell VPS `ubuntu@remura-vnic` dopo invocazione **verificata tramite SHA256** del programma `scripts/shark_p0b_passive_observer.py` a commit `6f301a3fc3ebde34154363d36649b66799ad7667`, SHA256 sorgente `4358dbe617e1fab1d8ec650f0e494c37c7ddee01201beb52a43edc6d2573961f`; caricamento ed esecuzione **in memoria**, nessun file salvato o deploy. Il primo screenshot delle 09:28 mostrava la sessione ancora in attesa della finestra naturale; il secondo delle 09:34 ha mostrato il risultato e il prompt tornato regolarmente.
+
+| Campo effettivamente osservato | Risultato |
+|---|---:|
+| `status` | **NATURAL_INGEST_BASELINE_OBSERVED** |
+| `targetUtc` | **2026-11-06T08:31:30Z = 09:31:30 CET** |
+| `windowSeconds` | **85** (circa 09:31:20–09:32:45 CET) |
+| `sampleIntervalSeconds` / `samples` | **5 / 18** |
+| `collectorRecordAdvancedInWindow` | **true** |
+| `servicePidUnchanged` | **true** |
+| `serviceCpuDuringWindowMs` | **1740.784 ms** (1,741 s di tempo CPU) |
+| `serviceCpuPctOfOneFullCore` | **2.048%** nell'intervallo (NON quota effettiva OCI 1/8 OCPU) |
+| `maxSampledServiceMemMiB` | **113.33 MiB** |
+| `minSampledHostAvailableMiB` | **621.24 MiB** |
+| `cpuPsiSomeTotalDeltaMs` | **42.604 ms**, PSI CPU host |
+| `ioPsiSomeTotalDeltaMs` | **88.052 ms**, PSI I/O host |
+| `memoryPsiSomeTotalDeltaMs` | **0.0 ms** |
+| `additionalBrokerCalls` | **0** dalla sonda |
+| `localReadOnlyStatusGets` | **2** su loopback |
+| `writesOrServiceChanges` | **false** |
+| `oracleBillingVerified` / `oracleCpuEntitlementMeasured` | **false / false** |
+| `realCvdCollectorCoLoadTested` / `cvdResearchMayBeEnabled` | **false / false** |
+
+- [x] **P0b one-shot osservazione durante ingest naturale = PASS evidenza puntuale.** Almeno un nuovo record `collectorTiming.lastIngestReturnedUtc` è avanzato nella finestra e il PID non è cambiato; ciò conferma l'osservazione del collector esistente, **NON** il suo comportamento con un nuovo CVD. Il dato CPU 2,048% riguarda un core intero medio in 85 secondi, non il valore percentuale di throttling o dell'entitlement del provider. La RAM 113,33 MiB è il massimo dei **18 campioni**, non un picco assoluto non campionato. PSI misurati su **host intero**. Nessun errore della sonda riferito.
+- [x] **Nessuna azione LIVE oltre alla sonda read-only temporanea**: non è stato installato codice, modificato `/opt/remura`, aggiunta una richiesta broker, inserito un CVD, alterata la cadenza o avviato un test intenso. **Versione LIVE di riferimento v1.64** con loading/notifiche preservata; verificata come riferita dall'utente, non SHA deploy via SSH.
+- [ ] **P0b confidenza statistica delle risorse ancora NO-GO:** un solo intervallo diurno non copre più sessioni, il carico del mercato variabile, p95/p99 o eventi di stress; non trarre promessa di latency/regressioni, né confrontare con test che non sono stati eseguiti. Conservare i 218 batch raccolti (mediana 17,087s e max 28,930s) come baseline temporale, con storico al massimo 256 righe; mai spacciarli per 218 prove CPU simultanee.
+- [ ] **Prossima scelta tecnica:** preferire ulteriori **finestre passivamente osservate e non invasive in diversi orari di mercato**, valutando eventuale strumento di ricerca off-host per gestire coppie di evidenze senza portare il collector sulla micro VM al limite. Prima di qualsiasi esperimento con CVD attivo richiedere 8 finestre d'overlap comparative indipendenti, stessi tempi di raccolta, assenza nuove API, zero `SQLITE_BUSY`, backup e restore, più OCI billing/Always Free verificati. Il gate `shark_p0_go_no_go.py` continua NO_GO.
+- [ ] **P0c budget/quote ancora NO-GO:** shape micro OCI Always Free eligible è confermata; **spese reali, volumi boot/block eleggibili, storage Firebase ed eventuali quote GitHub Actions non sono certificate** da queste misure. Nessun nuovo servizio o volume, nessun acquisto.
+- [ ] La validazione scientifica resta separata: CVD proxy CLV×tick volume ≠ order-flow aggressivo realmente istituzionale; edge e profitti non validati statisticamente, test prospettici e walkforward ancora aperti.
+
+
+
 ## 05/11/2026 sera — P0b, preparazione osservatore PASSIVO di un vero batch naturale (solo codice di ricerca, nessun uso su VPS)
 
 **Contesto realizzato:** shape OCI `VM.Standard.E2.1.Micro` verificata (1 GiB RAM, 1/8 OCPU base), filesystem 41459/45129 MiB disponibili, memoria host 636-665 MiB osservata e servizio attivo. Prezzi recenti/verificati 38/38; benchmark già registrato su 218 batch naturali = 1090/1090 slot salvati, mediana 17,087 s, max 28,930 s, successivamente 219/219 post-scan OK e mediana post-scan 255 ms; sono misure di baseline, **non** misure di CVD concomitante.
@@ -11,8 +45,8 @@
 - [x] Le metriche elaborate in memoria sono soltanto aggregate: delta CPU cgroup nell'intervallo, **massimo RAM campionato** (non picco assoluto), minimo `MemAvailable` campionato, delta PSI CPU/I/O/memoria, stato del servizio stabile e timestamp UTC programmato. Niente OHLC, simboli, token, OCID, path privati, account o contenuti grezzi nei risultati. `oracleBillingVerified=false`, `oracleCpuEntitlementMeasured=false`, `realCvdCollectorCoLoadTested=false`, `cvdResearchMayBeEnabled=false` indipendentemente dal responso.
 - [x] Sicurezze: abort se gruppo systemd non è **esattamente** `/system.slice/remura-private.service` o se PID cambia, cgroup non v2, path symlink, mancano contatori, time drift maggiore di 2,5 s, contatori retrocedono o ingest non avanza davvero. **Non recupera eseguendo un batch a mano, non modifica unità o file**. Accetta una sola finestra; non un servizio sempre acceso. I contatori PSI host descrivono tutte le attività, non solo REMURA, e l'utilizzo di 1 core misurato **non** prova la quota hypervisor OCI 1/8 OCPU.
 - [x] Nuovo **`tests/test_shark_p0b_passive_observer.py`**: finti orologi, eccezioni, proxi, redirect, path symlink, dati sensibili, timestamp di ingest mancante/non nuovo/fuori finestra, contatori retrocessi, PID riavviato, rollover finestra 256 record; test esecuzione `--self-check` senza cache o dipendenze e senza sleep reale. Collegato alla CI Shark Science.
-- [ ] **GATE prima di chiedere qualsiasi comando su Termius:** 3 workflow CI **SUCCESS** sull'ultima HEAD, verificare fonte byte per byte e SHA256 del file, preparare un'UNICA invocazione opzionale di script immutabile verificato in memoria, se possibile senza file su disco; valutare tempi/impatti della sonda sulla micro-VPS e stop in caso di risultato ambiguo. Nessun test `--observe` è stato ancora eseguito su Oracle.
-- [ ] **Solo misura a zero carico aggiuntivo:** se e quando una finestra naturale viene osservata, confrontare con baseline e ripetere più volte solo dopo analisi, senza effettuare un test con nuovo CVD sul server. Staging e potenziali calcoli CVD pesanti restano OFFLINE GitHub/runner sotto quota.
+- [x] **GATE codice e prima esecuzione superati:** tre CI SUCCESS sul commit sorgente 6f301a3f, SHA256 verificato, singolo `--observe` eseguito in memoria su Oracle il 06/11 alle 09:31:30 CET, risultati registrati nella sezione superiore. Nessun deploy e nessun file persistente. Il gate di co-load CVD è separato ed ancora NO-GO.
+- [x] **Prima finestra naturale passivamente osservata il 06/11;** un risultato affidabile ma non sufficiente a validare stabilità su più orari. Ripetizioni, se utili, solo deliberate e senza abilitare nuovo CVD sul server. Staging e potenziali calcoli CVD pesanti restano OFFLINE GitHub/runner sotto quota.
 - [ ] **P0c contabilità ancora NO-GO:** shape idonea Always Free NON conferma zero fatture dell'account, boot+block volumes complessivi, quota GitHub private Actions, storage/egress Firebase. Non acquistare nulla né abilita recorder finché mancano queste verifiche. Proteggere LIVE v1.64 loading e notifiche; PR #89 DRAFT, nessun merge/deploy.
 - [ ] Statistica COT/CVD: CVD resta proxy da CLV×tick volume (non misura diretta acquisti/vendite istituzionali), COT rilasciato con ritardo, dati as-of e verifica out-of-sample/commissioni da completare. Nessuna certezza di edge o profitto.
 
