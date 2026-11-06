@@ -1,5 +1,14 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
+## 06/11/2026 — B-P0: prova INTEGRALE della CLI di laboratorio sul runner GitHub isolato
+
+- [x] Dopo l'esame della roadmap OCI, il controllo `remura-arm-a1-limits-readonly.yml` esiste su main di remura-collector ma alle 21:44 italiane NON risulta alcun run manuale: non dedurre disponibilita' o gratuite' OCI dal verde dell'inventario ARM lab. Le istanze di laboratorio restano ZERO, CVD LIVE OFF.
+- [x] Il runner `shark-science-offline.yml` ora esegue anche il percorso integrale `--run` del gate `shark_oracle_cvd_coload_gate.py` **soltanto su un runner Ubuntu GitHub disposable**, con checkout sinteticamente copiato sotto `/tmp`, non-root, esplicita attestazione di isolamento, verifiche preventive di assenza di /opt/remura e unit systemd, pulizia automatica scratch. Questo serve a esercitare realmente le guardie e il sottoprocesso, prima testati solo indirettamente, senza toccare Oracle, cTrader, collector, servizi o file privati.
+- [ ] Verificare CI sul SHA esatto. Questa prova NON e' su Oracle: risultati CPU/RSS e risorse NON dimostrano sicurezza della VPS E2 1/8 OCPU, limiti storage, fatture, coesistenza reale, intervallo OOS o convenienza economica.
+- [ ] Da eseguire tramite workflow MANUALE esistente del repository privato: `REMURA Oracle ARM - limiti A1 (sola lettura)` su main. Lo script chiama SOLO ListLimitValues e GetResourceAvailability per A1 e non crea nulla. Se OCI_HTTP_403, per i permessi verificare lettura resource-availability secondo documentazione Oracle; non assegnare permessi di scrittura o modificare LIVE. Anche il SUCCESS non prova capacita' fisica ne' gratuità effettiva o volumi gia' usati. Servono audit tenancy root, OCI billing, 200 GB volumi e quote complessive prima di qualsiasi VM. Il filone ARM prepara tali risorse separatamente.
+- [x] Nessuna nuova istanza, nessun deploy, merge, cron, GET cTrader, trade, notifica o versione LIVE. Remura v1.64 intatta, PR #89 DRAFT, Track A separata.
+
+
 
 ## 06/11/2026 — B-P0: predisposto gate CVD su macchina Oracle di laboratorio ISOLATA (non eseguito)
 

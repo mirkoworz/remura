@@ -195,6 +195,19 @@ jobs:
         run: |
           python -B scripts/shark_oracle_cvd_coload_gate.py --self-check
           python -m unittest discover -s tests -p 'test_shark_oracle_cvd_coload_gate.py' -v
+      - name: Execute full CVD and price co-load once on disposable GitHub runner (NEVER Oracle/LIVE)
+        shell: bash
+        env:
+          REMURA_ISOLATED_ORACLE_LAB: I_CONFIRM_NO_LIVE
+        run: |
+          set -euo pipefail
+          test "$(id -u)" -ne 0
+          test ! -e /opt/remura
+          test ! -e /etc/systemd/system/remura-private.service
+          workdir="$(mktemp -d -p /tmp remura-cvd-github.XXXXXX)"
+          trap 'rm -rf -- "$workdir"' EXIT
+          cp -a scripts tests "$workdir/"
+          python -B "$workdir/scripts/shark_oracle_cvd_coload_gate.py" --run
       - name: Test Oracle staging script safety and isolated synthetic restore
         run: |
           python scripts/shark_oracle_staging_gate.py --self-check
