@@ -86,6 +86,7 @@ class ObserverTests(unittest.TestCase):
         self.assertEqual(out["maxSampledFiveSecondCpuPctOfOneFullCore"],0.1)
         self.assertEqual(out["minObservedSampleIntervalSeconds"],5)
         self.assertEqual(out["maxObservedSampleIntervalSeconds"],5)
+        self.assertEqual(out["observedSamplingSpanSeconds"],85)
         self.assertTrue(out["cgroupCpuThrottleObservable"])
         self.assertEqual(out["cgroupCpuThrottlePeriodDelta"],2)
         self.assertEqual(out["cgroupCpuThrottledMsDelta"],0.425)
@@ -213,6 +214,7 @@ class ObserverTests(unittest.TestCase):
                                0.099,places=3)
         self.assertEqual(out["minObservedSampleIntervalSeconds"],5.05)
         self.assertEqual(out["maxObservedSampleIntervalSeconds"],5.05)
+        self.assertEqual(out["observedSamplingSpanSeconds"],85.85)
         arr[8]["sampleMonotonicSeconds"]=arr[7]["sampleMonotonicSeconds"]
         with self.assertRaisesRegex(ValueError,"invalid_five_second_interval"):
             p.aggregate(arr,target=target,window_start=begin,window_end=end,
