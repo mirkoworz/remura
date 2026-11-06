@@ -51,6 +51,13 @@ def event(**changes):
         "privateBrokerToken":"DONT_EXPOSE_THIS_SECRET"
     }
     payload.update(changes)
+    if ("cotMappedLegWitnesses" not in changes and
+            payload["symbol"] in p.FROZEN_UNIVERSE):
+        payload["cotMappedLegWitnesses"]=[
+            {"dataset":ds,"code":code,
+             "firstSeenAtUtc":payload["cotFirstSeenAtUtc"]}
+            for ds,code in p.expected_cot_legs(payload["symbol"])
+        ]
     return payload
 
 
@@ -136,6 +143,48 @@ class ProspectiveCvdProtocolTests(unittest.TestCase):
                 self.assertEqual(report["sameCohortCvdUnknownCoverage"],1)
                 self.assertEqual(report["sameCohortCvdFullScanNegativeCandidates"],0)
                 self.assertEqual(report["sameCohortCvdAlignedCandidates"],0)
+
+    def test_frozen_universe_exactly_matches_existing_34_markets(self):
+        from scripts.shark_cot_asof_witness import CATALOG
+        self.assertEqual(p.FROZEN_UNIVERSE,CATALOG)
+        self.assertEqual(len(p.FROZEN_UNIVERSE),34)
+        self.assertEqual(len(p.expected_cot_legs("EURGBP")),2)
+        self.assertEqual(p.expected_cot_legs("XAUUSD"),
+                         (("disagg","088691"),))
+        self.assertEqual(p.PROTOCOL["approvedMarkets"],list(CATALOG))
+
+    def test_cross_currency_requires_both_cftc_legs_known_asof(self):
+        full=event(symbol="EURGBP")
+        self.assertEqual(check([full])["rowsCoreAdmitted"],1)
+        one=event(symbol="EURGBP",
+                  cotMappedLegWitnesses=[full["cotMappedLegWitnesses"][0]])
+        out=check([one])
+        self.assertEqual(out["rowsCoreAdmitted"],0)
+        self.assertEqual(out["exclusionReasons"]["cot_legs_incomplete_or_unmapped"],1)
+        late=copy.deepcopy(full)
+        late["cotMappedLegWitnesses"][1]["firstSeenAtUtc"]="2026-11-09T10:02:00Z"
+        self.assertEqual(check([late])["exclusionReasons"]["cot_leg_not_known_asof"],1)
+        bad=copy.deepcopy(full)
+        bad["cotMappedLegWitnesses"][1]["code"]="000000"
+        self.assertEqual(
+            check([bad])["exclusionReasons"]["cot_legs_incomplete_or_unmapped"],1)
+        mismatch=copy.deepcopy(full)
+        mismatch["cotMappedLegWitnesses"][1]["firstSeenAtUtc"]="2026-11-07T20:00:00Z"
+        self.assertEqual(
+            check([mismatch])["exclusionReasons"]["cot_latest_leg_time_mismatch"],1)
+
+    def test_direct_contract_dataset_is_market_specific(self):
+        gold=event(symbol="XAUUSD",cotDataset="disagg")
+        self.assertEqual(check([gold])["rowsCoreAdmitted"],1)
+        fake=event(symbol="XAUUSD",cotDataset="tff")
+        self.assertEqual(
+            check([fake])["exclusionReasons"]["wrong_cftc_dataset_for_market"],1)
+        for sym in ("GER30","VIX","BTCUSD","USDXYZ"):
+            with self.subTest(sym=sym):
+                r=check([event(symbol=sym)])
+                self.assertEqual(r["rowsCoreAdmitted"],0)
+                self.assertEqual(
+                    r["exclusionReasons"]["outside_frozen_34_market_universe"],1)
 
     def test_core_future_sources_are_not_valid_historically(self):
         cases=[
