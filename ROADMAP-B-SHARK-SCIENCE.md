@@ -1,5 +1,17 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
+
+## 06/11/2026 — B-P0: predisposto gate CVD su macchina Oracle di laboratorio ISOLATA (non eseguito)
+
+**Evidenze reali LETTE, senza nuovi test sulla VPS:** il run privato remura-collector #42234788299 del 06/11 14:32 UTC ha osservato RAM usata 29,2%, disco 8,1%, tick-volume nelle ultime 64/64 M15 EURUSD e 64/64 XAUUSD. Sono snapshot, non CPU CVD né quote. Il run inventario Oracle ARM lab #42282150741 del 06/11 19:44 UTC vede ZERO istanze nel compartimento laboratorio: non attesta disponibilita fisica, fatturazione o quote globali. Il filone ARM e separato.
+
+- [x] Aggiunto scripts/shark_oracle_cvd_coload_gate.py con CLI --self-check (senza controllo host) e --run (solo esplicitamente sul laboratorio futuro), NON connesso a cron/servizi/CI run. Riusa guardie di shark_oracle_staging_gate.py: checkout sotto /tmp, utente non-root, /proc Linux, memoria e disco disponibili. Proibisce inoltre host con /opt/remura o remura-private.service, richiede conferma esplicita REMURA_ISOLATED_ORACLE_LAB=I_CONFIRM_NO_LIVE per impedire esecuzione accidentale sulla VM di produzione.
+- [x] Il solo --run, se abilitato su host isolato, invochera la suite ESISTENTE sintetica test_shark_cvd_coload_rehearsal.py, cioe 34 mercati sintetici con 160 M15 ciascuno, 2 CVD originali sintetici, 32 fuori copertura. Campiona VmRSS, I/O e MemAvailable del sottoprocesso, timeout 45 secondi, budget regressione interno 128 MiB RSS e verifica doppio backup/restore. Non usa broker, rete, database LIVE, account OCI, ordini o notifiche. RESTITUISCE SEMPRE releaseAuthorized=false, crossDatabaseAtomicCommit=false, nessun edge trading dimostrato. RSS campionata non e picco garantito; non misura quota CPU 1/8 Oracle o throttling provider.
+- [x] Test statici tests/test_shark_oracle_cvd_coload_gate.py: schema report allowlisted, 34/2/32, recupero errori, root/host LIVE/isolamento non confermato respinti prima dello spawn. Workflow Shark Science: esegue SOLO --self-check e unittest, mai --run. Verificare CI sul nuovo HEAD dopo il commit.
+- [ ] Gate in attesa: istanza lab A1 realmente creata e verificata gratis, test host solo dopo separazione da LIVE, 8 baseline naturali (attualmente 3), misure reali di ingest/CPU/RSS/PSI/lock/throttling, doppio backup/restore/rollback, quote/fatture OCI boot/block globali, GitHub Actions privato e Firestore. Nessuna attivazione o test CVD sulla VPS E2 LIVE autorizzata.
+- [x] Protocollo sperimentale del 09/11 e hash invariati; LIVE di riferimento v1.64 con loading/notifiche intatti, PR #89 DRAFT, Track A separata, nessun deploy/merge/new broker GET o servizio a pagamento. Nessun vantaggio statistico o PnL OOS dimostrato.
+
+
 ## 06/11/2026 — B-P0: prova OFFLINE di coesistenza ingest prezzo + pilota CVD su due SQLite isolate
 
 - [x] Aggiunta nuova suite tests/test_shark_cvd_coload_rehearsal.py e relativa CI Shark Science. Non duplica il benchmark scanner 34×4000 già esistente: usa 34 mercati sintetici ×160 M15, il VERO codice price_store.ingest e il nuovo adattatore shark_cvd_same_source_adapter.capture (2 originali EURUSD/XAUUSD) in concorrenza su due database temporanei separati. Controlla parità degli archivi prezzo seriale/parallelo, origine SHA/HMAC, 2 tentativi CVD, 32 mercati non coperti, e report anonimizzato CPU/wall/RSS del processo CI. GitHub runner NON e VM Oracle; queste misure non certificano quota 1/8 OCPU o PSI reale.
