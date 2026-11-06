@@ -191,7 +191,9 @@ def _raw_core(row, start, now):
     for leg in legs:
         if (type(leg) is not dict or
                 type(leg.get("dataset")) is not str or
-                type(leg.get("code")) is not str):
+                type(leg.get("code")) is not str or
+                type(leg.get("reportDate")) is not str or
+                leg["reportDate"] != report):
             return None,"cot_legs_incomplete_or_unmapped"
         try:
             when=_time(leg.get("firstSeenAtUtc"))
