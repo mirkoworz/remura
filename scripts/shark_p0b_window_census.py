@@ -48,7 +48,9 @@ def _utc(value):
 
 def _validate(report):
     """Allowlist all used fields; never serialize untrusted unknown fields."""
-    if type(report) is not dict or report.get("schema") not in INPUT_SCHEMAS:
+    if (type(report) is not dict or
+            type(report.get("schema")) is not str or
+            report["schema"] not in INPUT_SCHEMAS):
         raise ValueError("invalid_input_schema")
     is_v2 = report["schema"].endswith("-v2")
     expected = {
