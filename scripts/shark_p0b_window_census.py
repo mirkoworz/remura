@@ -15,7 +15,10 @@ import math
 import sys
 
 SCHEMA = "remura-track-b-p0b-passive-census-v1"
-INPUT_SCHEMA = "remura-track-b-p0b-passive-natural-batch-v1"
+INPUT_SCHEMAS = frozenset((
+    "remura-track-b-p0b-passive-natural-batch-v1",
+    "remura-track-b-p0b-passive-natural-batch-v2",
+))
 MAX_REPORTS = 32
 MAX_INPUT_BYTES = 65536
 ENGINEERING_TARGET = 8  # internal coverage goal, NOT a statistical threshold
@@ -45,8 +48,9 @@ def _utc(value):
 
 def _validate(report):
     """Allowlist all used fields; never serialize untrusted unknown fields."""
-    if type(report) is not dict or report.get("schema") != INPUT_SCHEMA:
+    if type(report) is not dict or report.get("schema") not in INPUT_SCHEMAS:
         raise ValueError("invalid_input_schema")
+    is_v2 = report["schema"].endswith("-v2")
     expected = {
         "status":"NATURAL_INGEST_BASELINE_OBSERVED",
         "windowSeconds":85,
@@ -79,6 +83,31 @@ def _validate(report):
     # Check internal CPU agreement to within output rounding.
     if abs(metrics["cpuPct"]-metrics["cpuMs"]/(85*10)) > 0.001:
         raise ValueError("inconsistent_cpu_units")
+    metrics["cpu5sBurstPct"] = None
+    metrics["kernelThrottlePeriods"] = None
+    metrics["kernelThrottleMs"] = None
+    if is_v2:
+        if (report.get("providerHypervisorThrottleMeasured") is not False or
+                type(report.get("cgroupCpuThrottleObservable")) is not bool):
+            raise ValueError("invalid_v2_kernel_counter_scope")
+        burst_pct = _number(
+            report,"maxSampledFiveSecondCpuPctOfOneFullCore",10000)
+        burst_ms = _number(report,"maxSampledFiveSecondCpuMs",500000)
+        if (abs(burst_pct-burst_ms/(5*10)) > 0.001 or
+                burst_ms > metrics["cpuMs"] + 0.01 or
+                burst_pct+0.001 < metrics["cpuPct"]):
+            raise ValueError("inconsistent_five_second_cpu_units")
+        metrics["cpu5sBurstPct"] = burst_pct
+        if report["cgroupCpuThrottleObservable"]:
+            events = report.get("cgroupCpuThrottlePeriodDelta")
+            if type(events) is not int or not 0 <= events <= 10_000_000:
+                raise ValueError("invalid_kernel_throttle_events")
+            duration = _number(report,"cgroupCpuThrottledMsDelta",1_000_000)
+            metrics["kernelThrottlePeriods"] = events
+            metrics["kernelThrottleMs"] = duration
+        elif (report.get("cgroupCpuThrottlePeriodDelta") is not None or
+              report.get("cgroupCpuThrottledMsDelta") is not None):
+            raise ValueError("unobservable_kernel_throttle_must_be_null")
     return t, metrics
 
 
@@ -98,6 +127,9 @@ def summarize(reports):
     diversified = (len(observations) >= ENGINEERING_TARGET
                    and utc_days >= 2 and utc_hours >= 3 and sessions >= 2)
     m = [p for _, p in observations]
+    burst = [v["cpu5sBurstPct"] for v in m
+             if v["cpu5sBurstPct"] is not None]
+    kernel = [v for v in m if v["kernelThrottlePeriods"] is not None]
     # No claim about unsampled peaks, external CPU entitlement or broker
     # performance regressions. Host PSI is NOT service-only PSI.
     return {
@@ -115,6 +147,17 @@ def summarize(reports):
         "lastTargetUtc":end.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "maxMeanServiceCpuPctOfOneCore":round(max(v["cpuPct"] for v in m),4),
         "maxServiceCpuWindowMs":round(max(v["cpuMs"] for v in m),3),
+        "windowsWithFiveSecondBurstData":len(burst),
+        "maxSampledFiveSecondCpuPctOfOneCore":(
+            round(max(burst),4) if burst else None),
+        "windowsWithKernelThrottleCounters":len(kernel),
+        "maxCgroupCpuThrottledMsDelta":(
+            round(max(v["kernelThrottleMs"] for v in kernel),3)
+            if kernel else None),
+        "maxCgroupCpuThrottlePeriodDelta":(
+            max(v["kernelThrottlePeriods"] for v in kernel)
+            if kernel else None),
+        "kernelThrottlingNotHypervisorThrottle":True,
         "maxSampledServiceMemMiB":round(max(v["serviceMemMiB"] for v in m),2),
         "minSampledHostAvailableMiB":round(min(v["hostAvailableMiB"] for v in m),2),
         "maxWindowHostCpuPsiSomeDeltaMs":round(max(v["cpuPsiMs"] for v in m),3),
@@ -122,6 +165,7 @@ def summarize(reports):
         "maxWindowHostMemoryPsiSomeDeltaMs":round(
             max(v["memoryPsiMs"] for v in m),3),
         "peakCpuQuotaUtilizationMeasured":False,
+        "providerHypervisorThrottleMeasured":False,
         "realCvdCollectorCoLoadTested":False,
         "priceIngestLatencyRegressionMeasured":False,
         "oracleFreeTierBillingVerified":False,
