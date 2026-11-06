@@ -115,6 +115,16 @@ def _hex(value):
     return type(value) is str and re.fullmatch("[0-9a-f]{64}",value) is not None
 
 
+def expected_cot_legs(symbol):
+    """Frozen CFTC contracts: FX crosses need TWO independently seen legs."""
+    if symbol in DIRECT_COT:
+        return (DIRECT_COT[symbol],)
+    if symbol not in FX_MARKETS:
+        raise ValueError("symbol_outside_frozen_universe")
+    return tuple(sorted(("tff",FX_CODES[ccy]) for ccy in
+                        (symbol[:3],symbol[3:]) if ccy != "USD"))
+
+
 def _raw_core(row, start, now):
     if type(row) is not dict or row.get("schema") != INPUT_SCHEMA:
         return None,"invalid_schema"
@@ -167,6 +177,34 @@ def _raw_core(row, start, now):
     # timestamp from providing fake early access to institutional data.
     if cot.date() < report_date:
         return None,"cot_first_seen_predates_report"
+    # An FX cross such as EURGBP requires BOTH EUR and GBP CFTC legs to be
+    # known at this decision. A single EUR witness cannot authorize the
+    # full cross-market institutional hypothesis.
+    expected=expected_cot_legs(row["symbol"])
+    if row["cotDataset"] != expected[0][0]:
+        return None,"wrong_cftc_dataset_for_market"
+    legs=row.get("cotMappedLegWitnesses")
+    if type(legs) is not list or len(legs) != len(expected):
+        return None,"cot_legs_incomplete_or_unmapped"
+    mapped=[]
+    timestamps=[]
+    for leg in legs:
+        if (type(leg) is not dict or
+                type(leg.get("dataset")) is not str or
+                type(leg.get("code")) is not str):
+            return None,"cot_legs_incomplete_or_unmapped"
+        try:
+            when=_time(leg.get("firstSeenAtUtc"))
+        except ValueError:
+            return None,"cot_leg_first_seen_invalid"
+        if when > observed or when.date() < report_date:
+            return None,"cot_leg_not_known_asof"
+        mapped.append((leg["dataset"],leg["code"]))
+        timestamps.append(when)
+    if sorted(mapped) != sorted(expected):
+        return None,"cot_legs_incomplete_or_unmapped"
+    if max(timestamps) != cot:
+        return None,"cot_latest_leg_time_mismatch"
     return (observed,report),None
 
 
