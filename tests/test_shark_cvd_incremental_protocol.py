@@ -14,6 +14,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from scripts import shark_cvd_incremental_protocol as p
 
@@ -71,6 +72,9 @@ class ProspectiveCvdProtocolTests(unittest.TestCase):
     def test_protocol_is_fixed_future_only_and_no_trade(self):
         a=p.protocol_sha256()
         self.assertEqual(len(a),64)
+        self.assertEqual(a,p.FROZEN_PROTOCOL_SHA256)
+        self.assertEqual(a,
+            "09d833dafdd426254bc8fedccc367e41fa451ac8f2e6c99a9dac27f7387e2905")
         self.assertEqual(p.PROTOCOL["effectiveStartUtc"],"2026-11-09T00:00:00Z")
         self.assertEqual(p.PROTOCOL["outcomeHorizonsHours"],[1,4,24])
         self.assertEqual(p.PROTOCOL["purgeEmbargoM15"],8)
@@ -81,6 +85,14 @@ class ProspectiveCvdProtocolTests(unittest.TestCase):
         self.assertEqual(check([])["protocolSha256"],a)
         with self.assertRaisesRegex(ValueError,"research_protocol_digest_changed"):
             check([event()],digest="0"*64)
+
+    def test_protocol_mutation_cannot_silently_keep_original_registration(self):
+        with patch.dict(p.PROTOCOL,{"stopAtr":3.25}):
+            self.assertNotEqual(p.protocol_sha256(),p.FROZEN_PROTOCOL_SHA256)
+            with self.assertRaisesRegex(ValueError,"research_protocol_digest_changed"):
+                check([event()])
+            self.assertEqual(p.main(["--self-check"]),2)
+        self.assertEqual(p.protocol_sha256(),p.FROZEN_PROTOCOL_SHA256)
 
     def test_real_history_not_made_future_evidence(self):
         before=event(observedAtUtc="2026-11-08T10:01:00Z",
