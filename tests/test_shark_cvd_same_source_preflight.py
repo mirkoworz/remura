@@ -237,6 +237,18 @@ class SameOriginalPreflightTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,"frozen_preregistration"):
                 bridge.prepare(rows,docs,clock=AT)
 
+    def test_future_recorder_expansion_cannot_silently_enable_extra_markets(self):
+        rows,docs=inputs()
+        with patch.object(scans,"PILOT",("EURUSD","XAUUSD","GBPUSD")):
+            with self.assertRaisesRegex(ValueError,
+                                         "frozen_preregistration_or_pilot_changed"):
+                bridge.prepare(rows,docs,clock=AT)
+        with patch.object(scans,"PILOT",("EURUSD",)):
+            with self.assertRaisesRegex(ValueError,
+                                         "frozen_preregistration_or_pilot_changed"):
+                bridge.prepare(rows,docs,clock=AT)
+        self.assertEqual(bridge.prepare(rows,docs,clock=AT)["twoPilotMarketsOnly"],2)
+
     def test_no_network_database_or_filesystem_operations(self):
         rows,docs=inputs()
         with patch("sqlite3.connect",side_effect=AssertionError("sqlite_access")):
