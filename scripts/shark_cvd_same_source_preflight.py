@@ -22,7 +22,8 @@ from scripts import shark_cvd_source_lineage as lineage
 from scripts import shark_price_only_compact as compact
 
 SCHEMA = "remura-track-b-same-original-cvd-bridge-preflight-v1"
-MAX_PILOT_DOCS = len(scan.PILOT)
+FROZEN_PILOT = frozenset(("EURUSD","XAUUSD"))
+MAX_PILOT_DOCS = 2
 MAX_ORIGINAL_M15 = 4320
 
 
@@ -38,7 +39,9 @@ def prepare(price_rows, pilot_documents, *, clock):
     fields, broker symbols, COT versions, files, event data or order hints.
     """
     if (protocol.protocol_sha256()!=protocol.FROZEN_PROTOCOL_SHA256 or
-            set(scan.PILOT)-set(protocol.FROZEN_UNIVERSE)):
+            set(scan.PILOT)!=FROZEN_PILOT or
+            len(scan.PILOT)!=MAX_PILOT_DOCS or
+            not FROZEN_PILOT.issubset(protocol.FROZEN_UNIVERSE)):
         raise ValueError("frozen_preregistration_or_pilot_changed")
     if type(clock) is not datetime:
         raise ValueError("explicit_utc_research_clock_required")
@@ -50,7 +53,7 @@ def prepare(price_rows, pilot_documents, *, clock):
         raise ValueError("exact_34_price_cells_required")
     if type(pilot_documents) is not dict or len(pilot_documents)>MAX_PILOT_DOCS:
         raise ValueError("pilot_documents_scope_invalid")
-    if not set(pilot_documents).issubset(scan.PILOT):
+    if not set(pilot_documents).issubset(FROZEN_PILOT):
         raise ValueError("nonpilot_source_documents_not_allowed")
 
     # Reuse the ORIGINAL compact batch preparation contract, which checks
@@ -68,7 +71,7 @@ def prepare(price_rows, pilot_documents, *, clock):
     if set(by_symbol)!=set(protocol.FROZEN_UNIVERSE):
         raise ValueError("original_34_catalog_mismatch")
     counts=Counter()
-    for symbol in scan.PILOT:
+    for symbol in ("EURUSD","XAUUSD"):
         row=by_symbol[symbol]
         doc=pilot_documents.get(symbol)
         if doc is None:
@@ -127,15 +130,16 @@ def prepare(price_rows, pilot_documents, *, clock):
         "fullPriceOnlyDenominator":len(protocol.FROZEN_UNIVERSE),
         "fullPriceOnlyCandidateCount":checked["candidateCount"],
         "fullPriceOnlyExplicitUnknownCount":checked["unknownCount"],
-        "twoPilotMarketsOnly":len(scan.PILOT),
+        "twoPilotMarketsOnly":MAX_PILOT_DOCS,
         "marketsNotSupportedByExistingCvdRecorder":
-            len(protocol.FROZEN_UNIVERSE)-len(scan.PILOT),
+            len(protocol.FROZEN_UNIVERSE)-MAX_PILOT_DOCS,
         "pilotOriginalSourcesReadyForFutureTest":
             counts["PILOT_SOURCE_READY_FOR_ISOLATED_FUTURE_TEST"],
         "pilotOriginalSourceUnavailable":counts["SOURCE_NOT_AVAILABLE"],
         "pilotOutsideAllowedCvdClock":counts["OUTSIDE_PROSPECTIVE_CVD_CLOCK"],
         "pilotIncompleteTickVolume":counts["TICK_VOLUME_INCOMPLETE"],
-        "sourceHashesCrossCheckedAgainstOriginalPriceBatch":True,
+        "providedPilotHashesCheckedAgainstOriginalPriceRows":True,
+        "unknownPilotSourcesAreNotCrossChecked":True,
         "cOTFilteringApplied":False,
         "retailSourceJoined":False,
         "cvdDetectorEvaluated":False,
