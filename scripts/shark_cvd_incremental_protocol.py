@@ -32,6 +32,28 @@ MAX_RETAIL_AGE = timedelta(hours=3)
 MAX_PRICE_AGE = timedelta(minutes=90)
 MAX_CVD_AGE = timedelta(minutes=90)
 
+# Frozen catalog from the existing 34-market Squalincome universe, NOT every
+# valid-looking ticker. Market list can only change in a new pre-registered
+# version; never select profitable instruments after seeing their outcomes.
+FX_MARKETS = (
+    "EURUSD", "GBPUSD", "AUDUSD", "NZDUSD", "USDJPY", "USDCAD", "USDCHF",
+    "EURGBP", "EURJPY", "EURCHF", "EURCAD", "EURAUD", "EURNZD",
+    "GBPJPY", "GBPCHF", "GBPCAD", "GBPAUD", "GBPNZD",
+    "AUDJPY", "AUDCAD", "AUDCHF", "AUDNZD",
+    "NZDJPY", "NZDCAD", "NZDCHF", "CADJPY", "CADCHF", "CHFJPY",
+)
+FX_CODES = {
+    "EUR":"099741", "GBP":"096742", "JPY":"097741",
+    "AUD":"232741", "CAD":"090741", "CHF":"092741",
+    "NZD":"112741",
+}
+DIRECT_COT = {
+    "XAUUSD":("disagg","088691"), "XAGUSD":("disagg","084691"),
+    "USOIL":("disagg","067651"), "US500":("tff","13874A"),
+    "NAS100":("tff","209742"), "US30":("tff","124603"),
+}
+FROZEN_UNIVERSE = tuple(sorted((*FX_MARKETS, *DIRECT_COT)))
+
 # Fixed protocol is deliberately selected WITHOUT access to future outcomes.
 # No parameter search, model tuning or mutable threshold optimisation is
 # permitted under this protocol. Editing any field changes the SHA256.
@@ -40,6 +62,11 @@ PROTOCOL = {
     "effectiveStartUtc": START,
     "study": "CVD proxy incremental value for pre-observed price+COT+retail candidates",
     "universe": "PREDECLARED_34_MARKET_SQUALINCOME_PRICE_ONLY_UNIVERSE",
+    "approvedMarkets": list(FROZEN_UNIVERSE),
+    "fxCftcLegCodes": dict(sorted(FX_CODES.items())),
+    "directCftcContracts": {
+        key: list(value) for key,value in sorted(DIRECT_COT.items())
+    },
     "dataOrder": "immutable observations, point-in-time COT witness, closed cTrader M15, retail first-seen, prospectively complete CVD scan",
     "branches": [
         "CORE_PRICE_COT_RETAIL_ALL",
@@ -91,9 +118,9 @@ def _hex(value):
 def _raw_core(row, start, now):
     if type(row) is not dict or row.get("schema") != INPUT_SCHEMA:
         return None,"invalid_schema"
-    if not isinstance(row.get("symbol"),str) or not re.fullmatch(
-            r"[A-Z0-9]{3,15}",row["symbol"]):
-        return None,"invalid_symbol"
+    if (type(row.get("symbol")) is not str or
+            row["symbol"] not in FROZEN_UNIVERSE):
+        return None,"outside_frozen_34_market_universe"
     if type(row.get("direction")) is not int or row["direction"] not in (-1,1):
         return None,"invalid_direction"
     try:
