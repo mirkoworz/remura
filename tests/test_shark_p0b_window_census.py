@@ -217,6 +217,12 @@ class CensusTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     census.summarize([observation(**{key:val})])
 
+    def test_unhashable_or_wrong_schema_fails_closed(self):
+        for shape in ({}, [], None, 123, False):
+            with self.subTest(shape=repr(shape)):
+                with self.assertRaisesRegex(ValueError,"invalid_input_schema"):
+                    census.summarize([observation(schema=shape)])
+
     def test_cpu_units_must_match(self):
         with self.assertRaisesRegex(ValueError,"inconsistent_cpu_units"):
             census.summarize([observation(serviceCpuDuringWindowMs=1800)])
