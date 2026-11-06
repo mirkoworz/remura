@@ -1,6 +1,21 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
 
+## 06/11/2026 — P0b: baseline CPU **micro-picchi 5s** e throttling Linux, retrocompatibile con prima prova reale
+
+**Motivo:** la prima osservazione naturale del 06/11 alle 09:31:30 CET (85s, CPU cgroup 1740,784 ms, 2,048% di UN intero core medio; max RAM campionata 113,33 MiB; minimo RAM host disponibile 621,24 MiB; PSI CPU/I/O/memoria host 42,604/88,052/0 ms) NON consente di vedere picchi CPU brevi o giudicare i limiti di una VM Oracle **VM.Standard.E2.1.Micro** a 1/8 OCPU di base. Baseline originale **conservata e non reinterpretata**.
+
+- [x] Aggiornato `scripts/shark_p0b_passive_observer.py` a schema **`remura-track-b-p0b-passive-natural-batch-v2`**, nel SOLO branch di ricerca. Preserva 18 misure passive ogni 5s (85s totali), due sole GET loopback, nessuna chiamata broker, nessuna scrittura, cron o servizio, nessun accesso a database o credenziali. Non installato su Oracle: il report reale esistente era v1 dal sorgente pinned `6f301a3fc3ebde34154363d36649b66799ad7667`.
+- [x] Misure V2: **`maxSampledFiveSecondCpuMs`** e **`maxSampledFiveSecondCpuPctOfOneFullCore`** (massimo delta CPU in uno dei 17 intervalli di 5s, NON picco istantaneo), lettura opzionale contatori kernel cgroup v2 `cpu.stat.nr_throttled` e `throttled_usec`, variazioni su tutta la finestra. Se entrambi indisponibili: `cgroupCpuThrottleObservable=false` e delta `null` — non attribuire zero; se disponibili parzialmente, valori errati, retrocessi o PID cambiato: **fail-closed**. `providerHypervisorThrottleMeasured=false` e `oracleCpuEntitlementMeasured=false` **sempre**: il throttling kernel non misura le limitazioni dell'hypervisor Oracle.
+- [x] Aggiornato `scripts/shark_p0b_window_census.py`: accetta in modo sicuro **sia v1 sia v2**, confronta solo campi omogenei e conta `windowsWithFiveSecondBurstData` e `windowsWithKernelThrottleCounters`. La prima finestra V1 ha **dati di burst/throttling N/D** (non zero, non estrapolati); solo i record V2 consentono massimi burst e throttling quando misurabili. Anche a 8 finestre distribuite su due giorni, tre ore e due fasce orarie, outcome **NOT_CVD_GO**. Niente ROI, falsa p95/p99 o affidabilità di trading inventati.
+- [x] Aggiunte prove offline: burst sintetico 40% su 5s con media appena 2,3529% su 85s, counter throttling mancante vs zero osservato, regressione contatori, mixed v1/v2, CPU units coerenti, falsi dati di quota CPU, JSON schema non valido o non hashable. Non leggere la VPS in CI; nessun collector o processo LIVE viene avviato.
+- [ ] **Gate CI:** attendere tre workflow SUCCESS **sull'ultimo SHA** (Shark Science, Price Engine, Insights); verificare la nuova HEAD e aggiornarne la PR. Fino a quel momento la V2 è candidata soltanto.
+- [ ] **Prossima eventuale misura:** quando opportuno, una sola nuova osservazione NATURALE da Termius con sorgente V2 pinned + SHA256 verificato, **non** un monitor che gira in background. Fare solo su esplicita richiesta/approvazione dell'operatore e dopo CI. Conservare intatta la prima prova V1.
+- [ ] **Gate real CVD + costi:** rimane NO-GO finché assenti osservazioni in diversi periodi, effettivi test di co-load con rollback sicuro, backup/restore/HMAC, prova billing volumi Always Free e limiti cloud, più test statistici OOS con costi/spread. Nessun segnale istituzionale/profitto provato.
+- [x] Nessuna versione LIVE pubblicata, nessun merge PR #89 DRAFT. Versione LIVE di riferimento comunicata **v1.64** con loading personalizzato/notifiche **non toccati**.
+
+
+
 ## 06/11/2026 — P0b: confronto OFFLINE di finestre NATURALI (una reale oggi; nessuna nuova osservazione sulla VPS)
 
 **Decisione progettuale:** dalla prima raccolta naturale misurata (09:31:30 CET, 6 novembre) la VPS Micro `VM.Standard.E2.1.Micro` ha mostrato 1740,784 ms CPU di servizio in 85 s, ~2,048% di un intero core medio, massimo RAM campionata 113,33 MiB, minimo RAM host disponibile 621,24 MiB, PSI CPU/I/O/memoria host 42,604/88,052/0 ms. Il collector ha registrato un ingest naturale senza riavvio. Non attribuire le misure alla quota provider 1/8 OCPU né alla latenza individuale della raccolta. Da qui NON risulta un margine di CPU garantito per il nuovo CVD.
