@@ -268,6 +268,9 @@ class FullDenominatorAuditTests(unittest.TestCase):
             p.execute("DROP TRIGGER research_compact_no_update")
             p.execute(f"UPDATE {compact.TABLE} SET payload_sha256=?",
                       ("f"*64,))
+            p.execute("CREATE TRIGGER research_compact_no_update "
+                      f"BEFORE UPDATE ON {compact.TABLE} "
+                      "BEGIN SELECT RAISE(ABORT,'immutable_scan_batch'); END")
             p.commit()
             with self.assertRaisesRegex(ValueError,
                                          "archive_integrity_failed"):
