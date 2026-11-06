@@ -218,8 +218,12 @@ class SameOriginalPreflightTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             bridge.prepare(rows,docs,clock=AT)
         with self.assertRaisesRegex(ValueError,
-                                     "nonpilot_source_documents_not_allowed"):
+                                     "pilot_documents_scope_invalid"):
             bridge.prepare(inputs()[0],{**docs,"USDCHF":{}},clock=AT)
+        with self.assertRaisesRegex(ValueError,
+                                     "nonpilot_source_documents_not_allowed"):
+            bridge.prepare(inputs()[0],
+                           {"EURUSD":docs["EURUSD"],"USDCHF":{}},clock=AT)
 
     def test_cannot_run_before_prospective_start_or_with_untrusted_clock(self):
         rows,docs=inputs()
