@@ -24,7 +24,7 @@ import sys
 import time
 import urllib.request
 
-SCHEMA = "remura-track-b-p0b-passive-natural-batch-v1"
+SCHEMA = "remura-track-b-p0b-passive-natural-batch-v2"
 SERVICE = "remura-private.service"
 CGROUP_BASE = Path("/sys/fs/cgroup/system.slice/remura-private.service")
 SIGNALS_URL = "http://127.0.0.1:8765/private-api/signals/status"
@@ -129,8 +129,16 @@ def read_host_counters():
     memory = _small_text(CGROUP_BASE / "memory.current").strip()
     if not memory.isdecimal():
         raise ValueError("cgroup_memory_unavailable")
+    throttle_fields = ("nr_throttled", "throttled_usec")
+    present = [key in cpu for key in throttle_fields]
+    if any(present) and not all(present):
+        raise ValueError("partial_kernel_throttle_counters")
+    throttle = dict(zip(throttle_fields,
+                        (cpu[k] for k in throttle_fields))) if all(present) else {}
     return {
         "cpuUsec":cpu["usage_usec"],
+        "cgroupThrottlePeriods":throttle.get("nr_throttled"),
+        "cgroupThrottleUsec":throttle.get("throttled_usec"),
         "serviceMemBytes":int(memory),
         "hostMemAvailableKiB":_available_kib(),
         "cpuPsiSomeUsec":_psi_some_total("/proc/pressure/cpu"),
@@ -197,10 +205,21 @@ def aggregate(samples, *, target, window_start, window_end,
             type(sample.get(k)) is not int or sample[k] < 0 for k in names)
            for sample in samples):
         raise ValueError("invalid_observation")
+    throttle_keys=("cgroupThrottlePeriods", "cgroupThrottleUsec")
+    throttle_missing = all(
+        sample.get("cgroupThrottlePeriods") is None and
+        sample.get("cgroupThrottleUsec") is None for sample in samples)
+    throttle_present = all(
+        all(type(sample.get(k)) is int and sample[k] >= 0
+            for k in throttle_keys) for sample in samples)
+    if not (throttle_missing or throttle_present):
+        raise ValueError("partial_or_invalid_kernel_throttle_counters")
+    monotonic=("cpuUsec","cpuPsiSomeUsec","ioPsiSomeUsec",
+               "memoryPsiSomeUsec")
+    if throttle_present:
+        monotonic += throttle_keys
     if any(samples[i][k] > samples[i+1][k]
-           for k in ("cpuUsec","cpuPsiSomeUsec","ioPsiSomeUsec",
-                     "memoryPsiSomeUsec")
-           for i in range(len(samples)-1)):
+           for k in monotonic for i in range(len(samples)-1)):
         raise ValueError("counter_reset_or_restart")
     if (not isinstance(before, dict) or not isinstance(after, dict) or
             any(type(info.get("samples")) is not int or
@@ -214,6 +233,8 @@ def aggregate(samples, *, target, window_start, window_end,
                  (before["samples"] == after["samples"] == 256)))
     stable = pid_before == pid_after
     delta = samples[-1]["cpuUsec"]-samples[0]["cpuUsec"]
+    burst = max(samples[i+1]["cpuUsec"]-samples[i]["cpuUsec"]
+                for i in range(len(samples)-1))
     duration = BEFORE_SECONDS+AFTER_SECONDS
     return {
         "schema":SCHEMA,
@@ -228,6 +249,17 @@ def aggregate(samples, *, target, window_start, window_end,
         "serviceCpuDuringWindowMs":round(delta/1000, 3),
         "serviceCpuPctOfOneFullCore":round(
             100*delta/(duration*1_000_000), 4),
+        "maxSampledFiveSecondCpuMs":round(burst/1000, 3),
+        "maxSampledFiveSecondCpuPctOfOneFullCore":round(
+            100*burst/(SAMPLE_STEP_SECONDS*1_000_000), 4),
+        "cgroupCpuThrottleObservable":throttle_present,
+        "cgroupCpuThrottlePeriodDelta":(
+            samples[-1]["cgroupThrottlePeriods"]-
+            samples[0]["cgroupThrottlePeriods"] if throttle_present else None),
+        "cgroupCpuThrottledMsDelta":(
+            round((samples[-1]["cgroupThrottleUsec"]-
+                   samples[0]["cgroupThrottleUsec"])/1000, 3)
+            if throttle_present else None),
         "maxSampledServiceMemMiB":round(
             max(v["serviceMemBytes"] for v in samples)/MiB, 2),
         "minSampledHostAvailableMiB":round(
@@ -241,6 +273,7 @@ def aggregate(samples, *, target, window_start, window_end,
              samples[0]["memoryPsiSomeUsec"])/1000, 3),
         "onlySampledMaximaNotActualPeaks":True,
         "oracleCpuEntitlementMeasured":False,
+        "providerHypervisorThrottleMeasured":False,
         "realCvdCollectorCoLoadTested":False,
         "oracleBillingVerified":False,
         "cvdResearchMayBeEnabled":False,
