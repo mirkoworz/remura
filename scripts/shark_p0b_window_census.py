@@ -95,9 +95,21 @@ def _validate(report):
         burst_pct = _number(
             report,"maxSampledFiveSecondCpuPctOfOneFullCore",10000)
         burst_ms = _number(report,"maxSampledFiveSecondCpuMs",500000)
-        if (abs(burst_pct-burst_ms/(5*10)) > 0.001 or
-                burst_ms > metrics["cpuMs"] + 0.01 or
-                burst_pct+0.001 < metrics["cpuPct"]):
+        shortest=_number(report,"minObservedSampleIntervalSeconds",7)
+        longest=_number(report,"maxObservedSampleIntervalSeconds",7)
+        observed_span=_number(report,"observedSamplingSpanSeconds",119)
+        if (not 3 <= shortest <= longest <= 7 or
+                not 51 <= observed_span <= 119 or
+                observed_span + 0.01 < shortest*17 or
+                observed_span - 0.01 > longest*17):
+            raise ValueError("inconsistent_sample_clock")
+        # The interval with the highest absolute CPU may differ from the
+        # interval with the highest normalized %. Compare with bounds from
+        # the real monotonic sampling durations, not an invented exact 5s.
+        if (burst_ms > metrics["cpuMs"]+0.01 or
+                burst_pct+0.001 < burst_ms/(longest*10) or
+                burst_pct > burst_ms/(shortest*10)+0.001 or
+                burst_pct+0.001 < metrics["cpuMs"]/(observed_span*10)):
             raise ValueError("inconsistent_five_second_cpu_units")
         metrics["cpu5sBurstPct"] = burst_pct
         if report["cgroupCpuThrottleObservable"]:
