@@ -265,6 +265,7 @@ def aggregate(samples, *, target, window_start, window_end,
         "maxSampledFiveSecondCpuPctOfOneFullCore":round(burst_core_pct, 4),
         "minObservedSampleIntervalSeconds":round(min(elapsed_intervals),4),
         "maxObservedSampleIntervalSeconds":round(max(elapsed_intervals),4),
+        "observedSamplingSpanSeconds":round(sample_times[-1]-sample_times[0],4),
         "cgroupCpuThrottleObservable":throttle_present,
         "cgroupCpuThrottlePeriodDelta":(
             samples[-1]["cgroupThrottlePeriods"]-
