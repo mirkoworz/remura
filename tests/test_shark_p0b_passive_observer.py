@@ -24,6 +24,7 @@ def samples():
     for i in range(p.SAMPLE_COUNT):
         result.append({
             "cpuUsec":12_000_000+i*5_000,
+            "sampleMonotonicSeconds":float(i*5),
             "cgroupThrottlePeriods":3+i//6,
             "cgroupThrottleUsec":100+i*25,
             "serviceMemBytes":60*1024*1024+i*1024,
@@ -83,6 +84,8 @@ class ObserverTests(unittest.TestCase):
                          "remura-track-b-p0b-passive-natural-batch-v2")
         self.assertEqual(out["maxSampledFiveSecondCpuMs"],5.0)
         self.assertEqual(out["maxSampledFiveSecondCpuPctOfOneFullCore"],0.1)
+        self.assertEqual(out["minObservedSampleIntervalSeconds"],5)
+        self.assertEqual(out["maxObservedSampleIntervalSeconds"],5)
         self.assertTrue(out["cgroupCpuThrottleObservable"])
         self.assertEqual(out["cgroupCpuThrottlePeriodDelta"],2)
         self.assertEqual(out["cgroupCpuThrottledMsDelta"],0.425)
@@ -121,6 +124,7 @@ class ObserverTests(unittest.TestCase):
              patch.object(p.subprocess,"run",
                           side_effect=AssertionError("no real systemctl")):
             out=p.observe(clock=testclock.now,sleeper=testclock.sleep,
+                          monotonic=testclock.now,
                           sampler=read,status=status,identity=identity)
         self.assertEqual(out["status"],"NATURAL_INGEST_BASELINE_OBSERVED")
         self.assertEqual(counts,{"read":p.SAMPLE_COUNT,"status":2,"service":2})
@@ -192,6 +196,29 @@ class ObserverTests(unittest.TestCase):
         self.assertEqual(out["maxSampledFiveSecondCpuMs"],2000.0)
         self.assertEqual(out["maxSampledFiveSecondCpuPctOfOneFullCore"],40.0)
         self.assertFalse(out["cvdResearchMayBeEnabled"])
+
+    def test_measured_monotonic_intervals_prevent_false_peak_cpu_rates(self):
+        target,begin,end=p.planned_window(20*3600+3*60)
+        arr=samples()
+        for i,record in enumerate(arr):
+            record["sampleMonotonicSeconds"]=i*5.05
+            record["cpuUsec"]=12_000_000+i*5_000
+        out=p.aggregate(arr,target=target,window_start=begin,window_end=end,
+                        before={"samples":1,"ingestUtcSeconds":target-900},
+                        after={"samples":2,"ingestUtcSeconds":target+10},
+                        pid_before=100,pid_after=100)
+        # A 5.05s interval with 5ms CPU is below 0.1% of one core.
+        self.assertEqual(out["maxSampledFiveSecondCpuMs"],5)
+        self.assertAlmostEqual(out["maxSampledFiveSecondCpuPctOfOneFullCore"],
+                               0.099,places=3)
+        self.assertEqual(out["minObservedSampleIntervalSeconds"],5.05)
+        self.assertEqual(out["maxObservedSampleIntervalSeconds"],5.05)
+        arr[8]["sampleMonotonicSeconds"]=arr[7]["sampleMonotonicSeconds"]
+        with self.assertRaisesRegex(ValueError,"invalid_five_second_interval"):
+            p.aggregate(arr,target=target,window_start=begin,window_end=end,
+                        before={"samples":1,"ingestUtcSeconds":target-900},
+                        after={"samples":2,"ingestUtcSeconds":target+10},
+                        pid_before=100,pid_after=100)
 
     def test_missing_linux_throttling_fields_are_unknown_not_zero(self):
         target,begin,end=p.planned_window(20*3600+3*60)
