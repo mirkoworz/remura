@@ -146,9 +146,20 @@ class RetailInboxTests(unittest.TestCase):
         self.assertEqual(self.counts(),(0,0,0))
 
     def test_absent_retail_source_rolls_back_cot_price_history(self):
+        # SANDBOX ONLY: simulate missing previously recorded receipts by
+        # deliberately disabling DELETE protection in an in-memory fixture.
+        # Production append-only behavior remains unchanged.
+        with self.assertRaisesRegex(sqlite3.IntegrityError,"append_only"):
+            with self.db:
+                self.db.execute(f"DELETE FROM {retail.TABLE}")
+        self.db.execute("DROP TRIGGER research_retail_first_delete")
         self.db.execute(f"DELETE FROM {retail.TABLE}")
-        # Append-only properly prevents this deliberate tamper.
-        self.db.rollback()
+        self.db.commit()
+        with self.assertRaisesRegex(ValueError,
+                                    "retail_prior_receipt_inbox_empty"):
+            self.decision()
+        self.assertEqual(self.counts(),(0,0,0))
+        self.assertFalse(self.db.in_transaction)
 
     def test_require_original_owned_sqlite_transaction(self):
         with self.assertRaisesRegex(ValueError,
