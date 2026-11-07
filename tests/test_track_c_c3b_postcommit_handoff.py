@@ -22,7 +22,7 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"scripts"))
 import cot_monitor as cot
 import price_store
-from price_feed import iso
+from price_feed import iso, market_document
 import track_c_c3b_durable_shadow as shadow
 import track_c_c3b_postcommit_handoff as post
 
@@ -130,12 +130,13 @@ class PostcommitIsolatedHandoffTests(unittest.TestCase):
             shadow.prepare(other_shadow,mode=shadow.MODE)
             writer=price_store.connect(missing_core)
             try:
+                rows=price_bundle("EURUSD")["markets"]["EURUSD"]["timeframes"]["M15"]
+                original=market_document(
+                    "EURUSD","ctrader","SYNTHETIC",rows,NOW)
                 writer.execute(
                     "INSERT INTO prices VALUES (?,?,?,?,?)",
-                    ("EURUSD","ctrader","SYNTHETIC",READ,
-                     json.dumps({"symbol":"EURUSD","provider":"ctrader",
-                      "lastComplete":READ,"timeframes":{
-                          "M15":[1],"H1":[1],"H4":[1]}})))
+                    ("EURUSD","ctrader","SYNTHETIC",
+                     original["lastComplete"],json.dumps(original)))
                 self.assertTrue(writer.in_transaction)
                 self.assertEqual(post.dispatch(
                     missing_core,other_shadow,symbol="EURUSD",
@@ -249,6 +250,13 @@ print('SYNTHETIC_HANDOFF_OK')
             blocker.close()
         self.assertEqual(self.counts()["total"],0)
         self.assertEqual(self.deliver(),post.STAGED)
+
+    def test_stale_or_future_price_close_cannot_be_laundered(self):
+        late="2026-11-09T12:04:00Z"
+        early="2026-11-09T11:59:00Z"
+        self.assertEqual(self.deliver("EURUSD","ctrader",at=late),post.UNKNOWN)
+        self.assertEqual(self.deliver("XAUUSD","ctrader",at=early),post.UNKNOWN)
+        self.assertEqual(self.counts()["total"],0)
 
     def test_missing_source_and_retail_are_unknown(self):
         db=price_store.connect(self.core)
