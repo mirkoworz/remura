@@ -77,6 +77,8 @@ on:
       - 'scripts/private_server.py'
       - 'scripts/track_c_shadow_rehearsal.py'
       - 'tests/test_track_c_shadow_rehearsal.py'
+      - 'scripts/track_c_b_original_contract.py'
+      - 'tests/test_track_c_b_original_contract.py'
       - 'scripts/resource_monitor.py'
       - 'resource-health.js'
       - 'resource-health.css'
@@ -223,6 +225,22 @@ jobs:
       - run: python -m unittest discover -s tests -p 'test_signals_monitor.py' -v
       - name: Test Track C synthetic in-memory handoff; never collect market data
         run: python -m unittest discover -s tests -p 'test_track_c_shadow_rehearsal.py' -v
+      - name: Track C only - checkout exact Track B research commit (no merge)
+        if: github.event_name == 'pull_request' && github.head_ref == 'research/track-c-beta-prospective-20261107'
+        uses: actions/checkout@v4
+        with:
+          repository: mirkoworz/remura
+          ref: 35b06da71da8cad75cc573ec8cde252f72d5a339
+          path: track-b-pinned
+          persist-credentials: false
+      - name: Track C only - verify immutable original Track B reference
+        if: github.event_name == 'pull_request' && github.head_ref == 'research/track-c-beta-prospective-20261107'
+        run: test "$(git -C track-b-pinned rev-parse HEAD)" = "35b06da71da8cad75cc573ec8cde252f72d5a339"
+      - name: Track C only - exercise original Track B retail/COT/price/decision (synthetic)
+        if: github.event_name == 'pull_request' && github.head_ref == 'research/track-c-beta-prospective-20261107'
+        env:
+          PYTHONPATH: ${{ github.workspace }}/track-b-pinned:${{ github.workspace }}
+        run: python -m unittest discover -s tests -p 'test_track_c_b_original_contract.py' -v
       - run: python -m unittest discover -s tests -p 'test_statistical_validation.py' -v
       - run: python -m unittest discover -s tests -p 'test_dual24_validation.py' -v
       - run: python -m unittest discover -s tests -p 'test_market_validation.py' -v
