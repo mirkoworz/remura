@@ -18,6 +18,7 @@ on:
       - 'scripts/shark_research_probe.py'
       - 'scripts/shark_cot_paired_baseline.py'
       - 'scripts/shark_cot_robustness.py'
+      - 'scripts/shark_market_regime_context.py'
       - 'scripts/shark_cot_asof_witness.py'
       - 'scripts/shark_signal_evidence.py'
       - 'scripts/shark_price_asof_evidence.py'
@@ -67,6 +68,7 @@ on:
       - 'tests/test_shark_research_probe.py'
       - 'tests/test_shark_cot_paired_baseline.py'
       - 'tests/test_shark_cot_robustness.py'
+      - 'tests/test_shark_market_regime_context.py'
       - 'tests/test_shark_cot_asof_witness.py'
       - 'tests/test_shark_signal_evidence.py'
       - 'tests/test_shark_price_asof_evidence.py'
@@ -128,7 +130,7 @@ jobs:
       - name: Verify offline script syntax
         run: |
           node --check cvd-divergence-core.js
-          python -m py_compile scripts/cvd_divergence.py scripts/cvd_benchmark.py scripts/cvd_session_replay.py scripts/shark_science_gate.py scripts/shark_cvd_incremental_protocol.py scripts/shark_cvd_missingness_bounds.py scripts/shark_cvd_full_denominator_audit.py scripts/shark_cvd_same_source_preflight.py scripts/shark_cvd_same_source_adapter.py scripts/shark_walkforward.py scripts/shark_data_readiness.py scripts/shark_research_census.py scripts/shark_universe_lineage.py scripts/shark_universe_probe.py scripts/shark_research_probe.py scripts/shark_cot_paired_baseline.py scripts/shark_cot_robustness.py scripts/shark_cot_asof_witness.py scripts/shark_signal_evidence.py scripts/shark_price_asof_evidence.py scripts/shark_observation_bundle.py scripts/shark_price_only_universe.py scripts/shark_price_only_compact.py scripts/shark_prospective_coverage.py scripts/shark_first_invocation.py scripts/shark_scan_failures.py scripts/shark_sample_admission.py scripts/shark_causal_pair_audit.py scripts/shark_resource_probe.py scripts/shark_digest_ab_benchmark.py scripts/shark_oracle_staging_gate.py scripts/shark_oracle_cvd_coload_gate.py scripts/shark_cvd_ledger.py scripts/shark_cvd_source_lineage.py scripts/shark_cvd_cot_price_triage.py scripts/shark_cvd_scan_coverage.py scripts/shark_cot_cvd_scan_reconciliation.py scripts/shark_cvd_prefix_lineage.py scripts/shark_prefix_cost_probe.py scripts/shark_research_local_archive.py scripts/shark_cvd_sharded_ledger.py scripts/shark_cvd_shard_backup.py scripts/shark_cvd_storage_gate.py scripts/shark_cvd_shard_resource_probe.py scripts/shark_oracle_capacity_readonly.py scripts/shark_p0b_passive_observer.py scripts/shark_p0b_window_census.py scripts/shark_p0_go_no_go.py
+          python -m py_compile scripts/cvd_divergence.py scripts/cvd_benchmark.py scripts/cvd_session_replay.py scripts/shark_science_gate.py scripts/shark_cvd_incremental_protocol.py scripts/shark_cvd_missingness_bounds.py scripts/shark_cvd_full_denominator_audit.py scripts/shark_cvd_same_source_preflight.py scripts/shark_cvd_same_source_adapter.py scripts/shark_walkforward.py scripts/shark_data_readiness.py scripts/shark_research_census.py scripts/shark_universe_lineage.py scripts/shark_universe_probe.py scripts/shark_research_probe.py scripts/shark_cot_paired_baseline.py scripts/shark_cot_robustness.py scripts/shark_market_regime_context.py scripts/shark_cot_asof_witness.py scripts/shark_signal_evidence.py scripts/shark_price_asof_evidence.py scripts/shark_observation_bundle.py scripts/shark_price_only_universe.py scripts/shark_price_only_compact.py scripts/shark_prospective_coverage.py scripts/shark_first_invocation.py scripts/shark_scan_failures.py scripts/shark_sample_admission.py scripts/shark_causal_pair_audit.py scripts/shark_resource_probe.py scripts/shark_digest_ab_benchmark.py scripts/shark_oracle_staging_gate.py scripts/shark_oracle_cvd_coload_gate.py scripts/shark_cvd_ledger.py scripts/shark_cvd_source_lineage.py scripts/shark_cvd_cot_price_triage.py scripts/shark_cvd_scan_coverage.py scripts/shark_cot_cvd_scan_reconciliation.py scripts/shark_cvd_prefix_lineage.py scripts/shark_prefix_cost_probe.py scripts/shark_research_local_archive.py scripts/shark_cvd_sharded_ledger.py scripts/shark_cvd_shard_backup.py scripts/shark_cvd_storage_gate.py scripts/shark_cvd_shard_resource_probe.py scripts/shark_oracle_capacity_readonly.py scripts/shark_p0b_passive_observer.py scripts/shark_p0b_window_census.py scripts/shark_p0_go_no_go.py
       - name: Test CVD JS detector
         run: node --test tests/cvd-divergence.test.js
       - name: Test CVD parity, benchmark and archive replay
@@ -167,6 +169,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_shark_cot_paired_baseline.py' -v
       - name: Test chronological COT weeks, inverted control and cost stress
         run: python -m unittest discover -s tests -p 'test_shark_cot_robustness.py' -v
+      - name: Classify future-only original M15 price regimes without future leakage or trade outcomes
+        run: python -m unittest discover -s tests -p 'test_shark_market_regime_context.py' -v
       - name: Test future-only immutable COT evidence without fictitious original first-seen
         run: python -m unittest discover -s tests -p 'test_shark_cot_asof_witness.py' -v
       - name: Test prospective Squalincome event-to-COT evidence consistency and rollback
