@@ -181,7 +181,11 @@ class OriginalRetailReceiptHandoffTests(unittest.TestCase):
             self.new_decision(self.receipt())
         self.assertEqual(self.history_count(),0)
         self.assertEqual(price_link.aggregate(self.db)["locallyJoined"],0)
-        self.assertEqual(retail.aggregate if False else 2,2)
+        self.assertEqual(
+            self.db.execute(f"SELECT count(*) FROM {retail.TABLE}").fetchone()[0],
+            2)
+        # The context link table has deliberately been DROPPED in this
+        # fixture; testing its row count would mask the actual rollback.
 
     def test_cvd_protocol_unchanged_and_no_real_retail_values_stored(self):
         self.assertEqual(protocol.protocol_sha256(),
