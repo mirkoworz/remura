@@ -88,7 +88,8 @@ def require_schema(db):
     return True
 
 
-def capture_pair(db, *, original_snapshot, file_read_at, clock):
+def capture_pair(db, *, original_snapshot, file_read_at, clock,
+                 research_numeric_features=False):
     """Atomic EURUSD/XAUUSD local first read; no partial pilot success.
 
     Caller must pass the original JSON read ONCE at the parent process and
@@ -97,7 +98,13 @@ def capture_pair(db, *, original_snapshot, file_read_at, clock):
     """
     if not isinstance(db,sqlite3.Connection) or db.in_transaction:
         raise ValueError("fresh_research_pair_connection_required")
+    if type(research_numeric_features) is not bool:
+        raise ValueError("numeric_feature_opt_in_boolean_required")
     require_schema(db)
+    numerical=None
+    if research_numeric_features:
+        from scripts import shark_retail_numeric_features as numerical
+        numerical.require_schema(db)
     read=_utc(file_read_at)
     recorded=_utc(clock)
     if study.protocol_sha256()!=study.FROZEN_PROTOCOL_SHA256:
@@ -126,12 +133,19 @@ def capture_pair(db, *, original_snapshot, file_read_at, clock):
             ).fetchone()
             if last is not None and clocking._parse(last[0])>=updated:
                 raise ValueError("duplicate_or_backfilled_retail_source")
-            db.execute(
+            inserted=db.execute(
                 f"INSERT INTO {TABLE} "
                 "(symbol,source_updated_at,original_read_at,recorded_at,"
                 "numeric_sha256,algorithm) VALUES (?,?,?,?,?,?)",
                 (symbol,clocking._iso(updated),clocking._iso(read),
                  clocking._iso(recorded),sha,ALG))
+            if numerical is not None:
+                # SAME source JSON + SAME original SQLite transaction.
+                # Failure on either feature row rolls back BOTH receipts.
+                numerical.append_inside_original_pair(
+                    db,receipt_id=inserted.lastrowid,symbol=symbol,
+                    entry=original_snapshot["symbols"][symbol],
+                    original_sha=sha,recorded_clock=recorded)
         db.commit()
     except BaseException:
         db.rollback()
@@ -143,6 +157,7 @@ def capture_pair(db, *, original_snapshot, file_read_at, clock):
         "retailWasActualSqualincomeInput":False,
         "cvdEvidence":"UNKNOWN","liveEnabled":False,
         "newBrokerCalls":0,"statisticalEdgeEstablished":False,
+        "anonymousNumericResearchCaptured":research_numeric_features,
     }
 
 

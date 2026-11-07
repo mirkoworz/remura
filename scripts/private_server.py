@@ -738,7 +738,8 @@ def collect_once(db_path, symbols, days=2, runner=subprocess.run, now=None,
 
 
 def retail_once(db_path,runner=subprocess.run, *,
-                research_retail_first_seen=False):
+                research_retail_first_seen=False,
+                research_retail_numeric_features=False):
     """Default OFF local first-seen witness; normal Myfxbook path unchanged.
 
     The normal retail_loop never passes research_retail_first_seen=True.
@@ -746,11 +747,18 @@ def retail_once(db_path,runner=subprocess.run, *,
     """
     if type(research_retail_first_seen) is not bool:
         raise ValueError("research_retail_opt_in_boolean_required")
+    if type(research_retail_numeric_features) is not bool:
+        raise ValueError("numeric_feature_opt_in_boolean_required")
+    if research_retail_numeric_features and not research_retail_first_seen:
+        raise ValueError("numeric_features_require_original_first_seen_opt_in")
     db=connect(db_path)
     if research_retail_first_seen:
         from scripts import shark_retail_first_seen as retail_research
         try:
             retail_research.require_schema(db)
+            if research_retail_numeric_features:
+                from scripts import shark_retail_numeric_features as numeric_research
+                numeric_research.require_schema(db)
         finally:
             db.close()
         db=connect(db_path)
@@ -784,7 +792,8 @@ def retail_once(db_path,runner=subprocess.run, *,
             try:
                 retail_research.capture_pair(
                     proof_db,original_snapshot=original,
-                    file_read_at=read_at,clock=utcnow())
+                    file_read_at=read_at,clock=utcnow(),
+                    research_numeric_features=research_retail_numeric_features)
             finally:
                 proof_db.close()
         else:
