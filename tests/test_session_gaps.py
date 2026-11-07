@@ -5,6 +5,7 @@ import sqlite3
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -133,10 +134,14 @@ class SessionGapTests(unittest.TestCase):
             try:
                 url = ("http://127.0.0.1:" + str(server.server_port)
                        + "/private-api/signals/session-gaps")
-                with urlopen(url, timeout=5) as response:
-                    self.assertEqual(response.headers["Cache-Control"],
-                                     "no-store, max-age=0")
-                    body = json.load(response)
+                # HTTP route calls session_gap_overview without an as-of arg.
+                # Freeze its clock to the fixture date; otherwise, once 14 days
+                # pass, rolling windows erase the pattern and CI turns red.
+                with patch("session_gaps.utcnow", return_value=NOW):
+                    with urlopen(url, timeout=5) as response:
+                        self.assertEqual(response.headers["Cache-Control"],
+                                         "no-store, max-age=0")
+                        body = json.load(response)
                 self.assertEqual(body["mode"], "diagnostic_only")
                 self.assertTrue(body["bothMetalsSamePattern"])
                 self.assertNotIn("SENSITIVE-BROKER-KEY", json.dumps(body))
