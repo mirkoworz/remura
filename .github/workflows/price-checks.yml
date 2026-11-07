@@ -75,6 +75,8 @@ on:
       - 'tests/test_cot_monitor.py'
       - 'tests/test_signals_monitor.py'
       - 'scripts/private_server.py'
+      - 'scripts/track_c_shadow_rehearsal.py'
+      - 'tests/test_track_c_shadow_rehearsal.py'
       - 'scripts/resource_monitor.py'
       - 'resource-health.js'
       - 'resource-health.css'
@@ -219,6 +221,8 @@ jobs:
       - name: Test v1.64 exact 15-file SHA state reconciliation, offline
         run: python -m unittest discover -s tests -p 'test_reconcile_v164.py' -v
       - run: python -m unittest discover -s tests -p 'test_signals_monitor.py' -v
+      - name: Test Track C synthetic in-memory handoff; never collect market data
+        run: python -m unittest discover -s tests -p 'test_track_c_shadow_rehearsal.py' -v
       - run: python -m unittest discover -s tests -p 'test_statistical_validation.py' -v
       - run: python -m unittest discover -s tests -p 'test_dual24_validation.py' -v
       - run: python -m unittest discover -s tests -p 'test_market_validation.py' -v
