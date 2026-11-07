@@ -177,7 +177,13 @@ class RegimeCvdCohortTests(unittest.TestCase):
         early=case()
         # Same COT report, other market after 2h embargo, with 24h
         # nominal horizon matured. The shared week cannot enter both folds.
-        late=case("XAUUSD",observed="2026-11-12T10:01:00Z")
+        late=case("XAUUSD",observed="2026-11-11T10:01:00Z")
+        # Do not accidentally put the synthetic second observation into the
+        # validation PURGE window: that would not test week contamination.
+        self.assertEqual(mat._fold(study._time("2026-11-11T10:01:00Z"),
+                                   study._time(TRAIN),
+                                   study._time(VALIDATION),
+                                   study._time(ASOF)), "validation")
         out=go([early,late])
         self.assertEqual(out["coreAdmitted"],2)
         self.assertEqual(out["foldExclusionsAndMissingProvenance"]
