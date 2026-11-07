@@ -185,8 +185,7 @@ print('SYNTHETIC_OK')
                         meta(seen="2026-11-09T12:01:00Z"),
                         meta(seen="2026-11-09T11:56:00Z"),
                         meta(commit="2026-11-09T12:01:00Z"),
-                        meta(commit="2026-11-09T11:59:00Z"),
-                        meta()):
+                        meta(commit="2026-11-09T11:59:00Z")):
             self.assertEqual(self.stage(payload),shadow.UNKNOWN)
         with_extra=meta()
         with_extra["account"]="SYNTHETIC_ID_SHOULD_NOT_ENTER_DISK"
