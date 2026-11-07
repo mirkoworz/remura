@@ -189,7 +189,7 @@ class PostcommitIsolatedHandoffTests(unittest.TestCase):
                     core_db,price_bundle("EURUSD"),now=NOW)
                 self.assertIn("EURUSD",result["saved"])
             finally:core_db.close()
-            self.assertEqual(self.counts()["state"],shadow.UNKNOWN)
+            self.assertEqual(self.counts()["total"],0)
         finally:
             blocker.rollback()
             blocker.close()
