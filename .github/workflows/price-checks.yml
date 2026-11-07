@@ -79,6 +79,8 @@ on:
       - 'tests/test_track_c_shadow_rehearsal.py'
       - 'scripts/track_c_b_original_contract.py'
       - 'tests/test_track_c_b_original_contract.py'
+      - 'scripts/track_c_cot_arrival_contract.py'
+      - 'tests/test_track_c_cot_arrival_contract.py'
       - 'scripts/resource_monitor.py'
       - 'resource-health.js'
       - 'resource-health.css'
@@ -236,6 +238,11 @@ jobs:
       - name: Track C only - verify immutable original Track B reference
         if: github.event_name == 'pull_request' && github.head_ref == 'research/track-c-beta-prospective-20261107'
         run: test "$(git -C track-b-pinned rev-parse HEAD)" = "35b06da71da8cad75cc573ec8cde252f72d5a339"
+      - name: Track C only - verify CFTC post-HTTP first-seen with pinned B (synthetic)
+        if: github.event_name == 'pull_request' && github.head_ref == 'research/track-c-beta-prospective-20261107'
+        env:
+          PYTHONPATH: ${{ github.workspace }}/track-b-pinned:${{ github.workspace }}
+        run: python -m unittest discover -s tests -p 'test_track_c_cot_arrival_contract.py' -v
       - name: Track C only - exercise original Track B retail/COT/price/decision (synthetic)
         if: github.event_name == 'pull_request' && github.head_ref == 'research/track-c-beta-prospective-20261107'
         env:
