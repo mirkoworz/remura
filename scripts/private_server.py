@@ -737,12 +737,23 @@ def collect_once(db_path, symbols, days=2, runner=subprocess.run, now=None,
             temp_path.unlink(missing_ok=True)
 
 
-def retail_once(db_path,runner=subprocess.run):
-    """Reuse the existing official Myfxbook API collector in a PRIVATE cwd.
+def retail_once(db_path,runner=subprocess.run, *,
+                research_retail_first_seen=False):
+    """Default OFF local first-seen witness; normal Myfxbook path unchanged.
 
-    No Git commits, no data writes to public repository, no credentials in stdout.
+    The normal retail_loop never passes research_retail_first_seen=True.
+    No extra broker or Myfxbook API request, env switch, or auto migration.
     """
+    if type(research_retail_first_seen) is not bool:
+        raise ValueError("research_retail_opt_in_boolean_required")
     db=connect(db_path)
+    if research_retail_first_seen:
+        from scripts import shark_retail_first_seen as retail_research
+        try:
+            retail_research.require_schema(db)
+        finally:
+            db.close()
+        db=connect(db_path)
     if not (os.environ.get("MYFXBOOK_EMAIL") and os.environ.get("MYFXBOOK_PASSWORD")):
         try:set_status(db,retail_status="awaiting_credentials")
         finally:db.close()
@@ -757,15 +768,35 @@ def retail_once(db_path,runner=subprocess.run):
                    stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
                    timeout=120,check=False)
         latest_file=target/"data"/"myfxbook"/"latest.json"
-        data=retail_document(db_path,RETAIL_LATEST)
-        if run.returncode!=0 or data is None:
-            raise RuntimeError("Nessun aggiornamento Myfxbook convalidato.")
+        if research_retail_first_seen:
+            # The exact original private file is read just once. The
+            # independent local read clock comes IMMEDIATELY after read_text.
+            if not latest_file.is_file() or latest_file.stat().st_size>3_000_000:
+                raise ValueError("research_original_retail_file_unavailable")
+            raw=latest_file.read_text("utf-8")
+            read_at=utcnow()
+            original=json.loads(raw)
+            if (run.returncode!=0 or not isinstance(original,dict)
+                    or original.get("status")!="ok"
+                    or not isinstance(original.get("symbols"),dict)):
+                raise RuntimeError("Retail research JSON non convalidato.")
+            proof_db=connect(db_path)
+            try:
+                retail_research.capture_pair(
+                    proof_db,original_snapshot=original,
+                    file_read_at=read_at,clock=utcnow())
+            finally:
+                proof_db.close()
+        else:
+            data=retail_document(db_path,RETAIL_LATEST)
+            if run.returncode!=0 or data is None:
+                raise RuntimeError("Nessun aggiornamento Myfxbook convalidato.")
         db=connect(db_path)
         try:set_status(db,retail_status="running",retail_last_success=utcnow().isoformat(),
                        retail_last_error="")
         finally:db.close()
         return True
-    except (OSError,ValueError,RuntimeError,subprocess.SubprocessError):
+    except (OSError,ValueError,RuntimeError,subprocess.SubprocessError,sqlite3.DatabaseError):
         db=connect(db_path)
         try:set_status(db,retail_status="failed",retail_last_error="Myfxbook non aggiornato.")
         finally:db.close()

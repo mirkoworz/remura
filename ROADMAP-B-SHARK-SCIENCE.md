@@ -1,5 +1,15 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
+## 07/11/2026 — Ricevuta locale Myfxbook: esatta lettura JSON parent e prova doppio pilota
+
+- [x] Preflight PR #89 DRAFT HEAD 965702df1f4e974cf0f0d81090ad98dd2ed64bdb, CI Price #42376954219, Insights #42376954231, Shark #42376954237 tutti SUCCESS. Coordinamento OCI privato consultato, nessuna modifica.
+- [x] Modificato SOLO sul branch non LIVE scripts/private_server.py:retail_once con parametro research_retail_first_seen=False. Il normale retail_loop non lo passa, non ci sono variabili ambiente abilitatrici, chiamate aggiuntive o migrazioni automatiche. Il percorso legacy è invariato. In futuro, solo previo opt-in esplicito, si verifica READ-ONLY la presenza di tabelle e trigger FIRST-SEEN PRIMA di avviare subprocess/API.
+- [x] Se autorizzato, parent legge il file privato latest.json originale UNA sola volta, prende utcnow() immediatamente dopo read_text e prima di json.loads, poi invoca capture_pair con timestamp locale di read e nuovo UTC di scrittura. Questo è un orario del nostro programma, NON la risposta Myfxbook firmata né un dato garantito dal provider. Non inferire la ricezione da latest.json.updatedAt.
+- [x] Nuovo shark_retail_first_seen.require_schema READ-ONLY e capture_pair: verifica campi numerici originali, consistenza/clock/stale, EURUSD E XAUUSD contemporanei; BEGIN IMMEDIATE con entrambe le INSERT nella stessa transazione e rollback totale su duplicati/failure. Niente valori di percentuali, lotti, prezzi retail o account nelle nuove tabelle: solo simboli, SHA e orari locali.
+- [x] Nuovo test test_shark_retail_parent_receipt.py usa realmente retail_once con runner sintetico e SQLite temporaneo: due ricevute atomiche, assenza schema/trigger prima della chiamata, default OFF anche con env, JSON incompleto/alterato, clock futuro o pre-start, duplicati, fallimento SQL su seconda riga e nessuna API vera. Incluso nello stesso Shark Science workflow.
+- [ ] Non integrato nel LIVE, nessun provisioning Oracle, trading, notifiche, nuovo servizio o API. Retail disponibile prima della decisione NON significa usato dal segnale; CVD privato rimane UNKNOWN senza prove. Protocollo CVD SHA256 09d833dafdd426254bc8fedccc367e41fa451ac8f2e6c99a9dac27f7387e2905 invariato, inizio 09/11 UTC NON equivale a registratore attivato. LIVE v1.64 documentata, P0b 3/8 al 06/11.
+- [ ] CI nuovo commit da verificare; futuro rollout subordinato a consenso, backup/restore, quote/billing OCI, migrazione testata e numero versione + data/ora in alto su tutte le nove pagine. Nessun vantaggio statistico reale provato.
+
 ## 07/11/2026 — Myfxbook FIRST-SEEN locale e contesto Squalincome opt-in, CVD UNKNOWN
 
 - [x] Checkpoint di partenza `f75cb3306beab385807d0edff06250929e2ed99c` verificato 3/3 SUCCESS: [Price #42376058009](https://github.com/mirkoworz/remura/actions/runs/42376058009), [Insights #42376058045](https://github.com/mirkoworz/remura/actions/runs/42376058045), [Shark #42376058048](https://github.com/mirkoworz/remura/actions/runs/42376058048). PR #89 DRAFT, coordinamento OCI privato letto, LIVE invariata.

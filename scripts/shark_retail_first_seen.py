@@ -70,6 +70,82 @@ def ensure_schema(db):
                BEGIN SELECT RAISE(ABORT,'append_only'); END""")
 
 
+def require_schema(db):
+    """READ-ONLY prerequisite, not an automatic research migration."""
+    if not isinstance(db,sqlite3.Connection) or db.in_transaction:
+        raise ValueError("clean_research_schema_read_required")
+    for table in (TABLE,LINK):
+        if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+                      (table,)).fetchone() is None:
+            raise ValueError("research_retail_schema_absent")
+    for name in ("research_retail_first_update",
+                 "research_retail_first_delete",
+                 "research_retail_context_update",
+                 "research_retail_context_delete"):
+        if db.execute("SELECT 1 FROM sqlite_master WHERE type='trigger' AND name=?",
+                      (name,)).fetchone() is None:
+            raise ValueError("research_retail_append_only_trigger_absent")
+    return True
+
+
+def capture_pair(db, *, original_snapshot, file_read_at, clock):
+    """Atomic EURUSD/XAUUSD local first read; no partial pilot success.
+
+    Caller must pass the original JSON read ONCE at the parent process and
+    an actual local UTC clock immediately after reading it, not updatedAt.
+    Local clocks and SHA do NOT authenticate Myfxbook API response time.
+    """
+    if not isinstance(db,sqlite3.Connection) or db.in_transaction:
+        raise ValueError("fresh_research_pair_connection_required")
+    require_schema(db)
+    read=_utc(file_read_at)
+    recorded=_utc(clock)
+    if study.protocol_sha256()!=study.FROZEN_PROTOCOL_SHA256:
+        raise ValueError("frozen_research_protocol_invalid")
+    if (type(original_snapshot) is not dict
+            or type(original_snapshot.get("symbols")) is not dict
+            or not all(x in original_snapshot["symbols"]
+                       for x in ("EURUSD","XAUUSD"))):
+        raise ValueError("both_original_pilot_markets_required")
+    material=[]
+    for symbol in ("EURUSD","XAUUSD"):
+        updated,sha=_identity(original_snapshot,symbol)
+        if not clocking._parse(study.START)<=updated<=read<=recorded:
+            raise ValueError("future_or_unavailable_retail_source")
+        if recorded-read>WRITE_GRACE or read-updated>MAX_AGE:
+            raise ValueError("stale_retail_original_source")
+        material.append((symbol,updated,sha))
+    db.execute("BEGIN IMMEDIATE")
+    try:
+        if db.execute(f"SELECT count(*) FROM {TABLE}").fetchone()[0]+2>MAX_ROWS:
+            raise ValueError("retail_research_capacity_reached")
+        for symbol,updated,sha in material:
+            last=db.execute(
+                f"SELECT source_updated_at FROM {TABLE} "
+                "WHERE symbol=? ORDER BY id DESC LIMIT 1",(symbol,)
+            ).fetchone()
+            if last is not None and clocking._parse(last[0])>=updated:
+                raise ValueError("duplicate_or_backfilled_retail_source")
+            db.execute(
+                f"INSERT INTO {TABLE} "
+                "(symbol,source_updated_at,original_read_at,recorded_at,"
+                "numeric_sha256,algorithm) VALUES (?,?,?,?,?,?)",
+                (symbol,clocking._iso(updated),clocking._iso(read),
+                 clocking._iso(recorded),sha,ALG))
+        db.commit()
+    except BaseException:
+        db.rollback()
+        raise
+    return {
+        "schema":SCHEMA,"status":"BOTH_LOCAL_RETAIL_SOURCES_WITNESSED",
+        "pilotCount":2,"originalParentReadClockLocalOnly":True,
+        "myfxbookApiReceiptAuthenticated":False,
+        "retailWasActualSqualincomeInput":False,
+        "cvdEvidence":"UNKNOWN","liveEnabled":False,
+        "newBrokerCalls":0,"statisticalEdgeEstablished":False,
+    }
+
+
 def _utc(value):
     if type(value) is not datetime:
         raise ValueError("explicit_real_utc_runtime_clock_required")
