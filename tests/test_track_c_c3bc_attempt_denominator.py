@@ -191,6 +191,7 @@ class AttemptDenominatorOfflineTests(unittest.TestCase):
         try:
             with self.assertRaisesRegex(ValueError,"source_attempt_not_eligible"):
                 with db:
+                    db.execute("BEGIN IMMEDIATE")
                     den.record_core_attempt(
                         db,self.core,self.research,attempt_id=aid(10),
                         symbol="EURUSD",source="retail",
