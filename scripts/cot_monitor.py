@@ -111,11 +111,18 @@ def ensure_table(db):
     # Provenance is deliberately append-only and does not backfill existing rows.
     db.commit()
 
-def collect_once(db_path, now=None, fetch=download):
+def collect_once(db_path, now=None, fetch=download, *, research_response_observer=None):
     """At most 2 official dataset requests (with one fallback host each).
 
     Leave older good records untouched when a dataset fetch fails.
+    Track C future-only hook DEFAULT OFF: observe original normalized CFTC
+    response with UTC clocks sampled immediately before/AFTER fetch, BEFORE
+    any SQLite change. The hook is NOT called in normal production; it is
+    not an independently authenticated timestamp or an automatic recorder.
+    Any callback error must block that dataset's write, not weaken checks.
     """
+    if research_response_observer is not None and not callable(research_response_observer):
+        raise ValueError("explicit_callable_research_response_observer_required")
     now=now or utcnow()
     db=connect(db_path)
     ensure_table(db)
@@ -124,7 +131,20 @@ def collect_once(db_path, now=None, fetch=download):
     try:
         for dataset in DATASETS:
             try:
-                records=normalize(dataset,fetch(dataset,now),now)
+                # Preserve the exact normal path when research is OFF.
+                # Sampling the clock is deliberately adjacent to the actual
+                # fetch return; the old cot_first_seen uses the collector's
+                # entry clock and MUST NOT be reinterpreted as HTTP receipt.
+                started=utcnow() if research_response_observer is not None else None
+                original=fetch(dataset,now)
+                received=utcnow() if research_response_observer is not None else None
+                records=normalize(dataset,original,now)
+                if research_response_observer is not None:
+                    # Immutable primitive tuples, not a mutable map the
+                    # observer could rewrite before cot_reports persistence.
+                    frozen=tuple(sorted((kind,code,report,*tuple(values))
+                                        for (kind,code,report),values in records.items()))
+                    research_response_observer(dataset,started,received,frozen)
                 with db:
                     # Only NEW contract/week rows receive a first-seen timestamp.
                     # Older records are never retroactively claimed as captured.
