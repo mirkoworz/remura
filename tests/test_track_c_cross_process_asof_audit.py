@@ -181,6 +181,17 @@ class TwoMarketOriginalBAndCotReceiptTests(unittest.TestCase):
         options.update(kw)
         return cross.audit(self.cot, self.db, **options)
 
+    def reopen_cot(self, *, read_only):
+        # Tampering tests must use an intentionally writable connection,
+        # never silently promote the auditor's actual read-only handle.
+        self.cot.close()
+        if read_only:
+            self.cot = sqlite3.connect(
+                "file:" + str(self.cot_file) + "?mode=ro",uri=True)
+            self.cot.execute("PRAGMA query_only=ON")
+        else:
+            self.cot = sqlite3.connect(str(self.cot_file))
+
     def test_two_real_B_decisions_and_four_original_local_source_chains(self):
         evidence=self.run_audit()
         self.assertEqual(evidence["researchMarketsValidated"],2)
@@ -213,13 +224,13 @@ class TwoMarketOriginalBAndCotReceiptTests(unittest.TestCase):
             })
 
     def test_drift_in_cot_http_original_does_not_qualify(self):
-        self.cot.execute("PRAGMA query_only=OFF")
+        self.reopen_cot(read_only=False)
         self.cot.execute(
             "UPDATE cot_reports SET first_long=first_long+1 "
             "WHERE dataset='tff' AND code='099741' AND report_date='2026-10-27'"
         )
         self.cot.commit()
-        self.cot.execute("PRAGMA query_only=ON")
+        self.reopen_cot(read_only=True)
         with self.assertRaisesRegex(ValueError,
                                    "cot_source_and_http_witness_mismatch"):
             self.run_audit()
@@ -259,14 +270,14 @@ class TwoMarketOriginalBAndCotReceiptTests(unittest.TestCase):
                 "EURUSD": True,"XAUUSD":self.ids["XAUUSD"]})
 
     def test_unavailable_late_http_receipt_cannot_be_backfilled(self):
-        self.cot.execute("PRAGMA query_only=OFF")
+        self.reopen_cot(read_only=False)
         # Ledger itself prevents changes even in synthetic DB.
         with self.assertRaisesRegex(sqlite3.IntegrityError,"append_only"):
             with self.cot:
                 self.cot.execute(
                     "UPDATE research_track_c_cot_http_receipts "
                     "SET response_received_at='2099-01-01T00:00:00Z'")
-        self.cot.execute("PRAGMA query_only=ON")
+        self.reopen_cot(read_only=True)
         self.assertEqual(self.run_audit()["researchMarketsValidated"],2)
 
 
