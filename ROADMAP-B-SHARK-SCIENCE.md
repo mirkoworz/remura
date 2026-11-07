@@ -1,5 +1,16 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
+## 07/11/2026 — Coordinamento unico OCI / Shark Science (supera checkpoint OCI del 06/11)
+
+**Decisione:** i due filoni di conversazione su laboratorio Oracle ARM e ricerca Track B condividono *una sola* infrastruttura futura, ma **non devono duplicare policy IAM, audit, istanze o deploy**. La fonte operativa unica sulle risorse Oracle è il documento PRIVATO [COORDINAMENTO-OCI-SHARK-SCIENCE.md](https://github.com/mirkoworz/remura-collector/blob/main/COORDINAMENTO-OCI-SHARK-SCIENCE.md). La presente roadmap governa soltanto gli esperimenti CVD e le evidenze statistiche; non autorizza la creazione di VM.
+
+- [x] Verificati direttamente su GitHub Actions gli audit manuali privati del 06/11: A1 Limits [#42301485747](https://github.com/mirkoworz/remura-collector/actions/runs/42301485747) SUCCESS; storage 47 GB su riferimento 200 GB, zero block e 153 GB nominalmente liberi [#42305752464](https://github.com/mirkoworz/remura-collector/actions/runs/42305752464) SUCCESS; costi aggregati 0,0000 EUR per 02/10–05/11 **non fattura finale** [#42305661998](https://github.com/mirkoworz/remura-collector/actions/runs/42305661998) SUCCESS.
+- [x] Nuovo dato che **supera** la vecchia voce «A1 Limits non ancora eseguito»: censimento Compute globale manuale [#42306977488](https://github.com/mirkoworz/remura-collector/actions/runs/42306977488) SUCCESS, 2 compartimenti, 1 VM E2 Micro, **0 VM A1**, 0 OCPU/0 GB A1 utilizzati. Equivalenza 2 OCPU/12 GB A1 è **solo compatibilità nominale**: nessuna disponibilità fisica/Always Free/fattura confermata. Primo censimento fallito [#42306699932](https://github.com/mirkoworz/remura-collector/actions/runs/42306699932) superato dal successivo OK; non ripeterlo.
+- [x] CVD co-load [PR #89](https://github.com/mirkoworz/remura/pull/89) resta DRAFT, testato su runner GitHub sintetico isolato, **non** sulla VM E2 Oracle LIVE; laboratorio ARM ancora assente; segnale/edge reale non dimostrato. Nessuna modifica a LIVE v1.64, nessun broker GET o CVD operativo.
+- [ ] **NO-GO prima del laboratorio:** verificare in console fatture/piano/account e l'idoneità futura allo 0 €, backup e tutte le regioni, disponibilità host (precedenti `Out of host capacity`) e rotazione della chiave API eventualmente esposta. Non aggiungere policy IAM già sufficienti; non riavviare i workflow manuali appena verificati. Solo dopo evidenza e consenso esplicito dell'utente valutare una sola VM A1 isolata; poi misure vere CPU/RSS/PSI/lock/backup e baseline. Non usare Termius né toccare la VPS adesso.
+- [x] Questo è **solo un checkpoint documentale nel ramo B**. Nessuna nuova versione applicativa rilasciata: il prossimo deploy, se approvato, dovrà incrementare versione e mostrare data/ora reale italiana in alto su tutte le nove pagine, con backup/restore-test/rollback.
+
+
 ## 06/11/2026 — B-P0: prova INTEGRALE della CLI di laboratorio sul runner GitHub isolato
 
 - [x] Dopo l'esame della roadmap OCI, il controllo `remura-arm-a1-limits-readonly.yml` esiste su main di remura-collector ma alle 21:44 italiane NON risulta alcun run manuale: non dedurre disponibilita' o gratuite' OCI dal verde dell'inventario ARM lab. Le istanze di laboratorio restano ZERO, CVD LIVE OFF.
