@@ -101,6 +101,8 @@ on:
       - 'tests/test_track_c_c3bc_frozen_plan.py'
       - 'scripts/track_c_c3c_scheduler_source_contract.py'
       - 'tests/test_track_c_c3c_scheduler_source_contract.py'
+      - 'scripts/track_c_c3c_execution_evidence.py'
+      - 'tests/test_track_c_c3c_execution_evidence.py'
       - '.github/workflows/myfxbook.yml'
       - 'scripts/resource_monitor.py'
       - 'resource-health.js'
@@ -248,6 +250,8 @@ jobs:
       - name: Test v1.64 exact 15-file SHA state reconciliation, offline
         run: python -m unittest discover -s tests -p 'test_reconcile_v164.py' -v
       - run: python -m unittest discover -s tests -p 'test_signals_monitor.py' -v
+      - name: Track C3c-b - reconcile observed schedule runs and bounded batch timing receipts offline
+        run: python -m unittest discover -s tests -p 'test_track_c_c3c_execution_evidence.py' -v
       - name: Track C3c - audit real repository scheduler source contract and drift, no execution
         run: python -m unittest discover -s tests -p 'test_track_c_c3c_scheduler_source_contract.py' -v
       - name: Track C3b-c - frozen reproducible synthetic source-specific plan detects missing scheduled slots
