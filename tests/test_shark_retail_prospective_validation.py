@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import json
 import sqlite3
 import unittest
 
@@ -135,6 +136,9 @@ class RetailProspectiveStudyTests(unittest.TestCase):
 
     def test_synthetic_exact_4500_rows_backup_restore_and_bytes(self):
         out = study.synthetic_storage_probe()
+        # Sanitized reproducible measured bytes in the existing CI log.
+        print("REMURA_RETAIL_SYNTHETIC_STORAGE=" +
+              json.dumps(out, sort_keys=True))
         self.assertEqual(out["featureRows"], 4500)
         self.assertEqual(out["originalReceiptRows"], 4500)
         self.assertEqual(out["backupRestoreIntegrity"], "OK")
