@@ -223,6 +223,11 @@ def audit(core, research, *, mode=None):
         linked={x[0]:x for x in links}
         if len(linked)!=len(links):
             raise ValueError("duplicate_research_link_identity")
+        unlinked_shadow=queue.execute(
+            f"SELECT count(*) FROM {shadow.TABLE} s LEFT JOIN "
+            f"{RESEARCH_TABLE} l ON l.shadow_item_id=s.id "
+            "WHERE l.shadow_item_id IS NULL"
+        ).fetchone()[0]
         candidate=exclusion=staged=missing=invalid=0
         seen=set()
         for ident,sym,src,clock,outcome in attempts:
@@ -245,12 +250,24 @@ def audit(core, research, *, mode=None):
             ).fetchone()
             if (row is None or row[0]!=sym or row[1]!=src
                     or row[3]!=entry[3] or row[2]!=entry[2]
-                    or shadow._utc(row[2])-shadow._utc(clock)
-                       not in (timedelta(seconds=i) for i in range(61))):
+                    or not timedelta(0)<=
+                      shadow._utc(row[2])-shadow._utc(clock)<=
+                      timedelta(minutes=1)):
                 missing+=1
                 invalid+=1
             elif row[4] in ("pending","leased","synthetic_ack"):
-                staged+=1
+                # Re-check the exact source bytes, not merely an old
+                # pointer or a synthetically successful worker ack.
+                try:
+                    current=post._source(p,sym,src,shadow._utc(row[2]))
+                    valid=current==entry[3]
+                except (sqlite3.Error,ValueError,TypeError,OSError):
+                    valid=False
+                if valid:
+                    staged+=1
+                else:
+                    missing+=1
+                    invalid+=1
             else:
                 missing+=1
         unknown_links=len(set(linked)-seen)
@@ -265,6 +282,7 @@ def audit(core, research, *, mode=None):
             "missingOrUnknownCount":missing,
             "integrityBlockerCount":invalid,
             "orphanResearchLinks":unknown_links,
+            "unlinkedShadowJobs":unlinked_shadow,
             "denominatorIsCompleteForLiveScans":False,
             "realMarketReceiptVerified":False,
             "retailOriginalParentReadLinked":False,
