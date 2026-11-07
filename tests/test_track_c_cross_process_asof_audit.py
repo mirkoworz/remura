@@ -23,6 +23,13 @@ if not (B_ROOT / "scripts/shark_retail_first_seen.py").is_file():
 sys.path.insert(0, str(B_ROOT / "tests"))
 sys.path.insert(0, str(B_ROOT / "scripts"))
 sys.path.insert(0, str(B_ROOT))
+# The original B fixture imports price_store by TOP-LEVEL name. Load the
+# original B implementation first and pin that module in sys.modules.
+# Only then prioritize C's cot_monitor for the separate synthetic collector.
+import price_store as _original_b_price_store
+assert "research_parent_read_at" in (
+    _original_b_price_store.ingest.__code__.co_varnames
+), "original_B_price_store_was_not_loaded"
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from scripts import track_c_cross_process_asof_audit as cross
