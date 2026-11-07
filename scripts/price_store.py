@@ -81,14 +81,24 @@ def validate_payload(input_doc, now=None):
     return markets
 
 
-def ingest(db, input_doc, now=None):
+def ingest(db, input_doc, now=None, *, research_parent_read_at=None):
     """Merge incremental CLOSED M15 with existing history, regenerate true H1/H4.
 
     Timestamps: candle open in UTC. Reject broker mix and invalid candles.
     No invented bars are inserted in gaps, including after weekends.
+
+    Track B opt-in is OFF by default. Only an explicitly authorized FUTURE
+    caller can pass a genuinely observed UTC parent JSON-read clock; the
+    optional research witness is then written in the SAME market UPSERT
+    transaction. No research schema is created by this function.
     """
     now=now or utcnow()
     incoming=validate_payload(input_doc,now)
+    fingerprint=None
+    if research_parent_read_at is not None:
+        from scripts import shark_ingest_first_seen as fingerprint
+        fingerprint.preflight(
+            input_doc,parent_read_at=research_parent_read_at,ingest_at=now)
     success={}
     errors={}
     for symbol,market in incoming.items():
@@ -132,6 +142,13 @@ def ingest(db, input_doc, now=None):
                               ON CONFLICT(symbol) DO UPDATE SET source=excluded.source,
                               broker_symbol=excluded.broker_symbol,updated_at=excluded.updated_at,payload=excluded.payload""",
                            (symbol,source,broker,merged["lastComplete"],payload))
+                if fingerprint is not None:
+                    # Same transaction; missing/invalid/duplicate proof fails
+                    # the entire market UPSERT, never an optimistic record.
+                    fingerprint.record(
+                        db,symbol=symbol,child_export=input_doc,
+                        merged_document=merged,
+                        parent_read_at=research_parent_read_at,ingest_at=now)
             success[symbol]=len(merged["timeframes"]["M15"])
         except (ValueError, TypeError, KeyError, OverflowError) as exc:
             errors[symbol]=str(exc)
