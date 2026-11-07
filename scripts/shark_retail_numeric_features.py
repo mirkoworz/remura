@@ -165,7 +165,8 @@ def read_linked(db, *, history_id):
         raise ValueError("frozen_protocol_mismatch")
     item=db.execute(
         f"SELECT h.symbol,h.observed_at,c.retail_witness_id,"
-        "c.original_numeric_sha256 FROM squalincome_history h "
+        "c.original_numeric_sha256,c.symbol,c.observed_at,c.linked_at "
+        "FROM squalincome_history h "
         f"JOIN {original.LINK} c ON h.id=c.history_id WHERE h.id=?",
         (history_id,)
     ).fetchone()
@@ -173,7 +174,7 @@ def read_linked(db, *, history_id):
         return {"status":"UNKNOWN_NO_ORIGINAL_RETAIL_LINK",
                 "retailInputToOriginalSignal":False,
                 "cvdCoverage":"UNKNOWN","realEdgeEstablished":False}
-    symbol,observed_string,rid,link_sha=item
+    symbol,observed_string,rid,link_sha,link_symbol,link_observed,link_at=item
     receipt=db.execute(
         f"SELECT symbol,source_updated_at,original_read_at,recorded_at,"
         f"numeric_sha256 FROM {original.TABLE} WHERE id=?",(rid,)
@@ -183,10 +184,30 @@ def read_linked(db, *, history_id):
     source_sym,source_time,read_time,record_time,original_sha=receipt
     observed=clocks._parse(observed_string)
     if (symbol!=source_sym or original_sha!=link_sha
+            or link_symbol!=symbol
+            or clocks._parse(link_observed)!=observed
+            or not observed<=clocks._parse(link_at)<=observed+original.DECISION_GRACE
             or not clocks._parse(protocol.START)<=clocks._parse(source_time)
                <=clocks._parse(read_time)<=clocks._parse(record_time)<=observed
             or observed-clocks._parse(source_time)>original.MAX_AGE):
         raise ValueError("retail_link_not_valid_for_original_decision")
+    # A later locally witnessed receipt cannot be swapped with an older
+    # numeric value that was never pinned as latest at original decision.
+    latest=db.execute(
+        f"SELECT id FROM {original.TABLE} WHERE symbol=? AND recorded_at<=? "
+        "ORDER BY id DESC LIMIT 1",
+        (symbol,clocks._iso(observed))
+    ).fetchone()
+    if latest is None or latest[0]!=rid:
+        raise ValueError("retail_receipt_superseded_before_original_decision")
+    from scripts import shark_signal_ingest_decision_link as signal
+    proof=db.execute(
+        f"SELECT observed_at_utc,linked_at_utc FROM {signal.TABLE} "
+        "WHERE history_id=?",(history_id,)
+    ).fetchone()
+    if (proof is None or clocks._parse(proof[0])!=observed
+            or not observed<=clocks._parse(proof[1])<=clocks._parse(link_at)):
+        raise ValueError("retail_original_decision_source_proof_missing")
     vals=db.execute(
         f"SELECT symbol,original_sha256,recorded_at,"
         "long_pct,short_pct,long_lots,short_lots,long_positions,"
