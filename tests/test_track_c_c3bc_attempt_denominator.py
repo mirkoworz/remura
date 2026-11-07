@@ -114,8 +114,8 @@ class AttemptDenominatorOfflineTests(unittest.TestCase):
         self.record(2,"XAUUSD","ctrader")
         # The committed source and its CORE scan ledger survive; the
         # research process never started for one attempt.
-        self.assertEqual(self.link(1),den.link_after_stage.__doc__ and
-                         "SYNTHETIC_ATTEMPT_STAGED_AND_LINKED_NOT_VERIFIED")
+        self.assertEqual(
+            self.link(1),"SYNTHETIC_ATTEMPT_STAGED_AND_LINKED_NOT_VERIFIED")
         result=self.report()
         self.assertEqual(result["instrumentedAttemptCount"],2)
         self.assertEqual(result["candidateCount"],2)
