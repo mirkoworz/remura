@@ -14,12 +14,16 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+import hashlib
+import json
 import sqlite3
 import tempfile
 
 MODE = "OFFLINE_SYNTHETIC_PINNED_B_COT_ATOMIC_ONLY"
 SCHEMA = "remura-track-c-atomic-cot-original-b-v1"
 FILE_NAME = "track-c-synthetic-atomic.sqlite3"
+TABLE = "research_track_c_cot_http_receipts"
+MAX_ROWS = 4000  # Synthetic bounded dry-run, not a production quota claim.
 MAX_RESPONSE_SPAN = timedelta(seconds=60)
 MAX_INGEST_AFTER_HTTP = timedelta(seconds=30)
 START = datetime(2026, 11, 9, tzinfo=timezone.utc)
@@ -31,8 +35,8 @@ def _utc(t):
     return t.astimezone(timezone.utc)
 
 
-def _lab_db(db):
-    if type(db) is not sqlite3.Connection or not db.in_transaction:
+def _lab_db(db, *, require_transaction=True):
+    if type(db) is not sqlite3.Connection or (require_transaction and not db.in_transaction):
         raise ValueError("only_active_original_sqlite_transaction_allowed")
     loc = db.execute("PRAGMA database_list").fetchall()
     if len(loc) != 1 or loc[0][1] != "main" or not loc[0][2]:
@@ -41,6 +45,32 @@ def _lab_db(db):
     root = Path(tempfile.gettempdir()).resolve()
     if file.name != FILE_NAME or not file.is_relative_to(root):
         raise ValueError("live_file_or_unapproved_sqlite_forbidden")
+
+
+def ensure_schema(db, *, mode=None):
+    """Explicit synthetic-only migration, NEVER performed by collector."""
+    if mode != MODE:
+        raise ValueError("explicit_offline_rehearsal_mode_required")
+    _lab_db(db, require_transaction=False)
+    if db.in_transaction:
+        raise ValueError("clean_explicit_research_schema_transaction_required")
+    with db:
+        db.execute(f"""CREATE TABLE IF NOT EXISTS {TABLE}(
+            id INTEGER PRIMARY KEY,
+            dataset TEXT NOT NULL CHECK(dataset IN ('tff','disagg')),
+            request_started_at TEXT NOT NULL,
+            response_received_at TEXT NOT NULL,
+            witnessed_at TEXT NOT NULL,
+            normalized_row_count INTEGER NOT NULL CHECK(normalized_row_count>0),
+            normalized_sha256 TEXT NOT NULL,
+            UNIQUE(dataset,response_received_at,normalized_sha256)
+        )""")
+        db.execute(f"""CREATE TRIGGER IF NOT EXISTS track_c_cot_http_no_update
+            BEFORE UPDATE ON {TABLE}
+            BEGIN SELECT RAISE(ABORT,'append_only'); END""")
+        db.execute(f"""CREATE TRIGGER IF NOT EXISTS track_c_cot_http_no_delete
+            BEFORE DELETE ON {TABLE}
+            BEGIN SELECT RAISE(ABORT,'append_only'); END""")
 
 
 class OriginalBAtomicWitness:
@@ -72,16 +102,22 @@ class OriginalBAtomicWitness:
                 "09d833dafdd426254bc8fedccc367e41fa451ac8f2e6c99a9dac27f7387e2905"):
             raise ValueError("frozen_scientific_protocol_mismatch")
         objects = dict(db.execute(
-            "SELECT name,type FROM sqlite_master WHERE name IN (?,?,?)",
+            "SELECT name,type FROM sqlite_master WHERE name IN (?,?,?,?,?,?)",
             (evidence.TABLE, "research_cot_asof_no_update",
-             "research_cot_asof_no_delete")
+             "research_cot_asof_no_delete", TABLE,
+             "track_c_cot_http_no_update", "track_c_cot_http_no_delete")
         ).fetchall())
         if (objects.get(evidence.TABLE) != "table"
                 or objects.get("research_cot_asof_no_update") != "trigger"
                 or objects.get("research_cot_asof_no_delete") != "trigger"):
             raise ValueError("explicit_research_witness_migration_missing")
+        if (objects.get(TABLE) != "table"
+                or objects.get("track_c_cot_http_no_update") != "trigger"
+                or objects.get("track_c_cot_http_no_delete") != "trigger"):
+            raise ValueError("explicit_track_c_receipt_schema_missing")
 
         seen = set()
+        fingerprints = []
         for row in frozen:
             if type(row) is not tuple or len(row) != 8:
                 raise ValueError("not_the_original_normalized_cot_tuple")
@@ -100,7 +136,23 @@ class OriginalBAtomicWitness:
             ).fetchone()
             if persisted is None or tuple(persisted) != tuple(numbers):
                 raise ValueError("sqlite_not_equal_to_exact_original_response")
+            # Digest the validated ORIGINAL row using the B algorithm,
+            # never store the raw positions in this receipt ledger.
+            fingerprints.append((kind,code,week,evidence._digest(tuple(numbers))))
 
+        if db.execute(f"SELECT count(*) FROM {TABLE}").fetchone()[0] >= MAX_ROWS:
+            raise ValueError("bounded_synthetic_cot_receipt_capacity_reached")
+        canonical = json.dumps(sorted(fingerprints),separators=(",",":"),
+                               ensure_ascii=True,allow_nan=False)
+        chain_sha = hashlib.sha256(canonical.encode("ascii")).hexdigest()
+        to_utc = evidence._iso
+        db.execute(
+            f"INSERT INTO {TABLE}(dataset,request_started_at,"
+            "response_received_at,witnessed_at,normalized_row_count,"
+            "normalized_sha256) VALUES (?,?,?,?,?,?)",
+            (dataset,to_utc(a),to_utc(b),to_utc(c),
+             len(fingerprints),chain_sha)
+        )
         # MUST be the last operation that may raise before B commits.
         # The nested B context manager commits source and witness together.
         # Exceptions before commit roll back both.
