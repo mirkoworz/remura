@@ -173,13 +173,25 @@ class RegimeFirstSeenTests(unittest.TestCase):
 
     def test_original_history_must_be_fresh_after_protocol_start(self):
         earlier=OBS-timedelta(days=1)
-        with self.assertRaisesRegex(ValueError,"frozen_protocol_or_prospective_start_invalid"):
-            capture(self.db,self.doc,clock=earlier)
+        # The *price* witness also refuses an old observation clock, so
+        # exercise the new regime's independent protocol-start gate directly.
+        with self.assertRaisesRegex(ValueError,
+                                    "frozen_protocol_or_prospective_start_invalid"):
+            with self.db:
+                hid=insert(self.db)
+                regime.capture(self.db,history_id=hid,
+                    observed_document=self.doc,
+                    source_received_at=stamp(RECEIVED),clock=earlier)
         self.assertEqual(regime.aggregate(self.db)["locallyRecorded"],0)
+        self.assertEqual(
+            self.db.execute("SELECT count(*) FROM squalincome_history")
+                   .fetchone()[0],0)
 
     def test_rebinding_and_update_delete_are_impossible(self):
         hid,_=capture(self.db,self.doc)
         with self.db:
+            # sqlite3 "with connection" alone does NOT start a transaction.
+            self.db.execute("BEGIN")
             with self.assertRaisesRegex(ValueError,
                        "regime_evidence_cannot_be_rebound_or_backfilled"):
                 regime.capture(self.db,history_id=hid,
@@ -207,6 +219,7 @@ class RegimeFirstSeenTests(unittest.TestCase):
             regime.capture(None,history_id=1,observed_document=self.doc,
                            source_received_at=stamp(RECEIVED),clock=NOW)
         with self.db:
+            self.db.execute("BEGIN")
             with self.assertRaisesRegex(ValueError,"new_history_id_required"):
                 regime.capture(self.db,history_id=True,
                                observed_document=self.doc,
