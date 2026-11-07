@@ -112,11 +112,12 @@ def rehearse(db, *, arrivals, write_at, decision_at, mode=None):
             raise ValueError("pilot_cot_weeks_not_aligned")
         report_dates = dates
         new.update(normalized)
-    # No historical replay or edits: require all keys genuinely absent.
-    existing = set(db.execute(
-        "SELECT dataset,code,report_date FROM cot_reports").fetchall())
-    if existing.intersection(new):
-        raise ValueError("existing_cot_not_new_original_response")
+    # Only a newly prepared EMPTY synthetic research DB is allowed. The
+    # original B witness commits inside its own transaction, so preflight
+    # must guarantee exactly four source rows before invoking it.
+    if (db.execute("SELECT count(*) FROM cot_reports").fetchone()[0] != 0
+            or db.execute(f"SELECT count(*) FROM {witness.TABLE}").fetchone()[0] != 0):
+        raise ValueError("synthetic_cot_database_must_be_empty")
     old_first_seen = None
     if db.execute(
         "SELECT 1 FROM sqlite_master WHERE type='table' AND name='cot_first_seen'"
