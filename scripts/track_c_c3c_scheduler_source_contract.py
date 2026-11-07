@@ -71,8 +71,8 @@ def _require_wait(fn,expr,label):
         raise ValueError("scheduler_source_drift_"+label)
 
 
-def _require_call(fn,name,label):
-    if len(_calls(fn,name))!=1:
+def _require_call(fn,name,label,expected_count=1):
+    if len(_calls(fn,name))!=expected_count:
         raise ValueError("scheduler_source_drift_"+label)
 
 
@@ -93,7 +93,7 @@ def _extract(path):
     return path.read_text(encoding="utf-8")
 
 
-def _env_guard(fn,key,default):
+def _env_guard(fn,key,default,expected_count):
     # Extract exactly one literal env.get KEY/default from live main().
     matched=[]
     for call in ast.walk(fn):
@@ -107,7 +107,7 @@ def _env_guard(fn,key,default):
             except (ValueError,TypeError,LookupError): continue
             if pair[0]==key:
                 matched.append(pair)
-    if matched!=[(key,default)]:
+    if matched!=[(key,default)]*expected_count:
         raise ValueError("scheduler_enablement_contract_drift_"+key)
 
 
@@ -138,7 +138,7 @@ def inspect(*, root=None, mode=None):
     _require_wait(cot,EXPECTED["cot_stop_wait"],"cot_after_work_6hour")
     _require_call(cot,"collect_official_cot","cot_collector")
     _require_wait(price,EXPECTED["ctrader_stop_wait"],"ctrader_batch_quarter")
-    _require_call(price,"collect_once","ctrader_batch_collector")
+    _require_call(price,"collect_once","ctrader_batch_collector",expected_count=2)
     _require_wait(retail,EXPECTED["retail_stop_wait"],"vps_retail_20minutes")
     _require_call(retail,"retail_once","vps_retail_collector")
     quarter_secs=_get_expr(quarter,"quarter")
@@ -148,8 +148,8 @@ def inspect(*, root=None, mode=None):
             EXPECTED["ctrader_next_quarter"]):
         raise ValueError("scheduler_source_drift_ctrader_quarter_90s_grace")
 
-    _env_guard(main,"REMURA_COLLECTOR_ENABLED","0")
-    _env_guard(main,"REMURA_RETAIL_ENABLED","0")
+    _env_guard(main,"REMURA_COLLECTOR_ENABLED","0",expected_count=2)
+    _env_guard(main,"REMURA_RETAIL_ENABLED","0",expected_count=1)
     # Private COT enabled by explicit opt-in or inherits explicitly opted-in
     # collector. A default-on research recorder would be a release blocker.
     calls=_calls(main,"cot_sync_enabled")
