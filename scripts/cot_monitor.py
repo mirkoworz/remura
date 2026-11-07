@@ -138,6 +138,14 @@ def collect_once(db_path, now=None, fetch=download, *, research_response_observe
                 started=utcnow() if research_response_observer is not None else None
                 original=fetch(dataset,now)
                 received=utcnow() if research_response_observer is not None else None
+                if research_response_observer is not None and (
+                        not isinstance(started,dt.datetime)
+                        or not isinstance(received,dt.datetime)
+                        or started.tzinfo is None or received.tzinfo is None
+                        or started.utcoffset()!=dt.timedelta(0)
+                        or received.utcoffset()!=dt.timedelta(0)
+                        or received<started):
+                    raise ValueError("nonmonotonic_research_cot_receipt_clock")
                 records=normalize(dataset,original,now)
                 if research_response_observer is not None:
                     # Immutable primitive tuples, not a mutable map the
