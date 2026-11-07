@@ -18,6 +18,8 @@
 
 **C3a (CI)**: `tests/test_track_c_shadow_rehearsal.py` aggiunge prove avversarie per transazioni atomiche, regressioni, tempo/as-of, confini mercato, mancati retail, crash/doppie righe, schema, SQLite file-based vietato, cap e no segreti/JSON persistiti. È stato aggiunto **solo un test** al workflow `price-checks.yml` preesistente, usando i runner del piano; **nessun cron/workflow nuovo** e nessuna rete/broker. Il passaggio C3 completo resta aperto fino a verifiche di coesistenza **sulla vera pipeline originale** e compatibilità con B.
 
+**C3a CI VERIFICATA:** commit di codice/workflow `1d8a3a9fec3ded122d43aca71585d35b695a0eb5`: [Price Engine run #42405523630](https://github.com/mirkoworz/remura/actions/runs/42405523630) **SUCCESS**, incluso il passo nominato `Test Track C synthetic in-memory handoff; never collect market data` **SUCCESS**; [Insights run #42405523638](https://github.com/mirkoworz/remura/actions/runs/42405523638) **SUCCESS**. Questi esiti certificano test sintetici di regressione, non fonti REALI, costi, performance o autorizzazione alla VPS. Il presente aggiornamento è solo documentale.
+
 **Stop/go**: non richiamare il laboratorio della PR C come un registratore di mercato; nessun dataset/prova prospettica raccolta. L'eventuale rilascio richiederà audit C1 residuo + C2 vero originale + C3 verde + costi/privacy C4 + consenso C5. Nei test sintetici non riprodurre segreti o payload reali. La PR #97 rimane DRAFT e non attiva nulla.
 
 ## La rotta: tre filoni strategici senza confondere responsabilità
