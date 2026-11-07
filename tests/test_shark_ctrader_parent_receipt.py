@@ -5,7 +5,7 @@ The synthetic child process is a local runner writing a private temp JSON.
 """
 from __future__ import annotations
 
-from datetime import timedelta,timezone
+from datetime import datetime,timedelta,timezone
 import json
 import os
 from pathlib import Path
@@ -78,9 +78,11 @@ class ParentReadFirstSeenTests(unittest.TestCase):
             f"SELECT parent_read_at_utc,recorded_at_utc,"
             f"collection_started_utc FROM {first.TABLE}"
         ).fetchone()
-        self.assertEqual(proof[0],"2026-11-09T12:00:25Z")
-        self.assertEqual(proof[1],"2026-11-09T12:00:40Z")
-        self.assertEqual(proof[2],"2026-11-09T12:00:10Z")
+        # witness._iso serializes microseconds even when .000000; compare
+        # actual UTC instants, not a weaker truncated string format.
+        parsed=[datetime.fromisoformat(x.replace("Z","+00:00")) for x in proof]
+        self.assertEqual(parsed,[PARENT_READ,INGEST_DONE,CHILD_STARTED])
+        self.assertTrue(all(x.utcoffset()==timedelta(0) for x in parsed))
         self.assertEqual(len(self.calls),1)
         self.assertFalse(self.exports[0].exists())
         summary=first.verify_scan(
