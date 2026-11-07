@@ -104,8 +104,10 @@ ans=s.finish(path,item_id=job['id'],lease_token=job['leaseToken'],
 assert ans==s.ACKED
 print('SYNTHETIC_OK')
 """
-        env=dict(os.environ)
-        env["PYTHONPATH"]=str(ROOT/"scripts")
+        # Strictly sanitize child environment: NEVER forward parent's
+        # API keys, GitHub tokens, broker credentials or personal settings.
+        env={"PYTHONPATH":str(ROOT/"scripts"),
+             "PYTHONDONTWRITEBYTECODE":"1"}
         result=subprocess.run(
             [sys.executable,"-c",body,str(self.path),STAMP],
             capture_output=True,text=True,timeout=15,env=env,check=False)
@@ -185,9 +187,10 @@ print('SYNTHETIC_OK')
                         meta(commit="2026-11-09T12:01:00Z"),
                         meta(commit="2026-11-09T11:59:00Z"),
                         meta()):
-            payload=dict(payload)
-            payload["account"]="SYNTHETIC_ID_SHOULD_NOT_ENTER_DISK"
             self.assertEqual(self.stage(payload),shadow.UNKNOWN)
+        with_extra=meta()
+        with_extra["account"]="SYNTHETIC_ID_SHOULD_NOT_ENTER_DISK"
+        self.assertEqual(self.stage(with_extra),shadow.UNKNOWN)
         self.assertEqual(shadow.stage(
             self.path,meta(),at=STAMP,mode=shadow.MODE),
             shadow.UNKNOWN)
