@@ -179,19 +179,30 @@ class AtomicOriginalDecisionTests(unittest.TestCase):
         self.db.commit()
         with self.assertRaises(sqlite3.DatabaseError):
             self.run_new()
-        self.assertEqual(counts(self.db)["history"],0)
-        self.assertEqual(counts(self.db)["cot"],0)
-        self.assertEqual(counts(self.db)["price"],0)
-        self.assertEqual(counts(self.db)["source"],0)
+        self.assertEqual(
+            self.db.execute("SELECT count(*) FROM squalincome_history").fetchone()[0],0)
+        self.assertEqual(
+            self.db.execute(f"SELECT count(*) FROM {cot.TABLE}").fetchone()[0],0)
+        self.assertEqual(
+            self.db.execute(f"SELECT count(*) FROM {price.TABLE}").fetchone()[0],0)
+        # The ingest proof table is INTENTIONALLY absent in this test.
+        self.assertEqual(
+            self.db.execute(f"SELECT count(*) FROM {source_link.TABLE}").fetchone()[0],0)
 
     def test_missing_research_link_schema_is_a_hard_sqlite_error(self):
         self.db.execute(f"DROP TABLE {source_link.TABLE}")
         self.db.commit()
         with self.assertRaises(sqlite3.DatabaseError):
             self.run_new()
-        self.assertEqual(counts(self.db)["history"],0)
-        self.assertEqual(counts(self.db)["cot"],0)
-        self.assertEqual(counts(self.db)["price"],0)
+        self.assertEqual(
+            self.db.execute("SELECT count(*) FROM squalincome_history").fetchone()[0],0)
+        self.assertEqual(
+            self.db.execute(f"SELECT count(*) FROM {cot.TABLE}").fetchone()[0],0)
+        self.assertEqual(
+            self.db.execute(f"SELECT count(*) FROM {price.TABLE}").fetchone()[0],0)
+        self.assertEqual(
+            self.db.execute(f"SELECT count(*) FROM {first.TABLE}").fetchone()[0],1)
+        # The source link table is INTENTIONALLY absent here.
 
     def test_duplicate_original_signal_refuses_new_research_join(self):
         self.run_new()
