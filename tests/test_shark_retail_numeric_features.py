@@ -135,7 +135,7 @@ class ProspectiveRetailNumericTests(unittest.TestCase):
         self.decide()
         self.db.execute("DROP TRIGGER research_retail_features_no_update")
         self.db.execute(
-            f"UPDATE {numeric.TABLE} SET long_pct=41 "
+            f"UPDATE {numeric.TABLE} SET long_pct=63 "
             "WHERE symbol='EURUSD'")
         self.db.commit()
         with self.assertRaisesRegex(ValueError,

@@ -16,6 +16,7 @@ import unittest
 from unittest.mock import patch
 
 from scripts import shark_retail_first_seen as retail
+from scripts import shark_retail_numeric_features as numeric
 from test_shark_retail_first_seen import original,READ,RECORDED,UPDATED
 import private_server as server
 from price_store import connect,get_status
@@ -48,7 +49,7 @@ class RetailParentReadTests(unittest.TestCase):
             json.dumps(self.payload),encoding="utf-8")
         return types.SimpleNamespace(returncode=0)
 
-    def invoke(self,*,enabled=False):
+    def invoke(self,*,enabled=False,features=False):
         with patch.dict(os.environ,{
             "MYFXBOOK_EMAIL":"fake@example.invalid",
             "MYFXBOOK_PASSWORD":SECRET,
@@ -56,7 +57,8 @@ class RetailParentReadTests(unittest.TestCase):
             READ,RECORDED,RECORDED,RECORDED]):
             return server.retail_once(
                 self.path,runner=self.fake_runner,
-                research_retail_first_seen=enabled)
+                research_retail_first_seen=enabled,
+                research_retail_numeric_features=features)
 
     def rows(self):
         return self.db.execute(
@@ -149,6 +151,35 @@ class RetailParentReadTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"research_retail_opt_in_boolean_required"):
             server.retail_once(self.path,runner=self.fake_runner,
                 research_retail_first_seen="yes")
+        self.assertEqual(self.calls,0)
+
+    def test_numeric_feature_requires_both_opt_ins_and_preapproved_schema(self):
+        with self.assertRaisesRegex(
+                ValueError,"numeric_features_require_original_first_seen_opt_in"):
+            self.invoke(enabled=False,features=True)
+        self.assertEqual(self.calls,0)
+        retail.ensure_schema(self.db)
+        with self.assertRaisesRegex(
+                ValueError,"numeric_features_explicit_migration_required"):
+            self.invoke(enabled=True,features=True)
+        self.assertEqual(self.calls,0)
+        numeric.ensure_schema(self.db)
+        self.assertTrue(self.invoke(enabled=True,features=True))
+        self.assertEqual(self.calls,1)
+        self.assertEqual(self.db.execute(
+            f"SELECT count(*) FROM {retail.TABLE}").fetchone()[0],2)
+        self.assertEqual(
+            numeric.aggregate(self.db)["prospectiveNumericRows"],2)
+        self.assertEqual(get_status(self.db)["retail_status"],"running")
+
+    def test_numeric_preflight_rejects_absent_trigger_before_api_call(self):
+        retail.ensure_schema(self.db)
+        numeric.ensure_schema(self.db)
+        self.db.execute("DROP TRIGGER research_retail_features_no_delete")
+        self.db.commit()
+        with self.assertRaisesRegex(
+                ValueError,"numeric_features_append_only_trigger_missing"):
+            self.invoke(enabled=True,features=True)
         self.assertEqual(self.calls,0)
 
     def test_normal_scheduler_remains_default_off(self):
