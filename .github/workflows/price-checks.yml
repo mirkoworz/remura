@@ -88,6 +88,7 @@ on:
       - 'tests/test_track_c_cross_process_asof_audit.py'
       - 'scripts/track_c_c3_safety_mailbox.py'
       - 'tests/test_track_c_c3_safety_mailbox.py'
+      - 'tests/test_track_c_c3_live_activation_guard.py'
       - 'scripts/resource_monitor.py'
       - 'resource-health.js'
       - 'resource-health.css'
@@ -234,6 +235,8 @@ jobs:
       - name: Test v1.64 exact 15-file SHA state reconciliation, offline
         run: python -m unittest discover -s tests -p 'test_reconcile_v164.py' -v
       - run: python -m unittest discover -s tests -p 'test_signals_monitor.py' -v
+      - name: Track C3 - guard all LIVE code paths against accidental research wiring
+        run: python -m unittest discover -s tests -p 'test_track_c_c3_live_activation_guard.py' -v
       - name: Track C3 - test isolated core survival and bounded shadow research (offline)
         run: python -m unittest discover -s tests -p 'test_track_c_c3_safety_mailbox.py' -v
       - name: Test Track C synthetic in-memory handoff; never collect market data
