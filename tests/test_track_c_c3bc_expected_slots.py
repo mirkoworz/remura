@@ -7,8 +7,10 @@ slot is not a received market event. Three lab DBs remain independent.
 from __future__ import annotations
 
 import hashlib
+import os
 from pathlib import Path
 import sqlite3
+import subprocess
 import sys
 import unittest
 
@@ -214,6 +216,39 @@ class PreregisteredLabScheduleTests(unittest.TestCase):
         finally:
             db.rollback()
             db.close()
+
+    def test_separate_planner_process_dies_after_registration(self):
+        """Schedule survives a hard-stop before the source attempt begins."""
+        program = """import os,sys
+import track_c_c3bc_expected_slots as slots
+core,research,schedule,identifier=sys.argv[1:]
+status=slots.register(core,research,schedule,
+    slot_id=identifier,symbol='EURUSD',source='cot',
+    registered_at='2026-11-09T11:59:00Z',
+    due_at='2026-11-09T12:00:00Z',mode=slots.MODE)
+assert status=='EXPECTED_SYNTHETIC_SLOT_REGISTERED_NOT_OBSERVED'
+os._exit(17)
+"""
+        env={"PYTHONPATH":str(ROOT/"scripts"),
+             "PYTHONDONTWRITEBYTECODE":"1"}
+        proc=subprocess.run([
+            sys.executable,"-c",program,str(self.core),
+            str(self.research),str(self.schedule),expected(1)],
+            env=env,text=True,capture_output=True,timeout=15,check=False)
+        self.assertEqual(proc.returncode,17)
+        evidence=self.audit()
+        self.assertEqual(evidence["registeredExpectedSlots"],1)
+        self.assertEqual(evidence["missingBeforeCoreAttempt"],1)
+        self.assertEqual(evidence["startedInWindow"],0)
+        self.assertFalse(evidence["completeRealDenominator"])
+
+    def test_future_slot_claimed_by_earlier_core_attempt_is_anomaly(self):
+        self.plan(1,due=FUTURE)
+        self.case.record(1,when=DUE)
+        out=self.audit()
+        self.assertEqual(out["futureNotYetDue"],1)
+        self.assertEqual(out["startedInWindow"],0)
+        self.assertGreater(out["integrityBlockers"],0)
 
     def test_mode_path_schema_and_capacity_guards(self):
         with self.assertRaisesRegex(ValueError,"explicit_offline_schedule_mode"):
