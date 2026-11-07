@@ -33,7 +33,8 @@ from scripts import shark_signal_ingest_decision_link as link
 SCHEMA = "remura-track-b-future-original-decision-atomicity-v1"
 
 
-def record_new(db, *, insert_history, original_document, clock):
+def record_new(db, *, insert_history, original_document, clock,
+               original_retail_snapshot=None):
     """Guarantee all-or-none for a NEW pilot event on one SQLite connection.
 
     insert_history(db) must return the cursor for exactly ONE new
@@ -83,6 +84,15 @@ def record_new(db, *, insert_history, original_document, clock):
             clock=now)
         if paired.get("status")!="ORIGINAL_LOCAL_COT_PRICE_INGEST_LINKED":
             raise ValueError("original_ingest_decision_link_not_verified")
+        retail_attached=False
+        if original_retail_snapshot is not None:
+            from scripts import shark_retail_first_seen as retail
+            context=retail.attach_new(
+                db,history_id=hid,original_snapshot=original_retail_snapshot,
+                clock=now)
+            if context["status"]!="LOCAL_RETAIL_CONTEXT_BEFORE_DECISION":
+                raise ValueError("invalid_original_retail_context")
+            retail_attached=True
         db.commit()
         return {
             "schema":SCHEMA,
@@ -91,7 +101,10 @@ def record_new(db, *, insert_history, original_document, clock):
             "originalLocalCOTPriceIngestMatched":True,
             "wholeTransactionCommittedTogether":True,
             "noRetrospectiveAttach":True,
-            "retailFirstSeen":"UNKNOWN",
+            "retailFirstSeen":(
+                "LOCAL_PRIOR_CONTEXT_NOT_SIGNAL_INPUT" if retail_attached
+                else "UNKNOWN"),
+            "retailUsedByOriginalSqualincomeSignal":False,
             "cvdCoverage":"UNKNOWN",
             "brokerReceiptExternallyAuthenticated":False,
             "cotFirstSeenIndependentlyAuthenticated":False,
