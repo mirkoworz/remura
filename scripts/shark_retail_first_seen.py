@@ -276,6 +276,97 @@ def attach_new(db, *, history_id, original_snapshot, clock):
             "ordersEnabled":False,"statisticalEdgeEstablished":False}
 
 
+def attach_receipt_new(db, *, history_id, retail_receipt_id, clock):
+    """Pin EXISTING local receipt ID during the new Squalincome transaction.
+
+    Crucially this routine NEVER reloads current/latest.json, accepts a
+    retail snapshot or calls _identity(). The receipt ID must be handed to
+    the ORIGINAL observer before its decision. A source read after the
+    observation, mismatched market, out-of-window digest, or a newer
+    previously witnessed source is not eligible. This proves only that
+    local hash metadata was present before the decision, NOT the original
+    retail values nor their use in the Squalincome algorithm.
+
+    The parent coordinator must own fresh INSERT/BEGIN/ROLLBACK. A malicious
+    caller with SQLite write privileges can forge IDs/clocks; this is NOT
+    independently certified first-seen or immutable external proof.
+    """
+    if not isinstance(db,sqlite3.Connection) or not db.in_transaction:
+        raise ValueError("original_history_transaction_required")
+    if type(history_id) is not int or history_id<=0:
+        raise ValueError("new_history_id_required")
+    if type(retail_receipt_id) is not int or retail_receipt_id<=0:
+        raise ValueError("exact_positive_retail_receipt_id_required")
+    now=_utc(clock)
+    row=db.execute(
+        "SELECT symbol,observed_at FROM squalincome_history WHERE id=?",
+        (history_id,)
+    ).fetchone()
+    if row is None:
+        raise ValueError("new_history_absent")
+    symbol,stamp=row
+    observed=clocking._parse(stamp)
+    if (symbol not in PILOT
+            or observed<clocking._parse(study.START)
+            or not observed<=now<=observed+DECISION_GRACE):
+        raise ValueError("retail_not_recorded_at_original_decision")
+    original=db.execute(
+        f"SELECT observed_at_utc,linked_at_utc FROM {signal.TABLE} "
+        "WHERE history_id=?",(history_id,)
+    ).fetchone()
+    if (original is None or clocking._parse(original[0])!=observed
+            or not observed<=clocking._parse(original[1])<=now):
+        raise ValueError("original_cot_price_signal_proof_missing")
+    receipt=db.execute(
+        f"SELECT symbol,source_updated_at,original_read_at,recorded_at,"
+        f"numeric_sha256,algorithm FROM {TABLE} WHERE id=?",
+        (retail_receipt_id,)
+    ).fetchone()
+    if receipt is None:
+        raise ValueError("pinned_retail_receipt_absent")
+    source_symbol,source_stamp,read_stamp,recorded_stamp,digest,alg=receipt
+    source_time=clocking._parse(source_stamp)
+    read_time=clocking._parse(read_stamp)
+    recorded_time=clocking._parse(recorded_stamp)
+    if (source_symbol!=symbol or alg!=ALG
+            or type(digest) is not str or len(digest)!=64
+            or any(c not in "0123456789abcdef" for c in digest)
+            or not clocking._parse(study.START)<=source_time<=read_time<=recorded_time<=observed
+            or observed-source_time>MAX_AGE):
+        raise ValueError("pinned_retail_receipt_not_originally_available")
+    # Prevent cherry-picking an older value when a NEWER LOCAL first-seen
+    # receipt of the same symbol was already recorded before the decision.
+    # Future receipts arriving AFTER this observation have no authority to
+    # invalidate what was genuinely available at observation time.
+    newer=db.execute(
+        f"SELECT id,recorded_at FROM {TABLE} "
+        "WHERE symbol=? AND id>?",(symbol,retail_receipt_id)
+    ).fetchall()
+    if any(clocking._parse(t)<=observed for _,t in newer):
+        raise ValueError("pinned_receipt_superseded_before_original_decision")
+    if db.execute(f"SELECT 1 FROM {LINK} WHERE history_id=?",
+                  (history_id,)).fetchone():
+        raise ValueError("retail_context_cannot_be_rebound")
+    db.execute(
+        f"INSERT INTO {LINK}(history_id,retail_witness_id,symbol,"
+        "observed_at,linked_at,original_numeric_sha256) "
+        "VALUES(?,?,?,?,?,?)",
+        (history_id,retail_receipt_id,symbol,stamp,clocking._iso(now),digest)
+    )
+    return {
+        "status":"PINNED_LOCAL_RETAIL_RECEIPT_AVAILABLE_NOT_SIGNAL_INPUT",
+        "originalLocalReceiptIdMatched":True,
+        "retailSnapshotRefetched":False,
+        "retailValuesRehydrated":False,
+        "retailUsedByOriginalSqualincomeSignal":False,
+        "providerSignedFirstSeen":False,
+        "cvdEvidence":"UNKNOWN",
+        "ordersEnabled":False,
+        "statisticalEdgeEstablished":False,
+        "brokerCalls":0,
+    }
+
+
 def aggregate(db):
     if not isinstance(db,sqlite3.Connection):
         raise ValueError("sqlite_connection_required")

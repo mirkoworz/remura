@@ -34,7 +34,7 @@ SCHEMA = "remura-track-b-future-original-decision-atomicity-v1"
 
 
 def record_new(db, *, insert_history, original_document, clock,
-               original_retail_snapshot=None):
+               original_retail_snapshot=None, retail_receipt_id=None):
     """Guarantee all-or-none for a NEW pilot event on one SQLite connection.
 
     insert_history(db) must return the cursor for exactly ONE new
@@ -52,6 +52,11 @@ def record_new(db, *, insert_history, original_document, clock,
         raise ValueError("fresh_original_insert_and_ohlc_required")
     if type(clock) is not datetime:
         raise ValueError("explicit_genuine_utc_observation_clock_required")
+    if original_retail_snapshot is not None and retail_receipt_id is not None:
+        raise ValueError("retail_snapshot_and_pinned_receipt_are_exclusive")
+    if retail_receipt_id is not None and (
+            type(retail_receipt_id) is not int or retail_receipt_id<=0):
+        raise ValueError("exact_positive_retail_receipt_id_required")
     now=witness._clock(clock)
     if (protocol.protocol_sha256()!=protocol.FROZEN_PROTOCOL_SHA256
             or now < witness._parse(protocol.START)):
@@ -85,6 +90,7 @@ def record_new(db, *, insert_history, original_document, clock,
         if paired.get("status")!="ORIGINAL_LOCAL_COT_PRICE_INGEST_LINKED":
             raise ValueError("original_ingest_decision_link_not_verified")
         retail_attached=False
+        retail_by_receipt=False
         if original_retail_snapshot is not None:
             from scripts import shark_retail_first_seen as retail
             context=retail.attach_new(
@@ -93,6 +99,14 @@ def record_new(db, *, insert_history, original_document, clock,
             if context["status"]!="LOCAL_RETAIL_CONTEXT_BEFORE_DECISION":
                 raise ValueError("invalid_original_retail_context")
             retail_attached=True
+        if retail_receipt_id is not None:
+            from scripts import shark_retail_first_seen as retail
+            context=retail.attach_receipt_new(
+                db,history_id=hid,retail_receipt_id=retail_receipt_id,
+                clock=now)
+            if context["status"]!="PINNED_LOCAL_RETAIL_RECEIPT_AVAILABLE_NOT_SIGNAL_INPUT":
+                raise ValueError("pinned_retail_not_available_at_original_decision")
+            retail_by_receipt=True
         db.commit()
         return {
             "schema":SCHEMA,
@@ -102,8 +116,11 @@ def record_new(db, *, insert_history, original_document, clock,
             "wholeTransactionCommittedTogether":True,
             "noRetrospectiveAttach":True,
             "retailFirstSeen":(
-                "LOCAL_PRIOR_CONTEXT_NOT_SIGNAL_INPUT" if retail_attached
+                "PINNED_LOCAL_RECEIPT_NOT_SIGNAL_INPUT" if retail_by_receipt
+                else "LOCAL_PRIOR_CONTEXT_NOT_SIGNAL_INPUT" if retail_attached
                 else "UNKNOWN"),
+            "retailReceiptBoundWithoutSourceRefetch":retail_by_receipt,
+            "retailValuesRehydrated":False,
             "retailUsedByOriginalSqualincomeSignal":False,
             "cvdCoverage":"UNKNOWN",
             "brokerReceiptExternallyAuthenticated":False,

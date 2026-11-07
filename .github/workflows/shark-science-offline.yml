@@ -92,6 +92,7 @@ on:
       - 'tests/test_shark_original_decision_atomic_gate.py'
       - 'tests/test_shark_retail_first_seen.py'
       - 'tests/test_shark_retail_parent_receipt.py'
+      - 'tests/test_shark_retail_receipt_handoff.py'
       - 'tests/test_shark_price_only_universe.py'
       - 'tests/test_shark_price_only_compact.py'
       - 'tests/test_shark_prospective_coverage.py'
@@ -200,6 +201,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_shark_ctrader_ingest_handoff.py' -v
       - name: Test owned new-observation transaction atomicity, receipt clocks and full rollback
         run: python -m unittest discover -s tests -p 'test_shark_price_regime_atomic_gate.py' -v
+      - name: Test first-seen retail receipt ID exact as-of Squalincome decision without later JSON re-read
+        run: python -m unittest discover -s tests -p 'test_shark_retail_receipt_handoff.py' -v
       - name: Test private Myfxbook parent first read and atomic two-market receipt offline
         run: python -m unittest discover -s tests -p 'test_shark_retail_parent_receipt.py' -v
       - name: Test original Myfxbook retail first-seen and optional atomic context; CVD stays UNKNOWN
