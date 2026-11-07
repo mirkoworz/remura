@@ -52,6 +52,7 @@ class C2cTrueAtomicOriginalWitnessTests(unittest.TestCase):
         db = connect(self.path)
         collector.ensure_table(db)
         witness.ensure_schema(db)
+        bridge.ensure_schema(db,mode=bridge.MODE)
         db.close()
         self.requests=[]
 
@@ -89,10 +90,21 @@ class C2cTrueAtomicOriginalWitnessTests(unittest.TestCase):
         self.assertEqual(clock.call_count,6)
         self.assertEqual(self.count("cot_reports"),28)
         self.assertEqual(self.count(witness.TABLE),28)
+        self.assertEqual(self.count(bridge.TABLE),2)
         self.assertEqual(self.count("cot_first_seen"),28)
         db=connect(self.path)
         try:
-            for kind, expected in (("tff",CLOCKS[2]),("disagg",CLOCKS[5])):
+            for kind, started, received, expected in (
+                    ("tff",CLOCKS[0],CLOCKS[1],CLOCKS[2]),
+                    ("disagg",CLOCKS[3],CLOCKS[4],CLOCKS[5])):
+                metadata=db.execute(
+                    f"SELECT request_started_at,response_received_at,witnessed_at,"
+                    f"normalized_row_count,normalized_sha256 FROM {bridge.TABLE} "
+                    "WHERE dataset=?",(kind,)).fetchone()
+                self.assertEqual(tuple(witness._parse(i) for i in metadata[:3]),
+                                 (started,received,expected))
+                self.assertGreater(metadata[3],0)
+                self.assertEqual(len(metadata[4]),64)
                 seen=db.execute(
                     f"SELECT DISTINCT witnessed_at FROM {witness.TABLE} "
                     "WHERE dataset=?", (kind,)).fetchall()
@@ -117,6 +129,7 @@ class C2cTrueAtomicOriginalWitnessTests(unittest.TestCase):
         self.assertEqual(self.requests,["tff","disagg"])
         self.assertEqual(self.count("cot_reports"),28)
         self.assertEqual(self.count(witness.TABLE),0)
+        self.assertEqual(self.count(bridge.TABLE),0)
 
     def test_missing_explicit_b_migration_fails_both_datasets(self):
         db=connect(self.path)
@@ -128,6 +141,7 @@ class C2cTrueAtomicOriginalWitnessTests(unittest.TestCase):
         self.assertEqual(out["errors"],{"tff":"unavailable","disagg":"unavailable"})
         self.assertEqual(self.count("cot_reports"),0)
         self.assertEqual(self.count("cot_first_seen"),0)
+        self.assertEqual(self.count(bridge.TABLE),0)
 
     def test_b_failure_on_second_dataset_rolls_back_only_second_source(self):
         db=connect(self.path)
@@ -144,6 +158,7 @@ class C2cTrueAtomicOriginalWitnessTests(unittest.TestCase):
         self.assertEqual(self.count("cot_reports"),22)
         self.assertEqual(self.count(witness.TABLE),22)
         self.assertEqual(self.count("cot_first_seen"),22)
+        self.assertEqual(self.count(bridge.TABLE),1)
         self.assertEqual(self.count("cot_reports","WHERE dataset='disagg'"),0)
 
     def test_changed_sqlite_after_upsert_rolls_back_source_and_proof(self):
@@ -161,6 +176,7 @@ class C2cTrueAtomicOriginalWitnessTests(unittest.TestCase):
         self.assertEqual(out["saved"],{"disagg":6})
         self.assertEqual(self.count("cot_reports","WHERE dataset='tff'"),0)
         self.assertEqual(self.count(witness.TABLE,"WHERE dataset='tff'"),0)
+        self.assertEqual(self.count(bridge.TABLE),1)
 
     def test_future_local_attestation_blocks_tff_transaction(self):
         clocks=[CLOCKS[0],CLOCKS[1],NOW+dt.timedelta(seconds=60),*CLOCKS[3:]]
@@ -169,6 +185,7 @@ class C2cTrueAtomicOriginalWitnessTests(unittest.TestCase):
         self.assertEqual(out["errors"],{"tff":"unavailable"})
         self.assertEqual(self.count("cot_reports","WHERE dataset='tff'"),0)
         self.assertEqual(self.count(witness.TABLE,"WHERE dataset='tff'"),0)
+        self.assertEqual(self.count(bridge.TABLE),1)
 
     def test_revised_value_after_original_proof_cannot_requalify_asof(self):
         with patch.object(collector,"utcnow",side_effect=CLOCKS):
@@ -186,6 +203,41 @@ class C2cTrueAtomicOriginalWitnessTests(unittest.TestCase):
                 review["blockerCounts"]["source_values_not_yet_witnessed"],0)
             self.assertEqual(self.count(witness.TABLE),28)
         finally:db.close()
+
+    def test_append_only_http_clock_receipt_and_b_witness(self):
+        with patch.object(collector,"utcnow",side_effect=CLOCKS):
+            out=self.run_collector()
+        self.assertFalse(out["errors"])
+        db=connect(self.path)
+        try:
+            with self.assertRaisesRegex(sqlite3.IntegrityError,"append_only"):
+                with db:
+                    db.execute(f"DELETE FROM {bridge.TABLE}")
+            with self.assertRaisesRegex(sqlite3.IntegrityError,"append_only"):
+                with db:
+                    db.execute(f"UPDATE {bridge.TABLE} SET witnessed_at='1999-01-01'")
+            self.assertEqual(self.count(bridge.TABLE),2)
+        finally:db.close()
+
+    def test_missing_clock_ledger_schema_blocks_before_cot_commit(self):
+        db=connect(self.path)
+        with db:
+            db.execute(f"DROP TABLE {bridge.TABLE}")
+        db.close()
+        with patch.object(collector,"utcnow",side_effect=CLOCKS):
+            out=self.run_collector()
+        self.assertEqual(out["errors"],{"tff":"unavailable","disagg":"unavailable"})
+        self.assertEqual(self.count("cot_reports"),0)
+        self.assertEqual(self.count(witness.TABLE),0)
+
+    def test_full_http_receipt_cap_rolls_back_source_and_b_proof(self):
+        with patch.object(collector,"utcnow",side_effect=CLOCKS), (
+                patch.object(bridge,"MAX_ROWS",0)):
+            out=self.run_collector()
+        self.assertEqual(out["errors"],{"tff":"unavailable","disagg":"unavailable"})
+        self.assertEqual(self.count("cot_reports"),0)
+        self.assertEqual(self.count(bridge.TABLE),0)
+        self.assertEqual(self.count(witness.TABLE),0)
 
     def test_explicit_offline_only_never_call_from_live_file(self):
         with self.assertRaisesRegex(ValueError,"explicit_offline_rehearsal_mode"):
