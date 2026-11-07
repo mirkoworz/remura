@@ -11,6 +11,8 @@ import datetime as dt
 import json
 import math
 import sqlite3
+import time
+from contextlib import contextmanager
 
 from price_feed import MARKETS, parse_time, utcnow
 from price_store import connect, latest, audit_market
@@ -303,7 +305,43 @@ def scan_once_with_h1_frames(db_path,now=None,*,targets=None):
     return _scan_once(db_path,now,targets=targets,capture_frames=True)
 
 
-def _scan_once(db_path,now=None,*,targets=None,capture_frames=False):
+def scan_once_with_price_only_research(db_path, now=None, *, targets=None):
+    """FUTURE-ONLY explicit opt-in; never called by LIVE v1.62.
+
+    No import, table or extra SQL on the default scan_once code path.
+    App integration would require an audited feature flag set to OFF by default.
+    The import fallback is necessary because private_server runs from scripts/.
+    """
+    import sys
+    from pathlib import Path
+    root = str(Path(__file__).resolve().parents[1])
+    if root not in sys.path:
+        sys.path.insert(0, root)
+    from scripts import shark_price_only_universe as research
+    return _scan_once(db_path, now, targets=targets,
+                      price_only_research=research)
+
+
+def scan_once_with_compact_price_only_research(db_path, now=None, *, targets=None):
+    """Future-only, explicit compact research mode; LIVE default unchanged.
+
+    Complete 34-market scan becomes ONE SHA-verified zlib SQLite record,
+    distinct from targeted scans. No legacy per-symbol research table.
+    """
+    import sys
+    from pathlib import Path
+    root = str(Path(__file__).resolve().parents[1])
+    if root not in sys.path:
+        sys.path.insert(0, root)
+    from scripts import shark_price_only_universe as preparer
+    from scripts import shark_price_only_compact as compact
+    return _scan_once(db_path, now, targets=targets,
+                      compact_research=compact, compact_preparer=preparer)
+
+
+def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
+               price_only_research=None,compact_research=None,
+               compact_preparer=None):
     """Observe all markets on periodic scans, or a small verified fresh batch.
 
     Targeted scans update existing observation/history/event tables, but NEVER
@@ -322,38 +360,159 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False):
             raise ValueError("Invalid Squalincome fresh-batch symbols")
         symbols=tuple(sorted(set(targets)))
     # Safe to run even when the upstream collector is not ready: no invented report.
-    db=connect(db_path)
+    # A busy writer can also block price_store.connect() while it sets WAL
+    # and creates the two base tables. Apply the bounded timeout at connect,
+    # not only afterwards. Legacy scan_once still uses its original 30s.
+    db=(connect(db_path,timeout=5.0)
+        if compact_research is not None else connect(db_path))
     ensure_tables(db)
     from cot_monitor import ensure_table as ensure_cot_table
     ensure_cot_table(db)
+    if price_only_research is not None:
+        # Schema + new writes are enabled ONLY by the explicit research entry
+        # point. No migration, import or new request on legacy scan_once.
+        price_only_research.ensure_schema(db)
+    if compact_research is not None:
+        if price_only_research is not None or compact_preparer is None:
+            raise ValueError("exclusive_research_store_required")
+        compact_research.ensure_schema(db)
     examined=baselines=events=updates=0
     exclusions={}
     frames_by_symbol={}
     price_quality_by_symbol={}
+    research_totals={}
+    compact_rows=[]
+    compact_snapshot={}
+    scan_savepoint_counter=0
+    compact_write_lock_start=None
+    compact_read_snapshot_ms=None
+
+    @contextmanager
+    def scan_write():
+        """Preserve legacy commits; compact mode keeps the outer transaction.
+
+        Per-symbol SAVEPOINT prevents an error inside a symbol's multi-write
+        sequence from leaking partial changes into the final atomic commit.
+        """
+        nonlocal scan_savepoint_counter
+        if compact_research is None:
+            with db:
+                yield
+            return
+        scan_savepoint_counter+=1
+        name=f"remura_scan_{scan_savepoint_counter}"
+        db.execute(f"SAVEPOINT {name}")
+        try:
+            yield
+        except BaseException:
+            db.execute(f"ROLLBACK TO SAVEPOINT {name}")
+            db.execute(f"RELEASE SAVEPOINT {name}")
+            raise
+        else:
+            db.execute(f"RELEASE SAVEPOINT {name}")
+
+    def read_original_price(symbol):
+        # Exactly the original v1.62 price operations, with no broker GETs.
+        document=latest(db,symbol)
+        frames_by_symbol[symbol]=safe_frame_diagnostics(document,now)
+        # Same immutable loaded document and scan UTC as frame metadata.
+        # Values are allowlisted; never store broker IDs, OHLC or secrets.
+        quality=audit_market(document,now)
+        price_quality_by_symbol[symbol]={
+            "integrity":quality.get("integrity"),
+            "freshness":quality.get("freshness"),
+            "ready":quality.get("ready"),
+            "checkedAt":now.isoformat()
+        }
+        price=price_view(document,now,quality=quality) if document else None
+        return document,quality,price
+
     try:
-        for symbol in symbols:
+        if compact_research is not None:
+            # Phase 1: a single repeatable SQLite READ snapshot. All source
+            # documents and COT are classified with exactly the same version
+            # and original UTC observation clock, without writer reservation.
+            # The prepared cache stores only small classifications and
+            # evidence rows, never 34 copies of raw OHLC documents.
+            read_started=time.perf_counter()
+            source_version=db.execute("PRAGMA data_version").fetchone()[0]
+            db.execute("BEGIN")
             try:
-                series=cot_series(db,symbol)
-                cot=cot_view(series,symbol,now)
-                document=latest(db,symbol)
-                frames_by_symbol[symbol]=safe_frame_diagnostics(document,now)
-                # Same immutable loaded document and scan UTC as frame metadata.
-                # Values are allowlisted; never store broker IDs, OHLC or secrets.
-                quality=audit_market(document,now)
-                price_quality_by_symbol[symbol]={
-                    "integrity":quality.get("integrity"),
-                    "freshness":quality.get("freshness"),
-                    "ready":quality.get("ready"),
-                    "checkedAt":now.isoformat()
-                }
-                price=price_view(document,now,quality=quality) if document else None
-                current=classify(cot,price)
+                for scan_symbol in symbols:
+                    scanned_row=None
+                    try:
+                        document,quality,price=read_original_price(scan_symbol)
+                        reason=("price_present" if price is not None else
+                                price_exclusion(document,now,quality=quality))
+                        scanned_row,_=compact_preparer.prepare(
+                            db,symbol=scan_symbol,scan_at=now.isoformat(),
+                            observed_document=document,quality=quality,
+                            price_result=price,price_reason=reason)
+                        series=cot_series(db,scan_symbol)
+                        cot=cot_view(series,scan_symbol,now)
+                        current=classify(cot,price)
+                        # Never retain OHLC payloads for all 34 markets:
+                        # only prevalidated research rows, COT and derived
+                        # classifications/missing-price cause are frozen.
+                        compact_snapshot[scan_symbol]=(
+                            scanned_row,series,cot,price,current,reason)
+                    except (ValueError,TypeError,KeyError,OverflowError):
+                        # A price failure is an explicit unknown. A COT
+                        # failure after price preparation keeps its valid
+                        # price-only evidence without a COT prefilter.
+                        compact_snapshot[scan_symbol]=(scanned_row,)
+            finally:
+                db.rollback()  # end READ only; no writes have been issued
+            compact_read_snapshot_ms=round(
+                (time.perf_counter()-read_started)*1000,1)
+            # Phase 2: commit all original Squalincome changes and the batch
+            # atomically, holding the SQLite writer reservation ONLY here.
+            # Any external committed write after the read snapshot invalidates
+            # every prepared provenance claim, including already-seen COT.
+            db.execute("BEGIN IMMEDIATE")
+            compact_write_lock_start=time.perf_counter()
+            if db.execute("PRAGMA data_version").fetchone()[0]!=source_version:
+                raise sqlite3.OperationalError(
+                    "research_source_changed_before_atomic_commit")
+        for symbol in symbols:
+            compact_row=None
+            try:
+                if compact_research is not None:
+                    frozen=compact_snapshot[symbol]
+                    compact_row=frozen[0]
+                    if len(frozen)==1:
+                        raise ValueError("research_source_unverifiable")
+                    _,series,cot,price,current,reason=frozen
+                if price_only_research is not None:
+                    # The PRICE-ONLY denominator is captured BEFORE ANY
+                    # per-symbol COT access. An absent/broken COT must never
+                    # preselect the population of price candidates.
+                    document,quality,price=read_original_price(symbol)
+                    reason=("price_present" if price is not None else
+                            price_exclusion(document,now,quality=quality))
+                    with db:
+                        db.execute("BEGIN")
+                        research_result=price_only_research.capture_optional(
+                            db,symbol=symbol,scan_at=now.isoformat(),
+                            observed_document=document,quality=quality,
+                            price_result=price,price_reason=reason)
+                    result_status=research_result["status"]
+                    research_totals[result_status]=research_totals.get(
+                        result_status,0)+1
+                if compact_research is None:
+                    series=cot_series(db,symbol)
+                    cot=cot_view(series,symbol,now)
+                    if price_only_research is None:
+                        document,quality,price=read_original_price(symbol)
+                    current=classify(cot,price)
                 if current is None:
                     reasons=[]
                     if cot is None:
                         reasons.append(cot_exclusion(series,symbol,now))
                     if price is None:
-                        reasons.append(price_exclusion(document,now,quality=quality))
+                        reasons.append(
+                            reason if compact_research is not None else
+                            price_exclusion(document,now,quality=quality))
                     exclusions[symbol]=reasons or ["no_qualifying_setup"]
                     continue
                 examined+=1
@@ -376,7 +535,7 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False):
                         prior=None
                 change=transition(prior,current)
                 stamp=now.isoformat()
-                with db:
+                with scan_write():
                     if change:
                         cur=db.execute("INSERT OR IGNORE INTO squalincome_events"
                            "(symbol,event_type,side,report_date,price_time,observed_at,detail) VALUES(?,?,?,?,?,?,?)",
@@ -413,10 +572,26 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False):
                         "observed_at=excluded.observed_at",
                         (symbol,current["state"],current["side"],current["report_date"],current["price_time"],
                          current["price_state"],stamp))
-            except (ValueError,TypeError,KeyError,sqlite3.Error,OverflowError):
+            except sqlite3.Error:
+                # A broken research evidence table is an operational database
+                # failure, NOT an innocent N/D. Never mask it when opt-in.
+                if price_only_research is not None or compact_research is not None:
+                    raise
+                exclusions[symbol]=["scan_error"]
+                continue
+            except (ValueError,TypeError,KeyError,OverflowError):
                 # Never expose provider exceptions, prices or credentials.
                 exclusions[symbol]=["scan_error"]
                 continue
+            finally:
+                if compact_research is not None:
+                    # Even when price processing or COT fails for a symbol,
+                    # preserve a marked UNKNOWN cell in the full denominator.
+                    # Missing means observation failed NOW, never a backfill.
+                    if compact_row is None:
+                        compact_row=compact_research.missing_row(
+                            symbol=symbol,scan_at=now.isoformat())
+                    compact_rows.append(compact_row)
         # Keep counters internally consistent even if a single market errors.
         examined=len(symbols)-len(exclusions)
         counts={}
@@ -443,7 +618,7 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False):
                             for symbol in symbols],
                  "newBaselines":baselines,"updatedObservations":updates,
                  "newEvents":events,"outcome":outcome}
-        with db:
+        with scan_write():
             db.execute("DELETE FROM squalincome_events WHERE observed_at < ?",
                 ((now-dt.timedelta(days=EVENT_KEEP_DAYS)).isoformat(),))
             db.execute("DELETE FROM squalincome_history WHERE observed_at < ?",
@@ -456,6 +631,35 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False):
                     " scanned_at=excluded.scanned_at,summary=excluded.summary",
                     (now.isoformat(),json.dumps(summary,sort_keys=True)))
         result={"examined":examined,"baselines":baselines,"newEvents":events}
+        if compact_research is not None:
+            if len(compact_rows)!=len(symbols):
+                raise ValueError("incomplete_price_only_compact_scan")
+            # Within the very same BEGIN IMMEDIATE transaction as all prior
+            # Squalincome writes. The next db.commit() is the only commit.
+            compressed=compact_research.seal(
+                db,compact_rows,full=(targets is None))
+            result["priceOnlyResearch"]={
+                "marketsAttempted":len(symbols),
+                "batchStatus":compressed["status"],
+                "storedMarkets":compressed["storedMarkets"],
+                "eligiblePriceCandidates":compressed.get("eligiblePriceCandidates",0),
+                "unknownObservations":compressed.get("unverifiableMarketObservations",0),
+                "fullMarketDenominator":targets is None,
+                "cotFilterAppliedToResearch":False,
+                "extraBrokerRequests":0,
+                "ordersEnabled":False,
+                "alertsEnabled":False,
+            }
+        if price_only_research is not None:
+            # Only aggregate allowlisted statuses; no quotes or account names.
+            result["priceOnlyResearch"]={
+                "marketsAttempted":len(symbols),
+                "byState":dict(sorted(research_totals.items())),
+                "cotFilterAppliedToResearch":False,
+                "extraBrokerRequests":0,
+                "ordersEnabled":False,
+                "alertsEnabled":False,
+            }
         if capture_frames and targets is not None:
             # Internal opt-in: expose only the H1 frame metadata that this
             # very same scan read, at the very same UTC instant. Never export
@@ -463,7 +667,21 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False):
             result["h1Frames"]={
                 symbol:{"H1":frames_by_symbol.get(symbol,{}).get("H1")}
                 for symbol in symbols}
+        if compact_research is not None:
+            db.commit()
+            # Used to assess Oracle ingest lock contention BEFORE deploy.
+            # This is elapsed time holding SQLite's writer reservation;
+            # does not measure network/latency/billing.
+            result["priceOnlyResearch"]["sqliteWriterLockMs"]=round(
+                (time.perf_counter()-compact_write_lock_start)*1000,1)
+            result["priceOnlyResearch"]["readOnlySnapshotMs"]=(
+                compact_read_snapshot_ms)
+            result["priceOnlyResearch"]["snapshotVersionValidated"]=True
         return result
+    except BaseException:
+        if compact_research is not None:
+            db.rollback()
+        raise
     finally:db.close()
 
 
