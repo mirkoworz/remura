@@ -182,9 +182,19 @@ def audit(core, research, schedule, *, as_of, mode=None):
                 continue
             if scheduled>now:
                 future+=1
+                # An attempt claiming to belong to an as-yet-future
+                # expected slot is an integrity anomaly, not a success.
+                if ident in indexed:
+                    invalid+=1
                 continue
             if now<scheduled+GRACE:
                 within+=1
+                # Grace window is not a missing count, but future-dated
+                # or pre-schedule attempts must never be accepted silently.
+                if ident in indexed:
+                    actual=shadow._utc(indexed[ident][3])
+                    if not scheduled<=actual<=now:
+                        invalid+=1
                 continue
             due+=1
             attempt=indexed.get(ident)
