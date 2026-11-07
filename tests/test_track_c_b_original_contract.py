@@ -107,7 +107,10 @@ class OriginalBContractTests(unittest.TestCase):
         self.db.commit()
         with self.assertRaisesRegex(ValueError, "numeric_features_explicit_migration"):
             self.invoke()
-        self.assertEqual(self.counts()[:1], [0])
+        # Numeric table was deliberately dropped: do not ask counts() to
+        # query the missing table. Assert no retail receipt or history write.
+        self.assertEqual(self.db.execute(
+            f"SELECT count(*) FROM {retail.TABLE}").fetchone()[0], 0)
         self.assertEqual(self.db.execute(
             "SELECT count(*) FROM squalincome_history").fetchone()[0], 0)
 
