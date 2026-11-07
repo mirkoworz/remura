@@ -98,7 +98,9 @@ class CTraderHandoffTests(unittest.TestCase):
 
     def test_changed_child_bar_or_broker_at_ingest_is_rejected(self):
         altered=copy.deepcopy(self.child)
-        altered["markets"]["EURUSD"]["timeframes"]["M15"][-4]["c"]+=.0001
+        # A valid but different close must pass OHLC validation first,
+        # then fail the *same-source* cross-stage equality test.
+        altered["markets"]["EURUSD"]["timeframes"]["M15"][-4]["c"]+=.00001
         with self.assertRaisesRegex(ValueError,
                                      "child_to_merged_last33_candles_changed"):
             stage(altered,self.stored)
