@@ -100,6 +100,15 @@ def _source(core, symbol, source, observed_at):
                     any(type(frames.get(k)) is not list or
                         not frames.get(k) for k in ("M15","H1","H4"))):
                 raise ValueError("original_ctrader_frames_missing")
+            from price_feed import parse_time
+            last=parse_time(row[1])
+            closed_at=last+timedelta(minutes=15)
+            # A later post-commit reader must never turn an old last
+            # close into a fresh FIRST-SEEN price observation.
+            if (not timedelta(0)<=observed_at-closed_at
+                    <=timedelta(minutes=3)
+                    or frames["M15"][-1].get("t")!=row[1]):
+                raise ValueError("stale_or_future_original_price_snapshot")
             payload=["ctrader",symbol,row[0],row[1],obj]
         canonical=json.dumps(payload,sort_keys=True,separators=(",",":"),
                              ensure_ascii=True,allow_nan=False)
