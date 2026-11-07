@@ -116,10 +116,9 @@ class ResearchFailureIsolationRehearsal(unittest.TestCase):
         box=safe.SyntheticResearchMailbox(mode=safe.MODE,enabled=True)
         self.assertEqual(box.offer(item(),now=STAMP),
                          "SYNTHETIC_METADATA_STAGED_ONLY")
-        with self.assertRaisesRegex(AssertionError,"must_not_run_inline"):
-            # offer() never runs the worker; this callable is explicitly
-            # called in this guard to ensure it is not scheduled by offer().
-            raise AssertionError("must_not_run_inline")
+        # No callback was passed to offer(): the synchronous core
+        # path cannot run a research worker and has no hidden scheduling.
+        self.assertEqual(box.summary()["syntheticCompleted"],0)
         observed=[]
         def worker(meta):
             observed.append(meta)
