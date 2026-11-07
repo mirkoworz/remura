@@ -58,6 +58,30 @@ def ensure_schema(db):
             BEGIN SELECT RAISE(ABORT,'append_only'); END""")
 
 
+def require_schema(db):
+    """Read-only opt-in preflight BEFORE starting a child collector process.
+
+    Never create a table, run a migration, call broker or accept an absent
+    append-only trigger. This is LOCAL schema readiness, not an OCI audit.
+    """
+    if not isinstance(db,sqlite3.Connection) or db.in_transaction:
+        raise ValueError("research_schema_preflight_requires_clean_connection")
+    names={name:typ for name,typ in db.execute(
+        "SELECT name,type FROM sqlite_master "
+        "WHERE name IN (?,?,?)",
+        (TABLE,"research_ingest_first_no_update","research_ingest_first_no_delete")
+    )}
+    if (names.get(TABLE)!="table"
+            or names.get("research_ingest_first_no_update")!="trigger"
+            or names.get("research_ingest_first_no_delete")!="trigger"):
+        raise ValueError("research_append_only_migration_not_authorized_or_missing")
+    columns={row[1] for row in db.execute(f"PRAGMA table_info({TABLE})")}
+    if not {"symbol","parent_read_at_utc","child_document_sha256",
+            "merged_document_sha256","recorded_at_utc"} <= columns:
+        raise ValueError("research_ingest_evidence_schema_incomplete")
+    return True
+
+
 def _utc_clock(value):
     if type(value) is not datetime:
         raise ValueError("explicit_utc_instant_required")

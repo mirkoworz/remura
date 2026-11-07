@@ -588,15 +588,39 @@ def collector_command(symbols, days, output):
     return args
 
 
-def collect_once(db_path, symbols, days=2, runner=subprocess.run, now=None, source="primary"):
+def collect_once(db_path, symbols, days=2, runner=subprocess.run, now=None,
+                 source="primary", *, research_ingest_first_seen=False):
     """Isolated child process: Twisted reactor and cTrader TCP live outside HTTP server.
 
     No secrets in args; all cTrader credentials are inherited via environment.
     No file is written under the public asset allowlist.
+
+    Future Track B explicit research gate, OFF by default and NOT wired to
+    collector_loop or environment. Only primary EURUSD/XAUUSD experiments
+    with pre-installed append-only schema can pass the original parent's
+    actual child-file READ clock to the same price_store.ingest transaction.
+    That is NOT a broker-signed response timestamp.
     """
     now=now or utcnow()
     if source not in ("primary","backup"):
         raise ValueError("Unexpected cTrader source")
+    if type(research_ingest_first_seen) is not bool:
+        raise ValueError("research_first_seen_explicit_boolean_required")
+    if research_ingest_first_seen:
+        # Absolutely no auto-schema creation, extra network request, backup
+        # credential use or implicit full-universe research capture.
+        if (source != "primary" or type(symbols) not in (tuple,list)
+                or not 1 <= len(symbols) <= 2
+                or any(type(s) is not str or s not in ("EURUSD","XAUUSD")
+                       for s in symbols)
+                or len(set(symbols)) != len(symbols)):
+            raise ValueError("research_first_seen_primary_two_market_pilot_only")
+        from scripts import shark_ingest_first_seen as research_first_seen
+        research_db=connect(db_path)
+        try:
+            research_first_seen.require_schema(research_db)
+        finally:
+            research_db.close()
     secondary=backup_ctrader_environment(db_path) if source=="backup" else None
     if source=="backup" and secondary is None:
         return {"saved":{},"errors":{"backup":"not_configured"}}
@@ -642,14 +666,27 @@ def collect_once(db_path, symbols, days=2, runner=subprocess.run, now=None, sour
             raise RuntimeError("Collettore senza risposta valida da cTrader.")
         if temp_path.stat().st_size>15_000_000:
             raise RuntimeError("Risposta del collettore troppo grande.")
-        payload=json.loads(temp_path.read_text("utf-8"))
+        # Existing private one-time JSON read; NO extra broker GET or
+        # repeat file read. A separate clock is acquired immediately AFTER
+        # successfully reading bytes, BEFORE parsing or rewriting any market.
+        raw_payload=temp_path.read_text("utf-8")
+        parent_json_read_at=utcnow() if research_ingest_first_seen else None
+        payload=json.loads(raw_payload)
         if source=="backup" and isinstance(payload.get("markets"),dict):
             for market in payload["markets"].values():
                 if isinstance(market,dict) and isinstance(market.get("providerSymbol"),str):
                     market["providerSymbol"]="BACKUP · "+market["providerSymbol"]
         db=connect(db_path)
         try:
-            report=ingest(db,payload,now=utcnow())
+            if research_ingest_first_seen:
+                # Same received JSON, explicit read instant, same original
+                # market UPSERT transaction. Missing schema/corrupt payload
+                # is a hard error, never a fabricated scientific witness.
+                report=ingest(
+                    db,payload,now=utcnow(),
+                    research_parent_read_at=parent_json_read_at)
+            else:
+                report=ingest(db,payload,now=utcnow())
             count=len(report["saved"])
             errors=len(report["errors"])+len(payload.get("errors",{}))
             reason=safe_ctrader_reason(payload,getattr(process,"returncode",0))
