@@ -95,6 +95,8 @@ on:
       - 'tests/test_track_c_c3b_postcommit_handoff.py'
       - 'scripts/track_c_c3bc_attempt_denominator.py'
       - 'tests/test_track_c_c3bc_attempt_denominator.py'
+      - 'scripts/track_c_c3bc_expected_slots.py'
+      - 'tests/test_track_c_c3bc_expected_slots.py'
       - 'scripts/resource_monitor.py'
       - 'resource-health.js'
       - 'resource-health.css'
@@ -241,6 +243,8 @@ jobs:
       - name: Test v1.64 exact 15-file SHA state reconciliation, offline
         run: python -m unittest discover -s tests -p 'test_reconcile_v164.py' -v
       - run: python -m unittest discover -s tests -p 'test_signals_monitor.py' -v
+      - name: Track C3b-c - preregister future synthetic scan slots and expose pre-attempt crashes
+        run: python -m unittest discover -s tests -p 'test_track_c_c3bc_expected_slots.py' -v
       - name: Track C3b-c - core transaction attempt denominator and missed research deliveries (synthetic)
         run: python -m unittest discover -s tests -p 'test_track_c_c3bc_attempt_denominator.py' -v
       - name: Track C3b - verify postcommit COT and cTrader source across shadow WAL (synthetic)
