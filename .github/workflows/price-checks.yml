@@ -84,6 +84,8 @@ on:
       - 'tests/test_track_c_cot_fetch_seam.py'
       - 'scripts/track_c_cot_atomic_b_witness.py'
       - 'tests/test_track_c_cot_atomic_b_witness.py'
+      - 'scripts/track_c_cross_process_asof_audit.py'
+      - 'tests/test_track_c_cross_process_asof_audit.py'
       - 'scripts/resource_monitor.py'
       - 'resource-health.js'
       - 'resource-health.css'
@@ -253,6 +255,11 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}/track-b-pinned:${{ github.workspace }}
         run: python -m unittest discover -s tests -p 'test_track_c_cot_atomic_b_witness.py' -v
+      - name: Track C only - audit COT HTTP + original B cTrader retail Squalincome for both markets (synthetic)
+        if: github.event_name == 'pull_request' && github.head_ref == 'research/track-c-beta-prospective-20261107'
+        env:
+          PYTHONPATH: ${{ github.workspace }}/track-b-pinned:${{ github.workspace }}
+        run: python -m unittest discover -s tests -p 'test_track_c_cross_process_asof_audit.py' -v
       - name: Track C only - exercise original Track B retail/COT/price/decision (synthetic)
         if: github.event_name == 'pull_request' && github.head_ref == 'research/track-c-beta-prospective-20261107'
         env:
