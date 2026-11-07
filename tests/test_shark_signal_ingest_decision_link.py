@@ -103,11 +103,14 @@ class DecisionSourceLinkTests(unittest.TestCase):
         self.assertNotIn("2026-11-09",public)
         self.assertNotIn("1.01",public)
 
-    def test_missing_COT_first_seen_does_not_fabricate_valid_link(self):
-        self.db.execute(
-            f"DELETE FROM {cot_witness.TABLE}"
-        )  # immutable trigger blocks deletion: first assert protection
-        self.db.rollback()
+    def test_cot_witness_append_only_cannot_be_erased_to_rewrite_history(self):
+        with self.assertRaisesRegex(sqlite3.IntegrityError,"append_only"):
+            with self.db:
+                self.db.execute(f"DELETE FROM {cot_witness.TABLE}")
+        self.assertGreater(self.db.execute(
+            f"SELECT count(*) FROM {cot_witness.TABLE}"
+        ).fetchone()[0],0)
+        self.assertEqual(link.aggregate(self.db)["locallyJoined"],0)
 
     def test_missing_cot_bundle_proof_causes_full_history_rollback(self):
         # New decision with no matching cot link, price can still be real.
@@ -162,13 +165,24 @@ class DecisionSourceLinkTests(unittest.TestCase):
             b=bundle.record(self.db,history_id=hid,
                             observed_document=self.doc,clock=NOW)
         self.assertEqual(b["state"],"BOTH_LOCAL_PROOFS_PRESENT")
+        # The real schema refuses mutation; first exercise that gate.
+        with self.assertRaisesRegex(sqlite3.IntegrityError,"append_only"):
+            with self.db:
+                self.db.execute(
+                    f"UPDATE {cot_proof.TABLE} SET evidence_digest=?",
+                    ("a"*64,)
+                )
+        # Simulate a PRIVILEGED local SQLite file tamper, ONLY in sandbox:
+        # append-only triggers are not protection against a DB owner who
+        # deliberately drops them. Our digest cross-check must still fail.
+        self.db.execute("DROP TRIGGER research_squalincome_links_no_update")
         self.db.execute(
-            f"UPDATE {cot_proof.TABLE} SET evidence_digest=?",
-            ("a"*64,)
-        )
-        with self.db:
-            with self.assertRaisesRegex(ValueError,
-                                        "cot_proof_or_original_decision_mismatch"):
+            f"UPDATE {cot_proof.TABLE} SET evidence_digest=?",("a"*64,))
+        self.db.commit()
+        with self.assertRaisesRegex(ValueError,
+                                    "cot_proof_or_original_decision_mismatch"):
+            with self.db:
+                self.db.execute("BEGIN")
                 link.capture(self.db,history_id=hid,
                              original_document=self.doc,clock=NOW)
         self.assertEqual(link.aggregate(self.db)["locallyJoined"],0)
