@@ -124,9 +124,10 @@ class ResearchIngestFirstSeenTests(unittest.TestCase):
         original=record(self.db,self.child)
         self.assertEqual(self.total(),1)
         baseline=latest(self.db,"EURUSD")
-        again=record(self.db,self.child)
-        self.assertNotIn("EURUSD",again["saved"])
-        self.assertIn("EURUSD",again["errors"])
+        # A genuine SQLite constraint is an operational failure and MUST
+        # propagate rather than become an ordinary invalid market result.
+        with self.assertRaises(sqlite3.IntegrityError):
+            record(self.db,self.child)
         self.assertEqual(self.total(),1)
         self.assertEqual(latest(self.db,"EURUSD"),baseline)
 
@@ -153,9 +154,10 @@ class ResearchIngestFirstSeenTests(unittest.TestCase):
         self.db.commit()
         altered=copy.deepcopy(self.child)
         altered["markets"]["EURUSD"]["timeframes"]["M15"][-3]["c"]+=.00001
-        failed=record(self.db,altered,received=PARENT_READ+timedelta(seconds=2),
-                      now=INGEST_DONE+timedelta(seconds=2))
-        self.assertIn("EURUSD",failed["saved"] if False else failed["errors"])
+        with self.assertRaisesRegex(
+                sqlite3.IntegrityError,"synthetic_fingerprint_storage_failed"):
+            record(self.db,altered,received=PARENT_READ+timedelta(seconds=2),
+                   now=INGEST_DONE+timedelta(seconds=2))
         self.assertEqual(self.total(),1)
         self.assertEqual(latest(self.db,"EURUSD"),current)
         self.db.execute("DROP TRIGGER block_future_local_witness")
