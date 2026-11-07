@@ -10,7 +10,9 @@ from __future__ import annotations
 from datetime import datetime,timedelta,timezone
 from pathlib import Path
 import json
+import os
 import sqlite3
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -147,6 +149,58 @@ class PostcommitIsolatedHandoffTests(unittest.TestCase):
                     source="ctrader",read_at=READ,enabled=True,
                     mode=post.MODE),post.STAGED)
             finally:writer.close()
+
+    def test_separate_python_process_dispatch_and_rechecks_original_core(self):
+        """Proof of a separate research process in CI, NOT a live daemon."""
+        child = """import sys
+import track_c_c3b_postcommit_handoff as bridge
+import track_c_c3b_durable_shadow as shadow
+core,research=sys.argv[1:]
+status=bridge.dispatch(core,research,symbol='EURUSD',source='cot',
+                       read_at='2026-11-09T12:00:00Z',
+                       enabled=True,mode=bridge.MODE)
+assert status==bridge.STAGED
+job=shadow.claim(research,at='2026-11-09T12:00:04Z',
+                 enabled=True,mode=shadow.MODE)
+assert job is not None
+valid=bridge.check_lease_source(
+    core,research,job=job,checked_at='2026-11-09T12:00:04Z',
+    enabled=True,mode=bridge.MODE)
+assert valid is True
+ack=shadow.finish(research,item_id=job['id'],lease_token=job['leaseToken'],
+                  at='2026-11-09T12:00:04Z',
+                  synthetic_worker_ok=valid,enabled=True,mode=shadow.MODE)
+assert ack==shadow.ACKED
+print('SYNTHETIC_HANDOFF_OK')
+"""
+        environment={"PYTHONPATH":str(ROOT/"scripts"),
+                     "PYTHONDONTWRITEBYTECODE":"1"}
+        result=subprocess.run([sys.executable,"-c",child,
+                               str(self.core),str(self.research)],
+                              text=True,capture_output=True,timeout=15,
+                              env=environment,check=False)
+        self.assertEqual(result.returncode,0,
+                         "independent offline subprocess handoff failed")
+        self.assertEqual(result.stdout.strip(),"SYNTHETIC_HANDOFF_OK")
+        self.assertEqual(self.counts()["syntheticAck"],1)
+        self.assertEqual(self.counts()["pending"],0)
+        self.assertEqual(self.calls,["tff","disagg"])
+
+    def test_core_commit_without_dispatch_has_no_research_receipt(self):
+        # A loss/crash after a core transaction and BEFORE the research
+        # dispatcher is a genuine remaining gap: no automatic backfill.
+        self.assertEqual(self.counts()["total"],0)
+        self.assertEqual(self.counts()["syntheticAck"],0)
+        self.assertIsNone(shadow.claim(
+            self.research,at=READ,enabled=True,mode=shadow.MODE))
+        db=price_store.connect(self.core)
+        try:
+            self.assertIsNotNone(price_store.latest(db,"EURUSD"))
+            self.assertEqual(db.execute(
+                "SELECT count(*) FROM cot_reports").fetchone()[0],28)
+        finally:
+            db.close()
+        self.assertEqual(self.counts()["total"],0)
 
     def test_core_revision_after_stage_is_rejected_by_worker(self):
         self.assertEqual(self.deliver("XAUUSD","cot"),post.STAGED)
