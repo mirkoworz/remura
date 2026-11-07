@@ -55,9 +55,12 @@ def record_new(db, *, insert_history, original_document, clock,
         raise ValueError("explicit_genuine_utc_observation_clock_required")
     if type(research_retail_inbox) is not bool:
         raise ValueError("retail_inbox_opt_in_requires_boolean")
-    if sum((original_retail_snapshot is not None,
-            retail_receipt_id is not None,
-            research_retail_inbox))>1:
+    # Preserve existing legacy contract for the two pre-existing modes.
+    # The third optional inbox mode must remain mutually exclusive too.
+    if original_retail_snapshot is not None and retail_receipt_id is not None:
+        raise ValueError("retail_snapshot_and_pinned_receipt_are_exclusive")
+    if research_retail_inbox and (
+            original_retail_snapshot is not None or retail_receipt_id is not None):
         raise ValueError("retail_sources_are_mutually_exclusive")
     if retail_receipt_id is not None and (
             type(retail_receipt_id) is not int or retail_receipt_id<=0):
