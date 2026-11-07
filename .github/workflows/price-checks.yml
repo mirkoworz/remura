@@ -86,6 +86,8 @@ on:
       - 'tests/test_track_c_cot_atomic_b_witness.py'
       - 'scripts/track_c_cross_process_asof_audit.py'
       - 'tests/test_track_c_cross_process_asof_audit.py'
+      - 'scripts/track_c_c3_safety_mailbox.py'
+      - 'tests/test_track_c_c3_safety_mailbox.py'
       - 'scripts/resource_monitor.py'
       - 'resource-health.js'
       - 'resource-health.css'
@@ -232,6 +234,8 @@ jobs:
       - name: Test v1.64 exact 15-file SHA state reconciliation, offline
         run: python -m unittest discover -s tests -p 'test_reconcile_v164.py' -v
       - run: python -m unittest discover -s tests -p 'test_signals_monitor.py' -v
+      - name: Track C3 - test isolated core survival and bounded shadow research (offline)
+        run: python -m unittest discover -s tests -p 'test_track_c_c3_safety_mailbox.py' -v
       - name: Test Track C synthetic in-memory handoff; never collect market data
         run: python -m unittest discover -s tests -p 'test_track_c_shadow_rehearsal.py' -v
       - name: Track C only - checkout exact Track B research commit (no merge)
