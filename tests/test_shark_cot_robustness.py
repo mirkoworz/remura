@@ -181,5 +181,109 @@ class RobustnessTests(unittest.TestCase):
                              "INSUFFICIENT")
 
 
+class CotWeekClusterSensitivityTests(unittest.TestCase):
+    """Synthetic diagnostics; not a test on live institutional outcomes."""
+
+    def test_same_week_repeats_can_flip_pooled_mean_and_week_balanced_mean(self):
+        # Purely adversarial fixture, NOT the actual historical cohort schema:
+        # one COT release is repeated 23 times, other 7 weeks appear once.
+        # A naive 30-row mean is positive even though all 8 equal-weight
+        # COT-week views are collectively negative. No return claims follow.
+        cases = [
+            {"week": "week-0", "cotGrossBps": 10., "longGrossBps": 0.}
+            for _ in range(23)
+        ]
+        cases.extend(
+            {"week": f"week-{i}", "cotGrossBps": -20.,
+             "longGrossBps": 0.}
+            for i in range(1, 8)
+        )
+        r = research._cot_week_cluster_audit(cases)
+        self.assertEqual(r["samples"], 30)
+        self.assertEqual(r["distinctCotWeeks"], 8)
+        self.assertEqual(r["maxSamplesOneWeek"], 23)
+        self.assertEqual(r["maxShareOneWeekPct"], 76.67)
+        self.assertEqual(r["pooledPairedCotMinusLongBps"], 3.0)
+        self.assertEqual(r["equalCotWeekWeightPairedBps"], -16.25)
+        self.assertEqual(r["leaveOneWholeCotWeekOutPairedBpsRange"],
+                         {"minPairedBps": -20.0, "maxPairedBps": -15.7143})
+        self.assertEqual(r["sensitivityGate"],
+                         "DESCRIPTIVE_ONLY_NOT_INDEPENDENT")
+        self.assertFalse(r["weekClusterIsIndependentOosProof"])
+        self.assertTrue(r["noPValuesOrConfidenceIntervals"])
+        self.assertEqual(r, research._cot_week_cluster_audit(list(reversed(cases))))
+        self.assertNotIn("profitProbability",json.dumps(r))
+
+    def test_thirty_correlated_cases_from_one_week_never_pass_week_gate(self):
+        cases = [
+            {"week": "week-one", "cotGrossBps": 100.,
+             "longGrossBps": -100.}
+            for _ in range(30)
+        ]
+        r = research._cot_week_cluster_audit(cases)
+        self.assertEqual(r["samples"],30)
+        self.assertEqual(r["distinctCotWeeks"],1)
+        self.assertEqual(r["maxShareOneWeekPct"],100.0)
+        self.assertIsNone(r["leaveOneWholeCotWeekOutPairedBpsRange"])
+        self.assertEqual(r["sensitivityGate"],
+                         "INSUFFICIENT_WEEKS_OR_COHORTS")
+
+    def test_eight_weeks_but_only_eight_cases_still_insufficient(self):
+        cases = [
+            {"week": f"w{i}", "cotGrossBps": 1.,
+             "longGrossBps": 0.}
+            for i in range(8)
+        ]
+        r = research._cot_week_cluster_audit(cases)
+        self.assertEqual(r["distinctCotWeeks"],8)
+        self.assertIsNone(r["leaveOneWholeCotWeekOutPairedBpsRange"])
+        self.assertEqual(r["sensitivityGate"],
+                         "INSUFFICIENT_WEEKS_OR_COHORTS")
+
+    def test_week_blocks_balanced_for_two_markets_and_never_infer_independence(self):
+        cases = [
+            {"week": f"report-{i:02d}", "cotGrossBps": float(i - 7),
+             "longGrossBps": 0.}
+            for i in range(15) for _ in ("EURUSD","XAUUSD")
+        ]
+        r = research._cot_week_cluster_audit(cases)
+        self.assertEqual(r["samples"],30)
+        self.assertEqual(r["distinctCotWeeks"],15)
+        self.assertEqual(r["maxSamplesOneWeek"],2)
+        self.assertEqual(r["pooledPairedCotMinusLongBps"],
+                         r["equalCotWeekWeightPairedBps"])
+        self.assertIsNotNone(r["leaveOneWholeCotWeekOutPairedBpsRange"])
+        self.assertFalse(r["noTradingEdgeEstablished"] is False)
+        self.assertFalse(r["weekClusterIsIndependentOosProof"])
+
+    def test_empty_and_real_sqlite_fixture_keep_horizons_separate(self):
+        empty = research._cot_week_cluster_audit([])
+        self.assertEqual(empty["samples"],0)
+        self.assertIsNone(empty["equalCotWeekWeightPairedBps"])
+        self.assertIsNone(empty["maxShareOneWeekPct"])
+        self.assertIsNone(empty["leaveOneWholeCotWeekOutPairedBpsRange"])
+        with db_fixture() as db:
+            insert(db, "train")
+            insert(db, "validation")
+            insert(db, "test")
+            # The existing verified provenance and 24h embargo still apply.
+            result = evaluate(db)
+            for fold in ("train", "validation", "test"):
+                h4 = next(h for h in result["folds"][fold]
+                          if h["horizonHours"] == 4)
+                self.assertEqual(h4["cotWeekClusterAudit"]["samples"], 1)
+                self.assertEqual(
+                    h4["cotWeekClusterAudit"]["distinctCotWeeks"], 1)
+                self.assertIsNone(
+                    h4["cotWeekClusterAudit"]
+                    ["leaveOneWholeCotWeekOutPairedBpsRange"])
+                for hours in (1,24):
+                    block = next(h for h in result["folds"][fold]
+                                 if h["horizonHours"] == hours)
+                    self.assertEqual(block["cotWeekClusterAudit"]["samples"],0)
+            self.assertEqual(result["edge"],"NOT_ESTABLISHED")
+            self.assertFalse(result["independentOutOfSample"])
+
+
 if __name__ == "__main__":
     unittest.main()

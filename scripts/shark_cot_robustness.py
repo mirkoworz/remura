@@ -67,6 +67,78 @@ def _stats(cases, costs, multiple):
     }
 
 
+def _cot_week_cluster_audit(cases):
+    """Sensitivity to correlated observations sharing a COT report week.
+
+    The unit is a COT publication week, shared across all markets. Reusing
+    the same COT release, even on different instruments, is not independent
+    evidence. Aggregate each week's SAME-cohort COT-minus-long paired gaps
+    first; then remove ONE entire week at a time. Never cherry-pick a week
+    or recompute the trading rule. This is a descriptive influence screen,
+    NOT a significance test, confidence interval, causal effect or real PnL.
+    """
+    by_week = defaultdict(list)
+    for case in cases:
+        # Equal explicit round-trip costs on the paired arms cancel. These
+        # are gross directional bps differences, NOT net profits or fills.
+        by_week[case["week"]].append(
+            case["cotGrossBps"] - case["longGrossBps"]
+        )
+    n = len(cases)
+    k = len(by_week)
+    sorted_week_means = [
+        sum(gaps) / len(gaps)
+        for _, gaps in sorted(by_week.items())
+    ]
+    # The cohorts are provenance-verified by _verified_cases upstream, but
+    # the historic source revisions and actual fills remain unverified.
+    admitted = n >= MIN_COHORTS and k >= MIN_WEEKS
+    pooled = (
+        sum(sum(gaps) for gaps in by_week.values()) / n if n else None
+    )
+    balanced = (
+        sum(sorted_week_means) / k if k else None
+    )
+    if admitted and k > 1:
+        loo = [
+            (sum(sorted_week_means) - x) / (k - 1)
+            for x in sorted_week_means
+        ]
+        sensitivity = {
+            "minPairedBps": round(min(loo), 4),
+            "maxPairedBps": round(max(loo), 4),
+        }
+    else:
+        sensitivity = None
+    return {
+        "clusterUnit": "shared_cot_report_week_across_all_markets",
+        "samples": n,
+        "distinctCotWeeks": k,
+        "maxSamplesOneWeek": (
+            max(map(len, by_week.values())) if k else 0
+        ),
+        "maxShareOneWeekPct": (
+            round(100 * max(map(len, by_week.values())) / n, 2)
+            if n else None
+        ),
+        "pooledPairedCotMinusLongBps": (
+            round(pooled, 4) if pooled is not None else None
+        ),
+        "equalCotWeekWeightPairedBps": (
+            round(balanced, 4) if balanced is not None else None
+        ),
+        "leaveOneWholeCotWeekOutPairedBpsRange": sensitivity,
+        "sensitivityGate": (
+            "DESCRIPTIVE_ONLY_NOT_INDEPENDENT" if admitted
+            else "INSUFFICIENT_WEEKS_OR_COHORTS"
+        ),
+        "costsCancelOnlyInPairedDifference": True,
+        "weekClusterIsIndependentOosProof": False,
+        "noPValuesOrConfidenceIntervals": True,
+        "noTradingEdgeEstablished": True,
+    }
+
+
 def evaluate(db, *, as_of, train_end, validation_end, costs,
              embargo_hours=24):
     """Use existing persisted cohorts, with windows fixed BEFORE results read.
@@ -123,6 +195,7 @@ def evaluate(db, *, as_of, train_end, validation_end, costs,
             studies = buckets[fold][horizon]
             folds[fold].append({
                 "horizonHours": horizon,
+                "cotWeekClusterAudit": _cot_week_cluster_audit(studies),
                 "costScenarios": [
                     {"costMultiple": multiple,
                      **_stats(studies, cost_bps, multiple)}
