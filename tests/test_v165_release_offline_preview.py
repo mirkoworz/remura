@@ -108,7 +108,7 @@ class ReleaseV165OfflinePreviewTests(unittest.TestCase):
     def test_incorrect_banner_rejected_even_with_modified_pin(self):
         sample=dict(self.source)
         sample["nav.js"]=self.source["nav.js"].replace(
-            m.SOURCE_BANNER,b"REMURA · Aggiornamento v1.64 · BAD")
+            m.SOURCE_BANNER,"REMURA · Aggiornamento v1.64 · BAD".encode("utf-8"))
         with patch.dict(m.SOURCE_BLOBS,{"nav.js":m.git_blob(sample["nav.js"])}):
             with self.assertRaisesRegex(ValueError,"GLOBAL_TOP_BANNER_MISSING"):
                 m.preview(sample)
