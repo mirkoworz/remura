@@ -68,3 +68,18 @@ Fonti: [Tailscale selectors, autogroup:self](https://tailscale.com/docs/referenc
 
 **Rimane da verificare prima di qualsiasi nuova connessione:** piano e uso Tailscale, tag ownership/autoapprovers, ACL complete e Tailscale SSH, OIDC claim mapping futuro; indipendentemente GitHub Actions quota/costi e Oracle Always Free; account SSH nonroot/forced gate/server key e, solo con via libera separato, hash LIVE/backup/rollback. `SSH_AUDIT=NO_GO`, `V165_RELEASE=NO_GO`, `C5=NO_GO`.
 
+## 8 novembre 2026 — Evidenza Tailscale SSH check su self (sola lettura)
+
+Nuove schermate dell'operatore da **Policies → Tailscale SSH** mostrano una regola SSH (senza secret o indirizzi):
+
+```json
+{ "action": "check", "src": ["autogroup:member"], "dst": ["autogroup:self"], "users": ["autogroup:nonroot", "root"] }
+```
+
+**Interpretazione verificata dalla documentazione Tailscale** ([Tailscale SSH](https://tailscale.com/docs/features/tailscale-ssh)): questa e' la **regola SSH predefinita**. La sorgente sono membri; la destinazione sono soltanto i **dispositivi posseduti dallo stesso utente**, non tutti gli host taggati. Sono ammessi come *possibili account di destinazione* `root` e altri utenti non-root che esistano sul dispositivo. `check` richiede re-autenticazione periodica dell'utente (tipicamente 12 ore); non e' un permesso automatico root per la CI. La regola, da sola, **non dimostra** che il servizio Tailscale SSH sia abilitato sulla VPS o che SSH esposto sia OpenSSH/Tailscale SSH.
+
+**Separazione critica dei protocolli:** il modello futuro `v165-private-ssh-audit-REVIEW-ONLY.yml` usa un tradizionale client SSH con chiave e `UserKnownHostsFile` + forced command `authorized_keys` previsto sul server. Tailscale SSH e' un servizio *diverso* che, se abilitato sul nodo, prende la porta TCP/22 della tailnet e gestisce l'autenticazione senza rispettare l'`authorized_keys` di OpenSSH per le connessioni Tailscale SSH. **NON usare il nostro modello con Tailscale SSH abilitato sulla VPS** credendo che la chiave/forced-command lo contenga. L'eventuale via SSH autorizzata richiede verificare da console/stato nodo che il flusso sia **OpenSSH tradizionale sopra la rete Tailscale**, oppure riprogettare il sistema e rifare una revisione indipendente: non abilitarlo per sbloccare i test.
+
+**Decisione:** la regola attuale e' `action:check` per `member→self`; **non** concedere automaticamente root alla CI e **non modificare** la policy Tailscale SSH in questa fase. Le due regole General access rules visibili in precedenza restano l'unica evidenza network: `member→self:*` e `tag:remura-ci-read→solo HTTPS/443` senza SSH. Nessuna prova di OIDC/ACL nuove, account dedicato, host-key, backup, quote o prova file LIVE. `SSH_AUDIT=NO_GO`, `V165_RELEASE=NO_GO`, `C5=NO_GO`.
+
+**Prossimo controllo operativo innocuo:** pagina Machines della console Tailscale, cercare la VPS e verificare **soltanto lo stato di Tailscale SSH / owner/tag**. Se si condivide una schermata, oscurare nome dispositivo, IP/tailnet e dati identificativi; mai inviare chiavi, token o indirizzi. Non cambiare toggle. In alternativa continuare con la diagnostica HTTPS/443 già presente. Nessun comando o run remoto eseguito per questo checkpoint.
