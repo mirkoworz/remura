@@ -154,8 +154,11 @@ def preview(sources: dict[str, bytes], *, base_main_sha=BASE_MAIN_SHA,
             "BACKEND_DEFAULT_OFF_MISSING")
     require(b"NO_GO_RESEARCH_AND_PROSPECTIVE_COLLECTION"
             in staged["scripts/storage_inventory_v165.py"]
-            and b"NO_GO_RESEARCH_AND_PROSPECTIVE_COLLECTION"
-            in staged["scripts/storage_cache_v165.py"], "RESEARCH_GUARD_MISSING")
+            and b"LIVE_MODE, NO_GO, inventory"
+            in staged["scripts/storage_cache_v165.py"]
+            and b'"operationalDecision": NO_GO'
+            in staged["scripts/storage_cache_v165.py"],
+            "RESEARCH_GUARD_MISSING")
     return staged
 
 
