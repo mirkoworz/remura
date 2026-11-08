@@ -12,6 +12,13 @@
 
 
 
+## 08/11/2026 — C4b(l) — screenshot Machines VPS online e filtro Tailscale SSH (ancora da verificare)
+
+- [x] Ricevute schermate **Machines** e dettaglio `remura-server`: due dispositivi Tailscale elencati (iPhone + VPS), VPS connessa, Linux, client Tailscale `1.104.2` stable, aggiornamento automatico indicato attivo, stato cifratura Tailscale locale `node:tsStateEncrypted=false`, scadenza chiave macchina circa 5 mesi e certificato TLS mostrato valido. Nessuna subnet route pubblicizzata. Non trasferiti IP, nodekey o altri identificativi nei documenti GitHub.
+- [x] Evitata una falsa prova: `node:tsStateEncrypted=false` significa **stato Tailscale locale non cifrato a riposo**, NON Tailscale SSH disabilitato. Il suo impatto va valutato a parte, non aggiornare server ora. Il client VPS 1.104.2 e il client CI futuro 1.104.4 sono distinti: non dedurre necessità di upgrade.
+- [ ] **Ultimo controllo console SSH di questa sottosequenza:** Machines → Filters → Property → Tailscale SSH, verificare se la VPS compare fra i dispositivi filtrati. Consultazione sola lettura, niente «SSH to machine». Non inventare stato SSH dal resto della pagina.
+- [ ] Altri gate invariati: uso/piano Tailscale, budget Actions, OIDC/ACL future, permessi e forced gate OpenSSH sulla VPS, integrità dei 15 file, costi Always Free, backup/restore e rollback. Nessun collegamento o scrittura LIVE: `C4b(l)=NO_GO`, `v1.65=NO_GO`, `C5=NO_GO`.
+
 ## 08/11/2026 — C4b(l) — policy Tailscale SSH predefinita check (non configurazione della CI)
 
 - [x] L'operatore ha mostrato **Policies → Tailscale SSH**: regola `action: check`, `src: autogroup:member`, `dst: autogroup:self`, `users: autogroup:nonroot, root`. La [documentazione ufficiale](https://tailscale.com/docs/features/tailscale-ssh) identifica esattamente questa come regola di default; richiede conferma periodica d'identita' (12h standard) e si applica ai soli dispositivi della stessa persona. I dispositivi taggati non sono destinazioni `self`. La presenza di `root` non prova login root attivo sulla VPS, servizio SSH abilitato o accesso dell'identita' CI.
