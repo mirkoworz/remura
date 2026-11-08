@@ -250,6 +250,8 @@ jobs:
       - name: Test v1.64 exact 15-file SHA state reconciliation, offline
         run: python -m unittest discover -s tests -p 'test_reconcile_v164.py' -v
       - run: python -m unittest discover -s tests -p 'test_signals_monitor.py' -v
+      - name: Track C3c-c - separate worker process crash, timeout, saturation and core survival (offline)
+        run: python -m unittest discover -s tests -p 'test_track_c_c3cc_isolated_worker.py' -v
       - name: Track C3c-b - reconcile observed schedule runs and bounded batch timing receipts offline
         run: python -m unittest discover -s tests -p 'test_track_c_c3c_execution_evidence.py' -v
       - name: Track C3c - audit real repository scheduler source contract and drift, no execution
