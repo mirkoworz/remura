@@ -42,3 +42,15 @@ Nuovo codice `scripts/track_c_c4b_capacity_evidence.py`: accetta fino a otto cam
 - **13 test** offline verificati sul commit `e89ff3b27b2d33bf0200ea26e983cc420d5a02ff`: [Price Engine #42478145437](https://github.com/mirkoworz/remura/actions/runs/42478145437) **SUCCESS**, [Insights #42478145434](https://github.com/mirkoworz/remura/actions/runs/42478145434) **SUCCESS**. Nessun polling, job programmato, intervento Oracle o operazione con Termius.
 
 **Importante:** un verde GitHub significa che SQLite sintetica può essere salvata e ripristinata nell'harness CI, non che REMURA abbia un backup vero ripristinabile, l'account Always Free post-trial sia gratuito, o che il motore scientifico reale sia avviabile senza impatto.
+
+## 5. C4b(c) — prova di COPERTURA, non di capacità
+
+Nel nuovo `track_c_c4bc_evidence_coverage.py` un registro **solo metadata** mantiene aperti otto gate essenziali per C5: RAM/CPU/swap/disco corrente, SQLite/WAL/SHM corrente, restore cifrato fuori host, OCI piano/billing, GitHub quote, Firestore quote, isolazione di processo OS e prove FIRST-SEEN. Accetta rapporti storici o consegnati soltanto come **segnalazioni non autenticate**, non come autorizzazioni: la data/il tipo di fonte sono informazioni dichiarate, non proof of receipt. La provenienza del report non verifica che i dati all'interno siano corretti. Un registro vuoto produce otto MISSING; non produce "zero consumo".
+
+**Riconciliazione delle informazioni già disponibili senza nuovi servizi**:
+- I report OCI privati del 7 novembre mostrano E2.1.Micro con 1 GB e boot 47 GB, trial probabile e analisi costi pari a 0 riportato fino al 7/11: **DOCUMENTI STORICI**, NON proof del piano post-trial né del carico del momento.
+- Le prove private batch del 3 novembre verificano un singolo batch, ma **non** indicano commit per simbolo, throughput VPS di oggi o completezza delle scansioni.
+- I 13 test C4b(b) del backup SQLite appartengono a una directory temporanea in GitHub: **non** verificano backup esistente e restore fuori dalla VPS.
+- Non è disponibile in questo audit un inventario corrente **di tutte** le SQLite/WAL/SHM, una prova di restore off-host, limiti Firestore/GitHub realmente usati o attestazione del kill switch OS.
+
+**Conclusione**: i report e la checklist sono utili per ridurre verifiche duplicate. Per procedere in C4b(d) servirà un controllo autorizzato strettamente read-only, preferibilmente usando dati diagnostici già ottenuti, con misure sanificate e identificatore del run originale. Nessuna nuova richiesta provider, modifica LIVE o riavvio.

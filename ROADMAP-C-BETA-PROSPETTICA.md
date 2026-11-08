@@ -3,6 +3,16 @@
 **Decisione di coordinamento:** 07/11/2026, Italia. **Stato:** ricerca e test OFFLINE sul branch C; nessuna raccolta prospettica reale, merge, installazione o rilascio autorizzati. Raccolta scientifica prospettica NON autorizzata, NON installata e NON avviata. **Repository:** `mirkoworz/remura`. **Branch dedicato:** `research/track-c-beta-prospective-20261107` (PR documentale DRAFT iniziale). **Riferimento scientifico:** [Track B](ROADMAP-B-SHARK-SCIENCE.md) — [PR #89 DRAFT](https://github.com/mirkoworz/remura/pull/89). **Riferimento infrastrutturale esclusivo:** documento privato `COORDINAMENTO-OCI-SHARK-SCIENCE.md` nel repository `mirkoworz/remura-collector`.
 
 
+## 08/11/2026 — C4b(c): registro offline delle prove mancanti e provenienza (NO-GO)
+
+**Stato:** implementazione in branch C, test CI da verificare. Non ci sono nuovi campioni della VPS né costi/quote consultati in tempo reale. Il precedente C4b(b) ha dimostrato un restore SOLO sintetico; non trasformarlo in evidenza di disaster recovery reale.
+
+- [x] `scripts/track_c_c4bc_evidence_coverage.py`: input **soltanto metadati redatti** di provenienza, senza valori account, percorsi, prezzi, segreti o API; massimo 24 record, clock UTC stretto, rifiuto di fonte inventata e deduplicazione conservativa. Nessuna operazione file, HTTP, terminale, VPS, Oracle, Firestore o provider.
+- [x] Otto gate misurabili ma ancora non provati: 1) risorse VPS correnti; 2) dimensioni SQLite/WAL/SHM; 3) restore fuori host; 4) fatturazione e piano OCI; 5) consumo GitHub Actions/storage; 6) utilizzo Firestore; 7) separazione OS effettiva della ricerca; 8) ricevute autentiche FIRST-SEEN provider. Campioni assenti → MISSING; lab → LAB_ONLY; documenti precedenti → HISTORICAL; campioni consegnati → SUBMITTED ma **NON AUTENTICATI**.
+- [x] Anche se sono presentati tutti gli otto attestati come recenti, il controllore NON può autenticare firme/fatturazione, autorizzare la raccolta o eliminare la revisione umana: `NO_GO_RESEARCH_AND_PROSPECTIVE_COLLECTION` invariato. Un GitHub Action verde non attesta né la freschezza dei provider né CPU disponibile sulla VM.
+- [x] `tests/test_track_c_c4bc_evidence_coverage.py`: **13 test** offline su report storici, date future, clock non UTC, campioni scaduti, duplicati, campo credenziale proibito, tentativo di certificazione fittizia, completezza apparente e decisione NO-GO. Sorgenti esterne non contattate.
+- [ ] **C4b(d) richiesta di prove mirate (NON avviata)**: ottenere risorse e dimensioni SQLite attuali con audit di sola lettura autorizzato, verificare copie cifrate fuori VPS/restore, quote GitHub e Firebase, fatturazione Oracle dopo trial nel filone Oracle. Non effettuare nuove GET o workflow dal Track C senza controllo dei permessi e del budget. Niente merge C/B, niente deploy, cron, ordini o C5.
+
 ## 08/11/2026 — C4b(b): inventario + backup/restore SQLite + kill gate offline (NON LIVE)
 
 **Gate C4b(b) esercitato SOLO su SQLite fittizia in una directory temporanea.** Il test non misura SQLite live, costo, memoria Oracle, spazio disco reale della VPS, backup esterno cifrato o resilienza con carichi reali. Nessuna autorizzazione a C5, nessuna installazione, API, cron o nuovo processo permanente.
