@@ -191,6 +191,36 @@ class OneShotReceiptTests(unittest.TestCase):
         self.assertIn("git hash-object",t)
         self.assertIn("persist-credentials: false",t)
 
+    def test_external_actions_are_immutable_upstream_verified_sha(self):
+        t=TEMPLATE.read_text()
+        self.assertIn("uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1", t)
+        self.assertIn("uses: tailscale/github-action@064b10558093f38325e838ddea35486bdc6b1d5c # v4.4.0", t)
+        self.assertNotIn("uses: actions/checkout@v5", t)
+        self.assertNotIn("uses: tailscale/github-action@v4", t)
+
+    def test_external_actions_all_use_full_40_hex_shas(self):
+        import re
+        t=TEMPLATE.read_text()
+        refs=re.findall(r"^\s+uses:\s+([^\s#]+)", t, re.MULTILINE)
+        self.assertEqual(len(refs),2)
+        for ref in refs:
+            with self.subTest(ref=ref):
+                self.assertRegex(ref, r"^[a-z0-9_-]+/[a-z0-9_-]+@[0-9a-f]{40}$")
+        self.assertNotIn("@main",t)
+        self.assertNotIn("@latest",t)
+
+    def test_tailscale_client_version_explicit_and_no_cache_reuse(self):
+        t=TEMPLATE.read_text()
+        self.assertIn("          version: 1.104.4",t)
+        self.assertIn("          use-cache: 'false'",t)
+        self.assertNotIn("version: latest",t)
+        self.assertNotIn("version: unstable",t)
+
+    def test_template_runner_os_is_fixed_supported_family(self):
+        t=TEMPLATE.read_text()
+        self.assertIn("    runs-on: ubuntu-24.04",t)
+        self.assertNotIn("    runs-on: ubuntu-latest",t)
+
     def test_transport_requires_pinned_ssh_known_hosts(self):
         t=TEMPLATE.read_text()
         self.assertIn("ssh-keygen -F",t)
