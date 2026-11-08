@@ -246,7 +246,8 @@ class DraftStorageCacheTests(unittest.TestCase):
             return {
                 "schema":cache_module.SCHEMA,"state":"METADATA_ONLY_NEVER_OFFHOST_PROOF",
                 "sampledAtUtc":"2026-11-08T12:00:00+00:00",
-                "metadata":None,"offhostBackupVerified":False,
+                "metadata":m._empty("UNKNOWN_READONLY_METADATA_INVENTORY_INCOMPLETE"),
+                "offhostBackupVerified":False,
                 "restoreOutsideVpsVerified":False,"oracleBillingVerified":False,
                 "researchLiveEnabled":False,"operationalDecision":cache_module.NO_GO}
         obj=cache_module.StorageMetadataCache(sampler=sampler)
@@ -279,6 +280,95 @@ class DraftStorageCacheTests(unittest.TestCase):
             "operationalDecision":"GO","offhostBackupVerified":True})
         obj.refresh_once("fictional")
         self.assertEqual(obj.peek()["state"],"UNKNOWN_INVALID_SAMPLER_PAYLOAD")
+
+
+    def _valid_sample(self, metadata=None):
+        if metadata is None:
+            metadata=m._empty("UNKNOWN_READONLY_METADATA_INVENTORY_INCOMPLETE")
+        return {
+            "schema":cache_module.SCHEMA,
+            "state":"METADATA_ONLY_NEVER_OFFHOST_PROOF",
+            "sampledAtUtc":"2026-11-08T13:45:00+00:00",
+            "metadata":metadata,
+            "offhostBackupVerified":False,
+            "restoreOutsideVpsVerified":False,
+            "oracleBillingVerified":False,
+            "researchLiveEnabled":False,
+            "operationalDecision":cache_module.NO_GO,
+        }
+
+    def test_only_allowlisted_fields_reach_private_http_cache(self):
+        for injected in (
+            {"serverFilesystemPath":"/opt/remura/private"},
+            {"CTRADER_TOKEN":"NEVER_ECHO"},
+            {"debugDetails":{"privateKey":"NEVER_ECHO"}},
+        ):
+            obj=cache_module.StorageMetadataCache(
+                sampler=lambda _, bad=injected:{**self._valid_sample(),**bad})
+            obj.refresh_once("fictional")
+            snapshot=obj.peek()
+            self.assertEqual(snapshot["state"],"UNKNOWN_INVALID_SAMPLER_PAYLOAD")
+            self.assertNotIn("NEVER_ECHO",repr(snapshot))
+            self.assertNotIn("/opt/remura",repr(snapshot))
+
+    def test_nested_inventory_new_fields_do_not_leak_secrets(self):
+        original=self._valid_sample()
+        for injected in (
+            {**original["metadata"],"privatePath":"/opt/remura/private/secret"},
+            {**original["metadata"],"localBackups":{
+                "state":"UNKNOWN_NO_SCANNED_BACKUP",
+                "token":"PRIVATE_KEY_MUST_NOT_LEAK"}},
+        ):
+            obj=cache_module.StorageMetadataCache(
+                sampler=lambda _, data=injected:self._valid_sample(data))
+            obj.refresh_once("fictional")
+            snapshot=obj.peek()
+            self.assertEqual(snapshot["state"],"UNKNOWN_INVALID_SAMPLER_PAYLOAD")
+            self.assertNotIn("PRIVATE_KEY_MUST_NOT_LEAK",repr(snapshot))
+            self.assertNotIn("/opt/remura",repr(snapshot))
+
+    def test_false_billing_evidence_and_bad_timestamp_fail_closed(self):
+        for injected in (
+            {"oracleBillingVerified":True},
+            {"sampledAtUtc":"/secret/storage/account/credential"},
+            {"state":"METADATA_ONLY_NEVER_OFFHOST_PROOF;TOKEN"},
+            {"metadata":None},
+        ):
+            obj=cache_module.StorageMetadataCache(
+                sampler=lambda _, bad=injected:{**self._valid_sample(),**bad})
+            obj.refresh_once("fictional")
+            self.assertEqual(obj.peek()["state"],"UNKNOWN_INVALID_SAMPLER_PAYLOAD")
+
+    def test_valid_synthetic_inventory_survives_strict_cache_filter(self):
+        with tempfile.TemporaryDirectory(prefix="remura-c4bf-") as directory:
+            root=Path(directory)
+            (root/m.DB_NAME).write_bytes(b"FICTITIOUS_DATA_NOT_SQLITE")
+            metadata=m.inventory(root,mode=m.LAB_MODE)
+            self.assertEqual(metadata["state"],"METADATA_ONLY_NOT_INDEPENDENTLY_ATTESTED")
+            obj=cache_module.StorageMetadataCache(
+                sampler=lambda _:self._valid_sample(metadata))
+            obj.refresh_once("fictional")
+            self.assertEqual(obj.peek()["state"],"METADATA_ONLY_NEVER_OFFHOST_PROOF")
+            self.assertEqual(obj.peek()["metadata"]["operationalDecision"],m.NO_GO)
+
+    def test_simulated_slow_sampler_never_blocks_cached_read(self):
+        entered=threading.Event()
+        release=threading.Event()
+        def slow(_):
+            entered.set()
+            release.wait(2)
+            return self._valid_sample()
+        obj=cache_module.StorageMetadataCache(sampler=slow)
+        thread=threading.Thread(target=obj.refresh_once,args=("fictional",),daemon=True)
+        thread.start()
+        try:
+            self.assertTrue(entered.wait(1))
+            self.assertEqual(obj.peek()["state"],"UNKNOWN_MISSING_OR_STALE_CACHE")
+        finally:
+            release.set()
+            thread.join(3)
+        self.assertFalse(thread.is_alive())
+        self.assertEqual(obj.peek()["state"],"METADATA_ONLY_NEVER_OFFHOST_PROOF")
 
     def test_thread_starts_once_only_when_explicitly_called(self):
         stop=threading.Event()
