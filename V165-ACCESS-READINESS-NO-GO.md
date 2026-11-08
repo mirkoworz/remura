@@ -3,6 +3,16 @@
 **Checkpoint: 8 novembre 2026. Stato: NO-GO per accesso nuovo, SSH, rilascio e raccolta C5.**
 Questo file è una scheda operativa per il proprietario. Non contiene segreti, indirizzi privati, chiavi, OCID o comandi da eseguire sulla VPS. È soltanto nella PR #98 DRAFT; non installa alcuna GitHub Action.
 
+## 8 novembre 2026, ore 23:22 italiane — Chiuso censimento Security Lists della subnet (UI, sola lettura)
+
+**Evidenza successiva al checkpoint delle 22:57:** nella pagina della **subnet pubblica della VPS REMURA**, scheda **Sicurezza → Liste di sicurezza**, lo screenshot mostra **solo** `Default Security List for remura-vcn`, **pagina 1 di 1**, fino a **25 elementi per pagina**. La lista visualizzata è **Disponibile**. Non risulta una seconda Security List associata alla subnet al momento della consultazione.
+
+La precedente lettura dell'**ingress** della medesima Default Security List mostrava soltanto **due righe ICMP** e nessuna autorizzazione **TCP/22**. **Conclusione circoscritta:** le Security Lists associate alla subnet **non permettono nuovi ingress TCP/22 pubblici in base alla configurazione osservata**. Un precedente controllo VNIC mostrava **nessun NSG associato**. Non è stata condotta alcuna scansione di raggiungibilità né un'ispezione delle regole host: **non chiamare questo risultato una certificazione completa di SSH/firewall Linux** e non inferire OpenSSH spento o pronto.
+
+**Gate aggiornati:** `SUBNET_ALL_ASSOCIATED_SECURITY_LISTS=ONE_DEFAULT_ONLY_ATTESTED_UI`; `OCI_SUBNET_TCP22_INGRESS=NOT_ALLOWED_BY_SECURITY_LIST_UI`; `OCI_PUBLIC_SSH_REACHABILITY=NOT_PROBED`; `OPENSSH_HOST_FIREWALL=UNKNOWN`. Rimangono `SSH_AUDIT=NO_GO`, `V165_RELEASE=NO_GO`, `C5=NO_GO`. I precedenti TODO sulle associazioni della subnet, conservati come storico delle 22:57, sono **superati da questa nuova evidenza**.
+
+**Prossimo controllo console senza scritture:** shape della VM, etichetta/idoneità Always Free, boot/block volume, quote e billing reale post-trial (sottoporre ad audit anche l'uso GitHub Actions e Tailscale prima di attivare runner). Restano mancanti hash dei 15 file LIVE, OpenSSH non-root/forced gate, host key, ACL/OIDC autorizzate, backup SQLite consistente e restore off-host, autoupdater/rollback, banner reale su nove pagine e consenso separato al rilascio. Nessuna modifica a OCI, VPS, Tailscale, collector o MAIN; nessuna attivazione C5.
+
 ## 1. Cosa sappiamo già, senza ripetere controlli
 
 - I repository sono `mirkoworz/remura` (pubblico) e `mirkoworz/remura-collector` (privato, main; ID GitHub 1424422834). La PR #98 conserva il template sotto `deploy/oracle/templates/`, **non** in `.github/workflows/`. Il Filone B è PR #89 DRAFT; il Filone C è PR #97 DRAFT.
