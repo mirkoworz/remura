@@ -3,6 +3,16 @@
 **Checkpoint: 8 novembre 2026. Stato: NO-GO per accesso nuovo, SSH, rilascio e raccolta C5.**
 Questo file è una scheda operativa per il proprietario. Non contiene segreti, indirizzi privati, chiavi, OCID o comandi da eseguire sulla VPS. È soltanto nella PR #98 DRAFT; non installa alcuna GitHub Action.
 
+## 8 novembre 2026, ore 23:44 italiane — Boot volume: dimensione 47 GB, non spazio libero e non prova fattura
+
+Nuove schermate da console Oracle, **senza modifiche o comandi host**: nel compartimento radice in regione Milano, elenco **Volumi di avvio**, il volume `remura-server (Boot Volume)` appare **Disponibile**, **47 GB allocati**, **VPU:10**, **replica tra aree non attiva**. Nell'elenco separato **Volumi a blocchi** del compartimento selezionato non vi sono elementi, e la scheda Storage dell'istanza mostrava nessun volume a blocchi aggiuntivo collegato. La memoria libera su filesystem Linux e gli inode restano **NON MISURATI**.
+
+La [documentazione Oracle Always Free](https://docs.oracle.com/it-it/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm) indica quota **200 GB di storage combinato boot+block** nella regione home e fino a **5 backup** inclusi, e descrive 47 GB come dimensione minima di un boot volume. Il singolo volume usa nominalmente **23,5% di 200 GB**, ma il totale della tenancy, altri compartimenti, backup, regione home e fatturazione non sono stati certificati. Il testo UI `listBootVolumes.alwaysFree` sembra una **chiave di localizzazione visibile per l'etichetta Always Free**, da **non usare** da sola come attestazione contabile definitiva. Non inventare disponibilità effettiva di 153 GB su account o sulla VPS.
+
+**Controllo successivo in sola lettura:** aprire il **dettaglio** del volume di avvio già elencato e verificare la dicitura **Always Free Eligible/Sempre gratis idoneo**, se presente. Nessuna creazione di risorse, snapshot/backup, aumento volume, upgrade o accesso SSH. Budget e trial già documentati: evitare duplicati.
+
+Tutti i blocchi operativi restano: `C4b(l)=NO_GO`, `SSH_AUDIT=NO_GO`, `V165_RELEASE=NO_GO`, `C5=NO_GO`; niente deploy, collector, ACL, Tailscale SSH o altre modifiche LIVE.
+
 ## 8 novembre 2026, ore 23:35 italiane — Dimensionamento shape VPS e limiti Always Free: evidenza parziale
 
 Nella console Oracle, scheda **Dettagli istanza**, l'operatore ha mostrato `VM.Standard.E2.1.Micro` con **1 OCPU come conteggio UI**, **1 GB RAM**, **0,5 Gbps come banda di rete UI**, **solo storage a blocchi**, con immagine **Ubuntu 24.04 Minimal**. Nessuna modifica. La [documentazione Oracle delle risorse Always Free](https://docs.oracle.com/it-it/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm) elenca **massimo due istanze VM.Standard.E2.1.Micro** nella home region, con **CPU baseline pari a 1/8 OCPU** e burst possibile. I campi della console **non** garantiscono 1 core dedicato o banda Internet garantita.
