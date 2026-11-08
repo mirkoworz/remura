@@ -12,6 +12,12 @@
 
 
 
+## 08/11/2026 ore 22:06 Italia — Account Free Trial ATTIVO e ingresso TCP/22 OCI ancora da verificare
+
+- [x] L'operatore ha mostrato direttamente il banner **Oracle Account di livello gratuito — Versione di prova gratuita attiva**. Stato account aggiornato da `UNKNOWN/FREE_TRIAL_LIKELY` a **`FREE_TRIAL_ACTIVE` attestato dalla UI**, alla data della prova. Il portale segnala passaggio ai servizi Sempre gratis senza upgrade: **non** significa che tutte le risorse esistenti siano idonee Always Free né conferma una fattura a 0€ dopo scadenza. Nessun upgrade, spesa o chiamata OCI avviati.
+- [x] Acquisita topologia della VM: VNIC primaria, subnet **pubblica** nella VCN REMURA, IPv4 pubblico, route table predefinita e campo **Network Security Groups assenti** nella schermata. Non copiare IP pubblici/privati o dati personali visualizzati nelle schermate. **La porta 22 non è verificata**: IP pubblico non equivale a SSH esposto.
+- [ ] **Prossimo controllo gratuito e in sola lettura:** Oracle Networking → Virtual Cloud Networks → VCN → Security Lists **associate alla subnet pubblica** → Ingress Rules; leggere source CIDR, protocollo e porte di tutte le liste, in particolare TCP/22. Regole multiple sono additive. Non modificare regole/NSG/VNIC/route; se visibile `0.0.0.0/0` per TCP/22, preparare una correzione con consenso separato e piano anti-lockout, non chiudere indiscriminatamente.
+- [ ] Restano NO-GO: prova firewall Linux e OpenSSH effettivo, network tailnet e SSH user+forced gate, hash 15 file LIVE, backup/restore fuori VPS, quote e idoneita' Always Free, rilascio v1.65 e raccolta prospettica C5. Filoni A/B e MAIN non toccati.
 ## 08/11/2026 ore 21:58 Italia — Filtro Tailscale SSH: zero macchine, risultato acquisito
 
 - [x] L'operatore ha applicato su Machines il filtro `property:tailscale-ssh` e mostrato **0 machines / No machines match your search**, mentre la precedente schermata senza filtro mostrava `remura-server` connessa. [Documentazione ufficiale Tailscale](https://tailscale.com/docs/features/access-control/device-management/how-to/filter): questo filtro seleziona proprio i nodi che hanno **Tailscale SSH abilitato**. La VPS non risulta abilitata al momento del riscontro.
