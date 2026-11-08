@@ -9,6 +9,14 @@
 
 
 
+
+
+## 08/11/2026 — Main avanzato solo per campioni Myfxbook (verifica GitHub, NON LIVE)
+
+La lettura GitHub della branch `main` al momento del controllo ha restituito `8c1907a03123dc766cc434d14ae13a9ac93aec3c`, diverso dalla precedente baseline `5ec7d73247b7ec074ce3640d7cafecaa7b3f1c74`. `compare_commits` ufficiale tra questi SHA indica **ahead di 1 commit**, **31 file mutati, tutti `data/myfxbook/`**, nessun file codice/HTML/script toccato. Il commit e' un normale aggiornamento campioni sentiment e **non** autorizza interpretazioni prospettiche o l'installazione v1.65. **Nessuna nostra operazione ha modificato main**.
+
+La baseline del protocollo/preview offline v1.65 resta volutamente pin al vecchio SHA: non disattivare per inerzia il controllo fail-closed solo perche' `main` riceve dati. Prima di qualsiasi rilascio futuro bisogna selezionare un nuovo target con verifica distinta (il codice applicativo potrebbe essere uguale ma la SHA Git del ramo e' cambiata), registrare l'identita' effettiva dei 15 file LIVE, verificare quote e backup/rollback, ottenere il consenso. PR #89/#97/#98 separate DRAFT, C4b(l) e C5 sempre NO-GO.
+
 ## 08/11/2026 — C4b(k) — checksum indipendente Tailscale prima di OIDC (checkpoint successivo)
 
 - [x] Ricontrollati su GitHub PR #89, #97, #98 ancora OPEN/DRAFT e separati. Nessun merge, deploy, VPS access o modifiche ai Filoni A/B.
