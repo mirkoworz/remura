@@ -219,10 +219,38 @@ class OneShotReceiptTests(unittest.TestCase):
     def test_runner_does_not_log_raw_ssh_output(self):
         t=TEMPLATE.read_text()
         self.assertIn("2>/dev/null",t)
-        self.assertIn('printf \'%s\' "$report" |',t)
-        self.assertIn("v165_ssh_stdout_receipt.py",t)
+        self.assertIn('head -c 2049 > "$outfile"',t)
+        self.assertIn('v165_ssh_stdout_receipt.py < "$outfile"',t)
+        self.assertIn('outfile="$(mktemp ',t)
+        self.assertIn('rm -f "$keyfile" "$khfile" "$outfile"',t)
+        self.assertNotIn('report=""',t)
         self.assertNotIn('echo "$report"',t)
         self.assertNotIn("set -x",t)
+
+    def test_runner_output_ceiling_tied_to_strict_receiver(self):
+        t=TEMPLATE.read_text()
+        self.assertIn(f"head -c {receipt.MAX_STDOUT_BYTES + 1}",t)
+        self.assertIn("set -o pipefail; timeout 40s ssh",t)
+
+    def test_oidc_permission_is_scoped_to_gated_job(self):
+        t=TEMPLATE.read_text()
+        self.assertIn("permissions:\n  contents: read\n\nconcurrency:",t)
+        self.assertIn("jobs:\n  audit:\n",t)
+        self.assertIn("    permissions:\n      contents: read\n      id-token: write",t)
+        self.assertEqual(t.count("id-token: write"),1)
+
+    def test_transport_pins_receiver_separately_before_credentials(self):
+        t=TEMPLATE.read_text()
+        self.assertIn("expected_receiver_blob=96a3fd628baff65e677d4594bb8e6c65205bc596",t)
+        self.assertIn("git hash-object deploy/oracle/v165_ssh_stdout_receipt.py",t)
+        self.assertLess(t.index("PINNED_RECEIVER_DRIFT"),t.index("Connect dedicated ephemeral audit identity"))
+
+    def test_ssh_does_not_use_inherited_client_proxies_or_control_sockets(self):
+        t=TEMPLATE.read_text()
+        for guard in ("ssh -F /dev/null", "-o ProxyCommand=none",
+                      "-o ProxyJump=none", "-o ControlMaster=no",
+                      "-o ControlPath=none"):
+            self.assertIn(guard,t)
 
     def test_documented_disclaimers_no_release(self):
         t=TEMPLATE.read_text()
