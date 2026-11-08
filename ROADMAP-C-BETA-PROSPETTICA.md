@@ -12,6 +12,20 @@
 
 
 
+## 08/11/2026 — Decisione owner: pausa backup, chiusura preparazione C offline
+
+**Decisione esplicita dell'operatore:** **non eseguire backup adesso e non proseguire adesso con controlli, schermate o procedure di backup**. Rinviare le prove di consistenza SQLite, restore off-host e ogni backup OCI a una sessione successiva. Questa scelta **non equivale** a confermare un backup già esistente, ad autorizzare una release senza restore o a rimuovere i gate NO-GO. Nessuna richiesta all'operatore di aprire menu backup Oracle durante la presente fase.
+
+**Chiusura di fase, non di progetto:** i deliverable **offline/DRAFT** del Filone C e il protocollo v1.65 restano preservati nelle PR #97 e #98, senza merge. Non aggiungere altri mock, test ripetitivi o workflow in assenza di un problema concreto. Le osservazioni Oracle sono acquisite: VCN/subnet con una sola Security List senza TCP/22 ingress; shape E2.1.Micro idonea Always Free; volume boot da 47 GB con etichetta esplicita **Sempre gratis**. Questi fatti **non** attestano file, servizio SSH, firewall, costo complessivo o stato del DB LIVE.
+
+**Distinzione obbligatoria di avanzamento:**
+- [x] **C-PREPARAZIONE-OFFLINE=CHIUSA_PER_ORA**: ricerca, checklist e design documentati e congelati; nessuna nuova raccolta o attivazione.
+- [ ] **C-VALIDAZIONE-LIVE=NON_ESEGUITA**: integrità dei 15 file installati, spazio/inode, OpenSSH/firewall e permessi reali ancora senza prove; accesso privato SSH/OIDC/ACL non approvato.
+- [ ] **C-BACKUP-RESTORE=RINVIATO_SU_RICHIESTA**: creare e verificare una copia SQLite consistente e ripristino fuori host **solo** in futuro con consenso specifico, verifiche quote/costi e piano di sicurezza. Nessuna scorciatoia basata su backup di volume o test sintetici.
+- [ ] **C5-RACCOLTA-PROSPETTICA=NO_GO** e **V165_RELEASE=NO_GO** fino al completamento dei gate LIVE, dell'autoupdater/rollback, del banner v1.65/data/ora in tutte le nove pagine e dell'autorizzazione finale. Non inferire profittabilità, qualità dei dati futuri o evidenza istituzionale reale da suite offline.
+
+**Prossimo lavoro sensato senza backup e senza toccare la VPS:** fermare qui il percorso C, mantenere le PR in DRAFT, eventualmente seguire il Filone B separato oppure riprendere il Filone C solo quando l'operatore autorizzerà esplicitamente le verifiche LIVE mancanti. Nessun intervento su MAIN, collector, Tailscale, Oracle IAM, VM o Filoni A/B.
+
 ## 08/11/2026 ore 23:50 Italia — Boot volume esplicitamente Sempre gratis (UI, sola lettura)
 
 - [x] L'operatore ha aperto la **pagina di dettaglio** del volume `remura-server (Boot Volume)` in Oracle, regione Milano: sotto il nome compaiono contemporaneamente i badge **Disponibile** e **Sempre gratis**. La riga di elenco già verificata mostrava **47 GB** e **VPU:10**. Rispetto al precedente testo UI non tradotto `listBootVolumes.alwaysFree`, **l'etichetta leggibile Always Free del volume è ora attestata direttamente dalla UI**. Nessun backup, modifica o chiamata a provider effettuati.
