@@ -89,7 +89,10 @@ def _child(argv):
     _, filename, at, behavior = argv
     if behavior not in BEHAVIORS or not _child_limits():
         return 71
-    if set(os.environ) != {"PYTHONDONTWRITEBYTECODE", "PYTHONNOUSERSITE"}:
+    # CPython may add LC_CTYPE when coercing the C locale (PEP 538).
+    # It was NOT forwarded from the parent; never permit other variables.
+    if set(os.environ) - {"PYTHONDONTWRITEBYTECODE", "PYTHONNOUSERSITE",
+                           "LC_CTYPE"}:
         return 72
     try:
         p = shadow._path(filename, shadow.MODE)
