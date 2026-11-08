@@ -3,6 +3,19 @@
 **Decisione di coordinamento:** 07/11/2026, Italia. **Stato:** ricerca e test OFFLINE sul branch C; nessuna raccolta prospettica reale, merge, installazione o rilascio autorizzati. Raccolta scientifica prospettica NON autorizzata, NON installata e NON avviata. **Repository:** `mirkoworz/remura`. **Branch dedicato:** `research/track-c-beta-prospective-20261107` (PR documentale DRAFT iniziale). **Riferimento scientifico:** [Track B](ROADMAP-B-SHARK-SCIENCE.md) — [PR #89 DRAFT](https://github.com/mirkoworz/remura/pull/89). **Riferimento infrastrutturale esclusivo:** documento privato `COORDINAMENTO-OCI-SHARK-SCIENCE.md` nel repository `mirkoworz/remura-collector`.
 
 
+## 08/11/2026 — C4b(b): inventario + backup/restore SQLite + kill gate offline (NON LIVE)
+
+**Gate C4b(b) esercitato SOLO su SQLite fittizia in una directory temporanea.** Il test non misura SQLite live, costo, memoria Oracle, spazio disco reale della VPS, backup esterno cifrato o resilienza con carichi reali. Nessuna autorizzazione a C5, nessuna installazione, API, cron o nuovo processo permanente.
+
+- [x] `scripts/track_c_c4bb_recovery_gate.py`: path rigidamente limitato a `remura-c4bb-*/track-c4bb-synthetic-core.sqlite3` sotto tmp locale; symlink/hardlink rifiutati, nessun accesso a `/opt/remura`. Lettura **SQLite mode=ro** del core sintetico; schema fisso `lab_schema` + `lab_receipts`, max 32 record sha sintetici, limiti main/WAL/SHM e confronto rigoroso dei contenuti.
+- [x] Inventario lab esplicita file core, WAL e SHM e segnala `NOT_PRESENT_NOT_ZERO_USAGE_PROOF` se non presenti. Non inventa consumo zero della LIVE. Nessun rilevamento dei database live.
+- [x] Backup SQLite tramite API `sqlite3.Connection.backup()` da sorgente sintetica aperta in sola lettura; test di apertura/`PRAGMA integrity_check` del backup, secondo restore in un file temporaneo, verifica righe e digest del contenuto. Salvataggio/ripristino temporanei cancellati: **non è un backup di produzione** né prova di disaster recovery cross-host. Non modifica sorgente.
+- [x] Preflight di spazio solo sulla cartella temporanea del runner con riserva conservativa di laboratorio `4*(main+wal+shm)+1 MiB`; non prova che questo calcolo basti sulla VPS. Simula disco pieno, backup corrotto, nomi occupati e input ostili: rifiuto/UNKNOWN, senza sovrascrivere backup esistenti.
+- [x] `preview_kill_gate`: kill switch **ATTIVO di default** e pura anteprima. Anche togglando in LAB e superando restore, non avvia alcun worker e produce sempre `NO_GO_RESEARCH_AND_PROSPECTIVE_COLLECTION`. Il kill switch di produzione reale resta da progettare, testare e autorizzare.
+- [x] 13 test `tests/test_track_c_c4bb_recovery_gate.py`: backup reale su DB sintetico WAL, ripristino riaperto, inventario di sidecar non presenti, full-disk artificiale, corruzione, collisione backup, schema falso, symlink/out-of-scope, kill switch default/preview, nessuna esposizione di percorsi o segreti. **CI da confermare sul commit dedicato**.
+- [ ] **C4b(c) e C5 NO-GO:** nessun backup live verificato, restore test esterno LIVE, quota GitHub/Firestore/Oracle realmente misurata, capacità RAM/disco VPS, kill switch OS o controllo degli originali FIRST-SEEN. Per il prossimo gate usare solo diagnostiche già raccolte oppure un audit di sola lettura autorizzato, mantenendo B e Oracle indipendenti. Nessun merge PR #89/#97, no deploy.
+
+
 ## 08/11/2026 — C4b(a): gate offline su risorse e inventario SQLite/WAL (NON una misurazione LIVE)
 
 **Stato: VERIFICATO SOLO LAB — commit `5d9aedbfb076c3a2bbfdd0501180aeeb9e5df3e1`**. 12 test sintetici C4b e suite preesistenti superati: [Price Engine #42477019365](https://github.com/mirkoworz/remura/actions/runs/42477019365) **SUCCESS**, [Insights #42477019455](https://github.com/mirkoworz/remura/actions/runs/42477019455) **SUCCESS**. Nessuna autorizzazione a C5, nessun polling o collegamento alla VPS.

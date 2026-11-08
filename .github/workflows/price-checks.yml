@@ -250,6 +250,8 @@ jobs:
       - name: Test v1.64 exact 15-file SHA state reconciliation, offline
         run: python -m unittest discover -s tests -p 'test_reconcile_v164.py' -v
       - run: python -m unittest discover -s tests -p 'test_signals_monitor.py' -v
+      - name: Track C4b(b) - synthetic SQLite WAL backup, restore and default-off kill gate
+        run: python -m unittest discover -s tests -p 'test_track_c_c4bb_recovery_gate.py' -v
       - name: Track C4b(a) - pure offline resource/SQLite evidence fail-closed gate
         run: python -m unittest discover -s tests -p 'test_track_c_c4b_capacity_evidence.py' -v
       - name: Track C3c-c - separate worker process crash, timeout, saturation and core survival (offline)
