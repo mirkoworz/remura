@@ -74,6 +74,19 @@ L'anteprima è **eseguibile solo come controllo su checkout GitHub**, non instal
 
 **Prossimo gate:** progettare separatamente l'installer/reconciler LIVE di v1.65 con preflight pinned e verifiche operative reali (percorso e SHA VPS, servizi, backup coerente con restore-test, permessi, rollback, quote e banner), ma SENZA invocarlo prima di una specifica autorizzazione.
 
+## C4b(k) — protocollo progettuale per installer v1.65, fail-closed (08/11/2026)
+
+Nuovo modulo `deploy/oracle/v165_release_protocol_draft.py`, **solo `--plan-offline`**, commit `3575d4d0aa8db9dff928f3002279d44658abb44a`. Aggiunto `tests/test_v165_release_protocol_draft.py` con **17/17 PASS** e nuova verifica nella CI `price-checks.yml` (commit `d03341b7cb038731fba0bb2e0d6f7687b865a491`): [Price Engine #42495793193](https://github.com/mirkoworz/remura/actions/runs/42495793193) e [Insights #42495793214](https://github.com/mirkoworz/remura/actions/runs/42495793214), entrambe SUCCESS. Tutti i controlli v1.65 precedenti sono ancora verdi in Price Engine.
+
+**Contratto vincolante proposto per il futuro installer (NON ancora realizzato):**
+1. File manifest esatto 12 preesistenti (nove HTML, `nav.js`, `sw.js`, `scripts/private_server.py`) e due nuovi (`scripts/storage_inventory_v165.py`, `scripts/storage_cache_v165.py`). Non servire file di configurazione, SQLite, chiavi, cartelle private o branch di ricerca.
+2. Non assumere che `main` GitHub `5ec7d73` sia lo SHA realmente installato su Oracle: l'identità LIVE va attestata separatamente con manifest e timestamp banner.
+3. Rispettare sequenza: consenso separato, billing e ACL; pin del target con CI push/main; preflight disco+SQLite; snapshot coerente e restore-test; backup rollback codice sigillato; lock autoupdater e stop servizio; installazione dei 12 esistenti + 2 moduli nuovi; verifica hashes, health e banner su nove pagine; riconciliazione updater **solo in un passaggio separato**; conferma continuità della raccolta e costi.
+4. Se uno step fallisce: non avanzare; il modello consente esclusivamente rollback **sintetico**, non attesta recovery della VPS. Il modello `advance_synthetic` rifiuta tutte le prove non marcate `synthetic`, i passaggi fuori ordine e gli stati terminali.
+5. Dimensionamento disco: con misure sconosciute restituisce `UNKNOWN`; con input interi sintetici fornisce soltanto un **reserve estimate** prudenziale (4× DB+WAL+SHM, 3× codice e margine 512 MiB). Non misura capacità, inode o quota reali e non autorizza un deploy.
+
+**Limitazione tecnica fondamentale:** `v165_release_protocol_draft.py` non contiene `--apply`, funzione di installazione o di rollback reale, non apre file SQLite, non usa rete, `systemctl`, Oracle o autoupdater, e restituisce sempre `NO_GO_RELEASE_AND_PROSPECTIVE_COLLECTION`. È un **contratto di progettazione testato**, non l'installer pronto da lanciare. L'attestazione attuale dello SHA installato e i gate operativi/Always Free non sono disponibili da questi test.
+
 ## Limitazioni e barriere NON superate
 
 - Questo ramo **NON è la release 1.65** e NON è un'autorizzazione a installare o
