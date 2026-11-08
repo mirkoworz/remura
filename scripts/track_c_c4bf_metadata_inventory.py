@@ -25,8 +25,10 @@ MIN_FREE = 512 * 1024**2
 MAX_DB = 8 * 1024**3
 MAX_BACKUP_DIRS = 64
 MAX_BACKUP_FILES = 8
+MAX_ROLLBACK_NODES = 128
+MAX_ROLLBACK_DEPTH = 4
 ARCHIVE_NAME = re.compile(r"backup-v\d{2,4}-[A-Za-z0-9-]{8,96}\Z")
-TRANSIENT_NAME = re.compile(r"(?:candidate|restore-test)-v\d{2,4}-[A-Za-z0-9-]{4,96}\Z")
+ROLLBACK_NAME = re.compile(r"rollback-v\d{2,4}-[A-Za-z0-9-]{4,96}\Z")
 BACKUP_FILES = frozenset((DB_NAME, "manifest.txt"))
 
 
@@ -74,48 +76,97 @@ def _item(path, *, optional=False):
             "allocatedBytes": s.st_blocks * 512}
 
 
+def _rollback_metadata(path):
+    """Bounded nested source-file metadata of release_v164 rollback bundles.
+
+    This is NOT an integrity check and must not read manifest contents.
+    """
+    nodes = 0
+    apparent = 0
+    manifest_seen = False
+    pending = [(path, 0)]
+    while pending:
+        directory, depth = pending.pop()
+        if depth > MAX_ROLLBACK_DEPTH:
+            raise ValueError("rollback_too_deep")
+        if not stat.S_ISDIR(directory.lstat().st_mode):
+            raise ValueError("rollback_directory_not_plain")
+        with os.scandir(directory) as iterator:
+            for entry in iterator:
+                nodes += 1
+                if nodes > MAX_ROLLBACK_NODES:
+                    raise ValueError("rollback_files_over_cap")
+                child = directory / entry.name
+                info = child.lstat()
+                if stat.S_ISDIR(info.st_mode):
+                    if depth >= MAX_ROLLBACK_DEPTH:
+                        raise ValueError("rollback_depth_cap")
+                    pending.append((child, depth + 1))
+                elif (stat.S_ISREG(info.st_mode) and info.st_nlink == 1
+                      and 0 <= info.st_size <= MAX_DB):
+                    apparent += info.st_size
+                    if depth == 0 and entry.name == "manifest.json":
+                        manifest_seen = True
+                else:
+                    raise ValueError("rollback_symlink_hardlink_or_special_file")
+    if not manifest_seen:
+        raise ValueError("rollback_manifest_missing")
+    return apparent
+
+
 def _backup_tree(root):
-    """Count only known v156-style archive directories; NEVER read contents."""
+    """Count v156 DB snapshots AND v164 code rollbacks as distinct local kinds."""
     directory = root / BACKUP_DIR
+    unknown = {"state": "UNKNOWN_LOCAL_BACKUP_LAYOUT_OR_BOUNDS",
+               "archives": None, "apparentBytes": None,
+               "rollbacks": None, "rollbackApparentBytes": None}
     try:
         s = directory.lstat()
     except FileNotFoundError:
-        return {"state": "UNKNOWN_NO_LOCAL_BACKUP_DIRECTORY",
-                "archives": None, "apparentBytes": None}
+        return {**unknown, "state": "UNKNOWN_NO_LOCAL_BACKUP_DIRECTORY"}
     if not stat.S_ISDIR(s.st_mode):
-        return {"state": "UNKNOWN_BACKUP_DIRECTORY_TYPE",
-                "archives": None, "apparentBytes": None}
-    total = count = 0
+        return {**unknown, "state": "UNKNOWN_BACKUP_DIRECTORY_TYPE"}
+    snapshot_bytes = snapshot_count = rollback_bytes = rollback_count = 0
     try:
         with os.scandir(directory) as iterator:
             for index, entry in enumerate(iterator):
                 if index >= MAX_BACKUP_DIRS:
                     raise ValueError("bounded_backup_directory_entries")
-                if not ARCHIVE_NAME.fullmatch(entry.name):
-                    raise ValueError("unrecognized_or_incomplete_backup_entry")
                 current = directory / entry.name
                 if not stat.S_ISDIR(current.lstat().st_mode):
-                    raise ValueError("backup_archive_not_real_directory")
-                entries = set()
-                with os.scandir(current) as files:
-                    for number, file in enumerate(files):
-                        if number >= MAX_BACKUP_FILES or file.name not in BACKUP_FILES:
-                            raise ValueError("unrecognized_backup_file_or_limit")
-                        entries.add(file.name)
-                        info = _item(current / file.name)
-                        total += info["apparentBytes"]
-                if entries != BACKUP_FILES:
-                    raise ValueError("incomplete_backup_archive")
-                count += 1
-    except (OSError, ValueError):
-        return {"state": "UNKNOWN_LOCAL_BACKUP_LAYOUT_OR_BOUNDS",
-                "archives": None, "apparentBytes": None}
-    return {
-        "state": ("LOCAL_ARCHIVE_METADATA_NOT_RESTORE_EVIDENCE" if count else
-                  "UNKNOWN_NO_LOCAL_BACKUP_ARCHIVE"),
-        "archives": count,
-        "apparentBytes": total if count else None
-    }
+                    raise ValueError("backup_entry_not_plain_directory")
+                if ARCHIVE_NAME.fullmatch(entry.name):
+                    contents = set()
+                    with os.scandir(current) as files:
+                        for number, file in enumerate(files):
+                            if number >= MAX_BACKUP_FILES or file.name not in BACKUP_FILES:
+                                raise ValueError("unrecognized_backup_file_or_limit")
+                            contents.add(file.name)
+                            info = _item(current / file.name)
+                            snapshot_bytes += info["apparentBytes"]
+                    if contents != BACKUP_FILES:
+                        raise ValueError("incomplete_backup_archive")
+                    snapshot_count += 1
+                elif ROLLBACK_NAME.fullmatch(entry.name):
+                    rollback_bytes += _rollback_metadata(current)
+                    rollback_count += 1
+                else:
+                    # Includes interrupted candidate-v156 and unexpected files:
+                    # refuse complete-enumeration claims rather than omitting.
+                    raise ValueError("unrecognized_or_incomplete_backup_entry")
+    except (OSError, ValueError, OverflowError):
+        return unknown
+    if snapshot_count:
+        state = "LOCAL_ARCHIVE_METADATA_NOT_RESTORE_EVIDENCE"
+    elif rollback_count:
+        state = "LOCAL_ROLLBACK_METADATA_NOT_SQLITE_BACKUP_PROOF"
+    else:
+        state = "UNKNOWN_NO_LOCAL_BACKUP_ARCHIVE"
+    return {"state": state,
+            "archives": snapshot_count,
+            "apparentBytes": snapshot_bytes if snapshot_count else None,
+            "rollbacks": rollback_count,
+            "rollbackApparentBytes": rollback_bytes if rollback_count else None}
 
 
 def _space(root):

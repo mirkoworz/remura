@@ -77,6 +77,60 @@ class ReadonlyInventoryTests(unittest.TestCase):
         self.assertEqual(x["localBackups"]["state"],"UNKNOWN_NO_LOCAL_BACKUP_ARCHIVE")
         self.assertIsNone(x["localBackups"]["apparentBytes"])
 
+    def rollback(self, *, name="rollback-v164-abcdefgh"):
+        folder=self.root/m.BACKUP_DIR/name
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder/"manifest.json").write_text("FICTIONAL_ROLLBACK_MANIFEST",encoding="ascii")
+        nested=folder/"scripts"
+        nested.mkdir()
+        (nested/"price_store.py").write_bytes(b"FICTIONAL_SOURCE_COPY")
+        return folder
+
+    def test_v164_rollback_only_is_not_database_backup(self):
+        self.core_file()
+        self.rollback()
+        x=self.scan()
+        self.assertEqual(x["localBackups"]["archives"],0)
+        self.assertEqual(x["localBackups"]["rollbacks"],1)
+        self.assertIsNone(x["localBackups"]["apparentBytes"])
+        self.assertGreater(x["localBackups"]["rollbackApparentBytes"],0)
+        self.assertEqual(x["localBackups"]["state"],
+                         "LOCAL_ROLLBACK_METADATA_NOT_SQLITE_BACKUP_PROOF")
+        self.assertFalse(x["backupRestoreIntegrityVerified"])
+
+    def test_v156_sqlite_archive_and_v164_code_rollback_separate(self):
+        self.core_file();self.archive();self.rollback()
+        x=self.scan()
+        self.assertEqual(x["localBackups"]["archives"],1)
+        self.assertEqual(x["localBackups"]["rollbacks"],1)
+        self.assertEqual(x["localBackups"]["state"],
+                         "LOCAL_ARCHIVE_METADATA_NOT_RESTORE_EVIDENCE")
+        self.assertFalse(x["offhostBackupExistsVerified"])
+
+    def test_symlink_or_missing_manifest_inside_v164_rollback_invalid(self):
+        self.core_file()
+        folder=self.rollback()
+        (folder/"manifest.json").unlink()
+        self.assertEqual(self.scan()["localBackups"]["state"],
+                         "UNKNOWN_LOCAL_BACKUP_LAYOUT_OR_BOUNDS")
+        (folder/"manifest.json").write_bytes(b"FICTIONAL")
+        link=folder/"scripts"/"symlink"
+        try:link.symlink_to(self.core)
+        except (OSError,NotImplementedError):self.skipTest("symlink unavailable")
+        self.assertEqual(self.scan()["localBackups"]["state"],
+                         "UNKNOWN_LOCAL_BACKUP_LAYOUT_OR_BOUNDS")
+
+    def test_deep_rollback_tree_rejected_in_bounded_read_only_pass(self):
+        self.core_file()
+        folder=self.rollback()
+        cursor=folder
+        for i in range(m.MAX_ROLLBACK_DEPTH+2):
+            cursor=cursor/("sub"+str(i))
+            cursor.mkdir()
+        x=self.scan()
+        self.assertEqual(x["localBackups"]["state"],
+                         "UNKNOWN_LOCAL_BACKUP_LAYOUT_OR_BOUNDS")
+
     def test_incomplete_or_unknown_backup_layout_fails_closed(self):
         self.core_file()
         base=self.root/m.BACKUP_DIR
