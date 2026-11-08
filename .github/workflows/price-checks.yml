@@ -281,6 +281,24 @@ jobs:
       - run: python -m unittest discover -s tests -p 'test_capital_sentiment.py' -v
       - run: python -m unittest discover -s tests -p 'test_capital_private.py' -v
       - run: python -m unittest discover -s tests -p 'test_ctrader_tokens.py' -v
+      # TEMPORARY one-shot evidence fetch; delete after obtaining the digest.
+      # Public official endpoint only: no credentials, OCI, SSH, or VPS.
+      - name: TEMP evidence - official Tailscale 1.104.4 amd64 SHA256 (public only)
+        if: github.event_name == 'pull_request' && github.head_ref == 'release/v165-readonly-storage-diagnostic-draft-20261108'
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_url='https://pkgs.tailscale.com/stable/tailscale_1.104.4_amd64.tgz.sha256'
+          if ! raw="$(timeout 20s curl --proto '=https' --proto-redir '=https' --tlsv1.2 --fail --silent --show-error --location --max-time 12 --retry 1 "$source_url" | head -c 129)"; then
+            echo 'REMURA_TS_PUBLIC_CHECKSUM=UNAVAILABLE'
+            exit 0
+          fi
+          if [[ "$raw" =~ ^[0-9a-f]{64}$ ]]; then
+            echo "REMURA_TS_OFFICIAL_AMD64_1_104_4_SHA256=$raw"
+          else
+            echo 'REMURA_TS_PUBLIC_CHECKSUM=INVALID_RESPONSE'
+          fi
+
       - name: Verify no personal feed or API token is publicly embedded
         run: |
           node - <<'NODE'
