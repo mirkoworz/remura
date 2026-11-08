@@ -3,6 +3,16 @@
 **Checkpoint: 8 novembre 2026. Stato: NO-GO per accesso nuovo, SSH, rilascio e raccolta C5.**
 Questo file è una scheda operativa per il proprietario. Non contiene segreti, indirizzi privati, chiavi, OCID o comandi da eseguire sulla VPS. È soltanto nella PR #98 DRAFT; non installa alcuna GitHub Action.
 
+## 8 novembre 2026, ore 23:35 italiane — Dimensionamento shape VPS e limiti Always Free: evidenza parziale
+
+Nella console Oracle, scheda **Dettagli istanza**, l'operatore ha mostrato `VM.Standard.E2.1.Micro` con **1 OCPU come conteggio UI**, **1 GB RAM**, **0,5 Gbps come banda di rete UI**, **solo storage a blocchi**, con immagine **Ubuntu 24.04 Minimal**. Nessuna modifica. La [documentazione Oracle delle risorse Always Free](https://docs.oracle.com/it-it/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm) elenca **massimo due istanze VM.Standard.E2.1.Micro** nella home region, con **CPU baseline pari a 1/8 OCPU** e burst possibile. I campi della console **non** garantiscono 1 core dedicato o banda Internet garantita.
+
+**Esito circoscritto:** `VPS_SHAPE_ALWAYS_FREE_ELIGIBLE=YES` per forma e famiglia immagine; **non** equivale a `VPS_ALL_RESOURCES_ALWAYS_FREE_CONFIRMED` e **non** attesta una fattura a 0 euro dopo il trial. Restano aperti l'etichetta risorsa idonea, l'home region della tenancy, il conteggio totale VM Micro, le dimensioni e il totale di boot/block volumes, eventuali backup, quote e costo effettivo. Oracle documenta un plafond di **200 GB combinati per boot e block storage** e fino a **5 backup volume** Always Free nella home region. Il Free Trial e i controlli storici di budget/alert sono già evidenziati nella roadmap e **non vanno rieseguiti** salvo segnali nuovi; alert e budget non sono prova di blocco addebiti.
+
+**Prossimo controllo UI solo lettura:** nella **stessa pagina di istanza Oracle**, scheda **Storage**, individuare il **boot volume collegato** e visualizzarne **dimensione in GB** e stato/etichetta Always Free; nessun resize, nuova risorsa o backup. Il censimento completo degli altri volumi e delle istanze esistenti resta un controllo successivo solo se necessario per attestare i limiti cumulativi.
+
+Tutti gli altri gate invariati: `C4b(l)=NO_GO`, `SSH_AUDIT=NO_GO`, `V165_RELEASE=NO_GO`, `C5=NO_GO`; nessuna modifica a SSH, ACL, IAM, VPS, MAIN o collector. Restano necessari dati host effettivi, inventario dei 15 file LIVE, backup SQLite coerente e restore off-host, rollback e autorizzazione separata.
+
 ## 8 novembre 2026, ore 23:22 italiane — Chiuso censimento Security Lists della subnet (UI, sola lettura)
 
 **Evidenza successiva al checkpoint delle 22:57:** nella pagina della **subnet pubblica della VPS REMURA**, scheda **Sicurezza → Liste di sicurezza**, lo screenshot mostra **solo** `Default Security List for remura-vcn`, **pagina 1 di 1**, fino a **25 elementi per pagina**. La lista visualizzata è **Disponibile**. Non risulta una seconda Security List associata alla subnet al momento della consultazione.
