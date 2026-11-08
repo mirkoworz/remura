@@ -7,6 +7,17 @@
 
 
 
+
+
+## 08/11/2026 — C4b(k) — checksum indipendente Tailscale prima di OIDC (checkpoint successivo)
+
+- [x] Ricontrollati su GitHub PR #89, #97, #98 ancora OPEN/DRAFT e separati. Nessun merge, deploy, VPS access o modifiche ai Filoni A/B.
+- [x] Analizzato `src/main.ts` di `tailscale/github-action` al commit immutabile v4.4.0: su Linux il tarball e' confrontato con un SHA256, ma senza `sha256sum` esplicito l'hash viene scaricato automaticamente dallo **stesso server** `pkgs.tailscale.com` e non vale come pin indipendente. Disabilitare cache evita il percorso che potrebbe non rieseguire la verifica.
+- [x] Su release PR #98 **solo template inattivo** aggiunto gate fail-closed **prima delle credenziali Tailscale OIDC**. Richiede `REMURA_V165_TS_TARBALL_SHA256` (64 hex non-zero) per `tailscale_1.104.4_amd64.tgz` e runner Linux/X64; lo passa a `sha256sum` dell'Action. La forma corretta non dimostra provenienza: il digest reale richiede verifica esterna e consenso per la variabile privata prima di qualsiasi run.
+- [x] Quattro nuovi test offline di forma/check runner e input avversari; il caso con digest sintetico formalmente valido NON e' hash genuino, NON e' prova di integrita' dell'archivio.
+- [ ] **CI nuova da confermare:** checkpoint precedente `327/327` offline su 12 suite; suite ora contiene 41 test invece di 37 (totale atteso `331/331` se tutte verdi). Non chiamare PASS il nuovo codice senza workflow effettivamente concluso.
+- [ ] STOP LIVE invariato: digest autentico non acquisito/approvato; environment reviewer, ACL Tailscale separata, host key e utente SSH non-root, SHA dei 15 file LIVE, spazio/inode, billing/Always Free, backup SQLite+restore off-host, rollback/autoupdater e consenso rilascio ancora mancanti. **C4b(l), v1.65, C5 NO-GO**.
+
 ## 08/11/2026 — Pin SHA azioni esterne su template NON ATTIVO (checkpoint successivo)
 
 - [x] Sul **ramo separato release PR #98** (nessun merge, nessun deploy), pin immutabili delle GitHub Actions esterne nel template SSH NON installato: `actions/checkout` **v5.0.1** `93cb6efe18208431cddfb8368fd83d5badbf9bfd` e `tailscale/github-action` **v4.4.0** `064b10558093f38325e838ddea35486bdc6b1d5c`, verificati sui tag GitHub ufficiali e sorgente `action.yml`. Client Tailscale `1.104.4` esplicito, `use-cache: false`, runner `ubuntu-24.04`. Nessun nuovo workflow schedulato, nessun token creato o usato, zero accesso VPS.
