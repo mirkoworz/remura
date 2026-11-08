@@ -5,6 +5,15 @@
 
 
 
+
+
+## 08/11/2026 — Pin SHA azioni esterne su template NON ATTIVO (checkpoint successivo)
+
+- [x] Sul **ramo separato release PR #98** (nessun merge, nessun deploy), pin immutabili delle GitHub Actions esterne nel template SSH NON installato: `actions/checkout` **v5.0.1** `93cb6efe18208431cddfb8368fd83d5badbf9bfd` e `tailscale/github-action` **v4.4.0** `064b10558093f38325e838ddea35486bdc6b1d5c`, verificati sui tag GitHub ufficiali e sorgente `action.yml`. Client Tailscale `1.104.4` esplicito, `use-cache: false`, runner `ubuntu-24.04`. Nessun nuovo workflow schedulato, nessun token creato o usato, zero accesso VPS.
+- [x] Quattro nuovi test statici sulla forma degli SHA, divieto tag mobili, versione client e runner vincolato. **Non** sono una prova che la VPN funzioni o che la supply chain del pacchetto runtime sia integra: il checksum del tarball Tailscale `sha256sum` non e' ancora fissato/verificato.
+- [ ] CI del nuovo commit: verificare lo stato effettivo dei run Price Engine/Insights prima di incrementare il contatore offline dal precedente **323/323 su 12 suite** (target massimo atteso se tutto verde: 327/327).
+- [ ] Rimangono NO-GO tutti i gate operativi: ambiente protetto con approvazione reale, identity/ACL Tailscale nuova e ristretta, autorizzazione SSH non-root/host key senza esposizione pubblica, hash LIVE indipendente, spazio/inode, billing/Always Free, restore off-host, rollback/autoupdater, rilascio v1.65 e C5. Non modificare Filoni A e B.
+
 ## 08/11/2026 — Revisione sicurezza template SSH non attivo (checkpoint successivo)
 
 - [x] Verificati nuovamente via GitHub i tre rami separati: PR #89 Track B, PR #97 Track C e PR #98 v1.65 ancora **OPEN/DRAFT** agli HEAD del passaggio di consegne. Nessun merge o intervento al collector.
