@@ -205,6 +205,109 @@ class ReadonlyInventoryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"only_bounded_lab"):
             self.scan(lab_free_override=True)
 
+
+    def _root_fd(self):
+        return os.open(self.root, m._dir_flags())
+
+    def test_fd_scan_regular_database_and_optional_sidecars(self):
+        self.core_file()
+        fd=self._root_fd()
+        try:
+            main=m._fd_item(fd,m.DB_NAME)
+            missing=m._fd_item(fd,m.DB_NAME+"-wal",optional=True)
+            self.assertEqual(main["state"],"FILE_SIZE_METADATA_ONLY")
+            self.assertIsNone(missing["apparentBytes"])
+            self.assertGreaterEqual(m._fd_space(fd)["availableInodes"],0)
+        finally:
+            os.close(fd)
+
+    def test_fd_symlink_or_hardlink_to_main_fails_closed(self):
+        self.core_file()
+        fd=self._root_fd()
+        try:
+            (self.root/(m.DB_NAME+"-wal")).symlink_to(self.core)
+            with self.assertRaisesRegex(ValueError,"symlink_or_hardlink"):
+                m._fd_item(fd,m.DB_NAME+"-wal",optional=True)
+            alias=self.root/"alias"
+            os.link(self.core,alias)
+            with self.assertRaisesRegex(ValueError,"symlink_or_hardlink"):
+                m._fd_item(fd,m.DB_NAME)
+        finally:
+            os.close(fd)
+
+    def test_fd_backup_metadata_keeps_snapshot_and_rollback_distinct(self):
+        self.core_file()
+        self.archive()
+        self.rollback()
+        fd=self._root_fd()
+        try:
+            result=m._fd_backup_tree(fd)
+            self.assertEqual(result["archives"],1)
+            self.assertEqual(result["rollbacks"],1)
+            self.assertGreater(result["apparentBytes"],0)
+            self.assertGreater(result["rollbackApparentBytes"],0)
+        finally:
+            os.close(fd)
+
+    def test_fd_symlink_backup_entry_fails_without_following(self):
+        self.core_file()
+        safe=self.root/"private-target"
+        safe.mkdir()
+        backups=self.root/m.BACKUP_DIR
+        backups.mkdir()
+        (backups/"backup-v156-20261108T123000Z-abcdef").symlink_to(safe)
+        fd=self._root_fd()
+        try:
+            self.assertEqual(m._fd_backup_tree(fd)["state"],
+                             "UNKNOWN_LOCAL_BACKUP_LAYOUT_OR_BOUNDS")
+        finally:
+            os.close(fd)
+
+    def test_fd_stays_pinned_when_original_directory_path_replaced(self):
+        original=self.root/"original"
+        original.mkdir()
+        (original/m.DB_NAME).write_bytes(b"FICTIONAL_SMALL")
+        elsewhere=self.root/"elsewhere"
+        elsewhere.mkdir()
+        (elsewhere/m.DB_NAME).write_bytes(b"SENSITIVE"*100)
+        fd=os.open(original,m._dir_flags())
+        try:
+            original.rename(self.root/"renamed")
+            original.symlink_to(elsewhere,target_is_directory=True)
+            self.assertEqual(m._fd_item(fd,m.DB_NAME)["apparentBytes"],
+                             len(b"FICTIONAL_SMALL"))
+        finally:
+            os.close(fd)
+
+    def test_live_root_directory_opens_request_nofollow_every_step(self):
+        with patch.object(m.os,"open",side_effect=[101,102,103,104]) as opened, \
+             patch.object(m.os,"close") as closed:
+            descriptor=m._open_live_root()
+            self.assertEqual(descriptor,104)
+            args=opened.call_args_list
+            self.assertEqual([x.args[0] for x in args],
+                             ["/","opt","remura","private"])
+            self.assertTrue(all(x.args[1]&os.O_NOFOLLOW for x in args))
+            self.assertEqual([x.kwargs.get("dir_fd") for x in args],
+                             [None,101,102,103])
+            self.assertEqual([x.args[0] for x in closed.call_args_list],
+                             [101,102,103])
+
+    def test_fd_scan_never_opens_sqlite_wal_or_backup_regular_files(self):
+        self.core_file()
+        self.archive()
+        fd=self._root_fd()
+        try:
+            with patch.object(m.os,"open",wraps=os.open) as opened:
+                m._fd_item(fd,m.DB_NAME)
+                m._fd_backup_tree(fd)
+            names=[args.args[0] for args in opened.call_args_list]
+            self.assertNotIn(m.DB_NAME,names)
+            self.assertNotIn(m.DB_NAME+"-wal",names)
+            self.assertNotIn("manifest.txt",names)
+        finally:
+            os.close(fd)
+
     def test_no_sqlite_or_network_import_and_no_server_activation(self):
         script=(ROOT/"scripts"/"storage_inventory_v165.py").read_text()
         tree=ast.parse(script)
