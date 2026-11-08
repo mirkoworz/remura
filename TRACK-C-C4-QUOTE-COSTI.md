@@ -22,3 +22,13 @@ Prima di raccogliere osservazioni reali, servono misure effettive e documentate:
 Usare avvisi all'**80%** di qualunque quota realmente applicabile e STOP research prima di superarla, preservando i collector. Il consumo stimato da dati del laboratorio non vale come costo o quote reale. Il budget email da **1 €** con alert **0,10 €** descritto nel filone infrastruttura è un avviso, non automaticamente una barriera di fatturazione. Nessuna garanzia di 0 € fino alla conferma della fatturazione e del piano effettivo.
 
 **NO-GO invariato:** PR #97 e #89 DRAFT, `main`/LIVE non toccati da C, nessuna attivazione Track C5, nuova VM, provider polling, ordine, segnali o profitti.
+
+## 3. C4b(a) — valutatore della capacità sulla telemetria esistente (solo LAB)
+
+Nuovo codice `scripts/track_c_c4b_capacity_evidence.py`: accetta fino a otto campioni ridotti, già sanificati, dello schema `remura-resources-v1`. Verifica data UTC, età massima 5 minuti, ordinamento e uptime, RAM/disco/swap, proxy load1/logical, quote di coerenza; restituisce UNKNOWN su campioni assenti, vecchi o invalidi. **Non apre /proc, filesystem, HTTP, API OCI o provider** e non converte la simulazione in telemetria VPS reale.
+
+- Limiti puramente esplorativi (NON attivati): RAM/disco >=80%, spazio libero <512 MiB, swap in uso o load1/logical >=0,8 segnalano possibile pressione. L'average load NON misura la percentuale CPU né il consumo OCPU OCI.
+- Inventario opzionale solo **numerico** di core SQLite, WAL, SHM, research SQLite, WAL, SHM e backup. L'assenza di una sola misura genera UNKNOWN; anche valori numerici validi sono input NON attestato, NON prova di restore.
+- 12 test con dati fittizi: episodi di saturazione, clock falsi, restart, input segreto rifiutato, single-sample bias e anti-GO. Il gate ritorna sempre `NO_GO_RESEARCH_AND_PROSPECTIVE_COLLECTION` senza alcun commit operativo. La CI che verificherà questo checkpoint va registrata dopo la sua conclusione.
+
+**Dai documenti privati già esistenti:** la telemetria batch del 3 novembre e i controlli Oracle del 7 novembre sono fotografie *storiche*, non misurazioni attuali. L'istanza E2.1.Micro (RAM 1 GB) è diversa da una futura A1; non usare 12 GB come RAM realmente disponibile. I dati di billing riportati pari a zero non provano la spesa finale, e il restore-test non è attestato da questa fase. **C4b(b) resta NO-GO** per mancanza di misurazioni correnti e autorizzazione a eventuale raccolta. Nessun nuovo GET, job schedulato, servizio o intervento VPS è stato richiesto.

@@ -3,6 +3,19 @@
 **Decisione di coordinamento:** 07/11/2026, Italia. **Stato:** ricerca e test OFFLINE sul branch C; nessuna raccolta prospettica reale, merge, installazione o rilascio autorizzati. Raccolta scientifica prospettica NON autorizzata, NON installata e NON avviata. **Repository:** `mirkoworz/remura`. **Branch dedicato:** `research/track-c-beta-prospective-20261107` (PR documentale DRAFT iniziale). **Riferimento scientifico:** [Track B](ROADMAP-B-SHARK-SCIENCE.md) — [PR #89 DRAFT](https://github.com/mirkoworz/remura/pull/89). **Riferimento infrastrutturale esclusivo:** documento privato `COORDINAMENTO-OCI-SHARK-SCIENCE.md` nel repository `mirkoworz/remura-collector`.
 
 
+## 08/11/2026 — C4b(a): gate offline su risorse e inventario SQLite/WAL (NON una misurazione LIVE)
+
+**Stato:** simulatore di valutazione risorse con 12 test sintentici locali; la conferma richiede CI GitHub sul commit C4b. Nessuna autorizzazione a C5, nessun polling o collegamento alla VPS.
+
+- [x] `scripts/track_c_c4b_capacity_evidence.py`: modulo **puramente offline**; accetta SOLO campioni già sanificati in forma ridotta derivabile da `resource_monitor.snapshot` (`remura-resources-v1`), non importa server/collector, non apre file, non crea rete, processi, cron, provider API, notifiche, dati di mercato o modifiche a Oracle.
+- [x] Valida clock UTC, massimo 8 campioni, età massimo 5 minuti, sequenza/uptime, numeri coerenti e limiti; distingue **SAMPLE ASSENTE / STALE / INVALIDO / RESTART / UNA SOLA MISURA / PIÙ MISURE NON ATTESTATE**. Non deduce tempo effettivo di ingest, OCPU, costo Oracle, performance futura o assenza di crash. Proxy `load1/logical` NON equivale alla percentuale di utilizzo CPU.
+- [x] Soglie solo **proposte in laboratorio**: alert quando RAM o disco >=80%, disco libero inferiore a 512 MiB, swap in uso o rapporto load1/logical >=0,8. Le soglie **non sono state installate** e non dimostrano spazio sufficiente per backup/rollback o quote cloud.
+- [x] Inventario di dimensioni SQLite **fornito da fonte esterna NON attestata**: core DB/WAL/SHM, shadow DB/WAL/SHM e backup; nessun path, token o file letto. Manifest mancante/stale/invalidato => UNKNOWN, mai zero. I sette contatori non certificano copertura di TUTTI i database o restore-test.
+- [x] `tests/test_track_c_c4b_capacity_evidence.py`: **12 test offline** di dati mancanti, data invecchiata, timezone/futuro, risorse incoerenti, soglie, riavvio, payload vietato, inventario assente o insufficiente, modalità e anti-attivazione.
+- [ ] **C4b(b) NO-GO:** i rapporti privati del 7 novembre sono **storici**. La VM ordinaria E2 (1 GB RAM) è operativa secondo evidenza privata, ma non è un A1 potenziato; quote billing e stato finale post-trial sono ancora da confermare nel Track Oracle (checkpoint successivo dopo il 15 novembre). Mancano campioni correnti verificabili su CPU/RAM/swap, inventario effettivo DB/WAL/SHM+backup, costi GitHub/Firebase, spazio libero, restore-test e prova di isolamento operativo su hardware vero. Un risultato CI verde non cambia questi UNKNOWN. PR #89 e #97 restano DRAFT, nessun servizio o acquisizione prospettica reale avviati.
+- [ ] Il **verdetto prodotto da questo modulo è sempre NO_GO_RESEARCH_AND_PROSPECTIVE_COLLECTION**, anche con due snapshot sintetiche perfette. Non è un interruttore operativo né una protezione di costi in tempo reale.
+
+
 ## 08/11/2026 — C4a: inventario fonti gratuite e limiti reali da verificare (SOLA DOCUMENTAZIONE)
 
 **Stato C4a: baseline statica verificabile; NON è una misurazione corrente di consumi, fatture, VM, servizi o dati di mercato.** Dettagli, fonti ufficiali e matrice di controlli: [TRACK-C-C4-QUOTE-COSTI.md](TRACK-C-C4-QUOTE-COSTI.md).
