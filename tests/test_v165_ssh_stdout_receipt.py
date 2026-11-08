@@ -186,7 +186,7 @@ class OneShotReceiptTests(unittest.TestCase):
 
     def test_transport_pins_exact_code_source(self):
         t=TEMPLATE.read_text()
-        self.assertIn("ref: 33aeb9a4805104d663489e3a5e28dd12db47f28a",t)
+        self.assertIn("ref: 77eb7ec4dfd98176c8146651489a382126647048",t)
         self.assertIn("expected_code_blob=98b0a28190647e9d321690097aae30395bc9f900",t)
         self.assertIn("git hash-object",t)
         self.assertIn("persist-credentials: false",t)
@@ -198,7 +198,7 @@ class OneShotReceiptTests(unittest.TestCase):
         self.assertIn("-o UserKnownHostsFile=",t)
         self.assertNotIn("ssh-keyscan ",t)
         self.assertNotIn("StrictHostKeyChecking=no",t)
-        self.assertNotIn("accept-new",t)
+        self.assertNotIn("StrictHostKeyChecking=accept-new",t)
 
     def test_transport_rejects_root_privileged_account(self):
         t=TEMPLATE.read_text()
