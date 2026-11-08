@@ -3,6 +3,14 @@
 **Checkpoint: 8 novembre 2026. Stato: NO-GO per accesso nuovo, SSH, rilascio e raccolta C5.**
 Questo file è una scheda operativa per il proprietario. Non contiene segreti, indirizzi privati, chiavi, OCID o comandi da eseguire sulla VPS. È soltanto nella PR #98 DRAFT; non installa alcuna GitHub Action.
 
+## 8 novembre 2026 — Decisione owner: verifiche backup rinviate
+
+L'operatore ha esplicitamente richiesto di **non effettuare ora backup e di rinviarli a un altro momento**, preferendo chiudere la preparazione del Filone C. Per questa fase: **STOP a schermate, menu, inventari e proposte operative sui backup**, incluse policy OCI, snapshot, copie SQLite e restore. Non programmare né attivare nulla. Il warning sui backup esistente nel volume Oracle resta un dato storico, non una richiesta di intervento immediato.
+
+**La sicurezza non viene derogata:** `SQLITE_CONSISTENT_OFFHOST_BACKUP=NOT_ATTESTED_DEFERRED`, `RESTORE_TEST_OFFHOST=NOT_ATTESTED_DEFERRED`, `OPENSSH_HOST_AUDIT=NOT_ATTESTED`, `15_LIVE_FILE_SHA_ATTESTATION=NOT_DONE`, `FULL_OCI_BILLING=NOT_ATTESTED`. La fase di progettazione offline v1.65 può essere **congelata senza altre modifiche**; `V165_RELEASE=NO_GO` e `C5=NO_GO` rimangono vincolanti. Mai installare, rilasciare o ampliare accessi per "completare" il filone senza gate e consensi successivi.
+
+**Handoff futuro:** alla ripresa, concordare in un'unica sessione una sequenza di audit VPS non-root/sola lettura, hash esatti dei 15 file, quote e storage/inode, protezione dati e verifica backup SQLite+restore fuori host, autoupdater/rollback, target SHA reale, banner italiano su nove pagine, controllo CI e autorizzazione release separata. Non ripetere la già conclusa verifica Security List o l'identificazione della forma/del volume. PR #89, #97, #98 restano DRAFT non mergiate; MAIN e servizi LIVE invariati.
+
 ## 8 novembre 2026, ore 23:50 italiane — Volume di avvio etichettato Sempre gratis; warning backup da non ignorare
 
 Nella pagina Oracle **dettaglio volume di avvio** `remura-server (Boot Volume)`, catturata dall'operatore da iPhone, sono visibili i badge **Disponibile** e **Sempre gratis**. Questo conferma direttamente **l'etichetta Always Free del singolo volume** (47 GB allocati, già attestati dalla pagina elenco), invece della chiave UI non tradotta precedente. La forma `VM.Standard.E2.1.Micro` rimane idonea secondo documentazione; **non** ne consegue ancora che l'insieme delle risorse OCI sia interamente gratuito dopo il trial né che vi siano 153 GB effettivamente disponibili. Non risultano attestate le quote globali del conto, gli altri compartimenti/backup e lo spazio libero/inode nella VPS.
