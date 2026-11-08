@@ -12,6 +12,12 @@
 
 
 
+## 08/11/2026 ore 22:57 Italia — C4b(l) — default Security List solo ICMP, assocazioni subnet da attestare
+
+- [x] Ricevute schermate Oracle della **Default Security List** nella VCN REMURA. Tabella **Regole di entrata** `pagina 1 di 1` con **due righe ICMP**, sorgenti visibili `0.0.0.0/0` e `10.0.0.0/16`, tipi/codici ICMP `3,4` e `3`. **Nessuna regola TCP/22 compare nella lista esaminata**. In uscita la lista autorizza tutti i protocolli verso `0.0.0.0/0`, e ciò NON apre automaticamente connessioni SSH in ingresso.
+- [x] Consultata la [documentazione Oracle Security Lists](https://docs.oracle.com/en-us/iaas/Content/Network/Concepts/securitylists.htm): una subnet può avere **diverse security lists associate**; le rispettive autorizzazioni si sommano. Poiché la VNIC non mostrava NSG, il prossimo controllo è leggere l'elenco effettivo e completo di Security Lists **associate alla subnet pubblica** e non soltanto la Default Security List mostrata nella VCN.
+- [ ] Fino a questa verifica: `DEFAULT_SECURITY_LIST_TCP22=NO` sulla UI, ma `SUBNET_ALL_SECURITY_LISTS_ATTESTED=NO` e `OCI_PUBLIC_SSH_EXPOSURE=UNKNOWN`. Se altre liste sono collegate, leggere ogni ingress; non toccare/chiudere/aggiungere regole. Nessun lockout e nessun cambiamento LIVE.
+- [ ] Controlli indipendenti ancora mancanti: firewall Linux, OpenSSH, utente no-sudo/forced gate, ACL Tailscale/OIDC, hash file v1.64 LIVE, backup/restore, costi/quote post-trial Always Free. C4b(l)/release v1.65/C5 sempre **NO-GO**; Filoni A e B non modificati.
 ## 08/11/2026 ore 22:06 Italia — Account Free Trial ATTIVO e ingresso TCP/22 OCI ancora da verificare
 
 - [x] L'operatore ha mostrato direttamente il banner **Oracle Account di livello gratuito — Versione di prova gratuita attiva**. Stato account aggiornato da `UNKNOWN/FREE_TRIAL_LIKELY` a **`FREE_TRIAL_ACTIVE` attestato dalla UI**, alla data della prova. Il portale segnala passaggio ai servizi Sempre gratis senza upgrade: **non** significa che tutte le risorse esistenti siano idonee Always Free né conferma una fattura a 0€ dopo scadenza. Nessun upgrade, spesa o chiamata OCI avviati.
