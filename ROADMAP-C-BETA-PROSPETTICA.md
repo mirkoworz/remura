@@ -14,7 +14,7 @@
 - [x] Tutte le cartelle/temp DB vengono eliminati a fine simulazione; nessun output contiene chiavi, hash, blob o percorsi. Le CI non pubblicano un artifact con ciphertext o dati. **Uso 1 MiB solo laboratorio**: la procedura one-shot non è adatta a una SQLite di produzione grande; per LIVE servono streaming/cifratura a memoria limitata, gestione chiavi **indipendente dalla VPS**, audit sicurezza e approvazione distinta.
 - [ ] **C4b(j) operativo / C4b(k) / C5 NO-GO**: manca verifica reale dimensioni SQLite/WAL/SHM, spazio Object Storage/Drive disponibile, protezione key escrow, copia cifrata offhost e restore-test realmente indipendente. Lo storico Oracle 47GB boot non è quota Object Storage. Pianificare **prima** una diagnostica sola lettura autorizzata o rilascio v1.65 separato, con verifica fatturazione post trial, banner versione/data su tutte le pagine e rollback. La PR #97 resta DRAFT, senza merge LIVE.
 
-**CI del commit C4b(j): da registrare dopo i run.**
+**C4b(j) CI verificata:** codice commit `9703e968a1f034e9627f243ec2099618147ecd3a`, correzione workflow YAML commit `f8406d5e94ccb01aa8d0a6531a75f1a93a7a670d`: [Price Engine #42490222050](https://github.com/mirkoworz/remura/actions/runs/42490222050) **SUCCESS** (installazione PyCA binaria e 18 test integrazione C4b-j; tutte le suite precedenti verdi), [Insights #42490221967](https://github.com/mirkoworz/remura/actions/runs/42490221967) **SUCCESS**. Primo run `42490109847` fallito soltanto per sintassi YAML del parametro `--only-binary=:all:` senza quoting; corretto, nessun test/live compromesso. **Non confondere PASS sintetico con evidenza off-host operativa**.
 
 ## 08/11/2026 — C4b(i): piano gratuito off-host crittografato e gate quote (SOLO OFFLINE)
 
