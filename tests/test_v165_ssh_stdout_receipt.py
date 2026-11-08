@@ -221,14 +221,25 @@ class OneShotReceiptTests(unittest.TestCase):
         self.assertIn("    runs-on: ubuntu-24.04",t)
         self.assertNotIn("    runs-on: ubuntu-latest",t)
 
-    def test_tailscale_archive_digest_from_reviewed_variable_only(self):
+    def test_tailscale_archive_digest_is_immutable_official_pin(self):
+        # Public official checksum captured via CI #42515538956 on 2026-11-08.
+        # This verifies a pinned string, not a downloaded tarball or signature.
         t=TEMPLATE.read_text()
-        variable=chr(36)+"{{ vars.REMURA_V165_TS_TARBALL_SHA256 }}"
-        self.assertIn("sha256sum: "+variable,t)
-        self.assertIn("TS_V165_ARCHIVE_SHA256: "+variable,t)
+        digest="624ea093d47d62cf56f17b8332d74b8decda4a1faa610ebc60a1de334b2b3dc9"
+        self.assertIn("sha256sum: '"+digest+"'",t)
+        self.assertIn("TS_V165_ARCHIVE_SHA256: '"+digest+"'",t)
+        self.assertEqual(t.count(digest),2)
+        self.assertNotIn("REMURA_V165_TS_TARBALL_SHA256",t)
         self.assertIn("REMURA_AUDIT=TAILSCALE_ARCHIVE_PIN_NOT_ATTESTED",t)
         self.assertLess(t.index("TAILSCALE_ARCHIVE_PIN_NOT_ATTESTED"),
                         t.index("Connect dedicated ephemeral audit identity"))
+
+    def test_no_runtime_manifest_fetch_or_variable_override(self):
+        t=TEMPLATE.read_text()
+        self.assertNotIn(".tgz.sha256'", t)
+        self.assertNotIn("sha256sum: $",t)
+        self.assertNotIn("curl ",t)
+        self.assertNotIn("wget ",t)
 
     @staticmethod
     def _archive_preflight(digest, os_name="Linux", arch="X64"):
