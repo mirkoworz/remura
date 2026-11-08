@@ -16,10 +16,11 @@ import subprocess
 import sys
 import time
 
-try:
-    from scripts import track_c_c3b_durable_shadow as shadow
-except ImportError:
-    import track_c_c3b_durable_shadow as shadow
+# -I excludes both PYTHONPATH and the script directory. Restore ONLY the
+# immutable sibling scripts directory for our audited, standard-library-only
+# research WAL module; do not restore external module lookup paths.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import track_c_c3b_durable_shadow as shadow
 
 MODE = "OFFLINE_SYNTHETIC_C3CC_ISOLATED_WORKER_ONLY"
 UNKNOWN = shadow.UNKNOWN
