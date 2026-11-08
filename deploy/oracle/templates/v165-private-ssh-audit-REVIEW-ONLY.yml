@@ -71,12 +71,14 @@ jobs:
 
       - name: Require independently reviewed pinned Tailscale archive checksum
         # Reference archive: tailscale_1.104.4_amd64.tgz (official stable).
-        # A matching digest must be externally verified by the operator.
-        # Never fetch a fresh digest here and call that an immutable pin.
+        # SHA256 recorded on 2026-11-08 from the official HTTPS .sha256 endpoint
+        # via one-shot PR-only CI run #42515538956; reviewed against official
+        # distribution origin. This is NOT a signed vendor provenance proof.
+        # Never fetch a fresh digest at runtime and treat it as immutable.
         # This check runs BEFORE OIDC credentials are requested.
         shell: bash
         env:
-          TS_V165_ARCHIVE_SHA256: ${{ vars.REMURA_V165_TS_TARBALL_SHA256 }}
+          TS_V165_ARCHIVE_SHA256: '624ea093d47d62cf56f17b8332d74b8decda4a1faa610ebc60a1de334b2b3dc9'
         run: |
           set -euo pipefail
           if [[ "${RUNNER_OS:-}" != Linux || "${RUNNER_ARCH:-}" != X64 ]] ||
@@ -93,7 +95,7 @@ jobs:
           audience: ${{ secrets.TS_AUDIENCE }}
           tags: tag:remura-ci-v165-audit
           version: 1.104.4
-          sha256sum: ${{ vars.REMURA_V165_TS_TARBALL_SHA256 }}
+          sha256sum: '624ea093d47d62cf56f17b8332d74b8decda4a1faa610ebc60a1de334b2b3dc9'
           use-cache: 'false'
 
       - name: One pinned read-only 15-file scan over SSH stdin (no server-side script)
