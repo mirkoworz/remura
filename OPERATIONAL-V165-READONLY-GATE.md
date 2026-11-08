@@ -57,3 +57,22 @@ Lanciare eventuali workflow manuali **solo dopo una decisione esplicita** e solt
 - Nessun fornitore a pagamento richiesto. Gratuità **non attestata** dai workflow/simulazioni; serve verifica quote/costi da account vero.
 
 **Decisione finale del documento: `NO_GO_RELEASE_AND_PROSPECTIVE_COLLECTION`.**
+
+## 5. Riscontro storico delle Action reali (08/11/2026 — sola lettura su GitHub)
+
+**Verificato senza nuove esecuzioni:** la cronologia REST di GitHub Actions del repository **privato** `mirkoworz/remura-collector` (298 run elencati, pagine consultate) ha confermato precedenti `workflow_dispatch` conclusi e un run schedulato di diagnostica VPS. Sono stati controllati il campo `conclusion` dei job effettivamente eseguiti e alcune sole righe di output **previste e sanitizzate dal codice**. I log integrali e i dati numerici/identificativi dell'infrastruttura **non vengono copiati nel repository pubblico**. Non è stata chiamata OCI né la VPS e nessun workflow è stato rilanciato.
+
+| Famiglia di prove storiche | Ultimo run effettivo controllato (UTC) | Quanto supporta il gate | Quanto **non** supporta |
+| --- | --- | --- | --- |
+| GET privati Tailscale: health, autoupdater, percentuale risorse | 06/11/2026 14:32, schedule, job diagnostica completato | Health al momento del run e stato API, dati aggregati disco/RAM | Health attuale, hash completo indipendente, inode, free-tier, backup off-host |
+| Oracle Usage API `COST` | 06/11/2026 22:33, dispatch, job completato | Costi registrati nel periodo storico esplicitato da API | Fattura finale, costo oggi/non registrato, iscrizione Always Free post-trial |
+| Oracle storage home e controllo globale | 06/11/2026 22:17 e 22:34, dispatch, job completati | Inventario di boot/block/backup visibile nella regione home e confronto **nominale** di volume | Byte/inode liberi dentro VM, billing, risorse di servizi non inventariati |
+| Oracle Compute / A1 limit inventory | 06/11/2026 22:44 e 22:01, dispatch, job completati | Risorse Compute inventariate e limitazioni amministrative lette | Host capacity, effettiva creazione A1, costi, autorizzazione di spesa |
+| Oracle altre regioni | 07/11/2026 11:55, dispatch, job completato | Censimento non-home nel perimetro READY effettivamente interrogato | Altri servizi, stati fuori perimetro, bill globale |
+| Autenticazione OCI | 07/11/2026 11:46, dispatch, job completato | Chiamata autenticata autorizzata in sola lettura al momento del run | Rotazione chiavi completamente attestata, ACL o idoneità billing |
+
+**Importante:** i `conclusion=success` attestano che i job hanno completato *le proprie* verifiche, non i gate di produzione v1.65. Lo scope temporalmente limitato e la differenza fra `head_sha` del repository privato e SHA LIVE impediscono di trasformare questi risultati in una prova di release. Non esiste ancora una verifica indipendente degli inode e dei file installati, né un restore SQLite off-host.
+
+**Nuova decisione:** evidenze **parziali e storiche reperite**, ma **12/12 gate integrati di release non ancora soddisfatti**; `NO_GO_RELEASE_AND_PROSPECTIVE_COLLECTION`. Non si devono confondere la quota amministrativa OCI A1 e la disponibilità fisica dell'host; la verifica spesa richiede sempre conferma in console Oracle e controlli sulle risorse correnti. I risultati di autenticazione non giustificano interventi automatici sulle chiavi. In questa fase non si chiede al Filone A di ripetere i controlli senza necessità.
+
+**Preservazione della privacy:** conservare i collegamenti puntuali ai singoli run e i numeri **solo in contesto privato** con revisione dell'operatore. Questo file è soltanto un indice pubblico delle fonti, con data, classe, portata e limitazioni. Il periodo di conservazione dei log GitHub è distinto dalla nostra roadmap e non è garantito; il recupero di evidenze future richiederà verifica della retention.
