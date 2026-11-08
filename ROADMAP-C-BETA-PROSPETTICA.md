@@ -12,6 +12,12 @@
 
 
 
+## 08/11/2026 — C4b(l) — policy Tailscale SSH predefinita check (non configurazione della CI)
+
+- [x] L'operatore ha mostrato **Policies → Tailscale SSH**: regola `action: check`, `src: autogroup:member`, `dst: autogroup:self`, `users: autogroup:nonroot, root`. La [documentazione ufficiale](https://tailscale.com/docs/features/tailscale-ssh) identifica esattamente questa come regola di default; richiede conferma periodica d'identita' (12h standard) e si applica ai soli dispositivi della stessa persona. I dispositivi taggati non sono destinazioni `self`. La presenza di `root` non prova login root attivo sulla VPS, servizio SSH abilitato o accesso dell'identita' CI.
+- [x] Distinzione critica: Tailscale SSH, quando abilitato su host, prende la porta 22 della tailnet e gestisce autenticazione **diversa** da OpenSSH. Il futuro gate `authorized_keys`/forced-command verificatore di PR #98 presuppone **OpenSSH tradizionale trasportato su Tailscale**, quindi e' incompatibile con la semplice attivazione Tailscale SSH sulla VPS. Aggiunto esplicito STOP nel commento del template DRAFT #98: non utilizzare il percorso previsto se il servizio Tailscale SSH e' abilitato sulla VPS. Nessun cambio alle regole reali.
+- [ ] Per distinguere i due casi, prossima consultazione **solo console**: pagina Machines, stato/ownership/tag della VPS e stato Tailscale SSH sul nodo, senza modificare toggle, senza SSH, senza inviare IP privati o chiavi. Finche' non e' verificato e non ci sono account no-sudo, host key, OIDC/ACL minimali e consenso, `SSH_AUDIT=NO_GO`.
+- [ ] `v1.65=NO_GO`, `C5=NO_GO`; backup/restore off-host, storage/inode LIVE, costo/Always Free e prove di contenuto 15 file ancora non eseguiti. Filoni A e B, Main e collector invariati.
 ## 08/11/2026 — C4b(l) — verificata visualmente la coppia di grant Tailscale (NO-GO SSH)
 
 - [x] Ricevute dall'operatore due schermate con **entrambe le regole espanse** nella console Tailscale `Policies > General access rules`. Verificato `autogroup:member → autogroup:self → *`: secondo Tailscale `self` permette l'accesso solo ai dispositivi propri, **non** un accesso indiscriminato a tutti i dispositivi, e non si applica ai dispositivi taggati.
