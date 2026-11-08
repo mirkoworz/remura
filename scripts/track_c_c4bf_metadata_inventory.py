@@ -31,7 +31,7 @@ BACKUP_FILES = frozenset((DB_NAME, "manifest.txt"))
 
 
 def _root(value, mode, approved):
-    if type(value) not in (str, Path):
+    if not isinstance(value, (str, Path)):
         raise ValueError("explicit_root_required")
     root = Path(value)
     if not root.is_absolute() or ".." in root.parts:
