@@ -221,6 +221,54 @@ class OneShotReceiptTests(unittest.TestCase):
         self.assertIn("    runs-on: ubuntu-24.04",t)
         self.assertNotIn("    runs-on: ubuntu-latest",t)
 
+    def test_tailscale_archive_digest_from_reviewed_variable_only(self):
+        t=TEMPLATE.read_text()
+        variable=chr(36)+"{{ vars.REMURA_V165_TS_TARBALL_SHA256 }}"
+        self.assertIn("sha256sum: "+variable,t)
+        self.assertIn("TS_V165_ARCHIVE_SHA256: "+variable,t)
+        self.assertIn("REMURA_AUDIT=TAILSCALE_ARCHIVE_PIN_NOT_ATTESTED",t)
+        self.assertLess(t.index("TAILSCALE_ARCHIVE_PIN_NOT_ATTESTED"),
+                        t.index("Connect dedicated ephemeral audit identity"))
+
+    @staticmethod
+    def _archive_preflight(digest, os_name="Linux", arch="X64"):
+        import os
+        import textwrap
+        t=TEMPLATE.read_text()
+        start=t.split("      - name: Require independently reviewed pinned Tailscale archive checksum",1)[1]
+        gate=start.split("      - name: Connect dedicated ephemeral audit identity",1)[0]
+        script=textwrap.dedent(gate.split("        run: |\n",1)[1]).strip()
+        env=dict(os.environ)
+        env.update({"TS_V165_ARCHIVE_SHA256":digest,
+                    "RUNNER_OS":os_name,"RUNNER_ARCH":arch})
+        return subprocess.run(["bash","-c",script],env=env,
+                              capture_output=True,timeout=5)
+
+    def test_archive_preflight_rejects_missing_zeros_bad_lengths_and_injection(self):
+        candidates=("", "0"*64, "a"*63, "f"*65, "A"*64,
+                    "x"*64, "a"*31+"$(echo secret)", "a"*32+"\n"+"b"*32)
+        for digest in candidates:
+            with self.subTest(length=len(digest)):
+                p=self._archive_preflight(digest)
+                self.assertNotEqual(p.returncode,0)
+                self.assertIn(b"TAILSCALE_ARCHIVE_PIN_NOT_ATTESTED",p.stdout)
+                self.assertNotIn(b"secret",p.stdout+p.stderr)
+
+    def test_archive_preflight_rejects_wrong_runner_platform(self):
+        digest="ab"*32
+        for os_name,arch in (("Windows","X64"),("macOS","X64"),
+                             ("Linux","ARM64"),("Linux","")):
+            with self.subTest(os=os_name,arch=arch):
+                p=self._archive_preflight(digest,os_name,arch)
+                self.assertNotEqual(p.returncode,0)
+
+    def test_archive_preflight_accepts_synthetic_shape_not_authenticity(self):
+        # A syntactically valid test digest is NOT the real archive checksum.
+        p=self._archive_preflight("ab"*32)
+        self.assertEqual(p.returncode,0,p.stderr)
+        self.assertEqual(p.stdout,b"")
+        self.assertEqual(p.stderr,b"")
+
     def test_transport_requires_pinned_ssh_known_hosts(self):
         t=TEMPLATE.read_text()
         self.assertIn("ssh-keygen -F",t)
