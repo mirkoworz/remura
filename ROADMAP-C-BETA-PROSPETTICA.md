@@ -12,6 +12,15 @@
 
 
 
+## 08/11/2026 — C4b(l) decisione: prima evidenze di console, poi eventuali autorizzazioni separate (NO-GO)
+
+- [x] Creato sul **ramo release #98, DRAFT e SENZA esecuzione** il documento [V165-ACCESS-READINESS-NO-GO.md](V165-ACCESS-READINESS-NO-GO.md), matrice sintetica da decisione: via A HTTPS/443 esistente (prove parziali soltanto) oppure via B SSH protetto di 15 file (richiede nuova rete e modifiche VPS, entrambe NON autorizzate). Nessuna nuova Action o componente cloud attivato.
+- [x] Confrontati il collector privato realmente presente e la documentazione ufficiale GitHub, Tailscale e OpenSSH. Il vecchio workflow del collector NON supporta l'hash dei 15 file; il template in PR #98 NON è installato. Sono distinti consenso dell'owner nel workflow e controllo/revisione delle policy di accesso, dei privilegi del server e del codice eseguito.
+- [x] **Controllo gratuità perimetro dichiarato:** GitHub Actions su repository privato consuma il budget mensile legato al piano (consumi reali ignoti); required reviewers nei repo privati non sono gratis su Free/Pro/Team. Tailscale Personal è gratuito **per uso non commerciale** e il listino segnala limiti dei runner effimeri: piano reale, uso effettivo e futura eventuale monetizzazione REMURA ancora da valutare; nessun upgrade eseguito. OCI classe account/Always Free/fattura e quote restano non certificate.
+- [ ] **Primo vero passo operativamente utile, Fase 0 (no scritture):** attestare dalle console GitHub il piano/budget e consumo; Tailscale piano/uso e global ACL/grants (compreso eventuale allow-all); OCI classe di account/quote/costi. Evitare duplicazioni dei censimenti HOME già completati. Non incollare segreti/PEM/token, né inviare host/Tailnet privati.
+- [ ] **Fasi 1-4 subordinatamente a consensi espressi ciascuna:** nuova OIDC/ACL tag TCP/22 limitata a singola VPS; server SSH utente no-sudo e forced command root-owned con byte pin + key host verificata; un solo audit 15 file; prova backup SQLite/restore off-host e rilascio v1.65 separato, seguito da possibile C5. NO-GO su ciascuna fino a evidenze; la release richiede banner versione e timestamp italiano su 9 pagine.
+- [x] Track B PR #89 DRAFT non modificata. Track C PR #97 e release #98 ancora DRAFT e separate; nessun deploy, SSH o Termius.
+
 ## 08/11/2026 — C4b(k) — gate owner-only GRATIS e controllo SSH server-side su byte pin (NON ATTIVI)
 
 - [x] Verificata tramite [documentazione ufficiale GitHub](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments) la **limitazione di costo/funzionalita'**: required reviewers di Environment NON disponibili in repository privati su GitHub Free/Pro/Team; su Free gli Environment privati non sono disponibili. Piano dell'account GitHub **non verificato**; quindi non acquistare nulla o presumere di avere revisori gratuiti.
