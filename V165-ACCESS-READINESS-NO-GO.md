@@ -1,0 +1,56 @@
+# REMURA v1.65 — C4b(l), decisione di accesso privato: PREPARAZIONE SENZA ATTIVAZIONE
+
+**Checkpoint: 8 novembre 2026. Stato: NO-GO per accesso nuovo, SSH, rilascio e raccolta C5.**
+Questo file è una scheda operativa per il proprietario. Non contiene segreti, indirizzi privati, chiavi, OCID o comandi da eseguire sulla VPS. È soltanto nella PR #98 DRAFT; non installa alcuna GitHub Action.
+
+## 1. Cosa sappiamo già, senza ripetere controlli
+
+- I repository sono `mirkoworz/remura` (pubblico) e `mirkoworz/remura-collector` (privato, main; ID GitHub 1424422834). La PR #98 conserva il template sotto `deploy/oracle/templates/`, **non** in `.github/workflows/`. Il Filone B è PR #89 DRAFT; il Filone C è PR #97 DRAFT.
+- Nel collector esiste il workflow manuale di diagnostica `remura-vps-diagnostic.yml`: Tailscale HTTPS/443, sole GET, nessun SSH né accesso diretto ai file. Questo conferma solo ciò che espongono gli endpoint, **non** l'identità indipendente dei 15 file installati.
+- Il modello futuro fissa checkout e Tailscale Action a commit specifici, il checksum pubblico del tarball Tailscale 1.104.4 Linux amd64, l'identità del verificatore locale e la ricezione strettamente limitata. Il gate remoto forzato `v165_pinned_ssh_forced_gate_REVIEW_ONLY.py` è preparato ma **non installato**.
+- Checkpoint CI verificato prima di questo documento: 344/344 test offline v1.65 in 12 suite, Price Engine #42516947113 e Insights #42516947089 SUCCESS. Nessun test attesta il server, l'utente SSH, le ACL o i prezzi reali del mercato.
+
+## 2. Percorsi possibili, non equivalenti
+
+**A — Restare su diagnostica HTTPS esistente (nessun nuovo accesso).** Non richiede cambiare porte, ACL o utente SSH. Può confermare metriche e versione dichiarate, quando l'operatore autorizzerà un run manuale già esistente. **NON** dimostra i 15 hash autonomamente: non consente quindi di sbloccare la v1.65 sulla base di quelle sole GET.
+
+**B — Audit SSH protetto dei soli 15 file (prospettiva completa, non attivo).** Richiede modifica separata della configurazione Tailscale e della VPS. Quando e solo quando autorizzato, il runner effimero potrà trasmettere un verificatore immutabile via SSH all'utente dedicato non privilegiato. Sul server il forced-command deve essere root-owned e deve confrontare l'esatto Git blob **prima di eseguire** il codice ricevuto. Il client da solo non rende sicuro il servizio SSH.
+
+## 3. Gate preliminari, controllabili da console senza usare Termius
+
+| Gate | Evidenza richiesta | Stato adesso |
+|---|---|---|
+| GitHub piano/costi | Verificare piano reale, quote Actions private, consumo mensile e budget con blocco alla soglia; nessun acquisto | NON ATTESTATO |
+| Tailscale piano/quote | Verificare fatturazione attuale, uso effimero, tag e compatibilità d'uso: il Personal gratuito è dichiarato per uso **non commerciale** | NON ATTESTATO |
+| Tailscale policy globale | Controllare l'intera ACL/grants esistente, assenza di regole allow-all che vanificherebbero la nuova restrizione; non ampliare `tag:remura-ci-read` (HTTPS/443) | NON ATTESTATO |
+| Federazione OIDC futura | Nuova identità e `tag:remura-ci-v165-audit`, vincoli GitHub repo/visibilità/branch/evento/workflow sul solo job manuale | NON CONFIGURATO |
+| Accesso host | Solo VPS specifica TCP/22 sulla tailnet; nessuna apertura Internet; host key verificata fuori banda | NON ATTESTATO |
+| SSH server | Utente specifico non-root senza sudo e senza accesso a SQLite/segreti; authorized_keys `restrict` + forced command esatto installato come root e verificato | NON INSTALLATO |
+| Consenso workflow | Workflow manuale, owner/repo ID fissati, input booleano default OFF, variabile di abilitazione default OFF, no rerun: **solo preparati nel template** | NON INSTALLATO |
+| Integrità produzione | Hash reali dei 15 file leggibili senza privilegi, versione della VPS e controllo autoupdater indipendente | NON MISURATO |
+| Backup e ripristino | SQLite consistente con restore-test fuori host, rollback verificato prima del rilascio | NON ESEGUITO |
+| Oracle | Classe account/Always Free, fatturazione, quote effettive, inode/spazio; niente nuove VM, policy o pagamenti | NON CERTIFICATO |
+
+**Se un gate di accesso è incerto: STOP.** Non risolvere dando sudo/root, aggiungendo `0.0.0.0/0`, espandendo vecchi tag Tailscale, pubblicando il repo privato o aggirando policy. Mai inviare chiavi SSH, token, hostname privati, PE​M o OCID in chat o commit.
+
+## 4. Scelta gratuita e limiti reali
+
+- [GitHub Environments](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments): i **required reviewers** per repo privati non sono disponibili sui piani Free/Pro/Team. La via owner-only del template è una doppia conferma, **non** una revisione da un secondo soggetto. Non creare fittizi environment protetti.
+- [GitHub Actions Billing](https://docs.github.com/en/actions/concepts/billing-and-usage): per repository privati valgono i limiti di calcolo/storage del piano. La quota reale residua non è consultabile in questo preflight; non inferire 0€ da run verdi. Controllare anche la [guida ai budget](https://docs.github.com/en/billing/managing-your-billing/using-budgets-control-spending).
+- [Tailscale Pricing](https://tailscale.com/pricing): piano Personal gratuito per uso non commerciale; il listino pubblico riporta limiti sulle risorse effimere (1.000 minuti/mese al checkpoint), utenti e tag. Verificare **piano e uso reale** prima di aggiungere un runner. Eventuale futura monetizzazione di REMURA potrebbe richiedere una scelta diversa, non presumere idoneità del Personal.
+- [Tailscale GitHub Action](https://tailscale.com/docs/integrations/github/github-action): un nuovo OIDC federato e tag devono essere creati prima di poter accedere. [Tailscale Grants](https://tailscale.com/docs/features/access-control/grants): nuove regole ristrette non eliminano automaticamente altri permessi già concessi.
+- [OpenSSH authorized_keys](https://man.openbsd.org/sshd): `restrict` limita forwarding/PTY, il forced command riceve `SSH_ORIGINAL_COMMAND`; un semplice `command="python3 -"` sarebbe insufficiente senza controllo dei byte eseguiti. Non installare un key-gate non revisionato.
+
+## 5. Ordine delle autorizzazioni future — SEMPRE SEPARATE
+
+**Fase 0: consultazione da console, senza modifiche.** Il proprietario verifica piano/quote GitHub, piano/uso Tailscale, policy globale Tailscale e stato account OCI. Non condivide segreti. I run storici già verdi non si ripetono solo per ottenere un altro verde.
+
+**Fase 1: consenso specifico alla configurazione di rete.** Soltanto dopo approvazione esplicita: nuova OIDC/tag con ACL minima solo su un host/porta 22. Non cambiare il tag HTTPS esistente, non accedere ancora alla VPS.
+
+**Fase 2: consenso specifico alla preparazione del server.** Solo dopo audit costi e rischio, creare account non-root, forced-command root-owned e host key confermata. Backup e piano di rollback **prima** di qualsiasi modifica server. Nessuna scrittura o attivazione automatica in questa documentazione.
+
+**Fase 3: consenso specifico a UN audit read-only dei 15 file.** Un solo workflow manuale controllato, nessuna diagnostica privata grezza nei log; il risultato prova soltanto la corrispondenza dei 15 file nello specifico istante. Non attesta updater/backup/Oracle.
+
+**Fase 4: rilascio v1.65, separato dalla fase 3.** Soltanto dopo prova backup/restore SQLite, rollback, baseline attuale, quote e autorizzazione espressa. La release deve stampare numero versione e data/ora reali italiane su tutte le nove pagine. C5 resta un'altra autorizzazione, e i dati prospettici non vanno confusi con prove sintetiche.
+
+**Decisione adesso:** preparazione completata, NO-GO SSH/VM/VPS/release/C5, nessuna credenziale o costo attivati. Il prossimo punto efficace è raccogliere le sole quattro evidenze di console della Fase 0 e valutare se il percorso gratuito sia davvero percorribile.
