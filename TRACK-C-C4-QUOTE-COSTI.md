@@ -56,3 +56,13 @@ Nel nuovo `track_c_c4bc_evidence_coverage.py` un registro **solo metadata** mant
 - Non è disponibile in questo audit un inventario corrente **di tutte** le SQLite/WAL/SHM, una prova di restore off-host, limiti Firestore/GitHub realmente usati o attestazione del kill switch OS.
 
 **Conclusione**: i report e la checklist sono utili per ridurre verifiche duplicate. Per procedere in C4b(d) servirà un controllo autorizzato strettamente read-only, preferibilmente usando dati diagnostici già ottenuti, con misure sanificate e identificatore del run originale. Nessuna nuova richiesta provider, modifica LIVE o riavvio.
+
+## 6. C4b(d) — consultazione originale di report già acquisiti, nessun run nuovo
+
+In GitHub PRIVATO remura-collector sono stati consultati senza rerun i log originali di due diagnostiche del 03/11/2026 ([#41649580706](https://github.com/mirkoworz/remura-collector/actions/runs/41649580706) e [#41653292319](https://github.com/mirkoworz/remura-collector/actions/runs/41653292319)). RAM e disco in entrambi i report erano sotto l'80%, ma erano osservazioni puntuali storiche e non un'attestazione delle risorse dell'08/11 o del consumo durante i picchi; le dimensioni SQLite/WAL/SHM e l'integrità di backup non erano misurate. La diagnostica riportava esplicitamente BACKUP_SQLITE non verificato. I valori numerici di VPS restano nei log privati.
+
+Il costo OCI riportato dal run privato [#42305661998](https://github.com/mirkoworz/remura-collector/actions/runs/42305661998) era 0,0000 EUR nell'intervallo 02/10–05/11, con avvertimento ZERO_REPORTED_NOT_BILL_VERIFIED: non è una fattura né un limite di addebito. Non avviare un nuovo censimento. Il controllo piano Oracle post-trial è del filone Oracle dopo il 15/11.
+
+Il workflow privato remura-vps-diagnostic.yml esistente ha già un preflight /private-api/resources; è schedulato ferialmente alle 06:37 UTC, ma il job privato è condizionato a REMURA_VPS_DIAG_ENABLED=1 (stato attuale sconosciuto). Non cambiare trigger, non azionarlo dal ramo C. Si tratta di GET alla VPS, non zero traffico; non contattano cTrader/Myfxbook/CFTC/OCI.
+
+Il nuovo adapter OFFLINE scripts/track_c_c4bd_history_adapter.py accetta soltanto estratti sanitizzati delle percentuali RAM/disco e dell'esplicita mancanza di prova backup, senza aprire file né collegarsi a GitHub. I suoi test usano numeri fittizi, non i valori interni privati. Anche un estratto con clock recente viene classificato NON AUTENTICATO e non sostituisce la prova di backup, costo o headroom attuale. NO-GO per C4b(e)/C5 invariato.

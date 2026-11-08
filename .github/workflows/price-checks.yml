@@ -250,6 +250,8 @@ jobs:
       - name: Test v1.64 exact 15-file SHA state reconciliation, offline
         run: python -m unittest discover -s tests -p 'test_reconcile_v164.py' -v
       - run: python -m unittest discover -s tests -p 'test_signals_monitor.py' -v
+      - name: Track C4b(d) - read pre-redacted historic diagnostic lines offline
+        run: python -m unittest discover -s tests -p 'test_track_c_c4bd_history_adapter.py' -v
       - name: Track C4b(c) - offline redacted provenance coverage and no-go safeguards
         run: python -m unittest discover -s tests -p 'test_track_c_c4bc_evidence_coverage.py' -v
       - name: Track C4b(b) - synthetic SQLite WAL backup, restore and default-off kill gate
