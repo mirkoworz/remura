@@ -72,6 +72,9 @@ def validate_file_set(before, staged):
 def staged_files(before):
     require(type(before) is dict and set(before) == EXPECTED_FILES,
             "FILE_ALLOWLIST")
+    # Validate types/limits BEFORE calling bytes.replace: reject malformed input
+    # with a deterministic no-go instead of raising an unexpected exception.
+    validate_file_set(before, before)
     result = {name: before[name].replace(b"V164", b"V165") for name in before}
     validate_file_set(before, result)
     require(all(result[name] != before[name] for name in before),
