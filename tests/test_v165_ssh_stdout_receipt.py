@@ -175,9 +175,44 @@ class OneShotReceiptTests(unittest.TestCase):
         self.assertNotIn("  pull_request:",t)
         for guard in ("github.event.repository.private == true",
                       "github.ref == 'refs/heads/main'",
-                      "vars.REMURA_V165_SSH_AUDIT_ENABLED == '1'",
-                      "environment: v165-audit-protected"):
+                      "github.repository_id == '1424422834'",
+                      "github.actor_id == '316473246'",
+                      "github.run_attempt == 1",
+                      "inputs.operator_consents_to_one_shot_readonly_scan == true",
+                      "vars.REMURA_V165_SSH_AUDIT_ENABLED == '1'"):
             self.assertIn(guard,t)
+
+    def test_private_free_mode_never_assumes_paid_environment_reviewers(self):
+        t=TEMPLATE.read_text()
+        self.assertIn("required environment reviewers are NOT",t)
+        self.assertIn("for PRIVATE repositories",t)
+        self.assertIn("NOT independent second-person approval",t)
+        self.assertNotIn("    environment:",t)
+        self.assertNotIn("environment: v165-audit-protected",t)
+
+    def test_double_manual_consent_is_explicit_default_false(self):
+        t=TEMPLATE.read_text()
+        self.assertIn("on:\n  workflow_dispatch:\n    inputs:\n",t)
+        self.assertIn("      operator_consents_to_one_shot_readonly_scan:\n",t)
+        self.assertIn("        required: true\n        type: boolean\n        default: false",t)
+        self.assertNotIn("default: true",t)
+        self.assertIn("inputs.operator_consents_to_one_shot_readonly_scan == true",t)
+        self.assertIn("vars.REMURA_V165_SSH_AUDIT_ENABLED == '1'",t)
+
+    def test_owner_repo_ids_verified_and_no_rerun(self):
+        t=TEMPLATE.read_text()
+        self.assertIn("github.repository_id == '1424422834'",t)
+        self.assertIn("github.actor_id == '316473246'",t)
+        self.assertIn("github.run_attempt == 1",t)
+        self.assertIn("github.ref == 'refs/heads/main'",t)
+        self.assertIn("github.event.repository.private == true",t)
+
+    def test_forced_python_stdin_is_not_misrepresented_as_restricted(self):
+        t=TEMPLATE.read_text()
+        self.assertIn("forced SSH command that runs ",t)
+        self.assertIn("a forced-command gate that validates the EXACT approved verifier bytes",t)
+        self.assertIn("Read-only filesystem permissions and no-sudo are required",t)
+        self.assertIn("NOT INSTALLED AS A GITHUB ACTION",t)
 
     def test_transport_never_widens_existing_https_only_tag(self):
         t=TEMPLATE.read_text()
