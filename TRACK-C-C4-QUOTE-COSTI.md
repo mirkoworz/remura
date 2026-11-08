@@ -76,3 +76,5 @@ Recuperati dal repository **privato** tre workflow automatici con job VPS diagno
 Il nuovo confronto `scripts/track_c_c4be_historic_trend.py` non esegue GET e accetta SOLO riassunti pre-redatti consegnati dalla fonte; controlla clock UTC, duplicati, bounds, 256 come cap della finestra e consistenza aggregati. A parità di dati la conclusione resta SEMPRE `NO_GO_RESEARCH_AND_PROSPECTIVE_COLLECTION`. Test sintetici in CI, nessun numero reale inserito nel branch pubblico.
 
 **Gate successivo C4b(f):** piano di misura **locale** dei file SQLite/WAL/SHM e prova di restore backup FUORI dalla VPS, con autorizzazione e limiti espliciti; il GET resources esistente da solo è insufficiente. Track Oracle verifica piano post-Trial in autonomia e con controllo delle quote; niente nuove chiamate mercato o servizi da Track C.
+
+**C4b(e) test CI verificati**: commit `5d4ad1bd17289663ccd19ac7fb2cce5589d0e652`, [Price Engine #42480644071](https://github.com/mirkoworz/remura/actions/runs/42480644071) SUCCESS; [Insights #42480644044](https://github.com/mirkoworz/remura/actions/runs/42480644044) SUCCESS. Non certificano continuità, backup, costi o risorse VPS attuali.
