@@ -146,6 +146,7 @@ def _bounded_file(directory_fd, name):
 def _normalized_blob(name, data):
     if name != "nav.js":
         return git_blob(data)
+    require(STAMP_PREPARED not in data, "NAV_PREPARATION_STAMP_NOT_LIVE")
     stamps = STAMP_LIVE.findall(data)
     require(len(stamps) == 1, "NAV_STAMP_MISSING_OR_AMBIGUOUS")
     require(stamps[0] != STAMP_PREPARED, "NAV_PREPARATION_STAMP_NOT_LIVE")
