@@ -236,3 +236,10 @@ Prima di un eventuale run reale servono approvazione dedicata, environment con r
 **NO-GO:** 319/319 e' il checkpoint CI precedente; nuovi test da verificare. Nessun SSH/OCI/VPS avviato, nessuna risorsa attivata, LIVE ancora documentata v1.64 e non attestata, 12 gate reali mancanti, C4b(l) e C5 bloccati.
 
 **Chiusura verifica CI codice del modello, 08/11/2026:** [Price Engine #42512887999](https://github.com/mirkoworz/remura/actions/runs/42512887999) e [Insights #42512887987](https://github.com/mirkoworz/remura/actions/runs/42512887987) entrambe SUCCESS al commit di test `4e898a7a83edcba03ca958ee50bee3aa41b3695b`. I log Price confermano **33/33** test trasporto e **323/323** test v1.65 offline su 12 suite (319 precedente + 4). Il modello resta non attivo, nessun riscontro dei file LIVE, 12 gate reali NO-GO; CI verde non autorizza preflight VPS o release.
+
+
+## C4b(k) — pin immutabili Action esterne (08/11/2026; NON ATTIVO)
+
+Nel template di futuro audit SSH sotto deploy/oracle/templates (mai workflow eseguibile) le dipendenze esterne sono state fissate a commit GitHub ufficialmente risolti: actions/checkout v5.0.1 `93cb6efe18208431cddfb8368fd83d5badbf9bfd`; tailscale/github-action v4.4.0 `064b10558093f38325e838ddea35486bdc6b1d5c`. L'action Tailscale di quel commit dichiara supporto OIDC e client versione predefinita 1.104.4, che abbiamo reso esplicita. Cache Tailscale disabilitata per il controllo one-shot; runner ubuntu-24.04. Quattro nuovi test statici di pin/versione/runner, da verificare in CI.
+
+Rischio residuo: il pin SHA dell'**Action** non equivale al checksum del binario Tailscale scaricato al runtime; `sha256sum` e' ancora da ottenere da fonte affidabile e validare prima di qualsiasi attivazione. Restano da attestare manual approvals effettive dell'environment, identita' Tailscale dedicata/ACL/host, utente non-root senza sudo, known_hosts, costo/quote e tutte le evidenze Oracle/SQLite. Niente run remoto o LIVE; NO-GO rilascio e C5.
