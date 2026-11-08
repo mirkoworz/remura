@@ -113,3 +113,15 @@ L'operatore ha condiviso quattro schermate della console Tailscale **Machines** 
 Fonte Oracle: [Security Lists](https://docs.oracle.com/en-us/iaas/Content/Network/Concepts/securitylists.htm) e [Addressing Basic Configuration Issues](https://docs.oracle.com/en-us/iaas/Content/Security/Reference/configuration_tasks.htm) — le regole applicate alla subnet si sommano; una singola regola di ingresso sufficiente puo' permettere il traffico. La console non certifica da sola la configurazione del demone SSH sul server.
 
 **Decisione:** `ORACLE_FREE_TRIAL_ACTIVE=ATTESTED_BY_UI`, `ORACLE_EACH_RESOURCE_ALWAYS_FREE=UNKNOWN`, `VNIC_PUBLIC_SUBNET=YES`, `VNIC_NSG_SHOWN=NONE`, `OCI_TCP22_INGRESS_EXPOSURE=UNKNOWN`. Nessuna modifica a rete, VNIC, subnet, IAM, SSH o VPS; C4b(l), release v1.65 e C5 restano NO-GO. Non riavviare audit OCI storici già verdi.
+
+## 8 novembre 2026, ore 22:57 italiane — Security List ingress: due ICMP, nessun TCP/22 visibile
+
+**Evidenza puntuale da screenshot Oracle, senza chiamate nuove:** l'operatore ha aperto la `Default Security List` della VCN REMURA, scheda `Regole di sicurezza`; la tabella **Regole di entrata** mostra `pagina 1 di 1`, esattamente **due righe** con protocollo `ICMP`. Le sorgenti visibili sono `0.0.0.0/0` e `10.0.0.0/16`, con tipi/codici ICMP `3,4` e `3`. **Nessuna regola TCP, in particolare TCP/22, compare nella Security List esaminata.**
+
+La tabella **Regole di uscita** mostra una regola verso `0.0.0.0/0` per tutti i protocolli. Una regola **egress** non apre da sola la porta SSH alle nuove connessioni Internet in ingresso; può permettere traffico di risposta a connessioni avviate dall'istanza, per esempio Tailscale.
+
+**Limitazione da non oltrepassare:** una subnet Oracle può avere *più Security Lists associate*, e una regola in qualsiasi lista può autorizzare il traffico; la VNIC precedente non mostrava NSG. Fonte [Oracle Security Lists](https://docs.oracle.com/en-us/iaas/Content/Network/Concepts/securitylists.htm). **Non risulta ancora dalla nuova schermata un elenco esplicito e completo delle liste associate alla subnet della VPS.** Perciò la formulazione corretta è `EXAMINED_DEFAULT_LIST_PUBLIC_TCP22=NO`, non `OCI_ALL_INGRESS_TCP22_CLOSED=YES`.
+
+**Prossima verifica in sola lettura**: sulla pagina della **subnet effettiva** della VNIC REMURA aprire `Dettagli` e individuare `Security Lists / Liste di sicurezza` *associate alla subnet*. Se solo la Default Security List è collegata, l'audit delle ACL Oracle per la porta 22 può essere chiuso come nessuna regola d'ingresso pubblico **sulla base della configurazione del momento**, fermo restando il firewall host. Se sono elencate altre liste, esaminare tutte le loro regole d'ingresso. Nessuna modifica, disabilitazione, o aggiunta di regole, NSG, IP o SSH.
+
+**Gate:** `DEFAULT_SECURITY_LIST_TCP22=NOT_ALLOWED_IN_SCREENSHOT`, `SUBNET_ALL_ASSOCIATED_SECURITY_LISTS=NOT_ATTESTED`, `OCI_PUBLIC_SSH_EXPOSURE=NO_GO_UNTIL_ASSOCIATIONS`, `SSH_AUDIT=NO_GO`, `V165_RELEASE=NO_GO`, `C5=NO_GO`. Immagini mostrano dati operativi, ma nessun IP o dato personale è riportato qui. Nessun costo, risorsa OCI o accesso VPS introdotto da questa nota.
