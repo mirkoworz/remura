@@ -78,3 +78,11 @@ Il nuovo confronto `scripts/track_c_c4be_historic_trend.py` non esegue GET e acc
 **Gate successivo C4b(f):** piano di misura **locale** dei file SQLite/WAL/SHM e prova di restore backup FUORI dalla VPS, con autorizzazione e limiti espliciti; il GET resources esistente da solo è insufficiente. Track Oracle verifica piano post-Trial in autonomia e con controllo delle quote; niente nuove chiamate mercato o servizi da Track C.
 
 **C4b(e) test CI verificati**: commit `5d4ad1bd17289663ccd19ac7fb2cce5589d0e652`, [Price Engine #42480644071](https://github.com/mirkoworz/remura/actions/runs/42480644071) SUCCESS; [Insights #42480644044](https://github.com/mirkoworz/remura/actions/runs/42480644044) SUCCESS. Non certificano continuità, backup, costi o risorse VPS attuali.
+
+## 8. C4b(f) — formato definitivo dell'inventario in sola lettura, SOLO CODICE
+
+Dal codice LIVE attuale emerge un database noto `private/remura-prices.sqlite3` in WAL e un vecchio strumento di backup `deploy/oracle/backup_v156.py` che prevede snapshot con restore-test. Il comando `--backup` dello strumento di release **scrive file**: non eseguirlo come diagnostica di sola lettura. Il comando `--check` apre il database e fa integrity check, quindi è più invasivo di una misura di dimensione; non è stato eseguito.
+
+Il nuovo `scripts/track_c_c4bf_metadata_inventory.py` è predisposto per misurare **solo metadati filesystem** dell'unico DB noto e dei suoi WAL/SHM, del filesystem e degli archivi locali nella cartella `predeploy-backups`. Distingue assenza, anomalie, limiti, file link e incompletezza. Non legge manifest, contenuto SQLite o altri documenti e non verifica checksum, restore, copia remota o durabilità. Il programma **non viene chiamato dalla LIVE, non è installato e non è una nuova Action**; le CI usano esclusivamente cartelle temporanee sintetiche. Richiede modalità specifica, autorizzazione ulteriore e path esatto per il futuro eventuale audit VPS.
+
+Una copertura di una sola SQLite non equivale a un censimento di tutto lo storage. Per verificare il backup off-host occorrono luogo separato, hash verificato in ambiente protetto, data creazione, prova di recupero autorizzata, confini di costo e cancellazione controllata degli artefatti; nessun risultato può essere dedotto da `predeploy-backups` locale. **NO-GO C5**.
