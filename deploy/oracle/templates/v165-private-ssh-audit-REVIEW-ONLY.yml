@@ -3,7 +3,22 @@
 # Store under deploy/oracle/templates, NEVER .github/workflows in remura.
 # Future owner must separately review and explicitly authorize any installation
 # in the *private* mirkoworz/remura-collector repo, including SSH/Tailscale
-# configuration, dedicated unprivileged account and environment approvals.
+# configuration, dedicated unprivileged account and explicit one-shot consent.
+#
+# IMPORTANT: GitHub Free/Pro/Team required environment reviewers are NOT
+# offered for PRIVATE repositories. A named environment alone is NOT an
+# approval. This offline-only template uses a free/manual fail-closed gate:
+# owner account ID + repository ID + single-run checkbox + default-OFF
+# repository variable. This is NOT independent second-person approval.
+# The operator MUST still approve installation and each actual connection.
+# Any copied workflow in a private repo must be reviewed before activation.
+#
+# CAUTION: a forced SSH command that runs `python3 -` directly accepts
+# arbitrary code from the SSH client over stdin. It is NOT enough to claim
+# a read-only SSH key. Before activation, provision and independently review
+# a forced-command gate that validates the EXACT approved verifier bytes
+# before executing them, or use a preinstalled immutable restricted verifier.
+# Read-only filesystem permissions and no-sudo are required as well.
 #
 # Existing tag:remura-ci-read is HTTPS:443 ONLY and MUST NOT be expanded to
 # SSH. Use a different narrowly-scoped, manual-workflow OIDC identity/tag.
@@ -15,6 +30,12 @@ name: REMURA v1.65 - one-shot v1.64 code evidence (REVIEW TEMPLATE)
 
 on:
   workflow_dispatch:
+    inputs:
+      operator_consents_to_one_shot_readonly_scan:
+        description: 'I approve ONE code-only v1.64 audit; no release, deployment or C5'
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -32,10 +53,13 @@ jobs:
     if: >-
       github.event_name == 'workflow_dispatch' &&
       github.repository == 'mirkoworz/remura-collector' &&
+      github.repository_id == '1424422834' &&
+      github.actor_id == '316473246' &&
       github.event.repository.private == true &&
       github.ref == 'refs/heads/main' &&
+      github.run_attempt == 1 &&
+      inputs.operator_consents_to_one_shot_readonly_scan == true &&
       vars.REMURA_V165_SSH_AUDIT_ENABLED == '1'
-    environment: v165-audit-protected
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
