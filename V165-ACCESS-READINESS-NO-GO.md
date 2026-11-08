@@ -3,6 +3,16 @@
 **Checkpoint: 8 novembre 2026. Stato: NO-GO per accesso nuovo, SSH, rilascio e raccolta C5.**
 Questo file è una scheda operativa per il proprietario. Non contiene segreti, indirizzi privati, chiavi, OCID o comandi da eseguire sulla VPS. È soltanto nella PR #98 DRAFT; non installa alcuna GitHub Action.
 
+## 8 novembre 2026, ore 23:50 italiane — Volume di avvio etichettato Sempre gratis; warning backup da non ignorare
+
+Nella pagina Oracle **dettaglio volume di avvio** `remura-server (Boot Volume)`, catturata dall'operatore da iPhone, sono visibili i badge **Disponibile** e **Sempre gratis**. Questo conferma direttamente **l'etichetta Always Free del singolo volume** (47 GB allocati, già attestati dalla pagina elenco), invece della chiave UI non tradotta precedente. La forma `VM.Standard.E2.1.Micro` rimane idonea secondo documentazione; **non** ne consegue ancora che l'insieme delle risorse OCI sia interamente gratuito dopo il trial né che vi siano 153 GB effettivamente disponibili. Non risultano attestate le quote globali del conto, gli altri compartimenti/backup e lo spazio libero/inode nella VPS.
+
+**Nuovo avviso reale di Console:** la pagina mostra un warning di assenza di **backup recenti del boot volume**. Il numero di giorni non è visibile per intero nello screenshot: **non inventarlo**. Il banner non certifica l'assenza di qualunque backup esterno, SQLite, storage o snapshot e non va usato come evidenza di backup consistente. Nessun backup Oracle è stato creato; non eseguire policy backup, snapshot o resize per affrontare il warning senza verifica costi/quote, protezione dati e consenso specifico.
+
+**Stati aggiornati:** `BOOT_VOLUME_ALWAYS_FREE_LABEL=YES_UI`; `BOOT_VOLUME_CAPACITY=47_GB`; `OCI_ACCOUNT_ALL_RESOURCES_FREE=UNKNOWN`; `OCI_RECENT_BOOT_BACKUP=NOT_ATTESTED`; `SQLITE_CONSISTENT_OFFHOST_RESTORE=NOT_ATTESTED`. Resta necessario un backup SQLite coerente e un **restore-test realmente fuori host**, non sostituibili da un'etichetta Always Free o da snapshot della VM.
+
+**Prossima azione autorizzabile solo come lettura:** consultare, se utile, l'elenco dei backup di avvio **già esistenti** e la policy associata dalla console; non premere Crea backup, Attiva policy, Backup adesso o pulsanti di mutazione. Il percorso SSH/OpenSSH su Tailscale, i 15 SHA LIVE, spazio/inode, rollback/autoupdater, costo complessivo e consenso rimangono NO-GO. Nessuna modifica a VPS, Tailscale, IAM, collector, MAIN o PR #89.
+
 ## 8 novembre 2026, ore 23:44 italiane — Boot volume: dimensione 47 GB, non spazio libero e non prova fattura
 
 Nuove schermate da console Oracle, **senza modifiche o comandi host**: nel compartimento radice in regione Milano, elenco **Volumi di avvio**, il volume `remura-server (Boot Volume)` appare **Disponibile**, **47 GB allocati**, **VPU:10**, **replica tra aree non attiva**. Nell'elenco separato **Volumi a blocchi** del compartimento selezionato non vi sono elementi, e la scheda Storage dell'istanza mostrava nessun volume a blocchi aggiuntivo collegato. La memoria libera su filesystem Linux e gli inode restano **NON MISURATI**.
