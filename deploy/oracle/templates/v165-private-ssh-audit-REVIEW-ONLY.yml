@@ -25,6 +25,10 @@ concurrency:
 
 jobs:
   audit:
+    # OIDC token needed only by the explicitly gated Tailscale job.
+    permissions:
+      contents: read
+      id-token: write
     if: >-
       github.event_name == 'workflow_dispatch' &&
       github.repository == 'mirkoworz/remura-collector' &&
@@ -56,7 +60,12 @@ jobs:
             echo 'REMURA_AUDIT=PINNED_CODE_DRIFT'
             exit 1
           fi
-          # The receiver is also pinned by checkout ref; no fetched HEAD used.
+          expected_receiver_blob=96a3fd628baff65e677d4594bb8e6c65205bc596
+          actual_receiver_blob="$(git hash-object deploy/oracle/v165_ssh_stdout_receipt.py)"
+          if [[ "$actual_receiver_blob" != "$expected_receiver_blob" ]]; then
+            echo 'REMURA_AUDIT=PINNED_RECEIVER_DRIFT'
+            exit 1
+          fi
           python3 -m py_compile deploy/oracle/v165_v164_live_code_readonly.py deploy/oracle/v165_ssh_stdout_receipt.py
 
       - name: Connect dedicated ephemeral audit identity through Tailscale
@@ -86,7 +95,9 @@ jobs:
           fi
           keyfile="$RUNNER_TEMP/remura-v165-ssh-key"
           khfile="$RUNNER_TEMP/remura-v165-known-hosts"
-          cleanup() { rm -f "$keyfile" "$khfile"; }
+          # Bound remote stdout before buffering it; temporary file on runner only.
+          outfile="$(mktemp "$RUNNER_TEMP/remura-v165-stdout.XXXXXXXX")"
+          cleanup() { rm -f "$keyfile" "$khfile" "$outfile"; }
           trap cleanup EXIT
           printf '%s\n' "$REMURA_V165_SSH_KEY" > "$keyfile"
           printf '%s\n' "$REMURA_V165_SSH_KNOWN_HOSTS" > "$khfile"
@@ -97,8 +108,10 @@ jobs:
             echo 'REMURA_AUDIT=HOST_KEY_NOT_PINNED'
             exit 1
           fi
-          report=""
-          if ! report="$(timeout 40s ssh \
+          # No unbounded shell variable or raw remote output in job logs.
+          # Limit stdout to 2049 bytes (receiver refuses >2048). pipefail
+          # prevents an SSH failure from being reported as a successful scan.
+          if ! (set -o pipefail; timeout 40s ssh -F /dev/null \
                 -o BatchMode=yes \
                 -o IdentitiesOnly=yes \
                 -o PasswordAuthentication=no \
@@ -113,14 +126,16 @@ jobs:
                 -o ForwardAgent=no \
                 -o ForwardX11=no \
                 -o PermitLocalCommand=no \
+                -o ProxyCommand=none \
+                -o ProxyJump=none \
+                -o ControlMaster=no \
+                -o ControlPath=none \
                 -i "$keyfile" -p 22 -T \
                 "${REMURA_V165_SSH_USER}@${REMURA_V165_SSH_HOST}" \
                 'python3 -I - --audit-live-readonly --operator-approved' \
-                < deploy/oracle/v165_v164_live_code_readonly.py 2>/dev/null)"; then
+                < deploy/oracle/v165_v164_live_code_readonly.py 2>/dev/null |
+              head -c 2049 > "$outfile"); then
             echo 'REMURA_AUDIT=REMOTE_CODE_NOT_ATTESTED'
             exit 1
           fi
-          # Do not log raw remote stdout. The parser rejects extra fields,
-          # duplicate JSON keys, wrong source ref, fake successes and >2 KiB.
-          printf '%s' "$report" |
-            python3 deploy/oracle/v165_ssh_stdout_receipt.py
+          python3 deploy/oracle/v165_ssh_stdout_receipt.py < "$outfile"
