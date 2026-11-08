@@ -12,6 +12,14 @@
 
 
 
+## 08/11/2026 ore 23:44 Italia — C4b(l): boot volume REMURA 47 GB (console, sola lettura)
+
+- [x] Le nuove schermate della lista Oracle dei **Volumi di avvio**, con filtro al compartimento **radice** e regione **Italy Northwest (Milan)**, mostrano la riga **`remura-server (Boot Volume)`**, **dimensione allocata 47 GB**, prestazioni standard **VPU:10**, **Replica tra più aree = Non attiva**, condizione **Disponibile**. La pagina **Volumi a blocchi** dello stesso compartimento visualizzava **Nessun elemento da visualizzare**, e la scheda Storage dell'istanza mostrava **Nessun volume a blocchi aggiuntivo collegato**. Non dedurre da 47 GB quanto spazio libero resti dentro Ubuntu (richiede `df`/inode sull'host e consenso separato).
+- [x] La documentazione Oracle [Always Free](https://docs.oracle.com/it-it/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm) indica **200 GB complessivi** di volumi di avvio + volumi a blocchi nella home region, fino a **cinque backup** di volume gratuiti, e cita **47 GB** come dimensione minima di boot volume nelle istanze. **47/200 GB = 23,5% della quota teorica di storage**, solo se l'intero volume risultasse eleggibile e non esistessero altre risorse concorrenti: NON è un bilancio della tenancy né prova di spesa zero. Nessun backup nuovo creato.
+- [ ] La stringa UI `listBootVolumes.alwaysFree` compare accanto al volume: **possibile etichetta di risorsa Always Free non localizzata**, ma non un attestato inequivoco della flag contabile. Fino al dettaglio risorsa e/o inventario quota nella home region: `BOOT_VOLUME_ALWAYS_FREE_ELIGIBILITY=LIKELY_NOT_ATTESTED`; `TOTAL_TENANCY_STORAGE_CONSUMPTION=UNKNOWN`; `FREE_DISK_SPACE_AND_INODES=UNKNOWN`. Non trascrivere ID o IP nei documenti.
+- [ ] **Prossimo passo non invasivo:** aprire il nome **`remura-server (Boot Volume)`** nell'elenco attuale e leggere soltanto eventuale etichetta **Sempre gratis idoneo / Always Free Eligible** e informazioni del volume; per l'account/quote usare solo un controllo nuovo se rimangono ambiguità, senza ripetere budget/alert e test storici.
+- [ ] Restano `C4b(l)=NO_GO`, `SSH_AUDIT=NO_GO`, `V165_RELEASE=NO_GO`, `C5=NO_GO` fino a host/15 hash LIVE, sicurezza accesso, backup SQLite coerente, restore-test off-host, rollback, costi e consensi. MAIN, PR #89, VPS, collector, IAM e ACL invariati.
+
 ## 08/11/2026 ore 23:35 Italia — C4b(l): shape VPS Oracle verificata (console, solo lettura)
 
 - [x] Dalla schermata **Dettagli istanza → Configurazione forma** della VPS REMURA in regione **Italy Northwest (Milan)** risultano: **`VM.Standard.E2.1.Micro`**, campo UI **Conteggio OCPU = 1**, **Memoria = 1 GB**, **Larghezza di banda della rete = 0,5 Gbps** (campo della console), **solo storage a blocchi**. Dettagli immagine: **Canonical Ubuntu 24.04 Minimal**. Nessuna modifica a istanza, forma, immagine, rete o storage.
