@@ -62,6 +62,18 @@ L'anteprima è **eseguibile solo come controllo su checkout GitHub**, non instal
 
 **Controllo offline in CI:** `python -m unittest discover -s tests -p 'test_v165_release_offline_preview.py' -v`. Nessun input di autenticazione o chiave richiesto.
 
+## C4b(k) — laboratorio transazione release, SQLite WAL e rollback sintetico (08/11/2026)
+
+**Cosa è stato realmente eseguito:** nuovo `deploy/oracle/v165_release_transaction_lab.py`, con CLI **soltanto** `--simulate-offline`. Genera in directory temporanee su **uno stesso runner** un DB inventato EURUSD/XAUUSD e righe di stato, abilita WAL e lascia la connessione sorgente aperta durante il backup coerente `sqlite3.Connection.backup()`. Ricostruisce una copia con un secondo `backup()`, controlla `PRAGMA integrity_check` e i record attesi. Verifica il digest SHA256 della copia prima del restore, rifiuta alterazioni/symlink/assenza/corruzione. Non usa `shutil.copy` per copiare a caldo il DB WAL.
+
+**Rollback codice simulato:** manifest di **14 nomi fissi** (9 HTML, nav.js, sw.js, 3 backend) con contenuti inventati; modifica solo queste copie fittizie in memoria e ne verifica il ripristino completo dopo il tentativo. Sono provati guasti in sei punti: dopo backup, snapshot corrotto, dopo staging, sostituzione parziale, sostituzione completa e finta riconciliazione. Lo stato autoupdater è un marcatore **fittizio in memoria** e non viene mai modificato. La directory temporanea e le prove sono eliminate automaticamente.
+
+**Evidenza CI:** `tests/test_v165_release_transaction_lab.py` **18/18 PASS** su [Price Engine #42495151783](https://github.com/mirkoworz/remura/actions/runs/42495151783), [Insights #42495151777](https://github.com/mirkoworz/remura/actions/runs/42495151777) **SUCCESS**, codice finale commit `a5290300d2d61b36ab0f5f0bbee10c9c49d496c0`. Un primo run ha rilevato un tipo invalido trattato con eccezione prima dell'allowlist; ora gli input sono validati prima di costruire i file di prova. Le suite già esistenti sul medesimo workflow, inclusi i 42 test scanner e i 18 test della preview, sono verdi.
+
+**Cosa NON significa:** NON esiste ancora un installer v1.65 di produzione; nessuna misura, backup, restore, file, servizio, impostazione, autoupdater o configurazione LIVE è stata toccata; nessuna prova di copia fuori macchina, cifratura, continuità dei provider o quote OCI. Il test del rollback è **solo su file fittizi**, non un recupero della VPS. Lo script restituisce sempre `NO_GO_RELEASE_AND_PROSPECTIVE_COLLECTION` e non offre `--apply` o argomenti di percorso LIVE.
+
+**Prossimo gate:** progettare separatamente l'installer/reconciler LIVE di v1.65 con preflight pinned e verifiche operative reali (percorso e SHA VPS, servizi, backup coerente con restore-test, permessi, rollback, quote e banner), ma SENZA invocarlo prima di una specifica autorizzazione.
+
 ## Limitazioni e barriere NON superate
 
 - Questo ramo **NON è la release 1.65** e NON è un'autorizzazione a installare o
