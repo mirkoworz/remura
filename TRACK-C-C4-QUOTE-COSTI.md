@@ -102,3 +102,11 @@ Il contratto `scripts/track_c_c4bg_resource_transport_contract.py` e 15 test fit
 **Costo:** il codice e gli unit test nel branch non creano nuovi provider, servizi o fatture. Una futura GET aggiuntiva dalla diagnostica consumerebbe una chiamata HTTP della VPS e minuti GitHub Actions già applicabili; non dimostra di per sé un conto totale a 0 €.
 
 **C4b(g) CI verificata (SOLO LAB):** commit `e834e74d680950b084bbe465b8dc4373a5b69577`; [Price Engine #42486731167](https://github.com/mirkoworz/remura/actions/runs/42486731167) **SUCCESS**, [Insights #42486731068](https://github.com/mirkoworz/remura/actions/runs/42486731068) **SUCCESS**. Il contratto non è installato sul server e non produce misure attuali.
+
+## 10. C4b(h) — compatibility preview, non un endpoint operativo
+
+Progettato `scripts/track_c_c4bh_resource_compat_preview.py` usando soltanto il contratto C4b(g). La simulazione conserva esattamente i nove campi `remura-resources-v1` e i loro valori se il feature flag è OFF (valore di default). Con flag LAB ON, richiede snapshot e metadati PRECALCOLATI e aggiunge solo `storageInventory` sanitizzato; non esegue `lstat/scandir/statvfs` e non ha I/O di rete o SQLite. Nessuna nuova GET, job o spesa verso la VPS.
+
+La feature reale non può essere copiata direttamente dal prototipo: la futura integrazione deve **mai** fare scansioni nel thread che risponde alle GET e deve avere cache, timeout/limiti misurati esternamente, gestione errori, auth invariata e rollback. L'attuale `private_server.py` e `resource_monitor.py` NON importano il prototipo. L'eventuale nuova versione v1.65 con banner/versione/data su tutte le pagine, rilascio e rollback richiede decisione separata e non fa parte del Track C.
+
+La validità di un payload non prova autenticità, stato attuale, costi, copie fuori host o recuperabilità. `NO_GO_RESEARCH_AND_PROSPECTIVE_COLLECTION` invariante. **18 test CI sintetici** associati alla PR #97.

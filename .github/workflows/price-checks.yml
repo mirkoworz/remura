@@ -250,6 +250,8 @@ jobs:
       - name: Test v1.64 exact 15-file SHA state reconciliation, offline
         run: python -m unittest discover -s tests -p 'test_reconcile_v164.py' -v
       - run: python -m unittest discover -s tests -p 'test_signals_monitor.py' -v
+      - name: Track C4b(h) - default-off legacy resource API compatibility in pure LAB
+        run: python -m unittest discover -s tests -p 'test_track_c_c4bh_resource_compat_preview.py' -v
       - name: Track C4b(g) - future private resource-extension contract and no-live-wiring guard
         run: python -m unittest discover -s tests -p 'test_track_c_c4bg_resource_transport_contract.py' -v
       - name: Track C4b(f) - metadata-only SQLite/WAL and local backups (temp LAB)
