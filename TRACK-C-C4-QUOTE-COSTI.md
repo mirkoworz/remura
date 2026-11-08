@@ -100,3 +100,5 @@ Conferma statica dell'attuale `scripts/private_server.py`: `GET /private-api/res
 Il contratto `scripts/track_c_c4bg_resource_transport_contract.py` e 15 test fittizi verificano il solo formato sanificato, l'età dichiarata, i bounds e l'impossibilità di promuovere una copia **locale** a restore **fuori host**. Fino a rilascio esplicito: `remoteEndpointCurrentlyImplemented=false`, tutti i gate LIVE/OCI/restore/first-seen non verificati e `NO_GO_RESEARCH_AND_PROSPECTIVE_COLLECTION`.
 
 **Costo:** il codice e gli unit test nel branch non creano nuovi provider, servizi o fatture. Una futura GET aggiuntiva dalla diagnostica consumerebbe una chiamata HTTP della VPS e minuti GitHub Actions già applicabili; non dimostra di per sé un conto totale a 0 €.
+
+**C4b(g) CI verificata (SOLO LAB):** commit `e834e74d680950b084bbe465b8dc4373a5b69577`; [Price Engine #42486731167](https://github.com/mirkoworz/remura/actions/runs/42486731167) **SUCCESS**, [Insights #42486731068](https://github.com/mirkoworz/remura/actions/runs/42486731068) **SUCCESS**. Il contratto non è installato sul server e non produce misure attuali.
