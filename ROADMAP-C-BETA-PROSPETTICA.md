@@ -12,6 +12,13 @@
 
 
 
+## 08/11/2026 — C4b(l) — verificata visualmente la coppia di grant Tailscale (NO-GO SSH)
+
+- [x] Ricevute dall'operatore due schermate con **entrambe le regole espanse** nella console Tailscale `Policies > General access rules`. Verificato `autogroup:member → autogroup:self → *`: secondo Tailscale `self` permette l'accesso solo ai dispositivi propri, **non** un accesso indiscriminato a tutti i dispositivi, e non si applica ai dispositivi taggati.
+- [x] Verificato `tag:remura-ci-read → singola VPS → tcp:443`. Esattamente la destinazione/protocollo attesi per la diagnostica HTTPS esistente, **nessun TCP/22 con quel tag**. Nel documento DRAFT #98 `V165-ACCESS-READINESS-NO-GO.md` annotati i soli grant osservati, **senza trascrivere l'indirizzo Tailscale della VPS**.
+- [ ] Non e' ancora garantita l'assenza di altre ACL/grants/Tailscale SSH/tag owners/auto approvers/OIDC policy o varianti d'accesso: le schermate limitano l'evidenza a due righe dell'editor. Controllare in **sola lettura** il resto delle policy e il piano/uso Tailscale, senza alterare le regole. Nessuna connessione/nuovo tag.
+- [ ] Manteniamo `C4b(l) SSH=NO-GO`, `v1.65=NO-GO` e `C5=NO-GO`: network-side, account SSH no-sudo/server gate, hash LIVE, spazio/inode, billing/Always Free, backup/restore off-host e consenso ancora non dimostrati. Filone A e B non toccati.
+
 ## 08/11/2026 — C4b(l) decisione: prima evidenze di console, poi eventuali autorizzazioni separate (NO-GO)
 
 - [x] Creato sul **ramo release #98, DRAFT e SENZA esecuzione** il documento [V165-ACCESS-READINESS-NO-GO.md](V165-ACCESS-READINESS-NO-GO.md), matrice sintetica da decisione: via A HTTPS/443 esistente (prove parziali soltanto) oppure via B SSH protetto di 15 file (richiede nuova rete e modifiche VPS, entrambe NON autorizzate). Nessuna nuova Action o componente cloud attivato.
