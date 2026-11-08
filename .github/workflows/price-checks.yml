@@ -22,6 +22,8 @@ on:
       - 'tests/test_v165_release_offline_preview.py'
       - 'deploy/oracle/v165_release_transaction_lab.py'
       - 'tests/test_v165_release_transaction_lab.py'
+      - 'deploy/oracle/v165_readonly_preflight_fixture.py'
+      - 'tests/test_v165_readonly_preflight_fixture.py'
       - 'deploy/oracle/v165_preflight_evidence_lab.py'
       - 'tests/test_v165_preflight_evidence_lab.py'
       - 'deploy/oracle/v165_incident_decision_lab.py'
@@ -220,6 +222,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_v165_incident_decision_lab.py' -v
       - name: Draft v1.65 private evidence plan with 12 strict synthetic slots (NO LIVE)
         run: python -m unittest discover -s tests -p 'test_v165_preflight_evidence_lab.py' -v
+      - name: Draft v1.65 bounded read-only preflight arithmetic on fake snapshots (NO LIVE)
+        run: python -m unittest discover -s tests -p 'test_v165_readonly_preflight_fixture.py' -v
       - run: python -m unittest discover -s tests -p 'test_private_server.py' -v
       - name: Test offline opt-in batch timing, no new broker requests (v1.61 research)
         run: python -m unittest discover -s tests -p 'test_batch_timing.py' -v
