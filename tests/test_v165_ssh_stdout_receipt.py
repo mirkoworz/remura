@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ORACLE = ROOT / "deploy" / "oracle"
 sys.path.insert(0, str(ORACLE))
 import v165_ssh_stdout_receipt as receipt
+import v165_pinned_ssh_forced_gate_REVIEW_ONLY as forced_gate
 
 TEMPLATE = ORACLE / "templates" / "v165-private-ssh-audit-REVIEW-ONLY.yml"
 
@@ -162,6 +163,80 @@ class OneShotReceiptTests(unittest.TestCase):
         self.assertNotIn("os.environ",src)
         self.assertNotIn("subprocess",src)
         self.assertNotIn("urllib",src)
+
+    def test_forced_gate_accepts_only_exact_approved_verifier_source(self):
+        path=ORACLE/"v165_v164_live_code_readonly.py"
+        source=path.read_bytes()
+        self.assertEqual(forced_gate.approve_exact_verifier(
+            source,forced_gate.APPROVED_ORIGINAL_COMMAND),source)
+        import hashlib
+        blob=b"blob "+str(len(source)).encode("ascii")+bytes((0,))+source
+        self.assertEqual(hashlib.sha1(blob).hexdigest(),
+                         forced_gate.APPROVED_SOURCE_GIT_BLOB)
+
+    def test_forced_gate_rejects_any_mutated_code(self):
+        original=(ORACLE/"v165_v164_live_code_readonly.py").read_bytes()
+        for data in (original+b"\n", original[:-1], b"print('danger')",
+                     original.replace(b"read-only",b"writeable",1)):
+            with self.subTest(bytes=len(data)):
+                with self.assertRaises(forced_gate.UnapprovedPayload):
+                    forced_gate.approve_exact_verifier(
+                        data,forced_gate.APPROVED_ORIGINAL_COMMAND)
+
+    def test_forced_gate_rejects_nonmatching_ssh_original_command(self):
+        source=(ORACLE/"v165_v164_live_code_readonly.py").read_bytes()
+        for bad in (None,"","python3 -I -","bash","sudo bash",
+                    forced_gate.APPROVED_ORIGINAL_COMMAND+" ; cat /etc/passwd"):
+            with self.subTest(command=bad):
+                with self.assertRaises(forced_gate.UnapprovedPayload):
+                    forced_gate.approve_exact_verifier(source,bad)
+
+    def test_forced_gate_rejects_empty_oversize_and_nonbytes(self):
+        command=forced_gate.APPROVED_ORIGINAL_COMMAND
+        for payload in (b"",b"a"*(forced_gate.MAX_STDIN+1),
+                        "print(1)",None,bytearray(b"test")):
+            with self.subTest(length=len(payload) if payload is not None else None):
+                with self.assertRaises(forced_gate.UnapprovedPayload):
+                    forced_gate.approve_exact_verifier(payload,command)
+
+    def test_forced_gate_cli_rejects_unapproved_payload_without_echo(self):
+        import os
+        path=str(ORACLE/"v165_pinned_ssh_forced_gate_REVIEW_ONLY.py")
+        private=b"PRIVATE_MARKER_MUST_NOT_APPEAR"
+        env=dict(os.environ)
+        env["SSH_ORIGINAL_COMMAND"]=forced_gate.APPROVED_ORIGINAL_COMMAND
+        p=subprocess.run([sys.executable,"-I",path],input=private,
+                         capture_output=True,env=env,timeout=10)
+        self.assertNotEqual(p.returncode,0)
+        self.assertEqual(p.stdout.decode().strip(),forced_gate.REJECTION)
+        self.assertNotIn(private,p.stdout+p.stderr)
+
+    def test_forced_gate_cli_rejects_missing_command_before_read(self):
+        import os
+        path=str(ORACLE/"v165_pinned_ssh_forced_gate_REVIEW_ONLY.py")
+        env=dict(os.environ)
+        env.pop("SSH_ORIGINAL_COMMAND",None)
+        p=subprocess.run([sys.executable,"-I",path],
+                         input=b"not approved",capture_output=True,env=env,timeout=10)
+        self.assertNotEqual(p.returncode,0)
+        self.assertEqual(p.stdout.decode().strip(),forced_gate.REJECTION)
+
+    def test_forced_gate_is_review_only_and_not_vps_install(self):
+        source_path=ORACLE/"v165_pinned_ssh_forced_gate_REVIEW_ONLY.py"
+        content=source_path.read_text()
+        self.assertIn("NOT INSTALLED ON ANY VPS",content)
+        self.assertIn("root-owned copy",content)
+        self.assertIn("SSH_ORIGINAL_COMMAND",content)
+        self.assertIn("approve_exact_verifier(payload, command)",content)
+        self.assertIn("Only the exact pinned source can reach exec",content)
+        self.assertNotIn("subprocess",content)
+        self.assertNotIn("socket",content)
+
+    def test_forced_gate_matches_pinned_workflow_remote_command(self):
+        t=TEMPLATE.read_text()
+        self.assertIn("'"+forced_gate.APPROVED_ORIGINAL_COMMAND+"'",t)
+        self.assertIn("a forced-command gate that validates the EXACT approved verifier bytes",t)
+        self.assertIn("NOT INSTALLED AS A GITHUB ACTION",t)
 
     def test_transport_is_nonactive_template_not_real_workflow(self):
         self.assertEqual(TEMPLATE.parent.name,"templates")
