@@ -3,6 +3,17 @@
 **Decisione di coordinamento:** 07/11/2026, Italia. **Stato:** ricerca e test OFFLINE sul branch C; nessuna raccolta prospettica reale, merge, installazione o rilascio autorizzati. Raccolta scientifica prospettica NON autorizzata, NON installata e NON avviata. **Repository:** `mirkoworz/remura`. **Branch dedicato:** `research/track-c-beta-prospective-20261107` (PR documentale DRAFT iniziale). **Riferimento scientifico:** [Track B](ROADMAP-B-SHARK-SCIENCE.md) — [PR #89 DRAFT](https://github.com/mirkoworz/remura/pull/89). **Riferimento infrastrutturale esclusivo:** documento privato `COORDINAMENTO-OCI-SHARK-SCIENCE.md` nel repository `mirkoworz/remura-collector`.
 
 
+
+
+## 08/11/2026 — Revisione sicurezza template SSH non attivo (checkpoint successivo)
+
+- [x] Verificati nuovamente via GitHub i tre rami separati: PR #89 Track B, PR #97 Track C e PR #98 v1.65 ancora **OPEN/DRAFT** agli HEAD del passaggio di consegne. Nessun merge o intervento al collector.
+- [x] Verificato in lettura il workflow privato remura-vps-diagnostic.yml: il trasporto esistente Tailscale -> HTTPS/443 fornisce solo metriche/versione dichiarate; **non** permette di eseguire il verificatore indipendente dei 15 file. Per evidenze parziali utilizzare preferibilmente gli endpoint esistenti solo dopo autorizzazione: niente estensione implicita di SSH/22 o nuovi endpoint di esecuzione.
+- [x] Sul ramo separato **release PR #98, ancora DRAFT e senza workflow attivo**, modificato il solo template di trasporto SSH: ricevitore e scanner SHA pin, OIDC limitato al job, SSH senza configurazione/proxy/control socket ereditati, stdout strettamente limitato a 2049 byte PRIMA del buffering, parser max 2048, pipefail, file temporaneo solo sul runner e cleanup; aggiunti quattro test statici a quelli esistenti. Il template **non e'** in .github/workflows.
+- [x] Documentate in runbook v1.65 e piano OPERATIONAL le condizioni necessarie: approvazione umana effettiva dell'environment; nuova identita' Tailscale e ACL vincolate a host TCP/22; host key verificata; utente non-root senza sudo/scritture; eventuale forced-command/restrict; action esterne @v4/@v5 ancora da pin a commit SHA immutabili; no apertura SSH pubblica e nessuna modifica al tag HTTPS esistente. File read-only puo' comunque modificare atime/log di sistema; output positivo non certifica updater, billing, quote o backup.
+- [ ] Nuova CI dei test del template: leggere la conclusione delle Actions dell'ultimo HEAD prima di dichiarare il numero finale di PASS. Il checkpoint antecedente e' **319/319 test offline**. **Non** riportare come prova operativa la CI.
+- [ ] Gate effettivi tutti pendenti: identity SHA v1.64 LIVE, spazio/inode VPS, ACL e billing/Always Free correnti, backup SQLite + restore off-host, rollback/autoupdater e decisione esplicita di rilascio. **C4b(l), release v1.65, C5 NO-GO**. LIVE v1.64 solo documentata, non osservata tramite VPS, e nessun banner LIVE modificato.
+
 ## 08/11/2026 — C4b(k): PR di release SEPARATA per poter misurare i byte veri (DRAFT, NO LIVE)
 
 **Diagnostica reale oggi impossibile con i dati attuali.** La GET privata esistente \`/private-api/resources\` non pubblica metadati SQLite, WAL, SHM; il workflow \`remura-vps-diagnostic.yml\` usa solo HTTPS/Tailscale e **non possiede SSH** o una command-run capability. Nell'elenco dei run privati schedulati consultati l'ultimo è 06/11/2026, senza inventario di file. Una nuova GET identica non fornirebbe dati nuovi: non è stata avviata.
