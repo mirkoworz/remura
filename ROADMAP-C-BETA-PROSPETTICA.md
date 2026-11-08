@@ -12,6 +12,12 @@
 
 
 
+## 08/11/2026 ore 21:58 Italia — Filtro Tailscale SSH: zero macchine, risultato acquisito
+
+- [x] L'operatore ha applicato su Machines il filtro `property:tailscale-ssh` e mostrato **0 machines / No machines match your search**, mentre la precedente schermata senza filtro mostrava `remura-server` connessa. [Documentazione ufficiale Tailscale](https://tailscale.com/docs/features/access-control/device-management/how-to/filter): questo filtro seleziona proprio i nodi che hanno **Tailscale SSH abilitato**. La VPS non risulta abilitata al momento del riscontro.
+- [x] **Chiuso il dubbio Tailscale SSH vs OpenSSH per lo stato attuale**: non modificare/abilitare Tailscale SSH, perché intercetterebbe porta 22 sulla tailnet e il futuro forced command `authorized_keys` di OpenSSH non potrebbe proteggerlo. Percorso candidato: **OpenSSH tradizionale trasportato da Tailscale**.
+- [ ] **Non dichiarare SSH pronto**: bisogna ancora attestare OpenSSH realmente in ascolto e limitato, account non-root senza sudo, host key verificata e gate root-owned, nuova identità OIDC + ACL stretta su sola VPS:22 e consenso specifico. Fatti non dimostrati dalle schermate; `SSH_AUDIT=NO_GO`.
+- [ ] C4b(l), v1.65 e C5 sempre **NO-GO** per costi/quote, hash LIVE, backup SQLite off-host/restore, rollback e autorizzazioni. Non accedere alla VPS, non modificare il collector, Filoni A/B separati.
 ## 08/11/2026 — C4b(l) — screenshot Machines VPS online e filtro Tailscale SSH (ancora da verificare)
 
 - [x] Ricevute schermate **Machines** e dettaglio `remura-server`: due dispositivi Tailscale elencati (iPhone + VPS), VPS connessa, Linux, client Tailscale `1.104.2` stable, aggiornamento automatico indicato attivo, stato cifratura Tailscale locale `node:tsStateEncrypted=false`, scadenza chiave macchina circa 5 mesi e certificato TLS mostrato valido. Nessuna subnet route pubblicizzata. Non trasferiti IP, nodekey o altri identificativi nei documenti GitHub.
