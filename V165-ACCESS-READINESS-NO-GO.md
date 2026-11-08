@@ -54,3 +54,17 @@ Questo file è una scheda operativa per il proprietario. Non contiene segreti, i
 **Fase 4: rilascio v1.65, separato dalla fase 3.** Soltanto dopo prova backup/restore SQLite, rollback, baseline attuale, quote e autorizzazione espressa. La release deve stampare numero versione e data/ora reali italiane su tutte le nove pagine. C5 resta un'altra autorizzazione, e i dati prospettici non vanno confusi con prove sintetiche.
 
 **Decisione adesso:** preparazione completata, NO-GO SSH/VM/VPS/release/C5, nessuna credenziale o costo attivati. Il prossimo punto efficace è raccogliere le sole quattro evidenze di console della Fase 0 e valutare se il percorso gratuito sia davvero percorribile.
+
+## 8 novembre 2026 — Evidenza visiva Tailscale ACL dell'operatore (sola lettura)
+
+L'operatore ha mostrato la schermata reale **Policies → General access rules** di Tailscale con **due regole espanse**. Contenuti registrati senza hostname/IP private, credenziali o altri identificativi:
+
+1. `src: ["autogroup:member"], dst: ["autogroup:self"], ip: ["*"]`. Secondo la documentazione ufficiale Tailscale, `self` significa **solo dispositivi posseduti dalla stessa persona**, non qualunque dispositivo dell'intera tailnet. La selezione `autogroup:self` **non si applica a dispositivi taggati**. L'asterisco concede tutte le porte soltanto entro quell'ambito di identita'.
+2. `src: ["tag:remura-ci-read"], dst: ["singolo dispositivo della VPS"], ip: ["tcp:443"]`. E' coerente con la diagnostica CI HTTPS/443 esistente; **nessuna autorizzazione SSH/22** per il tag della CI e nessun tag `remura-ci-v165-audit` appare nelle due regole mostrate.
+
+**Esito di questa specifica evidenza:** `TAILSCALE_VISIBLE_GRANTS=SCOPED_NOT_GLOBAL_ALLOW_ALL`. La vecchia ipotesi che `member → self → *` fosse un vero `* → * → *` e' stata esclusa per queste due regole. **Non** e' ancora un audit dell'intera policy (altre ACL/grants, SSH tab, tag ownership, OIDC e varianti policy possono aggiungere accessi) e non prova che l'host abbia SSH sicuro. Non modificare o eliminare regole esistenti. Tailscale `Access Controls` e `Tailscale SSH` restano oggetti di verifica distinti.
+
+Fonti: [Tailscale selectors, autogroup:self](https://tailscale.com/docs/reference/targets-and-selectors), [Tailscale grant examples](https://tailscale.com/docs/reference/examples/grants) e [policy file reference](https://tailscale.com/docs/reference/syntax/policy-file). Nessuna modifica tailnet/collector/VPS, nessun accesso remoto o costo generato.
+
+**Rimane da verificare prima di qualsiasi nuova connessione:** piano e uso Tailscale, tag ownership/autoapprovers, ACL complete e Tailscale SSH, OIDC claim mapping futuro; indipendentemente GitHub Actions quota/costi e Oracle Always Free; account SSH nonroot/forced gate/server key e, solo con via libera separato, hash LIVE/backup/rollback. `SSH_AUDIT=NO_GO`, `V165_RELEASE=NO_GO`, `C5=NO_GO`.
+
