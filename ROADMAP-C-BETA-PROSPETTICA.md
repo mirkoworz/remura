@@ -5,7 +5,7 @@
 
 ## 08/11/2026 — C4b(a): gate offline su risorse e inventario SQLite/WAL (NON una misurazione LIVE)
 
-**Stato:** simulatore di valutazione risorse con 12 test sintentici locali; la conferma richiede CI GitHub sul commit C4b. Nessuna autorizzazione a C5, nessun polling o collegamento alla VPS.
+**Stato: VERIFICATO SOLO LAB — commit `5d9aedbfb076c3a2bbfdd0501180aeeb9e5df3e1`**. 12 test sintetici C4b e suite preesistenti superati: [Price Engine #42477019365](https://github.com/mirkoworz/remura/actions/runs/42477019365) **SUCCESS**, [Insights #42477019455](https://github.com/mirkoworz/remura/actions/runs/42477019455) **SUCCESS**. Nessuna autorizzazione a C5, nessun polling o collegamento alla VPS.
 
 - [x] `scripts/track_c_c4b_capacity_evidence.py`: modulo **puramente offline**; accetta SOLO campioni già sanificati in forma ridotta derivabile da `resource_monitor.snapshot` (`remura-resources-v1`), non importa server/collector, non apre file, non crea rete, processi, cron, provider API, notifiche, dati di mercato o modifiche a Oracle.
 - [x] Valida clock UTC, massimo 8 campioni, età massimo 5 minuti, sequenza/uptime, numeri coerenti e limiti; distingue **SAMPLE ASSENTE / STALE / INVALIDO / RESTART / UNA SOLA MISURA / PIÙ MISURE NON ATTESTATE**. Non deduce tempo effettivo di ingest, OCPU, costo Oracle, performance futura o assenza di crash. Proxy `load1/logical` NON equivale alla percentuale di utilizzo CPU.
