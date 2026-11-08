@@ -117,3 +117,11 @@ Nuovo modulo `deploy/oracle/v165_release_protocol_draft.py`, **solo `--plan-offl
    su **tutte** le pagine coinvolte; non aggiornare solo il numero interno.
 5. Autorizzazione al rilascio e successiva osservazione, senza attivare C5.
 
+
+## C4b(k) — preflight pinned con metadati CI sintetici (08/11/2026)
+
+Aggiunto `deploy/oracle/v165_pinned_preflight_lab.py` e relativo test offline. Questo è un **componente di laboratorio**, non una libreria di autorizzazione LIVE: verifica la forma stretta di un **fixture CI fittizio** (due workflow differenti, push su main, HEAD identico e success), confronta i 14 Git blob preparatori al commit bloccato `3819fe1450980c046533e400d283b25f37a67bd3`, poi costruisce soltanto in memoria un manifest SHA256 dei 12 file esistenti e 2 moduli nuovi. Reimpiega la preview validata per nove riferimenti nav.js v165, banner comune e cache PWA; la data Europe/Rome è **simulata**, non l'ora di un rilascio. Test negativi: target alterato, main moved, workflow duplicato, CI pull_request/dispatch/rossa, tree modificato, file extra, timestamp senza zona e DST.
+
+**Limitazioni:** due CI finte verdi non equivalgono a run reali! Non consulta GitHub, Tailscale, OCI o la VPS; non genera backup o restore SQLite; non attesta il LIVE v1.64 né gli hash precedenti per rollback; non conserva manifest in produzione. La CLI ammette solo `--check-fixture-offline`; `actualPushMainCiVerified=false`, `installedLiveV164Attested=false` e `NO_GO_RELEASE_AND_PROSPECTIVE_COLLECTION` sono obbligatori anche con tutti i test verdi. Per l'installer futuro servono lettura remota autenticata e doppio controllo HEAD sotto lock, prova LIVE separata, rollback persistente e verificato, restore e consenso operativo.
+
+**Esecuzione CI prevista:** `python -m unittest discover -s tests -p 'test_v165_pinned_preflight_lab.py' -v` nello stesso workflow Price Engine già esistente (nessun cron o nuovo provider). Inserire qui risultato e link solo dopo verifica reale della CI; fino ad allora i test sono **da verificare**.
