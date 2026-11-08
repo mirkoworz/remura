@@ -23,7 +23,15 @@
 # Existing tag:remura-ci-read is HTTPS:443 ONLY and MUST NOT be expanded to
 # SSH. Use a different narrowly-scoped, manual-workflow OIDC identity/tag.
 #
-# A green run would mean 15 pinned file contents matched the v1.64 source at
+# CRITICAL PROTOCOL DISTINCTION: this future workflow expects traditional
+# OpenSSH, using known_hosts, private key and server authorized_keys forced
+# command, transported privately over Tailscale. Tailscale SSH is a separate
+# service that can intercept tailnet TCP/22 and does NOT enforce OpenSSH
+# authorized_keys forced commands. DO NOT deploy this design against a VPS
+# with Tailscale SSH enabled; independently verify the host mode first.
+# The visible Tailscale SSH default member->self check/root policy does
+# NOT grant the tagged remura-ci-read identity an SSH permission.
+## A green run would mean 15 pinned file contents matched the v1.64 source at
 # the scan instant. It would NOT verify updater SHA, backups, ACL, billing,
 # or authorize v1.65 release / prospective C5.
 name: REMURA v1.65 - one-shot v1.64 code evidence (REVIEW TEMPLATE)
