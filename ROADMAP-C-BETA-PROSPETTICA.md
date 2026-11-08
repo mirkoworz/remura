@@ -11,6 +11,15 @@
 
 
 
+
+## 08/11/2026 — C4b(k): digest Tailscale autentico recuperato e PIN FISSO (solo CI pubblica, nessun LIVE)
+
+- [x] Effettuata **una sola sonda temporanea** nel workflow Price Engine della PR #98 DRAFT, solo `pull_request`, senza credenziali. Il runner ha consultato via HTTPS ufficiale la checksum pubblica dell'archivio `tailscale_1.104.4_amd64.tgz` su `pkgs.tailscale.com` e letto il digest SHA256 `624ea093d47d62cf56f17b8332d74b8decda4a1faa610ebc60a1de334b2b3dc9`. [Price Engine #42515538956](https://github.com/mirkoworz/remura/actions/runs/42515538956) SUCCESS; questo NON e' ricalcolo dell'archivio, ne' firma indipendente del fornitore.
+- [x] Eliminata la dipendenza dalla variabile `REMURA_V165_TS_TARBALL_SHA256`: il solo template SSH **NON attivo** contiene il digest statico esatto due volte (gate prima di OIDC e `sha256sum` di Tailscale). Resta `use-cache: false` e runner Linux/X64; il futuro runtime, se autorizzato, dovra' verificare il pacchetto scaricato rispetto al valore fissato e fermarsi se non coincide.
+- [x] Rimosso completamente il passo CI temporaneo: `.github/workflows/price-checks.yml` e' tornato **byte-per-byte** al blob storico `4ed91370358962adbbefcec44f36d1fbcbf3daf5`; nessuna nuova Action schedulata, nessun uso VPS/OCI/Tailscale.
+- [x] Adeguati i test al nuovo checksum letterale e al divieto di override variabile e fetch del manifest dentro il futuro template. **42/42 suite SSH offline PASS**, totale **332/332 su 12 suite**, [Price Engine #42515666047](https://github.com/mirkoworz/remura/actions/runs/42515666047) e [Insights #42515666147](https://github.com/mirkoworz/remura/actions/runs/42515666147) SUCCESS; un run rosso intermedio di sviluppo precedente e' stato corretto.
+- [ ] **C4b(l), rilascio v1.65, C5 restano NO-GO**: nessuna prova LIVE di 15 file, spazio/inode, ACL/OIDC, account SSH non-root, known_hosts, billing/Always Free, backup SQLite+restore off-host, rollback e autorizzazione finale. Il nuovo pin riduce rischio supply-chain e passaggi manuali, ma non permette il collegamento senza revisione indipendente. PR #89 non toccata e PR #97/#98 restano separate DRAFT.
+
 ## 08/11/2026 — Main avanzato solo per campioni Myfxbook (verifica GitHub, NON LIVE)
 
 La lettura GitHub della branch `main` al momento del controllo ha restituito `8c1907a03123dc766cc434d14ae13a9ac93aec3c`, diverso dalla precedente baseline `5ec7d73247b7ec074ce3640d7cafecaa7b3f1c74`. `compare_commits` ufficiale tra questi SHA indica **ahead di 1 commit**, **31 file mutati, tutti `data/myfxbook/`**, nessun file codice/HTML/script toccato. Il commit e' un normale aggiornamento campioni sentiment e **non** autorizza interpretazioni prospettiche o l'installazione v1.65. **Nessuna nostra operazione ha modificato main**.
