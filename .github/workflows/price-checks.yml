@@ -18,6 +18,8 @@ on:
       - 'scripts/storage_inventory_v165.py'
       - 'scripts/storage_cache_v165.py'
       - 'tests/test_storage_v165_draft.py'
+      - 'deploy/oracle/v165_release_offline_preview.py'
+      - 'tests/test_v165_release_offline_preview.py'
       - 'scripts/cot_monitor.py'
       - 'scripts/signals_monitor.py'
       - 'scripts/h1_batch_comparison.py'
@@ -188,6 +190,8 @@ jobs:
       - run: python -m unittest discover -s tests -p 'test_ctrader_feed.py' -v
       - name: Draft v1.65 opt-in storage metadata, backup local, stale cache and HTTP compatibility (offline)
         run: python -m unittest discover -s tests -p 'test_storage_v165_draft.py' -v
+      - name: Draft v1.65 14-file SHA pins and nine-page timestamp preview (offline, NO RELEASE)
+        run: python -m unittest discover -s tests -p 'test_v165_release_offline_preview.py' -v
       - run: python -m unittest discover -s tests -p 'test_private_server.py' -v
       - name: Test offline opt-in batch timing, no new broker requests (v1.61 research)
         run: python -m unittest discover -s tests -p 'test_batch_timing.py' -v
