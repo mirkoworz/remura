@@ -49,6 +49,19 @@ di versione e della data/ora visibili in cima a ogni pagina.
 6. Preparazione separata della release atomica v1.65: banner **versione + data/ora Italia in alto su tutte le nove pagine**, service worker/cache coerenti, preflight SHA/manifest, file allowlist, piano di rollback, monitoraggio post-deploy. Non anticipare il timestamp LIVE.
 7. Solo dopo i gate e autorizzazione, attivare la diagnostica e osservare le dimensioni REALI tramite l'endpoint privato esistente. `C4b(l)` e raccolta prospettica `C5` restano NO-GO finché non esistono evidenze indipendenti.
 
+## C4b(k) — anteprima pacchetto release v1.65 offline (08/11/2026)
+
+L'anteprima è **eseguibile solo come controllo su checkout GitHub**, non installa nulla e NON include opzioni `--apply`, `--deploy`, backup, restore, rollback o reconcile. Una nuova release completa deve ancora essere progettata e verificata separatamente.
+
+- `deploy/oracle/v165_release_offline_preview.py` blocca la vista alla baseline `main` `5ec7d73247b7ec074ce3640d7cafecaa7b3f1c74` e agli esatti SHA Git blob di **14 file allowlisted**: 9 pagine HTML, `nav.js`, `sw.js` e 3 moduli backend. Qualsiasi file inatteso o contenuto cambiato causa STOP. Questo SHA di `main` NON attesta lo SHA installato sulla VPS.
+- Simulazione **interamente in memoria**: in ogni pagina `nav.js?v=164` viene previsto come `nav.js?v=165`; il banner comune nella barra alta passa a `v1.65` con un **segnaposto esplicitamente non LIVE**. I test generano timestamp simulati Europe/Rome in inverno ed estate. La data/ora vera va timbrata **solo al momento dell'installazione autorizzata**; i file attualmente pubblicati e la LIVE v1.64 sono invariati.
+- Il service worker è simulato con cache distinta `remura-shell-v79-v1.65-storage-diagnostic`; resta esclusa dalla cache la rotta privata. I file SQLite e di configurazione non vengono letti, scritti o caricati.
+- Ispezione `ast` della **struttura**, senza esecuzione, di `release_v164.py`, `reconcile_v164.py` e `backup_v156.py`. Questo NON dimostra che il backup e rollback v1.64 funzionino oggi, né crea un installer v1.65. Lo script restituisce sempre `NO_GO_RELEASE_AND_PROSPECTIVE_COLLECTION`, con dieci gate LIVE esplicitamente pendenti.
+- `tests/test_v165_release_offline_preview.py`: **18/18 PASS** sui pin SHA, tutte le pagine, segnaposto, fuso orario, payload modificati, protezione SW, sorgenti non autorizzate, assenza di scritture/rete/SQLite e necessità dei gate. CI [Price Engine #42494182930](https://github.com/mirkoworz/remura/actions/runs/42494182930) e [Insights #42494182866](https://github.com/mirkoworz/remura/actions/runs/42494182866) **SUCCESS**, commit verificato `78b566cb6f4e718ac200f04329600dbd989ddf8f`. Il primo run della nuova suite aveva un errore di sintassi nel test Unicode e il secondo una condizione troppo restrittiva sull'import di `NO_GO`: entrambi corretti e rieseguiti, risultato finale verde.
+- **Resta obbligatorio** prima del rilascio reale: installer v1.65 con allowlist atomica e SHA LIVE attestato indipendentemente, backup coerente SQLite, restore-test indipendente, rollback verificato, compatibilità autoupdater, effettivi permessi e policy Tailscale, verifica costi e quote, aggiornamento reale del banner su tutte le 9 pagine, esplicita autorizzazione. Non ricavare alcun GO da questa anteprima.
+
+**Controllo offline in CI:** `python -m unittest discover -s tests -p 'test_v165_release_offline_preview.py' -v`. Nessun input di autenticazione o chiave richiesto.
+
 ## Limitazioni e barriere NON superate
 
 - Questo ramo **NON è la release 1.65** e NON è un'autorizzazione a installare o
