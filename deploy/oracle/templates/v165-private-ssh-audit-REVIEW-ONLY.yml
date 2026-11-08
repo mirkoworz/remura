@@ -92,7 +92,7 @@ jobs:
           printf '%s\n' "$REMURA_V165_SSH_KNOWN_HOSTS" > "$khfile"
           chmod 600 "$keyfile" "$khfile"
           # A pre-registered, independently reviewed host key is mandatory;
-          # never use ssh-keyscan/accept-new/StrictHostKeyChecking=no.
+          # never use automatic first-use trust or disable host-key verification.
           if ! ssh-keygen -F "$REMURA_V165_SSH_HOST" -f "$khfile" >/dev/null; then
             echo 'REMURA_AUDIT=HOST_KEY_NOT_PINNED'
             exit 1
