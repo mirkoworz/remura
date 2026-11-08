@@ -12,6 +12,14 @@
 
 
 
+## 08/11/2026 ore 23:35 Italia — C4b(l): shape VPS Oracle verificata (console, solo lettura)
+
+- [x] Dalla schermata **Dettagli istanza → Configurazione forma** della VPS REMURA in regione **Italy Northwest (Milan)** risultano: **`VM.Standard.E2.1.Micro`**, campo UI **Conteggio OCPU = 1**, **Memoria = 1 GB**, **Larghezza di banda della rete = 0,5 Gbps** (campo della console), **solo storage a blocchi**. Dettagli immagine: **Canonical Ubuntu 24.04 Minimal**. Nessuna modifica a istanza, forma, immagine, rete o storage.
+- [x] La [documentazione Oracle Always Free](https://docs.oracle.com/it-it/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm) include la forma `VM.Standard.E2.1.Micro` fino a **due VM Micro** nell'home region; è indicata come **1/8 OCPU baseline, burst possibile, 1 GB RAM**. Il conteggio **1 OCPU** mostrato dall'interfaccia non garantisce 1 OCPU dedicata, né il campo **0,5 Gbps** equivale a throughput Internet garantito. Ubuntu è una famiglia di immagini gratuita idonea secondo Oracle. **SHAPE_ALWAYS_FREE_ELIGIBLE=YES_BY_OFFICIAL_DOC_AND_SCREENSHOT**.
+- [ ] **Non promuovere la compatibilità della shape a costo effettivo zero:** verifica dell'etichetta Always Free sulla risorsa, home region della tenancy, **numero totale di istanze E2 Micro**, dimensione e totale **boot/block volumes**, backup e relativi limiti ancora non attestate dalle schermate. OCI documenta **200 GB di boot+block volume combinati** e **5 backup volume** nella home region Always Free; consumo reale non noto. L'account Free Trial e budget/alert erano già stati verificati in altra conversazione: **non ripetere l'audit storico**; gli alert non sono un hard cap di spesa.
+- [ ] **Prossimo passo visuale, senza mutazioni:** dalla stessa pagina della VPS aprire la scheda **Storage** → **Volumi di avvio / Boot volumes** e leggere **dimensione (GB)** e eventuale etichetta **Sempre gratis idoneo** del volume collegato. Seguirà, se necessario, solo il censimento di altri volumi/istanze per verificare i limiti totali. Non aprire wizard, fare resize, backup, stop o modifiche.
+- [ ] `SSH_AUDIT=NO_GO`, `V165_RELEASE=NO_GO`, `C5=NO_GO`. Né il fatto che la shape sia idonea, né le suite offline autorizzano SSH, backup LIVE, deploy o nuove risorse. Filoni A/B, MAIN, VPS e collector invariati.
+
 ## 08/11/2026 ore 23:22 Italia — C4b(l): elenco Security Lists della subnet completato (solo lettura)
 
 - [x] L'operatore ha aperto dalla VCN `remura-vcn` la scheda **Sicurezza** della **subnet pubblica associata alla VNIC REMURA**. La tabella **Liste di sicurezza** mostra **un'unica riga**, `Default Security List for remura-vcn`, stato **Disponibile**, con paginazione **pagina 1 di 1** e **25 elementi per pagina**. Nessuna seconda lista associata compare in questo censimento UI. Non sono state create o modificate regole.
