@@ -12,6 +12,14 @@
 
 
 
+## 08/11/2026 ore 23:22 Italia — C4b(l): elenco Security Lists della subnet completato (solo lettura)
+
+- [x] L'operatore ha aperto dalla VCN `remura-vcn` la scheda **Sicurezza** della **subnet pubblica associata alla VNIC REMURA**. La tabella **Liste di sicurezza** mostra **un'unica riga**, `Default Security List for remura-vcn`, stato **Disponibile**, con paginazione **pagina 1 di 1** e **25 elementi per pagina**. Nessuna seconda lista associata compare in questo censimento UI. Non sono state create o modificate regole.
+- [x] Questo chiude il dubbio emerso alle 22:57 sulle **Security Lists additive**: l'unica lista collegata è la Default Security List, già esaminata sulla scheda **Regole di entrata** (solo **due regole ICMP**, **nessuna TCP/22**). Quindi **le Security Lists della subnet non autorizzano TCP/22 in ingresso pubblico alla data/ora della verifica**. La regola egress `all protocols` non consente ingress autonomamente. Nella VNIC verificata in precedenza il campo NSG era vuoto, senza attestare altre possibili variazioni future.
+- [x] Evidenze circoscritte alla console, senza scansioni né accesso LIVE: `SUBNET_ALL_SECURITY_LISTS_ATTESTED=YES_UI_2026-11-08_2322_ITALY`; `SUBNET_SECURITY_LIST_TCP22=NOT_ALLOWED_UI`; `OCI_PUBLIC_SSH_REACHABILITY=NOT_PROBED`. **Non dedurre** lo stato di sshd/OpenSSH, firewall Linux o eventuali percorsi diversi di accesso.
+- [ ] **Prossimo gate utile, gratuito, in sola lettura:** attestare dalla console Oracle la **shape della VPS e l'idoneità Always Free**, quindi il consumo effettivo di boot/block volume e quote, senza aprire nuove istanze o cambiare billing. Per l'audit OpenSSH/firewall/15 file, restano necessari una via di lettura sicura e autorizzazioni separate; non tentare SSH, Tailscale SSH o Termius senza consenso.
+- [ ] **Stati invariati:** `C4b(l)=NO_GO` per audit host e integrità LIVE; `V165_RELEASE=NO_GO`, `C5=NO_GO` fino a backup SQLite coerente, restore off-host, rollback, costi/quote e consenso esplicito. Filoni A/B, PR #89, MAIN, VPS e collector non modificati.
+
 ## 08/11/2026 ore 22:57 Italia — C4b(l) — default Security List solo ICMP, assocazioni subnet da attestare
 
 - [x] Ricevute schermate Oracle della **Default Security List** nella VCN REMURA. Tabella **Regole di entrata** `pagina 1 di 1` con **due righe ICMP**, sorgenti visibili `0.0.0.0/0` e `10.0.0.0/16`, tipi/codici ICMP `3,4` e `3`. **Nessuna regola TCP/22 compare nella lista esaminata**. In uscita la lista autorizza tutti i protocolli verso `0.0.0.0/0`, e ciò NON apre automaticamente connessioni SSH in ingresso.
