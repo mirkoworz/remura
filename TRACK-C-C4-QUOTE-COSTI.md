@@ -47,6 +47,8 @@ Nuovo codice `scripts/track_c_c4b_capacity_evidence.py`: accetta fino a otto cam
 
 Nel nuovo `track_c_c4bc_evidence_coverage.py` un registro **solo metadata** mantiene aperti otto gate essenziali per C5: RAM/CPU/swap/disco corrente, SQLite/WAL/SHM corrente, restore cifrato fuori host, OCI piano/billing, GitHub quote, Firestore quote, isolazione di processo OS e prove FIRST-SEEN. Accetta rapporti storici o consegnati soltanto come **segnalazioni non autenticate**, non come autorizzazioni: la data/il tipo di fonte sono informazioni dichiarate, non proof of receipt. La provenienza del report non verifica che i dati all'interno siano corretti. Un registro vuoto produce otto MISSING; non produce "zero consumo".
 
+**CI C4b(c) verificata**: commit `80825ac3fff6b021e8603a50efe79391d6cec0b7` — [Price Engine #42478844747](https://github.com/mirkoworz/remura/actions/runs/42478844747) **SUCCESS** e [Insights #42478844729](https://github.com/mirkoworz/remura/actions/runs/42478844729) **SUCCESS**. I 13 test sono **sintetici**, non autorizzano C5.
+
 **Riconciliazione delle informazioni già disponibili senza nuovi servizi**:
 - I report OCI privati del 7 novembre mostrano E2.1.Micro con 1 GB e boot 47 GB, trial probabile e analisi costi pari a 0 riportato fino al 7/11: **DOCUMENTI STORICI**, NON proof del piano post-trial né del carico del momento.
 - Le prove private batch del 3 novembre verificano un singolo batch, ma **non** indicano commit per simbolo, throughput VPS di oggi o completezza delle scansioni.
