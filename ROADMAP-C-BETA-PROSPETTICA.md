@@ -384,3 +384,15 @@ Riutilizzare i moduli scientifici già sviluppati nel **B** (FIRST-SEEN, SHA, ti
 ## Cosa facciamo immediatamente
 
 **Prossimo lavoro consentito senza nuovi rischi:** completare **C1/C2/C3 SOLO OFFLINE**, in branch dedicato, con preflight read-only e prove sintetiche genuine; non attendere l'esito trial Oracle per preparare i test. **Il primo GO decisionale vero è C4+C5**, solo dopo evidenza di sicurezza/risorse e consenso. Non è stato fissato alcun orario di avvio del registratore e non esiste ancora un dataset prospettico di questo Track C.
+
+## 08/11/2026 — C4b(k): step successivo al protocollo v1.65 (OFFLINE, NO-GO)
+
+**Concorrenza verificata prima delle modifiche:** `main` ancora `5ec7d73247b7ec074ce3640d7cafecaa7b3f1c74`; PR #89/#97/#98 OPEN e DRAFT, nessun merge e nessun deploy LIVE. **Versione LIVE documentata v1.64**, non attestata indipendentemente sulla VPS.
+
+Il branch separato release, [PR #98](https://github.com/mirkoworz/remura/pull/98), ha il nuovo modulo **solo fixture** `deploy/oracle/v165_pinned_preflight_lab.py`, insieme a `tests/test_v165_pinned_preflight_lab.py`. Riprende dopo il protocollo v1.65 17/17: blocca il caso di target SHA/HEAD incongruenti, tree di 14 file non esatto, SHA Git blob divergenti, duplicati di workflow, esiti non verdi o esecuzioni CI di `pull_request`/`workflow_dispatch` invece di `push` su `main`. Calcola SHA256 dei 12 file esistenti e 2 moduli nuovi usando la preview congelata, con data **simulata** Europe/Rome, riferimenti nav.js v165 sulle 9 pagine e cache PWA distinta. Non legge SQLite, non contatta GitHub, non firma evidence LIVE, non installa e non riconcilia updater.
+
+**Checkpoint verificato:** codice commit [`7f85a2a`](https://github.com/mirkoworz/remura/commit/7f85a2a9d301fed3cc6450ee4975457bce31f333), **19/19 nuovi test PASS**, [Price Engine #42496881081](https://github.com/mirkoworz/remura/actions/runs/42496881081) e [Insights #42496881083](https://github.com/mirkoworz/remura/actions/runs/42496881083) **SUCCESS**; tutte le precedenti suite v1.65 nel workflow Price Engine restano verdi. Totale delle cinque suite: **114 test offline**. La CI del draft non è equivalente a CI **push su main** di un futuro target.
+
+**Stato: C4b(k) preparazione progressiva, C4b(l) misura reale e C5 beta prospettica restano NO-GO.** Nessuna attestazione dello SHA v1.64 installato, ACL/proxy Tailscale, Oracle billing/Always Free post-trial, spazio/inode reali, SQLite backup+restore off-host, rollback codice LIVE e autoupdater; nessun consenso dedicato al rilascio. La diagnostica è ancora OFF e REMURA LIVE non è stata timbrata v1.65.
+
+**Prossimo passo sicuro**: progettare e testare ancora solo offline la verifica indipendente della baseline LIVE e il manifest persistente di rollback con fault injection, separando sempre backup/restore SQLite, installazione e riconciliazione updater. Richiedere evidenze reali e autorizzazione dedicata prima di qualsiasi accesso o scrittura VPS. Track B #89 e infrastruttura restano autonomi. Nessun nuovo provider, server o workflow cron: verificare quote/costi reali in sede di gate operativo.
