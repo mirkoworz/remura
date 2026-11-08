@@ -15,6 +15,9 @@ on:
       - 'scripts/price_feed.py'
       - 'scripts/ctrader_feed.py'
       - 'scripts/price_store.py'
+      - 'scripts/storage_inventory_v165.py'
+      - 'scripts/storage_cache_v165.py'
+      - 'tests/test_storage_v165_draft.py'
       - 'scripts/cot_monitor.py'
       - 'scripts/signals_monitor.py'
       - 'scripts/h1_batch_comparison.py'
@@ -183,6 +186,8 @@ jobs:
       - run: node --test tests/price.test.js tests/insights.test.js tests/sentiment.test.js tests/capital-cloud.test.js tests/market-expansion.test.js tests/price-status.test.js tests/squalincome-diagnostics.test.js tests/squalincome-freshness.test.js tests/statistica-squali.test.js tests/dual24-ui.test.js tests/market-audit-ui.test.js tests/case-audit-ui.test.js tests/weekly-quality-ui.test.js tests/cot-week-watch-ui.test.js
       - run: python -m unittest discover -s tests -p 'test_price_feed.py' -v
       - run: python -m unittest discover -s tests -p 'test_ctrader_feed.py' -v
+      - name: Draft v1.65 opt-in storage metadata, backup local, stale cache and HTTP compatibility (offline)
+        run: python -m unittest discover -s tests -p 'test_storage_v165_draft.py' -v
       - run: python -m unittest discover -s tests -p 'test_private_server.py' -v
       - name: Test offline opt-in batch timing, no new broker requests (v1.61 research)
         run: python -m unittest discover -s tests -p 'test_batch_timing.py' -v
