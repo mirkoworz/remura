@@ -36,11 +36,12 @@ jobs:
       github.ref == 'refs/heads/main' &&
       vars.REMURA_V165_SSH_AUDIT_ENABLED == '1'
     environment: v165-audit-protected
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Checkout fixed public verifier and sanitizing receiver only
-        uses: actions/checkout@v5
+        # Immutable action commit verified against upstream v5.0.1.
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
         with:
           repository: mirkoworz/remura
           ref: 77eb7ec4dfd98176c8146651489a382126647048
@@ -69,11 +70,14 @@ jobs:
           python3 -m py_compile deploy/oracle/v165_v164_live_code_readonly.py deploy/oracle/v165_ssh_stdout_receipt.py
 
       - name: Connect dedicated ephemeral audit identity through Tailscale
-        uses: tailscale/github-action@v4
+        # Immutable action commit verified against upstream v4.4.0.
+        uses: tailscale/github-action@064b10558093f38325e838ddea35486bdc6b1d5c # v4.4.0
         with:
           oauth-client-id: ${{ secrets.TS_V165_AUDIT_OAUTH_CLIENT_ID }}
           audience: ${{ secrets.TS_AUDIENCE }}
           tags: tag:remura-ci-v165-audit
+          version: 1.104.4
+          use-cache: 'false'
 
       - name: One pinned read-only 15-file scan over SSH stdin (no server-side script)
         shell: bash
