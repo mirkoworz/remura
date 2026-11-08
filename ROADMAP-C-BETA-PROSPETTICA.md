@@ -12,6 +12,14 @@
 
 
 
+## 08/11/2026 ore 23:50 Italia — Boot volume esplicitamente Sempre gratis (UI, sola lettura)
+
+- [x] L'operatore ha aperto la **pagina di dettaglio** del volume `remura-server (Boot Volume)` in Oracle, regione Milano: sotto il nome compaiono contemporaneamente i badge **Disponibile** e **Sempre gratis**. La riga di elenco già verificata mostrava **47 GB** e **VPU:10**. Rispetto al precedente testo UI non tradotto `listBootVolumes.alwaysFree`, **l'etichetta leggibile Always Free del volume è ora attestata direttamente dalla UI**. Nessun backup, modifica o chiamata a provider effettuati.
+- [x] Stato puntuale `BOOT_VOLUME_ALWAYS_FREE_LABEL=CONFIRMED_UI_2026-11-08_2350_ITALY`; `BOOT_VOLUME_ALLOCATED_GB=47`; `VPS_SHAPE_ALWAYS_FREE_ELIGIBLE=YES` per `VM.Standard.E2.1.Micro`. Il totale quota boot/block sull'account, altri compartimenti e risorse, utilizzo reale del filesystem e fattura post-trial **non sono stati verificati da questa schermata**: `ALL_OCI_RESOURCES_ALWAYS_FREE=NOT_ATTESTED`, `VPS_DISK_FREE_INODES=UNKNOWN`.
+- [x] Nella stessa pagina di dettaglio Oracle appare un avviso sul fatto che **non è stato eseguito un backup recente del volume**; l'intervallo di giorni esatto è tagliato nello screenshot. Il warning **non prova** che non esistano altri backup o copie SQLite altrove. `RECENT_OCI_BOOT_VOLUME_BACKUP=NOT_ATTESTED`, `CONSISTENT_SQLITE_OFFHOST_BACKUP_AND_RESTORE=NOT_ATTESTED`. Non attivare backup automatico, snapshot o nuova risorsa senza audit costi/quote e consenso separato. Il backup OCI del disco non sostituisce una prova di restore SQLite indipendente e fuori host.
+- [ ] **Prossimo gate non invasivo:** nella stessa console, se utile, leggere **solo l'elenco esistente di backup del volume di avvio** e l'eventuale policy associata, senza creare/eseguire un backup. Poi pianificare un backup **SQLite consistente** con restore-test off-host, su percorso gratis soltanto dopo attestazione spazio/quote, credenziali e consenso per le azioni LIVE.
+- [ ] `C4b(l)=NO_GO`, `SSH_AUDIT=NO_GO`, `V165_RELEASE=NO_GO`, `C5=NO_GO`; nessuna prova LIVE dei 15 file, di sshd, firewall o memoria libera, nessun deploy, nessun intervento su MAIN, B #89, VPS, collector, IAM o Tailscale.
+
 ## 08/11/2026 ore 23:44 Italia — C4b(l): boot volume REMURA 47 GB (console, sola lettura)
 
 - [x] Le nuove schermate della lista Oracle dei **Volumi di avvio**, con filtro al compartimento **radice** e regione **Italy Northwest (Milan)**, mostrano la riga **`remura-server (Boot Volume)`**, **dimensione allocata 47 GB**, prestazioni standard **VPU:10**, **Replica tra più aree = Non attiva**, condizione **Disponibile**. La pagina **Volumi a blocchi** dello stesso compartimento visualizzava **Nessun elemento da visualizzare**, e la scheda Storage dell'istanza mostrava **Nessun volume a blocchi aggiuntivo collegato**. Non dedurre da 47 GB quanto spazio libero resti dentro Ubuntu (richiede `df`/inode sull'host e consenso separato).
