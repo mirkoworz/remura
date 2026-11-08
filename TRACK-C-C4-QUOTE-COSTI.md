@@ -122,3 +122,11 @@ Le quote ufficiali pubblicate OCI Object Storage indicano 20 GB combinati Always
 Il codice `track_c_c4bi_offhost_recovery_plan.py` produce solo stime conservative su dimensioni dichiarate (non verificate) e ritorna sempre `NO_GO_RESEARCH_AND_PROSPECTIVE_COLLECTION`. Non genera cifratura, chiavi, archivi o upload. I suoi test sono completamente fittizi; nessuna prova di recupero reale.
 
 **C4b(i) CI completata (NO-GO):** commit `0d442eb4a2399ee5a2ba064492c97b6ebdf5b33b` — [Price Engine #42488186932](https://github.com/mirkoworz/remura/actions/runs/42488186932) **SUCCESS**, [Insights #42488186927](https://github.com/mirkoworz/remura/actions/runs/42488186927) **SUCCESS**, 21 test sintetici. Nessun prezzo/consumo account e nessun restore esterno verificati.
+
+## 12. C4b(j) — prova funzionale di recupero crittografico totalmente sintetica
+
+Il laboratorio `scripts/track_c_c4bj_synthetic_recovery.py` simula un processo realmente eseguibile di backup/restauro SQLite con WAL: SQLite backup API -> ciphertext autenticato AES-256-GCM con chiave casuale **effimera** -> copia simulata a una cartella separata dello stesso runner -> perdita (soltanto della cartella sintetica) -> verifica hash+tag GCM -> ripristino di SQLite sintetica in terza cartella + `PRAGMA integrity_check` e verifica contenuti. Negativi manomissione (anche con hash ricalcolato), perdita, file troncato, header e chiave errata. Tutti i materiali vengono eliminati automaticamente con `TemporaryDirectory` e mai pubblicati come artifact.
+
+Dipendenza fissata `cryptography==50.0.2` **solo nelle GitHub Actions di test** con PyPI (`--only-binary=:all:`); non distribuita sulla VPS. La CI può consumare minuti di Action e download package, dunque non equivale a zero risorse internet. Nessun provider trading/OCI/Drive viene chiamato dall'applicazione.
+
+**Non è una vera prova off-host**: le tre directory sono sul medesimo host GitHub; la chiave è solo RAM, non c'è escrows indipendente, lo snapshot è inferiore a 1 MiB, il codice crittografico usa la variante one-shot e non può essere copiato direttamente in un servizio di backup LIVE con GB di DB. Non abbiamo misurato i file SQLite/WAL attuali né certificato la quota gratuita Object Storage o recuperato un backup fuori VPS. `NO_GO_RESEARCH_AND_PROSPECTIVE_COLLECTION` rimane obbligatorio.
