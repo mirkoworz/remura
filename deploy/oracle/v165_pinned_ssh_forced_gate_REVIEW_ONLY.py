@@ -34,7 +34,7 @@ def approve_exact_verifier(payload: bytes, original_command: str | None) -> byte
         raise UnapprovedPayload()
     if type(payload) is not bytes or not (0 < len(payload) <= MAX_STDIN):
         raise UnapprovedPayload()
-    git_object = b"blob " + str(len(payload)).encode("ascii") + b"\\0" + payload
+    git_object = b"blob " + str(len(payload)).encode("ascii") + bytes((0,)) + payload
     if hashlib.sha1(git_object).hexdigest() != APPROVED_SOURCE_GIT_BLOB:
         raise UnapprovedPayload()
     return payload
