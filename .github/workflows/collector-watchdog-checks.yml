@@ -13,6 +13,8 @@ on:
       - 'tests/test_watchdog_release_gate.py'
       - 'scripts/watchdog_staging_rehearsal.py'
       - 'tests/test_watchdog_staging_rehearsal.py'
+      - 'scripts/watchdog_crosspr_contract.py'
+      - 'tests/test_watchdog_crosspr_contract.py'
       - '.github/workflows/collector-watchdog-checks.yml'
 
 permissions:
@@ -39,5 +41,7 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_watchdog_release_gate.py' -v
       - name: Shared-file conflict, SHA-pinned bundle and synthetic rollback (offline)
         run: python -m unittest discover -s tests -p 'test_watchdog_staging_rehearsal.py' -v
+      - name: Future B/v165/watchdog integration structural safety (offline)
+        run: python -m unittest discover -s tests -p 'test_watchdog_crosspr_contract.py' -v
       - name: Existing private server regressions (offline)
         run: python -m unittest discover -s tests -p 'test_private_server.py' -v
