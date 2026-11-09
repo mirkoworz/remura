@@ -114,7 +114,12 @@ class RetailSegmentReadinessTests(unittest.TestCase):
         db=self.dbs[1]
         db.execute("DROP TRIGGER research_retail_first_update")
         db.execute(f"UPDATE {retail.TABLE} SET source_updated_at=?",
-                   ((earlier-timedelta(minutes=1)).isoformat(),))
+                   ((earlier-timedelta(minutes=3)).isoformat(),))
+        # Return test-only mutation to a protected append-only schema
+        # before the strict read-only auditor starts its preflight.
+        db.execute(f"""CREATE TRIGGER research_retail_first_update
+            BEFORE UPDATE ON {retail.TABLE}
+            BEGIN SELECT RAISE(ABORT,'append_only'); END""")
         db.commit()
         with self.assertRaisesRegex(ValueError,"backdated_receipt"):
             self.inspect()
@@ -126,6 +131,14 @@ class RetailSegmentReadinessTests(unittest.TestCase):
         db.execute(f"DELETE FROM {retail.TABLE} WHERE symbol='XAUUSD'")
         db.execute("DROP TRIGGER research_retail_features_no_delete")
         db.execute(f"DELETE FROM {numeric.TABLE} WHERE symbol='XAUUSD'")
+        # Never mistake a missing protection trigger for the intended
+        # receipt-pair failure: restore both synthetic triggers first.
+        db.execute(f"""CREATE TRIGGER research_retail_first_delete
+            BEFORE DELETE ON {retail.TABLE}
+            BEGIN SELECT RAISE(ABORT,'append_only'); END""")
+        db.execute(f"""CREATE TRIGGER research_retail_features_no_delete
+            BEFORE DELETE ON {numeric.TABLE}
+            BEGIN SELECT RAISE(ABORT,'append_only'); END""")
         db.commit()
         with self.assertRaisesRegex(ValueError,"partial_pair"):
             self.inspect()
@@ -135,6 +148,9 @@ class RetailSegmentReadinessTests(unittest.TestCase):
         db=self.dbs[0]
         db.execute("DROP TRIGGER research_retail_features_no_update")
         db.execute(f"UPDATE {numeric.TABLE} SET long_pct=71 WHERE symbol='EURUSD'")
+        db.execute(f"""CREATE TRIGGER research_retail_features_no_update
+            BEFORE UPDATE ON {numeric.TABLE}
+            BEGIN SELECT RAISE(ABORT,'append_only'); END""")
         db.commit()
         with self.assertRaisesRegex(ValueError,"numeric_sha256"):
             self.inspect()
