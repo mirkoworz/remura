@@ -106,6 +106,43 @@ class ActualScannerRetailTests(unittest.TestCase):
         self.assertEqual(self.query(
             "SELECT count(*) FROM research_signal_ingest_source_links")[0][0],0)
 
+    def test_shadow_missing_receipt_is_unknown_without_dropping_original(self):
+        """Research failure rolls back proofs, NOT genuine Squalincome history."""
+        db=sqlite3.connect(str(self.path))
+        try:
+            db.execute("DROP TRIGGER research_retail_first_delete")
+            db.execute("DELETE FROM research_retail_original_first_seen")
+            db.commit()
+        finally:
+            db.close()
+        result=scanner.scan_once_with_retail_inbox_research(
+            self.path,OBS,targets=("EURUSD",),
+            research_missing_is_unknown=True)
+        summary=result["retailFirstSeenResearch"]
+        self.assertEqual(summary["pilotOriginalLinks"],0)
+        self.assertEqual(summary["pilotRetailUnknown"],1)
+        self.assertTrue(summary["missingRetailPreservesOriginalHistory"])
+        self.assertEqual(self.query(
+            "SELECT count(*) FROM squalincome_history")[0][0],1)
+        self.assertEqual(self.query(
+            "SELECT count(*) FROM squalincome_observations")[0][0],1)
+        self.assertEqual(self.query(
+            "SELECT count(*) FROM research_signal_ingest_source_links")[0][0],0)
+        self.assertEqual(self.query(
+            "SELECT count(*) FROM research_squalincome_cot_links")[0][0],0)
+        self.assertEqual(self.query(
+            "SELECT count(*) FROM research_retail_signal_context")[0][0],0)
+
+    def test_shadow_with_receipt_links_original_and_no_unknown(self):
+        result=scanner.scan_once_with_retail_inbox_research(
+            self.path,OBS,targets=("EURUSD",),
+            research_missing_is_unknown=True)
+        summary=result["retailFirstSeenResearch"]
+        self.assertEqual(summary["pilotOriginalLinks"],1)
+        self.assertEqual(summary["pilotRetailUnknown"],0)
+        self.assertEqual(self.query(
+            "SELECT count(*) FROM research_retail_signal_context")[0][0],1)
+
     def test_wrong_scope_unsupported_and_default_scan_remains_unchanged(self):
         for targets in (None,(),("GBPUSD",),("EURUSD","EURUSD")):
             with self.subTest(targets=targets):

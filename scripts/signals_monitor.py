@@ -339,7 +339,8 @@ def scan_once_with_compact_price_only_research(db_path, now=None, *, targets=Non
                       compact_research=compact, compact_preparer=preparer)
 
 
-def scan_once_with_retail_inbox_research(db_path, now=None, *, targets=None):
+def scan_once_with_retail_inbox_research(
+        db_path, now=None, *, targets=None, research_missing_is_unknown=False):
     """RESEARCH-ONLY: original Squalincome scanner with atomic retail context.
 
     This entrypoint is NEVER called by private_server or a scheduled scan.
@@ -349,6 +350,8 @@ def scan_once_with_retail_inbox_research(db_path, now=None, *, targets=None):
     """
     import sys
     from pathlib import Path
+    if type(research_missing_is_unknown) is not bool:
+        raise ValueError("research_unknown_mode_explicit_boolean_required")
     if (type(now) is not dt.datetime or now.tzinfo is None
             or now.utcoffset()!=dt.timedelta(0)):
         raise ValueError("explicit_utc_original_research_scan_clock_required")
@@ -361,13 +364,16 @@ def scan_once_with_retail_inbox_research(db_path, now=None, *, targets=None):
     if root not in sys.path:
         sys.path.insert(0,root)
     from scripts import shark_retail_actual_scan_handoff as handoff
-    return _scan_once(db_path,now,targets=targets,
-                      retail_inbox_research=handoff.attach_new)
+    return _scan_once(
+        db_path,now,targets=targets,
+        retail_inbox_research=handoff.attach_new,
+        retail_inbox_unknown_on_missing=research_missing_is_unknown)
 
 
 def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
                price_only_research=None,compact_research=None,
-               compact_preparer=None,retail_inbox_research=None):
+               compact_preparer=None,retail_inbox_research=None,
+               retail_inbox_unknown_on_missing=False):
     """Observe all markets on periodic scans, or a small verified fresh batch.
 
     Targeted scans update existing observation/history/event tables, but NEVER
@@ -375,6 +381,9 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
     gates, COT validation, event transition and SQLite deduplication as a full
     scan; no relaxed thresholds, fake observations, or notifications.
     """
+    if (type(retail_inbox_unknown_on_missing) is not bool or
+            (retail_inbox_unknown_on_missing and retail_inbox_research is None)):
+        raise ValueError("invalid_retail_research_unknown_policy")
     if retail_inbox_research is not None and (
             not callable(retail_inbox_research)
             or price_only_research is not None
@@ -417,6 +426,7 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
     compact_rows=[]
     compact_snapshot={}
     retail_pilot_linked=0
+    retail_pilot_unknown=0
     scan_savepoint_counter=0
     compact_write_lock_start=None
     compact_read_snapshot_ms=None
@@ -601,12 +611,32 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
                         # must be verified in this SAME SQLite transaction.
                         if history_insert.rowcount!=1:
                             raise ValueError("new_original_pilot_history_insert_required")
-                        proof=retail_inbox_research(
-                            db,history_id=history_insert.lastrowid,
-                            observed_document=document,clock=now)
-                        if proof.get("status")!="ORIGINAL_SCANNER_RETAIL_INBOX_LINKED":
-                            raise ValueError("retail_original_scanner_proof_incomplete")
-                        retail_pilot_linked+=1
+                        if retail_inbox_unknown_on_missing:
+                            # RESEARCH-ONLY savepoint: missing retail or bad
+                            # provenance may not suppress a valid ORIGINAL
+                            # Squalincome observation. Any partial research
+                            # writes are rolled back. Unexpected SQLite/host
+                            # failures remain fatal until separately staged.
+                            db.execute("SAVEPOINT retail_proof_shadow")
+                        try:
+                            proof=retail_inbox_research(
+                                db,history_id=history_insert.lastrowid,
+                                observed_document=document,clock=now)
+                            if proof.get("status")!="ORIGINAL_SCANNER_RETAIL_INBOX_LINKED":
+                                raise ValueError("retail_original_scanner_proof_incomplete")
+                        except BaseException as exc:
+                            if not retail_inbox_unknown_on_missing:
+                                raise
+                            db.execute("ROLLBACK TO SAVEPOINT retail_proof_shadow")
+                            db.execute("RELEASE SAVEPOINT retail_proof_shadow")
+                            if isinstance(exc,ValueError):
+                                retail_pilot_unknown+=1
+                            else:
+                                raise
+                        else:
+                            if retail_inbox_unknown_on_missing:
+                                db.execute("RELEASE SAVEPOINT retail_proof_shadow")
+                            retail_pilot_linked+=1
                     db.execute("DELETE FROM squalincome_history WHERE symbol=? AND id NOT IN"
                         " (SELECT id FROM squalincome_history WHERE symbol=?"
                         " ORDER BY id DESC LIMIT ?)",
@@ -686,6 +716,8 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
         if retail_inbox_research is not None:
             result["retailFirstSeenResearch"]={
                 "pilotOriginalLinks":retail_pilot_linked,
+                "pilotRetailUnknown":retail_pilot_unknown,
+                "missingRetailPreservesOriginalHistory":retail_inbox_unknown_on_missing,
                 "sameOriginalHistoryTransaction":True,
                 "retailUsedByOriginalSignal":False,
                 "cvdEvidence":"UNKNOWN",
