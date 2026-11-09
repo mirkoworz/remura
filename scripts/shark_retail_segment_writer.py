@@ -251,7 +251,7 @@ def record(root,*,authorized_at,original_snapshot,file_read_at,clock,
     for symbol in ("EURUSD","XAUUSD"):
         updated,_=retail._identity(original_snapshot,symbol)
         if not (updated<=read and read-updated<=retail.MAX_AGE
-                and updated>=layout.study.START):
+                and updated>=retail.study.START):
             raise ValueError("retail_lab_source_unavailable_or_stale")
         identities[symbol]=updated
     slot=None
