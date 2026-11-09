@@ -74,13 +74,16 @@ class ActualScannerRetailTests(unittest.TestCase):
             "SELECT symbol FROM research_squalincome_cot_links")),1)
 
     def test_original_link_precedes_commit_and_no_refetch(self):
+        # Capture the real callable BEFORE patching its module attribute,
+        # otherwise the spy would recursively call its own MagicMock.
+        real_attach=hook.attach_new
         def spy(db,*,history_id,observed_document,clock):
             self.assertTrue(db.in_transaction)
             self.assertEqual(db.execute("SELECT last_insert_rowid()").fetchone()[0],
                              history_id)
             self.assertEqual(observed_document,self.original_price)
             self.assertEqual(clock,OBS)
-            return hook.attach_new(
+            return real_attach(
                 db,history_id=history_id,
                 observed_document=observed_document,clock=clock)
         with patch.object(hook,"attach_new",side_effect=spy):
