@@ -121,10 +121,14 @@ class OriginalHistoryRetentionTests(unittest.TestCase):
             db.close()
 
     def test_hypothetically_sufficient_caps_are_policy_only_not_real_go(self):
+        # At 120 minutes even a 28-week TWO-market collector creates
+        # 4,704 rows > the frozen 4,500 numeric research cap.
+        # A hypothetical slower 180-minute cycle fits it (3,136), but
+        # this is NOT permission to change the actual 20-minute collector.
         x=self.check(
             history_keep_days=365,
             history_max_per_symbol=20000,
-            retail_cycle_minutes=120)
+            retail_cycle_minutes=180)
         self.assertEqual(x["status"],
                          "POLICY_SCENARIO_ONLY_NOT_LIVE_AUTHORIZATION")
         self.assertFalse(x["retailFirstSeenLiveAuthorized"])
