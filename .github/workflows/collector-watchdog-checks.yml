@@ -1,0 +1,35 @@
+# Filone A — watchdog passivo: test soltanto offline.
+# Nessun avvio manuale, deploy, SSH, broker, Oracle, segreto o scrittura.
+name: REMURA collector watchdog offline checks
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/private_server.py'
+      - 'scripts/collector_watchdog.py'
+      - 'tests/test_collector_watchdog.py'
+      - 'tests/test_collector_watchdog_http.py'
+      - '.github/workflows/collector-watchdog-checks.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile offline, no external APIs
+        run: python -m py_compile scripts/private_server.py scripts/collector_watchdog.py tests/test_collector_watchdog.py tests/test_collector_watchdog_http.py
+      - name: Watchdog unit tests (no HTTP)
+        run: python -m unittest discover -s tests -p 'test_collector_watchdog.py' -v
+      - name: Watchdog HTTP tests (localhost only, temporary SQLite)
+        run: python -m unittest discover -s tests -p 'test_collector_watchdog_http.py' -v
+      - name: Existing private server regressions (offline)
+        run: python -m unittest discover -s tests -p 'test_private_server.py' -v
