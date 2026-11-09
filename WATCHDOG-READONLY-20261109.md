@@ -48,3 +48,19 @@ L'audit GitHub del 9 novembre mostra che le PR [#89](https://github.com/mirkowor
 - Workflow Watchdog già esistente, solo evento `pull_request`, nessun `workflow_dispatch`, nessuna API esterna o servizio nuovo. Test di protezione e regressioni sono offline. Lo stato CI dell'ultimo commit va letto dalle Actions GitHub prima di dichiarare verde.
 
 **MANCANTE PER UN VERO GO:** acquisire i HEAD aggiornati delle tre PR, revisione e fusione serializzata del server, dipendenze/manifest e test end-to-end sul codice risultante, hash di origine autenticati, installer di nuova versione, preflight VPS, risorse e costi OCI, backup/restore-test off-host e rollback LIVE autorizzato, banner con numero/data/ora reali in alto in tutte le nove pagine, CI completa e consenso esplicito. PR #99 rimane OPEN/DRAFT; nessun merge, deploy, SSH, Oracle, Tailscale, modifica segreti, chiamata broker, Filone B o C.
+
+
+## 09/11/2026 — Reconciler strutturale incrociato, senza fusione (solo DRAFT #99)
+
+**Fonte verificata prima del commit:** diff reali delle tre PR su `scripts/private_server.py`:
+- **B #89** (HEAD osservato `9784fb1e`) modifica `collect_once` per il parent read del file JSON, `retail_once` per ricevute originali e `squalincome_loop` per il percorso periodico di ricerca disattivato per default. Non riattivare le opzioni scientifiche.
+- **v1.65 #98** (HEAD osservato `69886bc1`) aggiunge `StorageMetadataCache`, `storageInventory` sulla rotta risorse se flag OFF-by-default è esplicitamente ON, e avvio della cache in `main()`.
+- **Watchdog #99** modifica l'import del modulo, `http_handler(db_path, collector_thread=None)`, il payload HEALTH e il passaggio del thread da `main()`. **#98 e #99 modificano entrambe `main()` nella zona di avvio thread/stop; l'unione non può essere presunta sicura**. L'integrazione futura deve conservare sia `_STORAGE_CACHE.start(db_path,stop)` condizionata, sia `thread=None` e `collector_thread=thread` nell'handler.
+
+Nuovo `scripts/watchdog_crosspr_contract.py:inspect_candidate(source,pin)`:
+1. Verifica che il codice candidato sia Python parsabile e che il suo SHA-256 uguagli il pin fornito dall'operatore. Il pin **non è autenticato** dal modulo, e non dimostra identità del codice LIVE.
+2. Verifica **solo strutturalmente** il mantenimento delle opzioni B disattivate per default, la cache v1.65 e la diagnostica watchdog con binding del thread.
+3. Se manca una dipendenza restituisce `BLOCKED_MISSING_CONTRACTS`; in presenza delle forme attese restituisce solo `STRUCTURAL_REVIEW_REQUIRED`, **mai** `release_authorized=true`. Un codice che soddisfa AST può comunque essere errato, regressivo o insicuro; non è un validatore semantico.
+4. Le prove `tests/test_watchdog_crosspr_contract.py` usano sorgenti Python sintetici per simulare un'integrazione e casi di omissione/attivazione accidentale. Il test sul `private_server.py` reale della #99 deve restituire BLOCKED per B e v1.65, con la parte watchdog presente. Questo è un test POSITIVO di fail-closed, non un fallimento della PR.
+
+**Piano successivo, senza eseguirlo:** prima di un futuro merge preparare in UN SOLO ramo di integrazione serializzato un candidato con gli HEAD aggiornati e verificati; audit funzionale, CI completa, diff allowlist, prove su flag spenti e invocazioni effettive, installer/manifest e rollback con DB off-host, verifica SHA LIVE, quote e autorizzazione specifica. Non copiare alla cieca i vecchi HEAD: cambiano quando B o C prosegue. Non riusare `release_v164.py`. Il nuovo strumento NON unisce branch, NON tocca main, B, C, Oracle, Tailscale, VPS, API o segreti. Stato sempre OPEN/DRAFT/NO-GO.
