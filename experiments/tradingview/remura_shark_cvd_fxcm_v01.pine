@@ -20,7 +20,7 @@ if syminfo.prefix != "FXCM" or syminfo.ticker != "EURUSD" or timeframe.period !=
 
 // This is aggregated 1-minute direction inference, NOT tick-by-tick aggressor data.
 // Available lower-timeframe history is limited by TradingView plan/feed.
-[array<float> intrabarOpen, array<float> intrabarClose, array<float> intrabarVolume] = request.security_lower_tf(syminfo.tickerid, "1", [open, close, volume])
+[intrabarOpen, intrabarClose, intrabarVolume] = request.security_lower_tf(syminfo.tickerid, "1", [open, close, volume])
 
 bool newDay = timeframe.change("D")
 int dayKey = time("D")
@@ -93,10 +93,12 @@ var float lastLowPrice = na
 var float lastLowCvd = na
 var int lastLowIndex = na
 var int lastLowDay = na
+var int lastLowMs = na
 var float lastHighPrice = na
 var float lastHighCvd = na
 var int lastHighIndex = na
 var int lastHighDay = na
+var int lastHighMs = na
 
 bool bull = false
 bool bear = false
@@ -122,7 +124,7 @@ if barstate.isconfirmed and completeSession and not na(cvd) and completeBars >= 
             if bull
                 firstPivotPrice := lastLowPrice
                 firstPivotCvd := lastLowCvd
-                firstPivotMs := time[bar_index - lastLowIndex]
+                firstPivotMs := lastLowMs
                 secondPivotPrice := p
                 secondPivotCvd := atPivotCvd
                 secondPivotMs := pivotMs
@@ -130,6 +132,7 @@ if barstate.isconfirmed and completeSession and not na(cvd) and completeBars >= 
             lastLowCvd := atPivotCvd
             lastLowIndex := pivotIndex
             lastLowDay := dayKey
+            lastLowMs := pivotMs
 
         if not na(pivotHigh)
             float p = high[rightBars]
@@ -138,7 +141,7 @@ if barstate.isconfirmed and completeSession and not na(cvd) and completeBars >= 
             if bear
                 firstPivotPrice := lastHighPrice
                 firstPivotCvd := lastHighCvd
-                firstPivotMs := time[bar_index - lastHighIndex]
+                firstPivotMs := lastHighMs
                 secondPivotPrice := p
                 secondPivotCvd := atPivotCvd
                 secondPivotMs := pivotMs
@@ -146,6 +149,7 @@ if barstate.isconfirmed and completeSession and not na(cvd) and completeBars >= 
             lastHighCvd := atPivotCvd
             lastHighIndex := pivotIndex
             lastHighDay := dayKey
+            lastHighMs := pivotMs
 
 plot(cvd, "CVD FXCM stimato (1m)", color=color.teal, linewidth=2)
 hline(0, "Zero", color=color.gray, linestyle=hline.style_dotted)
