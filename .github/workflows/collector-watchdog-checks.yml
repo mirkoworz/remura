@@ -15,6 +15,8 @@ on:
       - 'tests/test_watchdog_staging_rehearsal.py'
       - 'scripts/watchdog_crosspr_contract.py'
       - 'tests/test_watchdog_crosspr_contract.py'
+      - 'scripts/watchdog_release_blueprint.py'
+      - 'tests/test_watchdog_release_blueprint.py'
       - '.github/workflows/collector-watchdog-checks.yml'
 
 permissions:
@@ -43,5 +45,7 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_watchdog_staging_rehearsal.py' -v
       - name: Future B/v165/watchdog integration structural safety (offline)
         run: python -m unittest discover -s tests -p 'test_watchdog_crosspr_contract.py' -v
+      - name: Sixteen-file candidate blueprint and full-bundle rollback (offline)
+        run: python -m unittest discover -s tests -p 'test_watchdog_release_blueprint.py' -v
       - name: Existing private server regressions (offline)
         run: python -m unittest discover -s tests -p 'test_private_server.py' -v
