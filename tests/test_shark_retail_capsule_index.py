@@ -84,7 +84,10 @@ class PrivateCapsuleIndexTests(unittest.TestCase):
         path=self.folder/"a.zip"
         original=path.read_bytes()
         path.write_bytes(original[:-3]+b"bad")
-        with self.assertRaises(ValueError):
+        # This torn ZIP previously leaked a low-level OSError on zipfile
+        # seek. The index must expose a controlled corruption NO-GO.
+        with self.assertRaisesRegex(
+                ValueError,"private_capsule_unreadable_or_corrupt"):
             index.verify_latest(self.folder)
         path.write_bytes(original)
         self.assertEqual(index.verify_latest(self.folder)["generation"],1)
