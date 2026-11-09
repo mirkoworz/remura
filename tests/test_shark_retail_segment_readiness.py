@@ -147,7 +147,10 @@ class RetailSegmentReadinessTests(unittest.TestCase):
         self.pair(0,self.t(0)+timedelta(minutes=3))
         db=self.dbs[0]
         db.execute("DROP TRIGGER research_retail_features_no_update")
-        db.execute(f"UPDATE {numeric.TABLE} SET long_pct=71 WHERE symbol='EURUSD'")
+        # Keep long+short=100 so the test reaches the SHA check,
+        # rather than being blocked by the separate percentage invariant.
+        db.execute(f"UPDATE {numeric.TABLE} "
+                   "SET long_pct=71,short_pct=29 WHERE symbol='EURUSD'")
         db.execute(f"""CREATE TRIGGER research_retail_features_no_update
             BEFORE UPDATE ON {numeric.TABLE}
             BEGIN SELECT RAISE(ABORT,'append_only'); END""")
