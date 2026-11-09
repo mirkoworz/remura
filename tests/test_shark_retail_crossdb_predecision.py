@@ -20,7 +20,11 @@ from scripts import shark_observation_bundle as bundle
 from scripts import shark_signal_ingest_decision_link as sources
 from test_shark_original_decision_atomic_gate import new_history
 from test_shark_signal_ingest_decision_link import setup_case,OBS,NOW
-from test_shark_retail_segment_readiness import make_pair,AUTHORIZED
+from test_shark_retail_segment_readiness import make_pair
+
+# Entirely hypothetical cutoff: Oct 27 + seven days, next Monday = Nov 9.
+# Do NOT change the frozen preregistered calendar or pretend LIVE approval.
+AUTHORIZED=OBS-timedelta(days=13)
 
 
 class PredecisionCrossDbTests(unittest.TestCase):
