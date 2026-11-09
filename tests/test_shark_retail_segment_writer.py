@@ -236,6 +236,90 @@ class RetailSegmentWriterTests(unittest.TestCase):
         print("REMURA_B_RETAIL_SEGMENT_SYNTHETIC_PROFILE="
               +json.dumps(profile,sort_keys=True))
 
+    def test_complete_fourteen_day_shard_and_original_writer_rollover(self):
+        """A full 14-day shard uses real atomic paired-capture, then the
+        original writer verifies it and performs the new-shard rollover.
+
+        Bulk fill runs directly through the SAME capture_pair transaction
+        to avoid 1008 repeated 14-database audits on GitHub's free runner.
+        It is NOT 1008 end-to-end writer calls or a LIVE Oracle benchmark.
+        """
+        first=self.begin+timedelta(minutes=3)
+        expected_pairs=14*24*3
+        self.assertEqual(expected_pairs,1008)
+        first_result=self.write(first)
+        self.assertEqual(first_result["segmentNumber"],1)
+        original=self.root/"retail-000001.sqlite3"
+
+        bulk_start=time.perf_counter()
+        with sqlite3.connect(str(original)) as db:
+            db.execute("PRAGMA journal_mode=DELETE")
+            db.execute("PRAGMA synchronous=FULL")
+            for i in range(1,expected_pairs):
+                when=first+timedelta(minutes=20*i)
+                # Only the real, existing SQLite producer; source data is
+                # synthetic and already in memory before each transaction.
+                receipt=retail.capture_pair(
+                    db,original_snapshot=make_pair(when),
+                    file_read_at=when-timedelta(seconds=5),
+                    clock=when,research_numeric_features=True)
+                self.assertEqual(
+                    receipt["status"],"BOTH_LOCAL_RETAIL_SOURCES_WITNESSED")
+            rows=db.execute(
+                f"SELECT count(*) FROM {retail.TABLE}").fetchone()[0]
+            number=db.execute(
+                f"SELECT count(*) FROM {numeric.TABLE}").fetchone()[0]
+            pages=db.execute("PRAGMA page_count").fetchone()[0]
+            page_size=db.execute("PRAGMA page_size").fetchone()[0]
+            integrity=db.execute("PRAGMA integrity_check").fetchone()[0]
+        bulk_seconds=time.perf_counter()-bulk_start
+        bytes_full=original.stat().st_size
+        self.assertEqual(integrity,"ok")
+        self.assertEqual(rows,2016)
+        self.assertEqual(number,2016)
+        self.assertEqual(bytes_full,pages*page_size)
+        self.assertLess(bytes_full,writer.MAX_BYTES)
+        self.assertLess(number,numeric.MAX_FEATURE_ROWS)
+
+        # Re-enter the real router: it must read/audit the fully populated
+        # previous segment before publishing a new 14-day segment.
+        transition=self.write(self.next+timedelta(minutes=3))
+        self.assertEqual(transition["segmentNumber"],2)
+        status=self.verify()
+        self.assertEqual(status["publishedSegments"],2)
+        self.assertEqual(status["sourcePairs"],expected_pairs+1)
+        self.assertEqual(status["numericRows"],2*(expected_pairs+1))
+        self.assertEqual(
+            (self.root/"retail-000001.sqlite3").stat().st_size,bytes_full)
+        self.assertFalse(status["liveAuthorized"])
+        self.assertEqual(len(list(self.root.glob("*.sqlite3-wal"))),0)
+        self.assertEqual(len(list(self.root.glob("*.sqlite3-journal"))),0)
+
+        metrics={
+            "schema":"remura-track-b-retail-full-14day-synthetic-v1",
+            "status":"GITHUB_RUNNER_SYNTHETIC_FULL_SHARD_NOT_LIVE_GO",
+            "realPairedSQLiteCaptures":expected_pairs,
+            "bulkCapturesBypassedPerCallRouterAudit":expected_pairs-1,
+            "rolloverViaOriginalWriter":True,
+            "firstSegmentReceipts":rows,
+            "firstSegmentNumericRows":number,
+            "firstSegmentDiskBytes":bytes_full,
+            "firstSegmentKiB":round(bytes_full/1024,2),
+            "sqlitePageBytes":page_size,
+            "sqlitePageCount":pages,
+            "bulkCaptureWallSeconds":round(bulk_seconds,3),
+            "diskCapBytesPerShard":writer.MAX_BYTES,
+            "numericHeadroomRows":numeric.MAX_FEATURE_ROWS-number,
+            "complete196DaysMeasured":False,
+            "offHostRecoveryVerified":False,
+            "oracleQuotaVerified":False,
+            "originalSignalCrossDbLinkProven":False,
+            "liveAuthorized":False,
+            "additionalApiCalls":0,
+        }
+        print("REMURA_B_RETAIL_FULL_14D_SYNTHETIC="
+              +json.dumps(metrics,sort_keys=True))
+
     def test_source_validation_before_creating_any_shard(self):
         now=self.begin+timedelta(minutes=5)
         stale=make_pair(now-timedelta(hours=2))

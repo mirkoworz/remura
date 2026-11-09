@@ -1,5 +1,11 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
+## 09/11/2026 — Profilazione di un segmento completo di 14 giorni, con rollover reale del router (SOLO OFFLINE)
+
+- [x] Nuovo test `test_complete_fourteen_day_shard_and_original_writer_rollover`: popola un vero SQLite sintetico con **1.008 coppie EURUSD/XAUUSD** a distanza di 20 minuti (2.016 ricevute FIRST-SEEN + 2.016 feature numeriche), verifica integrità/pagine/capacità, poi utilizza il writer `shark_retail_segment_writer.record` per far scattare il passaggio al segmento due dopo aver verificato tutte le ricevute del primo. Il primo inserimento e il rollover passano dal router; le altre 1.007 coppie usano la **vera transazione atomica `retail.capture_pair`** direttamente, per evitare 1.007 audit integrali dei 14 database e ridurre consumo di minuti gratuiti GitHub. Non equiparare questa ottimizzazione a 1.008 esecuzioni end-to-end del router.
+- [x] Il nuovo test emette **misure effettive sul runner GitHub** (`REMURA_B_RETAIL_FULL_14D_SYNTHETIC`): file bytes/pagine, tempi e headroom numerico. Leggere i valori dal log SUCCESS, non inventarli né trasferirli direttamente su OCI. Nessun dato reale, GET Myfxbook, stream cTrader, VPS, DB live o backup coinvolto.
+- [ ] La prova di un solo segmento NON dimostra 14 segmenti completi né continuità/garanzia di 196 giorni, recuperabilità fuori host, autenticità Myfxbook, costo Oracle, original-first-seen nel processo LIVE, atomicità cross-db Squalincome o vantaggio statistico. FIRST-SEEN/CVD/C5/v1.65 NO-GO, PR #89 DRAFT, MAIN/Filoni A e C intatti. CI del commit da confermare.
+
 ## 09/11/2026 — Profilazione sintetica 24 ore e SQLITE_FULL durante seconda feature (SOLO GITHUB OFFLINE)
 
 - [x] Aggiunte due prove nel solo `tests/test_shark_retail_segment_writer.py`, senza modifica all'interfaccia del writer o ai servizi: **72 chiamate al vero writer isolate** (una ogni 20 minuti di orologio sintetico, pari a 24 ore teoriche), ciascuna con coppia EURUSD/XAUUSD e sei dati Myfxbook inventati, per misurare file SQLite effettivi dopo 1, 36, 72 coppie, pagine e tempi del runner. Output CI `REMURA_B_RETAIL_SEGMENT_SYNTHETIC_PROFILE`: i byte andranno letti dal log, NON anticipati né scambiati per storage/costi OCI.
