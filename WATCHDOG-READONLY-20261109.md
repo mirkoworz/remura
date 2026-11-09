@@ -28,3 +28,11 @@ Le PR B #89 e v1.65 #98 modificano anch'esse scripts/private_server.py: occorrer
 - python -m unittest discover -s tests -p 'test_private_server.py' -v
 
 Nessun test deve avviare broker o workflow manuali; test HTTP solo localhost e SQLite temporaneo. I test di integrazione HTTP devono essere eseguiti dentro un checkout completo del repository (non nel prototipo ZIP isolato).
+
+## 09/11/2026 — Gate aggiuntivo sul bundle di rilascio
+
+Il vecchio script v1.64 usa un elenco immutabile di 15 file, **senza** `scripts/collector_watchdog.py`. Non deve essere riutilizzato per questa PR: un server aggiornato con import del modulo mancante non può funzionare. L'autoupdater riconosce le modifiche sotto `scripts/` come `manual_required` e non le installa automaticamente. 
+
+`watchdog_release_gate.check_bundle()` è un controllo statico **solo offline**, che esige entrambi i moduli nella lista futura e verifica sintassi/import/campo HTTP. **NON** certifica al momento hash, stato Oracle, backup, restore, costi o possibilità di deploy. Il rilascio rimane NO-GO finché non esisterà un installer/versione coordinata con rollback, controlli LIVE e autorizzazione esplicita. 
+
+Test: `python -m unittest discover -s tests -p 'test_watchdog_release_gate.py' -v` su CI della PR. Nessuna modifica a `deploy/oracle/release_v164.py`, PR B, C, v1.65 o macchina LIVE.

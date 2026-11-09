@@ -9,6 +9,8 @@ on:
       - 'scripts/collector_watchdog.py'
       - 'tests/test_collector_watchdog.py'
       - 'tests/test_collector_watchdog_http.py'
+      - 'scripts/watchdog_release_gate.py'
+      - 'tests/test_watchdog_release_gate.py'
       - '.github/workflows/collector-watchdog-checks.yml'
 
 permissions:
@@ -31,5 +33,7 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_collector_watchdog.py' -v
       - name: Watchdog HTTP tests (localhost only, temporary SQLite)
         run: python -m unittest discover -s tests -p 'test_collector_watchdog_http.py' -v
+      - name: Verify staged module dependency and v1.64 no-go (offline)
+        run: python -m unittest discover -s tests -p 'test_watchdog_release_gate.py' -v
       - name: Existing private server regressions (offline)
         run: python -m unittest discover -s tests -p 'test_private_server.py' -v
