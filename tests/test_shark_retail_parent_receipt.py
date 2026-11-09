@@ -112,6 +112,57 @@ class RetailParentReadTests(unittest.TestCase):
             f"SELECT count(*) FROM {numeric.TABLE}").fetchone()[0],0)
         self.assertEqual(get_status(self.db)["retail_status"],"failed")
 
+    def test_zero_exit_without_file_update_rejects_cached_retail(self):
+        """No new FIRST-SEEN from old JSON when child claims success but writes nothing."""
+        retail.ensure_schema(self.db)
+        numeric.ensure_schema(self.db)
+        cached=self.path.parent/"myfxbook"/"data"/"myfxbook"/"latest.json"
+        cached.parent.mkdir(parents=True,exist_ok=True)
+        before=json.dumps(self.payload)
+        cached.write_text(before,encoding="utf-8")
+        def fake_success_no_update(cmd,*,cwd,**kw):
+            self.calls+=1
+            return types.SimpleNamespace(returncode=0)
+        with patch.dict(os.environ,{
+            "MYFXBOOK_EMAIL":"fake@example.invalid",
+            "MYFXBOOK_PASSWORD":SECRET,
+        }),patch.object(Path,"read_text",
+                        side_effect=AssertionError("read_of_old_cache_forbidden")):
+            self.assertFalse(server.retail_once(
+                self.path,runner=fake_success_no_update,
+                research_retail_first_seen=True,
+                research_retail_numeric_features=True))
+        self.assertEqual(self.calls,1)
+        self.assertEqual(cached.read_text(encoding="utf-8"),before)
+        self.assertEqual(self.rows(),[])
+        self.assertEqual(numeric.aggregate(self.db)["prospectiveNumericRows"],0)
+        self.assertEqual(get_status(self.db)["retail_status"],"failed")
+
+    def test_new_atomic_file_replacement_allows_first_original_receipt(self):
+        """The legitimate updated file still passes, including an existing cache."""
+        retail.ensure_schema(self.db)
+        cached=self.path.parent/"myfxbook"/"data"/"myfxbook"/"latest.json"
+        cached.parent.mkdir(parents=True,exist_ok=True)
+        cached.write_text(json.dumps(self.payload),encoding="utf-8")
+        def fake_atomic_child(cmd,*,cwd,**kw):
+            self.calls+=1
+            replacement=cached.with_suffix(".new")
+            replacement.write_text(json.dumps(self.payload),encoding="utf-8")
+            replacement.replace(cached)
+            return types.SimpleNamespace(returncode=0)
+        with patch.dict(os.environ,{
+            "MYFXBOOK_EMAIL":"fake@example.invalid",
+            "MYFXBOOK_PASSWORD":SECRET,
+        }),patch.object(server,"utcnow",side_effect=[
+            READ,RECORDED,RECORDED,RECORDED]):
+            result=server.retail_once(
+                self.path,runner=fake_atomic_child,
+                research_retail_first_seen=True)
+        self.assertTrue(result)
+        self.assertEqual(self.calls,1)
+        self.assertEqual(len(self.rows()),2)
+        self.assertEqual(get_status(self.db)["retail_status"],"running")
+
     def test_default_off_legacy_single_market_no_schema_or_env_switch(self):
         self.payload["symbols"].pop("XAUUSD")
         with patch.dict(os.environ,{"REMURA_RETAIL_FIRST_SEEN":"true"}):

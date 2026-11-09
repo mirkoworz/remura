@@ -772,16 +772,34 @@ def retail_once(db_path,runner=subprocess.run, *,
     target.mkdir(parents=True,exist_ok=True,mode=0o700)
     command=[sys.executable,str(ROOT/"scripts"/"update_myfxbook.py")]
     try:
+        latest_file=target/"data"/"myfxbook"/"latest.json"
+        previous_identity=None
+        if research_retail_first_seen:
+            # Only a successful, NEW file generation may become an original
+            # FIRST-SEEN receipt. A child returning 0 without updating the
+            # preserved cache must not turn that cache into new research data.
+            try:
+                previous=latest_file.stat()
+            except FileNotFoundError:
+                pass
+            else:
+                previous_identity=(
+                    previous.st_dev,previous.st_ino,
+                    previous.st_mtime_ns,previous.st_ctime_ns,previous.st_size)
         run=runner(command,cwd=target,stdin=subprocess.DEVNULL,
                    stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
                    timeout=120,check=False)
-        # The research opt-in must not READ a cached latest.json after an
-        # unsuccessful collector run, even if old content looks fresh.
-        # Normal LIVE collector path and scheduler remain unchanged.
         if research_retail_first_seen and run.returncode!=0:
             raise RuntimeError("Retail research collector unsuccessful.")
-        latest_file=target/"data"/"myfxbook"/"latest.json"
         if research_retail_first_seen:
+            # A changed local file identity is a necessary sanity check, not
+            # a provider-signed publication time or proof of API provenance.
+            current=latest_file.stat()
+            current_identity=(
+                current.st_dev,current.st_ino,
+                current.st_mtime_ns,current.st_ctime_ns,current.st_size)
+            if previous_identity is not None and current_identity==previous_identity:
+                raise RuntimeError("Retail research original file not refreshed.")
             # The exact original private file is read just once. The
             # independent local read clock comes IMMEDIATELY after read_text.
             if not latest_file.is_file() or latest_file.stat().st_size>3_000_000:
