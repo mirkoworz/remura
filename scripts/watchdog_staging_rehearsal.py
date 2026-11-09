@@ -103,12 +103,14 @@ def verify_staged_bundle(manifest, files, expected_sha256):
         return False, "INVALID_BUNDLE"
     if type(manifest) not in (list, tuple) or not 2 <= len(manifest) <= 100:
         return False, "INVALID_BUNDLE"
-    if len(set(map(str, manifest))) != len(manifest):
+    if any(type(path) is not str for path in manifest):
         return False, "INVALID_BUNDLE"
-    if set(manifest) != set(files) or set(manifest) != set(expected_sha256):
-        return False, "FILE_SET_MISMATCH"
+    if len(set(manifest)) != len(manifest):
+        return False, "INVALID_BUNDLE"
     if any(not _safe_path(path) for path in manifest):
         return False, "UNSAFE_PATH"
+    if set(manifest) != set(files) or set(manifest) != set(expected_sha256):
+        return False, "FILE_SET_MISMATCH"
     for path in manifest:
         value, pin = files[path], expected_sha256[path]
         if type(value) is not bytes or len(value) > MAX_SOURCE:
