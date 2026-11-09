@@ -23,6 +23,9 @@ import json
 import sqlite3
 
 from scripts import shark_cot_asof_witness as clocking
+from scripts import shark_signal_evidence as cot
+from scripts import shark_price_asof_evidence as price
+from scripts import shark_ingest_first_seen as ingest
 from scripts import shark_retail_first_seen as retail
 from scripts import shark_retail_numeric_features as numeric
 from scripts import shark_retail_segment_readiness as layout
@@ -105,6 +108,83 @@ def _from_shard(db,receipt_id,expected_symbol):
     }
 
 
+def _original_proofs_still_present(db,history_id,sym,observed):
+    """Read-only evidence chain check, not a new signal or provider fetch."""
+    h=db.execute(
+        "SELECT symbol,report_date,price_time,observed_at,cot_side "
+        "FROM squalincome_history WHERE id=?",(history_id,)).fetchone()
+    link=db.execute(
+        f"SELECT symbol,cot_report_date,price_closed_at_utc,"
+        f"observed_at_utc,linked_at_utc,original_ingest_proof_id,"
+        f"merged_document_sha256,cot_source_version_digest,algorithm "
+        f"FROM {source.TABLE} WHERE history_id=?",(history_id,)).fetchone()
+    if h is None or link is None:
+        return False
+    hs,week,closed,stamp,side=h
+    ls,lweek,lclosed,lobs,linked,ingest_id,doc_sha,cot_sha,alg=link
+    if (hs!=sym or (hs,week,closed)!=(ls,lweek,lclosed)
+            or clocking._parse(stamp)!=observed
+            or clocking._parse(lobs)!=observed
+            or alg!=source.ALG or not _hex(doc_sha) or not _hex(cot_sha)
+            or type(ingest_id) is not int or ingest_id<=0
+            or not observed<=clocking._parse(linked)
+                    <=observed+source.MAX_OBS_DELAY):
+        return False
+    p=db.execute(
+        f"SELECT observed_at,witnessed_at,source_document_sha256,"
+        f"m15_closed_at,algorithm FROM {price.TABLE} "
+        "WHERE symbol=? AND report_date=? AND price_time=?",
+        (hs,week,closed)).fetchone()
+    if p is None or p[4]!=price.ALGO or p[2]!=doc_sha:
+        return False
+    if (clocking._parse(p[0])!=observed
+            or clocking._parse(p[3])!=clocking._parse(closed)
+            or not observed<=clocking._parse(p[1])<=clocking._parse(linked)):
+        return False
+    c=db.execute(
+        f"SELECT observed_at,linked_at,cot_side,source_version_evidence,"
+        f"evidence_digest,algorithm FROM {cot.TABLE} "
+        "WHERE symbol=? AND cot_week=? AND price_closed_at=?",
+        (hs,week,closed)).fetchone()
+    if (c is None or c[2]!=side or c[5]!=cot.ALG
+            or c[4]!=cot_sha or type(c[3]) is not str
+            or hashlib.sha256(c[3].encode()).hexdigest()!=cot_sha):
+        return False
+    if (clocking._parse(c[0])!=observed
+            or not observed<=clocking._parse(c[1])<=clocking._parse(linked)):
+        return False
+    original_ingest=db.execute(
+        f"SELECT symbol,closed_at_utc,recorded_at_utc,"
+        f"merged_document_sha256,algorithm FROM {ingest.TABLE} "
+        "WHERE id=?",(ingest_id,)).fetchone()
+    if original_ingest is None:
+        return False
+    return (original_ingest[0]==hs
+            and clocking._parse(original_ingest[1])==clocking._parse(closed)
+            and clocking._parse(original_ingest[2])<=observed
+            and original_ingest[3]==doc_sha
+            and original_ingest[4]==ingest.ALGORITHM)
+
+
+def _latest_asof(folder,segment_count,symbol,as_of):
+    """Find the last recorded local source as of ORIGINAL observation time."""
+    latest=None
+    for number in range(1,segment_count+1):
+        db=writer._ro(writer._path(folder,number))
+        try:
+            for rid,stamp in db.execute(
+                f"SELECT id,recorded_at FROM {retail.TABLE} WHERE symbol=?",
+                (symbol,)):
+                received=clocking._parse(stamp)
+                if received<=as_of:
+                    candidate=(received,number,rid)
+                    if latest is None or candidate>latest:
+                        latest=candidate
+        finally:
+            db.close()
+    return latest
+
+
 def prepare(root,*,authorized_at,symbol,prepared_at):
     """READ ONLY lab lookup of latest already recorded receipt AS OF now.
 
@@ -120,32 +200,22 @@ def prepare(root,*,authorized_at,symbol,prepared_at):
     plan=layout.plan(authorized_at)
     if plan["status"]!="OFFLINE_CAPACITY_LAYOUT_PLAUSIBLE_NOT_LIVE_GO":
         raise ValueError("retail_segment_calendar_not_authorized")
-    # Prevent using a convenient outside folder or an unverified ledger.
-    witness=writer.verify(root,authorized_at=authorized_at)
-    if witness["publishedSegments"]<=0:
-        raise ValueError("no_prior_persisted_segment_receipt")
-    options=[]
-    for index in range(1,witness["publishedSegments"]+1):
-        p=writer._path(writer._folder(root),index)
-        db=writer._ro(p)
+    # One lock spans verification + exact receipt selection. Any later
+    # append requires a NEW verification, not a silent post-hoc source.
+    with writer._exclusive(root) as folder:
+        shards,_,_=writer._inspect(
+            folder,{**plan,"_authorized_at":authorized_at},20)
+        if not shards:
+            raise ValueError("no_prior_persisted_segment_receipt")
+        chosen=_latest_asof(folder,len(shards),symbol,prepared)
+        if chosen is None:
+            raise ValueError("no_asof_persisted_retail_receipt")
+        _,shard,rid=chosen
+        db=writer._ro(writer._path(folder,shard))
         try:
-            rows=db.execute(
-                f"SELECT id,symbol,recorded_at FROM {retail.TABLE} "
-                "WHERE symbol=? ORDER BY id DESC",(symbol,)).fetchall()
-            for receipt_id,sym,stamp in rows:
-                observed=clocking._parse(stamp)
-                if observed<=prepared:
-                    options.append((observed,index,receipt_id))
+            row=_from_shard(db,rid,symbol)
         finally:
             db.close()
-    if not options:
-        raise ValueError("no_asof_persisted_retail_receipt")
-    _,shard,rid=max(options)
-    db=writer._ro(writer._path(writer._folder(root),shard))
-    try:
-        row=_from_shard(db,rid,symbol)
-    finally:
-        db.close()
     ticket={
         "schema":SCHEMA,"symbol":symbol,"segmentNumber":shard,
         "receiptId":rid,"sourceUpdatedAt":row["sourceUpdatedAt"],
@@ -258,13 +328,11 @@ def reconcile(core_db,root,*,history_id,authorized_at):
     sym,observed,segment,rid,orig,digest,updated,read,recorded,prepared,pinned,alg=pin
     if alg!=ALGORITHM:
         return unknown
-    history=core_db.execute(
-        "SELECT symbol,observed_at FROM squalincome_history WHERE id=?",
-        (history_id,)).fetchone()
-    chain=core_db.execute(
-        f"SELECT 1 FROM {source.TABLE} WHERE history_id=?",
-        (history_id,)).fetchone()
-    if history!=(sym,observed) or chain is None:
+    try:
+        if not _original_proofs_still_present(
+                core_db,history_id,sym,clocking._parse(observed)):
+            return unknown
+    except (ValueError,TypeError,OverflowError,sqlite3.Error):
         return unknown
     ticket={
         "schema":SCHEMA,"symbol":sym,"segmentNumber":segment,
@@ -281,14 +349,24 @@ def reconcile(core_db,root,*,history_id,authorized_at):
                 or recorded_at-prepared_at>PIN_GRACE
                 or pinned_at-recorded_at>PIN_GRACE):
             return unknown
-        verified=writer.verify(root,authorized_at=authorized_at)
-        if segment>verified["publishedSegments"]:
-            return unknown
-        shard=writer._ro(writer._path(writer._folder(root),segment))
-        try:
-            from_file=_from_shard(shard,rid,sym)
-        finally:
-            shard.close()
+        with writer._exclusive(root) as folder:
+            plan=layout.plan(authorized_at)
+            if plan["status"]!="OFFLINE_CAPACITY_LAYOUT_PLAUSIBLE_NOT_LIVE_GO":
+                return unknown
+            shards,_,_=writer._inspect(
+                folder,{**plan,"_authorized_at":authorized_at},20)
+            if segment not in shards:
+                return unknown
+            # A more recent value already recorded BEFORE the original
+            # observation makes the older pin UNKNOWN, not reselectable.
+            latest=_latest_asof(folder,len(shards),sym,recorded_at)
+            if latest!=(clocking._parse(ticket["recordedAt"]),segment,rid):
+                return unknown
+            shard=writer._ro(writer._path(folder,segment))
+            try:
+                from_file=_from_shard(shard,rid,sym)
+            finally:
+                shard.close()
         if any(ticket[k]!=from_file[k] for k in (
                 "symbol","receiptId","sourceUpdatedAt","readAt",
                 "recordedAt","originalSha256","numericSha256")):

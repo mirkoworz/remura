@@ -100,6 +100,39 @@ class PredecisionCrossDbTests(unittest.TestCase):
         self.assertFalse(report["retailActuallyUsedBySqualincome"])
         self.assertFalse(report["tradingEdgeEstablished"])
 
+    def test_newer_receipt_before_original_scan_makes_old_pin_unknown(self):
+        ticket=self.prepare()
+        later=OBS-timedelta(milliseconds=500)
+        writer.record(self.folder,authorized_at=AUTHORIZED,
+                      original_snapshot=make_pair(later),
+                      file_read_at=later-timedelta(seconds=5),clock=later)
+        hid=self.original(ticket)
+        result=self.read(hid)
+        self.assertEqual(
+            result["status"],"UNKNOWN_ORIGINAL_OR_SHARD_PROOF_UNVERIFIABLE")
+        self.assertFalse(result["verifiedOriginalRetailPin"])
+
+    def test_underlying_original_proof_deleted_cannot_pass_recovery(self):
+        for table,trigger in (
+            ("research_squalincome_cot_links",
+             "research_squalincome_links_no_delete"),
+            ("research_squalincome_price_evidence",
+             "research_price_asof_no_delete"),
+            ("research_price_ingest_first_seen",
+             "research_ingest_first_no_delete")):
+            with self.subTest(table=table):
+                hid=self.original(self.prepare())
+                self.core.execute(f"DROP TRIGGER {trigger}")
+                self.core.execute(f"DELETE FROM {table}")
+                self.core.commit()
+                self.assertEqual(
+                    self.read(hid)["status"],
+                    "UNKNOWN_ORIGINAL_OR_SHARD_PROOF_UNVERIFIABLE")
+                # Reset only SYNTHETIC core fixture; never repair real data.
+                self.core.close()
+                self.core,_,self.ohlc=setup_case()
+                pin.ensure_schema(self.core)
+
     def test_crash_after_original_pin_rolls_back_both_original_rows(self):
         ticket=self.prepare()
         with self.assertRaisesRegex(RuntimeError,"synthetic_crash_after"):

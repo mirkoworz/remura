@@ -1,5 +1,12 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
+## 09/11/2026 — Recupero cross-DB anti-cherry-pick e prove originali complete (SOLO OFFLINE)
+
+- [x] Difetto identificato: `reconcile` controllava la presenza del link riassuntivo COT/prezzi/ingest, non delle tre prove sottostanti; poteva inoltre validare un PIN retail superato da una ricevuta più recente già nota **prima** dell'osservazione originale.
+- [x] Nuovi controlli **read-only** sul core: recupero esatto dei testimoni COT, prezzo M15/H1/H4 e ingest associati alla vera `squalincome_history`, con confronti di timestamp locali, simbolo, algoritmo e SHA delle prove. Nessun documento sorgente viene riletto dal broker/provider, nessun indicatore, segnale o decisione ricalcolato.
+- [x] `prepare` e `reconcile` mantengono il lock del writer laboratorio durante verifica e selezione della ricevuta; la riconciliazione restituisce `UNKNOWN` se esiste una ricevuta più recente già registrata entro la decisione, senza fare retroactive rebind. Le ricevute registrate DOPO l'evento non cambiano il PIN precedente. Test negativi con fonte retail superseduta e cancellazione delle prove COT, prezzo o ingest su DB sintetico.
+- [ ] Nessuna autentica firma esterna/clock indipendente, transazione cross-DB, recupero off-host o import LIVE. Il link continua a non essere input del Squalincome originale. PR #89 DRAFT; MAIN/VPS/Filoni A-C intatti, FIRST-SEEN/CVD/C5/v1.65 NO-GO; CI automatica del commit da verificare.
+
 ## 09/11/2026 — Handoff pre-decisione tra due SQLite, riconciliazione conservativa post-crash (SOLO OFFLINE)
 
 - [x] Creato `scripts/shark_retail_crossdb_predecision.py`: su **solo laboratorio** seleziona una ricevuta già salvata nel segmento Myfxbook prima dell'osservazione (`recorded <= prepared <= original observed`, source <= read <= record, age <=35m); controlla **entrambe** le impronte dell'identità originale e dei sei valori numerici. Non consulta `latest.json`, API o dati retail POST osservazione. Rifiuta l'assenza di fonte prima della decisione.
