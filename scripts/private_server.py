@@ -775,6 +775,11 @@ def retail_once(db_path,runner=subprocess.run, *,
         run=runner(command,cwd=target,stdin=subprocess.DEVNULL,
                    stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
                    timeout=120,check=False)
+        # The research opt-in must not READ a cached latest.json after an
+        # unsuccessful collector run, even if old content looks fresh.
+        # Normal LIVE collector path and scheduler remain unchanged.
+        if research_retail_first_seen and run.returncode!=0:
+            raise RuntimeError("Retail research collector unsuccessful.")
         latest_file=target/"data"/"myfxbook"/"latest.json"
         if research_retail_first_seen:
             # The exact original private file is read just once. The
@@ -784,7 +789,7 @@ def retail_once(db_path,runner=subprocess.run, *,
             raw=latest_file.read_text("utf-8")
             read_at=utcnow()
             original=json.loads(raw)
-            if (run.returncode!=0 or not isinstance(original,dict)
+            if (not isinstance(original,dict)
                     or original.get("status")!="ok"
                     or not isinstance(original.get("symbols"),dict)):
                 raise RuntimeError("Retail research JSON non convalidato.")

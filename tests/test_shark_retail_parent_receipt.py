@@ -84,6 +84,34 @@ class RetailParentReadTests(unittest.TestCase):
         for forbidden in (SECRET,"fake@example.invalid","62.5","2020.0"):
             self.assertNotIn(forbidden,safe)
 
+    def test_failed_child_must_not_read_cached_latest_or_write_receipts(self):
+        """Failed update cannot read previously preserved valid latest.json."""
+        retail.ensure_schema(self.db)
+        numeric.ensure_schema(self.db)
+        preserved=self.path.parent/"myfxbook"/"data"/"myfxbook"/"latest.json"
+        preserved.parent.mkdir(parents=True,exist_ok=True)
+        original_json=json.dumps(self.payload)
+        preserved.write_text(original_json,encoding="utf-8")
+        def failed_runner(cmd,*,cwd,**kwargs):
+            self.calls+=1
+            return types.SimpleNamespace(returncode=1)
+        with patch.dict(os.environ,{
+            "MYFXBOOK_EMAIL":"fake@example.invalid",
+            "MYFXBOOK_PASSWORD":SECRET,
+        }),patch.object(Path,"read_text",
+                        side_effect=AssertionError("cached_file_read_forbidden")):
+            self.assertFalse(server.retail_once(
+                self.path,runner=failed_runner,
+                research_retail_first_seen=True,
+                research_retail_numeric_features=True))
+        self.assertEqual(self.calls,1)
+        self.assertEqual(preserved.read_text(encoding="utf-8"),original_json)
+        self.assertEqual(self.db.execute(
+            f"SELECT count(*) FROM {retail.TABLE}").fetchone()[0],0)
+        self.assertEqual(self.db.execute(
+            f"SELECT count(*) FROM {numeric.TABLE}").fetchone()[0],0)
+        self.assertEqual(get_status(self.db)["retail_status"],"failed")
+
     def test_default_off_legacy_single_market_no_schema_or_env_switch(self):
         self.payload["symbols"].pop("XAUUSD")
         with patch.dict(os.environ,{"REMURA_RETAIL_FIRST_SEEN":"true"}):
