@@ -71,7 +71,13 @@ def _scan(packs):
     decision_ids=set()
     receipt_hashes={}
     for path in packs:
-        report=capsule.verify_archive(path)
+        # A torn ZIP can reach a malformed seek in Python zipfile; translate
+        # filesystem/ZIP corruption into the same deliberate NO-GO failure
+        # as a failed capsule hash or an invalid causal receipt.
+        try:
+            report=capsule.verify_archive(path)
+        except (OSError,zipfile.BadZipFile) as exc:
+            raise ValueError("private_capsule_unreadable_or_corrupt") from exc
         ids=[]
         with zipfile.ZipFile(path,"r") as zipped:
             with zipped.open(capsule.CAPSULES) as source:
