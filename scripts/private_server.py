@@ -49,6 +49,7 @@ from batch_timing import record as record_batch_timing, summary as batch_timing_
 from h1_batch_comparison import compare_paired_h1
 from h1_paired_store import (load_full_scan as load_h1_full_scan,
     record as record_h1_pair, summary as h1_pair_summary)
+from collector_watchdog import snapshot as collector_watchdog_snapshot
 
 ROOT=Path(__file__).resolve().parents[1]
 STORE=ROOT/"private"/"remura-prices.sqlite3"
@@ -282,7 +283,7 @@ def ig_document(db_path):
             "updatedAt":data.get("updatedAt"),"symbols":checked}
 
 
-def http_handler(db_path):
+def http_handler(db_path, collector_thread=None):
     request_counts={"allGet":0,"privateGet":0}
     request_lock=threading.Lock()
     class Handler(BaseHTTPRequestHandler):
@@ -393,6 +394,11 @@ def http_handler(db_path):
                         self.response(200,{
                             "name":"REMURA Private",
                             "collector":status.get("collector","disabled"),
+                            "collectorWatchdog":collector_watchdog_snapshot(
+                                enabled=os.environ.get("REMURA_COLLECTOR_ENABLED","0")=="1",
+                                thread=collector_thread,
+                                last_success=status.get("last_success"),
+                                now=utcnow()),
                             "ctraderPreflight":ctrader_preflight(db_path),
                             "ctraderBackup":backup_ctrader_status(db_path),
                             "collectorSource":status.get("collector_source","none"),
@@ -1080,6 +1086,7 @@ def main():
     finally:
         db.close()
     stop=threading.Event()
+    thread=None
     if os.environ.get("REMURA_COLLECTOR_ENABLED","0")=="1":
         thread=threading.Thread(target=collector_loop,args=(db_path,stop),daemon=True)
         thread.start()
@@ -1098,7 +1105,7 @@ def main():
     if os.environ.get("REMURA_IG_ENABLED","0")=="1":
         thread_ig=threading.Thread(target=ig_loop,args=(db_path,stop),daemon=True)
         thread_ig.start()
-    server=ThreadingHTTPServer((SERVER_HOST,args.port),http_handler(db_path))
+    server=ThreadingHTTPServer((SERVER_HOST,args.port),http_handler(db_path,collector_thread=thread))
     print("REMURA Private listening ONLY on http://127.0.0.1:"+str(args.port))
     print("Do NOT expose without authentication. Use Cloudflare Tunnel with a validated Access policy for the iPhone.")
     try:
