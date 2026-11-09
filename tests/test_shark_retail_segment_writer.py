@@ -2,14 +2,18 @@
 from __future__ import annotations
 
 from datetime import datetime,timedelta,timezone
+import json
 import os
 from pathlib import Path
 import sqlite3
+import statistics
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 
 from scripts import shark_retail_segment_writer as writer
+from scripts import shark_retail_numeric_features as numeric
 from scripts import shark_retail_segment_readiness as layout
 from scripts import shark_retail_first_seen as retail
 from test_shark_retail_segment_readiness import make_pair, AUTHORIZED
@@ -131,6 +135,106 @@ class RetailSegmentWriterTests(unittest.TestCase):
             fcntl.flock(fd,fcntl.LOCK_UN)
             os.close(fd)
         self.assertEqual(self.verify()["sourcePairs"],1)
+
+    def test_second_numeric_insert_disk_full_simulation_rolls_back_both(self):
+        """The genuine insert transaction must roll back at the second feature.
+
+        This is injected SQLITE_FULL, not a real filled filesystem or
+        provider outage. The empty shard is not a counted observation.
+        """
+        real=numeric.append_inside_original_pair
+        calls=[0]
+
+        def fail_on_second(*args,**kwargs):
+            calls[0]+=1
+            if calls[0]==2:
+                raise sqlite3.OperationalError(
+                    "database or disk is full (injected test only)")
+            return real(*args,**kwargs)
+
+        stamp=self.begin+timedelta(minutes=5)
+        with patch.object(numeric,"append_inside_original_pair",
+                          side_effect=fail_on_second):
+            with self.assertRaisesRegex(sqlite3.OperationalError,"disk is full"):
+                self.write(stamp)
+        self.assertEqual(calls[0],2)
+        empty=self.verify()
+        self.assertEqual(empty["publishedSegments"],1)
+        self.assertEqual(empty["sourcePairs"],0)
+        self.assertEqual(empty["numericRows"],0)
+        with sqlite3.connect(str(self.root/"retail-000001.sqlite3")) as db:
+            for table in (retail.TABLE,numeric.TABLE):
+                self.assertEqual(
+                    db.execute(f"SELECT count(*) FROM {table}").fetchone()[0],0)
+        self.assertEqual(self.write(stamp)["pairReceiptsWritten"],2)
+        restored=self.verify()
+        self.assertEqual(restored["sourcePairs"],1)
+        self.assertEqual(restored["numericRows"],2)
+
+    def test_24h_actual_writer_disk_profile_and_no_network(self):
+        """72 authentic local writer calls; source values are 100% synthetic.
+
+        No hard performance threshold and no inference about OCI billing,
+        shared broker data, future partitions or physical disk failure.
+        """
+        first=self.begin+timedelta(minutes=10)
+        durations=[]
+        measured={}
+        for i in range(72):
+            stamp=first+timedelta(minutes=20*i)
+            t0=time.perf_counter()
+            report=self.write(stamp)
+            durations.append(time.perf_counter()-t0)
+            self.assertEqual(report["segmentNumber"],1)
+            self.assertEqual(report["newApiCalls"],0)
+            if i in (0,35,71):
+                measured[str(i+1)]=(
+                    self.root/"retail-000001.sqlite3").stat().st_size
+        file=self.root/"retail-000001.sqlite3"
+        with sqlite3.connect(str(file)) as db:
+            page_count=db.execute("PRAGMA page_count").fetchone()[0]
+            page_bytes=db.execute("PRAGMA page_size").fetchone()[0]
+            receipts=db.execute(
+                f"SELECT count(*) FROM {retail.TABLE}").fetchone()[0]
+            numeric_rows=db.execute(
+                f"SELECT count(*) FROM {numeric.TABLE}").fetchone()[0]
+        result=self.verify()
+        self.assertEqual(result["sourcePairs"],72)
+        self.assertEqual(result["numericRows"],144)
+        self.assertEqual(receipts,144)
+        self.assertEqual(numeric_rows,144)
+        self.assertEqual(file.stat().st_size,page_count*page_bytes)
+        self.assertEqual(result["publishedSegments"],1)
+        self.assertFalse(result["liveAuthorized"])
+        self.assertLess(file.stat().st_size,writer.MAX_BYTES)
+        self.assertEqual(len(list(self.root.glob("*.sqlite3-journal"))),0)
+        self.assertEqual(len(list(self.root.glob("*.sqlite3-wal"))),0)
+        ordered=sorted(durations)
+        profile={
+            "schema":"remura-track-b-synthetic-retail-disk-profile-v1",
+            "status":"GITHUB_RUNNER_SYNTHETIC_24H_ONLY_NOT_OCI_CAPACITY",
+            "source":"fake_in_memory_Myfxbook_pairs_only",
+            "recordedPairs":72,
+            "recordedReceiptsAndNumericRows":144,
+            "bytesAfter1Pair":measured["1"],
+            "bytesAfter36Pairs":measured["36"],
+            "bytesAfter72Pairs":measured["72"],
+            "pageCount":page_count,
+            "pageBytes":page_bytes,
+            "writerWallSeconds72Calls":round(sum(durations),3),
+            "writerP95WallMilliseconds":round(
+                1000*ordered[68],3),
+            "budgetDiskBytesPerShard":writer.MAX_BYTES,
+            "completeFourteenDaysMeasured":False,
+            "complete196DaysMeasured":False,
+            "realOCIStorageOrCostVerified":False,
+            "physicalDiskFullTested":False,
+            "crossDBSqualincomeAtomicityVerified":False,
+            "liveAuthorized":False,
+            "newApiCalls":0,
+        }
+        print("REMURA_B_RETAIL_SEGMENT_SYNTHETIC_PROFILE="
+              +json.dumps(profile,sort_keys=True))
 
     def test_source_validation_before_creating_any_shard(self):
         now=self.begin+timedelta(minutes=5)

@@ -1,5 +1,11 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
+## 09/11/2026 — Profilazione sintetica 24 ore e SQLITE_FULL durante seconda feature (SOLO GITHUB OFFLINE)
+
+- [x] Aggiunte due prove nel solo `tests/test_shark_retail_segment_writer.py`, senza modifica all'interfaccia del writer o ai servizi: **72 chiamate al vero writer isolate** (una ogni 20 minuti di orologio sintetico, pari a 24 ore teoriche), ciascuna con coppia EURUSD/XAUUSD e sei dati Myfxbook inventati, per misurare file SQLite effettivi dopo 1, 36, 72 coppie, pagine e tempi del runner. Output CI `REMURA_B_RETAIL_SEGMENT_SYNTHETIC_PROFILE`: i byte andranno letti dal log, NON anticipati né scambiati per storage/costi OCI.
+- [x] Iniezione `sqlite3.OperationalError("database or disk is full")` **durante la SECONDA feature numerica**: l'originale `capture_pair` deve annullare entrambi i ricevute e i numerici, lasciare lo shard pubblicato ma vuoto e consentire un retry controllato senza inventare dati. È un guasto software simulato, NON prova di disco fisicamente pieno, WAL o recovery fuori host.
+- [ ] Il profile 24h non certifica 14 giorni completi, 196 giorni, picchi di RAM, OCI Always Free, quota GitHub Actions né capacità di coesistenza con collector/Squalincome. Mancano gate di filesystem, sicurezza, backup off-host, cross-DB signal link e validazione statistica prospettica. PR #89 DRAFT, MAIN/VPS/Filoni A e C intatti, LIVE v1.64 documentata; FIRST-SEEN e CVD LIVE restano NO_GO. Controllare la CI automatica dell'ultimo commit.
+
 ## 09/11/2026 — Writer retail isolato 14 giorni con roll-over e fail-closed (SOLO LAB OFFLINE)
 
 - [x] In `scripts/shark_retail_segment_writer.py` implementato un **writer esplicito solo per laboratorio** nel percorso `/tmp/remura-retail-lab-*` con directory 0700, SQLite 0600, lock `flock`, gate `REMURA_RETAIL_ISOLATED_LAB=I_CONFIRM_NO_LIVE`. Nessun import/call da `private_server`, `signals_monitor` o cron. Richiede timestamp UTC originali e documento Myfxbook già in memoria: **zero nuove API**, nessuna lettura di `latest.json`, nessuna vera autorizzazione LIVE.
