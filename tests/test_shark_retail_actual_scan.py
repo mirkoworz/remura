@@ -9,10 +9,14 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import sqlite3
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
 
+# The real observer is deployed as a top-level module under scripts/.
+ROOT=Path(__file__).resolve().parents[1]
+sys.path.insert(0,str(ROOT/"scripts"))
 import signals_monitor as scanner
 from scripts import shark_retail_first_seen as retail
 from scripts import shark_retail_actual_scan_handoff as hook
