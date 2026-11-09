@@ -97,6 +97,8 @@ on:
       - 'tests/test_shark_retail_parent_receipt.py'
       - 'tests/test_shark_retail_receipt_handoff.py'
       - 'tests/test_shark_retail_scan_inbox.py'
+      - 'tests/test_shark_retail_actual_scan.py'
+      - 'scripts/shark_retail_actual_scan_handoff.py'
       - 'tests/test_shark_retail_numeric_features.py'
       - 'tests/test_shark_retail_preregistered_protocol.py'
       - 'tests/test_shark_price_only_universe.py'
@@ -216,6 +218,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_shark_retail_preregistered_protocol.py' -v
       - name: Test shared SQLite retail source inbox at original Squalincome decision and concurrent writer
         run: python -m unittest discover -s tests -p 'test_shark_retail_scan_inbox.py' -v
+      - name: Test real Squalincome scanner research-only retail handoff with synthetic local proofs
+        run: python -m unittest discover -s tests -p 'test_shark_retail_actual_scan.py' -v
       - name: Test first-seen retail receipt ID exact as-of Squalincome decision without later JSON re-read
         run: python -m unittest discover -s tests -p 'test_shark_retail_receipt_handoff.py' -v
       - name: Test private Myfxbook parent first read and atomic two-market receipt offline

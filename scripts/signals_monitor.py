@@ -339,9 +339,35 @@ def scan_once_with_compact_price_only_research(db_path, now=None, *, targets=Non
                       compact_research=compact, compact_preparer=preparer)
 
 
+def scan_once_with_retail_inbox_research(db_path, now=None, *, targets=None):
+    """RESEARCH-ONLY: original Squalincome scanner with atomic retail context.
+
+    This entrypoint is NEVER called by private_server or a scheduled scan.
+    Explicit pilot-targeted execution is required; it does not claim full
+    34-market coverage or institutional signals. The normal scan_once() API
+    and production behavior remain unchanged.
+    """
+    import sys
+    from pathlib import Path
+    if (type(now) is not dt.datetime or now.tzinfo is None
+            or now.utcoffset()!=dt.timedelta(0)):
+        raise ValueError("explicit_utc_original_research_scan_clock_required")
+    if (not isinstance(targets,(tuple,list)) or not targets
+            or len(set(targets))!=len(targets)
+            or any(type(x) is not str or x not in ("EURUSD","XAUUSD")
+                   for x in targets)):
+        raise ValueError("research_requires_exact_pilot_targets")
+    root=str(Path(__file__).resolve().parents[1])
+    if root not in sys.path:
+        sys.path.insert(0,root)
+    from scripts import shark_retail_actual_scan_handoff as handoff
+    return _scan_once(db_path,now,targets=targets,
+                      retail_inbox_research=handoff.attach_new)
+
+
 def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
                price_only_research=None,compact_research=None,
-               compact_preparer=None):
+               compact_preparer=None,retail_inbox_research=None):
     """Observe all markets on periodic scans, or a small verified fresh batch.
 
     Targeted scans update existing observation/history/event tables, but NEVER
@@ -349,6 +375,13 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
     gates, COT validation, event transition and SQLite deduplication as a full
     scan; no relaxed thresholds, fake observations, or notifications.
     """
+    if retail_inbox_research is not None and (
+            not callable(retail_inbox_research)
+            or price_only_research is not None
+            or compact_research is not None
+            or targets is None
+            or any(x not in ("EURUSD","XAUUSD") for x in targets)):
+        raise ValueError("retail_original_hook_isolated_pilot_only")
     now=now or utcnow()
     all_symbols=monitored_symbols()
     if targets is None:
@@ -383,6 +416,7 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
     research_totals={}
     compact_rows=[]
     compact_snapshot={}
+    retail_pilot_linked=0
     scan_savepoint_counter=0
     compact_write_lock_start=None
     compact_read_snapshot_ms=None
@@ -551,7 +585,7 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
                             "first_after_upgrade" if not history_found else "update")
                     # An existing reference may be valid even if no v1.37
                     # timeline exists yet. Never invent older data for it.
-                    db.execute("INSERT OR IGNORE INTO squalincome_history"
+                    history_insert=db.execute("INSERT OR IGNORE INTO squalincome_history"
                         "(symbol,state,cot_side,price_side,h4_side,h1_side,m15_side,"
                         "price_state,report_date,price_time,observed_at,cot_weekly,"
                         "cot_sustained,origin,event_type) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
@@ -560,6 +594,19 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
                          current["price_state"],current["report_date"],current["price_time"],
                          stamp,cot.get("weekly"),int(bool(cot.get("sustained"))),
                          origin,change))
+                    if retail_inbox_research is not None:
+                        # Called at the ORIGINAL history INSERT, never after
+                        # the transaction commits and never via latest.json.
+                        # All three COT/price/ingest proofs + retail receipt
+                        # must be verified in this SAME SQLite transaction.
+                        if history_insert.rowcount!=1:
+                            raise ValueError("new_original_pilot_history_insert_required")
+                        proof=retail_inbox_research(
+                            db,history_id=history_insert.lastrowid,
+                            observed_document=document,clock=now)
+                        if proof.get("status")!="ORIGINAL_SCANNER_RETAIL_INBOX_LINKED":
+                            raise ValueError("retail_original_scanner_proof_incomplete")
+                        retail_pilot_linked+=1
                     db.execute("DELETE FROM squalincome_history WHERE symbol=? AND id NOT IN"
                         " (SELECT id FROM squalincome_history WHERE symbol=?"
                         " ORDER BY id DESC LIMIT ?)",
@@ -575,11 +622,16 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
             except sqlite3.Error:
                 # A broken research evidence table is an operational database
                 # failure, NOT an innocent N/D. Never mask it when opt-in.
-                if price_only_research is not None or compact_research is not None:
+                if (price_only_research is not None or compact_research is not None
+                        or retail_inbox_research is not None):
                     raise
                 exclusions[symbol]=["scan_error"]
                 continue
             except (ValueError,TypeError,KeyError,OverflowError):
+                # In RESEARCH mode a missing original proof MUST abort its
+                # own decision; silently keeping a partial link is forbidden.
+                if retail_inbox_research is not None:
+                    raise
                 # Never expose provider exceptions, prices or credentials.
                 exclusions[symbol]=["scan_error"]
                 continue
@@ -631,6 +683,16 @@ def _scan_once(db_path,now=None,*,targets=None,capture_frames=False,
                     " scanned_at=excluded.scanned_at,summary=excluded.summary",
                     (now.isoformat(),json.dumps(summary,sort_keys=True)))
         result={"examined":examined,"baselines":baselines,"newEvents":events}
+        if retail_inbox_research is not None:
+            result["retailFirstSeenResearch"]={
+                "pilotOriginalLinks":retail_pilot_linked,
+                "sameOriginalHistoryTransaction":True,
+                "retailUsedByOriginalSignal":False,
+                "cvdEvidence":"UNKNOWN",
+                "productionWired":False,
+                "apiCallsAdded":0,
+                "tradingEdgeEstablished":False,
+            }
         if compact_research is not None:
             if len(compact_rows)!=len(symbols):
                 raise ValueError("incomplete_price_only_compact_scan")
