@@ -13,7 +13,7 @@ from watchdog_crosspr_contract import inspect_candidate
 
 
 CANDIDATE = """
-from collector_watchdog import snapshot as collector_watchdog_snapshot
+from collector_watchdog import CycleProgress, snapshot as collector_watchdog_snapshot
 from storage_cache_v165 import StorageMetadataCache
 
 def collect_once(*, research_ingest_first_seen=False):
@@ -30,15 +30,21 @@ def observe_periodic_squalincome():
 def squalincome_loop():
     return observe_periodic_squalincome()
 
-def http_handler(db_path, collector_thread=None):
+def collector_loop(*, progress=None):
+    progress.mark_completed()
+
+def http_handler(db_path, collector_thread=None, collector_progress=None):
     if "REMURA_STORAGE_DIAG_ENABLED":
         data["storageInventory"] = _STORAGE_CACHE.peek()
-    return {"collectorWatchdog": collector_watchdog_snapshot(thread=collector_thread)}
+    return {"collectorWatchdog": collector_watchdog_snapshot(
+        thread=collector_thread, progress=collector_progress)}
 
 def main():
     if "REMURA_STORAGE_DIAG_ENABLED":
         _STORAGE_CACHE.start("db", "stop")
-    return http_handler("db", collector_thread="thread")
+    progress = CycleProgress()
+    collector_loop(progress=progress)
+    return http_handler("db", collector_thread="thread", collector_progress=progress)
 """
 
 
@@ -60,6 +66,7 @@ class CrossPrContractTests(unittest.TestCase):
         self.assertIn("B_INGEST_OPTIN", result["missing"])
         self.assertIn("V165_STORAGE_START", result["missing"])
         self.assertNotIn("WATCHDOG_IMPORT", result["missing"])
+        self.assertNotIn("WATCHDOG_CYCLE_PROGRESS", result["missing"])
         self.assertIs(result["release_authorized"], False)
 
     def test_b_ingest_opt_in_must_default_false(self):
@@ -98,7 +105,7 @@ class CrossPrContractTests(unittest.TestCase):
 
     def test_watchdog_import_required(self):
         result = run(CANDIDATE.replace(
-            "from collector_watchdog import snapshot as collector_watchdog_snapshot", "x = 1"))
+            "from collector_watchdog import CycleProgress, snapshot as collector_watchdog_snapshot", "x = 1"))
         self.assertIn("WATCHDOG_IMPORT", result["missing"])
 
     def test_watchdog_health_field_required(self):
@@ -108,6 +115,26 @@ class CrossPrContractTests(unittest.TestCase):
     def test_watchdog_thread_binding_required(self):
         result = run(CANDIDATE.replace('collector_thread="thread"', 'different="thread"'))
         self.assertIn("WATCHDOG_THREAD_WIRING", result["missing"])
+
+    def test_watchdog_progress_import_is_required(self):
+        result = run(CANDIDATE.replace(
+            "from collector_watchdog import CycleProgress, snapshot as collector_watchdog_snapshot",
+            "from collector_watchdog import snapshot as collector_watchdog_snapshot"))
+        self.assertIn("WATCHDOG_CYCLE_PROGRESS", result["missing"])
+
+    def test_watchdog_completed_cycle_must_be_recorded(self):
+        result = run(CANDIDATE.replace("progress.mark_completed()", "pass"))
+        self.assertIn("WATCHDOG_CYCLE_PROGRESS", result["missing"])
+
+    def test_watchdog_progress_must_reach_health_response(self):
+        result = run(CANDIDATE.replace("progress=collector_progress)",
+                                       "not_progress=collector_progress)"))
+        self.assertIn("WATCHDOG_CYCLE_PROGRESS", result["missing"])
+
+    def test_watchdog_progress_must_be_passed_by_main(self):
+        result = run(CANDIDATE.replace("collector_progress=progress)",
+                                       "different=progress)"))
+        self.assertIn("WATCHDOG_CYCLE_PROGRESS", result["missing"])
 
     def test_untrusted_or_wrong_pin_is_rejected(self):
         self.assertEqual(inspect_candidate(CANDIDATE, "0"*64)["state"], "UNPINNED_CANDIDATE")
