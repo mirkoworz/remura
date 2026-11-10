@@ -130,6 +130,13 @@ class TestD07Reference(unittest.TestCase):
         self.assertIn('ta.pivothigh(fxHigh, leftBars, rightBars)', p)
         self.assertIn('barstate.isconfirmed', p)
         self.assertIn('display=display.data_window', p)
+        # On an open 5m candle, the exported per-bar value is na;
+        # the UI must instead present continuity of the last CLOSED 5m.
+        self.assertIn('var bool lastConfirmedPrevContinuous = false', p)
+        self.assertIn('lastConfirmedPrevContinuous := good and continuous', p)
+        self.assertIn('Contesto ultima 5m CHIUSA:', p)
+        self.assertNotIn('"Contesto precedente: " + (continuousPrev', p)
+        self.assertIn('const string MODEL = "remura_fx_1m_segment_d0.7"', p)
         self.assertNotIn('input.bool(false, "Alert', p)
         executable = "\n".join(line.split("//")[0] for line in p.splitlines())
         self.assertIsNone(re.search(r"\b(?:alert|alertcondition|strategy\.entry|strategy\.order)\s*\(", executable))
