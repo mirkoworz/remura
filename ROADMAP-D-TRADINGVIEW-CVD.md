@@ -1,8 +1,17 @@
 # REMURA — FILONE D: TradingView FXCM / Shark CVD (sperimentale)
 
-**Apertura:** 09/11/2026 (Europe/Rome). **Versione laboratorio:** D0.3 (10/11/2026, Italia). **Stato:** D0.2 diagnosticato su TradingView, ma lo screenshot 10/11 mostra `FXCM` nell'intestazione e `FX:EURUSD | TF=5` nel runtime Pine. D0.3 ora interroga direttamente **FXCM:EURUSD** per entrambe le fonti 5m/1m, runtime D0.3 **NON ANCORA VERIFICATO**. NON LIVE.
+**Apertura:** 09/11/2026 (Europe/Rome). **Versione laboratorio:** D0.4 (10/11/2026, Italia). **Stato:** D0.3 ha compilato su TradingView ma è stata fermata da `Invalid symbol: FXCM:EURUSD`. D0.4 richiede **FX:EURUSD**, ID Pine realmente osservato e associato a FXCM dall'interfaccia TradingView. D0.4 runtime non ancora testata. NON LIVE.
 
 **Ramo:** `experiment/track-d-tv-fxcm-cvd-20261109`. Nessun merge, deploy, servizio, connettore VPS, endpoint pubblico o nuova API. Non cambiare versione applicativa LIVE: un esperimento Pine non è un aggiornamento delle nove pagine REMURA.
+
+## 10/11/2026 — D0.4: errore `Invalid symbol` e ticker canonico FXCM su TradingView
+
+- [x] Screenshot utente dopo aver inserito D0.3: `Errore di runtime — Invalid symbol: FXCM:EURUSD`. Non era un errore del calcolo CVD: il simbolo chiamato nello script non risulta valido in questa sessione di TradingView.
+- [x] Verifica pubblica: la pagina TradingView `https://it.tradingview.com/symbols/EURUSD/?exchange=FX` presenta l'ID `FX:EURUSD` con etichetta provider **FXCM**; questo coincide con l'ID effettivamente letto da Pine D0.2: `FX:EURUSD`. Non equiparare automaticamente etichetta UI ad API accessibile con prefisso `FXCM:`.
+- [x] Nuovo file **D0.4** `experiments/tradingview/remura_shark_cvd_fx_v04.pine`, `FEED = "FX:EURUSD"` identico per `request.security(..., "5", ...)` e `request.security_lower_tf(..., "1", ...)`, qualità dati fail closed e `ignore_invalid_symbol=true` per evitare blocco runtime su simboli non disponibili; diagnostica mostra ID, provider dichiarato da UI e numero di barre 1m per 5m.
+- [x] Modello distinto `remura_fx_1m_cvd_d0.4` e provenienza eventi `TV_FX_EURUSD_TICK_VOLUME_PROXY_1M`. D0.3 e D0.2 restano storici, non mischiare dati/risultati.
+- [ ] **Prossimo test:** sostituire Pine D0.3 con D0.4 sul grafico già aperto, verificare compilazione e comparsa di `DATI: FX:EURUSD (TV: FXCM) 5m+1m`; leggere numero barre 1m per ultima 5m. Solo dopo 1m completi verificare curva e divergenze; se dati parziali, non disattivare regole anti-falso-segnale.
+- [ ] Nessun alert, webhook, operazione, raccolta prospettica, segnale o redditività certificati. Questa prova non usa dati futures eseguiti.
 
 ## 10/11/2026 — D0.3: ricerca FXCM esplicita, anziché fidarsi della testata del grafico
 
@@ -26,7 +35,7 @@ L'utente dispone già di TradingView Premium e della watchlist **FXCM**. Screens
 
 **Ipotesi falsificabile:** il CVD *stimato* da OHLC + volume Forex dei minuti 1m, aggregato a 5m, migliora il potere predittivo delle sole divergenze di prezzo o di una semplice baseline prezzo+ATR. Il volume FXCM può essere tick volume/volume del singolo feed, NON contratti eseguiti sull'intero Forex né aggressor side istituzionale.
 
-Diverso dal proxy cTrader `CLV × tick volume` già esistente in REMURA/PR #77: non mischiare i due indicatori, le sorgenti, le unità, le sessioni e gli orari. Il modello attivo per il prossimo test sarà `remura_fxcm_1m_cvd_d0.3`, distinto da D0.1/D0.2 storici; non mescolare gli eventi tra revisioni.
+Diverso dal proxy cTrader `CLV × tick volume` già esistente in REMURA/PR #77: non mischiare i due indicatori, le sorgenti, le unità, le sessioni e gli orari. Il modello attivo per il prossimo test è `remura_fx_1m_cvd_d0.4`, distinto dai modelli storici D0.1/D0.2/D0.3; non mescolare eventi fra revisioni.
 
 ## Architettura sperimentale
 
