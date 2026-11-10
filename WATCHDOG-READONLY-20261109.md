@@ -98,3 +98,18 @@ Nuovo `scripts/watchdog_crosspr_contract.py:inspect_candidate(source,pin)`:
 **Separare segnali e prove:** liveness del thread, avanzamento dei cicli e freschezza dei dati rimangono tre misure diverse. Un thread può ancora completare cicli con risposte vuote o errori, e il nuovo testimone non certifica la qualità del feed, la continuità H1/M15, né l'uptime post trial. Se il processo termina, l'endpoint non sarà raggiungibile e servirà un controllo esterno già autorizzato; il watchdog in-process non può auto-segnalare un intero server spento.
 
 **Requisiti per LIVE invariati:** PR OPEN/DRAFT, nessun merge/deploy, release installer v1.64 non idoneo a includere il modulo; servono un rilascio serializzato, version/date Europe/Rome visibili nelle nove pagine, rollback e backup/restore autorizzati e verifica diretta della VPS. Oracle Always Free da controllare dopo il 15 novembre, nessun provisioning, nessuna modifica alla diagnostica privata/Tailscale.
+
+
+## 10/11/2026 — Gate statico anti-spreco broker / conservazione della cadenza
+
+Dopo l'introduzione del testimone passivo dei cicli, è stato aggiunto `scripts/watchdog_cadence_guard.py` con `tests/test_watchdog_cadence_guard.py`, eseguiti nell'**unico workflow PR-only Watchdog già presente**. È un controllo offline sul parser AST: **non** importa né esegue `private_server.py`, non apre reti, non crea timer/thread, non interroga cTrader, Oracle o Tailscale e non modifica il database.
+
+Il gate controlla che il codice candidato conservi **due soli call-site sintattici** nel ciclo `collector_loop`: primaria e fallback `source="backup"`; esattamente una attesa `stop.wait(seconds_to_next_quarter())`; selezione batch standard/priority già esistente sotto `REMURA_PRIORITY_COLLECTOR_ENABLED`; una sola creazione del thread collector in `main`; un solo `CycleProgress`; l'unico testimone `progress.mark_completed()` prima dell'attesa; **nessuna** chiamata a collector da `http_handler` e nessun timer `time.sleep` aggiunto al ciclo.
+
+I test di regressione modificano **solo stringhe Python simulate in memoria** per tentare un terzo call-site cTrader, un secondo thread, attesa diversa, timer extra, assenza del testimone e chiamate broker da HTTP: il gate restituisce `BLOCKED_CADENCE_DRIFT`. Il codice reale della PR deve restituire soltanto `STATIC_REVIEW_REQUIRED` con `violations=[]` e `release_authorized=False`.
+
+**Limiti importanti:** un AST statico non misura chiamate broker effettive, traffico, prezzi, quote, costi, né può escludere call-site creati dinamicamente o un cambio semantico del numero di richieste per batch. Nessuna garanzia di spendibilità gratuita di Oracle o GitHub Actions deriva dal semaforo verde. Se la logica di raccolta cambierà intenzionalmente, servirà una revisione esplicita dei gate e una misurazione futura autorizzata.
+
+**Controllo della diagnostica VPS:** al 10/11 alle 11:40 italiane, il repository privato non riportava ancora un run diagnostico del 10/11; l'ultimo run riuscito resta il 09/11 17:47 Italia (38/38 recenti). Ritardi delle schedulazioni GitHub sono documentati; non scambiarli per guasti Oracle e non forzare workflow manuali. L'errore 403 OIDC del run manuale 09/11 è distinto in issue privata remura-collector #48. Non ripetere audit OCI già completati.
+
+**Divieti invariati:** PR #99 OPEN/DRAFT; nessun merge, deploy, restart, SSH/Termius, chiamata API broker, nuovo cron, modifica IAM, budget o altre PR, backup rinviato per decisione del titolare.
