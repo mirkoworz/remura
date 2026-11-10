@@ -5,6 +5,7 @@ on:
     paths:
       - 'experiments/tradingview/**'
       - 'tests/test_track_d_tv_cvd_reference.py'
+      - 'tests/test_track_d_tv_v03_source.py'
       - 'ROADMAP-D-TRADINGVIEW-CVD.md'
       - '.github/workflows/track-d-pine-offline.yml'
   workflow_dispatch:
@@ -19,10 +20,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run local specification and causal reference tests
-        run: python -m unittest discover -s tests -p 'test_track_d_tv_cvd_reference.py' -v
+        run: python -m unittest discover -s tests -p 'test_track_d_tv*.py' -v
       - name: Confirm scope and absence of Pine compilation claim
         run: |
           test -s experiments/tradingview/remura_shark_cvd_fxcm_v01.pine
+          test -s experiments/tradingview/remura_shark_cvd_fxcm_v03.pine
           test -s ROADMAP-D-TRADINGVIEW-CVD.md
           echo "TRACK_D_OFFLINE_REFERENCE_TESTS_ONLY=YES"
           echo "PINE_COMPILED_IN_TRADINGVIEW=NOT_VERIFIED"
