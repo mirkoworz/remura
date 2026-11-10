@@ -6,7 +6,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1] / "experiments" / "tradingview"
-PATHS = [ROOT / "remura_shark_cvd_fx_v04.pine", ROOT / "remura_shark_cvd_fx_v05.pine"]
+PATHS = [ROOT / "remura_shark_cvd_fx_v04.pine", ROOT / "remura_shark_cvd_fx_v05.pine", ROOT / "remura_shark_cvd_fx_v06.pine"]
 
 
 def balance_pine_delimiters(source):
@@ -42,7 +42,7 @@ def balance_pine_delimiters(source):
 class TestD05(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.pine = PATHS[-1].read_text(encoding="utf8")
+        cls.pine = (ROOT / "remura_shark_cvd_fx_v05.pine").read_text(encoding="utf8")
 
     def test_balanced_delimiters_prevents_ce10015_regression(self):
         for path in PATHS:
