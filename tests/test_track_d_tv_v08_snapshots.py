@@ -97,7 +97,7 @@ class TestPrivateD08Snapshots(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "OUTSIDE"):
             mod.ingest(self.csv, SRC.parent / "private_ledger.json", RECEIVED1, baseline=True)
         with self.assertRaisesRegex(ValueError, "confirmed candle after"):
-            mod.ingest(self.csv, self.ledger, datetime.fromisoformat("2026-11-10T12:21:00+01:00"), baseline=True)
+            mod.ingest(self.csv, self.ledger, datetime.fromisoformat("2026-11-10T12:26:00+01:00"), baseline=True)
         write_csv(self.csv, [candle(0, cvd=True)])
         with self.assertRaisesRegex(ValueError, "without price-only"):
             mod.ingest(self.csv, self.ledger, RECEIVED1, baseline=True)
