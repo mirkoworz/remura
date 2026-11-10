@@ -1,0 +1,210 @@
+//@version=6
+// REMURA Track D D0.7 | 2026-11-10 Europe/Rome | RESEARCH ONLY
+// EURUSD Forex FXCM-labelled FX:EURUSD tick-volume proxy, not futures aggressor.
+// D0.6 remains frozen as the validated delta-replication reference.
+// D0.7 adds contextual continuity + causal segment-pivot research. NO alerts.
+indicator("REMURA Shark CVD D0.7 | SEGMENT RESEARCH", shorttitle="REMURA CVD D0.7", overlay=false)
+
+const string FEED = "FX:EURUSD"
+const string MODEL = "remura_fx_1m_segment_d0.7"
+int leftBars = input.int(2, "Pivot: barre sinistre", minval=1, maxval=10)
+int rightBars = input.int(2, "Pivot: barre destre conferma", minval=1, maxval=10)
+int minDistance = input.int(3, "Separazione minima pivot", minval=1, maxval=100)
+int maxDistance = input.int(72, "Separazione massima pivot", minval=3, maxval=250)
+int warmupBars = input.int(12, "Warmup barre 5m consecutive", minval=6, maxval=250)
+int minPriceTicks = input.int(5, "Differenza minima prezzo (tick)", minval=1, maxval=1000)
+float minCvdDiff = input.float(10.0, "Differenza minima CVD (volumi feed)", minval=0.0, step=1.0)
+bool showStudyMarkers = input.bool(true, "Mostra ipotesi divergenza (solo STUDIO)")
+
+string chartId = ticker.standard(syminfo.main_tickerid)
+bool chartOk = chartId == FEED and timeframe.isminutes and timeframe.multiplier == 5
+[fxHigh, fxLow, fxTime, fxDay, fxClose, fxTick] = request.security(FEED, "5", [high, low, time, time("D"), close, syminfo.mintick], gaps=barmerge.gaps_on, lookahead=barmerge.lookahead_off, ignore_invalid_symbol=true)
+[t1, o1, c1, v1] = request.security_lower_tf(FEED, "1", [time, open, close, volume], ignore_invalid_symbol=true)
+bool newDay = not na(fxDay) and (na(fxDay[1]) or fxDay != fxDay[1])
+
+var float lastMinuteClose = na
+var int lastSign = 0
+var float dayCvd = 0.0
+var bool validDay = false
+var int invalidBarsToday = 0
+var int previousBarMs = na
+var int previousDayKey = na
+var bool previousBarValid = false
+var int segmentId = 0
+var int segmentBars = 0
+var float segmentCvd = 0.0
+var int latestIntraCount = 0
+var string qualityReason = "ATTESA CANDELA 5M CHIUSA"
+var float lastGoodDelta = na
+var int lastGoodCloseMs = na
+
+float complete5m = na
+float continuousPrev = na
+float rawDelta5m = na
+float trustworthyDelta5m = na
+float segmentSeries = na
+float validDaySeries = na
+float eligiblePivot = na
+int activeSegment = na
+
+if chartOk and barstate.isconfirmed
+    if newDay
+        validDay := not na(fxTime) and fxTime == fxDay
+        dayCvd := 0.0
+        invalidBarsToday := 0
+        previousBarValid := false
+        lastMinuteClose := na
+        lastSign := 0
+
+    int n = array.size(t1)
+    latestIntraCount := n
+    bool good = true
+    string reason = "OK"
+    if na(fxTime)
+        good := false
+        reason := "PREZZI_5M_ASSENTI"
+    else if fxTime != time
+        good := false
+        reason := "TIMESTAMP_5M_ERRATO"
+    else if n != 5
+        good := false
+        reason := "INTRABAR_" + str.tostring(n) + "_SU_5"
+    else if array.size(o1) != n or array.size(c1) != n or array.size(v1) != n
+        good := false
+        reason := "ARRAY_1M_INCOERENTI"
+
+    // Context continuity is stricter than bar quality: the FIRST good bar
+    // after a gap is observable but its direction tie-break is untrusted.
+    bool continuous = good and previousBarValid and not newDay and not na(previousBarMs) and fxTime - previousBarMs == 300000 and fxDay == previousDayKey
+    complete5m := good ? 1.0 : 0.0
+    continuousPrev := good ? (continuous ? 1.0 : 0.0) : na
+
+    if not continuous
+        lastMinuteClose := na
+        lastSign := 0
+
+    float d = 0.0
+    if good
+        for i = 0 to n - 1
+            int tm = array.get(t1, i)
+            float o = array.get(o1, i)
+            float c = array.get(c1, i)
+            float v = array.get(v1, i)
+            if tm != fxTime + i * 60000
+                good := false
+                reason := "ORARIO_1M_NON_CONTIGUO"
+                break
+            if na(o) or na(c) or na(v) or v < 0
+                good := false
+                reason := "PREZZO_VOLUME_1M_ND"
+                break
+            int sign = c > o ? 1 : c < o ? -1 : na(lastMinuteClose) ? lastSign : c > lastMinuteClose ? 1 : c < lastMinuteClose ? -1 : lastSign
+            d += sign * v
+            lastMinuteClose := c
+            lastSign := sign
+
+    // If the intrabar loop fails, invalidate both quality flags.
+    if not good
+        continuous := false
+        complete5m := 0.0
+        continuousPrev := na
+        validDay := false
+        invalidBarsToday += 1
+        segmentBars := 0
+        segmentCvd := 0.0
+        lastMinuteClose := na
+        lastSign := 0
+    else
+        rawDelta5m := d
+        lastGoodDelta := d
+        lastGoodCloseMs := fxTime + 300000
+        if not continuous
+            segmentId += 1
+            segmentBars := 1
+            // Exclude first uncertain delta from clean segment cumulative:
+            // it can disagree with the native CVD after a data hole.
+            segmentCvd := 0.0
+        else
+            segmentBars += 1
+            segmentCvd += d
+            trustworthyDelta5m := d
+
+        if segmentBars >= 2
+            segmentSeries := segmentCvd
+
+        if validDay
+            dayCvd += d
+            validDaySeries := dayCvd
+
+    previousBarValid := good
+    previousBarMs := fxTime
+    previousDayKey := fxDay
+    qualityReason := reason
+    activeSegment := segmentId
+    eligiblePivot := good and continuous and segmentBars >= warmupBars ? 1.0 : 0.0
+
+// The price pivot is confirmed on the current (rightmost) bar.
+// Evaluate the CVD at the SAME price-pivot candle, never search future data.
+float pricePivotLow = ta.pivotlow(fxLow, leftBars, rightBars)
+float pricePivotHigh = ta.pivothigh(fxHigh, leftBars, rightBars)
+var float previousLowPrice = na
+var float previousLowCvd = na
+var int previousLowIndex = na
+var int previousLowSeg = na
+var float previousHighPrice = na
+var float previousHighCvd = na
+var int previousHighIndex = na
+var int previousHighSeg = na
+bool bullishStudy = false
+bool bearishStudy = false
+
+// A candidate is allowed only after warmup, on a fully contiguous segment
+// containing both the old and new price pivots and their confirmation bars.
+if chartOk and barstate.isconfirmed and eligiblePivot == 1.0 and activeSegment == activeSegment[rightBars] and activeSegment == activeSegment[rightBars + leftBars] and eligiblePivot[rightBars] == 1.0
+    int pointIndex = bar_index - rightBars
+    float pointCvd = segmentSeries[rightBars]
+    if not na(pointCvd)
+        if not na(pricePivotLow)
+            float p = fxLow[rightBars]
+            int dist = na(previousLowIndex) ? 0 : pointIndex - previousLowIndex
+            bullishStudy := showStudyMarkers and not na(previousLowPrice) and previousLowSeg == activeSegment and dist >= minDistance and dist <= maxDistance and p < previousLowPrice - minPriceTicks * fxTick and pointCvd > previousLowCvd + minCvdDiff
+            previousLowPrice := p
+            previousLowCvd := pointCvd
+            previousLowIndex := pointIndex
+            previousLowSeg := activeSegment
+        if not na(pricePivotHigh)
+            float p = fxHigh[rightBars]
+            int dist = na(previousHighIndex) ? 0 : pointIndex - previousHighIndex
+            bearishStudy := showStudyMarkers and not na(previousHighPrice) and previousHighSeg == activeSegment and dist >= minDistance and dist <= maxDistance and p > previousHighPrice + minPriceTicks * fxTick and pointCvd < previousHighCvd - minCvdDiff
+            previousHighPrice := p
+            previousHighCvd := pointCvd
+            previousHighIndex := pointIndex
+            previousHighSeg := activeSegment
+
+// The partial segment is not a complete daily CVD, and study markers are
+// NOT validated trading signals. No alert()/strategy.* calls are present.
+plot(chartOk ? validDaySeries : na, "CVD GIORNALIERO INTEGRO", color=color.teal, linewidth=2, style=plot.style_linebr)
+plot(chartOk ? segmentSeries : na, "CVD SEGMENTO PARZIALE (NO TRADE)", color=color.orange, linewidth=2, style=plot.style_linebr)
+hline(0, "Zero", color=color.gray, linestyle=hline.style_dotted)
+plotshape(bullishStudy ? segmentSeries : na, title="IPOTESI bullish SOLO STUDIO", style=shape.triangleup, location=location.absolute, color=color.lime, size=size.small, text="ST+")
+plotshape(bearishStudy ? segmentSeries : na, title="IPOTESI bearish SOLO STUDIO", style=shape.triangledown, location=location.absolute, color=color.red, size=size.small, text="ST-")
+plot(chartOk ? rawDelta5m : na, "DELTA_5M_GREZZO_COMPLETO", display=display.data_window, precision=2)
+plot(chartOk ? trustworthyDelta5m : na, "DELTA_5M_CONTINUO_VERIFICATO", display=display.data_window, precision=2)
+plot(chartOk ? complete5m : na, "QUALITA_5M_COMPLETA", display=display.data_window, precision=0)
+plot(chartOk ? continuousPrev : na, "CONTINUITA_PRECEDENTE_5M", display=display.data_window, precision=0)
+plot(chartOk ? eligiblePivot : na, "SEGMENTO_ELIGIBILE_STUDIO", display=display.data_window, precision=0)
+plot(chartOk and barstate.isconfirmed ? (bullishStudy ? 1.0 : 0.0) : na, "EVENTO_STUDIO_RIALZISTA", display=display.data_window, precision=0)
+plot(chartOk and barstate.isconfirmed ? (bearishStudy ? 1.0 : 0.0) : na, "EVENTO_STUDIO_RIBASSISTA", display=display.data_window, precision=0)
+bgcolor(not chartOk ? color.new(color.orange, 83) : validDay ? na : color.new(color.orange, 94), title="Storico solo parziale")
+
+var table diag = table.new(position.top_right, 1, 8, border_width=1)
+if barstate.islast
+    string state = not chartOk ? "D0.7 | SOLO FX:EURUSD 5m" : segmentBars < warmupBars ? "D0.7 | WARMUP / NO TRADE" : "D0.7 | RICERCA SEGMENTO (NO TRADE)"
+    table.cell(diag, 0, 0, state, text_color=color.orange, bgcolor=color.new(color.black, 15))
+    table.cell(diag, 0, 1, "Fonte: " + FEED + " | grafico " + chartId + " | TF=" + timeframe.period, text_color=color.white, bgcolor=color.new(color.black, 15))
+    table.cell(diag, 0, 2, "Ultimi intrabar 1m: " + str.tostring(latestIntraCount) + "/5 | " + qualityReason, text_color=color.aqua, bgcolor=color.new(color.black, 15))
+    table.cell(diag, 0, 3, "Contesto precedente: " + (continuousPrev == 1 ? "CONTINUO" : "NON VERIFICATO"), text_color=color.yellow, bgcolor=color.new(color.black, 15))
+    table.cell(diag, 0, 4, "Segmento #" + str.tostring(segmentId) + " | barre " + str.tostring(segmentBars) + " | warmup " + str.tostring(warmupBars), text_color=color.white, bgcolor=color.new(color.black, 15))
+    table.cell(diag, 0, 5, "5m incomplete oggi: " + str.tostring(invalidBarsToday) + " | giornaliero: " + (validDay ? "VALIDO" : "PARZIALE"), text_color=color.white, bgcolor=color.new(color.black, 15))
+    table.cell(diag, 0, 6, "Ultimo delta grezzo: " + (na(lastGoodDelta) ? "N/D" : str.tostring(lastGoodDelta, "#.##")), text_color=color.white, bgcolor=color.new(color.black, 15))
+    table.cell(diag, 0, 7, "Ultima 5m completa: " + (na(lastGoodCloseMs) ? "N/D" : str.format_time(lastGoodCloseMs, "dd/MM HH:mm", "Europe/Rome")), text_color=color.white, bgcolor=color.new(color.black, 15))
