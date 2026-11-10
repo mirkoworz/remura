@@ -1,4 +1,10 @@
-# REMURA — NQ options-level research v0.1 — 10 novembre 2026
+# REMURA — NQ Delta Profile / Effort vs Result — ricerca v0.5 — 10 novembre 2026
+
+**RETTIFICA PRIORITARIA (10/11, comunicazione diretta del trader):** le zone derivano da **picchi di Delta** sui profili di periodo e dalla loro interpretazione **sforzo vs risultato**. Sono stati nominati `Current Monthly`, `Previous Monthly`, `Week`, `Monthly`, con enfasi sui **profili current**. Questo è ora il candidato principale. Le ipotesi precedenti (GEX, OI, Expected Move, PVP, VWAP) rimangono storia del percorso e possibili confluences, **NON il metodo attribuito al trader**. Leggere prima: [DELTA-EFFORT-RESULT-PROTOCOL.md](DELTA-EFFORT-RESULT-PROTOCOL.md).
+
+---
+
+## Archivio ipotesi precedente: ricerca opzioni v0.1 — 10 novembre 2026
 
 **ISOLATO / SOLO RICERCA.** Nessuna modifica a main, REMURA live, Oracle, collector o filoni A/B/C.
 

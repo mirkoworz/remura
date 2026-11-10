@@ -1,5 +1,8 @@
 # REMURA NQ — Evidenza ATAS: screenshot 10 novembre 2026 (checkpoint 0.3)
 
+> **AGGIORNAMENTO / RETTIFICA v0.5 — 10/11/2026:** il trader ha chiarito direttamente che i livelli vengono dai **picchi di Delta** e dal loro **sforzo/risultato**, osservando profili `Current Monthly`, `Previous Monthly`, `Week`, `Monthly`, soprattutto i `current`. Le interpretazioni precedenti sulle opzioni come origine dei sei livelli sono superate; PVP/VWAP rimangono possibili strumenti accessori, non conferma della formula delle zone. Si conserva sotto l'audit storico ma la priorita' e' documentata in [DELTA-EFFORT-RESULT-PROTOCOL.md](DELTA-EFFORT-RESULT-PROTOCOL.md).
+
+
 **Fonte:** immagine ricevuta nel dialogo dall'utente dopo i livelli NQ del 10/11; screenshot grezzo non committato, e nessun livello Telegram privato ripubblicato.
 
 ## Leggibile nello screenshot
