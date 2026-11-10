@@ -1,11 +1,12 @@
 //@version=6
-// REMURA / Track D / research only / D0.1 (2026-11-09, Europe/Rome)
+// REMURA / Track D / research only / D0.2 (2026-11-10 07:14 Europe/Rome)
+// D0.2: avoid wrong-positive hard stop on symbol/timeframe; show diagnostics.
 // FXCM spot-Forex tick-volume PROXY. NOT CME aggressor volume.
 // No orders, no entries, no SL/TP, no claims of profitable edge.
 // Intended chart: FXCM:EURUSD, 5 minutes; 1-minute intrabars.
-indicator("REMURA Shark CVD D0.1 | FXCM proxy | RESEARCH", shorttitle="REMURA CVD D0.1", overlay=false, max_labels_count=100)
+indicator("REMURA Shark CVD D0.2 | FXCM proxy | RESEARCH", shorttitle="REMURA CVD D0.2", overlay=false, max_labels_count=100)
 
-const string MODEL = "remura_fxcm_1m_cvd_d0.1"
+const string MODEL = "remura_fxcm_1m_cvd_d0.2"
 int leftBars = input.int(2, "Pivot barre sinistre", minval=1, maxval=10)
 int rightBars = input.int(2, "Pivot barre destre (conferma)", minval=1, maxval=10)
 int minDistance = input.int(3, "Distanza minima pivot (barre)", minval=1, maxval=100)
@@ -14,9 +15,18 @@ int minPriceTicks = input.int(5, "Nuovo estremo minimo (tick di prezzo)", minval
 float minCvdDifference = input.float(10.0, "Differenza CVD minima (unita' volume FXCM)", minval=0.0, step=1.0)
 bool sendResearchAlerts = input.bool(false, "Abilita alert di RICERCA (no trade)")
 
-// Hard guard: avoid accidentally analyzing a different provider or interval.
-if syminfo.prefix != "FXCM" or syminfo.ticker != "EURUSD" or timeframe.period != "5"
-    runtime.error("Track D D0.1: aprire FXCM:EURUSD sul grafico a 5 minuti.")
+// Use TradingView's canonical chart identifier (ignores display modifiers).
+// Never halt the entire indicator on bar 0: display the observed identifiers
+// instead so an iPhone screenshot can reveal the actual source of a mismatch.
+string chartId = ticker.standard(syminfo.main_tickerid)
+bool chartIsFxcmEurusd = chartId == "FXCM:EURUSD"
+bool chartIsFiveMinutes = timeframe.isminutes and timeframe.multiplier == 5
+bool chartOk = chartIsFxcmEurusd and chartIsFiveMinutes
+var table sourceDiag = table.new(position.top_right, 1, 2, border_width=1)
+if barstate.islast
+    table.cell(sourceDiag, 0, 0, chartOk ? "REMURA D0.2 | FXCM 5m OK" : "REMURA D0.2 | SORGENTE/TIMEFRAME ERRATO", text_color=chartOk ? color.lime : color.orange, bgcolor=color.new(color.black, 20))
+    table.cell(sourceDiag, 0, 1, "Letto: " + chartId + " | TF=" + timeframe.period, text_color=color.white, bgcolor=color.new(color.black, 20))
+
 
 // This is aggregated 1-minute direction inference, NOT tick-by-tick aggressor data.
 // Available lower-timeframe history is limited by TradingView plan/feed.
@@ -35,7 +45,7 @@ float cvd = na
 bool completeBar = false
 
 // Commit state only on confirmed 5m bars, avoiding provisional intrabar alerts.
-if barstate.isconfirmed
+if barstate.isconfirmed and chartOk
     if newDay
         runningCvd := 0.0
         previousIntrabarClose := na
@@ -111,7 +121,7 @@ int secondPivotMs = na
 
 // Pivot is known on the RIGHT confirmation bar; marker/alert stay there,
 // never artificially offset backward to its historical pivot candle.
-if barstate.isconfirmed and completeSession and not na(cvd) and completeBars >= leftBars + rightBars + 2
+if chartOk and barstate.isconfirmed and completeSession and not na(cvd) and completeBars >= leftBars + rightBars + 2
     int pivotDay = dayKey[rightBars]
     int pivotIndex = bar_index - rightBars
     int pivotMs = time[rightBars]
@@ -151,17 +161,17 @@ if barstate.isconfirmed and completeSession and not na(cvd) and completeBars >= 
             lastHighDay := dayKey
             lastHighMs := pivotMs
 
-plot(cvd, "CVD FXCM stimato (1m)", color=color.teal, linewidth=2)
+plot(chartOk ? cvd : na, "CVD FXCM stimato (1m)", color=color.teal, linewidth=2)
 hline(0, "Zero", color=color.gray, linestyle=hline.style_dotted)
-plotshape(bull ? cvd : na, "Divergenza rialzista confermata (RICERCA)", shape.triangleup, location.absolute, color.lime, size=size.small, text="DIV+")
-plotshape(bear ? cvd : na, "Divergenza ribassista confermata (RICERCA)", shape.triangledown, location.absolute, color.red, size=size.small, text="DIV-")
-bgcolor(barstate.isconfirmed and not completeSession ? color.new(color.orange, 88) : na, title="Sessione incompleta: NO SIGNAL")
+plotshape(chartOk and bull ? cvd : na, "Divergenza rialzista confermata (RICERCA)", shape.triangleup, location.absolute, color.lime, size=size.small, text="DIV+")
+plotshape(chartOk and bear ? cvd : na, "Divergenza ribassista confermata (RICERCA)", shape.triangledown, location.absolute, color.red, size=size.small, text="DIV-")
+bgcolor(not chartOk ? color.new(color.orange, 85) : barstate.isconfirmed and not completeSession ? color.new(color.orange, 88) : na, title="Sessione incompleta: NO SIGNAL")
 
 // Dynamic JSON is emitted only if explicitly enabled AND a confirmed divergence
 // occurs on a closed realtime bar. TradingView alert/webhook must be set up manually.
 // No endpoint, credential, or personal data is embedded in this script.
-if sendResearchAlerts and barstate.isrealtime and barstate.isconfirmed and (bull or bear)
+if chartOk and sendResearchAlerts and barstate.isrealtime and barstate.isconfirmed and (bull or bear)
     string eventType = bull ? "BULLISH_REGULAR" : "BEARISH_REGULAR"
     string eventId = MODEL + "|" + syminfo.tickerid + "|5|" + eventType + "|" + str.tostring(secondPivotMs)
-    string payload = '{"schema":"remura-research-d0.1","mode":"RESEARCH_ONLY","algorithm":"' + MODEL + '","source":"TV_FXCM_TICK_VOLUME_PROXY_1M","event_id":"' + eventId + '","symbol":"' + syminfo.tickerid + '","timeframe":"5","type":"' + eventType + '","detected_bar_close_ms":' + str.tostring(time_close) + ',"pivot1_ms":' + str.tostring(firstPivotMs) + ',"pivot2_ms":' + str.tostring(secondPivotMs) + ',"pivot1_price":' + str.tostring(firstPivotPrice, format.mintick) + ',"pivot2_price":' + str.tostring(secondPivotPrice, format.mintick) + ',"pivot1_cvd":' + str.tostring(firstPivotCvd) + ',"pivot2_cvd":' + str.tostring(secondPivotCvd) + ',"current_price":' + str.tostring(close, format.mintick) + ',"current_cvd":' + str.tostring(cvd) + ',"delta_5m":' + str.tostring(barDelta) + '}'
+    string payload = '{"schema":"remura-research-d0.2","mode":"RESEARCH_ONLY","algorithm":"' + MODEL + '","source":"TV_FXCM_TICK_VOLUME_PROXY_1M","event_id":"' + eventId + '","symbol":"' + syminfo.tickerid + '","timeframe":"5","type":"' + eventType + '","detected_bar_close_ms":' + str.tostring(time_close) + ',"pivot1_ms":' + str.tostring(firstPivotMs) + ',"pivot2_ms":' + str.tostring(secondPivotMs) + ',"pivot1_price":' + str.tostring(firstPivotPrice, format.mintick) + ',"pivot2_price":' + str.tostring(secondPivotPrice, format.mintick) + ',"pivot1_cvd":' + str.tostring(firstPivotCvd) + ',"pivot2_cvd":' + str.tostring(secondPivotCvd) + ',"current_price":' + str.tostring(close, format.mintick) + ',"current_cvd":' + str.tostring(cvd) + ',"delta_5m":' + str.tostring(barDelta) + '}'
     alert(payload, alert.freq_all)
