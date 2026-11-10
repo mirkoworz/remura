@@ -138,8 +138,17 @@ class TestPineSafetyContract(unittest.TestCase):
     def test_pine_kept_out_of_live_and_research_alert_opt_in(self):
         pine = (Path(__file__).resolve().parents[1]
                 / "experiments" / "tradingview" / "remura_shark_cvd_fxcm_v01.pine").read_text()
-        self.assertIn('syminfo.prefix != "FXCM"', pine)
-        self.assertIn('timeframe.period != "5"', pine)
+        # D0.1 compiled on TradingView but failed at bar 0 because a hard
+        # identity/timeframe guard fired. D0.2 is diagnostic and fail-closed:
+        # no fake results, no research alerts on unsupported chart.
+        self.assertIn('ticker.standard(syminfo.main_tickerid)', pine)
+        self.assertIn('chartId == "FXCM:EURUSD"', pine)
+        self.assertIn('timeframe.isminutes and timeframe.multiplier == 5', pine)
+        self.assertIn('if chartOk and sendResearchAlerts', pine)
+        self.assertIn('if barstate.isconfirmed and chartOk', pine)
+        self.assertIn('SORGENTE/TIMEFRAME ERRATO', pine)
+        self.assertIn('"REMURA CVD D0.2"', pine)
+        self.assertNotIn('runtime.error(', pine)
         self.assertIn('input.bool(false, "Abilita alert', pine)
         self.assertIn('barstate.isconfirmed', pine)
         self.assertIn('request.security_lower_tf', pine)
