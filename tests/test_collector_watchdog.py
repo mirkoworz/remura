@@ -6,16 +6,16 @@ import unittest
 from unittest.mock import Mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-from collector_watchdog import RECENT_MINUTES, SCHEMA, snapshot
+from collector_watchdog import CYCLE_GAP_MINUTES, CycleProgress, RECENT_MINUTES, SCHEMA, snapshot
 
 UTC = dt.timezone.utc
 NOW = dt.datetime(2026, 11, 9, 9, 15, tzinfo=UTC)
 
 
 class WatchdogOfflineTests(unittest.TestCase):
-    def snap(self, *, enabled=True, thread=None, stamp=None, now=NOW):
+    def snap(self, *, enabled=True, thread=None, stamp=None, now=NOW, progress=None):
         return snapshot(enabled=enabled, thread=thread,
-                        last_success=stamp, now=now)
+                        last_success=stamp, now=now, progress=progress)
 
     def test_schema_is_explicit_and_never_enables_restart(self):
         out = self.snap(enabled=False)
@@ -97,12 +97,104 @@ class WatchdogOfflineTests(unittest.TestCase):
     def test_no_credentials_or_private_values_in_result(self):
         out = self.snap(thread=Mock(is_alive=lambda: True),
                         stamp="sensitive-token-should-not-be-printed")
-        self.assertEqual(set(out), {"schema", "threadState", "latestBatch", "batchAgeMinutes", "autoRestart", "action"})
+        self.assertEqual(set(out), {"schema", "threadState", "latestBatch", "batchAgeMinutes", "progressState", "progressAgeMinutes", "autoRestart", "action"})
         self.assertNotIn("sensitive-token", str(out))
 
     def test_naive_reference_time_rejected(self):
         with self.assertRaises(ValueError):
             self.snap(thread=Mock(is_alive=lambda: True), now=dt.datetime(2026, 11, 9))
+
+
+class FakeClock:
+    def __init__(self, seconds=1000):
+        self.seconds = seconds
+
+    def __call__(self):
+        return self.seconds
+
+
+class ProgressWatchdogOfflineTests(unittest.TestCase):
+    def snapshot(self, progress, *, enabled=True, alive=True):
+        return snapshot(enabled=enabled, thread=Mock(is_alive=lambda: alive),
+                        last_success=None, now=NOW, progress=progress)
+
+    def test_incomplete_first_cycle_uses_start_time_not_stale_prices(self):
+        clock = FakeClock()
+        progress = CycleProgress(clock=clock)
+        out = self.snapshot(progress)
+        self.assertEqual(out["progressState"], "awaiting_first_cycle")
+        self.assertEqual(out["progressAgeMinutes"], 0)
+        self.assertEqual(out["latestBatch"], "unknown")
+        clock.seconds += (CYCLE_GAP_MINUTES + 1) * 60
+        self.assertEqual(self.snapshot(progress)["progressState"], "first_cycle_overdue")
+
+    def test_completed_cycle_uses_monotonic_progress_even_without_saved_prices(self):
+        clock = FakeClock()
+        progress = CycleProgress(clock=clock)
+        clock.seconds += 10 * 60
+        progress.mark_completed()
+        clock.seconds += 3 * 60
+        out = self.snapshot(progress)
+        self.assertEqual(out["progressState"], "recent_cycle")
+        self.assertEqual(out["progressAgeMinutes"], 3)
+        self.assertEqual(out["latestBatch"], "unknown")
+
+    def test_alive_thread_without_completed_cycle_in_over_one_hour_is_advisory(self):
+        clock = FakeClock()
+        progress = CycleProgress(clock=clock)
+        progress.mark_completed()
+        clock.seconds += (CYCLE_GAP_MINUTES + 1) * 60
+        out = self.snapshot(progress)
+        self.assertEqual(out["threadState"], "running")
+        self.assertEqual(out["progressState"], "no_recent_cycle")
+        self.assertFalse(out["autoRestart"])
+        self.assertEqual(out["action"], "observe_only")
+
+    def test_stopped_thread_takes_precedence_over_old_cycle_age(self):
+        clock = FakeClock()
+        progress = CycleProgress(clock=clock)
+        progress.mark_completed()
+        clock.seconds += 100 * 60
+        out = self.snapshot(progress, alive=False)
+        self.assertEqual(out["progressState"], "stopped")
+        self.assertIsNone(out["progressAgeMinutes"])
+
+    def test_disabled_worker_does_not_read_progress(self):
+        clock = Mock()
+        progress = CycleProgress(clock=lambda: 2)
+        progress._clock = clock
+        out = self.snapshot(progress, enabled=False)
+        self.assertEqual(out["progressState"], "disabled")
+        clock.assert_not_called()
+
+    def test_unknown_progress_omits_unverified_claim(self):
+        out = self.snapshot(progress=None)
+        self.assertEqual(out["progressState"], "unknown")
+        self.assertIsNone(out["progressAgeMinutes"])
+
+    def test_bad_or_rolling_backward_monotonic_clock_fails_closed(self):
+        clock = FakeClock()
+        progress = CycleProgress(clock=clock)
+        clock.seconds -= 3
+        self.assertEqual(self.snapshot(progress)["progressState"], "unknown")
+        clock.seconds = float("nan")
+        self.assertEqual(self.snapshot(progress)["progressState"], "unknown")
+
+    def test_monitoring_failure_never_aborts_a_real_batch(self):
+        clock = FakeClock()
+        progress = CycleProgress(clock=clock)
+        def broken():
+            raise RuntimeError("internal-monitor-error")
+        progress._clock = broken
+        progress.mark_completed()
+        self.assertEqual(self.snapshot(progress)["progressState"], "unknown")
+
+    def test_mark_only_after_completed_cycle(self):
+        clock = FakeClock()
+        progress = CycleProgress(clock=clock)
+        self.assertEqual(progress.age_minutes(), (0, False))
+        progress.mark_completed()
+        self.assertEqual(progress.age_minutes(), (0, True))
 
 
 if __name__ == "__main__":
