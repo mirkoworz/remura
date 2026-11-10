@@ -4,6 +4,13 @@
 
 **Ramo:** `experiment/track-d-tv-fxcm-cvd-20261109`. Nessun merge, deploy, servizio, connettore VPS, endpoint pubblico o nuova API. Non cambiare versione applicativa LIVE: un esperimento Pine non è un aggiornamento delle nove pagine REMURA.
 
+## 10/11/2026 — Impostazioni CVD nativo verificate (due screenshot PC)
+
+- [x] Scheda **Input** CVD originale TradingView: `Periodo di riferimento = 1 giorno`. Il menu a tendina aperto mostra `Grafico`, `1 tick`, `10 tick`, `100 tick`, `1000 tick`, secondi e `1 minuto`: si tratta delle alternative per il **periodo di ancoraggio/reset**, NON della granularità intrabar né del selettore `Tick-based calculation`. NON selezionare 1 tick/1 minuto per tentare di aumentarne la precisione.
+- [x] Documentazione ufficiale TradingView ENG (aggiornata 2026): il CVD aggregato su timeframe di grafico in **minuti/ore** sceglie automaticamente **1 minuto** come timeframe intrabar; lo stesso passo di REMURA D0.5 su `FX:EURUSD` 5m. La modalità tick-based è separata e non emerge dalla scheda Input dell'utente; TradingView dice che è disabilitata per default e compare soltanto con accesso/simbolo compatibili. Fonte: https://www.tradingview.com/support/solutions/43000725058-cumulative-volume-delta/.
+- [ ] **D1b successivo:** mantenere CVD originale con riferimento **1 giorno**, senza modifiche. Verificare se nella legenda del CVD compare `Tick-based`/metodo; documentare screenshot. Confrontare solo **barre 5m chiuse**, stessa data e stesso feed, i *delta incrementali* (`CVD native close - previous close`) con `delta_5m` calcolato da Pine. L'azzeramento o segmentazione del CVD parziale REMURA rende i valori cumulati assoluti NON direttamente comparabili.
+- [ ] Nessuna certificazione di uguaglianza numerica, qualità istituzionale, profitto o segnale live. Nessun costo aggiuntivo; PR #100 continua DRAFT.
+
 ## 10/11/2026 — Confronto visivo D0.5 con CVD nativo TradingView (screenshot utente)
 
 - [x] **D1b preliminare visivo**, `FX:EURUSD` (etichetta FXCM), grafico 5m: due pannelli contemporaneamente visibili, superiore REMURA CVD D0.5, inferiore indicatore originale `CVD` di TradingView. Nei tratti intorno al 6 novembre entrambi mostrano diminuzione del cumulato; intorno al 9 novembre entrambi presentano incremento; il 10 novembre andamento più piatto. Questa è SOLO coerenza qualitativa/di direzione su un'immagine, non parità numerica, statistica, temporale o prova predittiva.
