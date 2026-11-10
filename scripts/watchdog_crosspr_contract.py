@@ -89,6 +89,7 @@ def inspect_candidate(server_source, expected_sha256):
         return {"state": "INVALID_SYNTAX", "release_authorized": False}
 
     collect = _node(tree, "collect_once")
+    collector_loop = _node(tree, "collector_loop")
     retail = _node(tree, "retail_once")
     periodic = _node(tree, "observe_periodic_squalincome")
     squal_loop = _node(tree, "squalincome_loop")
@@ -131,6 +132,17 @@ def inspect_candidate(server_source, expected_sha256):
             any(arg.arg == "collector_thread" for arg in handler.args.args)
             and _keyword_call(main, "http_handler", "collector_thread")):
         missing.append("WATCHDOG_THREAD_WIRING")
+    if not (_named_import(tree, "collector_watchdog", "CycleProgress")
+            and collector_loop and handler and main
+            and any(arg.arg == "progress" for arg in collector_loop.args.kwonlyargs)
+            and _attribute_call(collector_loop, "progress", "mark_completed")
+            and any(arg.arg == "collector_progress" for arg in handler.args.args)
+            and _keyword_call(handler, "collector_watchdog_snapshot", "progress")
+            and _call(main, "CycleProgress")
+            and (_constant(main, "progress") or
+                 _keyword_call(main, "collector_loop", "progress"))
+            and _keyword_call(main, "http_handler", "collector_progress")):
+        missing.append("WATCHDOG_CYCLE_PROGRESS")
 
     return {
         "state": "STRUCTURAL_REVIEW_REQUIRED" if not missing else "BLOCKED_MISSING_CONTRACTS",
