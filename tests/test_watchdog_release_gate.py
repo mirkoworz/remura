@@ -75,8 +75,8 @@ class WatchdogReleaseGateTests(unittest.TestCase):
 
     def test_missing_import_is_denied(self):
         removed=self.server.replace(
-            "from collector_watchdog import snapshot as collector_watchdog_snapshot",
-            "from collector_watchdog import something_else as collector_watchdog_snapshot",
+            "snapshot as collector_watchdog_snapshot",
+            "something_else as collector_watchdog_snapshot",
         )
         self.assertNotEqual(removed, self.server)
         self.assertEqual(self.check(("scripts/private_server.py","scripts/collector_watchdog.py"),
