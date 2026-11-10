@@ -1,3 +1,21 @@
+# REMURA Shark CVD — D0.5 (10/11/2026, Italia) — TEST DIAGNOSTICO
+
+**Nuovo codice:** [remura_shark_cvd_fx_v05.pine](remura_shark_cvd_fx_v05.pine)
+
+La **D0.4 compilava** dopo che l'utente ha aggiunto la parentesi mancante nella chiamata `table.cell`, ma la curva CVD è rimasta vuota. La causa non è stata ancora osservata: può dipendere dall'assenza di qualche barra 1m, da uno storico intrabar limitato, da un gap o dalla giornata incompleta. Non dedurre automaticamente che FXCM non trasmetta volume.
+
+## Prova senza costi sul PC
+
+1. Aprire EURUSD 5m esistente, TradingView lo identifica in Pine con `FX:EURUSD` (etichetta FXCM).
+2. Sostituire l'intero Pine D0.4 con [D0.5](remura_shark_cvd_fx_v05.pine), salvare e rimuovere i vecchi pannelli D0.1–D0.4; aggiungere il nuovo indicatore.
+3. Guardare il riquadro diagnostico in alto sul pannello `REMURA CVD D0.5`. Copiare/fotografare **stato**, **Barre 1m ultima 5m chiusa: x/5**, **Ultimo controllo** e **Barre parziali consecutive**.
+4. Interpretazione: **linea verde** = cumulato giornaliero completo secondo gate conservativo; **linea arancione** = solo tratto di 5m consecutive valide, ricominciato da zero dopo gap, **NO SIGNAL**; **nessuna linea** = non si è ancora formato un tratto sufficiente o manca un dato. Se `0/5`, indagheremo lo storico 1m.
+5. Lasciare l'opzione `Alert SOLO RICERCA` **disattivata**. Nessun webhook, ordine, SL/TP o collegamento cloud è abilitato.
+
+**D0.5 è da compilare nel runtime TradingView.** I test GitHub possono trovare parentesi mancanti e controllare il contratto del codice, ma non confermano né la compilazione Pine né la disponibilità dei dati. Il CVD rimane un **proxy di volume FX spot**, non volumi di contratti futures eseguiti. Nessuna nuova spesa, deploy o modifica alle nove pagine REMURA.
+
+## Versioni precedenti (archivio, non usare nel nuovo test)
+
 # REMURA Shark CVD — D0.4 (10/11/2026, Italia)
 
 **USARE D0.4:** [remura_shark_cvd_fx_v04.pine](remura_shark_cvd_fx_v04.pine). D0.1/D0.2/D0.3 sono conservate solo come esperimenti precedenti.
