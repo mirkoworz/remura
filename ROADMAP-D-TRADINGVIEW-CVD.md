@@ -1,8 +1,17 @@
 # REMURA — FILONE D: TradingView FXCM / Shark CVD (sperimentale)
 
-**Apertura:** 09/11/2026 (Europe/Rome). **Versione laboratorio:** D0.2 (10/11/2026 ore 07:14 Italia). **Stato:** D0.1 compilato su TradingView ma fermato dal controllo iniziale; D0.2 eseguito su TradingView con diagnostica funzionante: grafico attivo `FX:EURUSD`, timeframe 5m, mentre la sperimentazione richiede `FXCM:EURUSD`. Prova CVD su FXCM ancora DA VERIFICARE. NON LIVE.
+**Apertura:** 09/11/2026 (Europe/Rome). **Versione laboratorio:** D0.3 (10/11/2026, Italia). **Stato:** D0.2 diagnosticato su TradingView, ma lo screenshot 10/11 mostra `FXCM` nell'intestazione e `FX:EURUSD | TF=5` nel runtime Pine. D0.3 ora interroga direttamente **FXCM:EURUSD** per entrambe le fonti 5m/1m, runtime D0.3 **NON ANCORA VERIFICATO**. NON LIVE.
 
 **Ramo:** `experiment/track-d-tv-fxcm-cvd-20261109`. Nessun merge, deploy, servizio, connettore VPS, endpoint pubblico o nuova API. Non cambiare versione applicativa LIVE: un esperimento Pine non è un aggiornamento delle nove pagine REMURA.
+
+## 10/11/2026 — D0.3: ricerca FXCM esplicita, anziché fidarsi della testata del grafico
+
+- [x] Prova utente: nella stessa schermata la testata grafico riporta `Euro / Dollaro · 5 · FXCM`, ma la diagnostica Pine D0.2 legge `FX:EURUSD | TF=5`. La discrepanza è confermata e **non è una prova di dato FXCM nel codice**.
+- [x] Creato un **nuovo file** `experiments/tradingview/remura_shark_cvd_fxcm_v03.pine` (non modifica D0.2 storico): `FEED = "FXCM:EURUSD"` passato esplicitamente alle chiamate `request.security(FEED,"5",...)` e `request.security_lower_tf(FEED,"1",...)`; i pivot e il prezzo corrente provengono da FXCM, non dal grafico alias. `FX:EURUSD` è ammesso solo come **alias di visualizzazione**, non come provider di calcolo.
+- [x] Valida tempo barra a 5m e copertura di **tutti e cinque** i minuti da FXCM con timestamp coerenti; in caso di NA, gap, volume mancante o chart non EURUSD 5m, **NO SIGNAL**. Tabella contiene `Grafico: ...` e `DATI CALCOLATI: FXCM:EURUSD 5m+1m`. Alert manuali disabilitati, nessun ordine.
+- [ ] **D0.3 runtime gate:** sostituire D0.2 con il codice del nuovo file D0.3 nel Pine Editor, verificare compilazione, riga `DATI CALCOLATI`, pannello CVD e eventuale messaggio `DATI 1m INCOMPLETI`. Se la linea manca dopo aver bloccato correttamente la fonte, investigare gap/backfill con campioni temporizzati e senza aggirare i controlli.
+- [ ] **Parità e disciplina statistica:** provare con dati 5m realmente FXCM, confrontare CVD e pivot con lo stesso broker; annotare che un chart `FX:EURUSD` può avere candele visivamente differenti, quindi non usare i massimi/minimi visualizzati come conferma dei pivot FXCM senza riscontro numerico.
+- [ ] Nessun runtime Pine D0.3, dato di mercato, alert, webhook, profitto o costo reale è stato ancora validato. Test GitHub sono soltanto offline.
 
 ## 10/11/2026 — Riscontro runtime D0.2 (screenshot PC)
 
@@ -17,11 +26,11 @@ L'utente dispone già di TradingView Premium e della watchlist **FXCM**. Screens
 
 **Ipotesi falsificabile:** il CVD *stimato* da OHLC + volume Forex dei minuti 1m, aggregato a 5m, migliora il potere predittivo delle sole divergenze di prezzo o di una semplice baseline prezzo+ATR. Il volume FXCM può essere tick volume/volume del singolo feed, NON contratti eseguiti sull'intero Forex né aggressor side istituzionale.
 
-Diverso dal proxy cTrader `CLV × tick volume` già esistente in REMURA/PR #77: non mischiare i due indicatori, le sorgenti, le unità, le sessioni e gli orari. Il nuovo modello si chiama `remura_fxcm_1m_cvd_d0.2` (D0.1 storico non interoperabile per aggregazione scientifica).
+Diverso dal proxy cTrader `CLV × tick volume` già esistente in REMURA/PR #77: non mischiare i due indicatori, le sorgenti, le unità, le sessioni e gli orari. Il modello attivo per il prossimo test sarà `remura_fxcm_1m_cvd_d0.3`, distinto da D0.1/D0.2 storici; non mescolare gli eventi tra revisioni.
 
 ## Architettura sperimentale
 
-1. **TradingView Pine v6**, indicatore locale `experiments/tradingview/remura_shark_cvd_fxcm_v01.pine`: grafico limitato a `FXCM:EURUSD` 5m; `request.security_lower_tf(..., "1", [open,close,volume])`. Ogni minuto viene polarizzato per direzione open→close, con tie-break sull'ultimo close/direzione osservata; la somma produce un delta 5m. CVD si azzera con il nuovo giorno del feed `time("D")`.
+1. **TradingView Pine v6**, indicatore D0.3 `experiments/tradingview/remura_shark_cvd_fxcm_v03.pine`: grafico EURUSD 5m con alias grafico `FXCM:EURUSD` o `FX:EURUSD`, fonte dati **vincolata esplicitamente a `FXCM:EURUSD`** in entrambe le richieste 5m e 1m. Ogni minuto viene polarizzato per direzione open→close, con tie-break sull'ultimo close/direzione osservata; la somma produce un delta 5m. CVD si azzera con il nuovo giorno del feed `time("D")`.
 2. **Qualità prima di segnali:** valutazione soltanto a candela 5m chiusa, obbligo di cinque barre 1m disponibili, niente volume NA/negativo, niente gap tra barre 5m nella stessa giornata. Un buco invalida la sessione per il resto della giornata (fail closed). Questo è deliberatamente severo: registrare la frequenza dei blocchi, non scambiarli per assenza di opportunità. Storico 1m limitato da piano e feed; non dedurre disponibilità di intere sessioni dal solo grafico corrente.
 3. **Divergenza regolare e causale:** due minimi di prezzo (LL) con CVD più alto ai **medesimi** timestamp (HL), oppure due massimi prezzo (HH) con CVD minore (LH). Pivot 2+2 5m come impostazione iniziale; secondo pivot conoscibile solo dopo 2 barre destre: l'alert porta orario pivot e orario rilevamento distinti. Nessun confronto tra reset giornalieri.
 4. **Alert solo sperimentali:** `sendResearchAlerts=false` di default, JSON dinamico con fonte, algoritmo, tipo, ID, prezzo, CVD, tempo pivot e riconoscimento. Non contiene entrate/SL/TP/ordini. Nessun webhook viene creato o attivato da GitHub: gli alert esistono soltanto quando l'utente incolla, salva e configura Pine su TradingView e abilita esplicitamente l'opzione.
