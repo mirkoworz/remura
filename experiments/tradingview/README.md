@@ -1,3 +1,23 @@
+# REMURA Shark CVD — D0.6 | Test di parità numerica (10/11/2026, Italia)
+
+**Codice da provare:** [remura_shark_cvd_fx_v06.pine](remura_shark_cvd_fx_v06.pine) · **Roadmap:** [ROADMAP-D](../../ROADMAP-D-TRADINGVIEW-CVD.md)
+
+## Obiettivo
+
+Confrontare il **delta di una singola candela 5m** calcolato da REMURA con quello dell'indicatore `CVD` nativo TradingView. **Non confrontare i valori cumulati giornalieri direttamente**, perché i reset della nostra curva arancione differiscono. Formula nativa verificata nella documentazione TradingView: `Delta nativo della candela = Chiusura CVD - Apertura CVD`.
+
+## Procedura sul PC
+
+1. Sul grafico EURUSD FXCM (`FX:EURUSD` in Pine), 5 minuti, lascia il CVD nativo con **Periodo di riferimento = 1 giorno**. Non scegliere `1 tick`: quello è un altro periodo di ancoraggio, NON un aumento di precisione intrabar.
+2. In Pine Editor copia integralmente il nuovo file D0.6, salva e aggiungi al grafico, rimuovendo il pannello vecchio D0.5. **Nessun webhook, gli alert restano disattivati.**
+3. Nel pannello D0.6 vedrai i medesimi CVD verde (giorno integro) o arancione (segmento parziale, **NO SIGNAL**). La tabella mostra due righe nuove: `Ultimo DELTA 5M verificato` e `Candela chiusa` in ora italiana; servono solo per confermare che il calcolo gira.
+4. Apri la **Finestra dati** (Data Window) di TradingView. Posiziona il cursore su **una candela 5m già chiusa**, non l'ultima in formazione. Per lo stesso timestamp, sotto REMURA leggi `DELTA 5M REMURA verificato` e `QUALITA 5M (1 valida / 0 incompleta)`; sotto CVD nativo leggi i valori **Open** e **Close** della candela CVD.
+5. Ripeti su 3–5 candele chiuse preferibilmente dello stesso giorno; mandami screenshot della Finestra dati e orario cursore. Useremo `Close CVD - Open CVD` per confrontarlo al valore REMURA. Se qualità è 0 o N/D, **non** comparare: registra la candela come incompleta.
+
+Il Pine D0.6 **non è ancora compilato nel runtime TradingView**. GitHub Actions testa soltanto le proprietà statiche del codice e un modello di riferimento, non l'API live. Una differenza numerica potrebbe dipendere dal metodo di classificazione/tie-break, dall'accesso allo storico 1m, dal modello del provider o dal CVD nativo tick-based (da verificare separatamente). Nessuno di questi controlli dimostra un vantaggio statistico. Non generare ingressi, SL/TP, notifiche né ordini.
+
+## Archivio esperimenti precedenti (D0.1–D0.5)
+
 # REMURA Shark CVD — D0.5 (10/11/2026, Italia) — TEST DIAGNOSTICO
 
 **Nuovo codice:** [remura_shark_cvd_fx_v05.pine](remura_shark_cvd_fx_v05.pine)
