@@ -1,3 +1,21 @@
+# REMURA Shark CVD — TEST D0.7 · 10 novembre 2026 (Filone D)
+
+**Codice nuovo da provare:** [remura_shark_cvd_fx_v07.pine](remura_shark_cvd_fx_v07.pine) · [Roadmap D](../../ROADMAP-D-TRADINGVIEW-CVD.md)
+
+**Perché questa revisione:** nel CSV D0.6 (7.388 candele) il delta era identico a TradingView su 4.667/4.667 candele complete precedute da una completa contigua. Le 5 differenze osservate tra tutte le 4.702 candele complete arrivavano subito dopo dati 1m incompleti. D0.7 conserva il valore grezzo, ma mette una bandierina di **continuità precedente**: il primo 5m dopo un buco NON può confermare una divergenza.
+
+## Prova TradingView dal PC (nessun nuovo acquisto)
+
+1. Sul grafico TradingView **Euro/Dollaro FXCM** identificato da Pine come `FX:EURUSD`, sempre **5 minuti**, apri Pine Editor, incolla il **file intero D0.7**, salva e aggiungilo al grafico. Puoi lasciare l'indicatore CVD nativo con ancoraggio `1 giorno`; rimuovi il precedente REMURA D0.6 dal pannello per evitare doppioni.
+2. Leggi la tabella del nuovo **REMURA CVD D0.7**. Cerca la riga `Ultimi intrabar 1m: 5/5 | OK`, il campo `Contesto precedente: CONTINUO` e `Segmento #... | barre ... | warmup 12`.
+3. Nel **Data Window** sono presenti `QUALITA_5M_COMPLETA` (0/1), `CONTINUITA_PRECEDENTE_5M` (0/1/NA), `DELTA_5M_GREZZO_COMPLETO` e `DELTA_5M_CONTINUO_VERIFICATO`. Quando `QUALITA=1` ma `CONTINUITA=0`, il delta grezzo rimane visibile, quello affidabile rimane vuoto: comportamento corretto e deliberato.
+4. La curva **arancione** è soltanto il cumulato ricostruito di un segmento, mai una giornata completa se ci sono buchi. I simboli `ST+` e `ST-` sono **ipotesi di divergenza per ricerca**, riconosciute a pivot prezzo confermato (non retrodatate), solo dopo un warmup preimpostato di 12 barre consecutive. Non costituiscono suggerimenti di trading.
+5. Mandami una foto della tabella e del grafico o, se compare un errore, il messaggio e la riga Pine. La compilazione/esecuzione D0.7 su TradingView **NON è ancora verificata**. I test GitHub Actions sono test offline, non compilano Pine.
+
+**Sicurezza:** D0.7 non invia alert, non ha webhook, non invia alcun dato a REMURA cloud, non esegue ordini, non modifica l'app LIVE e non utilizza dati futures real-time. Lo scopo è preparare un dataset prospettico rigoroso per Shark Science, non stimare profitti su quattro marcatori storici.
+
+## Archivio versioni precedenti D0.1–D0.6
+
 # REMURA Shark CVD — D0.6 | Test di parità numerica (10/11/2026, Italia)
 
 **Codice da provare:** [remura_shark_cvd_fx_v06.pine](remura_shark_cvd_fx_v06.pine) · **Roadmap:** [ROADMAP-D](../../ROADMAP-D-TRADINGVIEW-CVD.md)
