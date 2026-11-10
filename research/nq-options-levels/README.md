@@ -30,3 +30,7 @@ Solo libreria standard Python; nessuna rete, ordine, trade, schedulazione, prezz
 5. Nessun merge/deploy/cron/billing senza consenso, preflight e controllo costi.
 
 **Revisione ricerca 0.1 / 2026-11-10. Versione applicazione REMURA invariata.**
+
+## Spaziatura: ipotesi descrittiva, non ricerca della formula
+
+`python3 research/nq-options-levels/scripts/inspect_spacing.py /percorso-privato/zone.json` rileva intervalli, multipli interi e residui di una griglia lineare, senza pubblicare i livelli originali. Il metodo e' **post-hoc** e non autorizza segnali o previsioni; intervalli teorici omessi dagli autori NON vanno trattati come vere zone operative. Test sintetici offline dedicati. Si valuta in futuro se la scala derivi da expected move, ATR/volatilita', volume profile o altre formule con dati indipendenti.
