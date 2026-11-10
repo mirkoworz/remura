@@ -87,8 +87,8 @@ class CycleProgressHTTPTests(unittest.TestCase):
             db = price_store.connect(dbpath)
             db.close()
             worker = Mock(is_alive=lambda: True)
-            with patch.dict(server.os.environ, {"REMURA_COLLECTOR_ENABLED": "1"}), \\
-                 patch.object(server, "utcnow", return_value=now), \\
+            with patch.dict(server.os.environ, {"REMURA_COLLECTOR_ENABLED": "1"}), \
+                 patch.object(server, "utcnow", return_value=now), \
                  patch.object(server, "collect_once", side_effect=AssertionError("no broker on GET")):
                 site = ThreadingHTTPServer(("127.0.0.1", 0),
                     server.http_handler(dbpath, collector_thread=worker,
@@ -126,8 +126,8 @@ class CycleProgressHTTPTests(unittest.TestCase):
             with patch.dict(server.os.environ, {
                     "REMURA_SYMBOLS": "EURUSD",
                     "REMURA_BATCH_TIMING_ENABLED": "0",
-                    "REMURA_PRIORITY_COLLECTOR_ENABLED": "0"}), \\
-                 patch.object(server, "collect_once", return_value={"saved": {}, "errors": {}}) as broker, \\
+                    "REMURA_PRIORITY_COLLECTOR_ENABLED": "0"}), \
+                 patch.object(server, "collect_once", return_value={"saved": {}, "errors": {}}) as broker, \
                  patch.object(server, "seconds_to_next_quarter", return_value=1):
                 server.collector_loop(dbpath, stop, progress=progress)
             self.assertTrue(stop.done)
