@@ -1,8 +1,15 @@
 # REMURA — FILONE D: TradingView FXCM / Shark CVD (sperimentale)
 
-**Apertura:** 09/11/2026 (Europe/Rome). **Versione laboratorio:** D0.2 (10/11/2026 ore 07:14 Italia). **Stato:** D0.1 compilato su TradingView ma fermato da guard al primo bar; D0.2 corretto nel repository, runtime D0.2 NON ANCORA VERIFICATO. NON LIVE.
+**Apertura:** 09/11/2026 (Europe/Rome). **Versione laboratorio:** D0.2 (10/11/2026 ore 07:14 Italia). **Stato:** D0.1 compilato su TradingView ma fermato dal controllo iniziale; D0.2 eseguito su TradingView con diagnostica funzionante: grafico attivo `FX:EURUSD`, timeframe 5m, mentre la sperimentazione richiede `FXCM:EURUSD`. Prova CVD su FXCM ancora DA VERIFICARE. NON LIVE.
 
 **Ramo:** `experiment/track-d-tv-fxcm-cvd-20261109`. Nessun merge, deploy, servizio, connettore VPS, endpoint pubblico o nuova API. Non cambiare versione applicativa LIVE: un esperimento Pine non è un aggiornamento delle nove pagine REMURA.
+
+## 10/11/2026 — Riscontro runtime D0.2 (screenshot PC)
+
+- [x] L'indicatore D0.2 si avvia e mostra la tabella diagnostica senza il vecchio errore `RE10142`.
+- [x] Screenshot sul PC: `REMURA D0.2 | SORGENTE/TIMEFRAME ERRATO`; riga `Letto: FX:EURUSD | TF=5` e indirizzo grafico con `symbol=FX%3AEURUSD`. **Il timeframe è corretto, il provider/simbolo NON è FXCM**. Arancione e CVD assente sono quindi il comportamento previsto dal blocco di qualità, non un difetto numerico dimostrato.
+- [ ] **Prossimo unico controllo:** cambiare simbolo nel selettore TradingView in **`FXCM:EURUSD`**, mantenere 5m e D0.2 già installato, verificare `Letto: FXCM:EURUSD | TF=5` con riga verde e CVD presente. Solo allora studiare eventuali mancanze delle barre 1m. Nessun nuovo codice, nessun allentamento dei gate, nessuna nuova spesa.
+- [ ] L'avvio su un grafico errato NON dimostra correttezza del CVD, supporto della serie volume in tutti i minuti, validità statistica o possibilità di inviare alert al cloud.
 
 ## Perché questo filone
 
