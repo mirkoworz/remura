@@ -1,3 +1,18 @@
+# REMURA Shark CVD — D0.4 (10/11/2026, Italia)
+
+**USARE D0.4:** [remura_shark_cvd_fx_v04.pine](remura_shark_cvd_fx_v04.pine). D0.1/D0.2/D0.3 sono conservate solo come esperimenti precedenti.
+
+L'errore mostrato sul tuo PC (`Invalid symbol: FXCM:EURUSD`) dipende dalla richiesta `FXCM:EURUSD`, che TradingView ha rifiutato. **D0.4 utilizza soltanto `FX:EURUSD`**, l'identificativo che il tuo indicatore D0.2 ha letto, associato alla dicitura **FXCM** dalla pagina ufficiale TradingView. Prezzo 5m e volume 1m vengono richiesti dalla stessa fonte `FX:EURUSD`. Fonte/provenienza vengono annotate senza fingere che il prefisso `FXCM:` sia disponibile.
+
+1. Nel Pine Editor seleziona tutto il vecchio script e incolla il contenuto di D0.4.
+2. Salva e aggiungi al grafico EURUSD 5 minuti, rimuovendo il pannello D0.3 precedente.
+3. Leggi la tabella nel pannello CVD: deve mostrare `DATI: FX:EURUSD (TV: FXCM) 5m+1m` e `Minuti 1m ultima 5m chiusa: 5/5` quando il feed è completo. Se compare `DATI 1m INCOMPLETI` o `0/5`, invia screenshot **senza modificare le guardie**: è un problema di copertura, non di ticker.
+4. Mantieni **Alert SOLO RICERCA** disattivato: nessun webhook, nessun invio a REMURA, nessuna operazione.
+
+La D0.4 non è stata compilata su TradingView in questa chat. GitHub verifica soltanto logica di riferimento e contratti statici; eventuali errori runtime devono essere riportati con riga e testo. Il CVD usa volume spot disponibile e **non** il delta aggressore eseguito futures. Nessun acquisto, deploy VPS o nuova versione applicativa LIVE.
+
+## Documentazione precedente (D0.3 / D0.2 storica)
+
 # REMURA Shark CVD — Test D0.3 (10/11/2026 Italia)
 
 **Usare il nuovo [remura_shark_cvd_fxcm_v03.pine](remura_shark_cvd_fxcm_v03.pine) — non D0.2.**
