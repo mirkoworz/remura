@@ -1,8 +1,16 @@
 # REMURA — FILONE D: TradingView FXCM / Shark CVD (sperimentale)
 
-**Apertura:** 09/11/2026 (Europe/Rome). **Versione laboratorio:** D0.6 (10/11/2026, Italia; nuova versione solo del sensore di ricerca, non della web app LIVE). **Stato:** D0.5 COMPILATA ed ESEGUITA dall'utente su TradingView `FX:EURUSD` 5m con dati 1m e CVD di segmenti visibili. Il pannello mostra `SOLO CVD PARZIALE`, `5/5`, `Ultimo controllo: OK`, `Barre parziali consecutive: 140`, `incomplete oggi: 2`. Questo conferma il funzionamento del prototipo diagnostico, NON la validità predittiva o il CVD giornaliero completo. NON LIVE.
+**Apertura:** 09/11/2026 (Europe/Rome). **Versione laboratorio:** D0.6 (10/11/2026, Italia; nuova versione solo del sensore di ricerca, non della web app LIVE). **Stato:** D0.6 COMPILATA ed ESEGUITA dall'utente su TradingView `FX:EURUSD` 5m con nativo CVD affiancato, delta per candela verificato e diagnostica. Screenshot: `SOLO CVD PARZIALE`, `5/5`, `Ultimo controllo: OK`, `147` barre parziali consecutive, `2` incomplete oggi, ultimo delta `+93` per candela chiusa `10/11 11:25` ora italiana. La parità numerica con CVD nativo resta NON VERIFICATA; nessun edge dimostrato. NON LIVE.
 
 **Ramo:** `experiment/track-d-tv-fxcm-cvd-20261109`. Nessun merge, deploy, servizio, connettore VPS, endpoint pubblico o nuova API. Non cambiare versione applicativa LIVE: un esperimento Pine non è un aggiornamento delle nove pagine REMURA.
+
+## 10/11/2026 — D0.6: conferma runtime, prossima analisi CSV
+
+- [x] Screenshot PC: `REMURA CVD D0.6` eseguito e tracciato arancione visibile accanto al CVD nativo giornaliero. Diagnostica `FX:EURUSD` 5m, ultimi 5m `5/5`, `OK`, `147` barre del segmento parziale, `2` incomplete oggi, ultimo delta per 5m `+93` con candela **chiusa alle 11:25 del 10/11/2026 (Italia)**. La D0.6 dunque produce un valore numerico su una candela 5m completa.
+- [ ] Le foto NON mostrano `Open` e `Close` del CVD nativo **alla stessa candela delle 11:20–11:25**. La linea e il `+93` NON dimostrano concordanza numerica: il cursore in diverse foto è su candele precedenti.
+- [ ] **Percorso consigliato, senza nuovo codice né costi:** in TradingView Premium mantenere entrambi gli indicatori, poi `Esporta dati grafico...` (CSV). L'esportazione include simbolo e plot degli indicatori attivi, **anche quelli visualizzati solo nella Finestra dati** secondo https://www.tradingview.com/pine-script-docs/visuals/overview/ e https://it.tradingview.com/support/solutions/43000537255/. Chiedere il CSV originale dell'utente, poi verificare intestazioni e confrontare per timestamp solo 5m chiuse con `QUALITA=1`: `delta_remura` vs `CVD_native_close - CVD_native_open`. Verificare se il CVD nativo esporta effettivamente colonne O/C; se non presenti, usare Finestra dati (`Alt+D` su PC) per campione manuale 3–5 candele chiuse.
+- [ ] Report quantitativo: numero campioni validi e esclusi, accordo di segno %, MAE su delta e valore percentuale ove significativi, outlier/gap/limiti di sessione; nessuna modifica retroattiva di parametri per massimizzare accordo, nessuna confusione con percentuali di vincita di trading.
+- [x] PR #100 resta DRAFT, nessun merge/deploy/webhook/acquisto; A/B/C e app LIVE invariati.
 
 ## 10/11/2026 — D0.6: confronto quantitativo delta 5m (nuovo gate)
 
