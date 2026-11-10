@@ -4,6 +4,14 @@
 
 **Ramo:** `experiment/track-d-tv-fxcm-cvd-20261109`. Nessun merge, deploy, servizio, connettore VPS, endpoint pubblico o nuova API. Non cambiare versione applicativa LIVE: un esperimento Pine non è un aggiornamento delle nove pagine REMURA.
 
+## 10/11/2026 — Confronto visivo D0.5 con CVD nativo TradingView (screenshot utente)
+
+- [x] **D1b preliminare visivo**, `FX:EURUSD` (etichetta FXCM), grafico 5m: due pannelli contemporaneamente visibili, superiore REMURA CVD D0.5, inferiore indicatore originale `CVD` di TradingView. Nei tratti intorno al 6 novembre entrambi mostrano diminuzione del cumulato; intorno al 9 novembre entrambi presentano incremento; il 10 novembre andamento più piatto. Questa è SOLO coerenza qualitativa/di direzione su un'immagine, non parità numerica, statistica, temporale o prova predittiva.
+- [x] La curva arancione REMURA rappresenta **segmenti parziali con reset dopo gap**; la curva azzurra riguarda soli periodi che il gate considera giornalmente integri. Il CVD nativo produce candele di delta cumulato e può usare una diversa regola di reset/precisione. Le apparenti divergenze e i simboli sul grafico non sono segnali validati; i dati storico/prezzo/volume condivisi NON formano due conferme indipendenti.
+- [ ] **D1b impostazioni da acquisire:** nello strumento CVD nativo controllare `Input` / `Periodo di riferimento = 1 giorno`, `Tick-based` OFF (se opzione presente) e granularità intrabar 1 minuto o automatico dei grafici 5m; annotare data e orari di 3-5 candele 5m CHIUSE sullo stesso giorno in cui REMURA è verde (o confrontare soltanto variazioni locali sui segmenti arancioni). Evitare confronto dei numeri assoluti di cumulati con ancore differenti. Riferimento: https://www.tradingview.com/support/solutions/43000725058-cumulative-volume-delta/
+- [ ] **D1b parità quantitativa:** confrontare `delta_5m` del nostro sensore con delta del CVD nativo aggregato su timestamp coincidenti; misurare quota dati validi, segno concorde e differenza in volume. Solo successivamente analizzare correttezza/divergenze e protocollo prospettico. Non scrivere nuove strategie, non creare alert/endpoint prima del GO scientifico.
+- [ ] Nessuna promessa di profitti/edge; niente futures aggressor e nessun segnale live. PR #100 DRAFT; `main`, A/B/C, VPS/Oracle, collector e versioni UI invariati, nessun nuovo costo.
+
 ## 10/11/2026 — Checkpoint D0.5 positivo su TradingView (evidenza utente)
 
 - [x] Prima visualizzazione confermata su TradingView: linee CVD di segmento e diagnostica sorgente/tempi operative, `5/5` minuti nell'ultima 5m chiusa, `Ultimo controllo: OK`. Nessun bisogno di altri acquisti per **questo test**. Il pannello indica `SOLO CVD PARZIALE` con due 5m incomplete oggi, e 140 barre consecutive di dati completi da ultimo reset di segmento.
