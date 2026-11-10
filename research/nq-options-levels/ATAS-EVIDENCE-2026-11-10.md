@@ -26,3 +26,17 @@
 Richiedere SOLO schermata delle impostazioni dei due profili (Profile Type: Volume/Delta/Bid-Ask, periodi) e di **CVD pro (multi)** (range volumi per curva), e schermata che mostri il nome dell'indicatore che traccia i livelli gialli, senza account o dati personali. Confrontare le predizioni ex-ante, non ottimizzare soglie sul 10/11.
 
 **Gate:** NO EDGE, NO LIVE, NO ORDINI, NO SCRAPING/ACQUISTI. Studio offline sul solo branch PR #101 DRAFT, non tocca PR #89, Track A, C, Oracle, collector, main o versione dell'app.
+
+## 10/11/2026 — Integrazione dell'utente: PVP + VWAP con bande (checkpoint ricerca v0.4)
+
+L'utente precisa che **le linee/zone gialle dovrebbero essere PVP** e **le bande celesti VWAP con bande**. Si tratta di testimonianza di seconda mano/probabile, non identificazione definitiva delle impostazioni ATAS. Aggiorna l'ipotesi del precedente paragrafo senza cancellare l'incertezza.
+
+- **PVP** in alcune metodologie indica **Peak Volume Price**, ossia il prezzo modale per volume; coincide concettualmente con Volume POC per lo stesso periodo/criterio. In altre piattaforme PVP e' anche sigla di **Periodic Volume Profile**: non attribuire automaticamente una delle due accezioni al grafico ATAS senza nome e configurazione dell'indicatore. ATAS documenta esplicitamente POC e Value Area.
+- **VWAP con bande**: prezzo medio ponderato dai volumi, spesso con deviazioni standard superiori/inferiori. Le aree celesti e la curva centrale sono compatibili con questa lettura. Periodo/ancoraggio (sessione, precedente giorno, swing) e moltiplicatori (1, 2, 3 sigma ecc.) sconosciuti. Il colore non dimostra l'indicatore.
+- **Due linee gialle**: se PVP indica un singolo picco del profilo, due livelli possono riferirsi a periodi/ancoraggi diversi oppure a un altro indicatore. Non definire entrambe "il PVP" senza impostazioni.
+- **Distinzione cruciale**: PVP/POC e VWAP/bande sono misure della distribuzione/prezzo-volume, mentre le sei zone pubblicate al mattino potrebbero essere calcolate separatamente da opzioni, volatilita', profili precedenti o livelli manuali. Il grafico non dimostra l'origine delle zone del mattino.
+- **Protocollo sperimentale**: futuro replay offline con volume futures NQ genuino e cronologia *as-of*, VWAP da prezzi/volumi (trade-level se disponibili; OHLCV solo proxy), bande standardizzate ex ante, POC per periodo, confronto aggiuntivo con zone del mattino e CVD Multi. Segnalare se mancano trades-by-price; non costruire PVP vero da soli prezzi di chiusura M5.
+
+Fonti verificate: https://atas.net/it/trading-indicators/ (VWAP e bande); https://help.atas.net/it/support/solutions/articles/72000602305-volume-profile-tpo (Volume POC); https://help.atas.net/it/support/solutions/articles/72000661101-ohlc-plus (POC, VWAP e livelli periodici).
+
+**NESSUN codice produttivo, scheduler, richiesta API, deploy o modifica di main**. PR #101 rimane DRAFT.
