@@ -98,8 +98,8 @@ class TestD08Baseline(unittest.TestCase):
         self.assertIn('"PREZZO_SENZA_CVD_RIALZISTA"', p)
         self.assertIn('display=display.data_window', p)
         self.assertIn('barstate.isconfirmed', p)
-        executable = "\\n".join(line.split("//")[0] for line in p.splitlines())
-        self.assertIsNone(re.search(r"\\b(?:alert|alertcondition|strategy\\.entry|strategy\\.order)\\s*\\(", executable))
+        executable = "\n".join(line.split("//")[0] for line in p.splitlines())
+        self.assertIsNone(re.search(r"\b(?:alert|alertcondition|strategy\.entry|strategy\.order)\s*\(", executable))
         self.assertNotIn("https://", p)
 
 
