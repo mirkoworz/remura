@@ -1,4 +1,4 @@
-"""Track D0.4 FX:EURUSD provenance and runtime-safety static tests (NOT Pine compilation)."""
+"""Track D0.4.1 FX:EURUSD provenance and runtime-safety static tests (NOT Pine compilation)."""
 from pathlib import Path
 import unittest
 
@@ -39,7 +39,7 @@ class TestCanonicalFxEurusd(unittest.TestCase):
         self.assertIn('input.bool(false, "Alert SOLO RICERCA', p)
         self.assertIn('chartOk and researchAlerts and barstate.isrealtime and barstate.isconfirmed', p)
         self.assertIn('"RESEARCH_ONLY"', p)
-        self.assertIn('const string MODEL = "remura_fx_1m_cvd_d0.4"', p)
+        self.assertIn('const string MODEL = "remura_fx_1m_cvd_d0.4.1"', p)
         self.assertIn('"source":"TV_FX_EURUSD_TICK_VOLUME_PROXY_1M"', p)
         for banned in ('strategy.entry(', 'strategy.order(', 'runtime.error(', 'http://', 'https://'):
             self.assertNotIn(banned, p)
