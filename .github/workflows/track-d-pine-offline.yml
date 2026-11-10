@@ -7,6 +7,7 @@ on:
       - 'tests/test_track_d_tv_cvd_reference.py'
       - 'tests/test_track_d_tv_v03_source.py'
       - 'tests/test_track_d_tv_v04_source.py'
+      - 'tests/test_track_d_tv_v05_diagnostics.py'
       - 'ROADMAP-D-TRADINGVIEW-CVD.md'
       - '.github/workflows/track-d-pine-offline.yml'
   workflow_dispatch:
@@ -27,6 +28,7 @@ jobs:
           test -s experiments/tradingview/remura_shark_cvd_fxcm_v01.pine
           test -s experiments/tradingview/remura_shark_cvd_fxcm_v03.pine
           test -s experiments/tradingview/remura_shark_cvd_fx_v04.pine
+          test -s experiments/tradingview/remura_shark_cvd_fx_v05.pine
           test -s ROADMAP-D-TRADINGVIEW-CVD.md
           echo "TRACK_D_OFFLINE_REFERENCE_TESTS_ONLY=YES"
           echo "PINE_COMPILED_IN_TRADINGVIEW=NOT_VERIFIED"
