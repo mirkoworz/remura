@@ -1,7 +1,20 @@
-# REMURA Shark CVD — seconda prova gratuita (Track D / D0.2 — 10/11/2026 07:14 Italia)
+# REMURA Shark CVD — Test D0.3 (10/11/2026 Italia)
 
-**Solo studio, non segnali operativi.** Codice: [remura_shark_cvd_fxcm_v01.pine](remura_shark_cvd_fxcm_v01.pine).
-Roadmap: [ROADMAP-D-TRADINGVIEW-CVD.md](../../ROADMAP-D-TRADINGVIEW-CVD.md).
+**Usare il nuovo [remura_shark_cvd_fxcm_v03.pine](remura_shark_cvd_fxcm_v03.pine) — non D0.2.**
+
+D0.2 ha mostrato sul PC `FX:EURUSD | TF=5` nonostante la testata `FXCM`. D0.3 risolve l'ambiguità leggendo **prezzi FXCM 5m + volumi FXCM 1m** tramite richieste a `FXCM:EURUSD` esplicite. Gli alias `FX:EURUSD` e `FXCM:EURUSD` sono ammessi *solo* come grafici EURUSD 5m; il grafico non fornisce prezzi al calcolo. Le candele visualizzate da `FX:EURUSD` potrebbero divergere da FXCM: giudicare i pivot soltanto sui prezzi FXCM richiesti, non a occhio sul grafico di un altro fornitore.
+
+## Sostituzione sul PC
+
+1. Aprire `FXCM:EURUSD` oppure l'EURUSD grafico già presente, sempre **5m**.
+2. Nel **Pine Editor**, sostituire tutto il vecchio script D0.2 con il contenuto **integrale** di `remura_shark_cvd_fxcm_v03.pine`, salvare e aggiungere/aggiornare l'indicatore. Rimuovere i pannelli vecchi D0.1/D0.2 per non confondere diagnostiche.
+3. Nel pannello D0.3 cercare `DATI CALCOLATI: FXCM:EURUSD 5m+1m`. La riga `Grafico: FX:EURUSD | TF=5` non è più motivo automatico per bloccare **il calcolo FXCM**.
+4. Se compare `DATI 1m INCOMPLETI` o il pannello è arancione, **non eliminare il controllo**. Mandare screenshot della tabella/pannello: il modello richiede i 5 minuti FXCM esatti per ciascuna candela 5m. Potrebbe non avere lo storico sufficiente.
+5. Lasciare disattivati gli **Alert SOLO RICERCA**. Il prototipo non invia dati a REMURA cloud e non genera ingressi, SL, TP o ordini.
+
+**Verifica indispensabile:** D0.3 NON è stato ancora compilato/testato nel runtime TradingView. Test GitHub offline non confermano che i dati richiesti siano presenti o che l'indicatore produca una linea. Se Pine dà errore di compilazione, inviare messaggio e riga esatta. La versione REMURA applicativa LIVE è invariata, nessun webhook e nessun costo aggiuntivo.
+
+## Documentazione precedente (D0.2 storico)
 
 ## Uso su TradingView
 
