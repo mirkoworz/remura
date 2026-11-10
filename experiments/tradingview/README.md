@@ -1,3 +1,29 @@
+# REMURA D0.8 — Esperimento PREZZO vs CVD (10/11/2026)
+
+**Nuovo script Pine:** [remura_shark_cvd_fx_v08.pine](remura_shark_cvd_fx_v08.pine) · **Analizzatore gratuito CSV:** [compare_d08_baseline.py](compare_d08_baseline.py) · [Roadmap D](../../ROADMAP-D-TRADINGVIEW-CVD.md).
+
+**Scopo:** stabilire se l'aggiunta del CVD **seleziona meglio** le configurazioni rispetto agli stessi pivot di prezzo senza CVD, NON attribuire i volumi agli istituzionali né generare trade. Il CVD filtrato è un SOTTOINSIEME degli eventi prezzo. Non trattare le due serie come campioni indipendenti.
+
+## Procedura iniziale sul PC
+
+1. Apri TradingView, `EURUSD` fornitore FXCM: Pine lo identifica come **`FX:EURUSD`**. Mantieni timeframe **5m**.
+2. Nel Pine Editor crea un indicatore nuovo con il contenuto **integrale** del file `remura_shark_cvd_fx_v08.pine`. Salva `REMURA D0.8`, aggiungi al grafico e rimuovi il pannello D0.7 per evitare confusioni. **D0.8 non è stata ancora compilata/provata nel runtime TradingView**; i check GitHub sono offline.
+3. Controlla nella tabella `D0.8 | BASELINE vs CVD (NO TRADE)`, `Ultimi intrabar 1m: 5/5 | OK`, `Contesto ultima 5m CHIUSA: CONTINUO` e `Oggi: PREZZO=X | con CVD=Y`. Se la 5m è ancora aperta, la tabella legge l'ultima candela chiusa.
+4. I simboli `ST+`/`ST-` continuano a mostrare le sole divergenze CVD. La nuova baseline di PREZZO è **registrata nel Data Window**, senza moltiplicare i marcatori visivi: `BASELINE_PREZZO_RIALZISTA`, `BASELINE_PREZZO_RIBASSISTA`, `PREZZO_SENZA_CVD_RIALZISTA`, `PREZZO_SENZA_CVD_RIBASSISTA`; sono preservati `EVENTO_STUDIO_RIALZISTA` e `EVENTO_STUDIO_RIBASSISTA`.
+5. Invia uno screenshot del grafico e della diagnostica D0.8. Annotiamo data/ora reale italiana della prima installazione: gli eventi precedenti sono solo ricalcoli storici, **non** osservazioni prospettiche.
+6. Dopo conferma del funzionamento esporta `Esporta dati grafico...` in CSV, mantenendo le due serie di eventi. Salva privatamente l'originale con data/ora di esportazione; non pubblicare dati TradingView nel repository. Per un'analisi offline:
+   `python experiments/tradingview/compare_d08_baseline.py "FX_EURUSD, 5.csv"`
+
+## Protocollo congelato
+
+Pivot 2/2, distanza 3–72 barre, 5 tick prezzo, warmup 12 barre 5m, soglia differenza CVD 10, FX:EURUSD 5m, dati 1m completi e continuità obbligatoria, eventi solo alla chiusura della barra di conferma. I due bracci condividono qualità e finestre osservabili: il solo elemento diverso è il **filtro CVD**.
+
+Lo script di analisi riporta gruppi prezzo totale, prezzo confermato dal CVD e prezzo senza conferma CVD, outcome direzionali a 1/4/24 ore, eventi non osservabili e sovrapposizioni. Le metriche sono **variazioni del prezzo, non profitti netti**: nessuno spread/slippage simulato e nessun risultato di vantaggio statistico sinora dimostrato. La prossima validazione PROSPETTICA inizia soltanto dopo l'attivazione manuale D0.8 documentata; evitare selezione retroattiva dell'inizio.
+
+**Sicurezza e costo:** niente Pine `alert()`, niente webhook/endpoint, niente ordini o VPS, nessun cambio versione delle pagine REMURA LIVE. Premium TradingView già in uso, costo aggiuntivo previsto per laboratorio **0 €**, limiti di intrabar e licenze sempre validi.
+
+## Archivio D0.1–D0.7.1
+
 # REMURA Shark CVD — TEST D0.7 · 10 novembre 2026 (Filone D)
 
 **Codice nuovo da provare:** [remura_shark_cvd_fx_v07.pine](remura_shark_cvd_fx_v07.pine) · [Roadmap D](../../ROADMAP-D-TRADINGVIEW-CVD.md)
