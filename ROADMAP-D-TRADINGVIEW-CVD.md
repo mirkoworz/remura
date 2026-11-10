@@ -1,6 +1,6 @@
 # REMURA — FILONE D: TradingView FXCM / Shark CVD (sperimentale)
 
-**Apertura:** 09/11/2026 (Europe/Rome). **Versione laboratorio:** D0.1. **Stato:** codice isolato, NON LIVE, NON VALIDATO SU TRADINGVIEW.
+**Apertura:** 09/11/2026 (Europe/Rome). **Versione laboratorio:** D0.2 (10/11/2026 ore 07:14 Italia). **Stato:** D0.1 compilato su TradingView ma fermato da guard al primo bar; D0.2 corretto nel repository, runtime D0.2 NON ANCORA VERIFICATO. NON LIVE.
 
 **Ramo:** `experiment/track-d-tv-fxcm-cvd-20261109`. Nessun merge, deploy, servizio, connettore VPS, endpoint pubblico o nuova API. Non cambiare versione applicativa LIVE: un esperimento Pine non è un aggiornamento delle nove pagine REMURA.
 
@@ -10,7 +10,7 @@ L'utente dispone già di TradingView Premium e della watchlist **FXCM**. Screens
 
 **Ipotesi falsificabile:** il CVD *stimato* da OHLC + volume Forex dei minuti 1m, aggregato a 5m, migliora il potere predittivo delle sole divergenze di prezzo o di una semplice baseline prezzo+ATR. Il volume FXCM può essere tick volume/volume del singolo feed, NON contratti eseguiti sull'intero Forex né aggressor side istituzionale.
 
-Diverso dal proxy cTrader `CLV × tick volume` già esistente in REMURA/PR #77: non mischiare i due indicatori, le sorgenti, le unità, le sessioni e gli orari. Il nuovo modello si chiama `remura_fxcm_1m_cvd_d0.1`.
+Diverso dal proxy cTrader `CLV × tick volume` già esistente in REMURA/PR #77: non mischiare i due indicatori, le sorgenti, le unità, le sessioni e gli orari. Il nuovo modello si chiama `remura_fxcm_1m_cvd_d0.2` (D0.1 storico non interoperabile per aggregazione scientifica).
 
 ## Architettura sperimentale
 
@@ -24,7 +24,8 @@ Diverso dal proxy cTrader `CLV × tick volume` già esistente in REMURA/PR #77: 
 
 - [x] **D0 — inventario e branch:** schermate confermano `FXCM:EURUSD` e volumi; ramo separato da `main`; PR #77 e PR #89 già esistenti, evitare duplicazioni.
 - [x] **D1 — prototipo sorgente Pine (non compilato):** calcolo 1m→5m, reset, qualità, pivot confermati, JSON opzionale e controllo rigoroso FXCM:EURUSD.
-- [ ] **D1a — compilazione Pine su TradingView:** incollare il file in Pine Editor, salvare, verificare compilazione, grafico e valori; documentare eventuali correzioni; non certificare Pine compilato tramite soli test Python.
+- [ ] **D1a — prova TradingView aggiornata:** schermata utente 10/11/2026 ore 07:11 Italia: `REMURA CVD D0.1` è stato accettato dal runtime, ma errore `RE10142` / `Error on bar 0` / `#main():19`, causato dall'`if` iniziale che controllava `syminfo.prefix`, `syminfo.ticker` e `timeframe.period` senza mostrare quale dato fosse diverso. Lo screenshot mostra 5m ed EURUSD; il provider FXCM era stato confermato in screenshot precedente, ma non abbiamo osservato **direttamente** il valore delle variabili Pine. Patch D0.2: usa `ticker.standard(syminfo.main_tickerid)` e `timeframe.isminutes && timeframe.multiplier == 5`, stampa `Letto: <ID> | TF=<period>` nel pannello, elimina `runtime.error` e sopprime CVD/eventi/alert su grafici non corrispondenti. **Non affermare che D0.2 funzioni** finché l'utente non lo ricarica e invia uno screenshot del pannello.
+- [ ] **D1a-bis — gate runtime:** se D0.2 indica `FXCM:EURUSD | TF=5` ma il CVD resta vuoto/arancione, controllare copertura 1m, buchi 5m e reset sessione: non disattivare il fail-closed per ottenere una linea fittizia.
 - [ ] **D1b — confronto CVD:** osservare 30+ candele confermate su sessioni distinte, confrontare il delta cumulato con l'indicatore CVD standard TradingView in modalità aggregata 1m, annotare differenze da tie-break, sessione, precisione, lacune e feed. Non paragonare un proxy al tick-based nativo come se fossero lo stesso dato.
 - [ ] **D2 — test causali:** dati sintetici per due pivot, no look-ahead, barre mancanti, periodi giornalieri, tie e prezzo flat. Poi archiviare esempi prospettici *originali*, incluse occasioni senza segnale.
 - [ ] **D3 — test alert senza VPS:** alert solo per ricerca (facoltativo), verificare JSON nel registro TradingView, un evento per pivot, deduplica, consegna potenzialmente fallita, no alert storici. Abilitare webhook esterni solo dopo autorizzazione e audit sicurezza.
