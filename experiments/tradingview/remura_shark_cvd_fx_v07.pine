@@ -184,7 +184,7 @@ if chartOk and barstate.isconfirmed and eligiblePivot == 1.0 and activeSegment =
 // The partial segment is not a complete daily CVD, and study markers are
 // NOT validated trading signals. No alert()/strategy.* calls are present.
 plot(chartOk ? validDaySeries : na, "CVD GIORNALIERO INTEGRO", color=color.teal, linewidth=2, style=plot.style_linebr)
-plot(chartOk ? segmentSeries : na, "CVD SEGMENTO PARZIALE (NO TRADE)", color=color.orange, linewidth=2, style=plot.style_linebr)
+plot(chartOk and not validDay ? segmentSeries : na, "CVD SEGMENTO PARZIALE (NO TRADE)", color=color.orange, linewidth=2, style=plot.style_linebr)
 hline(0, "Zero", color=color.gray, linestyle=hline.style_dotted)
 plotshape(bullishStudy ? segmentSeries : na, title="IPOTESI bullish SOLO STUDIO", style=shape.triangleup, location=location.absolute, color=color.lime, size=size.small, text="ST+")
 plotshape(bearishStudy ? segmentSeries : na, title="IPOTESI bearish SOLO STUDIO", style=shape.triangledown, location=location.absolute, color=color.red, size=size.small, text="ST-")
