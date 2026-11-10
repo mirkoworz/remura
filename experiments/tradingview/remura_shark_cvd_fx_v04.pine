@@ -1,11 +1,12 @@
 //@version=6
-// REMURA Track D D0.4 | 2026-11-10 Europe/Rome | Research only
+// REMURA Track D D0.4.1 | 2026-11-10 Europe/Rome | Research only
+// D0.4.1: fix missing table.cell() closing parenthesis (Pine CE10015).
 // FXCM EURUSD tick-volume proxy: NEVER real exchange aggressor volume.
 // TV lists the FX:EURUSD symbol as FXCM. All data must use FX:EURUSD.
-indicator("REMURA Shark CVD D0.4 | FX:EURUSD | RESEARCH", shorttitle="REMURA CVD D0.4", overlay=false)
+indicator("REMURA Shark CVD D0.4.1 | FX:EURUSD | RESEARCH", shorttitle="REMURA CVD D0.4.1", overlay=false)
 
 const string FEED = "FX:EURUSD"
-const string MODEL = "remura_fx_1m_cvd_d0.4"
+const string MODEL = "remura_fx_1m_cvd_d0.4.1"
 int leftBars = input.int(2, "Pivot a sinistra", minval=1, maxval=10)
 int rightBars = input.int(2, "Pivot a destra (conferma)", minval=1, maxval=10)
 int minDistance = input.int(3, "Separazione minima pivot (barre)", minval=1, maxval=100)
@@ -134,15 +135,15 @@ bgcolor(not chartOk or not validSession ? color.new(color.orange, 85) : na, titl
 
 var table diag = table.new(position.top_right, 1, 4, border_width=1)
 if barstate.islast
-    string state = not chartOk ? "D0.4 | APRI FX:EURUSD 5m" : not validSession ? "D0.4 | DATI 1m INCOMPLETI" : na(cvd) ? "D0.4 | ATTESA CHIUSURA" : "D0.4 | CVD FX DISPONIBILE"
+    string state = not chartOk ? "D0.4.1 | APRI FX:EURUSD 5m" : not validSession ? "D0.4.1 | DATI 1m INCOMPLETI" : na(cvd) ? "D0.4.1 | ATTESA CHIUSURA" : "D0.4.1 | CVD FX DISPONIBILE"
     table.cell(diag, 0, 0, state, text_color=chartOk and validSession ? color.lime : color.orange, bgcolor=color.new(color.black, 20))
     table.cell(diag, 0, 1, "Grafico: " + chartId + " | TF=" + timeframe.period, text_color=color.white, bgcolor=color.new(color.black, 20))
-    table.cell(diag, 0, 2, "DATI: FX:EURUSD (TV: FXCM) 5m+1m", text_color=color.aqua, bgcolor=color.new(color.black, 20)
+    table.cell(diag, 0, 2, "DATI: FX:EURUSD (TV: FXCM) 5m+1m", text_color=color.aqua, bgcolor=color.new(color.black, 20))
     table.cell(diag, 0, 3, "Minuti 1m ultima 5m chiusa: " + str.tostring(lastIntrabarCount) + "/5", text_color=color.white, bgcolor=color.new(color.black, 20))
 
 // Alert off by default. Manual setup required. No orders or webhook URLs.
 if chartOk and researchAlerts and barstate.isrealtime and barstate.isconfirmed and (bullish or bearish)
     string kind = bullish ? "BULLISH_REGULAR" : "BEARISH_REGULAR"
     string eventId = MODEL + "|" + FEED + "|" + kind + "|" + str.tostring(newTime)
-    string msg = '{"schema":"remura-research-d0.4","mode":"RESEARCH_ONLY","algorithm":"' + MODEL + '","source":"TV_FX_EURUSD_TICK_VOLUME_PROXY_1M","event_id":"' + eventId + '","symbol":"' + FEED + '","chart_symbol":"' + chartId + '","timeframe":"5","type":"' + kind + '","detected_bar_close_ms":' + str.tostring(fxT + 300000) + ',"pivot1_ms":' + str.tostring(oldTime) + ',"pivot2_ms":' + str.tostring(newTime) + ',"pivot1_price":' + str.tostring(oldPrice, format.mintick) + ',"pivot2_price":' + str.tostring(newPrice, format.mintick) + ',"pivot1_cvd":' + str.tostring(oldCvd) + ',"pivot2_cvd":' + str.tostring(newCvd) + ',"current_price":' + str.tostring(fxC, format.mintick) + ',"current_cvd":' + str.tostring(cvd) + ',"delta_5m":' + str.tostring(barDelta) + '}'
+    string msg = '{"schema":"remura-research-d0.4.1","mode":"RESEARCH_ONLY","algorithm":"' + MODEL + '","source":"TV_FX_EURUSD_TICK_VOLUME_PROXY_1M","event_id":"' + eventId + '","symbol":"' + FEED + '","chart_symbol":"' + chartId + '","timeframe":"5","type":"' + kind + '","detected_bar_close_ms":' + str.tostring(fxT + 300000) + ',"pivot1_ms":' + str.tostring(oldTime) + ',"pivot2_ms":' + str.tostring(newTime) + ',"pivot1_price":' + str.tostring(oldPrice, format.mintick) + ',"pivot2_price":' + str.tostring(newPrice, format.mintick) + ',"pivot1_cvd":' + str.tostring(oldCvd) + ',"pivot2_cvd":' + str.tostring(newCvd) + ',"current_price":' + str.tostring(fxC, format.mintick) + ',"current_cvd":' + str.tostring(cvd) + ',"delta_5m":' + str.tostring(barDelta) + '}'
     alert(msg, alert.freq_all)
