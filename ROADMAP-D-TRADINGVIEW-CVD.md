@@ -1,8 +1,16 @@
 # REMURA — FILONE D: TradingView FXCM / Shark CVD (sperimentale)
 
-**Apertura:** 09/11/2026 (Europe/Rome). **Versione laboratorio:** D0.5 (10/11/2026, Italia). **Stato:** D0.4 non compilava per parentesi mancante su `table.cell` (CE10015), corretta e confermata compilabile dall'utente. Il grafico CVD rimane vuoto; non abbiamo ancora visto il conteggio 1m né l'esatto stato dati. D0.5 diagnostica separata NON ANCORA COMPILATA/VALIDATA su TradingView. NON LIVE.
+**Apertura:** 09/11/2026 (Europe/Rome). **Versione laboratorio:** D0.5 (10/11/2026, Italia). **Stato:** D0.5 COMPILATA ed ESEGUITA dall'utente su TradingView `FX:EURUSD` 5m con dati 1m e CVD di segmenti visibili. Il pannello mostra `SOLO CVD PARZIALE`, `5/5`, `Ultimo controllo: OK`, `Barre parziali consecutive: 140`, `incomplete oggi: 2`. Questo conferma il funzionamento del prototipo diagnostico, NON la validità predittiva o il CVD giornaliero completo. NON LIVE.
 
 **Ramo:** `experiment/track-d-tv-fxcm-cvd-20261109`. Nessun merge, deploy, servizio, connettore VPS, endpoint pubblico o nuova API. Non cambiare versione applicativa LIVE: un esperimento Pine non è un aggiornamento delle nove pagine REMURA.
+
+## 10/11/2026 — Checkpoint D0.5 positivo su TradingView (evidenza utente)
+
+- [x] Prima visualizzazione confermata su TradingView: linee CVD di segmento e diagnostica sorgente/tempi operative, `5/5` minuti nell'ultima 5m chiusa, `Ultimo controllo: OK`. Nessun bisogno di altri acquisti per **questo test**. Il pannello indica `SOLO CVD PARZIALE` con due 5m incomplete oggi, e 140 barre consecutive di dati completi da ultimo reset di segmento.
+- [ ] **D1b — confronto metodologico su stesso periodo/sorgente:** affiancare indicatore `Cumulative Volume Delta` nativo TradingView in modalità aggregata con periodo di ancoraggio equivalente e granularità inferiore a 1m se configurabile. Annotare valore, forma, reset, differenze di regola direzionale e assenza dati; una differenza non implica automaticamente errore perché gli algoritmi possono essere diversi.
+- [ ] **Audit delle due barre incomplete:** distinguere effettiva assenza di un minuto, apertura/chiusura sessione, cambio giorno, limiti dello storico e gap di provider. Non disattivare `validSession` solo per abilitare alert; l'arancione resta **NO SIGNAL**.
+- [ ] Per provare un vantaggio scientifico: raccogliere eventi e non-eventi dopo la prima osservazione, verificare timestamp causali, parametri congelati, baseline solo prezzo, costi/esecuzione, campione futuro e risultati fuori campione. Fino allora nessuna notifica `ENTRA ORA` o integrazione LIVE.
+- [x] `main`, PR #89/#99, Oracle, backend e versioni visibili dell'app non sono stati toccati dal checkpoint D0.5. Nessun webhook acceso.
 
 ## 10/11/2026 — D0.5: compilazione confermata D0.4, CVD vuoto e diagnosi della copertura
 
@@ -11,7 +19,7 @@
 - [x] Creato `experiments/tradingview/remura_shark_cvd_fx_v05.pine`, modello `remura_fx_1m_cvd_d0.5`. Presenta **due curve distinte**: verde CVD giornaliero solo se la sessione parte dall'ancora giornaliera ed è integra; arancione **CVD PARZIALE (NO SIGNAL)** ricostruito da almeno due barre 5m consecutive con cinque minuti completi. Dopo ogni gap la curva arancione riparte da zero e non collega segmenti separati. Non si chiama mai CVD di giornata e non entra nei pivot/alert.
 - [x] Diagnostica del grafico: fonte `FX:EURUSD`, TF, `1m x/5` dell'ultima 5m chiusa, ragione osservata `FX_5M_ASSENTE` / `1M_PRESENTI_x_SU_5` / `ORARI_1M_NON_CONTIGUI` / `VOLUME_O_PREZZO_1M_ND` / `OK`, conteggio barre segmento e lacune. I dati sono validati solo alla chiusura della 5m; non trattare la candela aperta come definitiva.
 - [x] Aggiunti test statici con verifica delle parentesi per non ripetere CE10015 e di separazione dei due tracciati; NON sostituiscono il Pine Editor.
-- [ ] **Gate manuale D0.5:** provare il nuovo file su `FX:EURUSD` 5m e leggere una delle due curve oppure il motivo in tabella. Se c'è soltanto `0/5`, indagare disponibilità reali 1m del piano/feed; se c'è `5/5` e curva arancione, confermare segmento parziale ma **nessun segnale**. Non acquistare altri feed e non inviare webhook.
+- [x] **Gate manuale D0.5 — superato per il funzionamento diagnostico:** screenshot 10/11/2026, `FX:EURUSD` 5m, `SOLO CVD PARZIALE`, ultimo 5m chiuso `5/5` intrabar 1m, ultimo controllo `OK`, 140 barre consecutive nel tratto parziale e 2 incomplete nella giornata. Linea arancione visibile e tratti azzurri storici; alcune marcature DIV storiche non sono prova di anticipazione/profitto né alert live. Conferma che sono disponibili volumi 1m a sufficienza per calcolare un *proxy* sul segmento, ma NON garantisce completezza dell'intera giornata o equivalenza al delta futures.
 - [ ] Confronto futuro con CVD nativo aggregato TradingView solo su stessa fonte e timestamp; validazione scientifica B prima di qualsiasi notifica o livello operativo. Nessuna asserzione di vantaggio.
 
 ## 10/11/2026 — D0.4: errore `Invalid symbol` e ticker canonico FXCM su TradingView
