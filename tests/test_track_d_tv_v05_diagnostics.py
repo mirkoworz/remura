@@ -6,7 +6,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1] / "experiments" / "tradingview"
-PATHS = [ROOT / "remura_shark_cvd_fx_v04.pine", ROOT / "remura_shark_cvd_fx_v05.pine", ROOT / "remura_shark_cvd_fx_v06.pine", ROOT / "remura_shark_cvd_fx_v07.pine"]
+PATHS = [ROOT / "remura_shark_cvd_fx_v04.pine", ROOT / "remura_shark_cvd_fx_v05.pine", ROOT / "remura_shark_cvd_fx_v06.pine", ROOT / "remura_shark_cvd_fx_v07.pine", ROOT / "remura_shark_cvd_fx_v08.pine"]
 
 
 def balance_pine_delimiters(source):
