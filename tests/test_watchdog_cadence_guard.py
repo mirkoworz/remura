@@ -64,10 +64,11 @@ class WatchdogCadenceGuardTests(unittest.TestCase):
         self.assertIn("BROKER_OR_WORKER_IN_HTTP", self.check(candidate)["violations"])
 
     def test_new_collector_thread_call_site_is_blocked(self):
-        before = "thread=threading.Thread(target=collector_loop,args=(db_path,stop),"
+        before = "        collector_progress=CycleProgress()"
         self.assertIn(before, self.source)
-        candidate = self.source.replace(before, before.replace("thread=", "other_thread=") +
-                                        "\n        " + before)
+        candidate = self.source.replace(
+            before, before +
+            "\n        other_thread=threading.Thread(target=collector_loop,args=(db_path,stop),daemon=True)")
         self.assertIn("COLLECTOR_THREAD_OR_PROGRESS_START_DRIFT", self.check(candidate)["violations"])
 
     def test_invalid_source_fails_closed(self):
