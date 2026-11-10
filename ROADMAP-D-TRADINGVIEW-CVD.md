@@ -1,8 +1,18 @@
 # REMURA — FILONE D: TradingView FXCM / Shark CVD (sperimentale)
 
-**Apertura:** 09/11/2026 (Europe/Rome). **Versione laboratorio:** D0.4 (10/11/2026, Italia). **Stato:** D0.3 ha compilato su TradingView ma è stata fermata da `Invalid symbol: FXCM:EURUSD`. D0.4 richiede **FX:EURUSD**, ID Pine realmente osservato e associato a FXCM dall'interfaccia TradingView. D0.4 runtime non ancora testata. NON LIVE.
+**Apertura:** 09/11/2026 (Europe/Rome). **Versione laboratorio:** D0.5 (10/11/2026, Italia). **Stato:** D0.4 non compilava per parentesi mancante su `table.cell` (CE10015), corretta e confermata compilabile dall'utente. Il grafico CVD rimane vuoto; non abbiamo ancora visto il conteggio 1m né l'esatto stato dati. D0.5 diagnostica separata NON ANCORA COMPILATA/VALIDATA su TradingView. NON LIVE.
 
 **Ramo:** `experiment/track-d-tv-fxcm-cvd-20261109`. Nessun merge, deploy, servizio, connettore VPS, endpoint pubblico o nuova API. Non cambiare versione applicativa LIVE: un esperimento Pine non è un aggiornamento delle nove pagine REMURA.
+
+## 10/11/2026 — D0.5: compilazione confermata D0.4, CVD vuoto e diagnosi della copertura
+
+- [x] Nuova prova utente: Pine D0.4 segnala `CE10015 Missing closing parenthesis` alla riga 140, chiamata `table.cell`. Corretta aggiungendo `)`, confermata la compilazione dall'utente; il grafico CVD continua a rimanere **vuoto**. Il successo della compilazione NON verifica disponibilità dei volumi 1m o correttezza del CVD.
+- [x] Difetto logico nel prototipo: `validSession := false` al primo 5m non perfettamente completo, mantenuto fino al prossimo reset giornaliero; quando TradingView limita gli intrabar storici o una 5m è incompleta, può non esserci alcuna linea pur con dati successivi validi. Gli array da `request.security_lower_tf` possono contenere meno di cinque minuti o essere vuoti; vedere https://www.tradingview.com/pine-script-docs/concepts/other-timeframes-and-data/.
+- [x] Creato `experiments/tradingview/remura_shark_cvd_fx_v05.pine`, modello `remura_fx_1m_cvd_d0.5`. Presenta **due curve distinte**: verde CVD giornaliero solo se la sessione parte dall'ancora giornaliera ed è integra; arancione **CVD PARZIALE (NO SIGNAL)** ricostruito da almeno due barre 5m consecutive con cinque minuti completi. Dopo ogni gap la curva arancione riparte da zero e non collega segmenti separati. Non si chiama mai CVD di giornata e non entra nei pivot/alert.
+- [x] Diagnostica del grafico: fonte `FX:EURUSD`, TF, `1m x/5` dell'ultima 5m chiusa, ragione osservata `FX_5M_ASSENTE` / `1M_PRESENTI_x_SU_5` / `ORARI_1M_NON_CONTIGUI` / `VOLUME_O_PREZZO_1M_ND` / `OK`, conteggio barre segmento e lacune. I dati sono validati solo alla chiusura della 5m; non trattare la candela aperta come definitiva.
+- [x] Aggiunti test statici con verifica delle parentesi per non ripetere CE10015 e di separazione dei due tracciati; NON sostituiscono il Pine Editor.
+- [ ] **Gate manuale D0.5:** provare il nuovo file su `FX:EURUSD` 5m e leggere una delle due curve oppure il motivo in tabella. Se c'è soltanto `0/5`, indagare disponibilità reali 1m del piano/feed; se c'è `5/5` e curva arancione, confermare segmento parziale ma **nessun segnale**. Non acquistare altri feed e non inviare webhook.
+- [ ] Confronto futuro con CVD nativo aggregato TradingView solo su stessa fonte e timestamp; validazione scientifica B prima di qualsiasi notifica o livello operativo. Nessuna asserzione di vantaggio.
 
 ## 10/11/2026 — D0.4: errore `Invalid symbol` e ticker canonico FXCM su TradingView
 
