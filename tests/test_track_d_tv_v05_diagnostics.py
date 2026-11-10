@@ -54,7 +54,7 @@ class TestD05(unittest.TestCase):
         self.assertIn('const string FEED = "FX:EURUSD"', p)
         self.assertIn('request.security_lower_tf(FEED, "1"', p)
         self.assertIn('request.security(FEED, "5"', p)
-        self.assertIn('fxT == time', p)
+        self.assertIn('fxT != time', p)  # fail-closed mismatch branch
         self.assertIn('validSession := false', p)
         self.assertIn('if validSession', p)
         self.assertIn('if chartOk and researchAlerts and barstate.isrealtime and barstate.isconfirmed and (bullish or bearish)', p)
