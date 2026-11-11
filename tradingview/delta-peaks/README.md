@@ -1,7 +1,18 @@
 # REMURA — Order Flow Radar & Footprint Premium LAB v0.5
-**Aggiornamento: 11/11/2026, ore 12:40 CET**
+**Aggiornamento documentazione v0.5: 11/11/2026, ore 12:48 CET**
 
 > Laboratorio nella PR **#102 DRAFT**. Nessun merge, deploy o impatto sui filoni A/B/C.
+
+## CHECKPOINT VISIVO v0.5 — 11/11/2026, ore 12:48 CET
+
+**Prova FOOTPRINT su FXCM:EURUSD a 5 minuti: superata per caricamento/UI e dati visibili.**
+La fotografia dell'utente mostra il nome `REMURA Order Flow Radar Premium LAB v0.5` sul grafico e il pannello `REMURA PREMIUM FLOW v0.5` con `DATI FOOTPRINT = PRESENTI`. Il grafico stesso e' configurato come **Footprint volume nativo di TradingView**: le celle bid/ask colorate vengono da quella visualizzazione, non sono disegnate dal nostro Pine. Il nostro Pine mostra invece il pannello.
+
+Campione **LIVE/PROVVISORIO** osservato: BUY stimato **92**, SELL stimato **109**, delta **-17**, Delta/Vol circa **-8,5%**, conteggio imbalance BUY=**0**, SELL=**0** e ER stimato **NORMALE**. POC e Value Area sono valorizzati. Sono valori transitori: NON sono un risultato della sessione, non equivalgono a contratti CME e non dimostrano vantaggio statistico.
+
+**Da verificare separatamente:** selezione della vista `RADAR` dallo stesso indicatore v0.5, ricalcolo dopo chiusura candela e differenza tra delta della libreria intrabar e footprint nativo. Non modificare ancora i segnali ER per includere POC/imbalance.
+
+Prossima fase: definire il protocollo di misurazione ER **15/30/60 minuti** senza lookahead, su barre confermate e con benchmark; non confondere test visivo con misurazione di predittivita'.
 
 ## COPIA SU TRADINGVIEW
 **[Codice Pine v0.4](REMURA-Delta-Peaks-LAB.pine)**: aprilo su GitHub, premi **Raw**, copia tutto da `//@version=6` e sostituisci il codice nel **Pine Editor** su **FXCM:EURUSD, 5 minuti**. Salva e Aggiungi al grafico; togli le vecchie istanze per non sovrapporre gli indicatori. Il titolo corretto sara' **REMURA Order Flow Radar LAB v0.4**.
