@@ -1,29 +1,42 @@
-# REMURA TradingView — ROADMAP Delta Peaks LAB v0.2
-**Aggiornamento: 11/11/2026, ore 08:54 CET**
+# REMURA TradingView — ROADMAP Delta Peaks LAB v0.3
+**Aggiornamento: 11/11/2026, ore 09:03 CET**
 
 ## Stato attuale
-- [x] Sezione autonoma `tradingview/delta-peaks/` e PR **#102 DRAFT**, separata da main e dai filoni A/B/C.
-- [x] **v0.1** — compilazione e visualizzazione viste nello screenshot TradingView dell'11/11/2026 su `FXCM:EURUSD` 5m. Non e' una validazione scientifica.
-- [x] **v0.2** — riduzione rumore visivo, picchi separati da ER, soglia basata su 30 barre precedenti, intervallo minimo configurabile.
-- [ ] Prova di compilazione **v0.2** in Pine Editor, screenshot di confronto con v0.1.
-- [ ] Controllare feed senza volume, disponibilita' storico intrabar e coerenza colori/valori.
-- [ ] Confrontare con il metodo di riferimento dei picchi delta Week, Current Monthly e Previous Monthly.
+- [x] Cartella indipendente `tradingview/delta-peaks/`, PR #102 **DRAFT**, senza modifiche a main/produzione e ai filoni A/B/C.
+- [x] **v0.1**: screenshot EURUSD FXCM M5 del 11/11/2026 mostra corretta visualizzazione di marcatori e livelli.
+- [x] **v0.2**: riduzione del rumore visivo, delta / media precedenti, distanza minima fra picchi.
+- [x] **v0.3**: metrica numerica dell'efficienza Sforzo/Risultato con Delta, Sforzo relativo, Risultato orientato (ATR), Efficienza ER e alert dedicati.
+- [ ] **Prova compilazione v0.3** in Pine Editor TradingView e screenshot.
+- [ ] Verificare comportamento con delta 0/N/D, ATR assente, storia intrabar incompleta, grafici con o senza volume.
+- [ ] Confrontare **WEEK / CURRENT MONTH / PREVIOUS MONTH** con esempi e regole specifiche del metodo del collaboratore.
+- [ ] Confrontare i segnali filtrati vs senza gap, soglie 0.07 e 3.5 su campioni *prospective* senza selezione a posteriori.
 
-## Step successivi (non ancora implementati)
-1. **v0.3 — livelli fedeli al metodo:** distinguere massimo della barra, livello di prezzo effettivo, range/estremi e metrica di delta per Week/Current/Previous.
-2. **v0.4 — robustezza & falsi positivi:** analisi dei filtri sui dataset disponibili, nessun ottimismo retrospettivo.
-3. **v0.5 — prova prospettica:** registrare eventi prima della reazione, misurare casi positivi e negativi, volatilita', orari, eventi news.
-4. **v0.6 — eventuale integrazione REMURA:** flusso alert consentito, a costo zero se possibile, senza segreti in Pine e senza ricondurre dati FXCM a CME.
-5. **Confronto futures:** solo su dati autentici e utilizzabili legalmente quando disponibili.
+## Formula v0.3 (nessuna ottimizzazione retrospettiva)
+```
+Sforzo = abs(delta) / SMA(abs(delta delle 30 barre precedenti))
+Risultato = sign(delta) * (close - open) / ATR(14)
+Efficienza = Risultato / Sforzo
+ER = barra confermata AND Sforzo >= 3.5 AND Efficienza <= 0.07
+     AND rispetto del gap minimo (6 barre intermedie)
+```
+Il risultato dell'ultima barra appare in dashboard: non è storico statistico di efficacia, non è un segnale direzionale e non identifica specifici istituzionali.
+
+## Sviluppi successivi
+1. **v0.4 — livelli del metodo**: validare posizione e tipologia di livelli Week/Monthly con esempi, considerare range e valore del delta di periodo.
+2. **v0.5 — registrazione prospettica**: definire evento, timeframe di osservazione, target/stop solo per misurare esiti e falsi positivi, nessuna promessa di profitto.
+3. **v0.6 — filtri robustezza**: sessioni, volatilita', feed mancanti, gap, forme di volume, almeno due condizioni indipendenti.
+4. **v0.7 — eventuale integrazione REMURA**: verificare webhook, limiti del piano e termini di uso; preferire opzioni gratuite.
+5. **Futures reali**: confronto con CME soltanto quando dati utilizzabili e validi sono disponibili.
 
 ## Regole permanenti
-- Ogni modifica con versione e **data/ora CET/CEST nell'intestazione** di Pine, README e roadmap.
-- Nessuna promessa di profitti, segnali anticipatori o identita' istituzionale prima di test seri.
-- Nessun merge, deploy o modifica automatica alle PR dei filoni A/B/C.
-- Priorita' al gratuito, monitorando i limiti di piani e servizi.
-- Separare sempre **verifica compilazione/UI** da **validazione scientifica**.
+- Intestazione con versione e data/ora CET/CEST a ogni modifica.
+- Niente merge/deploy della PR #102, niente interferenza coi filoni A/B/C.
+- Separare compilazione Pine, verifica dati e validazione scientifica.
+- Evitare leak di credenziali, servizi a pagamento o chiamate non necessarie.
+- Documentare falsi positivi e negativi, non scegliere solo i successi.
 
-## Registro modifiche
-- **v0.1 — 11/11/2026 08:41 CET:** script iniziale con picchi, ER e livelli WEEK/MONTH, condizioni di alert.
-- **Verifica v0.1 — 11/11/2026 08:54 CET:** screenshot FXCM:EURUSD 5m conferma esecuzione e visualizzazione, segnali molto affollati.
-- **v0.2 — 11/11/2026 08:54 CET:** soglia 3.5 su media delle barre precedenti, gap minimo di 6 barre, visualizzazione ER per default, D+/D- opzionale. In attesa della prova sul grafico.
+## Registro
+- **v0.1 — 11/11/2026 08:41 CET**: prototipo iniziale.
+- **v0.1 screenshot — 11/11/2026 08:54 CET**: compilazione e visualizzazione osservate.
+- **v0.2 — 11/11/2026 08:54 CET**: soglie e pulizia grafica, in attesa di test Pine.
+- **v0.3 — 11/11/2026 09:03 CET**: calcolo normalizzato numerico Effort/Result/Efficiency, pannello e avvisi ER per segno delta. Test Pine non ancora svolto.
