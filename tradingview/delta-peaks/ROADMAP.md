@@ -1,5 +1,16 @@
 # REMURA TradingView — ROADMAP ALL-IN-ONE Premium LAB v0.7
-**Aggiornamento: 11/11/2026, ore 13:19 CET**
+**Aggiornamento roadmap: 11/11/2026, ore 13:55 CET**
+
+## CHECKPOINT CONFERMATO — 11/11/2026, ore 13:55 CET
+
+- [x] **L'utente conferma che la v0.7 funziona** nel Pine Editor/TradingView su FXCM:EURUSD M5, incluse le linee giornaliere. **È una conferma di funzionamento UI, non di correttezza statistica del metodo.**
+- [x] Pubblicato il [MANUALE DI STUDIO v0.7](MANUALE-V07-ORDER-FLOW.md): spiegazione puntuale della tabella, regole, sorgenti e protocollo manuale sui livelli/ritorni. CVD eventuale del grafico nativo resta separato dal Pine.
+- [x] Creato il [PIANO WEBHOOK TradingView → REMURA](PIANO-WEBHOOK-REMURA.md): JSON dinamico con `alert()`, eventi chiusi, gateway HTTPS e archivio senza attivazione live. PR #102 resta DRAFT.
+- [ ] **Prima implementazione successiva**: verificare schema eventi/bar-close, generazione JSON offline, ricezione in test (nessun segreto in GitHub), non attivare ordini o webhook live prima di sicurezza e consenso.
+- [ ] Misurazione prospettica su ER e retest DAY a 15/30/60 minuti, benchmark e fallimenti; considerare anche riclassifica dei livelli TOP3 durante la sessione.
+- [ ] Verificare una seconda volta su TradingView modalità `HL2` vs `POC FOOTPRINT`, cambio giorno e disponibilità PREVIOUS DAY/MONTH, non sovrapporre retrospettiva al live.
+
+**Prossimo filone TradingView**: v0.8 TELEMETRY JSON verso gateway di test isolato, poi scoring REMURA B/C solo dopo qualità dati validata. Nessun merge, deploy, acquisto o operazione di trading autorizzata. Il periodo Oracle Free Trial previsto in scadenza 15/11/2026 resta responsabilità del Filone A, quindi la nuova architettura deve tollerare un'eventuale assenza VPS.
 
 ## NUOVO CHECKPOINT — v0.7 DAY DELTA PEAKS (11/11/2026 13:19 CET)
 
@@ -9,7 +20,7 @@
 - [x] **Retest**: prima intersezione confermata del range High-Low su livelli gia' creati, soltanto da candele successive; marcatori RT, conteggi e quarta condizione di alert.
 - [x] **Vista COMPLETO** ampliata ai tre DAY, precedente giorno, conteggi di retest e storico eventi. Conservo le viste isolate RADAR/FOOTPRINT.
 - [x] Test strutturali di codice e cardinalita' di chiamate: un solo Footprint, un solo Delta intrabar, una tabella, 4 condizioni di alert.
-- [ ] **Compilare e verificare la v0.7 sul Pine Editor**; screenshot su `FXCM:EURUSD` M5 con le nuove linee e contatori.
+- [x] **Compilazione e funzionamento v0.7 confermati verbalmente dall’utente** su `FXCM:EURUSD` M5; mancano test quantitativi e verifica completa dei singoli contatori/edge case.
 - [ ] Controllare il cambio sessione/giorno, storico parziale, POC N/D e possibili livelli coincidenti.
 - [ ] Registrare prospetticamente ogni retest e valutare reazione successiva a 3/6/12 barre senza modificare parametri a posteriori.
 - [ ] Confrontare i livelli DAY/WEEK/MONTH coi video di riferimento; distinguere picco di barra da delta cumulativo del periodo.
