@@ -1,5 +1,20 @@
-# REMURA TradingView — ROADMAP ALL-IN-ONE Premium LAB v0.6
-**Aggiornamento: 11/11/2026, ore 12:58 CET**
+# REMURA TradingView — ROADMAP ALL-IN-ONE Premium LAB v0.7
+**Aggiornamento: 11/11/2026, ore 13:19 CET**
+
+## NUOVO CHECKPOINT — v0.7 DAY DELTA PEAKS (11/11/2026 13:19 CET)
+
+- [x] Creato [REMURA-ALL-IN-ONE-Premium-v0.7.pine](REMURA-ALL-IN-ONE-Premium-v0.7.pine), lasciando v0.6 intatta.
+- [x] **Top3 DAY** su `abs(delta intrabar)` di barre confermate: linee viola, arancione e azzurra dinamiche, filtro minimo 1.5x, nessuna modifica alle metriche ER esistenti.
+- [x] **PREVIOUS DAY** massimo in grigio puntinato e reset di giornata al `timeframe.change("1D")`.
+- [x] **Retest**: prima intersezione confermata del range High-Low su livelli gia' creati, soltanto da candele successive; marcatori RT, conteggi e quarta condizione di alert.
+- [x] **Vista COMPLETO** ampliata ai tre DAY, precedente giorno, conteggi di retest e storico eventi. Conservo le viste isolate RADAR/FOOTPRINT.
+- [x] Test strutturali di codice e cardinalita' di chiamate: un solo Footprint, un solo Delta intrabar, una tabella, 4 condizioni di alert.
+- [ ] **Compilare e verificare la v0.7 sul Pine Editor**; screenshot su `FXCM:EURUSD` M5 con le nuove linee e contatori.
+- [ ] Controllare il cambio sessione/giorno, storico parziale, POC N/D e possibili livelli coincidenti.
+- [ ] Registrare prospetticamente ogni retest e valutare reazione successiva a 3/6/12 barre senza modificare parametri a posteriori.
+- [ ] Confrontare i livelli DAY/WEEK/MONTH coi video di riferimento; distinguere picco di barra da delta cumulativo del periodo.
+
+**Regole scientifiche**: livelli selezionati solo dopo chiusura; la loro classificazione puo' cambiare con nuovi massimi, percio' in analisi prospettica salvare sempre il momento in cui un livello e' nato e quello in cui e' stato sostituito. Le linee non sono ordini istituzionali osservati. Costi addizionali zero, PR #102 DRAFT, no merge/deploy.
 
 ## CHECKPOINT v0.6 — ALL-IN-ONE Premium (11/11/2026, ore 12:58 CET)
 
