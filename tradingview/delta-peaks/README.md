@@ -1,5 +1,5 @@
 # REMURA TradingView — Delta Peaks LAB v0.3
-**Aggiornamento: 11/11/2026, ore 09:03 CET**
+**Aggiornamento documentazione v0.3: 11/11/2026, ore 09:39 CET**
 
 > Solo laboratorio: PR #102 DRAFT. Nessun merge, deploy, ordine o collegamento automatico al motore REMURA live.
 
@@ -41,7 +41,9 @@ Con **dati assenti**, ATR nullo o media del delta nulla, il calcolo ER produce *
 ## STATO VERIFICHE
 - **v0.1**: screenshot dell'11/11/2026 mostra che compila e visualizza marcatori e livelli su EURUSD FXCM M5, ma non dimostra alcun vantaggio statistico.
 - **v0.2**: codice aggiornato su GitHub, **non ancora testato su TradingView**.
-- **v0.3**: nuova metrica ER, **non ancora compilata in TradingView**. Prossimo step: screenshot del nuovo grafico, confronto con metodo originale del collaboratore.
+- **v0.3**: **test visivo/compilazione superato il 11/11/2026**. Due fotografie del grafico `FXCM:EURUSD` 5m mostrano indicatore v0.3 attivo, pannello Delta/Sforzo/Risultato/Efficienza, livelli Week/Monthly, marcatori ER+ e ER-. Nessun errore Pine visibile. Osservato ER- vicino all'11/11 sul grafico, senza inferire un risultato futuro.
+- La metrica resta **NON VALIDATA** come previsione e i dati non sono feed istituzionali certificati. Gli screenshot non provano che l'evento preceda un'inversione.
+- **Prossimo test**: bloccare ex ante soglie 3.5, 0.07 e gap 6, registrare ogni ER con timestamp/valore e misurare per 3, 6 e 12 barre successive distanza di chiusura, MFE/MAE in ATR e frequenza degli esiti avversi. Confrontare con un benchmark senza ER e senza attribuire una direzione automatica al marcatore; conservare anche gli insuccessi.
 - Fonte tecnica: [libreria TradingView ta](https://www.tradingview.com/script/BICzyhq0-ta/), [riferimento Pine Script v6](https://www.tradingview.com/pine-script-reference/v6/).
 
 ## COSTI / LIMITI
