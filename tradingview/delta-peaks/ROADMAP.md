@@ -1,5 +1,5 @@
 # REMURA TradingView — ROADMAP ALL-IN-ONE Premium TELEMETRY LAB v0.8.1
-**Aggiornamento roadmap: 11/11/2026, ore 16:26 CET**
+**Aggiornamento roadmap: 11/11/2026, ore 16:27 CET**
 **PR #102 DRAFT, OPEN — NO MERGE, NO DEPLOY, NO WEBHOOK, NO ORDINI.**
 
 ## CHECKPOINT v0.8.1 — 11/11/2026 16:26 CET (SOLO OFFLINE)
@@ -11,7 +11,7 @@
 - [x] Creati [validatore Python](validate_telemetry_v1.py) e [16 test sintetici](test_telemetry_v1.py) senza dipendenze terze.
 - [x] Aggiunto workflow GitHub Actions *solo su file di questo laboratorio* `.github/workflows/remura-tv-telemetry-lab.yml`, sola lettura, no segreti, no deploy, per regressioni Python; runner GitHub standard pubblico gratuito secondo documentazione ufficiale.
 - [x] Verifica pubblica quote: Workers Free 100.000 richieste/giorno e 10ms CPU/req; D1 Free 5 milioni righe lette/giorno, 100.000 scritte/giorno, 5GB account **e 500MB/database**; oltre quota il Free blocca operazioni. Nessuna nuova risorsa creata.
-- [ ] Verificare **risultato effettivo GitHub Actions** (non confondere test scritti con test eseguiti/verde).
+- [x] **CI verificata VERDE**: run [43048503823](https://github.com/mirkoworz/remura/actions/runs/43048503823) per HEAD `aaae10c4e6d59951e0b0bb0d4a2c07be27ead5a3`: regressioni sintetiche Python + `py_compile` completati con successo. NON è una compilazione Pine.
 - [ ] **Pine v0.8.1 NON COMPILATO su TradingView**: verificare compilazione manuale, soprattutto payload dinamico e campi NA, **senza creare alert**; solo dopo il confronto v0.7/v0.8 su FXCM:EURUSD M5.
 - [ ] Gateway di test: definire autenticazione sicura compatibile TV, con IP allowlist, body/rate limit, D1/KV retention e deduplica; verificare il consumo di risorse condivise prima di un qualsiasi deploy.
 - [ ] Misurazione reale **NON AVVIATA**: può iniziare solo dopo receiver autorizzato, conservazione eventi real-time, e feed M5 prospettico per barre senza eventi.
