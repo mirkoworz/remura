@@ -1,5 +1,5 @@
-# REMURA — Order Flow Radar LAB v0.4
-**Aggiornamento documentazione v0.4.1: 11/11/2026, ore 11:58 CET**
+# REMURA — Order Flow Radar & Footprint Premium LAB v0.5
+**Aggiornamento: 11/11/2026, ore 12:40 CET**
 
 > Laboratorio nella PR **#102 DRAFT**. Nessun merge, deploy o impatto sui filoni A/B/C.
 
@@ -42,6 +42,28 @@ L'intensita' **1/5 — 5/5** dipende dal rapporto tra delta corrente e media dei
 - **v0.4**: codice aggiornato su GitHub, controlli statici interni superati. **Non ancora compilata o osservata LIVE sul Pine Editor**. Per il prossimo passo mandare due schermate, una durante la candela e una alla sua chiusura.
 - Il feed FXCM Forex puo' usare tick volume. Il delta da `TradingView/ta/14` e' una stima intrabar, **non un footprint bid/ask del CME**, e gli ER non sono ordini BUY/SELL validati.
 - Nessuna nuova API, server o abbonamento; nuovi costi REMURA **zero**. Disponibilita' di dati intrabar/alert soggetta al piano TradingView.
+
+## NUOVO: RADAR + FOOTPRINT UNIFICATI — v0.5 PREMIUM (11/11/2026, 12:40 CET)
+
+**Test Premium sulla foto del 11/11/2026: SUPERATO lato compilazione e dati.** Sul grafico `FXCM:EURUSD` 5m la PROBE mostra `DATI PRESENTI`, buy **16**, sell **23**, delta **-7**, POC circa **1.11335**, VAH **1.11340**, VAL **1.11330**, 0 righe BUY imbalance e 1 riga SELL imbalance. I dati sono della candela LIVE, pertanto provvisori.
+
+A questo checkpoint e' stato aggiunto **[REMURA-Order-Flow-Radar-Premium-v0.5.pine](REMURA-Order-Flow-Radar-Premium-v0.5.pine)**, SENZA sovrascrivere il Radar v0.4 o la PROBE. E' un file alternativo che conserva i calcoli ER e permette di scegliere nel suo unico pannello:
+
+- `Vista pannello = FOOTPRINT` (default): BUY/SELL classificati, delta e delta/volume %, POC (centro riga), VAH/VAL, numero di righe BUY/SELL imbalance, indicazione ER e rapporto Sforzo/Efficienza.
+- `Vista pannello = RADAR`: pannello v0.4 originale con pressione verde/rossa, intensita', anomalie ER e ultimi tre eventi.
+- `Mostra POC come punti` default **OFF**: se acceso disegna solo il POC delle candele chiuse. Non e' un punto di entrata automatica.
+
+### Come testare la v0.5
+1. Apri il nuovo file, premi **Raw**, copia tutto e incolla in un nuovo indicatore Pine su FXCM:EURUSD M5.
+2. Per evitare due pannelli sovrapposti sul grafico, rimuovi temporaneamente le istanze separate di Radar v0.4 e Premium Probe.
+3. Controlla che **FOOTPRINT** visualizzi dati e che scegliendo **RADAR** nelle impostazioni compaia il vecchio pannello.
+4. Invia uno screenshot delle due viste, con eventuali messaggi di compilazione o runtime.
+
+La v0.5 ha superato solo controlli statici di integrita' su GitHub; **non risulta ancora compilata sul Pine Editor**. I tre `alertcondition` esistenti si basano **solo** su delta stimato e ER, NON sul footprint. Nessun ordine, webhook, merge o deploy.
+
+Il footprint FXCM proviene dalla classificazione direzionale di dati intrabar, **non** dall'identificazione delle controparti istituzionali e neppure dal book completo CME. Una differenza tra delta `requestVolumeDelta()` e delta `request.footprint()` non e' di per se' un errore: aggregazione e granularita' possono differire.
+
+Il piano Premium e' gia' posseduto dall'utente: nessun nuovo abbonamento necessario per questa prova. Le eventuali quotazioni real-time CME restano una questione separata.
 
 ## ESPERIMENTO NUOVO: FOOTPRINT NATIVO CON PREMIUM (11/11/2026, 11:58 CET)
 
