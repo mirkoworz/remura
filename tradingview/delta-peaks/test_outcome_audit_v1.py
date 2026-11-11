@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# REMURA OUTCOME LAB v0.8.3 — aggiornamento 11/11/2026 18:05 CET.
+# REMURA OUTCOME LAB v0.8.3 — aggiornamento 11/11/2026 18:00 CET.
 # SOLO DATI SINTETICI: nessun prezzo reale, nessun risultato di trading.
 import copy
 import unittest
