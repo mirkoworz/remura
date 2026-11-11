@@ -1,5 +1,49 @@
-# REMURA TradingView — ROADMAP TELEMETRY / GATEWAY LAB v0.8.2
-**Aggiornamento roadmap: 11/11/2026, ore 17:52 CET**
+# REMURA TradingView — ROADMAP PROSPECTIVE LAB v0.8.3
+**Aggiornamento roadmap: 11/11/2026, ore 18:01 CET**
+**PR #102 DRAFT, OPEN — NESSUN MERGE, DEPLOY, WEBHOOK O ORDINE.**
+
+## CHECKPOINT v0.8.3 — 11/11/2026 18:01 CET
+- [x] Verificate oggi le condizioni Workers Free e D1 Free alle fonti
+  ufficiali Cloudflare: **100.000 richieste Worker/giorno, 10ms CPU/request;
+  D1 5M righe lette/giorno, 100.000 righe scritte/giorno,
+  500 MB per database e 5 GB/account, max 10 database Free**.
+  Le quote sono condivise; **utilizzo reale account Cloudflare NON VERIFICATO**
+  e nessun login/account o deploy è stato effettuato.
+- [x] Conservati v0.7 funzionante e Pine v0.8.1 confermato funzionante
+  dall'utente; nessuna nuova prova Pine necessaria in questa fase.
+- [x] Gateway v0.8.2 Cloudflare/D1 e autenticazione/anti-duplicato rimangono
+  **soltanto sorgenti offline**. Prove GitHub CI eseguite, nessun URL webhook
+  o database realmente creato.
+- [x] Creato [OUTCOME AUDIT v0.8.3](outcome_audit_v1.py) e
+  [18 regressioni sintetiche](test_outcome_audit_v1.py); aggiornato
+  [protocollo](PROTOCOLLO-PROSPETTICO-V08.md).
+  Misura **15/30/60 minuti (3/6/12 M5)** su snapshot chiusi con ricezione
+  prospettica entro 120s, OHLC/ATR, MFE/MAE, retest RIFIUTO/ROTTURA/
+  INDEFINITO, coorti ER e sostituzioni livello senza look-ahead.
+- [x] Mancanza di barre M5, timestamp ricezione, ATR o cambio anchor
+  produce **esito mancante**. Livelli riclassificati si valutano con
+  identità di nascita, non col rank finale. Nessun esito reale finora.
+- [x] Confronto baseline descrittivo solo se abbiamo barre `HEARTBEAT`
+  complete della stessa data/fascia UTC prefissata: 00–08 / 08–16 / 16–24.
+  Nessuna inferenza di profitto: benchmark a segno permutato, intervalli
+  di confidenza e walk-forward OOS **ancora da implementare**.
+- [x] Aggiornata CI Python per includere 16+18=34 regressioni sintetiche
+  e aggiunte alle 21 regressioni Node del gateway = **55 test**;
+  risultato verde [run #43063528207](https://github.com/mirkoworz/remura/actions/runs/43063528207)
+  sul commit `b27f2f38c4e9f6c5d06bba2b81a339b1da75477b`.
+  Riconfermare sull'ultimo HEAD dopo la modifica roadmap.
+- [ ] Verificare quanto già utilizza l'**account Cloudflare** dell'utente:
+  nessun plugin Cloudflare disponibile, serve controllo via dashboard
+  prima di creare risorse.
+- [ ] Approvazione esplicita **solo prima** di creare Worker/D1 o abilitare
+  alert/webhook; prima effettuare preflight piano Free e misurare costo/CPU.
+- [ ] In futuro: test ricezione sintetica isolata e quote, monitor buchi,
+  eventuale heartbeat BAR M5 dopo consenso, esportazione dei record veri;
+  solo allora valutare prospetticamente ER/RT.
+- [ ] Filoni A/B/C, REMURA live e trading automatico rimangono intatti.
+
+
+
 **PR #102 DRAFT, OPEN — NO MERGE, NO DEPLOY, NO WEBHOOK, NO ORDINI.**
 
 ## CHECKPOINT CONFERMATO — 11/11/2026 17:52 CET
