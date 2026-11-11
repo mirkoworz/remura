@@ -1,5 +1,26 @@
 # REMURA TradingView — ROADMAP PROSPECTIVE + FREE QUOTA LAB v0.8.4
-**Aggiornamento roadmap: 11/11/2026, ore 18:31 CET**
+**Aggiornamento roadmap: 11/11/2026, ore 18:37 CET**
+**PR #102 DRAFT/OPEN — NO MERGE, NO DEPLOY, NO WEBHOOK, NO ORDINI.**
+
+## CHECKPOINT D1 UE CONFERMATO — 11/11/2026 18:37 CET
+- [x] Screenshot Cloudflare D1 Settings del database ricreato dall'utente:
+  **Jurisdiction = The European Union**, **Region = Eastern Europe**,
+  **Read replication = Disabled**. Verificata la giurisdizione europea dopo
+  sostituzione del precedente DB senza giurisdizione.
+- [ ] **Nome D1 non visibile** nello screenshot; prima di qualsiasi
+  query verificare che sia proprio `remura-tv-lab-eu` e che non sia
+  uno dei servizi esistenti.
+- [ ] D1 creato, ma **schema tv_flow_events non ancora applicato**.
+  Passaggio utente iPhone: aprire Console nel DB UE corretto;
+  incollare SQL `gateway-lab/schema.sql` contenente unicamente
+  CREATE TABLE/INDEX IF NOT EXISTS; Execute; verificare
+  che compaia la tabella `tv_flow_events`, gli indici e 0 righe.
+  Non applicare SQL sul DB precedente o su altri servizi.
+- [ ] Gateway/Worker non distribuito, nessun secret, webhook o
+  heartbeat attivato. Dati reali non ancora raccolti.
+
+
+
 **PR #102 DRAFT/OPEN — NO MERGE, NO DEPLOY, NO WEBHOOK, NO ORDINI.**
 
 ## CHECKPOINT D1 CREATO DALL'UTENTE — 11/11/2026 18:31 CET
