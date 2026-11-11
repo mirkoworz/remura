@@ -1,5 +1,5 @@
 # REMURA — Order Flow Radar LAB v0.4
-**Aggiornamento: 11/11/2026, ore 11:26 CET**
+**Aggiornamento documentazione v0.4.1: 11/11/2026, ore 11:58 CET**
 
 > Laboratorio nella PR **#102 DRAFT**. Nessun merge, deploy o impatto sui filoni A/B/C.
 
@@ -42,6 +42,20 @@ L'intensita' **1/5 — 5/5** dipende dal rapporto tra delta corrente e media dei
 - **v0.4**: codice aggiornato su GitHub, controlli statici interni superati. **Non ancora compilata o osservata LIVE sul Pine Editor**. Per il prossimo passo mandare due schermate, una durante la candela e una alla sua chiusura.
 - Il feed FXCM Forex puo' usare tick volume. Il delta da `TradingView/ta/14` e' una stima intrabar, **non un footprint bid/ask del CME**, e gli ER non sono ordini BUY/SELL validati.
 - Nessuna nuova API, server o abbonamento; nuovi costi REMURA **zero**. Disponibilita' di dati intrabar/alert soggetta al piano TradingView.
+
+## ESPERIMENTO NUOVO: FOOTPRINT NATIVO CON PREMIUM (11/11/2026, 11:58 CET)
+
+Ora che il piano dell'utente e' **TradingView Premium**, e' disponibile anche [REMURA-Footprint-Premium-Probe.pine](REMURA-Footprint-Premium-Probe.pine), test autonomo su `request.footprint()` (non modifica il Radar v0.4).
+
+Il file mostra **BUY/SELL categorizzati, delta footprint, POC (centro della riga), VAH, VAL e numero di righe con imbalance BUY/SELL**. Usa un'unica richiesta footprint come da limiti Pine, con 10 tick per riga e sbilanciamento 300% predefiniti. Nessun alert/ordine/trasmissione a REMURA.
+
+Per provarlo: su `FXCM:EURUSD` 5m aprire il nuovo file GitHub → **Raw** → copia nel Pine Editor e Aggiungi al grafico. Il radar v0.4 puo' restare installato, ma inizialmente e' meglio provarlo da solo per non confondere i pannelli. Il nuovo pannello e' in alto a sinistra.
+
+**Verifica critica:** se il footprint restituisce N/D, non attribuire BUY/SELL inesistenti; verificarne disponibilita' sul simbolo, sul timeframe e sul piano. Il dato FXCM puo' essere tick volume e la distinzione BUY/SELL si basa sulla direzione intrabar, non su contratti CME/identita' dei trader.
+
+**Stato:** file caricato, **compilazione Pine e presenza di dati FXCM ancora da verificare sul grafico**. Non sostituiamo la v0.4 finche' questa prova non passa.
+
+Fonti: [Footprint Pine](https://www.tradingview.com/pine-script-docs/concepts/other-timeframes-and-data/#requestfootprint), [Guida Footprint](https://it.tradingview.com/support/solutions/43000726164/).
 
 ## DOPO IL TEST
 Passare alla **misura 15, 30, 60 minuti post-ER**, con MFE/MAE in ATR, benchmark e registrazione anche dei falsi positivi. Va ancora confrontata la definizione dei livelli Week/Monthly col metodo originale del collaboratore.
