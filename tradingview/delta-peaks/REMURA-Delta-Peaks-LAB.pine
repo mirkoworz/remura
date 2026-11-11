@@ -1,17 +1,17 @@
 //@version=6
-// REMURA Delta Peaks LAB v0.2
-// Aggiornamento: 11/11/2026 08:54 CET
+// REMURA Delta Peaks LAB v0.3
+// Aggiornamento: 11/11/2026 09:03 CET
 // Ricerca sperimentale: delta STIMATO, non ordini istituzionali osservati.
 // Nessun collegamento con la versione live di REMURA.
 import TradingView/ta/14 as tv
 
-indicator("REMURA Delta Peaks LAB v0.2 - 11/11/2026", overlay=true, max_lines_count=10)
+indicator("REMURA Delta Peaks LAB v0.3 - 11/11/2026", overlay=true, max_lines_count=10)
 
 // PARAMETRI
 lowerTF = input.timeframe("1", "Timeframe delta intrabar")
 lookback = input.int(30, "Barre di riferimento", minval=5)
 multiplier = input.float(3.5, "Forza minima picco", minval=1, step=0.25)
-bodyLimit = input.float(0.25, "Corpo massimo / ATR", minval=0.01, step=0.05)
+maxEfficiency = input.float(0.07, "Efficienza ER massima", minval=-1.0, maxval=1.0, step=0.01)
 showLevels = input.bool(true, "Mostra livelli WEEK / MONTH")
 minPeakGap = input.int(6, "Minimo barre tra picchi (5m = 30 min)", minval=0, maxval=100)
 showPeaks = input.bool(false, "Mostra anche D+/D- (diagnostica)")
@@ -34,16 +34,23 @@ isPeak = peakCandidate and (na(lastPeakBar) or bar_index - lastPeakBar > minPeak
 if isPeak
     lastPeakBar := bar_index
 
-// SFORZO / RISULTATO - IPOTESI, NON SEGNALE DIREZIONALE CONFERMATO
-smallBody = not na(atrValue) and math.abs(close - open) <= atrValue * bodyLimit
-sellAbsorption = isPeak and deltaBar > 0 and (smallBody or close < open)
-buyAbsorption = isPeak and deltaBar < 0 and (smallBody or close > open)
+// SFORZO / RISULTATO: METRICA SPERIMENTALE, NON PROVA DI ASSORBIMENTO
+// Sforzo = |delta barra| / media(|delta| delle 30 barre precedenti).
+// Risultato direzionale = sign(delta) * (close - open) / ATR(14).
+// Efficienza ER = risultato direzionale / sforzo.
+// Negativa: corpo nella direzione opposta al delta. Circa zero: poco corpo.
+effort = not na(avgDelta) and avgDelta > 0 ? absDelta / avgDelta : na
+signedResult = not na(atrValue) and atrValue > 0 and not na(deltaBar) ? math.sign(deltaBar) * (close - open) / atrValue : na
+efficiency = not na(effort) and effort > 0 and not na(signedResult) ? signedResult / effort : na
+erCandidate = isPeak and not na(efficiency) and efficiency <= maxEfficiency
+erPositiveDelta = erCandidate and deltaBar > 0
+erNegativeDelta = erCandidate and deltaBar < 0
 
-// MARCATORI
-plotshape(showPeaks and isPeak and deltaBar > 0 and not sellAbsorption, title="Picco positivo", style=shape.circle, location=location.abovebar, color=color.lime, size=size.tiny, text="D+")
-plotshape(showPeaks and isPeak and deltaBar < 0 and not buyAbsorption, title="Picco negativo", style=shape.circle, location=location.belowbar, color=color.red, size=size.tiny, text="D-")
-plotshape(showER and sellAbsorption, title="Possibile assorbimento venditore", style=shape.triangledown, location=location.abovebar, color=color.orange, size=size.small, text="ER")
-plotshape(showER and buyAbsorption, title="Possibile assorbimento compratore", style=shape.triangleup, location=location.belowbar, color=color.aqua, size=size.small, text="ER")
+// MARCATORI - ER+ = pressione positiva inefficiente, ER- = pressione negativa inefficiente
+plotshape(showPeaks and isPeak and deltaBar > 0 and not erPositiveDelta, title="Picco positivo", style=shape.circle, location=location.abovebar, color=color.lime, size=size.tiny, text="D+")
+plotshape(showPeaks and isPeak and deltaBar < 0 and not erNegativeDelta, title="Picco negativo", style=shape.circle, location=location.belowbar, color=color.red, size=size.tiny, text="D-")
+plotshape(showER and erPositiveDelta, title="ER delta positivo", style=shape.triangledown, location=location.abovebar, color=color.orange, size=size.small, text="ER+")
+plotshape(showER and erNegativeDelta, title="ER delta negativo", style=shape.triangleup, location=location.belowbar, color=color.aqua, size=size.small, text="ER-")
 
 // MASSIMI ASSOLUTI DEL DELTA NEI PERIODI DISPONIBILI
 var float weekMax = na
@@ -97,22 +104,31 @@ if barstate.isconfirmed and not na(deltaBar)
         if showLevels
             monthLine := line.new(bar_index, monthPrice, bar_index + 1, monthPrice, extend=extend.right, color=color.yellow, width=2)
 
-// DASHBOARD
-var table panel = table.new(position.top_right, 2, 5, border_width=1)
+// DASHBOARD: valori dell'ultima barra, non la statistica delle barre precedenti
+var table panel = table.new(position.top_right, 2, 8, border_width=1)
 if barstate.islast
     table.cell(panel, 0, 0, "REMURA DELTA", bgcolor=color.black, text_color=color.white)
-    table.cell(panel, 1, 0, "LAB v0.2", bgcolor=color.black, text_color=color.white)
+    table.cell(panel, 1, 0, "LAB v0.3", bgcolor=color.black, text_color=color.white)
     table.cell(panel, 0, 1, "Delta barra")
     table.cell(panel, 1, 1, na(deltaBar) ? "N/D" : str.tostring(deltaBar, format.volume))
-    table.cell(panel, 0, 2, "WEEK")
-    table.cell(panel, 1, 2, na(weekPrice) ? "N/D" : str.tostring(weekPrice, format.mintick), text_color=color.aqua)
-    table.cell(panel, 0, 3, "CURRENT MONTH")
-    table.cell(panel, 1, 3, na(monthPrice) ? "N/D" : str.tostring(monthPrice, format.mintick), text_color=color.yellow)
-    table.cell(panel, 0, 4, "PREVIOUS MONTH")
-    table.cell(panel, 1, 4, na(previousMonthPrice) ? "N/D" : str.tostring(previousMonthPrice, format.mintick), text_color=color.gray)
+    table.cell(panel, 0, 2, "Sforzo (x)")
+    table.cell(panel, 1, 2, na(effort) ? "N/D" : str.tostring(effort, "#.##"))
+    table.cell(panel, 0, 3, "Risultato (ATR)")
+    table.cell(panel, 1, 3, na(signedResult) ? "N/D" : str.tostring(signedResult, "#.###"))
+    table.cell(panel, 0, 4, "Efficienza ER")
+    table.cell(panel, 1, 4, na(efficiency) ? "N/D" : str.tostring(efficiency, "#.###"))
+    table.cell(panel, 0, 5, "WEEK")
+    table.cell(panel, 1, 5, na(weekPrice) ? "N/D" : str.tostring(weekPrice, format.mintick), text_color=color.aqua)
+    table.cell(panel, 0, 6, "CURRENT MONTH")
+    table.cell(panel, 1, 6, na(monthPrice) ? "N/D" : str.tostring(monthPrice, format.mintick), text_color=color.yellow)
+    table.cell(panel, 0, 7, "PREVIOUS MONTH")
+    table.cell(panel, 1, 7, na(previousMonthPrice) ? "N/D" : str.tostring(previousMonthPrice, format.mintick), text_color=color.gray)
 
 // DATI E ALLARMI - NESSUN WEBHOOK ATTIVATO
 plot(deltaBar, "Delta stimato", display=display.data_window)
+plot(effort, "Sforzo relativo (x)", display=display.data_window)
+plot(signedResult, "Risultato orientato al delta (ATR)", display=display.data_window)
+plot(efficiency, "Efficienza ER", display=display.data_window)
 alertcondition(isPeak, "REMURA - Picco delta", "Rilevato picco delta su {{ticker}}")
-alertcondition(buyAbsorption, "REMURA - Possibile assorbimento BUY", "Possibile assorbimento compratore su {{ticker}}")
-alertcondition(sellAbsorption, "REMURA - Possibile assorbimento SELL", "Possibile assorbimento venditore su {{ticker}}")
+alertcondition(erPositiveDelta, "REMURA - ER delta positivo", "Delta positivo con bassa efficienza su {{ticker}}")
+alertcondition(erNegativeDelta, "REMURA - ER delta negativo", "Delta negativo con bassa efficienza su {{ticker}}")
