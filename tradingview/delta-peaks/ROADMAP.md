@@ -1,5 +1,23 @@
 # REMURA TradingView — ROADMAP PROSPECTIVE + FREE QUOTA LAB v0.8.4
-**Aggiornamento roadmap: 11/11/2026, ore 18:24 CET**
+**Aggiornamento roadmap: 11/11/2026, ore 18:31 CET**
+**PR #102 DRAFT/OPEN — NO MERGE, NO DEPLOY, NO WEBHOOK, NO ORDINI.**
+
+## CHECKPOINT D1 CREATO DALL'UTENTE — 11/11/2026 18:31 CET
+- [x] Screenshot D1 Database Overview dell'utente: database appena
+  inizializzato, **0 tabelle**, **0 query**, **0 righe lette**, **0 righe
+  scritte**, **12,29 kB** storage base. Da verificare nome effettivo
+  `remura-tv-lab` e giurisdizione/location: NON sono visibili
+  nel ritaglio dello screenshot. Non dichiarare nome verificato.
+- [x] I due Workers preesistenti rimangono intatti.
+- [ ] Prossimo passaggio manuale nel database **solo dopo verifica nome**:
+  tab `Console`, applicare **solo** SQL non distruttivo
+  [schema D1 LAB](gateway-lab/schema.sql) (CREATE TABLE/INDEX IF NOT EXISTS).
+  Verificare poi `Number of Tables: 1`; nessun evento memorizzato.
+- [ ] Non creare Worker/alert/secret, non abilitare webhook o heartbeat
+  finché non sono completati i controlli successivi e autorizzati.
+
+
+
 **PR #102 DRAFT/OPEN — NO MERGE, NO DEPLOY, NO ORDINI.**
 
 ## CHECKPOINT CLOUDFARE FREE ACCOUNT — 11/11/2026, 18:24 CET
