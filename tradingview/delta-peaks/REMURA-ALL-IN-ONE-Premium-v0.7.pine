@@ -357,7 +357,7 @@ if barstate.islast
             color stateColor = barstate.isrealtime and not barstate.isconfirmed ? color.orange : color.lime
             string imbSummary = not hasFootprint ? "N/D" : fpBuyImb > fpSellImb ? "PIU' BUY IMB" : fpSellImb > fpBuyImb ? "PIU' SELL IMB" : "IMB EQUILIBRIO"
             table.cell(panel, 0, 0, "REMURA PREMIUM", text_color=color.white, bgcolor=color.new(color.blue, 55), text_size=size.small)
-            table.cell(panel, 1, 0, "FLOW v0.5", text_color=color.white, bgcolor=color.new(color.blue, 55), text_size=size.small)
+            table.cell(panel, 1, 0, "LAB v0.7", text_color=color.white, bgcolor=color.new(color.blue, 55), text_size=size.small)
             table.cell(panel, 0, 1, "STATO", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
             table.cell(panel, 1, 1, stateText, text_color=stateColor, bgcolor=bg, text_size=size.tiny)
             table.cell(panel, 0, 2, "DATI FOOTPRINT", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
@@ -392,7 +392,7 @@ if barstate.islast
             color base = color.new(color.black, 20)
             color eventBg = previewER ? color.new(color.purple, 35) : previewPeak ? color.new(color.orange, 35) : base
             table.cell(panel, 0, 0, "REMURA RADAR", text_color=color.white, bgcolor=color.new(color.blue, 55), text_size=size.small)
-            table.cell(panel, 1, 0, "LAB v0.4", text_color=color.white, bgcolor=color.new(color.blue, 55), text_size=size.small)
+            table.cell(panel, 1, 0, "LAB v0.7", text_color=color.white, bgcolor=color.new(color.blue, 55), text_size=size.small)
             table.cell(panel, 0, 1, "STATO", text_color=color.silver, bgcolor=base, text_size=size.tiny)
             table.cell(panel, 1, 1, mode, text_color=modeColor, bgcolor=base, text_size=size.tiny)
             table.cell(panel, 0, 2, "DELTA", text_color=color.white, bgcolor=base, text_size=size.small)
