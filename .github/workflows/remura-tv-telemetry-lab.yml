@@ -1,0 +1,31 @@
+# REMURA TradingView Telemetry LAB v0.8.1 — aggiornamento 11/11/2026 16:24 CET.
+# SOLO CI OFFLINE. Nessun deploy, webhook, credenziale o trade automatico.
+name: REMURA TradingView Telemetry LAB
+on:
+  pull_request:
+    paths:
+      - "tradingview/delta-peaks/**"
+      - ".github/workflows/remura-tv-telemetry-lab.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: remura-tv-lab-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  telemetry-validator:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.number == 102
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout sola lettura
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Esegui 16 regressioni sintetiche di schema/eventi (no rete)
+        run: python3 -m unittest discover -s tradingview/delta-peaks -p "test_telemetry_v1.py" -v
+      - name: Python syntax preflight Pine-independent
+        run: python3 -m py_compile tradingview/delta-peaks/validate_telemetry_v1.py tradingview/delta-peaks/test_telemetry_v1.py
