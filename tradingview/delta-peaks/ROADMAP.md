@@ -1,5 +1,5 @@
 # REMURA TradingView — ROADMAP Order Flow Radar LAB v0.4
-**Aggiornamento: 11/11/2026, ore 11:26 CET**
+**Aggiornamento documentazione v0.4.1: 11/11/2026, ore 11:58 CET**
 
 ## Checkpoint
 - [x] Laboratorio indipendente `tradingview/delta-peaks/`, PR #102 DRAFT.
@@ -20,6 +20,19 @@
 - **LIVE**: anteprima aggiornata mentre la candela e' aperta, mai salvata come segnale definitivo.
 - **CONFERMATO**: marcatori, allarmi e ultime 3 anomalie/picchi solo a barra chiusa.
 - **Livelli**: per ora massimo |delta| della candela in periodo, prezzo hl2, non un livello istituzionale identificato.
+
+## Nuovo filone Premium — test footprint (11/11/2026 11:58 CET)
+- [x] Confermata da documentazione TradingView disponibilita' di `request.footprint()` per piano **Premium**.
+- [x] Creato **[REMURA-Footprint-Premium-Probe.pine](REMURA-Footprint-Premium-Probe.pine)** su questo ramo: prova isolata di BUY/SELL classificati, delta footprint, POC, VAH/VAL, conteggio imbalance per riga.
+- [ ] **Compilare il test** in TradingView su `FXCM:EURUSD` M5 e verificare che non sia tutto N/D; acquisire screenshot.
+- [ ] Ripetere, se possibile, su un future CME con dati autorizzati e distinguere volume reale da tick volume forex. **Non acquistare feed senza preventivo e autorizzazione.**
+- [ ] Confrontare i delta della v0.4 (requestVolumeDelta con 1m) con il delta footprint nativo (granularita' interna differente), senza sommarli o considerarli uguali.
+- [ ] Solo dopo prova positiva: pianificare integrazione POC/imbalance in una **v0.5 del RADAR**, mantenendo toggle e fallback N/D, e successiva misurazione prospettica ER a 15/30/60 minuti.
+
+Il piano Premium e' gia' attivo secondo l'utente; **nessun ulteriore abbonamento** necessario per la funzione Pine Premium. L'accesso a particolari dati futures CME in tempo reale potrebbe richiedere un abbonamento dati distinto. Nessun deploy di REMURA live.
+
+## Registro nuovo
+- **11/11/2026 11:58 CET — Footprint Premium PROBE v0.1**: aggiunta una prova nativa autonoma alla PR #102 DRAFT; Radar v0.4 lasciato invariato. Attesa compilazione in TradingView.
 
 ## Fase successiva — MISURA
 1. Definire ora, prima di osservare i risultati, una metrica per ogni evento ER confermato: prezzo, delta, effort, efficiency, ATR, simbolo, timeframe, istante e origine del feed.
