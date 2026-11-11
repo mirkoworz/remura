@@ -1,4 +1,4 @@
-# REMURA TradingView Telemetry LAB v0.8.2 — aggiornamento 11/11/2026 17:49 CET.
+# REMURA TradingView Telemetry LAB v0.8.3 — aggiornamento 11/11/2026 18:07 CET.
 # SOLO CI OFFLINE. Nessun deploy, webhook, credenziale o trade automatico.
 name: REMURA TradingView Telemetry LAB
 on:
@@ -25,10 +25,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Esegui 16 regressioni sintetiche di schema/eventi (no rete)
-        run: python3 -m unittest discover -s tradingview/delta-peaks -p "test_telemetry_v1.py" -v
+      - name: Esegui regressioni prospettiche e validazione (no rete)
+        run: python3 -m unittest discover -s tradingview/delta-peaks -p "test_*.py" -v
       - name: Python syntax preflight Pine-independent
-        run: python3 -m py_compile tradingview/delta-peaks/validate_telemetry_v1.py tradingview/delta-peaks/test_telemetry_v1.py
+        run: python3 -m py_compile tradingview/delta-peaks/validate_telemetry_v1.py tradingview/delta-peaks/test_telemetry_v1.py tradingview/delta-peaks/outcome_audit_v1.py tradingview/delta-peaks/test_outcome_audit_v1.py
       - name: Node v22 test gateway Cloudflare D1 simulato (offline, senza pacchetti)
         run: node --test tradingview/delta-peaks/gateway-lab/worker.test.mjs
       - name: JavaScript syntax check del gateway (non deploy)
