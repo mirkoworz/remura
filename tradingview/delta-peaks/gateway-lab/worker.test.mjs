@@ -1,4 +1,4 @@
-// REMURA Gateway LAB v0.8.2 — aggiornamento 11/11/2026 17:48 CET
+// REMURA Gateway LAB v0.8.2 — aggiornamento 11/11/2026 17:51 CET
 // Test di richieste SINTETICHE in Node: non richiedono rete né Cloudflare.
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -204,7 +204,7 @@ test("late event is preserved but excluded from prospective cohort", async () =>
 test("bar too far in future or older than 24h rejected", () => {
   expectInvalid(p => { p.bar_close_ms = Date.now() + 300_000; });
   expectInvalid(p => { p.bar_open_ms = Date.now() - 86_400_000 - 300_000;
-    p.bar_close_ms = Date.now() - 86_400_000 - 10_000; });
+    p.bar_close_ms = p.bar_open_ms + 300_000; });
 });
 test("soft per-minute rate gate for 20 saved events", async () => {
   const e = await env();
