@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# REMURA TELEMETRY LAB v0.8.3 — aggiornamento 11/11/2026 18:01 CET
+# REMURA TELEMETRY LAB v0.8.3 — aggiornamento 11/11/2026 18:00 CET
 # Valutazione PROSPETTICA OFFLINE, zero accesso rete, zero ordini.
 """Misura esiti ER/RT M5 a 3/6/12 barre SOLO con dati ricevuti in tempo.
 
