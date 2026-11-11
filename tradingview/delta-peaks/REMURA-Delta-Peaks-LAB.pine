@@ -1,11 +1,11 @@
 //@version=6
-// REMURA Delta Peaks LAB v0.3
-// Aggiornamento: 11/11/2026 09:03 CET
+// REMURA Order Flow Radar LAB v0.4
+// Aggiornamento: 11/11/2026 11:26 CET
 // Ricerca sperimentale: delta STIMATO, non ordini istituzionali osservati.
 // Nessun collegamento con la versione live di REMURA.
 import TradingView/ta/14 as tv
 
-indicator("REMURA Delta Peaks LAB v0.3 - 11/11/2026", overlay=true, max_lines_count=10)
+indicator("REMURA Order Flow Radar LAB v0.4 - 11/11/2026", overlay=true, max_lines_count=10)
 
 // PARAMETRI
 lowerTF = input.timeframe("1", "Timeframe delta intrabar")
@@ -16,6 +16,9 @@ showLevels = input.bool(true, "Mostra livelli WEEK / MONTH")
 minPeakGap = input.int(6, "Minimo barre tra picchi (5m = 30 min)", minval=0, maxval=100)
 showPeaks = input.bool(false, "Mostra anche D+/D- (diagnostica)")
 showER = input.bool(true, "Mostra ER (sforzo / risultato)")
+showPanel = input.bool(true, "Mostra radar colorato")
+showHistory = input.bool(true, "Mostra gli ultimi 3 eventi")
+colorBars = input.bool(false, "Colora candele anomale (anche LIVE)")
 
 // DELTA STIMATO DA TIMEFRAME INFERIORE
 // Il periodo di accumulo coincide con la candela del grafico:
@@ -27,12 +30,9 @@ absDelta = math.abs(deltaBar)
 avgDelta = ta.sma(absDelta[1], lookback)
 atrValue = ta.atr(14)
 
-// PICCHI: solo a candela confermata; filtro distanza, non un nuovo metodo di delta.
-peakCandidate = barstate.isconfirmed and not na(deltaBar) and not na(avgDelta) and avgDelta > 0 and absDelta >= avgDelta * multiplier
+// Gap tra picchi confermati. La vista LIVE puo' cambiare.
 var int lastPeakBar = na
-isPeak = peakCandidate and (na(lastPeakBar) or bar_index - lastPeakBar > minPeakGap)
-if isPeak
-    lastPeakBar := bar_index
+gapOK = na(lastPeakBar) or bar_index - lastPeakBar > minPeakGap
 
 // SFORZO / RISULTATO: METRICA SPERIMENTALE, NON PROVA DI ASSORBIMENTO
 // Sforzo = |delta barra| / media(|delta| delle 30 barre precedenti).
@@ -42,9 +42,37 @@ if isPeak
 effort = not na(avgDelta) and avgDelta > 0 ? absDelta / avgDelta : na
 signedResult = not na(atrValue) and atrValue > 0 and not na(deltaBar) ? math.sign(deltaBar) * (close - open) / atrValue : na
 efficiency = not na(effort) and effort > 0 and not na(signedResult) ? signedResult / effort : na
-erCandidate = isPeak and not na(efficiency) and efficiency <= maxEfficiency
+// Anteprima della barra aperta; solo alla chiusura si conferma.
+previewPeak = not na(effort) and effort >= multiplier and gapOK
+previewER = previewPeak and not na(efficiency) and efficiency <= maxEfficiency
+isPeak = barstate.isconfirmed and previewPeak
+erCandidate = barstate.isconfirmed and previewER
 erPositiveDelta = erCandidate and deltaBar > 0
 erNegativeDelta = erCandidate and deltaBar < 0
+
+// Ultimi tre eventi CONFERMATI; orario di apertura barra in Italia.
+var string event1 = "N/D"
+var string event2 = "N/D"
+var string event3 = "N/D"
+if isPeak
+    lastPeakBar := bar_index
+    event3 := event2
+    event2 := event1
+    string eventType = erPositiveDelta ? "ER+" : erNegativeDelta ? "ER-" : deltaBar > 0 ? "D+" : "D-"
+    event1 := str.format_time(time, "dd/MM HH:mm", "Europe/Rome") + " " + eventType + " " + str.tostring(effort, "#.0") + "x"
+
+// Colori della PRESSIONE e dell'ANOMALIA separati.
+hasDelta = not na(deltaBar)
+hasEffort = not na(effort)
+strength = not hasEffort ? 0 : effort < 1 ? 1 : effort < 2 ? 2 : effort < 3.5 ? 3 : effort < 5 ? 4 : 5
+strengthMeter = strength == 0 ? "N/D" : strength == 1 ? "1/5 |...." : strength == 2 ? "2/5 ||..." : strength == 3 ? "3/5 |||.." : strength == 4 ? "4/5 ||||." : "5/5 |||||"
+deltaColor = not hasDelta ? color.gray : deltaBar > 0 ? color.lime : deltaBar < 0 ? color.red : color.silver
+anomalyColor = previewER ? color.fuchsia : previewPeak ? color.orange : strength >= 3 ? color.yellow : color.gray
+pressureText = not hasDelta ? "N/D" : deltaBar > 0 ? "BUY stimato" : deltaBar < 0 ? "SELL stimato" : "NEUTRO"
+anomalyText = not hasEffort ? "N/D" : previewER ? (deltaBar > 0 ? "ER+ | EFF. BASSA" : "ER- | EFF. BASSA") : previewPeak ? "PICCO DELTA" : effort >= 2 ? "PRESSIONE ALTA" : "NORMALE"
+
+// Facoltativa: colorazione barra corrente PROVVISORIA finche' aperta.
+barcolor(colorBars ? (previewER ? color.purple : previewPeak ? color.orange : na) : na)
 
 // MARCATORI - ER+ = pressione positiva inefficiente, ER- = pressione negativa inefficiente
 plotshape(showPeaks and isPeak and deltaBar > 0 and not erPositiveDelta, title="Picco positivo", style=shape.circle, location=location.abovebar, color=color.lime, size=size.tiny, text="D+")
@@ -104,25 +132,46 @@ if barstate.isconfirmed and not na(deltaBar)
         if showLevels
             monthLine := line.new(bar_index, monthPrice, bar_index + 1, monthPrice, extend=extend.right, color=color.yellow, width=2)
 
-// DASHBOARD: valori dell'ultima barra, non la statistica delle barre precedenti
-var table panel = table.new(position.top_right, 2, 8, border_width=1)
+// PANNELLO LIVE: aggiorna celle solo sull'ultima barra.
+var table panel = table.new(position.top_right, 2, 15, bgcolor=color.new(color.black, 15), border_width=1)
 if barstate.islast
-    table.cell(panel, 0, 0, "REMURA DELTA", bgcolor=color.black, text_color=color.white)
-    table.cell(panel, 1, 0, "LAB v0.3", bgcolor=color.black, text_color=color.white)
-    table.cell(panel, 0, 1, "Delta barra")
-    table.cell(panel, 1, 1, na(deltaBar) ? "N/D" : str.tostring(deltaBar, format.volume))
-    table.cell(panel, 0, 2, "Sforzo (x)")
-    table.cell(panel, 1, 2, na(effort) ? "N/D" : str.tostring(effort, "#.##"))
-    table.cell(panel, 0, 3, "Risultato (ATR)")
-    table.cell(panel, 1, 3, na(signedResult) ? "N/D" : str.tostring(signedResult, "#.###"))
-    table.cell(panel, 0, 4, "Efficienza ER")
-    table.cell(panel, 1, 4, na(efficiency) ? "N/D" : str.tostring(efficiency, "#.###"))
-    table.cell(panel, 0, 5, "WEEK")
-    table.cell(panel, 1, 5, na(weekPrice) ? "N/D" : str.tostring(weekPrice, format.mintick), text_color=color.aqua)
-    table.cell(panel, 0, 6, "CURRENT MONTH")
-    table.cell(panel, 1, 6, na(monthPrice) ? "N/D" : str.tostring(monthPrice, format.mintick), text_color=color.yellow)
-    table.cell(panel, 0, 7, "PREVIOUS MONTH")
-    table.cell(panel, 1, 7, na(previousMonthPrice) ? "N/D" : str.tostring(previousMonthPrice, format.mintick), text_color=color.gray)
+    if not showPanel
+        table.clear(panel, 0, 0, 1, 14)
+    else
+        string mode = barstate.isrealtime ? (barstate.isconfirmed ? "CHIUSA / OK" : "LIVE / PROVVISORIO") : "STORICO / CHIUSO"
+        color modeColor = barstate.isrealtime and not barstate.isconfirmed ? color.orange : color.lime
+        color base = color.new(color.black, 20)
+        color eventBg = previewER ? color.new(color.purple, 35) : previewPeak ? color.new(color.orange, 35) : base
+        table.cell(panel, 0, 0, "REMURA RADAR", text_color=color.white, bgcolor=color.new(color.blue, 55), text_size=size.small)
+        table.cell(panel, 1, 0, "LAB v0.4", text_color=color.white, bgcolor=color.new(color.blue, 55), text_size=size.small)
+        table.cell(panel, 0, 1, "STATO", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+        table.cell(panel, 1, 1, mode, text_color=modeColor, bgcolor=base, text_size=size.tiny)
+        table.cell(panel, 0, 2, "DELTA", text_color=color.white, bgcolor=base, text_size=size.small)
+        table.cell(panel, 1, 2, hasDelta ? str.tostring(deltaBar, format.volume) : "N/D", text_color=deltaColor, bgcolor=eventBg, text_size=size.normal)
+        table.cell(panel, 0, 3, "PRESSIONE", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+        table.cell(panel, 1, 3, pressureText, text_color=deltaColor, bgcolor=base, text_size=size.small)
+        table.cell(panel, 0, 4, "INTENSITA'", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+        table.cell(panel, 1, 4, strengthMeter, text_color=anomalyColor, bgcolor=base, text_size=size.small)
+        table.cell(panel, 0, 5, "SFORZO x", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+        table.cell(panel, 1, 5, hasEffort ? str.tostring(effort, "#.##") : "N/D", text_color=anomalyColor, bgcolor=base, text_size=size.small)
+        table.cell(panel, 0, 6, "RISULTATO ATR", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+        table.cell(panel, 1, 6, na(signedResult) ? "N/D" : str.tostring(signedResult, "#.###"), text_color=color.white, bgcolor=base, text_size=size.small)
+        table.cell(panel, 0, 7, "EFFICIENZA", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+        table.cell(panel, 1, 7, na(efficiency) ? "N/D" : str.tostring(efficiency, "#.###"), text_color=previewER ? color.fuchsia : color.white, bgcolor=base, text_size=size.small)
+        table.cell(panel, 0, 8, "ANOMALIA", text_color=color.white, bgcolor=eventBg, text_size=size.small)
+        table.cell(panel, 1, 8, anomalyText, text_color=anomalyColor, bgcolor=eventBg, text_size=size.small)
+        table.cell(panel, 0, 9, "WEEK", text_color=color.aqua, bgcolor=base, text_size=size.tiny)
+        table.cell(panel, 1, 9, na(weekPrice) ? "N/D" : str.tostring(weekPrice, format.mintick), text_color=color.aqua, bgcolor=base, text_size=size.small)
+        table.cell(panel, 0, 10, "CURRENT MONTH", text_color=color.yellow, bgcolor=base, text_size=size.tiny)
+        table.cell(panel, 1, 10, na(monthPrice) ? "N/D" : str.tostring(monthPrice, format.mintick), text_color=color.yellow, bgcolor=base, text_size=size.small)
+        table.cell(panel, 0, 11, "PREVIOUS MONTH", text_color=color.gray, bgcolor=base, text_size=size.tiny)
+        table.cell(panel, 1, 11, na(previousMonthPrice) ? "N/D" : str.tostring(previousMonthPrice, format.mintick), text_color=color.silver, bgcolor=base, text_size=size.small)
+        table.cell(panel, 0, 12, showHistory ? "ULTIMO #1" : "", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+        table.cell(panel, 1, 12, showHistory ? event1 : "", text_color=color.white, bgcolor=base, text_size=size.tiny)
+        table.cell(panel, 0, 13, showHistory ? "ULTIMO #2" : "", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+        table.cell(panel, 1, 13, showHistory ? event2 : "", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+        table.cell(panel, 0, 14, showHistory ? "ULTIMO #3" : "", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+        table.cell(panel, 1, 14, showHistory ? event3 : "", text_color=color.silver, bgcolor=base, text_size=size.tiny)
 
 // DATI E ALLARMI - NESSUN WEBHOOK ATTIVATO
 plot(deltaBar, "Delta stimato", display=display.data_window)
