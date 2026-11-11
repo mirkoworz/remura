@@ -1,5 +1,37 @@
-# REMURA — GATEWAY ISOLATO Cloudflare Worker + D1 v0.8.2
-**Versione/aggiornamento: 0.8.2 — 11/11/2026, ore 17:51 CET**
+# REMURA — GATEWAY ISOLATO Cloudflare Worker + D1 (audit LAB v0.8.4)
+**Versione/aggiornamento: 0.8.4 — 11/11/2026, ore 18:05 CET**
+**Codice gateway invariato v0.8.2, NO DEPLOY.**
+
+## Bilancio Free aggiornato 11/11/2026 (simulazione, non quota account)
+Il modello [quota_budget_v1.py](../quota_budget_v1.py) esegue un
+controllo **offline** sul piano Free Cloudflare senza accedere ad account.
+Le 7 prove sono in [test_quota_budget_v1.py](../test_quota_budget_v1.py).
+Per un singolo `FXCM:EURUSD` M5, heartbeat di tutte le barre,
+30 giorni, al massimo 20 KB/record, 10% ritentativi e 40% overhead,
+il modello resta entro il **65% di 500 MB** per singolo DB e 10% delle
+quote giornaliere. Con due simboli e 30 giorni **non** supera il limite
+assoluto stimato soltanto, ma **supera il margine prudenziale**: usare
+retention più corta (es. 14 giorni) oppure progetto/DB separato dopo
+verifica del piano. Nessun risultato del modello conferma che l'account
+dell'utente sia libero o che il CPU reale resti sotto 10ms.
+Per eseguire senza deploy:
+
+```sh
+python3 tradingview/delta-peaks/quota_budget_v1.py --symbols 1 --retention-days 30
+python3 tradingview/delta-peaks/quota_budget_v1.py --symbols 2 --retention-days 14
+```
+
+### Riutilizzo risorse REMURA
+Nel repository `main` esistono già una configurazione **Firebase Web**
+e una procedura Firestore riservata a Capital.com. Sono dedicate
+a una funzione differente, con quote, regole e autorizzazioni da
+verificare. **Non scrivere nella stessa raccolta e non toccare filone C**.
+Cloudflare come gateway D1 indipendente evita di richiedere credenziali
+Firebase amministrative al webhook e separa il rischio sperimentale;
+un export eventuale verso l'interfaccia C richiederà coordinamento.
+
+
+
 **Stato: SOLO CODICE E TEST OFFLINE. Non è stato creato un account, Worker, D1, endpoint pubblico o webhook. PR #102 DRAFT.**
 
 ## Quale problema risolve
