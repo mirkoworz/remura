@@ -1,5 +1,5 @@
 # REMURA TradingView — ROADMAP PROSPECTIVE + FREE QUOTA LAB v0.8.4
-**Aggiornamento roadmap: 11/11/2026, ore 19:47 CET**
+**Aggiornamento roadmap: 11/11/2026, ore 19:52 CET**
 **PR #102 DRAFT/OPEN — NO MERGE, NO DEPLOY, NO WEBHOOK, NO ORDINI.**
 
 ## CHECKPOINT D1 UE CONFERMATO — 11/11/2026 18:37 CET
@@ -14,10 +14,16 @@
   screenshot Console mostra le tre istruzioni `CREATE TABLE IF NOT EXISTS`
   e `CREATE INDEX IF NOT EXISTS` e il messaggio
   `This query successfully executed` (11/11/2026).
-- [ ] **Conferma oggetti ancora pendente:** eseguire nella medesima Console
-  `SELECT name, type FROM sqlite_master WHERE name='tv_flow_events' OR name LIKE 'idx_tv_flow_events_%' ORDER BY type,name;`
-  e verificare che siano presenti una tabella e due indici.
-  Prima di questo riscontro non dichiarare struttura verificata.
+- [x] **Schema D1 verificato mediante query readback in Cloudflare Console**:
+  screenshot con risultato SQL di `sqlite_master` mostra esattamente
+  la tabella `tv_flow_events` e gli indici `idx_tv_flow_events_received`
+  e `idx_tv_flow_events_symbol_close` nel DB `remura-tv-lab`.
+  La tabella è pronta, ma nessun invio dati TradingView è ancora attivo.
+- [ ] Passaggio successivo: creare un Worker **dedicato e isolato**, senza
+  toccare `mirko-news-calendar` o `telegram-mirko-bridge`; verificare
+  la modalità di creazione nell'interfaccia prima di distribuirlo.
+  Codice receiver `gateway-lab/worker.mjs` è fail-closed, richiede D1,
+  secret hash e abilitazione esplicita; nessun webhook Live prima dei test.
 - [ ] Gateway/Worker non distribuito, nessun secret, webhook o
   heartbeat attivato. Dati reali non ancora raccolti.
 
