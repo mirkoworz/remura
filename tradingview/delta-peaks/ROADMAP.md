@@ -1,5 +1,40 @@
-# REMURA TradingView — ROADMAP PROSPECTIVE LAB v0.8.3
-**Aggiornamento roadmap: 11/11/2026, ore 18:01 CET**
+# REMURA TradingView — ROADMAP PROSPECTIVE + FREE QUOTA LAB v0.8.4
+**Aggiornamento roadmap: 11/11/2026, ore 18:05 CET**
+**PR #102 DRAFT/OPEN — NO MERGE, NO DEPLOY, NO LIVE, NO ORDINI.**
+
+## CHECKPOINT v0.8.4 (11/11/2026 18:05 CET)
+- [x] Aggiunti [QUOTA GUARD gratuito](quota_budget_v1.py) e
+  [7 prove automatiche](test_quota_budget_v1.py), per proteggere
+  costi/storage durante il futuro pilota `FXCM:EURUSD` M5.
+- [x] Stimati limiti con **guardrail interni** 10% richieste e scritture Free
+  giornaliere, 65% spazio DB da 500 MB; 20KB/evento, overhead 1.4×,
+  ritentativi 1.1×. Un simbolo M5/30gg rientra nel modello; due simboli
+  M5/30gg superano lo spazio **prudenziale**, due/14gg rientrano.
+  Sono stime massime, non consumo reale account.
+- [x] Totale suite automatica prevista: **62 test sintetici**
+  (16 schema + 18 esiti + 7 quota + 21 gateway Node).
+  Run verde sul codice [#43064598345](https://github.com/mirkoworz/remura/actions/runs/43064598345)
+  HEAD `fc6ce03b1e730b3cbf252b799cd38d4bca8c1d74`; test
+  confermati sul runner, nessun endpoint realmente collaudato.
+- [x] Inventario riutilizzo: in `main` sono presenti configurazione Firebase
+  Web e piano Firestore privato Capital.com; non sono una destinazione
+  webhook autenticata pronta, né attestano quota disponibile.
+  Prima scelta: gateway Cloudflare/D1 di laboratorio isolato; valutare
+  accesso REMURA C a dati riassuntivi solo dopo coordinamento.
+- [x] Aggiornata [guida gateway](gateway-lab/README.md) con limiti,
+  modello risparmio e motivi dell'isolamento.
+- [ ] Non sono verificabili da GitHub: **utilizzo reale del tuo account
+  Cloudflare**, CPU Worker per request, durata reale D1, consegna alert.
+  Occorre il dashboard/account, consenso per deploy isolato e
+  successivo test sintetico prima di attivare TradingView.
+- [ ] Alert TradingView v0.8.1 resta **telemetryEnabled=false** e
+  **heartbeat=false**. Nessun dato prospettico reale raccolto da
+  questo filone. Per avviare con affidabilità occorrerà
+  prova di consegna e heartbeat di tutte le barre M5.
+- [ ] Restano fuori da questo filone A/B/C, merge, deploy e ordini.
+
+
+
 **PR #102 DRAFT, OPEN — NESSUN MERGE, DEPLOY, WEBHOOK O ORDINE.**
 
 ## CHECKPOINT v0.8.3 — 11/11/2026 18:01 CET
