@@ -178,6 +178,81 @@ plot(showPocDots and barstate.isconfirmed ? fpPoc : na, "Footprint POC (centro r
 plot(fpDelta, "Delta Footprint Premium (classificato)", display=display.data_window)
 plot(fpDeltaPct, "Delta Footprint % volume", display=display.data_window)
 
+// LIVELLI DAY: i 3 massimi di |delta intrabar| del giorno, su barre chiuse.
+// Soglia separata dagli ER; prezzo hl2 o POC del footprint della candela.
+// Il giorno segue il calendario del simbolo TradingView.
+var array<float> dayScores = array.new_float(3, na)
+var array<float> dayPrices = array.new_float(3, na)
+var array<int> dayOrigins = array.new_int(3, na)
+var array<line> dayLines = array.new_line(3, na)
+var array<int> dayTouches = array.new_int(3, 0)
+var array<bool> dayTouching = array.new_bool(3, false)
+var float previousDayPrice = na
+var line previousDayLine = na
+var int previousDayTouches = 0
+var bool previousDayTouching = false
+bool dailyRetest = false
+
+if timeframe.change("1D")
+    previousDayPrice := array.get(dayPrices, 0)
+    if not na(previousDayLine)
+        line.delete(previousDayLine)
+        previousDayLine := na
+    previousDayTouches := 0
+    previousDayTouching := false
+    if showDailyLevels and showPrevDay and not na(previousDayPrice)
+        previousDayLine := line.new(bar_index, previousDayPrice, bar_index + 1, previousDayPrice, extend=extend.right, color=color.gray, style=line.style_dotted, width=2)
+    for i = 0 to 2
+        line oldLine = array.get(dayLines, i)
+        if not na(oldLine)
+            line.delete(oldLine)
+        array.set(dayScores, i, na)
+        array.set(dayPrices, i, na)
+        array.set(dayOrigins, i, na)
+        array.set(dayLines, i, na)
+        array.set(dayTouches, i, 0)
+        array.set(dayTouching, i, false)
+
+// Nessun dato futuro: i livelli possono essere rimpiazzati da picchi piu' forti,
+// ma vengono disegnati solo dopo la chiusura della candela di origine.
+float dayAnchorPrice = dailyAnchor == "POC FOOTPRINT" ? fpPoc : hl2
+bool dayEligible = barstate.isconfirmed and not na(deltaBar) and math.abs(deltaBar) > 0 and not na(dayAnchorPrice) and (dailyMinEffort == 0 or (not na(effort) and effort >= dailyMinEffort))
+if dayEligible
+    float candidateScore = math.abs(deltaBar)
+    int insertIndex = -1
+    for i = 0 to 2
+        float rankedScore = array.get(dayScores, i)
+        if insertIndex == -1 and (na(rankedScore) or candidateScore > rankedScore)
+            insertIndex := i
+    if insertIndex >= 0
+        line evicted = array.get(dayLines, 2)
+        if not na(evicted)
+            line.delete(evicted)
+        if insertIndex < 2
+            for j = 2 to insertIndex + 1
+                array.set(dayScores, j, array.get(dayScores, j - 1))
+                array.set(dayPrices, j, array.get(dayPrices, j - 1))
+                array.set(dayOrigins, j, array.get(dayOrigins, j - 1))
+                array.set(dayLines, j, array.get(dayLines, j - 1))
+                array.set(dayTouches, j, array.get(dayTouches, j - 1))
+                array.set(dayTouching, j, array.get(dayTouching, j - 1))
+        array.set(dayScores, insertIndex, candidateScore)
+        array.set(dayPrices, insertIndex, dayAnchorPrice)
+        array.set(dayOrigins, insertIndex, bar_index)
+        array.set(dayTouches, insertIndex, 0)
+        array.set(dayTouching, insertIndex, false)
+        line newLine = na
+        if showDailyLevels
+            newLine := line.new(bar_index, dayAnchorPrice, bar_index + 1, dayAnchorPrice, extend=extend.right, width=2)
+        array.set(dayLines, insertIndex, newLine)
+        for i = 0 to 2
+            line rankedLine = array.get(dayLines, i)
+            if not na(rankedLine)
+                color c = i == 0 ? color.fuchsia : i == 1 ? color.orange : color.aqua
+                line.set_color(rankedLine, c)
+                line.set_width(rankedLine, i == 0 ? 3 : 2)
+                line.set_style(rankedLine, i == 0 ? line.style_solid : line.style_dashed)
+
 // PANNELLO LIVE: aggiorna celle solo sull'ultima barra.
 var table panel = table.new(position.top_right, 2, 21, bgcolor=color.new(color.black, 15), border_width=1)
 if barstate.islast
