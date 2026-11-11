@@ -1,0 +1,111 @@
+//@version=6
+// REMURA Delta Peaks LAB v0.1
+// Aggiornamento: 11/11/2026 08:41 CET
+// Ricerca sperimentale: delta STIMATO, non ordini istituzionali osservati.
+// Nessun collegamento con la versione live di REMURA.
+import TradingView/ta/14 as tv
+
+indicator("REMURA Delta Peaks LAB v0.1 - 11/11/2026", overlay=true, max_lines_count=10)
+
+// PARAMETRI
+lowerTF = input.timeframe("1", "Timeframe delta intrabar")
+lookback = input.int(30, "Barre di riferimento", minval=5)
+multiplier = input.float(2.5, "Forza minima picco", minval=1, step=0.25)
+bodyLimit = input.float(0.25, "Corpo massimo / ATR", minval=0.01, step=0.05)
+showLevels = input.bool(true, "Mostra livelli WEEK / MONTH")
+showSignals = input.bool(true, "Mostra picchi e assorbimenti")
+
+// DELTA STIMATO DA TIMEFRAME INFERIORE
+// Il periodo di accumulo coincide con la candela del grafico:
+// deltaBar rappresenta quindi il delta stimato di una barra.
+[deltaOpen, deltaHigh, deltaLow, deltaBar] = tv.requestVolumeDelta(lowerTF, timeframe.period)
+
+absDelta = math.abs(deltaBar)
+avgDelta = ta.sma(absDelta, lookback)
+atrValue = ta.atr(14)
+
+// PICCHI: solo a candela confermata
+isPeak = barstate.isconfirmed and not na(deltaBar) and not na(avgDelta) and avgDelta > 0 and absDelta >= avgDelta * multiplier
+
+// SFORZO / RISULTATO - IPOTESI, NON SEGNALE DIREZIONALE CONFERMATO
+smallBody = not na(atrValue) and math.abs(close - open) <= atrValue * bodyLimit
+sellAbsorption = isPeak and deltaBar > 0 and (smallBody or close < open)
+buyAbsorption = isPeak and deltaBar < 0 and (smallBody or close > open)
+
+// MARCATORI
+plotshape(showSignals and isPeak and deltaBar > 0, title="Picco positivo", style=shape.circle, location=location.abovebar, color=color.lime, size=size.tiny, text="D+")
+plotshape(showSignals and isPeak and deltaBar < 0, title="Picco negativo", style=shape.circle, location=location.belowbar, color=color.red, size=size.tiny, text="D-")
+plotshape(showSignals and sellAbsorption, title="Possibile assorbimento venditore", style=shape.triangledown, location=location.abovebar, color=color.orange, size=size.small, text="ER")
+plotshape(showSignals and buyAbsorption, title="Possibile assorbimento compratore", style=shape.triangleup, location=location.belowbar, color=color.aqua, size=size.small, text="ER")
+
+// MASSIMI ASSOLUTI DEL DELTA NEI PERIODI DISPONIBILI
+var float weekMax = na
+var float monthMax = na
+var float weekPrice = na
+var float monthPrice = na
+var float previousMonthPrice = na
+
+var line weekLine = na
+var line monthLine = na
+var line previousLine = na
+
+// NUOVA SETTIMANA
+if timeframe.change("1W")
+    weekMax := na
+    weekPrice := na
+    if not na(weekLine)
+        line.delete(weekLine)
+        weekLine := na
+
+// NUOVO MESE
+if timeframe.change("1M")
+    previousMonthPrice := monthPrice
+    if not na(previousLine)
+        line.delete(previousLine)
+    previousLine := monthLine
+    if not na(previousLine)
+        line.set_color(previousLine, color.gray)
+        line.set_style(previousLine, line.style_dashed)
+    monthLine := na
+    monthMax := na
+    monthPrice := na
+
+// AGGIORNA I LIVELLI SOLO A CANDELA CHIUSA
+// Il prezzo tracciato e' hl2 della candela del massimo delta,
+// NON un volume profile POC o il prezzo esatto dello scambio.
+if barstate.isconfirmed and not na(deltaBar)
+    if na(weekMax) or absDelta > weekMax
+        weekMax := absDelta
+        weekPrice := hl2
+        if not na(weekLine)
+            line.delete(weekLine)
+        if showLevels
+            weekLine := line.new(bar_index, weekPrice, bar_index + 1, weekPrice, extend=extend.right, color=color.aqua, width=2)
+
+    if na(monthMax) or absDelta > monthMax
+        monthMax := absDelta
+        monthPrice := hl2
+        if not na(monthLine)
+            line.delete(monthLine)
+        if showLevels
+            monthLine := line.new(bar_index, monthPrice, bar_index + 1, monthPrice, extend=extend.right, color=color.yellow, width=2)
+
+// DASHBOARD
+var table panel = table.new(position.top_right, 2, 5, border_width=1)
+if barstate.islast
+    table.cell(panel, 0, 0, "REMURA DELTA", bgcolor=color.black, text_color=color.white)
+    table.cell(panel, 1, 0, "LAB v0.1", bgcolor=color.black, text_color=color.white)
+    table.cell(panel, 0, 1, "Delta barra")
+    table.cell(panel, 1, 1, na(deltaBar) ? "N/D" : str.tostring(deltaBar, format.volume))
+    table.cell(panel, 0, 2, "WEEK")
+    table.cell(panel, 1, 2, na(weekPrice) ? "N/D" : str.tostring(weekPrice, format.mintick), text_color=color.aqua)
+    table.cell(panel, 0, 3, "CURRENT MONTH")
+    table.cell(panel, 1, 3, na(monthPrice) ? "N/D" : str.tostring(monthPrice, format.mintick), text_color=color.yellow)
+    table.cell(panel, 0, 4, "PREVIOUS MONTH")
+    table.cell(panel, 1, 4, na(previousMonthPrice) ? "N/D" : str.tostring(previousMonthPrice, format.mintick), text_color=color.gray)
+
+// DATI E ALLARMI - NESSUN WEBHOOK ATTIVATO
+plot(deltaBar, "Delta stimato", display=display.data_window)
+alertcondition(isPeak, "REMURA - Picco delta", "Rilevato picco delta su {{ticker}}")
+alertcondition(buyAbsorption, "REMURA - Possibile assorbimento BUY", "Possibile assorbimento compratore su {{ticker}}")
+alertcondition(sellAbsorption, "REMURA - Possibile assorbimento SELL", "Possibile assorbimento venditore su {{ticker}}")
