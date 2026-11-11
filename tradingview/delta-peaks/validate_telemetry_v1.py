@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # REMURA v0.8.1 TELEMETRY — validatore OFFLINE del payload (no rete).
-# Aggiornamento: 11/11/2026 16:18 CET.
+# Aggiornamento: 11/11/2026 16:24 CET.
 # Dati FXCM classificati: NON esecuzioni istituzionali CME.
 """Valida JSON e JSONL TradingView senza attivare webhook o operazioni live.
 
@@ -41,6 +41,8 @@ def fields(value: object, names: tuple[str, ...], label: str) -> dict:
     require(isinstance(value, dict), f"{label}: oggetto JSON obbligatorio")
     missing = set(names).difference(value)
     require(not missing, f"{label}: chiavi mancanti: {sorted(missing)}")
+    extras = set(value).difference(names)
+    require(not extras, f"{label}: chiavi non previste: {sorted(extras)}")
     return value
 
 
@@ -75,7 +77,10 @@ def validate_payload(
         "events", "quality",
     )
     p = fields(payload, top, "payload")
-    encoded = json.dumps(p, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
+    try:
+        encoded = json.dumps(p, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
+    except (ValueError, TypeError) as exc:
+        raise InvalidTelemetry("JSON non serializzabile o numero non finito") from exc
     require(len(encoded.encode("utf-8")) <= MAX_BYTES, "payload oltre 20 KB")
     require(p["schema"] == SCHEMA, "schema differente")
     require(p["source"] == SOURCE, "fonte differente")
@@ -194,8 +199,11 @@ def main(argv: list[str] | None = None) -> int:
     try:
         text = data.strip()
         require(bool(text), "nessun dato")
-        records = ([json.loads(text)] if text.startswith("{") and "\n" not in text
-                   else [json.loads(line) for line in text.splitlines() if line.strip()])
+        try:
+            one_json = json.loads(text)
+            records = one_json if isinstance(one_json, list) else [one_json]
+        except json.JSONDecodeError:
+            records = [json.loads(line) for line in text.splitlines() if line.strip()]
         seen: set[str] = set()
         for index, record in enumerate(records, start=1):
             output = validate_payload(record)
