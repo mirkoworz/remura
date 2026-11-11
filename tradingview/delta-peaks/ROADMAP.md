@@ -1,5 +1,29 @@
-# REMURA TradingView — ROADMAP ALL-IN-ONE Premium LAB v0.7
-**Aggiornamento roadmap: 11/11/2026, ore 13:55 CET**
+# REMURA TradingView — ROADMAP ALL-IN-ONE Premium TELEMETRY LAB v0.8.1
+**Aggiornamento roadmap: 11/11/2026, ore 16:26 CET**
+**PR #102 DRAFT, OPEN — NO MERGE, NO DEPLOY, NO WEBHOOK, NO ORDINI.**
+
+## CHECKPOINT v0.8.1 — 11/11/2026 16:26 CET (SOLO OFFLINE)
+- [x] Verificata PR #102 DRAFT/OPEN, branch `research/tradingview-delta-peaks-20261111`, v0.7, manuale, schema e piano webhook; v0.7 resta conservata senza modifiche.
+- [x] Creato [REMURA v0.8.1 TELEMETRY](REMURA-ALL-IN-ONE-Premium-v0.8-TELEMETRY.pine) come nuovo script **separato**, `telemetryEnabled=false` e heartbeat OFF di default; `alert()` JSON solo a candela chiusa/realtime.
+- [x] Un solo JSON per M5 confermata, per non perdere eventi simultanei con frequenza once_per_bar_close; include OHLC+prev_close+ATR, delta, ER, footprint, snapshot livelli, origine dei livelli, punteggi DAY, nuovi livelli/sostituzioni e flags per quattro tipi di retest.
+- [x] Conservati 4 `alertcondition()` legacy, una `request.footprint()` e una `tv.requestVolumeDelta()` (verifica statica).
+- [x] [PROTOCOLLO PROSPETTICO](PROTOCOLLO-PROSPETTICO-V08.md): regole **congelate prima degli esiti** per ER e RT 3/6/12 M5, falsi positivi, benchmark e replacement drift; dati **simulati non validi** come prove di efficacia.
+- [x] Creati [validatore Python](validate_telemetry_v1.py) e [16 test sintetici](test_telemetry_v1.py) senza dipendenze terze.
+- [x] Aggiunto workflow GitHub Actions *solo su file di questo laboratorio* `.github/workflows/remura-tv-telemetry-lab.yml`, sola lettura, no segreti, no deploy, per regressioni Python; runner GitHub standard pubblico gratuito secondo documentazione ufficiale.
+- [x] Verifica pubblica quote: Workers Free 100.000 richieste/giorno e 10ms CPU/req; D1 Free 5 milioni righe lette/giorno, 100.000 scritte/giorno, 5GB account **e 500MB/database**; oltre quota il Free blocca operazioni. Nessuna nuova risorsa creata.
+- [ ] Verificare **risultato effettivo GitHub Actions** (non confondere test scritti con test eseguiti/verde).
+- [ ] **Pine v0.8.1 NON COMPILATO su TradingView**: verificare compilazione manuale, soprattutto payload dinamico e campi NA, **senza creare alert**; solo dopo il confronto v0.7/v0.8 su FXCM:EURUSD M5.
+- [ ] Gateway di test: definire autenticazione sicura compatibile TV, con IP allowlist, body/rate limit, D1/KV retention e deduplica; verificare il consumo di risorse condivise prima di un qualsiasi deploy.
+- [ ] Misurazione reale **NON AVVIATA**: può iniziare solo dopo receiver autorizzato, conservazione eventi real-time, e feed M5 prospettico per barre senza eventi.
+
+### Blocco rigoroso prima del collegamento REMURA B/C
+Le misurazioni a 15/30/60 minuti devono includere **ogni evento**, non soltanto vincitori.
+Finché non emergono confronti out-of-sample credibili, REMURA non deve trasformare
+ER+, ER-, POC o RT in ordini o probabilità di successo. Filoni A/B/C non modificati.
+Il Free Trial Oracle con scadenza prevista 15/11/2026 è seguito dal Filone A.
+
+
+
 
 ## CHECKPOINT CONFERMATO — 11/11/2026, ore 13:55 CET
 
