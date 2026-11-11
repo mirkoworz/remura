@@ -1,5 +1,5 @@
 # REMURA TradingView — ROADMAP PROSPECTIVE + FREE QUOTA LAB v0.8.4
-**Aggiornamento roadmap: 11/11/2026, ore 19:45 CET**
+**Aggiornamento roadmap: 11/11/2026, ore 19:47 CET**
 **PR #102 DRAFT/OPEN — NO MERGE, NO DEPLOY, NO WEBHOOK, NO ORDINI.**
 
 ## CHECKPOINT D1 UE CONFERMATO — 11/11/2026 18:37 CET
@@ -10,12 +10,14 @@
 - [x] **Nome D1 verificato nella foto della Console: `remura-tv-lab`.**
   Il suffisso `-eu` non è necessario: la giurisdizione UE è già confermata
   dalla schermata Settings. Nessuna nuova creazione/rinomina necessaria.
-- [ ] D1 creato, ma **schema tv_flow_events non ancora applicato**.
-  Passaggio utente (Console già aperta nel DB UE corretto):
-  incollare SQL `gateway-lab/schema.sql` contenente unicamente
-  CREATE TABLE/INDEX IF NOT EXISTS; Execute; verificare
-  che compaia la tabella `tv_flow_events`, gli indici e 0 righe.
-  Non applicare SQL sul DB precedente o su altri servizi.
+- [x] **SQL schema D1 eseguito dall'utente nel database `remura-tv-lab`**:
+  screenshot Console mostra le tre istruzioni `CREATE TABLE IF NOT EXISTS`
+  e `CREATE INDEX IF NOT EXISTS` e il messaggio
+  `This query successfully executed` (11/11/2026).
+- [ ] **Conferma oggetti ancora pendente:** eseguire nella medesima Console
+  `SELECT name, type FROM sqlite_master WHERE name='tv_flow_events' OR name LIKE 'idx_tv_flow_events_%' ORDER BY type,name;`
+  e verificare che siano presenti una tabella e due indici.
+  Prima di questo riscontro non dichiarare struttura verificata.
 - [ ] Gateway/Worker non distribuito, nessun secret, webhook o
   heartbeat attivato. Dati reali non ancora raccolti.
 
