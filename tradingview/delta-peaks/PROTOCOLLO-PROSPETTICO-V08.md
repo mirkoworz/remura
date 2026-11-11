@@ -1,5 +1,26 @@
-# REMURA — Protocollo prospettico v0.8.1 TELEMETRY (LAB)
-**Versione aggiornamento: 0.8.1 — 11/11/2026, ore 16:18 CET**
+# REMURA — Protocollo prospettico v0.8.3 TELEMETRY (LAB)
+**Versione aggiornamento: 0.8.3 — 11/11/2026, ore 17:59 CET**
+**Misuratore OFFLINE:** [outcome_audit_v1.py](outcome_audit_v1.py) · [18 test sintetici](test_outcome_audit_v1.py)
+
+### Checkpoint di studio v0.8.3 (11/11/2026 17:59 CET)
+- Pine v0.8.1: **compilazione e funzionamento confermati dall'utente**; esito dei webhook non testato.
+- Archivio gateway v0.8.2: software isolato e testato con DB simulato, ma NON distribuito.
+- Nuovo misuratore offline: richiede payload valido e `received_at_ms` timbrato
+  dal gateway **entro 2 minuti**; se manca non entra nel campione prospettico.
+  Senza heartbeat per tutte le barre M5, l'esito resta `MISSING_BAR`.
+- Eventi ER, RT, nascita/sostituzione DAY e PEAK: esiti a 3/6/12 M5 in ATR
+  e conteggio fallimenti/missing; nessuna direzione operativa presunta.
+- Ogni evento è contato una sola volta nel totale `ANY_EVENT`, ma può
+  appartenere contemporaneamente a più coorti specifiche.
+- Il confronto basale usa **solo** le barre heartbeat prive di eventi,
+  già registrate prospetticamente, con stessa data e fascia UTC prestabilita:
+  `00–08`, `08–16`, `16–24`. Se manca un benchmark coerente,
+  `INSUFFICIENTE`; non selezionare a posteriori una finestra favorevole.
+- Benchmark a segno permutato per ER, inferenza formale e intervalli di
+  confidenza: **NON IMPLEMENTATI**. Vietato dichiarare vantaggio statistico.
+- Il misuratore non connette né modifica B/C. Input test sintetici
+  **NON** sono dati osservati in tempo reale.
+
 **STATO: SOLO OFFLINE — nessun alert, gateway, cron o ordine attivato.**
 
 ## Obiettivo e preregistrazione (congelare prima degli esiti)
@@ -85,8 +106,8 @@ in millisecondi**, `sent_clock_ms` è l'orologio Pine (diagnostico), mentre
    autorizzata.
 
 ## Sequenza e isolamento
-- Check statici Pine offline; test manuale **di compilazione** TradingView è
-  ancora PENDING, senza creare alert.
+- Pine v0.8.1: conferma compilazione e funzionamento ricevuta l'11/11/2026;
+  resta PENDING la verifica del JSON emesso dall'alert() in ambiente reale.
 - Validatore Python `validate_telemetry_v1.py` rifiuta input errati e duplicati.
   Dati di unit test sono SINTETICI, non risultati reali.
 - Gateway HTTPS isolato: solo dopo revisione di autenticazione (non inserire
