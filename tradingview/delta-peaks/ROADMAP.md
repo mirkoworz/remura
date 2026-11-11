@@ -1,5 +1,5 @@
-# REMURA TradingView — ROADMAP Order Flow Radar LAB v0.4
-**Aggiornamento documentazione v0.4.1: 11/11/2026, ore 11:58 CET**
+# REMURA TradingView — ROADMAP Radar + Footprint Premium LAB v0.5
+**Aggiornamento: 11/11/2026, ore 12:40 CET**
 
 ## Checkpoint
 - [x] Laboratorio indipendente `tradingview/delta-peaks/`, PR #102 DRAFT.
@@ -20,6 +20,18 @@
 - **LIVE**: anteprima aggiornata mentre la candela e' aperta, mai salvata come segnale definitivo.
 - **CONFERMATO**: marcatori, allarmi e ultime 3 anomalie/picchi solo a barra chiusa.
 - **Livelli**: per ora massimo |delta| della candela in periodo, prezzo hl2, non un livello istituzionale identificato.
+
+## Test Premium riuscito e integrazione v0.5 (11/11/2026, ore 12:40 CET)
+
+- [x] `REMURA-Footprint-Premium-Probe.pine` si compila e produce dati in TradingView su **FXCM:EURUSD M5** (screenshot utente). POC/VAH/VAL e imbalance valorizzati; sulla candela LIVE osservati buy 16, sell 23, delta -7, POC 1.11335, VAH 1.11340, VAL 1.11330, BUY IMB=0, SELL IMB=1.
+- [x] Creata **[REMURA-Order-Flow-Radar-Premium-v0.5.pine](REMURA-Order-Flow-Radar-Premium-v0.5.pine)** come nuovo file separato. Condivide in un unico script il radar v0.4 e i campi Footprint Premium, con viste RADAR/FOOTPRINT selezionabili; una sola `request.footprint()`.
+- [x] Preservati ER, marcatori, ultimi tre picchi, livelli Week/Monthly e alert solo su barre confermate.
+- [ ] **Test compilazione** v0.5 in Pine Editor + screenshot delle viste FOOTPRINT e RADAR; controllare feed N/D e aggiornamento LIVE.
+- [ ] Confronto su alcuni eventi della differenza tra delta intrabar stimato e footprint (non forzarne uguaglianza).
+- [ ] Valutare se POC/imbalance migliorano la capacità di leggere Sforzo/Risultato in modo prospettico, senza introdurli ancora nei segnali.
+- [ ] Definire le metriche di efficacia a 15/30/60 minuti su dati prospettici e procedere alla loro misurazione. Includere falsi positivi e benchmark.
+
+**Limite:** footprint FXCM non identifica esecuzioni CME o banche. v0.5 ancora senza test sul grafico; resta una ricerca separata in PR #102 DRAFT.
 
 ## Nuovo filone Premium — test footprint (11/11/2026 11:58 CET)
 - [x] Confermata da documentazione TradingView disponibilita' di `request.footprint()` per piano **Premium**.
