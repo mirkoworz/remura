@@ -1,5 +1,32 @@
 # REMURA TradingView — ROADMAP PROSPECTIVE + FREE QUOTA LAB v0.8.4
-**Aggiornamento roadmap: 11/11/2026, ore 18:05 CET**
+**Aggiornamento roadmap: 11/11/2026, ore 18:24 CET**
+**PR #102 DRAFT/OPEN — NO MERGE, NO DEPLOY, NO ORDINI.**
+
+## CHECKPOINT CLOUDFARE FREE ACCOUNT — 11/11/2026, 18:24 CET
+- [x] Screenshot forniti dall'utente della dashboard Workers & Pages:
+  **204/100.000 richieste oggi** e **301/200.000 eventi Observability oggi**.
+  Workers già presenti: `mirko-news-calendar`, `telegram-mirko-bridge`.
+  **Non modificare o riutilizzare questi Workers.**
+- [x] Screenshot forniti dall'utente della dashboard D1:
+  **0/10 database**, **0/5M letture giornaliere**, **0/100k scritture giornaliere**,
+  **0B/5GB spazio totale**. Anche la vista mensile mostra 0 DB, 0 letture,
+  0 scritture, 0B spazio, alla data 11/11/2026.
+- [x] Le quote reali account Cloudflare per Workers+D1 sono state
+  verificate **al momento degli screenshot**; limiti futuri e CPU
+  dell'eventuale Worker LAB ancora da misurare. Il modello di budget
+  resta prudenziale.
+- [ ] **Prossima azione esclusivamente manuale dall'iPhone:** creare
+  nel piano Free un D1 dedicato `remura-tv-lab`, previa verifica
+  dettagli nella schermata `Create Database`. Preferire giurisdizione
+  UE, se disponibile; WEUR location hint non equivale a vincolo legale UE.
+  NON attivare Worker/alert/webhook, non applicare schema SQL prima
+  della conferma della creazione D1.
+- [ ] Verificare ID e configurazione del nuovo database **senza
+  pubblicare segreti**. Configurazione, schema, Worker e webhook rimangono
+  attività successive isolate e autorizzate.
+
+
+
 **PR #102 DRAFT/OPEN — NO MERGE, NO DEPLOY, NO LIVE, NO ORDINI.**
 
 ## CHECKPOINT v0.8.4 (11/11/2026 18:05 CET)
