@@ -1,5 +1,15 @@
 # REMURA TradingView — ROADMAP Radar + Footprint Premium LAB v0.5
-**Aggiornamento: 11/11/2026, ore 12:40 CET**
+**Aggiornamento documentazione v0.5: 11/11/2026, ore 12:48 CET**
+
+## Nuovo checkpoint visuale v0.5 — 11/11/2026 12:48 CET
+
+- [x] **FOOTPRINT v0.5 visibile e dati nativi presenti** su `FXCM:EURUSD` M5 (screenshot utente). Indicatore `REMURA Order Flow Radar Premium LAB v0.5` compilato e pannello presente.
+- [x] Verifica qualitativa di Buy 92, Sell 109, Delta -17, Delta/Volume circa -8,5%, 0 righe BUY imbalance e 0 righe SELL imbalance su candela LIVE. POC/VAH/VAL visibili: dati provvisori, nessuna interpretazione istituzionale.
+- [ ] Verificare **vista RADAR** del medesimo script v0.5 e confronto dei marker ER con v0.4.
+- [ ] Verificare variazioni durante la candela e dati della candela chiusa; differenze footprint vs delta stimato.
+- [ ] Avviare protocollo di misurazione a 3/6/12 barre (M5), prima ipotesi e benchmark fissati *prima* di interpretare gli esiti.
+
+Nota: nel grafico l'utente ha attivato anche il tipo **Footprint volume nativo**. Le celle colorate appartengono al tipo di grafico TradingView, NON alla tabella disegnata dallo script Pine.
 
 ## Checkpoint
 - [x] Laboratorio indipendente `tradingview/delta-peaks/`, PR #102 DRAFT.
