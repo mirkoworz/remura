@@ -1,37 +1,50 @@
-# REMURA TradingView — Delta Peaks LAB v0.2
-**Aggiornamento: 11/11/2026, ore 08:54 CET**
+# REMURA TradingView — Delta Peaks LAB v0.3
+**Aggiornamento: 11/11/2026, ore 09:03 CET**
 
-> Laboratorio indipendente: non modifica la web app REMURA, i filoni A/B/C, i deploy o i servizi cloud.
+> Solo laboratorio: PR #102 DRAFT. Nessun merge, deploy, ordine o collegamento automatico al motore REMURA live.
 
-## COPIA IL CODICE AGGIORNATO
-**Apri [REMURA-Delta-Peaks-LAB.pine](REMURA-Delta-Peaks-LAB.pine)** e premi **Raw** per copiare l'intero testo, a partire da `//@version=6`.
+## CODICE DA COPIARE
+Apri [REMURA-Delta-Peaks-LAB.pine](REMURA-Delta-Peaks-LAB.pine) → **Raw** → copia il testo integrale → incolla nel **Pine Editor** di TradingView.
 
-1. Apri **TradingView** sul simbolo **FXCM:EURUSD** a **5 minuti**.
-2. Apri **Pine Editor**, sostituisci tutto il vecchio codice v0.1 con quello v0.2 e clicca **Salva / Aggiungi al grafico**.
-3. Elimina dal grafico la vecchia istanza v0.1, se presente: evita marcatori doppi.
-4. Controlla sul grafico: titolo **v0.2**, linee **WEEK azzurra, CURRENT MONTH gialla, PREVIOUS MONTH grigia tratteggiata** e **ER**.
-5. Se serve vedere anche ogni picco, nelle impostazioni attiva **Mostra anche D+/D- (diagnostica)**.
+Usa **FXCM:EURUSD — timeframe 5 minuti**; timeframe intrabar predefinito **1 minuto**. Salva, aggiungi al grafico, rimuovi le vecchie istanze v0.1/v0.2 e verifica il titolo **LAB v0.3**.
 
-## MODIFICHE v0.2 PER RENDERE LEGGIBILE IL GRAFICO
-- **ER** (ipotesi sforzo/risultato) visibile per impostazione predefinita; **D+/D-** nascosti, attivabili dalla diagnostica. Un ER non e' una conferma di assorbimento istituzionale.
-- Soglia di selezione alzata da **2,5** a **3,5** volte la media dei **30 delta assoluti precedenti** (nella v0.1 la barra entrava nella propria media).
-- Filtro di distanza fra due picchi: **6 barre** complete senza nuovi eventi dopo un picco, cioe' circa 30 minuti su M5; parametro modificabile anche a 0.
-- Marcatori D+/D- evitano di sovrapporsi a ER quando entrambe le visualizzazioni sono attivate.
-- I tre **livelli storici non cambiano formula** in questa versione: massimo |delta| della singola barra in ciascun periodo, disegnato al suo `hl2`. Questa scelta va confrontata con il metodo di riferimento.
-- Gli alert restano presenti ma **non vengono inviati automaticamente a REMURA**.
+## NUOVI CALCOLI S/R (SFORZO / RISULTATO)
+Il delta stimato e' il valore di uscita della libreria TradingView `ta/14`, `requestVolumeDelta("1", timeframe.period)`; non e' il tape completo CME.
 
-## RISULTATO OSSERVATO
-- **v0.1 compilata e visibile** sul grafico FXCM:EURUSD 5m nella foto condivisa **11/11/2026**: marcatori e tre livelli visibili, nessun errore di compilazione mostrato.
-- **v0.2 non ancora compilata su TradingView**. Prossima prova: confrontare screenshot prima/dopo e verificare che i segnali restino sensati.
-- Non e' stata verificata alcuna capacita' predittiva o prova di posizionamento istituzionale.
+A ogni candela chiusa:
 
-## LIMITI
-- `TradingView/ta/14` e `requestVolumeDelta()` stimano il delta usando dati intrabar disponibili. **FXCM Forex non equivale al flusso di contratti CME**; il volume puo' rappresentare attivita' del feed/tick volume.
-- I massimi WEEK e MONTH sono parziali se la profondita' dei dati intrabar e' insufficiente; il valore puo' essere N/D.
-- Un picco isolato puo' essere rumore, news o evento del feed; ER e' una regola euristica (delta grande e corpo piccolo o movimento opposto).
-- Il filtro anti-affollamento puo' omettere anche eventi validi: **per studio rigoroso** confrontare v0.1 e v0.2 e provare `Minimo barre tra picchi = 0`.
-- Costo aggiuntivo da questa modifica GitHub: **zero**; disponibilita' degli indicatori/alert dipende dai limiti TradingView del piano.
+1. **Sforzo relativo**: `effort = abs(delta) / SMA(abs(delta[1]), 30)`. Il denominatore comprende le 30 candele precedenti, non quella corrente.
+2. **Risultato orientato al delta**: `signedResult = sign(delta) * (close - open) / ATR(14)`. E' positivo quando il corpo segue il segno del delta, negativo quando va in senso opposto.
+3. **Efficienza S/R**: `efficiency = signedResult / effort`. Piccola o negativa significa movimento direzionale modesto/opposto rispetto alla pressione stimata. Non e' una misura dell'assorbimento reale, ne' la probabilita' di inversione.
 
-**Prossimi passi:** [ROADMAP.md](ROADMAP.md). Non fare merge o deploy dal laboratorio senza verifica separata.
+**Regola di base di v0.3**: un evento `ER+` o `ER-` appare quando `effort >= 3.5`, `efficiency <= 0.07`, la candela e' confermata e sono passate piu' di **6 barre** dall'ultimo picco rilevato. I valori soglia sono **parametri sperimentali**, non ottimizzati sui dati o validati.
 
-**Fonti tecniche:** [libreria ufficiale TradingView ta](https://www.tradingview.com/script/BICzyhq0-ta/), [Pine Script v6](https://www.tradingview.com/pine-script-docs/).
+- **ER+ arancione sopra la candela**: pressione stimata positiva con basso risultato, non automaticamente SELL.
+- **ER- azzurro sotto la candela**: pressione stimata negativa con basso risultato, non automaticamente BUY.
+- **D+/D-** facoltativi, disattivati di default per mantenere il grafico pulito.
+- Dashboard mostra Delta, Sforzo x, Risultato ATR, Efficienza ER, WEEK, CURRENT MONTH, PREVIOUS MONTH.
+- Le tre linee dei livelli restano quelle originali: **massimo delta assoluto della singola candela** per periodo disegnato su **hl2**, non su prezzo di esecuzione istituzionale.
+
+### Esempi numerici di controllo
+Assumiamo media |delta| precedente = **500**, ATR = **10 pips**, soglia **0.07**, distanza minima rispettata.
+
+| Delta | Corpo prezzo | Sforzo | Risultato | Efficienza | Evento |
+| ---: | ---: | ---: | ---: | ---: | :--- |
+| +2.400 | +2 pips | 4,8 | +0,20 | +0,0417 | ER+ |
+| -2.400 | +2 pips | 4,8 | -0,20 | -0,0417 | ER- |
+| +2.000 | +10 pips | 4,0 | +1,00 | +0,2500 | Picco, non ER |
+| +100 | +1 pip | 0,2 | +0,10 | +0,5000 | Nessun picco |
+| 0 (media 0) | 0 | N/D | 0 | N/D | Nessun picco |
+
+Con **dati assenti**, ATR nullo o media del delta nulla, il calcolo ER produce **N/D**, non segnali inventati. Il filtro temporale può scartare eventi reali: per prove comparative impostare **Minimo barre tra picchi = 0**.
+
+## STATO VERIFICHE
+- **v0.1**: screenshot dell'11/11/2026 mostra che compila e visualizza marcatori e livelli su EURUSD FXCM M5, ma non dimostra alcun vantaggio statistico.
+- **v0.2**: codice aggiornato su GitHub, **non ancora testato su TradingView**.
+- **v0.3**: nuova metrica ER, **non ancora compilata in TradingView**. Prossimo step: screenshot del nuovo grafico, confronto con metodo originale del collaboratore.
+- Fonte tecnica: [libreria TradingView ta](https://www.tradingview.com/script/BICzyhq0-ta/), [riferimento Pine Script v6](https://www.tradingview.com/pine-script-reference/v6/).
+
+## COSTI / LIMITI
+La modifica non introduce nuove API, server, credenziali o abbonamenti. **GitHub: costo aggiuntivo nullo**. Limiti di storico intrabar, alert e indicatori dipendono dal piano TradingView. FXCM forex puo' offrire tick volume invece di volumi di contratti reali: mai spacciarlo per una misura istituzionale.
+
+Prossime fasi: [ROADMAP.md](ROADMAP.md).
