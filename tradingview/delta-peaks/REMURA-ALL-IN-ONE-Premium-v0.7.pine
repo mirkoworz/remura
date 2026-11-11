@@ -283,10 +283,10 @@ if barstate.isconfirmed and showDailyLevels
 plotshape(showDailyLevels and dailyRetest, title="Retest livello delta DAY", style=shape.diamond, location=location.abovebar, color=color.fuchsia, size=size.tiny, text="RT")
 
 // PANNELLO LIVE: aggiorna celle solo sull'ultima barra.
-var table panel = table.new(position.top_right, 2, 21, bgcolor=color.new(color.black, 15), border_width=1)
+var table panel = table.new(position.top_right, 2, 26, bgcolor=color.new(color.black, 15), border_width=1)
 if barstate.islast
     if not showPanel
-        table.clear(panel, 0, 0, 1, 20)
+        table.clear(panel, 0, 0, 1, 25)
     else
         // Vista unificata: stessi segnali delta/ER della v0.5, UNA sola richiesta footprint.
         if viewMode == "COMPLETO"
