@@ -26,6 +26,12 @@ fpTicks = input.int(10, "Footprint tick per riga", minval=1)
 fpImbThreshold = input.float(300.0, "Footprint imbalance %", minval=100, step=25.0)
 showPocDots = input.bool(false, "Mostra POC come punti (candele chiuse)")
 
+// PICCHI DELTA INTRADAY
+showDailyLevels = input.bool(true, "Mostra linee DAY: top 3 picchi delta")
+dailyMinEffort = input.float(1.5, "Soglia picchi DAY (delta/media)", minval=0.0, step=0.25)
+dailyAnchor = input.string("HL2", "Prezzo linee DAY", options=["HL2", "POC FOOTPRINT"])
+showPrevDay = input.bool(true, "Mostra DAY precedente (massimo)")
+
 // DELTA STIMATO DA TIMEFRAME INFERIORE
 // Il periodo di accumulo coincide con la candela del grafico:
 // deltaBar rappresenta quindi il delta stimato di una barra.
