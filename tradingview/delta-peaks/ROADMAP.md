@@ -1,5 +1,19 @@
-# REMURA TradingView — ROADMAP Radar + Footprint Premium LAB v0.5
-**Aggiornamento documentazione v0.5: 11/11/2026, ore 12:48 CET**
+# REMURA TradingView — ROADMAP ALL-IN-ONE Premium LAB v0.6
+**Aggiornamento: 11/11/2026, ore 12:58 CET**
+
+## CHECKPOINT v0.6 — ALL-IN-ONE Premium (11/11/2026, ore 12:58 CET)
+
+- [x] Verificato che la precedente v0.5 conteneva gia' i calcoli WEEK/CURRENT MONTH/PREVIOUS MONTH, ma erano leggibili in tabella solo dalla vista RADAR.
+- [x] Creato **[REMURA-ALL-IN-ONE-Premium-v0.6.pine](REMURA-ALL-IN-ONE-Premium-v0.6.pine)** separato, senza sostituire i file testati.
+- [x] Aggiunta vista default `COMPLETO` con delta intrabar e footprint, Sforzo/Risultato, POC/VAH/VAL, imb, 3 livelli e 3 eventi.
+- [x] Conservate viste `FOOTPRINT` e `RADAR`, disegno dei tre livelli, marcatori ER e 3 alert confermati.
+- [x] Verificati riferimenti statici: **1 request.footprint**, **1 requestVolumeDelta**, **1 table**, 4 marcatori e 3 alert.
+- [ ] Prova **reale di compilazione v0.6** in TradingView EURUSD FXCM M5 e verifica della vista COMPLETO, delle linee e delle altre due viste.
+- [ ] Validare visivamente il PREVIOUS MONTH con sufficiente profondita' storica (puo' essere parziale).
+- [ ] Stabilire il protocollo di misurazione prospettica ER a 3, 6, 12 barre M5, senza cambiare retroattivamente le soglie o usare dati futuri.
+- [ ] Confrontare definizione dei livelli coi video del metodo del collaboratore.
+
+**Vincoli**: no merge/deploy e nessuna modifica ai filoni A/B/C. Nessun nuovo costo; Premium gia' posseduto dall'utente. Il Footprint Forex resta classificazione intrabar del feed, non dati ordini istituzionali CME. Prossima fase statistica senza promettere profitti.
 
 ## Nuovo checkpoint visuale v0.5 — 11/11/2026 12:48 CET
 
