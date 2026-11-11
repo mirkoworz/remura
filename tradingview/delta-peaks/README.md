@@ -1,7 +1,29 @@
-# REMURA — Order Flow Radar & Footprint Premium LAB v0.5
-**Aggiornamento documentazione v0.5: 11/11/2026, ore 12:48 CET**
+# REMURA — TradingView ALL-IN-ONE Premium LAB v0.6
+**Aggiornamento: 11/11/2026, ore 12:58 CET**
 
 > Laboratorio nella PR **#102 DRAFT**. Nessun merge, deploy o impatto sui filoni A/B/C.
+
+## NUOVA VERSIONE PRINCIPALE — ALL-IN-ONE Premium v0.6 (11/11/2026 12:58 CET)
+
+**[COPIA IL CODICE UNICO v0.6](REMURA-ALL-IN-ONE-Premium-v0.6.pine)**
+
+Questa e' la prima versione con **vista COMBINATA COMPLETO**, pensata per sostituire sul grafico le istanze separate (non le cancella da GitHub):
+- Livelli WEEK (azzurro), CURRENT MONTH (giallo), PREVIOUS MONTH (grigio tratteggiato) con linee orizzontali e valori nel pannello.
+- Delta stimato intrabar, Sforzo, Risultato/ATR, Efficienza ER, marcatori e alert originali.
+- Footprint Premium nativo: BUY/SELL classificati, Delta, Delta/Volume %, POC, VAH/VAL 70% e conteggi imbalance.
+- Storico ultimi tre picchi confermati e segnalazioni LIVE provvisorie.
+- **Vista pannello = COMPLETO** (predefinita), FOOTPRINT, RADAR; tre viste in **un solo script**. Una sola `request.footprint()` e una sola `requestVolumeDelta()`.
+
+**Installazione TradingView**: apri il link, premi Raw, copia dall'inizio `//@version=6`, incolla in un nuovo Pine Editor su `FXCM:EURUSD` M5. Salva e Aggiungi al grafico. **Disattiva/rimuovi i vecchi script REMURA v0.4, Footprint Probe e v0.5** per evitare pannelli e linee doppi. Seleziona `Vista pannello = COMPLETO`.
+
+**Importante**: i rettangoli del grafico Footprint volume che vedevi nello screenshot appartengono al **tipo di grafico nativo TradingView**, non sono creati da questo script Pine. Puoi tenerlo come tipo grafico: il nostro indicatore disegna livelli, marcatori e pannello.
+
+**Significato dei livelli**: massimo delta assoluto di **una candela** nel periodo disponibile, disegnato a `hl2`; il PREVIOUS MONTH e' il precedente periodo osservato (puo' essere parziale con poco storico). **Non sono POC settimanali/mensili reali** e non sono provati livelli istituzionali. I valori intrabar e footprint possono essere diversi per metodi di aggregazione; non sommarli.
+
+**Sicurezza**: v0.6 ancora **non compilata nel Pine Editor**, solo controlli strutturali su GitHub. Nessuna strategia di ordini, nessuna nuova API o abbonamento, nessun deploy o merge. La PR #102 resta DRAFT. v0.4/v0.5/probe sono rimasti intatti come versioni di confronto.
+
+**Prossimo checkpoint**: screenshot di COMPLETO, verifica delle tre linee e tabella; poi misurazione prospettica delle anomalie ER a 15/30/60 minuti, con benchmark e casi negativi.
+
 
 ## CHECKPOINT VISIVO v0.5 — 11/11/2026, ore 12:48 CET
 
