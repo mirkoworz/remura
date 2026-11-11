@@ -1,7 +1,33 @@
-# REMURA — TradingView ALL-IN-ONE Premium LAB v0.6
-**Aggiornamento: 11/11/2026, ore 12:58 CET**
+# REMURA — ALL-IN-ONE Premium LAB v0.7
+**Aggiornamento: 11/11/2026, ore 13:19 CET**
 
 > Laboratorio nella PR **#102 DRAFT**. Nessun merge, deploy o impatto sui filoni A/B/C.
+
+## NUOVA VERSIONE v0.7 — LIVELLI DELTA GIORNALIERI DINAMICI
+
+**[Codice completo REMURA ALL-IN-ONE Premium v0.7](REMURA-ALL-IN-ONE-Premium-v0.7.pine)** — aggiornato **11/11/2026, 13:19 CET**.
+
+Un solo Pine integra i pannelli **COMPLETO / FOOTPRINT / RADAR**, i livelli WEEK/CURRENT MONTH/PREVIOUS MONTH e i nuovi livelli **DAY**. Le versioni v0.4, v0.5 e v0.6 rimangono intatte sul repository.
+
+**Linee sul grafico**:
+- **DAY 1 viola continuo (spessore 3)**: barra confermata con maggiore `abs(delta intrabar)` del giorno, tra le barre che superano la soglia.
+- **DAY 2 arancione tratteggiato**: secondo massimo.
+- **DAY 3 azzurro tratteggiato**: terzo massimo.
+- **PREVIOUS DAY grigio puntinato**: massimo del giorno di trading precedente, disponibile se il suo storico e' caricato.
+
+**Regole**:
+1. Valutazione solo alla chiusura di ogni candela M5; le linee DAY possono essere sostituite se arriva un delta assoluto piu' forte. Non anticipano il picco prima della chiusura.
+2. Filtro iniziale DAY = `abs(delta) / media 30 barre precedenti >= 1.5x`, separato dalla soglia ER=3.5x. Configurabile anche a `0` per mostrare sempre i tre massimi senza filtro.
+3. Il giorno cambia secondo `timeframe.change("1D")` (calendario/seduta del simbolo TradingView); il giorno di trading non coincide sempre con le 00:00 italiane.
+4. Il **prezzo** del livello e' di default `HL2` (media High/Low della candela di picco) per coerenza con WEEK/MONTH. Opzione `POC FOOTPRINT`: centro della riga POC del volume della candela stessa **quando presente**. POC non significa prezzo del maggiore delta buy/sell per tick.
+5. Un **RT** viola indica il primo **ritorno del range High-Low** di una candela successiva sul prezzo del livello. Tocchi continuativi per piu' candele contano una sola visita finche' il prezzo non si allontana. Nel pannello COMPLETO si leggono anche i conteggi `1:... 2:... 3:... Y:...`.
+6. La notifica `REMURA - Retest livello delta DAY` e' solo una **condizione di alert** TradingView, non un alert gia' attivato: creare manualmente l'alert, preferendo **una volta alla chiusura della candela**. Nessun ordine viene inserito.
+
+**Come provare**: aprire il file v0.7 → Raw → copiare dall'inizio `//@version=6` → sostituire con un solo indicatore su **FXCM:EURUSD M5**. Rimuovere le istanze precedenti per evitare doppie linee. Lasciare vista `COMPLETO`; controllare linee viola/arancione/azzurro e il grigio puntinato (quando disponibile). Invio screenshot richiesto per compilazione e resa grafica.
+
+**Limiti scientifici**: il delta Forex FXCM e' classificato/stimato, non vero flusso ordini attribuito a banche o future CME; la posizione della linea (HL2/POC volume) non prova il livello esatto dell'assorbimento. I retest NON provano supporto/resistenza o inversione. La v0.7 ha superato controlli strutturali su GitHub, **non ancora la compilazione reale in TradingView**. Dopo la prova misureremo a 15/30/60 minuti tanto i retest positivi quanto quelli falliti.
+
+**Costi**: nessuna nuova API o abbonamento; sfrutta il Premium gia' attivo. Nessun deploy, merge o modifica a REMURA live.
 
 ## NUOVA VERSIONE PRINCIPALE — ALL-IN-ONE Premium v0.6 (11/11/2026 12:58 CET)
 
