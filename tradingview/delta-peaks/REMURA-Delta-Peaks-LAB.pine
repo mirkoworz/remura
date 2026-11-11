@@ -1,19 +1,21 @@
 //@version=6
-// REMURA Delta Peaks LAB v0.1
-// Aggiornamento: 11/11/2026 08:41 CET
+// REMURA Delta Peaks LAB v0.2
+// Aggiornamento: 11/11/2026 08:54 CET
 // Ricerca sperimentale: delta STIMATO, non ordini istituzionali osservati.
 // Nessun collegamento con la versione live di REMURA.
 import TradingView/ta/14 as tv
 
-indicator("REMURA Delta Peaks LAB v0.1 - 11/11/2026", overlay=true, max_lines_count=10)
+indicator("REMURA Delta Peaks LAB v0.2 - 11/11/2026", overlay=true, max_lines_count=10)
 
 // PARAMETRI
 lowerTF = input.timeframe("1", "Timeframe delta intrabar")
 lookback = input.int(30, "Barre di riferimento", minval=5)
-multiplier = input.float(2.5, "Forza minima picco", minval=1, step=0.25)
+multiplier = input.float(3.5, "Forza minima picco", minval=1, step=0.25)
 bodyLimit = input.float(0.25, "Corpo massimo / ATR", minval=0.01, step=0.05)
 showLevels = input.bool(true, "Mostra livelli WEEK / MONTH")
-showSignals = input.bool(true, "Mostra picchi e assorbimenti")
+minPeakGap = input.int(6, "Minimo barre tra picchi (5m = 30 min)", minval=0, maxval=100)
+showPeaks = input.bool(false, "Mostra anche D+/D- (diagnostica)")
+showER = input.bool(true, "Mostra ER (sforzo / risultato)")
 
 // DELTA STIMATO DA TIMEFRAME INFERIORE
 // Il periodo di accumulo coincide con la candela del grafico:
@@ -21,11 +23,16 @@ showSignals = input.bool(true, "Mostra picchi e assorbimenti")
 [deltaOpen, deltaHigh, deltaLow, deltaBar] = tv.requestVolumeDelta(lowerTF, timeframe.period)
 
 absDelta = math.abs(deltaBar)
-avgDelta = ta.sma(absDelta, lookback)
+// Solo barre precedenti: evitiamo che il picco alteri la propria soglia.
+avgDelta = ta.sma(absDelta[1], lookback)
 atrValue = ta.atr(14)
 
-// PICCHI: solo a candela confermata
-isPeak = barstate.isconfirmed and not na(deltaBar) and not na(avgDelta) and avgDelta > 0 and absDelta >= avgDelta * multiplier
+// PICCHI: solo a candela confermata; filtro distanza, non un nuovo metodo di delta.
+peakCandidate = barstate.isconfirmed and not na(deltaBar) and not na(avgDelta) and avgDelta > 0 and absDelta >= avgDelta * multiplier
+var int lastPeakBar = na
+isPeak = peakCandidate and (na(lastPeakBar) or bar_index - lastPeakBar > minPeakGap)
+if isPeak
+    lastPeakBar := bar_index
 
 // SFORZO / RISULTATO - IPOTESI, NON SEGNALE DIREZIONALE CONFERMATO
 smallBody = not na(atrValue) and math.abs(close - open) <= atrValue * bodyLimit
@@ -33,10 +40,10 @@ sellAbsorption = isPeak and deltaBar > 0 and (smallBody or close < open)
 buyAbsorption = isPeak and deltaBar < 0 and (smallBody or close > open)
 
 // MARCATORI
-plotshape(showSignals and isPeak and deltaBar > 0, title="Picco positivo", style=shape.circle, location=location.abovebar, color=color.lime, size=size.tiny, text="D+")
-plotshape(showSignals and isPeak and deltaBar < 0, title="Picco negativo", style=shape.circle, location=location.belowbar, color=color.red, size=size.tiny, text="D-")
-plotshape(showSignals and sellAbsorption, title="Possibile assorbimento venditore", style=shape.triangledown, location=location.abovebar, color=color.orange, size=size.small, text="ER")
-plotshape(showSignals and buyAbsorption, title="Possibile assorbimento compratore", style=shape.triangleup, location=location.belowbar, color=color.aqua, size=size.small, text="ER")
+plotshape(showPeaks and isPeak and deltaBar > 0 and not sellAbsorption, title="Picco positivo", style=shape.circle, location=location.abovebar, color=color.lime, size=size.tiny, text="D+")
+plotshape(showPeaks and isPeak and deltaBar < 0 and not buyAbsorption, title="Picco negativo", style=shape.circle, location=location.belowbar, color=color.red, size=size.tiny, text="D-")
+plotshape(showER and sellAbsorption, title="Possibile assorbimento venditore", style=shape.triangledown, location=location.abovebar, color=color.orange, size=size.small, text="ER")
+plotshape(showER and buyAbsorption, title="Possibile assorbimento compratore", style=shape.triangleup, location=location.belowbar, color=color.aqua, size=size.small, text="ER")
 
 // MASSIMI ASSOLUTI DEL DELTA NEI PERIODI DISPONIBILI
 var float weekMax = na
@@ -94,7 +101,7 @@ if barstate.isconfirmed and not na(deltaBar)
 var table panel = table.new(position.top_right, 2, 5, border_width=1)
 if barstate.islast
     table.cell(panel, 0, 0, "REMURA DELTA", bgcolor=color.black, text_color=color.white)
-    table.cell(panel, 1, 0, "LAB v0.1", bgcolor=color.black, text_color=color.white)
+    table.cell(panel, 1, 0, "LAB v0.2", bgcolor=color.black, text_color=color.white)
     table.cell(panel, 0, 1, "Delta barra")
     table.cell(panel, 1, 1, na(deltaBar) ? "N/D" : str.tostring(deltaBar, format.volume))
     table.cell(panel, 0, 2, "WEEK")
