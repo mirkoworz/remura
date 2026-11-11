@@ -1,5 +1,22 @@
-# REMURA TradingView — ROADMAP ALL-IN-ONE Premium TELEMETRY LAB v0.8.1
-**Aggiornamento roadmap: 11/11/2026, ore 16:27 CET**
+# REMURA TradingView — ROADMAP TELEMETRY / GATEWAY LAB v0.8.2
+**Aggiornamento roadmap: 11/11/2026, ore 17:52 CET**
+**PR #102 DRAFT, OPEN — NO MERGE, NO DEPLOY, NO WEBHOOK, NO ORDINI.**
+
+## CHECKPOINT CONFERMATO — 11/11/2026 17:52 CET
+- [x] **Pine v0.8.1 compila e funziona in TradingView**, conferma esplicita dell'utente il 11/11/2026 dopo l'ultima prova. Non richiedere nuovamente questo controllo; il payload runtime e la consegna webhook **NON** sono ancora testati.
+- [x] Verificati i requisiti TradingView: webhook JSON `application/json`, 2FA, timeout remoto 3 secondi, quattro IP pubblicati ufficialmente, porte 80/443; chiamate possono essere perse.
+- [x] [Creato GATEWAY LAB v0.8.2](gateway-lab/README.md) Workers + D1 come codice offline: [receiver](gateway-lab/worker.mjs), [schema](gateway-lab/schema.sql) e [21 test sintetici](gateway-lab/worker.test.mjs), senza token, webhook URL, account cloud o deploy.
+- [x] Sicurezza fail-closed, IP allowlist + hash token solo configurabile fuori repository, schema JSON versione, body limit 20KB, controllo tempi, deduplica tramite D1, limite best-effort 20 record/min, nessun accesso remoto ai dati né routing a B/C.
+- [x] Aggiornata GitHub Actions `.github/workflows/remura-tv-telemetry-lab.yml` per eseguire **16 test Python + 21 test Worker Node** (no network/no third-party dependencies); run verde [43062097541](https://github.com/mirkoworz/remura/actions/runs/43062097541) per SHA `633ae6cae73934f5746dedb79a848a41c6c881b7`. Le successive esecuzioni su nuove modifiche vanno verificate di nuovo.
+- [x] Confronto quote ufficiali Cloudflare Workers Free: 100k richieste/giorno, 10ms CPU; D1 Free: 5M righe lette/giorno, 100k righe scritte/giorno; quote condivise con eventuali altre risorse. Nessun costo o risorsa cloud nuovi.
+- [ ] Verificare **CI finale** dopo ultime modifiche alla documentazione/test, senza confondere i mock locali con un endpoint reale.
+- [ ] **NON AUTORIZZATO:** creare Worker/D1, impostare segreti, attivare Cloudflare o TradingView webhook: prima verifica quote e decisione esplicita dell'utente.
+- [ ] Prima attivazione futura: prova endpoint isolato e payload sintetico; verificare che consegna, token/allowlist, latenza <3s e storage siano corretti. Tutto senza REMURA live.
+- [ ] Per studio prospettico completo serviranno **tutte le barre M5** (heartbeat TradingView inizialmente OFF), monitoraggio gap, ER/RT 3/6/12 barre, falsi positivi, replacement drift e benchmark; attivare soltanto nella finestra di ricerca concordata.
+- [ ] Nessuna modifica ai filoni A/B/C, nessun trade o promessa statistica; confrontare livelli WEEK/MONTH con metodo del collaboratore dopo acquisizione prospettica.
+
+
+
 **PR #102 DRAFT, OPEN — NO MERGE, NO DEPLOY, NO WEBHOOK, NO ORDINI.**
 
 ## CHECKPOINT v0.8.1 — 11/11/2026 16:26 CET (SOLO OFFLINE)
@@ -12,7 +29,7 @@
 - [x] Aggiunto workflow GitHub Actions *solo su file di questo laboratorio* `.github/workflows/remura-tv-telemetry-lab.yml`, sola lettura, no segreti, no deploy, per regressioni Python; runner GitHub standard pubblico gratuito secondo documentazione ufficiale.
 - [x] Verifica pubblica quote: Workers Free 100.000 richieste/giorno e 10ms CPU/req; D1 Free 5 milioni righe lette/giorno, 100.000 scritte/giorno, 5GB account **e 500MB/database**; oltre quota il Free blocca operazioni. Nessuna nuova risorsa creata.
 - [x] **CI verificata VERDE**: run [43048503823](https://github.com/mirkoworz/remura/actions/runs/43048503823) per HEAD `aaae10c4e6d59951e0b0bb0d4a2c07be27ead5a3`: regressioni sintetiche Python + `py_compile` completati con successo. NON è una compilazione Pine.
-- [ ] **Pine v0.8.1 NON COMPILATO su TradingView**: verificare compilazione manuale, soprattutto payload dinamico e campi NA, **senza creare alert**; solo dopo il confronto v0.7/v0.8 su FXCM:EURUSD M5.
+- [x] **Pine v0.8.1 COMPILATO in TradingView**, funzionamento confermato esplicitamente dall'utente il 11/11/2026; verifica ancora da fare sul JSON generato a runtime e webhook, senza creare alert.
 - [ ] Gateway di test: definire autenticazione sicura compatibile TV, con IP allowlist, body/rate limit, D1/KV retention e deduplica; verificare il consumo di risorse condivise prima di un qualsiasi deploy.
 - [ ] Misurazione reale **NON AVVIATA**: può iniziare solo dopo receiver autorizzato, conservazione eventi real-time, e feed M5 prospettico per barre senza eventi.
 
