@@ -1,35 +1,37 @@
-# REMURA TradingView — Delta Peaks LAB v0.1
-**Aggiornamento: 11/11/2026, ore 08:41 CET**
+# REMURA TradingView — Delta Peaks LAB v0.2
+**Aggiornamento: 11/11/2026, ore 08:54 CET**
 
-> Ricerca separata: nessuna modifica alla web app REMURA, al deploy, ai dati raccolti o alle PR dei filoni A, B e C.
+> Laboratorio indipendente: non modifica la web app REMURA, i filoni A/B/C, i deploy o i servizi cloud.
 
-## COPIA IL CODICE
-**File da usare:** [REMURA-Delta-Peaks-LAB.pine](REMURA-Delta-Peaks-LAB.pine)  
-**Vista RAW (testo puro):** apri il file su GitHub e tocca **Raw** per copiare il codice completo.
+## COPIA IL CODICE AGGIORNATO
+**Apri [REMURA-Delta-Peaks-LAB.pine](REMURA-Delta-Peaks-LAB.pine)** e premi **Raw** per copiare l'intero testo, a partire da `//@version=6`.
 
-1. Apri TradingView, simbolo **FXCM:EURUSD**, timeframe **5 minuti**.
-2. Apri **Pine Editor**, crea un nuovo indicatore, sostituisci il codice con il contenuto completo del file `.pine` (a partire da `//@version=6`).
-3. Salva e clicca **Aggiungi al grafico**. Se compare un errore, riportane il testo o fai uno screenshot.
-4. Impostazione di partenza: **delta intrabar = 1 minuto**, **lookback = 30 barre**, **moltiplicatore = 2.5**.
-5. Controlla i simboli **D+**, **D-**, **ER** e i tre livelli.
+1. Apri **TradingView** sul simbolo **FXCM:EURUSD** a **5 minuti**.
+2. Apri **Pine Editor**, sostituisci tutto il vecchio codice v0.1 con quello v0.2 e clicca **Salva / Aggiungi al grafico**.
+3. Elimina dal grafico la vecchia istanza v0.1, se presente: evita marcatori doppi.
+4. Controlla sul grafico: titolo **v0.2**, linee **WEEK azzurra, CURRENT MONTH gialla, PREVIOUS MONTH grigia tratteggiata** e **ER**.
+5. Se serve vedere anche ogni picco, nelle impostazioni attiva **Mostra anche D+/D- (diagnostica)**.
 
-## COSA FA v0.1
-- Rileva **picchi di delta stimato** rispetto alla media del suo valore assoluto su 30 barre.
-- Evidenzia un'**ipotesi** di sforzo elevato e risultato debole/opposto (**ER**), senza chiamarla assorbimento istituzionale certo.
-- Disegna il livello della barra con massimo |delta| della **settimana**, del **mese** e del **mese precedente**.
-- Traccia i livelli a **hl2** (media tra massimo e minimo della barra), non a un prezzo di scambio istituzionale verificato.
-- Offre condizioni di **alert TradingView**; non invia automaticamente notifiche a REMURA.
+## MODIFICHE v0.2 PER RENDERE LEGGIBILE IL GRAFICO
+- **ER** (ipotesi sforzo/risultato) visibile per impostazione predefinita; **D+/D-** nascosti, attivabili dalla diagnostica. Un ER non e' una conferma di assorbimento istituzionale.
+- Soglia di selezione alzata da **2,5** a **3,5** volte la media dei **30 delta assoluti precedenti** (nella v0.1 la barra entrava nella propria media).
+- Filtro di distanza fra due picchi: **6 barre** complete senza nuovi eventi dopo un picco, cioe' circa 30 minuti su M5; parametro modificabile anche a 0.
+- Marcatori D+/D- evitano di sovrapporsi a ER quando entrambe le visualizzazioni sono attivate.
+- I tre **livelli storici non cambiano formula** in questa versione: massimo |delta| della singola barra in ciascun periodo, disegnato al suo `hl2`. Questa scelta va confrontata con il metodo di riferimento.
+- Gli alert restano presenti ma **non vengono inviati automaticamente a REMURA**.
 
-## LIMITI IMPORTANTI
-- La libreria **TradingView/ta/14** e la funzione `requestVolumeDelta()` classificano volume intrabar: non sono il flusso certificato degli ordini CME. Nel forex FXCM il dato dipende dal feed e puo' essere tick volume.
-- I livelli sono calcolati solo sullo **storico intrabar accessibile all'account**. Se un periodo non e' caricato o mancano dati, la stima puo' essere incompleta e mostrare **N/D**.
-- La classe **ER** e' una regola euristica (delta elevato + corpo piccolo o direzione contraria): NON prova un acquisto/vendita di istituzionali.
-- Il criterio di selezione dei livelli v0.1 usa il **massimo delta assoluto della singola barra** per periodo; va ancora confrontato con gli esempi Week / Current Monthly / Previous Monthly del metodo di riferimento.
-- Il Pine Script **non e' ancora stato compilato o eseguito in TradingView**: primo test da fare sul grafico.
-- Nessun costo cloud, server, API o servizio a pagamento introdotto da questo codice; funzioni e limiti operativi di TradingView dipendono dal piano dell'utente.
+## RISULTATO OSSERVATO
+- **v0.1 compilata e visibile** sul grafico FXCM:EURUSD 5m nella foto condivisa **11/11/2026**: marcatori e tre livelli visibili, nessun errore di compilazione mostrato.
+- **v0.2 non ancora compilata su TradingView**. Prossima prova: confrontare screenshot prima/dopo e verificare che i segnali restino sensati.
+- Non e' stata verificata alcuna capacita' predittiva o prova di posizionamento istituzionale.
 
-## MODIFICHE FUTURE
-Apri [ROADMAP.md](ROADMAP.md). Tutte le modifiche qui restano in laboratorio finche' non vengono testate; nessun merge verso `main` o deploy automatico.
+## LIMITI
+- `TradingView/ta/14` e `requestVolumeDelta()` stimano il delta usando dati intrabar disponibili. **FXCM Forex non equivale al flusso di contratti CME**; il volume puo' rappresentare attivita' del feed/tick volume.
+- I massimi WEEK e MONTH sono parziali se la profondita' dei dati intrabar e' insufficiente; il valore puo' essere N/D.
+- Un picco isolato puo' essere rumore, news o evento del feed; ER e' una regola euristica (delta grande e corpo piccolo o movimento opposto).
+- Il filtro anti-affollamento puo' omettere anche eventi validi: **per studio rigoroso** confrontare v0.1 e v0.2 e provare `Minimo barre tra picchi = 0`.
+- Costo aggiuntivo da questa modifica GitHub: **zero**; disponibilita' degli indicatori/alert dipende dai limiti TradingView del piano.
 
-**Codice sorgente**: [REMURA-Delta-Peaks-LAB.pine](REMURA-Delta-Peaks-LAB.pine)  
-**Fonti**: [libreria TradingView ta](https://www.tradingview.com/script/BICzyhq0-ta/), [documentazione Pine Script v6](https://www.tradingview.com/pine-script-docs/).
+**Prossimi passi:** [ROADMAP.md](ROADMAP.md). Non fare merge o deploy dal laboratorio senza verifica separata.
+
+**Fonti tecniche:** [libreria ufficiale TradingView ta](https://www.tradingview.com/script/BICzyhq0-ta/), [Pine Script v6](https://www.tradingview.com/pine-script-docs/).
