@@ -1,0 +1,311 @@
+//@version=6
+// REMURA ALL-IN-ONE Premium LAB v0.7
+// Aggiornamento: 11/11/2026 13:19 CET
+// Ricerca sperimentale: delta STIMATO, non ordini istituzionali osservati.
+// Nessun collegamento con la versione live di REMURA.
+import TradingView/ta/14 as tv
+
+indicator("REMURA ALL-IN-ONE Premium LAB v0.7 - 11/11/2026", overlay=true, max_lines_count=30)
+
+// PARAMETRI
+lowerTF = input.timeframe("1", "Timeframe delta intrabar")
+lookback = input.int(30, "Barre di riferimento", minval=5)
+multiplier = input.float(3.5, "Forza minima picco", minval=1, step=0.25)
+maxEfficiency = input.float(0.07, "Efficienza ER massima", minval=-1.0, maxval=1.0, step=0.01)
+showLevels = input.bool(true, "Mostra livelli WEEK / MONTH")
+minPeakGap = input.int(6, "Minimo barre tra picchi (5m = 30 min)", minval=0, maxval=100)
+showPeaks = input.bool(false, "Mostra anche D+/D- (diagnostica)")
+showER = input.bool(true, "Mostra ER (sforzo / risultato)")
+showPanel = input.bool(true, "Mostra pannello REMURA")
+showHistory = input.bool(true, "Mostra gli ultimi 3 eventi")
+colorBars = input.bool(false, "Colora candele anomale (anche LIVE)")
+
+// PREMIUM: scelta pannello, un unico footprint nativo per la barra corrente.
+viewMode = input.string("COMPLETO", "Vista pannello", options=["COMPLETO", "FOOTPRINT", "RADAR"])
+fpTicks = input.int(10, "Footprint tick per riga", minval=1)
+fpImbThreshold = input.float(300.0, "Footprint imbalance %", minval=100, step=25.0)
+showPocDots = input.bool(false, "Mostra POC come punti (candele chiuse)")
+
+// DELTA STIMATO DA TIMEFRAME INFERIORE
+// Il periodo di accumulo coincide con la candela del grafico:
+// deltaBar rappresenta quindi il delta stimato di una barra.
+[deltaOpen, deltaHigh, deltaLow, deltaBar] = tv.requestVolumeDelta(lowerTF, timeframe.period)
+
+absDelta = math.abs(deltaBar)
+// Solo barre precedenti: evitiamo che il picco alteri la propria soglia.
+avgDelta = ta.sma(absDelta[1], lookback)
+atrValue = ta.atr(14)
+
+// Gap tra picchi confermati. La vista LIVE puo' cambiare.
+var int lastPeakBar = na
+gapOK = na(lastPeakBar) or bar_index - lastPeakBar > minPeakGap
+
+// SFORZO / RISULTATO: METRICA SPERIMENTALE, NON PROVA DI ASSORBIMENTO
+// Sforzo = |delta barra| / media(|delta| delle 30 barre precedenti).
+// Risultato direzionale = sign(delta) * (close - open) / ATR(14).
+// Efficienza ER = risultato direzionale / sforzo.
+// Negativa: corpo nella direzione opposta al delta. Circa zero: poco corpo.
+effort = not na(avgDelta) and avgDelta > 0 ? absDelta / avgDelta : na
+signedResult = not na(atrValue) and atrValue > 0 and not na(deltaBar) ? math.sign(deltaBar) * (close - open) / atrValue : na
+efficiency = not na(effort) and effort > 0 and not na(signedResult) ? signedResult / effort : na
+// Anteprima della barra aperta; solo alla chiusura si conferma.
+previewPeak = not na(effort) and effort >= multiplier and gapOK
+previewER = previewPeak and not na(efficiency) and efficiency <= maxEfficiency
+isPeak = barstate.isconfirmed and previewPeak
+erCandidate = barstate.isconfirmed and previewER
+erPositiveDelta = erCandidate and deltaBar > 0
+erNegativeDelta = erCandidate and deltaBar < 0
+
+// Ultimi tre eventi CONFERMATI; orario di apertura barra in Italia.
+var string event1 = "N/D"
+var string event2 = "N/D"
+var string event3 = "N/D"
+if isPeak
+    lastPeakBar := bar_index
+    event3 := event2
+    event2 := event1
+    string eventType = erPositiveDelta ? "ER+" : erNegativeDelta ? "ER-" : deltaBar > 0 ? "D+" : "D-"
+    event1 := str.format_time(time, "dd/MM HH:mm", "Europe/Rome") + " " + eventType + " " + str.tostring(effort, "#.0") + "x"
+
+// Colori della PRESSIONE e dell'ANOMALIA separati.
+hasDelta = not na(deltaBar)
+hasEffort = not na(effort)
+strength = not hasEffort ? 0 : effort < 1 ? 1 : effort < 2 ? 2 : effort < 3.5 ? 3 : effort < 5 ? 4 : 5
+strengthMeter = strength == 0 ? "N/D" : strength == 1 ? "1/5 |...." : strength == 2 ? "2/5 ||..." : strength == 3 ? "3/5 |||.." : strength == 4 ? "4/5 ||||." : "5/5 |||||"
+deltaColor = not hasDelta ? color.gray : deltaBar > 0 ? color.lime : deltaBar < 0 ? color.red : color.silver
+anomalyColor = previewER ? color.fuchsia : previewPeak ? color.orange : strength >= 3 ? color.yellow : color.gray
+pressureText = not hasDelta ? "N/D" : deltaBar > 0 ? "BUY stimato" : deltaBar < 0 ? "SELL stimato" : "NEUTRO"
+anomalyText = not hasEffort ? "N/D" : previewER ? (deltaBar > 0 ? "ER+ | EFF. BASSA" : "ER- | EFF. BASSA") : previewPeak ? "PICCO DELTA" : effort >= 2 ? "PRESSIONE ALTA" : "NORMALE"
+
+// Facoltativa: colorazione barra corrente PROVVISORIA finche' aperta.
+barcolor(colorBars ? (previewER ? color.purple : previewPeak ? color.orange : na) : na)
+
+// MARCATORI - ER+ = pressione positiva inefficiente, ER- = pressione negativa inefficiente
+plotshape(showPeaks and isPeak and deltaBar > 0 and not erPositiveDelta, title="Picco positivo", style=shape.circle, location=location.abovebar, color=color.lime, size=size.tiny, text="D+")
+plotshape(showPeaks and isPeak and deltaBar < 0 and not erNegativeDelta, title="Picco negativo", style=shape.circle, location=location.belowbar, color=color.red, size=size.tiny, text="D-")
+plotshape(showER and erPositiveDelta, title="ER delta positivo", style=shape.triangledown, location=location.abovebar, color=color.orange, size=size.small, text="ER+")
+plotshape(showER and erNegativeDelta, title="ER delta negativo", style=shape.triangleup, location=location.belowbar, color=color.aqua, size=size.small, text="ER-")
+
+// MASSIMI ASSOLUTI DEL DELTA NEI PERIODI DISPONIBILI
+var float weekMax = na
+var float monthMax = na
+var float weekPrice = na
+var float monthPrice = na
+var float previousMonthPrice = na
+
+var line weekLine = na
+var line monthLine = na
+var line previousLine = na
+
+// NUOVA SETTIMANA
+if timeframe.change("1W")
+    weekMax := na
+    weekPrice := na
+    if not na(weekLine)
+        line.delete(weekLine)
+        weekLine := na
+
+// NUOVO MESE
+if timeframe.change("1M")
+    previousMonthPrice := monthPrice
+    if not na(previousLine)
+        line.delete(previousLine)
+    previousLine := monthLine
+    if not na(previousLine)
+        line.set_color(previousLine, color.gray)
+        line.set_style(previousLine, line.style_dashed)
+    monthLine := na
+    monthMax := na
+    monthPrice := na
+
+// AGGIORNA I LIVELLI SOLO A CANDELA CHIUSA
+// Il prezzo tracciato e' hl2 della candela del massimo delta,
+// NON un volume profile POC o il prezzo esatto dello scambio.
+if barstate.isconfirmed and not na(deltaBar)
+    if na(weekMax) or absDelta > weekMax
+        weekMax := absDelta
+        weekPrice := hl2
+        if not na(weekLine)
+            line.delete(weekLine)
+        if showLevels
+            weekLine := line.new(bar_index, weekPrice, bar_index + 1, weekPrice, extend=extend.right, color=color.aqua, width=2)
+
+    if na(monthMax) or absDelta > monthMax
+        monthMax := absDelta
+        monthPrice := hl2
+        if not na(monthLine)
+            line.delete(monthLine)
+        if showLevels
+            monthLine := line.new(bar_index, monthPrice, bar_index + 1, monthPrice, extend=extend.right, color=color.yellow, width=2)
+
+// NATIVE FOOTPRINT PREMIUM — separato dai calcoli ER esistenti.
+// Nota: classificazione intrabar del volume FXCM != esecuzioni CME.
+// Limite Pine: UNA sola request.footprint() per script.
+footprint fp = request.footprint(fpTicks, va_percent=70, imbalance_percent=fpImbThreshold)
+bool hasFootprint = not na(fp)
+float fpBuy = hasFootprint ? fp.buy_volume() : na
+float fpSell = hasFootprint ? fp.sell_volume() : na
+float fpDelta = hasFootprint ? fp.delta() : na
+float fpTotal = hasFootprint ? fp.total_volume() : na
+float fpDeltaPct = hasFootprint and fpTotal > 0 ? 100.0 * fpDelta / fpTotal : na
+float fpPoc = na
+float fpVah = na
+float fpVal = na
+int fpBuyImb = 0
+int fpSellImb = 0
+
+if hasFootprint
+    volume_row pocRow = fp.poc()
+    volume_row vahRow = fp.vah()
+    volume_row valRow = fp.val()
+    fpPoc := math.avg(pocRow.up_price(), pocRow.down_price())
+    fpVah := vahRow.up_price()
+    fpVal := valRow.down_price()
+    for row in fp.rows()
+        if row.has_buy_imbalance()
+            fpBuyImb += 1
+        if row.has_sell_imbalance()
+            fpSellImb += 1
+
+// POC come punto facoltativo sul grafico; solo a candela chiusa.
+plot(showPocDots and barstate.isconfirmed ? fpPoc : na, "Footprint POC (centro riga)", color=color.orange, style=plot.style_circles, linewidth=2)
+plot(fpDelta, "Delta Footprint Premium (classificato)", display=display.data_window)
+plot(fpDeltaPct, "Delta Footprint % volume", display=display.data_window)
+
+// PANNELLO LIVE: aggiorna celle solo sull'ultima barra.
+var table panel = table.new(position.top_right, 2, 21, bgcolor=color.new(color.black, 15), border_width=1)
+if barstate.islast
+    if not showPanel
+        table.clear(panel, 0, 0, 1, 20)
+    else
+        // Vista unificata: stessi segnali delta/ER della v0.5, UNA sola richiesta footprint.
+        if viewMode == "COMPLETO"
+            color bg = color.new(color.black, 20)
+            color headBg = color.new(color.blue, 55)
+            color deltaFootColor = not hasFootprint ? color.gray : fpDelta > 0 ? color.lime : fpDelta < 0 ? color.red : color.silver
+            color erBg = previewER ? color.new(color.purple, 35) : previewPeak ? color.new(color.orange, 35) : bg
+            string stateText = barstate.isrealtime and not barstate.isconfirmed ? "LIVE / PROVVISORIO" : "CHIUSA / STORICO"
+            string fpPair = hasFootprint ? str.tostring(fpBuy, format.volume) + " / " + str.tostring(fpSell, format.volume) : "N/D"
+            string imbPair = hasFootprint ? str.tostring(fpBuyImb) + " / " + str.tostring(fpSellImb) : "N/D"
+            table.cell(panel, 0, 0, "REMURA ALL-IN-ONE", text_color=color.white, bgcolor=headBg, text_size=size.small)
+            table.cell(panel, 1, 0, "LAB v0.7", text_color=color.white, bgcolor=headBg, text_size=size.small)
+            table.cell(panel, 0, 1, "STATO", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 1, stateText, text_color=barstate.isrealtime and not barstate.isconfirmed ? color.orange : color.lime, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 0, 2, "DELTA intrabar", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 2, hasDelta ? str.tostring(deltaBar, format.volume) : "N/D", text_color=deltaColor, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 3, "DELTA footprint", text_color=color.white, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 1, 3, hasFootprint ? str.tostring(fpDelta, format.volume) : "N/D", text_color=deltaFootColor, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 4, "BUY / SELL stimati", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 4, fpPair, text_color=color.white, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 5, "DELTA / VOL %", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 5, na(fpDeltaPct) ? "N/D" : str.tostring(fpDeltaPct, "#.0") + "%", text_color=deltaFootColor, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 6, "SFORZO", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 6, hasEffort ? str.tostring(effort, "#.##") + "x" : "N/D", text_color=anomalyColor, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 7, "RISULTATO ATR", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 7, na(signedResult) ? "N/D" : str.tostring(signedResult, "#.###"), text_color=color.white, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 8, "EFFICIENZA ER", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 8, na(efficiency) ? "N/D" : str.tostring(efficiency, "#.###"), text_color=previewER ? color.fuchsia : color.white, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 9, "ANOMALIA", text_color=color.white, bgcolor=erBg, text_size=size.small)
+            table.cell(panel, 1, 9, anomalyText, text_color=anomalyColor, bgcolor=erBg, text_size=size.small)
+            table.cell(panel, 0, 10, "INTENSITA'", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 10, strengthMeter, text_color=anomalyColor, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 0, 11, "IMB BUY / SELL", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 11, imbPair, text_color=color.white, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 12, "POC footprint", text_color=color.orange, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 12, na(fpPoc) ? "N/D" : str.tostring(fpPoc, format.mintick), text_color=color.orange, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 13, "VAH 70%", text_color=color.fuchsia, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 13, na(fpVah) ? "N/D" : str.tostring(fpVah, format.mintick), text_color=color.fuchsia, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 14, "VAL 70%", text_color=color.fuchsia, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 14, na(fpVal) ? "N/D" : str.tostring(fpVal, format.mintick), text_color=color.fuchsia, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 15, "WEEK", text_color=color.aqua, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 15, na(weekPrice) ? "N/D" : str.tostring(weekPrice, format.mintick), text_color=color.aqua, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 16, "CURRENT MONTH", text_color=color.yellow, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 16, na(monthPrice) ? "N/D" : str.tostring(monthPrice, format.mintick), text_color=color.yellow, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 17, "PREVIOUS MONTH", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 17, na(previousMonthPrice) ? "N/D" : str.tostring(previousMonthPrice, format.mintick), text_color=color.silver, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 18, showHistory ? "EVENTO #1" : "", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 18, showHistory ? event1 : "", text_color=color.white, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 0, 19, showHistory ? "EVENTO #2" : "", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 19, showHistory ? event2 : "", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 0, 20, showHistory ? "EVENTO #3" : "", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 20, showHistory ? event3 : "", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+        else if viewMode == "FOOTPRINT"
+            color bg = color.new(color.black, 20)
+            color footColor = not hasFootprint ? color.gray : fpDelta > 0 ? color.lime : fpDelta < 0 ? color.red : color.silver
+            string stateText = barstate.isrealtime and not barstate.isconfirmed ? "LIVE / PROVVISORIO" : "CHIUSA / STORICO"
+            color stateColor = barstate.isrealtime and not barstate.isconfirmed ? color.orange : color.lime
+            string imbSummary = not hasFootprint ? "N/D" : fpBuyImb > fpSellImb ? "PIU' BUY IMB" : fpSellImb > fpBuyImb ? "PIU' SELL IMB" : "IMB EQUILIBRIO"
+            table.cell(panel, 0, 0, "REMURA PREMIUM", text_color=color.white, bgcolor=color.new(color.blue, 55), text_size=size.small)
+            table.cell(panel, 1, 0, "FLOW v0.5", text_color=color.white, bgcolor=color.new(color.blue, 55), text_size=size.small)
+            table.cell(panel, 0, 1, "STATO", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 1, stateText, text_color=stateColor, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 0, 2, "DATI FOOTPRINT", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 2, hasFootprint ? "PRESENTI" : "N/D", text_color=hasFootprint ? color.lime : color.orange, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 3, "BUY stimato", text_color=color.lime, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 1, 3, hasFootprint ? str.tostring(fpBuy, format.volume) : "N/D", text_color=color.lime, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 4, "SELL stimato", text_color=color.red, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 1, 4, hasFootprint ? str.tostring(fpSell, format.volume) : "N/D", text_color=color.red, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 5, "DELTA footprint", text_color=color.white, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 1, 5, hasFootprint ? str.tostring(fpDelta, format.volume) : "N/D", text_color=footColor, bgcolor=bg, text_size=size.normal)
+            table.cell(panel, 0, 6, "DELTA / VOL %", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 6, na(fpDeltaPct) ? "N/D" : str.tostring(fpDeltaPct, "#.0") + "%", text_color=footColor, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 7, "POC (centro)", text_color=color.orange, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 1, 7, na(fpPoc) ? "N/D" : str.tostring(fpPoc, format.mintick), text_color=color.orange, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 8, "VAH 70%", text_color=color.fuchsia, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 1, 8, na(fpVah) ? "N/D" : str.tostring(fpVah, format.mintick), text_color=color.fuchsia, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 9, "VAL 70%", text_color=color.fuchsia, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 1, 9, na(fpVal) ? "N/D" : str.tostring(fpVal, format.mintick), text_color=color.fuchsia, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 10, "BUY IMB / righe", text_color=color.lime, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 10, hasFootprint ? str.tostring(fpBuyImb) : "N/D", text_color=color.lime, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 11, "SELL IMB / righe", text_color=color.red, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 11, hasFootprint ? str.tostring(fpSellImb) : "N/D", text_color=color.red, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 12, "IMBALANCE", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 12, imbSummary, text_color=footColor, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 0, 13, "ER stimato", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 13, anomalyText, text_color=anomalyColor, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 0, 14, "SFORZO / EFF.", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 14, (na(effort) ? "N/D" : str.tostring(effort, "#.0") + "x") + " / " + (na(efficiency) ? "N/D" : str.tostring(efficiency, "#.###")), text_color=color.white, bgcolor=bg, text_size=size.small)
+        else
+            string mode = barstate.isrealtime ? (barstate.isconfirmed ? "CHIUSA / OK" : "LIVE / PROVVISORIO") : "STORICO / CHIUSO"
+            color modeColor = barstate.isrealtime and not barstate.isconfirmed ? color.orange : color.lime
+            color base = color.new(color.black, 20)
+            color eventBg = previewER ? color.new(color.purple, 35) : previewPeak ? color.new(color.orange, 35) : base
+            table.cell(panel, 0, 0, "REMURA RADAR", text_color=color.white, bgcolor=color.new(color.blue, 55), text_size=size.small)
+            table.cell(panel, 1, 0, "LAB v0.4", text_color=color.white, bgcolor=color.new(color.blue, 55), text_size=size.small)
+            table.cell(panel, 0, 1, "STATO", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 1, 1, mode, text_color=modeColor, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 0, 2, "DELTA", text_color=color.white, bgcolor=base, text_size=size.small)
+            table.cell(panel, 1, 2, hasDelta ? str.tostring(deltaBar, format.volume) : "N/D", text_color=deltaColor, bgcolor=eventBg, text_size=size.normal)
+            table.cell(panel, 0, 3, "PRESSIONE", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 1, 3, pressureText, text_color=deltaColor, bgcolor=base, text_size=size.small)
+            table.cell(panel, 0, 4, "INTENSITA'", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 1, 4, strengthMeter, text_color=anomalyColor, bgcolor=base, text_size=size.small)
+            table.cell(panel, 0, 5, "SFORZO x", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 1, 5, hasEffort ? str.tostring(effort, "#.##") : "N/D", text_color=anomalyColor, bgcolor=base, text_size=size.small)
+            table.cell(panel, 0, 6, "RISULTATO ATR", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 1, 6, na(signedResult) ? "N/D" : str.tostring(signedResult, "#.###"), text_color=color.white, bgcolor=base, text_size=size.small)
+            table.cell(panel, 0, 7, "EFFICIENZA", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 1, 7, na(efficiency) ? "N/D" : str.tostring(efficiency, "#.###"), text_color=previewER ? color.fuchsia : color.white, bgcolor=base, text_size=size.small)
+            table.cell(panel, 0, 8, "ANOMALIA", text_color=color.white, bgcolor=eventBg, text_size=size.small)
+            table.cell(panel, 1, 8, anomalyText, text_color=anomalyColor, bgcolor=eventBg, text_size=size.small)
+            table.cell(panel, 0, 9, "WEEK", text_color=color.aqua, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 1, 9, na(weekPrice) ? "N/D" : str.tostring(weekPrice, format.mintick), text_color=color.aqua, bgcolor=base, text_size=size.small)
+            table.cell(panel, 0, 10, "CURRENT MONTH", text_color=color.yellow, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 1, 10, na(monthPrice) ? "N/D" : str.tostring(monthPrice, format.mintick), text_color=color.yellow, bgcolor=base, text_size=size.small)
+            table.cell(panel, 0, 11, "PREVIOUS MONTH", text_color=color.gray, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 1, 11, na(previousMonthPrice) ? "N/D" : str.tostring(previousMonthPrice, format.mintick), text_color=color.silver, bgcolor=base, text_size=size.small)
+            table.cell(panel, 0, 12, showHistory ? "ULTIMO #1" : "", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 1, 12, showHistory ? event1 : "", text_color=color.white, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 0, 13, showHistory ? "ULTIMO #2" : "", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 1, 13, showHistory ? event2 : "", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 0, 14, showHistory ? "ULTIMO #3" : "", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 1, 14, showHistory ? event3 : "", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+
+// DATI E ALLARMI - NESSUN WEBHOOK ATTIVATO
+plot(deltaBar, "Delta stimato", display=display.data_window)
+plot(effort, "Sforzo relativo (x)", display=display.data_window)
+plot(signedResult, "Risultato orientato al delta (ATR)", display=display.data_window)
+plot(efficiency, "Efficienza ER", display=display.data_window)
+alertcondition(isPeak, "REMURA - Picco delta", "Rilevato picco delta su {{ticker}}")
+alertcondition(erPositiveDelta, "REMURA - ER delta positivo", "Delta positivo con bassa efficienza su {{ticker}}")
+alertcondition(erNegativeDelta, "REMURA - ER delta negativo", "Delta negativo con bassa efficienza su {{ticker}}")
