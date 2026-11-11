@@ -253,6 +253,35 @@ if dayEligible
                 line.set_width(rankedLine, i == 0 ? 3 : 2)
                 line.set_style(rankedLine, i == 0 ? line.style_solid : line.style_dashed)
 
+// RETEST: High/Low attraversa il livello su barra SUCCESSIVA all'origine.
+// Un attraversamento su piu' barre consecutive conta una sola visita.
+// Non implica inversione, supporto, resistenza o vantaggio statistico.
+if barstate.isconfirmed and showDailyLevels
+    for i = 0 to 2
+        float level = array.get(dayPrices, i)
+        int originBar = array.get(dayOrigins, i)
+        bool intersects = not na(level) and not na(originBar) and bar_index > originBar and low <= level and high >= level
+        bool wasTouching = array.get(dayTouching, i)
+        if intersects and not wasTouching
+            array.set(dayTouches, i, array.get(dayTouches, i) + 1)
+            dailyRetest := true
+        array.set(dayTouching, i, intersects)
+        line currentLine = array.get(dayLines, i)
+        if not na(currentLine)
+            color baseColor = i == 0 ? color.fuchsia : i == 1 ? color.orange : color.aqua
+            line.set_color(currentLine, intersects and not wasTouching ? color.white : baseColor)
+    if showPrevDay and not na(previousDayPrice)
+        bool yIntersects = low <= previousDayPrice and high >= previousDayPrice
+        if yIntersects and not previousDayTouching
+            previousDayTouches += 1
+            dailyRetest := true
+        previousDayTouching := yIntersects
+        if not na(previousDayLine)
+            line.set_color(previousDayLine, yIntersects ? color.white : color.gray)
+
+// RT appare solo su candela chiusa: un tocco rilevato, NON un ordine.
+plotshape(showDailyLevels and dailyRetest, title="Retest livello delta DAY", style=shape.diamond, location=location.abovebar, color=color.fuchsia, size=size.tiny, text="RT")
+
 // PANNELLO LIVE: aggiorna celle solo sull'ultima barra.
 var table panel = table.new(position.top_right, 2, 21, bgcolor=color.new(color.black, 15), border_width=1)
 if barstate.islast
@@ -390,3 +419,4 @@ plot(efficiency, "Efficienza ER", display=display.data_window)
 alertcondition(isPeak, "REMURA - Picco delta", "Rilevato picco delta su {{ticker}}")
 alertcondition(erPositiveDelta, "REMURA - ER delta positivo", "Delta positivo con bassa efficienza su {{ticker}}")
 alertcondition(erNegativeDelta, "REMURA - ER delta negativo", "Delta negativo con bassa efficienza su {{ticker}}")
+alertcondition(dailyRetest, "REMURA - Retest livello delta DAY", "Ritorno del prezzo su un livello giornaliero confermato di picco delta su {{ticker}}")
