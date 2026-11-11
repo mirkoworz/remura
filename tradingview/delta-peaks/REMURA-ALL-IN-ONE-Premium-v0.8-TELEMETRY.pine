@@ -1,6 +1,6 @@
 //@version=6
-// REMURA ALL-IN-ONE Premium LAB v0.8 TELEMETRY (isolato)
-// Aggiornamento: 11/11/2026 16:13 CET
+// REMURA ALL-IN-ONE Premium LAB v0.8.1 TELEMETRY (isolato)
+// Aggiornamento: 11/11/2026 16:18 CET
 // Script di prova, telemetria SPENTA di default; v0.7 invariata.
 // Ricerca sperimentale: delta STIMATO, non ordini istituzionali osservati.
 // Nessun collegamento con la versione live di REMURA.
@@ -484,15 +484,16 @@ bool shouldEmit = telemetryEnabled and barstate.isrealtime and barstate.isconfir
 if shouldEmit
     string payload = "{"
     payload += "\"schema\":\"remura.tv.flow.v1\",\"source\":\"TRADINGVIEW_INTRABAR_ESTIMATE\","
-    payload += "\"indicator\":\"REMURA_ALL_IN_ONE_PREMIUM\",\"version\":\"0.8.0-lab\","
+    payload += "\"indicator\":\"REMURA_ALL_IN_ONE_PREMIUM\",\"version\":\"0.8.1-lab\","
     payload += "\"event_type\":" + tvQuote(hasSignal ? "BAR_EVENT" : "HEARTBEAT") + ","
     payload += "\"symbol\":" + tvQuote(syminfo.tickerid) + ",\"feed\":" + tvQuote(syminfo.prefix) + ",\"timeframe\":" + tvQuote(timeframe.period) + ","
     payload += "\"bar_open_ms\":" + tvInt(time) + ",\"bar_close_ms\":" + tvInt(time_close) + ",\"sent_clock_ms\":" + tvInt(timenow) + ","
     payload += "\"confirmed\":true,\"realtime\":true,"
-    payload += "\"ohlc\":{\"open\":" + tvNum(open) + ",\"high\":" + tvNum(high) + ",\"low\":" + tvNum(low) + ",\"close\":" + tvNum(close) + ",\"atr14\":" + tvNum(atrValue) + "},"
+    payload += "\"ohlc\":{\"open\":" + tvNum(open) + ",\"high\":" + tvNum(high) + ",\"low\":" + tvNum(low) + ",\"close\":" + tvNum(close) + ",\"prev_close\":" + tvNum(close[1]) + ",\"atr14\":" + tvNum(atrValue) + "},"
     payload += "\"delta_intrabar\":" + tvNum(deltaBar) + ",\"effort\":" + tvNum(effort) + ",\"signed_result_atr\":" + tvNum(signedResult) + ",\"efficiency\":" + tvNum(efficiency) + ","
     payload += "\"footprint\":{\"available\":" + str.tostring(hasFootprint) + ",\"buy\":" + tvNum(fpBuy) + ",\"sell\":" + tvNum(fpSell) + ",\"delta\":" + tvNum(fpDelta) + ",\"total\":" + tvNum(fpTotal) + ",\"delta_pct\":" + tvNum(fpDeltaPct) + ",\"poc\":" + tvNum(fpPoc) + ",\"vah\":" + tvNum(fpVah) + ",\"val\":" + tvNum(fpVal) + ",\"imb_buy_rows\":" + (hasFootprint ? str.tostring(fpBuyImb) : "null") + ",\"imb_sell_rows\":" + (hasFootprint ? str.tostring(fpSellImb) : "null") + "},"
     payload += "\"levels\":{\"day1\":" + tvNum(array.get(dayPrices, 0)) + ",\"day2\":" + tvNum(array.get(dayPrices, 1)) + ",\"day3\":" + tvNum(array.get(dayPrices, 2)) + ",\"previous_day\":" + tvNum(previousDayPrice) + ",\"week\":" + tvNum(weekPrice) + ",\"current_month\":" + tvNum(monthPrice) + ",\"previous_month\":" + tvNum(previousMonthPrice) + "},"
+    payload += "\"level_scores\":{\"day1\":" + tvNum(array.get(dayScores, 0)) + ",\"day2\":" + tvNum(array.get(dayScores, 1)) + ",\"day3\":" + tvNum(array.get(dayScores, 2)) + "}," 
     payload += "\"level_origin_ms\":{\"day1\":" + tvInt(array.get(dayOriginCloseMs, 0)) + ",\"day2\":" + tvInt(array.get(dayOriginCloseMs, 1)) + ",\"day3\":" + tvInt(array.get(dayOriginCloseMs, 2)) + ",\"previous_day\":" + tvInt(previousDayOriginCloseMs) + ",\"week\":" + tvInt(weekOriginCloseMs) + ",\"current_month\":" + tvInt(monthOriginCloseMs) + ",\"previous_month\":" + tvInt(previousMonthOriginCloseMs) + "},"
     payload += "\"events\":{\"peak\":" + str.tostring(isPeak) + ",\"er_positive\":" + str.tostring(erPositiveDelta) + ",\"er_negative\":" + str.tostring(erNegativeDelta) + ",\"day_level_action\":" + tvQuote(dayLevelAction) + ",\"day_level_rank\":" + tvInt(dayLevelRank) + ",\"evicted_day_price\":" + tvNum(evictedDayPrice) + ",\"evicted_day_origin_ms\":" + tvInt(evictedDayOriginCloseMs) + ",\"retest_day1\":" + str.tostring(array.get(dayRetestFlags, 0)) + ",\"retest_day2\":" + str.tostring(array.get(dayRetestFlags, 1)) + ",\"retest_day3\":" + str.tostring(array.get(dayRetestFlags, 2)) + ",\"retest_previous_day\":" + str.tostring(previousDayRetestFlag) + "},"
     payload += "\"quality\":{\"bar_closed\":true,\"source_type\":\"VOLUME_CLASSIFIED_NOT_CME_EXECUTIONS\",\"has_intrabar_delta\":" + str.tostring(not na(deltaBar)) + ",\"has_footprint\":" + str.tostring(hasFootprint) + ",\"freshness_ms\":" + tvInt(timenow - time_close) + ",\"daily_anchor\":" + tvQuote(dailyAnchor) + ",\"lower_tf\":" + tvQuote(lowerTF) + "}"
