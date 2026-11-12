@@ -1,6 +1,16 @@
-# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.5
-**Aggiornamento roadmap: 12/11/2026, ore 23:34 CET**
+# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.6-doc (Worker runtime v0.8.5)
+**Aggiornamento roadmap: 12/11/2026, ore 23:41 CET**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView OFF, nessun ordine.**
+
+## CHECKPOINT CLEANUP OFFLINE + D1 LIVE READ-ONLY — 12/11/2026 ore 23:41 CET
+- [x] Sicurezza account e modalità: [PR #102](https://github.com/mirkoworz/remura/pull/102) verificata OPEN/DRAFT, nessun merge, nessun deploy dei Worker né modifica ai filoni A/B/C.
+- [x] `cloudflare_d1_readonly_audit.py` v0.4: SELECT solo su D1 `remura-tv-lab-test` UE e verifica aggiuntiva del `raw_json` **esattamente sintetico**, timeframe e tipo evento. Nessuna API di scrittura.
+- [x] `synthetic_cleanup_plan_v1.py`: genera soltanto un piano di eliminazione della singola chiave `REMURA_SYNTHETIC_WRITE_20261112` con guardie su simbolo, versione, timeframe, tipo evento, is_timely e JSON esatto. **Non esegue SQL né accede alla rete**.
+- [x] `test_synthetic_cleanup_plan_v1.py`: **13 simulazioni su SQLite in memoria**. Insieme ai **21 test offline read-only** (totale **34**) eseguiti con successo nel workflow di verifica.
+- [x] GitHub Actions [run #43321908263](https://github.com/mirkoworz/remura/actions/runs/43321908263): job offline-safety SUCCESS, job Cloudflare D1 Read SUCCESS; log `REMURA_D1_READONLY_AUDIT=record_verified` su `remura-tv-lab-test`, UE, SELECT. Nessuna scrittura remota.
+- [x] Guida `gateway-lab/README.md` aggiornata con stato effettivo Cloudflare e separazione TEST/PROSPETTICO; sezione storica che sosteneva DB/Worker mai creati corretta.
+- [ ] Cleanup reale del singolo record sintetico **non autorizzato né eseguito**; evitiamo di creare un token D1 Write ampio per cancellare una sola riga. Il record rimane esclusivamente nel DB TEST e non contamina `remura-tv-lab`. Potrà essere rimosso con un'unica DELETE manuale circoscritta o con procedura one-shot più avanti, dopo approvazione.
+- [ ] Priorità successiva: verificare protezioni edge/IP TradingView, rate limit e quota Free, poi pianificare prova webhook end-to-end **solo con consenso esplicito** e tenendo `INGEST_ENABLED` OFF sino ad allora. Nessun alert o ordine live.
 
 ## CHECKPOINT TOKEN CORRETTO E AUDIT D1 REALE VERDE — 12/11/2026 ore 23:34 CET
 - [x] Utente ha corretto una lettera nel GitHub Secret `REMURA_CF_D1_READ_TOKEN` senza pubblicare il valore in chat/repo.
