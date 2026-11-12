@@ -1,10 +1,11 @@
-# REMURA Cloudflare D1 READ-ONLY Audit v0.2 — aggiornamento 12/11/2026 ore 23:20 CET
+# REMURA Cloudflare D1 READ-ONLY Audit v0.3 — aggiornamento 12/11/2026 ore 23:21 CET
 # Nessuna operazione SQL di scrittura. Destinazione fissa: remura-tv-lab-test.
 # Eseguire SOLO con token Account > D1 > Read; mai usare Global API Key.
 """Minimal Cloudflare D1 REST read-only audit of REMURA synthetic LAB event."""
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import re
 import sys
@@ -13,6 +14,8 @@ from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 API_ORIGIN = "https://api.cloudflare.com/client/v4"
+# Hash dell\x27Account ID previsto: la versione in chiaro non compare nel repo.
+EXPECTED_ACCOUNT_SHA256 = "39fe5ae880b4da5708ff5847be26ca5b8dad77d8ed12f9efcfdcf4993a5ee202"
 EXPECTED_NAME = "remura-tv-lab-test"
 EXPECTED_JURISDICTION = "eu"
 TEST_KEY = "REMURA_SYNTHETIC_WRITE_20261112"
@@ -29,9 +32,22 @@ class AuditError(Exception):
 
 
 def require_account_id(account_id: str) -> str:
+    account_id = account_id.strip().lower()
     if not ACCOUNT_RE.fullmatch(account_id):
         raise AuditError("account_id_missing_or_invalid")
+    digest = hashlib.sha256(account_id.encode("ascii")).hexdigest()
+    if digest != EXPECTED_ACCOUNT_SHA256:
+        raise AuditError("account_id_does_not_match_remura")
     return account_id
+
+
+def require_account_token(token: str) -> str:
+    token = token.strip()
+    # I token Account API creati nel 2026 usano il prefisso cfat_.
+    # Non stampare mai token, frammenti, lunghezza o response body.
+    if not token.startswith("cfat_") or len(token) < 40:
+        raise AuditError("unexpected_account_api_token_format")
+    return token
 
 
 def decode_envelope(payload: object) -> dict:
@@ -118,8 +134,7 @@ def api_request(method: str, path: str, token: str, body: dict | None = None) ->
 
 def audit(account_id: str, token: str) -> str:
     account = quote(require_account_id(account_id), safe="")
-    if not token or len(token) < 16:
-        raise AuditError("readonly_token_missing")
+    token = require_account_token(token)
     # Account-owned token: verifica stato PRIMA di qualsiasi query D1.
     # Non stampa mai il token né alcuna parte della risposta HTTP.
     try:
