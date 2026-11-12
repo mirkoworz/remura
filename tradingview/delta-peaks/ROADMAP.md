@@ -1,5 +1,29 @@
 # REMURA TradingView — ROADMAP PROSPECTIVE + FREE QUOTA LAB v0.8.4
-**Aggiornamento roadmap: 11/11/2026, ore 19:52 CET**
+**Aggiornamento roadmap: 12/11/2026, ore 10:43 CET**
+**PR #102 DRAFT/OPEN — NO MERGE, NO ORDINI, NO WEBHOOK TRADINGVIEW.**
+
+## CHECKPOINT WORKER CLOUDFARE — 12/11/2026 10:43 CET
+- [x] L'utente ha creato e distribuito un Worker Cloudflare separato:
+  `remura-tv-ingest-lab`, e ha aperto l'editor. Screenshot mostra soltanto
+  il programma standard **Hello World**, non il receiver REMURA.
+- [x] Nessun collegamento D1, secret, alert o invio dati è stato verificato;
+  il Worker Hello World è pubblicato e non memorizza dati di mercato.
+- [x] Confermate le istruzioni ufficiali Cloudflare per collegare un D1:
+  pagina del Worker → tab `Bindings` → `Add binding` → `D1 database`.
+- [ ] Prossimo step guidato: dal nome del Worker in alto a sinistra
+  uscire dall'editor; nel pannello Worker aggiungere **SOLO** binding D1
+  con **Variable name `TELEMETRY_DB`** e database
+  **`remura-tv-lab` (Jurisdiction EU verificata)**. Confermare nella
+  schermata prima di installare codice. Non toccare Workers esistenti.
+- [ ] Dopo binding verificato, sostituire Hello World con
+  `gateway-lab/worker.mjs` SOLO in stato **INGEST_ENABLED assente/false**.
+  Testare endpoint read-only /health, configurare sicurezza e
+  secret in passaggi distinti; nessuna acquisizione reale senza autorizzazione.
+- [ ] Ricontrollare limite Free dopo deployment del receiver, e test
+  locali senza dataset reale.
+
+
+
 **PR #102 DRAFT/OPEN — NO MERGE, NO DEPLOY, NO WEBHOOK, NO ORDINI.**
 
 ## CHECKPOINT D1 UE CONFERMATO — 11/11/2026 18:37 CET
