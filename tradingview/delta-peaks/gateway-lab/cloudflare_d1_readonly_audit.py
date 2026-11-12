@@ -1,4 +1,4 @@
-# REMURA Cloudflare D1 READ-ONLY Audit v0.1 — aggiornamento 12/11/2026 ore 17:46 CET
+# REMURA Cloudflare D1 READ-ONLY Audit v0.2 — aggiornamento 12/11/2026 ore 23:20 CET
 # Nessuna operazione SQL di scrittura. Destinazione fissa: remura-tv-lab-test.
 # Eseguire SOLO con token Account > D1 > Read; mai usare Global API Key.
 """Minimal Cloudflare D1 REST read-only audit of REMURA synthetic LAB event."""
@@ -38,6 +38,14 @@ def decode_envelope(payload: object) -> dict:
     if not isinstance(payload, dict) or payload.get("success") is not True:
         raise AuditError("cloudflare_api_not_successful")
     return payload
+
+
+def verify_account_token(payload: object) -> None:
+    """Verify token status without logging its ID, body, or metadata."""
+    envelope = decode_envelope(payload)
+    result = envelope.get("result")
+    if not isinstance(result, dict) or result.get("status") != "active":
+        raise AuditError("account_token_not_active")
 
 
 def find_test_database(payload: object) -> str:
@@ -112,6 +120,13 @@ def audit(account_id: str, token: str) -> str:
     account = quote(require_account_id(account_id), safe="")
     if not token or len(token) < 16:
         raise AuditError("readonly_token_missing")
+    # Account-owned token: verifica stato PRIMA di qualsiasi query D1.
+    # Non stampa mai il token né alcuna parte della risposta HTTP.
+    try:
+        verified = api_request("GET", f"/accounts/{account}/tokens/verify", token)
+    except AuditError as err:
+        raise AuditError("account_token_verify_" + str(err)) from None
+    verify_account_token(verified)
     base = f"/accounts/{account}/d1/database"
     # Filtro per nome; non accedere per UUID hardcodato e non usare DB principale.
     listed = api_request("GET", base + "?name=" + EXPECTED_NAME, token)
