@@ -1,4 +1,4 @@
-# REMURA Cloudflare D1 READ-ONLY Audit tests v0.3 — aggiornamento 12/11/2026 ore 23:21 CET
+# REMURA Cloudflare D1 READ-ONLY Audit tests v0.4 — aggiornamento 12/11/2026 ore 23:38 CET
 # Prove locali senza rete; mai importare token e non eseguire operazioni remote.
 """Offline unit tests for Cloudflare D1 read-only guardrails."""
 import importlib.util
@@ -23,7 +23,9 @@ class CloudflareD1ReadOnlyAuditTests(unittest.TestCase):
 
     def record(self, **changes):
         row = {"event_key": audit.TEST_KEY, "symbol": "LAB:TEST_ONLY",
-               "version": "synthetic-test-v0.1", "is_timely": 0}
+               "version": "synthetic-test-v0.1", "is_timely": 0,
+               "timeframe": "5", "event_type": "HEARTBEAT",
+               "raw_json": '{"synthetic":true,"test_only":true,"market_data":false}'}
         row.update(changes)
         return {"success": True, "result": [
             {"success": True, "results": [row]}
@@ -78,6 +80,20 @@ class CloudflareD1ReadOnlyAuditTests(unittest.TestCase):
     def test_wrong_synthetic_version_rejected(self):
         with self.assertRaises(audit.AuditError):
             audit.inspect_test_record(self.record(version="0.8.1-lab"))
+
+    def test_raw_json_extra_field_rejected(self):
+        with self.assertRaises(audit.AuditError):
+            audit.inspect_test_record(self.record(
+                raw_json='{"synthetic":true,"test_only":true,"market_data":false,"extra":1}'))
+
+    def test_non_synthetic_flag_rejected(self):
+        with self.assertRaises(audit.AuditError):
+            audit.inspect_test_record(self.record(
+                raw_json='{"synthetic":false,"test_only":true,"market_data":false}'))
+
+    def test_wrong_event_type_rejected(self):
+        with self.assertRaises(audit.AuditError):
+            audit.inspect_test_record(self.record(event_type="BAR_EVENT"))
 
     def test_invalid_account_id(self):
         with self.assertRaises(audit.AuditError):
