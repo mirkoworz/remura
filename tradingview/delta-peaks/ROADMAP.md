@@ -1,5 +1,22 @@
-# REMURA TradingView — ROADMAP GATEWAY PATCH v0.8.5
-**Aggiornamento roadmap: 12/11/2026, ore 10:52 CET**
+# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.5
+**Aggiornamento roadmap: 12/11/2026, ore 10:55 CET**
+**PR #102 DRAFT/OPEN — nessun merge, alert TradingView OFF, nessun ordine.**
+
+## CHECKPOINT WORKER LIVE MA FAIL-CLOSED — 12/11/2026 10:55 CET
+- [x] Due screenshot utente confermano Worker `remura-tv-ingest-lab.mirkoworz.workers.dev` con ricevitore REMURA v0.8.5 distribuito.
+- [x] GET `/health` restituisce esattamente `{"status":"lab_only","accepting":false}`:
+  Worker raggiungibile e flag ingestion OFF.
+- [x] GET `/` restituisce `{"status":"disabled"}`: protezione predefinita fail-closed confermata live.
+- [x] Binding Cloudflare D1 `TELEMETRY_DB` → `remura-tv-lab` confermato in precedenza dalla UI; schema tabella + due indici confermati con query di lettura, giurisdizione UE verificata.
+- [ ] **Non ancora provata** una lettura/scrittura D1 effettuata DAL Worker, né una consegna webhook:
+  `/health` e `/` non interrogano D1. Non dichiarare pipeline funzionante end-to-end.
+- [ ] Prima di permettere acquisizione: predisporre segreto forte sul Worker senza inviarlo in chat/GitHub,
+  controllo IP, test sintetico senza dati di mercato, riscontro D1 e quota CPU;
+  fino ad allora `INGEST_ENABLED` deve restare assente/false.
+- [ ] Alert Pine/TradingView e heartbeat restano disattivati, nessun dato prospettico reale.
+- [ ] Filoni A/B/C intatti, nessun merge/deploy REMURA app né ordine di trading.
+
+
 **PR #102 DRAFT/OPEN — NESSUN MERGE O WEBHOOK TRADINGVIEW.**
 
 ## CHECKPOINT PATCH EDITOR CLOUDFARE — 12/11/2026 10:52 CET
@@ -12,12 +29,12 @@
   `new TextDecoder("utf-8", { fatal: true, ignoreBOM: false })`.
   Nessuna modifica al contratto JSON Pine `0.8.1-lab`,
   all'autenticazione o al fail-closed.
-- [ ] Utente deve aggiornare solo quella riga nel codice incollato su
-  Cloudflare, controllare che scompaia la sottolineatura e **NON premere
-  Deploy** finché la verifica editor non è completata.
-- [ ] `INGEST_ENABLED` deve restare assente/disattivato e nessun secret
-  creato; Worker Hello World resta l'ultima versione sicuramente distribuita.
-  Nessun evento TradingView o trading live autorizzato.
+- [x] Utente ha aggiornato il decoder, confermato l'assenza di errori
+  nell'editor e distribuito il Worker; health e disabled verificati con screenshot.
+  La patch di tipo è quindi verificata nel codice distribuito.
+- [x] Ricevitore v0.8.5 distribuito in produzione del SOLO Worker isolato,
+  ma `INGEST_ENABLED` è OFF (risposte health e root). Segreti/config
+  autenticazione e accesso reale D1 non ancora verificati: non attivare eventi.
 - [ ] Risultato CI GitHub per commit patch da verificare.
 
 
