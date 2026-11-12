@@ -1,6 +1,16 @@
 # REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.5
-**Aggiornamento roadmap: 12/11/2026, ore 10:55 CET**
+**Aggiornamento roadmap: 12/11/2026, ore 13:22 CET**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView OFF, nessun ordine.**
+
+## CHECKPOINT PROVA D1 IN PREVIEW — 12/11/2026, ore 13:22 CET
+- [x] Utente ha creato localmente su iPhone un token forte e digest SHA-256; i valori NON sono stati condivisi in chat o nel repository. Dalla UI Cloudflare risulta un secret in Production. La correttezza del valore non è ancora verificata end-to-end.
+- [x] Dopo aggiunta secret e deploy isolato del Worker, controlli LIVE: GET `/health` → `{"status":"lab_only","accepting":false}`; GET `/` → `{"status":"disabled"}`. Ingestion ancora OFF; nessun alert TradingView.
+- [x] Console D1 `remura-tv-lab`: `SELECT COUNT(*) AS totale_eventi FROM tv_flow_events` → **0** eventi alle 13:01 CET del 12/11/2026 (screenshot utente). Questo prova lettura nella Console D1, non una scrittura Worker.
+- [x] Editor Cloudflare: patch `ignoreBOM:false` presente; prova temporanea GET `/__lab_d1_probe` **solo in Preview** con `SELECT COUNT(*)` ha restituito `{"status":"d1_ok"}` secondo l'utente. Verifica accesso di lettura D1 dal Worker nella sessione Preview, **non conferma la scrittura né necessariamente l'identità dell'ambiente DB Production**.
+- [x] Codice della diagnostica `/__lab_d1_probe` rimosso dall'editor e screenshot verificato; utente ha chiuso l'editor. Nessun deploy della diagnostica autorizzato o riferito.
+- [x] PR #102 verificata DRAFT/OPEN tramite GitHub prima di questo aggiornamento, senza merge.
+- [ ] **Prossimo passaggio**: prova scrittura D1 solo su database isolato di staging/Preview, oppure altra procedura esplicitamente approvata, senza contaminare `remura-tv-lab`. La documentazione Cloudflare segnala che Preview con binding D1 allo stesso database ID condivide i dati: non assumere isolamento automatico. Prima verificare quota Free reale e binding Previews Base.
+- [ ] Non abilitare `INGEST_ENABLED=true`, webhook TradingView, heartbeat o ordini; non toccare filoni A/B/C o gli altri Worker.
 
 ## CHECKPOINT WORKER LIVE MA FAIL-CLOSED — 12/11/2026 10:55 CET
 - [x] Due screenshot utente confermano Worker `remura-tv-ingest-lab.mirkoworz.workers.dev` con ricevitore REMURA v0.8.5 distribuito.
