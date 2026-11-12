@@ -1,5 +1,5 @@
-# REMURA — GATEWAY ISOLATO Cloudflare Worker + D1 (documentazione v0.8.6)
-**Versione/aggiornamento: documentazione v0.8.6 — 12/11/2026, ore 23:41 CET**
+# REMURA — GATEWAY ISOLATO Cloudflare Worker + D1 (documentazione v0.8.7)
+**Versione/aggiornamento: documentazione v0.8.7 — 12/11/2026, ore 23:42 CET**
 **Worker principale v0.8.5 distribuito MA FAIL-CLOSED. PR #102 DRAFT, NO MERGE.**
 
 ## Checkpoint LIVE verificato — 12/11/2026
@@ -36,6 +36,29 @@ oppure un meccanismo temporaneo con approvazione/revoca e audit.
 L'uso GitHub Actions consuma minuti CI; verificare periodicamente
 l'utilizzo effettivo del piano Free e delle risorse Cloudflare.
 
+
+## Audit preliminare di rete e quote — 12/11/2026
+- Le quattro IPv4 nel codice `worker.mjs` (**52.89.214.238**,
+  **34.212.75.30**, **54.218.53.128**, **52.32.178.7**) corrispondono
+  all'elenco pubblicato ufficialmente da TradingView il 12/11/2026.
+- TradingView richiede **2FA** abilitata per i webhook, accetta soltanto
+  porte **80/443**, non invia webhook su IPv6 e annulla la richiesta se
+  l'endpoint impiega **oltre 3 secondi**. Questi sono vincoli documentati,
+  **non** verifiche di consegna del nostro Worker.
+- Cloudflare Workers Free: **100.000 richieste/giorno** e **10 ms CPU/request**.
+  D1 Free: **10 database**, **500 MB per singolo DB**, **5 GB complessivi**,
+  **5 milioni di righe lette/giorno**, **100.000 scritte/giorno**;
+  i limiti si applicano all'account, non al singolo Worker. La dashboard
+  dell'utente mostrava spazio sufficiente prima della creazione del DB TEST,
+  ma l'utilizzo complessivo reale **non è stato misurato dopo**.
+- **Bloccanti pre-ingest**: controllare 2FA TradingView, comportamento edge
+  e spoofing/proxy, token URL, rate limit a livello Cloudflare e tempi D1/Worker
+  (target massimo TradingView 3s) prima di autorizzare
+  `INGEST_ENABLED=true`.
+- Riferimenti: https://it.tradingview.com/support/solutions/43000529348/ ,
+  https://developers.cloudflare.com/workers/platform/limits/ ,
+  https://developers.cloudflare.com/d1/platform/limits/ ,
+  https://developers.cloudflare.com/d1/platform/pricing/ .
 
 ## Bilancio Free aggiornato 11/11/2026 (simulazione, non quota account)
 Il modello [quota_budget_v1.py](../quota_budget_v1.py) esegue un
