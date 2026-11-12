@@ -1,5 +1,6 @@
-// REMURA GATEWAY LAB v0.8.2 — aggiornamento 11/11/2026 17:46 CET
-// Solo ricerca: nessuna risorsa attivata, nessun deploy, nessun ordine.
+// REMURA GATEWAY LAB v0.8.5 — aggiornamento 12/11/2026 10:51 CET
+// Patch TypeScript Cloudflare editor: ignoreBOM esplicito; stessa semantica decoder.
+// Il deploy è ancora a cura dell'utente: ingest disattivato di default.
 // Ricevitore Cloudflare Worker + D1. Fail-closed per configurazione predefinita.
 // Ingresso SOLO da TradingView su IP documentati + token segreto nell'URL HTTPS.
 // Token MAI nel repository, nel Pine, nel corpo JSON o nei log.
@@ -183,7 +184,7 @@ async function readBoundedText(request) {
     at += part.byteLength;
   }
   try {
-    return new TextDecoder("utf-8", { fatal: true }).decode(joined);
+    return new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(joined);
   } catch {
     throw new InvalidInput("invalid_utf8");
   }
