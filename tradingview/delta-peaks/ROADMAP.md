@@ -1,5 +1,5 @@
 # REMURA TradingView — ROADMAP PROSPECTIVE + FREE QUOTA LAB v0.8.4
-**Aggiornamento roadmap: 12/11/2026, ore 10:43 CET**
+**Aggiornamento roadmap: 12/11/2026, ore 10:43 CET (binding D1 verificato)**
 **PR #102 DRAFT/OPEN — NO MERGE, NO ORDINI, NO WEBHOOK TRADINGVIEW.**
 
 ## CHECKPOINT WORKER CLOUDFARE — 12/11/2026 10:43 CET
@@ -10,11 +10,19 @@
   il Worker Hello World è pubblicato e non memorizza dati di mercato.
 - [x] Confermate le istruzioni ufficiali Cloudflare per collegare un D1:
   pagina del Worker → tab `Bindings` → `Add binding` → `D1 database`.
-- [ ] Prossimo step guidato: dal nome del Worker in alto a sinistra
-  uscire dall'editor; nel pannello Worker aggiungere **SOLO** binding D1
-  con **Variable name `TELEMETRY_DB`** e database
-  **`remura-tv-lab` (Jurisdiction EU verificata)**. Confermare nella
-  schermata prima di installare codice. Non toccare Workers esistenti.
+- [x] **Binding D1 salvato e verificato dallo screenshot Cloudflare**:
+  Worker `remura-tv-ingest-lab` → tipo D1 database → variabile
+  `TELEMETRY_DB` → valore `remura-tv-lab`; confermato in Settings / Bindings.
+  Non toccati `mirko-news-calendar` o `telegram-mirko-bridge`.
+- [ ] **Prossimo step**: installare nell'editor SOLO il codice
+  `tradingview/delta-peaks/gateway-lab/worker.mjs` dal branch della PR #102,
+  con `INGEST_ENABLED` **assente** (runtime variables ancora vuote nello
+  screenshot). Il ricevitore deve restare `fail-closed` e `/health` deve
+  rispondere `{"status":"lab_only","accepting":false}`; il root endpoint
+  dovrebbe restituire 503 (`disabled`). Codice Hello World attuale non
+  memorizza dati; evitare webhook/segreti fino a test successivo.
+- [ ] Eseguire test HTTP non distruttivi del Worker in isolamento e verificare
+  le quote, poi affrontare autenticazione e attivazione controllata.
 - [ ] Dopo binding verificato, sostituire Hello World con
   `gateway-lab/worker.mjs` SOLO in stato **INGEST_ENABLED assente/false**.
   Testare endpoint read-only /health, configurare sicurezza e
