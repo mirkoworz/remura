@@ -1,4 +1,4 @@
-# REMURA Cloudflare D1 READ-ONLY Audit tests v0.1 — aggiornamento 12/11/2026 ore 17:46 CET
+# REMURA Cloudflare D1 READ-ONLY Audit tests v0.2 — aggiornamento 12/11/2026 ore 23:20 CET
 # Prove locali senza rete; mai importare token e non eseguire operazioni remote.
 """Offline unit tests for Cloudflare D1 read-only guardrails."""
 import importlib.util
@@ -26,6 +26,19 @@ class CloudflareD1ReadOnlyAuditTests(unittest.TestCase):
         return {"success": True, "result": [
             {"success": True, "results": [row]}
         ]}
+
+    def test_active_account_token(self):
+        self.assertIsNone(audit.verify_account_token(
+            {"success": True, "result": {"status": "active", "id": "redacted"}}))
+
+    def test_disabled_account_token_rejected(self):
+        with self.assertRaises(audit.AuditError):
+            audit.verify_account_token(
+                {"success": True, "result": {"status": "disabled"}})
+
+    def test_unverified_account_token_rejected(self):
+        with self.assertRaises(audit.AuditError):
+            audit.verify_account_token({"success": False, "result": None})
 
     def test_valid_test_database(self):
         self.assertEqual(audit.find_test_database(self.fixture()), TEST_UUID)
