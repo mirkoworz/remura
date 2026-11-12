@@ -1,6 +1,14 @@
 # REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.5
-**Aggiornamento roadmap: 12/11/2026, ore 23:24 CET**
+**Aggiornamento roadmap: 12/11/2026, ore 23:34 CET**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView OFF, nessun ordine.**
+
+## CHECKPOINT TOKEN CORRETTO E AUDIT D1 REALE VERDE — 12/11/2026 ore 23:34 CET
+- [x] Utente ha corretto una lettera nel GitHub Secret `REMURA_CF_D1_READ_TOKEN` senza pubblicare il valore in chat/repo.
+- [x] Rilanciati solo i job falliti con GitHub Actions [run 43319409168, tentativo 2](https://github.com/mirkoworz/remura/actions/runs/43319409168): `offline-safety` SUCCESS e `cloudflare-readonly` SUCCESS.
+- [x] Log reale del job Cloudflare `131541499082`: `REMURA_D1_READONLY_AUDIT=record_verified`; `DATABASE=remura-tv-lab-test; JURISDICTION=EU; HTTP=READ_ONLY; SQL=SELECT`. Confermata autenticazione API ed esistenza del record sintetico atteso; nessuna scrittura/cancellazione remota.
+- [x] Token Account D1 READ funziona dalla GitHub Action. L'ID account verifica guardia hash attesa; il database principale `remura-tv-lab` **non è stato interrogato né modificato da questo workflow**.
+- [ ] Pulizia del record sintetico richiede autorizzazione separata e un meccanismo con privilegio di scrittura limitato, oppure intervento manuale; non usare il token D1 Read per nuove funzioni scriventi.
+- [ ] Eventuale successivo audit automatico periodico solo dopo scelta esplicita della frequenza. Worker ingress principale continua fail-closed; TradingView alerts/heartbeat OFF; PR #102 resta DRAFT/OPEN.
 
 ## CHECKPOINT AUTOMAZIONE CLOUDFLARE CON AUTENTICAZIONE 401 — 12/11/2026 ore 23:24 CET
 - [x] Utente ha confermato aggiunta GitHub Actions Secrets `REMURA_CF_D1_READ_TOKEN` e `REMURA_CF_ACCOUNT_ID` (nessun valore segreto ricevuto in chat).
