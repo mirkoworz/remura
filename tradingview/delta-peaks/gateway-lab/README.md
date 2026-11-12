@@ -14,7 +14,7 @@
   Worker separato `remura-tv-write-test` con codice pubblico Hello World.
   Un record sintetico `REMURA_SYNTHETIC_WRITE_20261112` è stato
   confermato nel database TEST; non è un dato di mercato.
-- GitHub Actions [audit D1 di sola lettura](../../../../.github/workflows/remura-tv-cloudflare-d1-readonly.yml)
+- GitHub Actions [audit D1 di sola lettura](../../../.github/workflows/remura-tv-cloudflare-d1-readonly.yml)
   autentica Cloudflare con token D1 Read, verifica nome/giurisdizione del solo
   DB TEST e i metadati esatti del record sintetico, senza scrivere.
   [Prova remota](https://github.com/mirkoworz/remura/actions/runs/43321908263) riuscita.
