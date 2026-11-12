@@ -1,4 +1,4 @@
-# REMURA Cloudflare D1 audit LAB v0.1 — aggiornamento 12/11/2026 ore 17:47 CET
+# REMURA Cloudflare D1 audit LAB v0.2 — aggiornamento 12/11/2026 ore 23:17 CET
 # Solo branch PR #102; test offline sempre, API solo read-only con secret configurati.
 # Nessun deploy, nessuna query SQL di scrittura, nessun webhook o segreto nel repository.
 name: REMURA Cloudflare D1 READ-ONLY Lab
