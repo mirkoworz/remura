@@ -1,4 +1,4 @@
-# REMURA Cloudflare D1 READ-ONLY Audit v0.3 — aggiornamento 12/11/2026 ore 23:21 CET
+# REMURA Cloudflare D1 READ-ONLY Audit v0.4 — aggiornamento 12/11/2026 ore 23:37 CET
 # Nessuna operazione SQL di scrittura. Destinazione fissa: remura-tv-lab-test.
 # Eseguire SOLO con token Account > D1 > Read; mai usare Global API Key.
 """Minimal Cloudflare D1 REST read-only audit of REMURA synthetic LAB event."""
@@ -20,7 +20,7 @@ EXPECTED_NAME = "remura-tv-lab-test"
 EXPECTED_JURISDICTION = "eu"
 TEST_KEY = "REMURA_SYNTHETIC_WRITE_20261112"
 SQL = (
-    "SELECT event_key, symbol, version, is_timely "
+    "SELECT event_key, symbol, version, is_timely, timeframe, event_type, raw_json "
     "FROM tv_flow_events WHERE event_key = ? LIMIT 2"
 )
 ACCOUNT_RE = re.compile(r"^[a-fA-F0-9]{32}$")
@@ -101,7 +101,11 @@ def inspect_test_record(payload: object) -> str:
     if not (row.get("event_key") == TEST_KEY
             and row.get("symbol") == "LAB:TEST_ONLY"
             and row.get("version") == "synthetic-test-v0.1"
-            and row.get("is_timely") == 0):
+            and row.get("is_timely") == 0
+            and row.get("timeframe") == "5"
+            and row.get("event_type") == "HEARTBEAT"
+            and row.get("raw_json") ==
+            '{"synthetic":true,"test_only":true,"market_data":false}'):
         raise AuditError("synthetic_record_metadata_mismatch")
     return "record_verified"
 
