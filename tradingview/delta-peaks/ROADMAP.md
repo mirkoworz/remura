@@ -1,5 +1,27 @@
-# REMURA TradingView — ROADMAP PROSPECTIVE + FREE QUOTA LAB v0.8.4
-**Aggiornamento roadmap: 12/11/2026, ore 10:43 CET (binding D1 verificato)**
+# REMURA TradingView — ROADMAP GATEWAY PATCH v0.8.5
+**Aggiornamento roadmap: 12/11/2026, ore 10:52 CET**
+**PR #102 DRAFT/OPEN — NESSUN MERGE O WEBHOOK TRADINGVIEW.**
+
+## CHECKPOINT PATCH EDITOR CLOUDFARE — 12/11/2026 10:52 CET
+- [x] Utente ha copiato nell'editor Cloudflare il receiver del branch di ricerca.
+  Screenshot del Worker `remura-tv-ingest-lab` mostra errore del
+  typechecker `ts(2345)` in `new TextDecoder("utf-8", { fatal: true })`,
+  perché il tipo `TextDecoderConstructorOptions` di Workers richiede
+  la proprietà `ignoreBOM`.
+- [x] [Receiver PATCH v0.8.5](gateway-lab/worker.mjs): sostituito con
+  `new TextDecoder("utf-8", { fatal: true, ignoreBOM: false })`.
+  Nessuna modifica al contratto JSON Pine `0.8.1-lab`,
+  all'autenticazione o al fail-closed.
+- [ ] Utente deve aggiornare solo quella riga nel codice incollato su
+  Cloudflare, controllare che scompaia la sottolineatura e **NON premere
+  Deploy** finché la verifica editor non è completata.
+- [ ] `INGEST_ENABLED` deve restare assente/disattivato e nessun secret
+  creato; Worker Hello World resta l'ultima versione sicuramente distribuita.
+  Nessun evento TradingView o trading live autorizzato.
+- [ ] Risultato CI GitHub per commit patch da verificare.
+
+
+
 **PR #102 DRAFT/OPEN — NO MERGE, NO ORDINI, NO WEBHOOK TRADINGVIEW.**
 
 ## CHECKPOINT WORKER CLOUDFARE — 12/11/2026 10:43 CET
