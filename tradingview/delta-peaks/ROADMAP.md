@@ -1,6 +1,14 @@
 # REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.5
-**Aggiornamento roadmap: 12/11/2026, ore 15:51 CET**
+**Aggiornamento roadmap: 12/11/2026, ore 17:38 CET**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView OFF, nessun ordine.**
+
+## CHECKPOINT WRITE PROBE SU D1 TEST — 12/11/2026, ore 17:38 CET
+- [x] Worker temporaneo isolato `remura-tv-write-test` distribuito con Hello World, binding D1 Production `TELEMETRY_DB` → `remura-tv-lab-test` confermato da screenshot. Preview configurata per usare lo stesso database di test.
+- [x] Editor Preview con codice sintetico di `INSERT OR IGNORE` su chiave `REMURA_SYNTHETIC_WRITE_20261112` e successivo `SELECT COUNT(*)`; secondo screenshot utente risposta `{"status":"d1_write_ok","record_found":1,"new_rows":0,"synthetic":true}`.
+- [x] Confermata **lettura del record di test dal Worker Preview**, senza duplicazione nell'ultima richiesta. `new_rows:0` significa che l'ultima invocazione non ha creato una nuova riga; la presenza del record è coerente con precedente invocazione Preview. **Non attribuire con certezza il momento della prima scrittura** senza ulteriore verifica.
+- [ ] Priorità: **rimuovere la modifica temporanea non autenticata dall'editor e uscire senza Deploy/Save**, mantenendo Hello World pubblico.
+- [ ] Confermare nella console D1 TEST mediante SELECT sulla chiave la presenza e i metadati `LAB:TEST_ONLY`, poi eliminare solo tale riga di prova con consenso e verifica; controllare che D1 principale rimanga senza eventi.
+- [ ] Non abilitare `INGEST_ENABLED=true`, heartbeat TradingView o ordini; non modificare altri Worker/filoni A/B/C. PR #102 resta DRAFT/OPEN senza merge.
 
 ## CHECKPOINT D1 TEST SCHEMA VERIFICATO — 12/11/2026, ore 15:51 CET
 - [x] Creato manualmente dall'utente database D1 isolato `remura-tv-lab-test`, giurisdizione **The European Union**, region **Eastern Europe**, read replication Disabled (screenshot).
