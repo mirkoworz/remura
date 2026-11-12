@@ -1,4 +1,4 @@
-# REMURA Cloudflare D1 READ-ONLY Audit tests v0.2 — aggiornamento 12/11/2026 ore 23:20 CET
+# REMURA Cloudflare D1 READ-ONLY Audit tests v0.3 — aggiornamento 12/11/2026 ore 23:21 CET
 # Prove locali senza rete; mai importare token e non eseguire operazioni remote.
 """Offline unit tests for Cloudflare D1 read-only guardrails."""
 import importlib.util
@@ -80,6 +80,22 @@ class CloudflareD1ReadOnlyAuditTests(unittest.TestCase):
     def test_invalid_account_id(self):
         with self.assertRaises(audit.AuditError):
             audit.require_account_id("")
+
+    def test_correct_account_guard(self):
+        self.assertEqual(audit.require_account_id("815b7a67ba41bf986b336978e6bcb5d9"),
+                         "815b7a67ba41bf986b336978e6bcb5d9")
+
+    def test_wrong_account_guard(self):
+        with self.assertRaises(audit.AuditError):
+            audit.require_account_id("00000000000000000000000000000000")
+
+    def test_account_token_prefix_guard(self):
+        self.assertEqual(audit.require_account_token("  cfat_" + "x" * 50 + "\\n"),
+                         "cfat_" + "x" * 50)
+
+    def test_wrong_account_token_prefix_rejected(self):
+        with self.assertRaises(audit.AuditError):
+            audit.require_account_token("cfut_" + "x" * 50)
 
     def test_sql_is_select_and_fixed_target(self):
         self.assertTrue(audit.SQL.startswith("SELECT "))
