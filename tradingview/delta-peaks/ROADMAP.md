@@ -1,6 +1,15 @@
 # REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.5
-**Aggiornamento roadmap: 12/11/2026, ore 17:48 CET**
+**Aggiornamento roadmap: 12/11/2026, ore 23:24 CET**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView OFF, nessun ordine.**
+
+## CHECKPOINT AUTOMAZIONE CLOUDFLARE CON AUTENTICAZIONE 401 — 12/11/2026 ore 23:24 CET
+- [x] Utente ha confermato aggiunta GitHub Actions Secrets `REMURA_CF_D1_READ_TOKEN` e `REMURA_CF_ACCOUNT_ID` (nessun valore segreto ricevuto in chat).
+- [x] Avviato workflow D1 read-only su branch di ricerca: [run #43318523658](https://github.com/mirkoworz/remura/actions/runs/43318523658). I test offline verdi e il job API raggiunge Cloudflare, ma Cloudflare ha risposto HTTP **401** a GET /d1/database; nessuna SELECT D1 completata.
+- [x] Aggiunto preflight GET /accounts/{account_id}/tokens/verify senza log sensibili; [run #43318951287](https://github.com/mirkoworz/remura/actions/runs/43318951287): **401 anche in verifica account token**.
+- [x] Aggiunta protezione che blocca Account ID diversi da REMURA tramite digest SHA-256 e richiede il formato account-token `cfat_` introdotto nel 2026 (trim whitespace). Suite offline estesa a **18 test**.
+- [x] [Run #43319409168](https://github.com/mirkoworz/remura/actions/runs/43319409168): offline-safety **SUCCESS**, live API bloccata prima della rete con `unexpected_account_api_token_format`. Ciò indica che il contenuto attuale del GitHub Secret non rispetta il formato previsto del token Account 2026; **non se ne conosce il valore e non va esposto**.
+- [ ] Azione manuale minima: controllare e sostituire nel solo GitHub Secret `REMURA_CF_D1_READ_TOKEN` il valore **integrale** del token account Cloudflare (nuovo prefisso `cfat_`), senza includere nome, etichette, spazi o screenshot. Se smarrito, ruotarlo dal pannello Cloudflare senza condividere il nuovo valore. Non cambiare gli altri secrets.
+- [ ] Alla conferma utente, riavviare audit con commit innocuo sul workflow; dichiarare successo solo dopo API attiva e SELECT D1 TEST verificata. Non cancellare dati né toccare Worker/filoni A/B/C o webhook.
 
 ## CHECKPOINT API D1 READ-ONLY — 12/11/2026, ore 17:48 CET
 - [x] Integrazione automatizzabile via API D1 Cloudflare, senza nuovo deploy Worker né modifiche D1: script `gateway-lab/cloudflare_d1_readonly_audit.py` v0.1, limitato per codice a `remura-tv-lab-test` (EU) e SELECT sulla chiave sintetica.
