@@ -1,6 +1,14 @@
 # REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.5
-**Aggiornamento roadmap: 12/11/2026, ore 13:22 CET**
+**Aggiornamento roadmap: 12/11/2026, ore 15:51 CET**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView OFF, nessun ordine.**
+
+## CHECKPOINT D1 TEST SCHEMA VERIFICATO — 12/11/2026, ore 15:51 CET
+- [x] Creato manualmente dall'utente database D1 isolato `remura-tv-lab-test`, giurisdizione **The European Union**, region **Eastern Europe**, read replication Disabled (screenshot).
+- [x] Esecuzione SQL su D1 Studio: una tabella `tv_flow_events` e due indici `idx_tv_flow_events_received`, `idx_tv_flow_events_symbol_close`, lanciando un comando per volta.
+- [x] Controllo `sqlite_master` restituisce esattamente 3 righe: tabella + due indici (screenshot 12/11/2026).
+- [x] Ultime quote D1 mostrate dall'utente prima della creazione: 1/10 database, 28,67 kB/5GB, 0/5M letture e 0/100k scritture (aggregati dashboard arrotondati). **Non è una misura dopo la creazione**.
+- [ ] Test reale di scrittura dal Worker **non ancora svolto**; nessun evento prospettico TradingView confermato. Evitare endpoint diagnostici pubblici e garantire che il database di prova, non quello principale, sia l'unico target.
+- [ ] Prossima azione: predisporre Worker di prova separato con binding D1 test e provare solo in preview controllata. Non modificare worker produttivo `remura-tv-ingest-lab`; ricezione `INGEST_ENABLED` resta disattivata. Nessuna PR merge, nessun ordine automatico.
 
 ## CHECKPOINT PROVA D1 IN PREVIEW — 12/11/2026, ore 13:22 CET
 - [x] Utente ha creato localmente su iPhone un token forte e digest SHA-256; i valori NON sono stati condivisi in chat o nel repository. Dalla UI Cloudflare risulta un secret in Production. La correttezza del valore non è ancora verificata end-to-end.
