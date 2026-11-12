@@ -2,8 +2,10 @@
 # Prove locali senza rete; mai importare token e non eseguire operazioni remote.
 """Offline unit tests for Cloudflare D1 read-only guardrails."""
 import importlib.util
+import hashlib
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 FILE = Path(__file__).with_name("cloudflare_d1_readonly_audit.py")
 SPEC = importlib.util.spec_from_file_location("remura_cf_d1_audit", FILE)
@@ -82,15 +84,17 @@ class CloudflareD1ReadOnlyAuditTests(unittest.TestCase):
             audit.require_account_id("")
 
     def test_correct_account_guard(self):
-        self.assertEqual(audit.require_account_id("815b7a67ba41bf986b336978e6bcb5d9"),
-                         "815b7a67ba41bf986b336978e6bcb5d9")
+        fake_id = "a" * 32
+        fake_digest = hashlib.sha256(fake_id.encode("ascii")).hexdigest()
+        with patch.object(audit, "EXPECTED_ACCOUNT_SHA256", fake_digest):
+            self.assertEqual(audit.require_account_id(fake_id), fake_id)
 
     def test_wrong_account_guard(self):
         with self.assertRaises(audit.AuditError):
             audit.require_account_id("00000000000000000000000000000000")
 
     def test_account_token_prefix_guard(self):
-        self.assertEqual(audit.require_account_token("  cfat_" + "x" * 50 + "\\n"),
+        self.assertEqual(audit.require_account_token("  cfat_" + "x" * 50 + "\n"),
                          "cfat_" + "x" * 50)
 
     def test_wrong_account_token_prefix_rejected(self):
