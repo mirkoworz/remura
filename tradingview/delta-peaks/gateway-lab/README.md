@@ -1,6 +1,41 @@
-# REMURA — GATEWAY ISOLATO Cloudflare Worker + D1 (audit LAB v0.8.4)
-**Versione/aggiornamento: 0.8.4 — 11/11/2026, ore 18:05 CET**
-**Codice gateway invariato v0.8.2, NO DEPLOY.**
+# REMURA — GATEWAY ISOLATO Cloudflare Worker + D1 (documentazione v0.8.6)
+**Versione/aggiornamento: documentazione v0.8.6 — 12/11/2026, ore 23:41 CET**
+**Worker principale v0.8.5 distribuito MA FAIL-CLOSED. PR #102 DRAFT, NO MERGE.**
+
+## Checkpoint LIVE verificato — 12/11/2026
+- Il Worker principale `remura-tv-ingest-lab` è online, con `INGEST_ENABLED`
+  assente/disabilitato: GET `/health` → `{"status":"lab_only","accepting":false}`;
+  GET `/` → `{"status":"disabled"}`. Questo **non** prova webhook live.
+- Il binding `TELEMETRY_DB` punta a D1 `remura-tv-lab` (UE); il segreto
+  `WEBHOOK_TOKEN_SHA256` è configurato in Production senza divulgazione.
+- D1 principale `remura-tv-lab`: **0 eventi** nell'ultima SELECT
+  dalla console dell'utente (12/11/2026, 13:01 CET). Non usare per prove.
+- D1 separato `remura-tv-lab-test` (UE), tabella e indici verificati;
+  Worker separato `remura-tv-write-test` con codice pubblico Hello World.
+  Un record sintetico `REMURA_SYNTHETIC_WRITE_20261112` è stato
+  confermato nel database TEST; non è un dato di mercato.
+- GitHub Actions [audit D1 di sola lettura](../../../../.github/workflows/remura-tv-cloudflare-d1-readonly.yml)
+  autentica Cloudflare con token D1 Read, verifica nome/giurisdizione del solo
+  DB TEST e i metadati esatti del record sintetico, senza scrivere.
+  [Prova remota](https://github.com/mirkoworz/remura/actions/runs/43321908263) riuscita.
+- [Piano di pulizia sintetica](synthetic_cleanup_plan_v1.py) contiene soltanto
+  la preparazione offline di una DELETE con condizioni strettissime;
+  **nessuna cancellazione Cloudflare è stata effettuata**. I test
+  simulano l'operazione con SQLite in memoria. Senza token D1 Write
+  né autorizzazione separata non si esegue una pulizia remota.
+- Pine v0.8.1: `telemetryEnabled=false`, `telemetryHeartbeat=false`;
+  nessun webhook, ingresso o ordine abilitato. Track A/B/C intatti.
+
+## Scelta sicurezza e gratuità
+Per cancellare **una sola riga sintetica** non creiamo automaticamente un
+token Cloudflare D1 Write a livello account: potrebbe permettere molte
+altre operazioni D1. Il record rimane isolato in TEST e non altera
+le future misure prospettiche del database principale. Prima di chiedere
+ulteriori credenziali, preferire una pulizia manuale molto circoscritta
+oppure un meccanismo temporaneo con approvazione/revoca e audit.
+L'uso GitHub Actions consuma minuti CI; verificare periodicamente
+l'utilizzo effettivo del piano Free e delle risorse Cloudflare.
+
 
 ## Bilancio Free aggiornato 11/11/2026 (simulazione, non quota account)
 Il modello [quota_budget_v1.py](../quota_budget_v1.py) esegue un
@@ -32,7 +67,7 @@ un export eventuale verso l'interfaccia C richiederà coordinamento.
 
 
 
-**Stato: SOLO CODICE E TEST OFFLINE. Non è stato creato un account, Worker, D1, endpoint pubblico o webhook. PR #102 DRAFT.**
+**Stato corrente: Worker LAB già distribuito (ingest OFF), due database D1 UE creati e test read-only API eseguito; nessun webhook TradingView. PR #102 DRAFT.**
 
 ## Quale problema risolve
 Trasforma i messaggi `alert()` v0.8.1 in un registro append-only
@@ -62,8 +97,8 @@ File: [worker.mjs](worker.mjs), [schema.sql](schema.sql),
   per simbolo, più eventuali ritentativi (giorni di mercato FX spesso
   meno di 24 ore per sessione). 288 × 30 = 8.640 righe in 30 giorni
   per simbolo se consegnate tutte e nessun duplicato; ignora overhead DB.
-- Richiede un account Cloudflare e un eventuale progetto D1 Free,
-  **non ancora creati**. Verificare quota effettiva e utilizzo preesistente.
+- Account Cloudflare Free e i due database D1 LAB sono già stati creati e
+  verificati tramite screenshot. Ricontrollare quote reali e CPU prima di ogni attivazione.
 
 Fonti ufficiali:
 - https://developers.cloudflare.com/workers/platform/limits/
@@ -124,8 +159,10 @@ Su un ambiente con Node 22:
 node --test tradingview/delta-peaks/gateway-lab/worker.test.mjs
 node --check tradingview/delta-peaks/gateway-lab/worker.mjs
 ```
-Il workflow GitHub Actions `remura-tv-telemetry-lab.yml` li esegue
-insieme ai 16 test Python sintetici e non avvia alcuna distribuzione.
+Il workflow GitHub Actions `remura-tv-telemetry-lab.yml` esegue regressioni
+offline e non avvia alcuna distribuzione. Il workflow read-only D1 esegue
+anche 21 test di auditing e 13 prove della pulizia simulata in memoria,
+seguiti da SELECT sull'unico DB TEST (solo se sono presenti Secrets GitHub).
 I dati fittizi nei test non sono prove di redditività.
 
 ## Schema dati e retention (progettazione)
@@ -136,23 +173,21 @@ Proposta: conservazione 30 giorni per il primo pilota, estendibile
 solo dopo verifica dello spazio e di una strategia di esportazione;
 **non attivare cleanup senza prima stabilire test di backup e restore**.
 
-## Procedura futura che richiede consenso esplicito (NON eseguire ora)
-1. Verificare piano Cloudflare realmente Free, consumo Workers/D1 e 2FA
-   TradingView. Verificare gli IP aggiornati dalla documentazione ufficiale.
-2. Creare spazio Cloudflare isolato e database D1 dedicato LAB,
-   configurare `TELEMETRY_DB` e applicare `schema.sql` **solo a questo DB**.
-3. Generare un token URL crittograficamente casuale forte in locale,
-   salvare **solo l'hash SHA256** tramite secret Worker, non GitHub.
-   Impostare esplicitamente `INGEST_ENABLED=true` soltanto per un test
-   approvato, con protections/rate limit edge.
-4. Provare l'endpoint con un payload sintetico e osservare 200,
-   duplicati, rifiuti e quote. Testare recupero con DB non disponibile.
-5. Impostare soltanto allora il webhook nel pannello TradingView,
+## Passaggi futuri che richiedono consenso esplicito (NON eseguire ora)
+1. Già completati: creazione database e Worker isolati, binding D1,
+   token forte locale + solo hash in Secret Worker, prova D1 da Preview,
+   audit D1 Cloudflare tramite GitHub Actions read-only.
+2. Ancora necessari: verificare 2FA TradingView, IP allowlist aggiornati,
+   quota e CPU Cloudflare, edge rate limiting e sicurezza token URL.
+3. Solo dopo autorizzazione esplicita e protezioni: predisporre prova
+   webhook sintetica end-to-end, osservare 200/duplicati/rifiuti e quote.
+   `INGEST_ENABLED=true` rimane vietato fino ad allora.
+4. Impostare soltanto dopo tali prove il webhook nel pannello TradingView,
    per una finestra di prova controllata. Per avere tutte le barre
    necessarie ai benchmark/futuri 15/30/60 min servirà abilitare
    heartbeat in `v0.8.1` (OFF di default), ricreare l'alert dopo
    variazioni del codice, monitorare latenza e fallimenti.
-6. Solo in uno step successivo preparare export e analisi offline
+5. Solo in uno step successivo preparare export e analisi offline
    per il Filone B e UI C. Nessun ordine automatico autorizzato.
 
 **Avvertenza:** ricevere ordini e volumi classificati nel feed FXCM NON
