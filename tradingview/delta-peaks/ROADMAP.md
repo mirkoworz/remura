@@ -1,6 +1,13 @@
-# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.6-doc (Worker runtime v0.8.5)
-**Aggiornamento roadmap: 12/11/2026, ore 23:41 CET**
+# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.7-doc (Worker runtime v0.8.5)
+**Aggiornamento roadmap: 12/11/2026, ore 23:43 CET**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView OFF, nessun ordine.**
+
+## CHECKPOINT AUDIT IP TRADINGVIEW E QUOTE — 12/11/2026 ore 23:43 CET
+- [x] Confrontate le quattro IPv4 allowlisted nel `worker.mjs` v0.8.5 con la [guida webhook TradingView](https://it.tradingview.com/support/solutions/43000529348/): corrispondono all'elenco ufficiale (12/11/2026).
+- [x] Confermati da TradingView: webhook richiede 2FA, solo porte 80/443, timeout 3 secondi, IPv6 non supportato. Nessun webhook effettivo provato; tempo di risposta Worker+D1 ancora sconosciuto.
+- [x] Confermate fonti [Workers Free](https://developers.cloudflare.com/workers/platform/limits/) (100k richieste/giorno, 10ms CPU/request) e [D1 Free](https://developers.cloudflare.com/d1/platform/limits/) (10 DB, 500MB/DB, 5GB/account, 5M read/100k write giornalieri).
+- [ ] Verifiche **ancora necessarie**: 2FA TradingView effettivamente ON, rate limit edge/proxy, quote account aggiornate a due DB e CPU/latency reali. Non confondere riscontro documental con un test live.
+- [x] Aggiornato il README gateway v0.8.7-doc. Worker runtime resta v0.8.5, ingest OFF, nessun deploy né merge PR #102.
 
 ## CHECKPOINT CLEANUP OFFLINE + D1 LIVE READ-ONLY — 12/11/2026 ore 23:41 CET
 - [x] Sicurezza account e modalità: [PR #102](https://github.com/mirkoworz/remura/pull/102) verificata OPEN/DRAFT, nessun merge, nessun deploy dei Worker né modifica ai filoni A/B/C.
