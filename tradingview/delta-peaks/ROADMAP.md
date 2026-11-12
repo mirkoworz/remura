@@ -1,6 +1,15 @@
 # REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.5
-**Aggiornamento roadmap: 12/11/2026, ore 17:38 CET**
+**Aggiornamento roadmap: 12/11/2026, ore 17:48 CET**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView OFF, nessun ordine.**
+
+## CHECKPOINT API D1 READ-ONLY — 12/11/2026, ore 17:48 CET
+- [x] Integrazione automatizzabile via API D1 Cloudflare, senza nuovo deploy Worker né modifiche D1: script `gateway-lab/cloudflare_d1_readonly_audit.py` v0.1, limitato per codice a `remura-tv-lab-test` (EU) e SELECT sulla chiave sintetica.
+- [x] Aggiunti **11 test offline** in `gateway-lab/test_cloudflare_d1_readonly_audit.py`, nessuna chiamata di rete nelle regressioni.
+- [x] Creato workflow isolato `.github/workflows/remura-tv-cloudflare-d1-readonly.yml` limitato ai push del branch #102, più workflow_dispatch per uso futuro; GitHub permissions contents:read, senza deploy/cancellazioni, solo token `REMURA_CF_D1_READ_TOKEN` e account ID `REMURA_CF_ACCOUNT_ID` dai GitHub Secrets.
+- [x] GitHub Actions [run 43262606971](https://github.com/mirkoworz/remura/actions/runs/43262606971) **SUCCESS**: job offline-safety verde. Job cloudflare-readonly terminato senza chiamate remote: **SKIPPED_MISSING_SECRETS**, non confondere il verde con un D1 live audit.
+- [ ] One-time manuale: token API Cloudflare `Account > D1 > Read` sul solo account REMURA, salvato in **GitHub Actions Secrets** senza mostrarlo in chat, e ID account in secondo secret. NON creare D1 Edit né Workers Edit.
+- [ ] Dopo secrets, nuovo commit al file di workflow su branch DRAFT per attivare il job remoto; verificare API read-only. Successivamente progettare cleanup con permessi di scrittura temporanei e autorizzazione separata.
+- [ ] `remura-tv-write-test` deve mantenere Hello World come codice pubblicato; la diagnostica temporanea è stata abbandonata senza Deploy secondo l'utente. Nessun webhook, nessuna scrittura automatica aggiunta.
 
 ## CHECKPOINT WRITE PROBE SU D1 TEST — 12/11/2026, ore 17:38 CET
 - [x] Worker temporaneo isolato `remura-tv-write-test` distribuito con Hello World, binding D1 Production `TELEMETRY_DB` → `remura-tv-lab-test` confermato da screenshot. Preview configurata per usare lo stesso database di test.
