@@ -1,6 +1,46 @@
-# REMURA — GATEWAY ISOLATO Cloudflare Worker + D1 (documentazione v0.8.11)
-**Versione/aggiornamento: documentazione v0.8.11 — 13/11/2026, ore 10:01 CET**
+# REMURA — GATEWAY ISOLATO Cloudflare Worker + D1 (documentazione v0.8.12)
+**Versione/aggiornamento: documentazione v0.8.12 — 13/11/2026, ore 10:12 CET**
 **Worker principale v0.8.5 distribuito MA FAIL-CLOSED. Il codice v0.8.6 è SOLO su GitHub, NON distribuito. PR #102 DRAFT, NO MERGE.**
+
+## Unified Free Budget Monitoring — 13/11/2026 ore 10:12 CET
+- [x] Il token `REMURA_CF_ANALYTICS_READ_TOKEN` esistente permette
+  l'analisi **Workers Invocations Adaptive**. Nessun token supplementare.
+  La query `cloudflare_workers_usage_guard.py` v0.2 legge l'intero
+  account (non un unico script), da inizio giorno UTC al momento
+  dell'esecuzione, `sum.requests`, `sum.errors`, `cpuTimeP99`.
+  Risultati sono *stime Analytics*, non costo/billing esatto.
+- [x] [Prima esecuzione reale Workers #43398573498](https://github.com/mirkoworz/remura/actions/runs/43398573498):
+  **100 richieste stimate**, **0 errori stimati**, P99 più elevato
+  nei gruppi osservati **3.080 microsecondi (3,08 ms)**;
+  il limite Workers Free di riferimento è **100.000 richieste/giorno**
+  e 10 ms CPU per invocazione, ma un P99 non prova che tutte le
+  richieste restino nel limite. La query limita le righe a 1.000:
+  quando la risposta è vuota, troncata o non valida, il dato è UNKNOWN
+  anziché presentare un falso valore pari a zero.
+- [x] Consolidati D1 Analytics, Workers Analytics e dimensione D1 TEST
+  nello stesso workflow
+  [REMURA Cloudflare Account Analytics READ-ONLY LAB](../../../.github/workflows/remura-tv-account-analytics-readonly.yml)
+  v0.4 con **63 test offline** (20+17+13+13) e resoconto nel
+  `GITHUB_STEP_SUMMARY` filtrato, senza token/nomi dei Workers.
+- [x] [Run unico #43399020915](https://github.com/mirkoworz/remura/actions/runs/43399020915):
+  job test SUCCESS, job budget read-only SUCCESS; D1 **1 read/0 write**
+  stimati, Workers **101 richieste/0 errori** stimati,
+  D1 TEST **28.672 byte** reali; `REMURA_BUDGET_REPORT=GENERATED_NO_SECRETS`.
+  Un'ulteriore correzione su CPU sconosciuta ha CI verde in
+  [run #43399187515](https://github.com/mirkoworz/remura/actions/runs/43399187515).
+- [x] Tutti i controlli remoti su Account Analytics / D1 TEST
+  sono sola lettura (API GraphQL POST significa query read-only,
+  non mutazione); nessun deploy, modifica del Worker, scrittura D1,
+  merge PR #102 o operazione verso i filoni A/B/C.
+- [ ] **NON ancora ricorrente**: sul branch PR #102 è disponibile tramite
+  push mirati e workflow_dispatch; GitHub `schedule` richiede un
+  workflow sul **default branch**. Non confondere il rapporto consolidato
+  con un monitor giornaliero già attivo. Prima della pianificazione
+  necessita una piccola approvazione per una job read-only separata
+  in main, oppure diversa schedulazione esterna autorizzata.
+- [ ] Non verificato: costo/piano account effettivo in Cloudflare,
+  protezione edge del Worker pubblico (403/403 da GitHub è inconcludente),
+  bilancio storage somma di tutti i D1, tariffazione reale limiter.
 
 ## Checkpoint credenziali Analytics e prime metriche REALI — 13/11/2026 ore 10:01 CET
 - [x] L'utente ha configurato in GitHub Secrets il token **Account Analytics → Read**
