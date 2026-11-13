@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# REMURA v0.8.31 — 13/11/2026, ore 21:13 CET
+# REMURA v0.8.31 — 13/11/2026, ore 21:09 CET
 # PREP ONLY. No deployment, webhook, worker settings edit or database SQL.
 """Prepare an OFF-only TEST gateway binding *in memory* from authenticated D1 metadata.
 
