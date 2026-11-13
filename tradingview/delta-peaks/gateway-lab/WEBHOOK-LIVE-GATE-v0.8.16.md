@@ -1,7 +1,13 @@
-# REMURA v0.8.18-doc — Piano di autorizzazione WEBHOOK REALE (NON ATTIVO)
-**Aggiornamento: 13/11/2026, ore 13:58 CET — metadata API e Test Worker**
+# REMURA v0.8.21-doc — Piano di autorizzazione WEBHOOK REALE (NON ATTIVO)
+**Aggiornamento: 13/11/2026, ore 15:12 CET — D1 Production binding verificato con screenshot**
 **PR #102: DRAFT · Worker runtime v0.8.5 · sorgente v0.8.6 in GitHub · monitor main v0.8.14.**
 
+## Checkpoint definitivo binding Production — 13/11/2026, ore 15:12 CET
+- Screenshot proprietario Worker `remura-tv-ingest-lab` → Settings → Production → Bindings. Riga completa: `D1 database | TELEMETRY_DB | remura-tv-lab`. **Binding reale al database principale**, quindi non usare questo Worker per i primi test.
+- Il nuovo Worker `remura-tv-webhook-test` resta **solo un manifest di esempio non distribuibile**, con target D1 `remura-tv-lab-test`, ingest OFF, namespace limiter e UUID non risolti, Secret separato da prevedere soltanto al preflight di attivazione. Nessuna integrazione Cloudflare mutata.
+- La tabella mostra un D1 binding e nessun rate limiter nella vista; non affermare lo stato di binding non visibili, né il flag ingest runtime. Cloudflare rate limiting si configura esplicitamente nel manifest ed è approssimativo per località: https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
+- **Preflight manuale binding Production completato**. Non richiedere ancora nomi di binding o screenshot delle stesse schermate. Per il primo webhook serve distinta autorizzazione test+deploy; fino ad allora nessun POST TradingView, nessun ordine e nessuna scrittura.
+  
 ## Checkpoint Worker metadata GET — 13/11/2026 13:58 CET
 - [Run #43428754941](https://github.com/mirkoworz/remura/actions/runs/43428754941): 11 test offline OK, API **GET autenticata** al Worker configurazione con token D1 Read esistente; esito `REMURA_WORKER_SETTINGS=INCONCLUSIVE_HTTP_403`. **Nessun permesso Worker Metadata confermato, nessuna risposta settings utilizzabile**. Il successo del workflow significa che il diniego è stato classificato correttamente; non equivale a verifica LIVE del Worker.
 - Questo 403 riguarda **api.cloudflare.com** e non è la stessa sonda GET pubblica `workers.dev` già inconcludente: non attribuirlo al BIC di `workers.dev`. Presumibile carenza permessi Workers del token, ma non dimostrata in modo definitivo. **Non ripetere stesso test**.
