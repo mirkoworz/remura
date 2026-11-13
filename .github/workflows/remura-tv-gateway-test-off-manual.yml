@@ -41,7 +41,7 @@ jobs:
       - name: Checkout immutable TEST-only source
         uses: actions/checkout@v4
         with:
-          ref: 84216dbaea598b53252fc929c9bfbde2edb0513c
+          ref: 004af2df1b54ffcdc8a222ce54cce7cb59fc52f3
           persist-credentials: false
       - name: Reject missing scoped credentials and execute offline gates
         shell: bash
@@ -75,6 +75,11 @@ jobs:
             --config "$REMURA_TEST_OFF_BUNDLE/wrangler.json" \
             --outdir "$RUNNER_TEMP/remura-test-off-dryrun"
           echo 'REMURA_TEST_OFF_WRANGLER=DRY_RUN_PASSED'
+      - name: Fresh GET-only final empty TEST binding check before mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/bootstrap_settings_guard_v1.py
       - name: Deploy only previously verified existing TEST Worker with OFF flag
         shell: bash
         run: |
