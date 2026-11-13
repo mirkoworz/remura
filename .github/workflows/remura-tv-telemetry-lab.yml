@@ -1,4 +1,4 @@
-# REMURA TradingView Telemetry LAB v0.8.35 — aggiornamento 13/11/2026 CET.
+# REMURA TradingView Telemetry LAB v0.8.36 — aggiornamento 13/11/2026 CET.
 # SOLO CI OFFLINE. Nessun deploy, webhook, credenziale o trade automatico.
 name: REMURA TradingView Telemetry LAB
 on:
@@ -45,6 +45,10 @@ jobs:
         run: |
           python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_prepare_test_off_bundle_v1.py' -v
           python3 -m py_compile tradingview/delta-peaks/gateway-lab/prepare_test_off_bundle_v1.py
+      - name: TEST Worker SHA-256 secret preparation (GET-only, offline mock)
+        run: |
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_prepare_test_hash_secret_v1.py' -v
+          python3 -m py_compile tradingview/delta-peaks/gateway-lab/prepare_test_hash_secret_v1.py
       - name: Emergency STOP for TEST gateway ON or OFF with separate hash Secret (offline only)
         run: |
           python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_emergency_stop_test_guard_v1.py' -v
