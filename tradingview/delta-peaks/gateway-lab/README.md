@@ -1,6 +1,49 @@
-# REMURA — GATEWAY ISOLATO Cloudflare Worker + D1 (documentazione v0.8.7)
-**Versione/aggiornamento: documentazione v0.8.7 — 12/11/2026, ore 23:42 CET**
-**Worker principale v0.8.5 distribuito MA FAIL-CLOSED. PR #102 DRAFT, NO MERGE.**
+# REMURA — GATEWAY ISOLATO Cloudflare Worker + D1 (documentazione v0.8.8)
+**Versione/aggiornamento: documentazione v0.8.8 — 13/11/2026, ore 06:37 CET**
+**Worker principale v0.8.5 distribuito MA FAIL-CLOSED. Il codice v0.8.6 è SOLO su GitHub, NON distribuito. PR #102 DRAFT, NO MERGE.**
+
+## Preflight RATE LIMITER v0.8.6 — 13/11/2026 (SOLO OFFLINE)
+- L'utente ha confermato 2FA TradingView **attiva** il 13/11/2026.
+- `worker.mjs` v0.8.6, **non distribuito**: `INGEST_ENABLED=true`
+  da solo **non abilita la ricezione**, perché ora serve anche
+  `INGEST_RATE_LIMITER.limit()`, oltre a D1 e hash SHA256. In caso
+  di binding mancante, `/health` indica `accepting:false` e l'ingress
+  resta `503 disabled`.
+- Il controllo del limiter avviene **dopo** IP, token e content-type
+  validati, **prima** di decodifica body e letture/scritture D1.
+  Richieste valide sopra soglia ⇒ 429; indisponibilità limiter ⇒ 503.
+  Le richieste anonime possono comunque consumare quote Workers prima
+  del controllo: necessario esaminare protezione edge dedicata.
+- La soluzione Cloudflare Workers Rate Limiting è **approssimativa e
+  per località Cloudflare**, non un tetto globale certo. Il precedente
+  limite D1 (20 eventi/60s) resta come protezione complementare.
+- Per una futura versione autorizzata, il binding va configurato
+  esclusivamente sul Worker `remura-tv-ingest-lab`, per esempio
+  tramite Wrangler (solo documentazione, **NON eseguire ora**):
+
+```toml
+[[ratelimits]]
+name = "INGEST_RATE_LIMITER"
+namespace_id = "<ID_NUMERICO_UNIVOCO_DA_VERIFICARE>"
+  [ratelimits.simple]
+  limit = 20
+  period = 60
+```
+
+- L'ID di namespace **deve essere un intero positivo univoco per
+  questo uso**, non un valore inventato da applicare a caso.
+  Verificare disponibilità della funzionalità e costi reali
+  sull'account Free **prima** di aggiungerlo o distribuire il Worker.
+- I sottodomini `workers.dev` appartengono alla zona Cloudflare
+  gestita: non assumere che regole WAF di una propria zona/domain
+  proteggano quell'hostname. Cloudflare raccomanda custom domain/route
+  per carichi critici; nessun dominio a pagamento è stato acquistato.
+- Fonti: https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
+  e https://developers.cloudflare.com/workers/configuration/routing/workers-dev/ .
+- I test sono **sintetici offline**; mancano ancora prova end-to-end
+  di un webhook vero, quota misurata, tempi reali e verifica binding
+  Worker dopo eventuale deploy autorizzato. Non accendere ingest
+  solo perché la CI è verde.
 
 ## Checkpoint LIVE verificato — 12/11/2026
 - Il Worker principale `remura-tv-ingest-lab` è online, con `INGEST_ENABLED`
