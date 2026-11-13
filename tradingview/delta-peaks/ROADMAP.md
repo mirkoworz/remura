@@ -1,6 +1,14 @@
-# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.31-doc (Worker Production noto v0.8.5, gateway sorgente v0.8.6 offline)
-**Aggiornamento roadmap: 13/11/2026, ore 21:00 CET — audit postdeploy, gateway OFF D1 TEST, preview e rollback mock**
+# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.32-doc (Worker Production noto v0.8.5, gateway sorgente v0.8.6 offline)
+**Aggiornamento roadmap: 13/11/2026, ore 21:08 CET — rollback manuale TEST preparato, nessun nuovo deploy**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView OFF, nessun ordine.**
+
+## CHECKPOINT v0.8.32 — ROLLBACK MANUALE WORKER TEST PREPARATO, NON ESEGUITO — 13/11/2026, ore 21:08 CET
+- [x] Creato `gateway-lab/worker_rollback_preflight_v1.py`: soli **due GET autenticati** (inventario D1 UE e settings del solo Worker TEST), confronto della destinazione D1 TEST e namespace limiter candidato senza stampare identificativi. Consentiti soltanto il bootstrap vuoto o il gateway `INGEST_ENABLED=false` con binding D1 TEST e limiter 20/60; tutti gli stati sconosciuti vengono bloccati.
+- [x] Sei nuovi test mock in `test_worker_rollback_preflight_v1.py` verificano target TEST, DB MAIN proibito, assenza credenziali, nessuna SQL e mancata esposizione token. [Actions #43498033946](https://github.com/mirkoworz/remura/actions/runs/43498033946) **SUCCESS**, inclusi i 12 test preesistenti del guard di rollback e quelli del laboratorio.
+- [x] Installato su `main`, senza avvio automatico, `.github/workflows/remura-tv-rollback-test-manual.yml` (ultimo commit `347a2a2942faecaa35882da1c7d9b66699464417`): `workflow_dispatch` solo per proprietario su main, scelta obbligatoria `ROLLBACK_TEST_TO_BOOTSTRAP_OFF`, permessi `contents:read`, checkout sorgente pinned `ac68fabf95a26ec9c62f4e2cd270661c32622578`. Prima dei comandi mutativi esegue test e preflight autenticato; se autorizzato in futuro potrà distribuire solo bootstrap inerte sul Worker TEST con `preview_urls:false`, poi verificare binding vuoti. Concurrency condivisa con precedente workflow di bootstrap: no due modifiche TEST simultanee. **Workflow NON eseguito, NESSUN deploy né rollback live eseguito.**
+- [ ] **Limite del rollback attuale:** gestisce solo bootstrap o gateway già OFF **senza Secret**. Prima della prima ingestione ON e dell'aggiunta di un Secret TEST, occorrerà estenderlo affinché una condizione d'emergenza ON possa davvero tornare a OFF; NON dichiararlo pronto per il trading live.
+- [ ] Prossimo percorso: completare workflow separato e manuale di **deploy del gateway TEST OFF** con D1 TEST/limiter e doppio preflight, avvio solo dopo nuova autorizzazione; dopo, una fase distinta per Secret TEST e primo webhook TradingView. Non effettuare ora deploy.
+- [x] Worker TEST bootstrap live ancora immutato, nessuna nuova scrittura D1, nessun webhook, Worker Production `remura-tv-ingest-lab` invariato, PR #102 DRAFT e budget `main` intatto.
 
 ## CHECKPOINT v0.8.31 — POSTDEPLOY LIVE VERIFIED E GATEWAY TEST OFFLINE FAIL-CLOSED — 13/11/2026, ore 21:00 CET
 - [x] Ripresa da v0.8.30 e PR #102 OPEN/DRAFT, senza rifare verifiche D1 TEST già concluse o sonda GitHub GET 403 identica. Worker Production `remura-tv-ingest-lab` NON modificato; attuale Worker TEST mantiene il bootstrap inerte realmente deployato 13/11 ore 20:45 CET.
