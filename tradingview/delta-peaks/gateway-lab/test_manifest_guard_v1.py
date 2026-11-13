@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# REMURA Manifest Safety TESTS v0.8.18 — 13/11/2026, ore 14:01 CET
+# REMURA Manifest Safety TESTS v0.8.31 — 13/11/2026, ore 21:06 CET
 # Pure synthetic offline tests. No Cloudflare tokens, deploy or network.
 import copy
 import json
@@ -50,6 +50,19 @@ class ManifestTests(unittest.TestCase):
         cfg["vars"]["WEBHOOK_TOKEN_SHA256"] = "SECRET_DO_NOT_STORE"
         with self.assertRaises(ManifestError):
             guard.verify_manifest(cfg)
+
+    def test_preview_urls_must_be_explicitly_disabled(self):
+        cfg = resolved()
+        self.assertIs(cfg["preview_urls"], False)
+        for value in (True, "false", None, 0, 1):
+            bad = copy.deepcopy(cfg)
+            bad["preview_urls"] = value
+            with self.subTest(value=value), self.assertRaises(ManifestError):
+                guard.verify_manifest(bad)
+        missing = copy.deepcopy(cfg)
+        del missing["preview_urls"]
+        with self.assertRaises(ManifestError):
+            guard.verify_manifest(missing)
 
     def test_unauthorized_routes_forbidden(self):
         cfg = resolved()
