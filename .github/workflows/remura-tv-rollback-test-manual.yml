@@ -1,0 +1,108 @@
+# REMURA v0.8.32 — 13/11/2026 ore 21:09 CET
+# ONLY manual rollback to existing inert TEST bootstrap. No push/cron/PR deploy.
+name: REMURA TEST Worker ROLLBACK (manual only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Rollback SOLO remura-tv-webhook-test al bootstrap inerte senza binding'
+        required: true
+        type: choice
+        options:
+          - ROLLBACK_TEST_TO_BOOTSTRAP_OFF
+
+permissions:
+  contents: read
+
+concurrency:
+  group: remura-test-worker-manual-changes
+  cancel-in-progress: false
+
+jobs:
+  rollback-test-worker-only:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/main' &&
+      github.actor == 'mirkoworz' &&
+      inputs.confirmation == 'ROLLBACK_TEST_TO_BOOTSTRAP_OFF'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      CI: 'true'
+      WRANGLER_SEND_METRICS: 'false'
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.REMURA_CF_TEST_WORKER_EDITOR_TOKEN }}
+      REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+      REMURA_CF_D1_READ_TOKEN: ${{ secrets.REMURA_CF_D1_READ_TOKEN }}
+      REMURA_CF_TEST_WORKER_EDITOR_TOKEN: ${{ secrets.REMURA_CF_TEST_WORKER_EDITOR_TOKEN }}
+    steps:
+      - name: Checkout pinned reviewed safe rollback files
+        uses: actions/checkout@v4
+        with:
+          ref: ac68fabf95a26ec9c62f4e2cd270661c32622578
+          persist-credentials: false
+      - name: No-credentials-in-log and offline rollback regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$REMURA_CF_ACCOUNT_ID"
+          test -n "$REMURA_CF_D1_READ_TOKEN"
+          test -n "$REMURA_CF_TEST_WORKER_EDITOR_TOKEN"
+          node --test tradingview/delta-peaks/gateway-lab/bootstrap_test_worker.test.mjs
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_off_gateway_rollback_guard_v1.py' -v
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_worker_rollback_preflight_v1.py' -v
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_bootstrap_settings_guard_v1.py' -v
+          echo 'REMURA_ROLLBACK_OFFLINE_TESTS=PASSED'
+      - name: Authenticate TEST Worker + D1 TEST identity, GET only, fail closed
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/worker_rollback_preflight_v1.py
+      - name: Build inert NO-BINDINGS bootstrap manifest only for TEST Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/remura-rollback-test"
+          cp tradingview/delta-peaks/gateway-lab/bootstrap_test_worker.mjs \
+            "$RUNNER_TEMP/remura-rollback-test/bootstrap_test_worker.mjs"
+          cat > "$RUNNER_TEMP/remura-rollback-test/wrangler.json" <<'JSON'
+          {
+            "name": "remura-tv-webhook-test",
+            "main": "bootstrap_test_worker.mjs",
+            "compatibility_date": "2026-11-13",
+            "workers_dev": true,
+            "preview_urls": false
+          }
+          JSON
+          python3 - <<'PY'
+          import json, os
+          p = os.path.join(os.environ["RUNNER_TEMP"], "remura-rollback-test/wrangler.json")
+          cfg = json.load(open(p, encoding="utf-8"))
+          assert set(cfg) == {"name", "main", "compatibility_date", "workers_dev", "preview_urls"}
+          assert cfg["name"] == "remura-tv-webhook-test"
+          assert cfg["main"] == "bootstrap_test_worker.mjs"
+          assert cfg["preview_urls"] is False and cfg["workers_dev"] is True
+          PY
+          echo 'REMURA_ROLLBACK_TARGET=TEST_ONLY; D1=NONE; SECRETS=NONE; PREVIEW_URLS=OFF'
+      - name: Wrangler dry-run followed by separately approved TEST rollback only
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.157.0 deploy --dry-run \
+            --config "$RUNNER_TEMP/remura-rollback-test/wrangler.json" \
+            --outdir "$RUNNER_TEMP/remura-rollback-test-dryrun"
+          npx --yes wrangler@4.157.0 deploy \
+            --config "$RUNNER_TEMP/remura-rollback-test/wrangler.json"
+          echo 'REMURA_TEST_ROLLBACK=DEPLOY_COMMAND_SUCCEEDED'
+      - name: Postdeploy TEST Worker metadata MUST have zero bindings
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/bootstrap_settings_guard_v1.py
+          {
+            echo '### REMURA TEST Worker rollback — manual owner request only'
+            echo 'Bootstrap inert deployed after strict authenticated target guard.'
+            echo 'Confirm no D1 bindings. No changes to remura-tv-ingest-lab.'
+            echo 'No TradingView webhook or trading orders authorized.'
+          } >> "$GITHUB_STEP_SUMMARY"
