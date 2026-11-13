@@ -1,5 +1,5 @@
 # REMURA — Bootstrap Worker TEST & accesso minimo v0.8.25
-**Aggiornato: 13/11/2026, ore 16:35 CET**  
+**Aggiornato: 13/11/2026, ore 16:32 CET**  
 **SOLO PIANO: NESSUNA CREAZIONE, DEPLOY, WEBHOOK, NUOVO TOKEN O MODIFICA CLOUDFLARE AUTORIZZATI.**
 
 ## Nuova scoperta sui ruoli Cloudflare (verifica documentale 13/11/2026)
@@ -13,6 +13,7 @@
 - `gateway-lab/bootstrap_test_worker.mjs` **v0.8.25** NON è `worker.mjs` v0.8.6. È un codice indipendente con solo `GET /health` JSON `{"status":"bootstrap_only","accepting":false}`, altri metodi/route: **HTTP 503 disabled**. Non usa variabili, Secrets, D1, limiter, client HTTP esterni, token, code di trading o webhook.
 - Test Node `gateway-lab/bootstrap_test_worker.test.mjs` (solo offline) verificano: anche con `INGEST_ENABLED=true` passato a runtime, chiamate POST o /ingest/token mai accettate, nessuna lettura env, nessuna scrittura DB, nessuna eco di token/body e risposte no-store/nosniff.
 - **Questo bootstrap è progettato per stare isolato e spento**. Non è il receiver TradingView. `worker.mjs` completo andrà distribuito eventualmente **in una seconda fase**, con tutte le protezioni precedentemente validate.
+- **Verifica reale di toolchain, ma NON di Cloudflare runtime:** [GitHub Actions #43453466241](https://github.com/mirkoworz/remura/actions/runs/43453466241) SUCCESS — 6 test Node e `wrangler@4.157.0 deploy --dry-run` sul solo bootstrap con configurazione temporanea `workers_dev:false` e senza alcun binding, namespace, account ID o credential. Nessun deploy e nessun Worker creato.
 - Il bootstrap non contiene binding, D1 UUID, credenziali, namespace rate limiter. Per il futuro passaggio al gateway reale resta indispensabile il preflight: D1 TEST `TELEMETRY_DB → remura-tv-lab-test`, limiter `INGEST_RATE_LIMITER`, Secret separato, `INGEST_ENABLED=false`.
 
 ## Procedura owner-only (NON ESEGUIRE SENZA NUOVO CONSENSO)
