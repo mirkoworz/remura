@@ -1,6 +1,14 @@
-# REMURA — TEST WEBHOOK RELEASE GATE v0.8.24 (NESSUN DEPLOY)
-**Aggiornamento: 13/11/2026, ore 15:55 CET**  
+# REMURA — TEST WEBHOOK RELEASE GATE v0.8.25 (NESSUN DEPLOY)
+**Aggiornamento: 13/11/2026, ore 16:33 CET**  
 **Sola documentazione e prove offline, PR #102 OPEN/DRAFT. Worker Production v0.8.5 non modificato.**
+
+## Checkpoint bootstrap a privilegi minimi — 13/11/2026, ore 16:33 CET
+- **Nuova informazione documentale Cloudflare (Sep 2026):** la creazione di un Worker richiede ruolo `Admin` di prodotto Workers. Un token `Editor` limitato a **un singolo Worker** può fare deploy soltanto se quel Worker **esiste già**: https://developers.cloudflare.com/workers/authorization/workers/. NON autorizzare un token Workers Admin product-wide per automatizzare l'innocuo primo bootstrap del TEST.
+- **Nuova sequenza raccomandata:** con consenso specifico, proprietario crea **una volta** dalla dashboard il solo `remura-tv-webhook-test` caricando `gateway-lab/bootstrap_test_worker.mjs`, che NON ha DB/Secret/limiter né gestione webhook: `GET /health` indica `accepting:false`, il resto restituisce HTTP 503. Solo dopo il Worker esistente, valutare un token dedicato con ruolo `Editor` limitato esattamente a `remura-tv-webhook-test`. Non assegnare privilegi al Worker Production `remura-tv-ingest-lab`.
+- **CI v0.8.25:** [Actions #43453466241](https://github.com/mirkoworz/remura/actions/runs/43453466241) SUCCESS: test Node di comportamento non operativo e compilazione Wrangler `deploy --dry-run` con configurazione sintetica `workers_dev:false`, senza login né API Cloudflare. Questo NON dimostra lo stato live, i costi CPU o l'esistenza del Worker TEST.
+- **Gate invariati:** vero binding `TELEMETRY_DB → remura-tv-lab-test`, limite `INGEST_RATE_LIMITER` ed effettiva disponibilità Free, Secret TEST distinto, `INGEST_ENABLED=false` nel gateway completo. **Nessuno** di questi va predisposto collegando il database principale per il bootstrap.
+- La creazione del Worker in dashboard è una modifica reale Cloudflare e richiede consenso nuovo; successiva sostituzione del codice con gateway completo e attivazione alert sono **altre** decisioni separate. Non richiedere ancora credenziali o screenshot dei vecchi controlli.
+- Procedura completa: [BOOTSTRAP-TEST-WORKER-v0.8.25.md](./BOOTSTRAP-TEST-WORKER-v0.8.25.md).
 
 ## Checkpoint piano Workers Free — 13/11/2026, ore 15:55 CET
 - Screenshot reale dell'utente Cloudflare → **Workers plans**: `Free $0` indicato come **Current plan**, Paid `$5/month + usage` disponibile ma non selezionato. **Verificato l'effettivo piano Workers Free** per l'account alla data del controllo; non richiedere di nuovo uno screenshot del piano.
@@ -25,7 +33,7 @@
 - Rate Limiting binding Cloudflare: `namespace_id` deve essere una stringa di intero positivo univoco per l'account; `simple.limit=20`, `simple.period=60`; quota **approssimativa per Cloudflare location**, non un tetto globale né protezione di richieste anonime che arrivano prima del codice. Namespace reale e disponibilità/costi del binding **NON confermati**.
 
 ## Gate necessari, nell'ordine
-1. **GO/NO-GO costo + accessi**: prima dell'eventuale deploy verificare piano effettivo Workers, limiti disponibili e costi reali; individuare permesso Workers Scripts **Edit** limitato al Worker TEST, in sessione proprietario, senza usare mai Global API Key o condividere token in chat. Non creare token a pagamento né elevare permessi dei vecchi token D1/Analytics. Nessun automatismo deploy sul ramo DRAFT.
+1. **GO/NO-GO costo + accessi**: piano Workers Free già verificato. Prima del deploy completo, scegliere il percorso a minimo privilegio: **bootstrap manuale owner-only del Worker TEST inerte** (dopo consenso), poi token `Editor` limitato al **solo Worker TEST già creato**. Non usare product-level Workers Admin nella CI; non riutilizzare i token D1/Analytics per fare deploy. Restano da verificare costi/limiti delle integrazioni, billing e CPU reali. Nessun automatismo deploy sul ramo DRAFT.
 2. **Binding preparato fuori dal repository**: ottenere soltanto da Cloudflare il vero UUID D1 TEST, verificarne corrispondenza con il nome TEST, configurare `INGEST_RATE_LIMITER` con namespace univoco, e generare segreto webhook **separato** dal Worker Production. Non aggiungere a GitHub file con segreti, token in URL, UUID sensibili o output API integrali. L'esempio con placeholder non va caricato.
 3. **Primo deploy richiede consenso ESPRESSO distinto**: nuovo Worker `remura-tv-webhook-test` con `INGEST_ENABLED=false`, nessuna route custom, binding a `remura-tv-lab-test`, MAI toccare `remura-tv-ingest-lab`. Non abilitare TradingView alert. Verificare via Cloudflare Dashboard versione, binding, limiter e l'endpoint `/health` **da un canale affidabile**: `accepting:false`. Una risposta 403 da GitHub verso `workers.dev` resta inconcludente, non ripetere uguale.
 4. **Secondo consenso per invio LIVE**: solo dopo identità e limiti confermati, abilitare temporaneamente ingest sul Worker TEST e configurare alert nel Pine TradingView, assicurando token fuori dal codice (niente log/chats). Permettere 1–pochi eventi pilota da TradingView, mai esecuzioni di ordini. Accertare esito consegna alert, presenza `BAR_EVENT/HEARTBEAT` e `received_at_ms` in D1 TEST con query read-only, latenza, errori Workers/CPU e rispetto del budget. Se Cloudflare applica BIC o protezioni edge che bloccano TradingView, **STOP**; non allargare globalmente Access/WAF per aggirare.
@@ -40,7 +48,8 @@
 | Manifest deployabile reale | NO — PLACEHOLDER |
 | Rate limiter account | NON VERIFICATO |
 | Secret per Worker TEST | NON CREATO |
-| Permesso Worker EDIT/DEPLOY | NON DISPONIBILE IN QUESTA CHAT |
+| Worker bootstrap inerte | COMPILATO E TESTATO OFFLINE, NON DEPLOYATO |
+| Permesso Worker EDIT/DEPLOY | NON DISPONIBILE IN QUESTA CHAT; scoped Editor possibile dopo creazione TEST |
 | Primo deploy e primo webhook live | NON AUTORIZZATI |
 | Piano Workers Free | CONFERMATO con screenshot dashboard 13/11/2026 |
 | Fatturazione aggregata account/CPU Worker TEST | NON VERIFICATE |
