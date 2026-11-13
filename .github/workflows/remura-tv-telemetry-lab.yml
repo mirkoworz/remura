@@ -59,6 +59,8 @@ jobs:
           python3 -m py_compile tradingview/delta-peaks/gateway-lab/bootstrap_settings_guard_v1.py
       - name: Offline bootstrap safe Worker tests (does not deploy)
         run: node --test tradingview/delta-peaks/gateway-lab/bootstrap_test_worker.test.mjs
+      - name: iPhone TEST webhook token WebCrypto generator test (offline, no network)
+        run: node --test tradingview/delta-peaks/test_local_token_keygen.test.mjs
       - name: JavaScript syntax check bootstrap safe Worker
         run: node --check tradingview/delta-peaks/gateway-lab/bootstrap_test_worker.mjs
       - name: JavaScript syntax check synthetic webhook fixture
