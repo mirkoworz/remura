@@ -1,0 +1,109 @@
+# REMURA v0.8.33 — 13/11/2026 CET — TEST gateway OFF only.
+# Owner-only manual workflow. Zero auto-deploy on push, PR, cron.
+# The pinned source is offline-reviewed research branch PR #102, never live app.
+name: REMURA TEST Worker GATEWAY OFF (manual only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'SOLO Worker TEST, D1 TEST e ingest DISATTIVATO; non attiva webhook'
+        required: true
+        type: choice
+        options:
+          - DEPLOY_GATEWAY_TEST_OFF_ONLY
+
+permissions:
+  contents: read
+
+concurrency:
+  group: remura-test-worker-bootstrap-manual
+  cancel-in-progress: false
+
+jobs:
+  deploy-gateway-test-off-only:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/main' &&
+      github.actor == 'mirkoworz' &&
+      inputs.confirmation == 'DEPLOY_GATEWAY_TEST_OFF_ONLY'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CI: 'true'
+      WRANGLER_SEND_METRICS: 'false'
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.REMURA_CF_TEST_WORKER_EDITOR_TOKEN }}
+      REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+      REMURA_CF_D1_READ_TOKEN: ${{ secrets.REMURA_CF_D1_READ_TOKEN }}
+      REMURA_CF_TEST_WORKER_EDITOR_TOKEN: ${{ secrets.REMURA_CF_TEST_WORKER_EDITOR_TOKEN }}
+    steps:
+      - name: Checkout immutable TEST-only source
+        uses: actions/checkout@v4
+        with:
+          ref: 84216dbaea598b53252fc929c9bfbde2edb0513c
+          persist-credentials: false
+      - name: Reject missing scoped credentials and execute offline gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$REMURA_CF_ACCOUNT_ID"
+          test -n "$REMURA_CF_D1_READ_TOKEN"
+          test -n "$REMURA_CF_TEST_WORKER_EDITOR_TOKEN"
+          node --test tradingview/delta-peaks/gateway-lab/worker.test.mjs
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_prepare_test_off_bundle_v1.py' -v
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_worker_rollback_preflight_v1.py' -v
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_off_gateway_rollback_guard_v1.py' -v
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_manifest_guard_v1.py' -v
+          python3 tradingview/delta-peaks/gateway-lab/predeploy_test_manifest_guard_v1.py
+          echo 'REMURA_TEST_OFF_GATES=OFFLINE_PASS'
+      - name: GET verified D1 TEST + current empty bootstrap settings, build private bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/prepare_test_off_bundle_v1.py
+          echo 'REMURA_D1_TARGET=TEST_ONLY; EDITOR_SCOPE=TEST_WORKER'
+          echo 'NO_D1_SQL=YES; NO_WEBHOOK=YES; NO_SECRETS_WRITTEN=YES'
+      - name: Compile with pinned Wrangler without touching Cloudflare
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${REMURA_TEST_OFF_BUNDLE:-}"
+          test -f "$REMURA_TEST_OFF_BUNDLE/wrangler.json"
+          test -f "$REMURA_TEST_OFF_BUNDLE/worker.mjs"
+          npx --yes wrangler@4.157.0 deploy --dry-run \
+            --config "$REMURA_TEST_OFF_BUNDLE/wrangler.json" \
+            --outdir "$RUNNER_TEMP/remura-test-off-dryrun"
+          echo 'REMURA_TEST_OFF_WRANGLER=DRY_RUN_PASSED'
+      - name: Deploy only previously verified existing TEST Worker with OFF flag
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Source pinned; target name, namespace, D1 UUID and OFF status validated.
+          npx --yes wrangler@4.157.0 deploy \
+            --config "$REMURA_TEST_OFF_BUNDLE/wrangler.json"
+          echo 'REMURA_TEST_OFF_DEPLOY=COMMAND_SUCCEEDED_PENDING_VERIFICATION'
+      - name: Read-back TEST metadata - fail unless only TEST D1/limiter/OFF
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/worker_rollback_preflight_v1.py \
+            | grep -Fx 'REMURA_TEST_ROLLBACK_PREFLIGHT=TEST_GATEWAY_OFF_STRICT_NO_SECRET'
+          {
+            echo '### REMURA TEST gateway OFF (owner-only)'
+            echo 'Worker: remura-tv-webhook-test. Ingest=false, no webhook secret.'
+            echo 'D1: TEST only. Production untouched by this workflow.'
+            echo 'Readback: metadata strict OFF configuration passed.'
+            echo 'No webhook TradingView, SQL insert, trading order or notification.'
+            echo 'External HTTP behavior, rate limiting limits and billing still need separate proof.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Always delete ephemeral Wrangler config and bundled Worker source
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -n "${REMURA_TEST_OFF_BUNDLE:-}" && \
+                "$REMURA_TEST_OFF_BUNDLE" == "$RUNNER_TEMP"/remura-test-off-* ]]; then
+            rm -rf -- "$REMURA_TEST_OFF_BUNDLE"
+          fi
+          echo 'REMURA_TEST_OFF_CLEANUP=ATTEMPTED'
