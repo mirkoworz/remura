@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# REMURA Test Worker Manifest Guard v0.8.18 — 13/11/2026, ore 13:58 CET
+# REMURA Test Worker Manifest Guard v0.8.31 — 13/11/2026, ore 21:05 CET
 # Pure offline safety validation. No Wrangler, API requests, secrets or deploy.
 """Validate isolated webhook TEST manifest; unresolved examples MUST NOT deploy."""
 from __future__ import annotations
@@ -14,7 +14,7 @@ EXPECTED_DB = "remura-tv-lab-test"
 DB_ID_RE = re.compile(r"^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$", re.I)
 NS_ID_RE = re.compile(r"^[1-9][0-9]{0,14}$")
 ROOT_FIELDS = {"$comment", "name", "main", "compatibility_date",
-               "workers_dev", "vars", "d1_databases", "ratelimits"}
+               "workers_dev", "preview_urls", "vars", "d1_databases", "ratelimits"}
 
 
 class ManifestError(ValueError):
@@ -31,6 +31,7 @@ def verify_manifest(cfg: object) -> str:
     require(cfg["name"] == EXPECTED_NAME, "test_worker_name_mismatch")
     require(cfg["main"] == "worker.mjs", "main_code_unknown")
     require(cfg["workers_dev"] is True, "workers_dev_route_expected")
+    require(cfg["preview_urls"] is False, "preview_urls_must_be_disabled")
     require(type(cfg["compatibility_date"]) is str
             and cfg["compatibility_date"] == "2026-11-13", "compat_date_invalid")
     require(type(cfg["$comment"]) is str and "SOLO ESEMPIO" in cfg["$comment"],
