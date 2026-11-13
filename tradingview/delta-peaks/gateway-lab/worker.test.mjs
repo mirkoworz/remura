@@ -1,4 +1,4 @@
-// REMURA Gateway LAB v0.8.6 — aggiornamento 13/11/2026 06:35 CET
+// REMURA Gateway LAB v0.8.22 TEST — aggiornamento 13/11/2026 15:25 CET
 // Test di richieste SINTETICHE in Node: non richiedono rete né Cloudflare.
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -286,4 +286,45 @@ test("missing database does not pretend success", async () => {
   const e = await env();
   e.TELEMETRY_DB = undefined;
   assert.equal((await send(e, sample())).status, 503);
+});
+
+test("rollback OFF closes ingestion before DB, without deleting existing TEST rows", async () => {
+  // Synthetic only: simulates emergency kill-switch, NOT a Cloudflare rollback.
+  const e = await env();
+  const first = sample(Date.now() - 15_000);
+  const second = sample(Date.now() - 10_000);
+  const accepted = await send(e, first);
+  assert.equal(accepted.status, 200);
+  assert.equal(e.TELEMETRY_DB.rows.size, 1);
+  const firstStored = [...e.TELEMETRY_DB.rows.values()][0];
+  const limiterCallsBefore = e.INGEST_RATE_LIMITER.calls;
+
+  e.INGEST_ENABLED = "false";
+  const health = await gateway.fetch(
+    new Request("https://example.invalid/health"), e);
+  assert.equal((await health.json()).accepting, false);
+  const blocked = await send(e, second);
+  assert.equal(blocked.status, 503);
+  assert.equal(blocked.body.status, "disabled");
+  assert.equal(e.TELEMETRY_DB.rows.size, 1);
+  assert.deepEqual([...e.TELEMETRY_DB.rows.values()][0], firstStored);
+  assert.equal(e.INGEST_RATE_LIMITER.calls, limiterCallsBefore);
+
+  // Even if someone accidentally re-enables the flag without a limiter,
+  // the worker must fail closed rather than writing a second TEST row.
+  e.INGEST_ENABLED = "true";
+  delete e.INGEST_RATE_LIMITER;
+  const missingLimiter = await send(e, second);
+  assert.equal(missingLimiter.status, 503);
+  assert.equal(missingLimiter.body.status, "disabled");
+  assert.equal(e.TELEMETRY_DB.rows.size, 1);
+});
+
+test("isolated TEST Worker can remain OFF with all other bindings configured", async () => {
+  const e = await env();
+  e.INGEST_ENABLED = "false";
+  assert.equal((await send(e, sample())).status, 503);
+  assert.equal(e.TELEMETRY_DB.rows.size, 0);
+  const health = await gateway.fetch(new Request("https://example.invalid/health"), e);
+  assert.equal((await health.json()).accepting, false);
 });
