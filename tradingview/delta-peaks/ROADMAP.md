@@ -1,6 +1,15 @@
-# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.18-doc (ultimo Worker noto v0.8.5, sorgente v0.8.6 offline)
-**Aggiornamento roadmap: 13/11/2026, ore 13:57 CET — API Worker metadata e isolamento TEST**
+# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.19-doc (ultimo Worker noto v0.8.5, sorgente v0.8.6 offline)
+**Aggiornamento roadmap: 13/11/2026, ore 15:03 CET — screenshot Production Settings**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView OFF, nessun ordine.**
+
+## CHECKPOINT v0.8.19 — WORKER PRODUCTION SETTINGS, SCREENSHOT UTENTE — 13/11/2026 ore 15:03 CET
+- [x] Nuovo screenshot reale Cloudflare dashboard `remura-tv-ingest-lab` → **Settings** → tab **Production**. In `Runtime variables and secrets` visibile **un elemento di tipo Secret**; in `Bindings` visibile **un elemento di tipo D1 database**. In `Observability` spunta su `Include Invocation logs` nell'area visibile. Nessuna modifica effettuata.
+- [x] **Non attribuire nomi che NON compaiono nell'immagine**: visualizzata soltanto colonna `Type` per Secret e D1. Non possiamo associare con certezza il Secret a `WEBHOOK_TOKEN_SHA256` né il binding D1 a `TELEMETRY_DB` o al database specifico. I checkpoint precedenti documentano la loro configurazione; **questa immagine non li riconferma nominalmente**. La colonna nome sembra fuori inquadratura sulla visualizzazione iPhone.
+- [x] Nella porzione di schermata visibile **non risulta alcuna riga Rate Limiting** e non è visibile alcuna variabile plaintext `INGEST_ENABLED`; **non dire che siano assenti dall'intera configurazione** finché non si controllano nomi, ambienti e binding supportati dalla UI.
+- [x] Confermata esistenza di impostazioni Production e binding D1/Secret dall'interfaccia proprietario **senza nuovi token**. Il workflow API Workers Settings aveva già prodotto `INCONCLUSIVE_HTTP_403` sul token D1 Read: non ripeterlo identico.
+- [ ] **Unica informazione manuale residua per questa vista:** mostrare la colonna `Name` e `Type` nello stesso screenshot, senza aprire valori: modalità orizzontale/zoom-out Safari o scorrimento laterale tabella. Non richiedere screenshot Access/Domains già acquisiti, né segreti.
+- [ ] Prima del webhook live serviranno verifica affidabile binding limiter/costo Free, ambiente TEST isolato (manifest v0.8.18 ancora INCOMPLETO/NO DEPLOY), flag ingest OFF fino al consenso per primo test e test end-to-end reale. Nessun ordine.
+- [x] PR #102 ancora DRAFT OPEN all'ultimo controllo, Worker runtime non modificato, monitor main v0.8.14 invariato, nessuna modifica ai database, filoni A/B/C o configurazione Cloudflare.
 
 ## CHECKPOINT v0.8.18 — WORKER SETTINGS AUTH GET 403 E TEST WEBHOOK SICURO — 13/11/2026 ore 13:57 CET
 - [x] Verificata documentazione **Cloudflare GET /accounts/{account}/workers/scripts/{script}/settings**, che richiede permessi Worker Scripts Read oppure Worker Metadata Read-Only; **NON** implica che il token D1 Read possieda tali permessi. Endpoint diverso da hostname pubblico `workers.dev`. [API Cloudflare](https://developers.cloudflare.com/api/resources/workers/subresources/scripts/subresources/script_and_version_settings/methods/get/).
