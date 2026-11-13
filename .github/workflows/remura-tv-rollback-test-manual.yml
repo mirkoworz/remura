@@ -16,7 +16,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: remura-test-worker-manual-changes
+  group: remura-test-worker-bootstrap-manual
   cancel-in-progress: false
 
 jobs:
