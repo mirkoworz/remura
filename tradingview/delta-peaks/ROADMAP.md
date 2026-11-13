@@ -1,6 +1,13 @@
-# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.25-doc (Worker Production noto v0.8.5, gateway sorgente v0.8.6 offline)
-**Aggiornamento roadmap: 13/11/2026, ore 16:34 CET — bootstrap Worker TEST inerte, accesso minimo**
+# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.26-doc (Worker Production noto v0.8.5, gateway sorgente v0.8.6 offline)
+**Aggiornamento roadmap: 13/11/2026, ore 17:27 CET — consenso bootstrap TEST acquisito, creazione Cloudflare ancora da confermare**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView OFF, nessun ordine.**
+
+## CHECKPOINT v0.8.26 — AUTORIZZAZIONE CREAZIONE TEST, IN ATTESA DELLA UI OWNER — 13/11/2026, ore 17:27 CET
+- [x] L'utente ha risposto **«Sì»** alla domanda esplicita di autorizzazione della **sola creazione iniziale** del Worker `remura-tv-webhook-test` con bootstrap inerte, senza D1/Secrets/limiter e senza webhook. Consenso limitato esattamente a questa fase, non al deploy del gateway completo, ingest ON, modifica di `remura-tv-ingest-lab`, trasferimento dati né creazione di token.
+- [x] Ricontrollato stato PR #102 OPEN/DRAFT e codice bootstrap `gateway-lab/bootstrap_test_worker.mjs` già validato in precedenza. Documentazione Cloudflare dashboard conferma il percorso Workers & Pages → Create application → Create Worker: https://developers.cloudflare.com/learning-paths/workers/get-started/first-worker/ . L'interfaccia può creare prima un template di esempio; NON dichiarare che l'esempio iniziale sia il bootstrap approvato. Se non è possibile cambiare il codice prima del deploy, guidare l'owner a sostituirlo immediatamente e verificare che nessun POST sia accettato.
+- [ ] **Azione proprietario da confermare**: creare solo `remura-tv-webhook-test` nella Dashboard Cloudflare, senza collegare GitHub, D1, Secrets, custom routes, ingest o altri servizi. Preferire il codice inerte al primo deploy se l'interfaccia lo consente; registrare screenshot dopo il salvataggio, senza credenziali. La creazione non è stata eseguita da questa sessione, che dispone di accesso GitHub ma non di scrittura Cloudflare.
+- [ ] Solo dopo verifica dell'identità del nuovo Worker esistente: considerare token per-Worker Editor e rate limiter TEST con nuova autorizzazione specifica. **Non confondere il consenso di creazione col permesso di attivare webhook o dati live**.
+- [x] Piano Workers Free e D1 distinti acquisiti, il monitor `main` v0.8.14 non modificato, PR #102 sempre DRAFT, nessun deploy/merge effettuato in questo aggiornamento.
 
 ## CHECKPOINT v0.8.25 — WORKER BOOTSTRAP INERTE E RUOLI GRANULARI — 13/11/2026, ore 16:34 CET
 - [x] Partito solo dal checkpoint v0.8.24 già verificato e PR #102 **OPEN/DRAFT**; nessun vecchio audit o 403 ripetuto; `main` monitor giornaliero v0.8.14, Workers Free $0 e due D1 UE restano checkpoint acquisiti.
