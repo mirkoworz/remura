@@ -64,8 +64,8 @@
   byId("clear").addEventListener("click", clear);
   byId("generate").addEventListener("click", async () => {
     clear();
-    if (!globalThis.isSecureContext || !crypto?.getRandomValues || !crypto?.subtle ||
-        !globalThis.TextEncoder || !globalThis.btoa) {
+    if (!globalThis.isSecureContext || !globalThis.crypto?.getRandomValues ||
+        !globalThis.crypto?.subtle || !globalThis.TextEncoder || !globalThis.btoa) {
       status.textContent = "Browser non sicuro o Web Crypto non disponibile. Nessun token creato.";
       return;
     }
