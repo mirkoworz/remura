@@ -1,4 +1,4 @@
-# REMURA Cloudflare D1 audit LAB v0.3 — aggiornamento 12/11/2026 ore 23:40 CET
+# REMURA Cloudflare D1 audit LAB v0.4 — aggiornamento 13/11/2026 ore 06:47 CET
 # Solo branch PR #102; test offline sempre, API solo read-only con secret configurati.
 # Nessun deploy, nessuna query SQL di scrittura, nessun webhook o segreto nel repository.
 name: REMURA Cloudflare D1 READ-ONLY Lab
@@ -13,6 +13,8 @@ on:
       - "tradingview/delta-peaks/gateway-lab/test_cloudflare_d1_readonly_audit.py"
       - "tradingview/delta-peaks/gateway-lab/synthetic_cleanup_plan_v1.py"
       - "tradingview/delta-peaks/gateway-lab/test_synthetic_cleanup_plan_v1.py"
+      - "tradingview/delta-peaks/gateway-lab/cloudflare_d1_storage_guard.py"
+      - "tradingview/delta-peaks/gateway-lab/test_cloudflare_d1_storage_guard.py"
   workflow_dispatch:
 
 permissions:
@@ -35,8 +37,10 @@ jobs:
         run: python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p "test_cloudflare_d1_readonly_audit.py" -v
       - name: Prova offline pulizia strettamente sintetica (solo SQLite in-memory)
         run: python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p "test_synthetic_cleanup_plan_v1.py" -v
+      - name: Verifica offline soglie storage D1 Free senza rete
+        run: python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p "test_cloudflare_d1_storage_guard.py" -v
       - name: Controllo sintassi
-        run: python3 -m py_compile tradingview/delta-peaks/gateway-lab/cloudflare_d1_readonly_audit.py tradingview/delta-peaks/gateway-lab/synthetic_cleanup_plan_v1.py
+        run: python3 -m py_compile tradingview/delta-peaks/gateway-lab/cloudflare_d1_readonly_audit.py tradingview/delta-peaks/gateway-lab/synthetic_cleanup_plan_v1.py tradingview/delta-peaks/gateway-lab/cloudflare_d1_storage_guard.py
 
   cloudflare-readonly:
     needs: offline-safety
@@ -61,3 +65,4 @@ jobs:
             exit 0
           fi
           python3 tradingview/delta-peaks/gateway-lab/cloudflare_d1_readonly_audit.py
+          python3 tradingview/delta-peaks/gateway-lab/cloudflare_d1_storage_guard.py
