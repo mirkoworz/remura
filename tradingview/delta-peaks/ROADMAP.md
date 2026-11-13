@@ -1,6 +1,17 @@
-# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.11-doc (Worker runtime v0.8.5, sorgente v0.8.6 offline)
-**Aggiornamento roadmap: 13/11/2026, ore 10:01 CET**
+# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.12-doc (Worker runtime v0.8.5, sorgente v0.8.6 offline)
+**Aggiornamento roadmap: 13/11/2026, ore 10:12 CET**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView OFF, nessun ordine.**
+
+## CHECKPOINT MONITOR UNIFICATO FREE D1 + WORKERS — 13/11/2026 ore 10:12 CET
+- [x] Fonti ufficiali Cloudflare: `workersInvocationsAdaptive` GraphQL con `sum.requests`, `sum.errors`, `quantiles.cpuTimeP99`, richiedendo solo il token **Account Analytics Read** esistente. Il dato è adattivo/stimato, non fatturazione esatta. Workers Free 100.000 req/die e 10ms CPU per singola invocazione.
+- [x] Implementato `cloudflare_workers_usage_guard.py` v0.2: riepilogo account-wide da mezzanotte UTC, campione max 1.000 righe; risposta vuota/troncata non può essere presentata come zero/sicura; P99 mancante viene riportato come sconosciuto, non zero. Nessuna credenziale nei log.
+- [x] **Prima prova reale Workers** [run #43398573498](https://github.com/mirkoworz/remura/actions/runs/43398573498): 100 richieste stimate, 0 errori stimati, 1 Worker rappresentato dai gruppi ritornati, massimo P99 osservato 3.080µs. **Non dimostra un consumo esatto/account completo né la conformità CPU di tutte le chiamate**.
+- [x] **Monitor combinato** workflow `.github/workflows/remura-tv-account-analytics-readonly.yml` v0.4: query D1 Analytics + Workers Analytics + file_size D1 TEST; scrive resoconto sanitized nel `GITHUB_STEP_SUMMARY`. Protezione da valori assenti e nessun logging secret.
+- [x] [Run #43399020915](https://github.com/mirkoworz/remura/actions/runs/43399020915): **63/63 test offline** (20 account D1 + 17 Workers + 13 D1 TEST storage + 13 report); job remoto SUCCESS: stime D1 `1 read, 0 write`, Workers `101 richieste, 0 errori`, DB TEST `28.672 byte`, `REMURA_BUDGET_REPORT=GENERATED_NO_SECRETS`.
+- [x] Ulteriore prova verde dopo fix `cpuTimeP99=None` senza inventare zero: [run #43399187515](https://github.com/mirkoworz/remura/actions/runs/43399187515).
+- [x] README `gateway-lab/README.md` aggiornato a v0.8.12-doc. Sorgente Worker v0.8.6 solo GitHub, runtime online v0.8.5, ingest non abilitato da noi.
+- [ ] **Non schedulato giornalmente**: il workflow nel branch DRAFT funziona su push mirati e `workflow_dispatch`. GitHub `schedule` sul branch research non viene eseguito: serve un orchestratore minimo separato nel ramo default solo con permessi `contents:read` e senza deploy, da autorizzare esplicitamente, oppure una schedulazione esterna idonea.
+- [ ] Rimangono non verificati: fatturazione e piano Cloudflare reali, protezione edge/403 del Worker, spazio complessivo D1 e disponibilità/costi rate limiting binding Free. Nessuna modifica a `main`, nessun webhook, ordine, SQL write, merge PR #102 o filoni A/B/C.
 
 ## CHECKPOINT ANALYTICS ACCOUNT-WIDE REALI RIUSCITE — 13/11/2026 ore 10:01 CET
 - [x] Utente ha confermato inserimento nel GitHub Secret `REMURA_CF_ANALYTICS_READ_TOKEN` del token Cloudflare separato **Account Analytics → Read**. Non vengono richieste modifiche ai precedenti token D1 Read.
