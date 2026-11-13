@@ -58,11 +58,14 @@ def assessment(reads: int, writes: int) -> str:
 def parse_analytics(payload: object, day: str) -> tuple[int, int] | None:
     if not isinstance(payload, dict) or payload.get("errors"):
         raise AuditError("graphql_errors_or_invalid_response")
-    viewer = payload.get("data", {}).get("viewer")
+    data = payload.get("data")
+    if not isinstance(data, dict):
+        raise AuditError("graphql_data_missing")
+    viewer = data.get("viewer")
     if not isinstance(viewer, dict):
         raise AuditError("graphql_viewer_missing")
     accounts = viewer.get("accounts")
-    if not isinstance(accounts, list) or len(accounts) != 1:
+    if not isinstance(accounts, list) or len(accounts) != 1 or not isinstance(accounts[0], dict):
         raise AuditError("graphql_account_count_mismatch")
     groups = accounts[0].get("d1AnalyticsAdaptiveGroups")
     if not isinstance(groups, list) or len(groups) > 10:
