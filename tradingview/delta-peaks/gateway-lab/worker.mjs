@@ -1,5 +1,6 @@
-// REMURA GATEWAY LAB v0.8.5 — aggiornamento 12/11/2026 10:51 CET
-// Patch TypeScript Cloudflare editor: ignoreBOM esplicito; stessa semantica decoder.
+// REMURA GATEWAY LAB v0.8.6 (SOLO GITHUB, NO DEPLOY) — aggiornamento 13/11/2026 06:35 CET
+// Guard rail prima di D1: binding obbligatorio INGEST_RATE_LIMITER quando ingest è ON.
+// Receiver LIVE Cloudflare resta v0.8.5, disabilitato.
 // Il deploy è ancora a cura dell'utente: ingest disattivato di default.
 // Ricevitore Cloudflare Worker + D1. Fail-closed per configurazione predefinita.
 // Ingresso SOLO da TradingView su IP documentati + token segreto nell'URL HTTPS.
@@ -203,14 +204,16 @@ function reply(status, code, extra = {}) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    // /health non deve mai dire accepting:true se manca un prerequisito.
+    const configured = env?.INGEST_ENABLED === "true" &&
+      typeof env?.TELEMETRY_DB?.prepare === "function" &&
+      typeof env?.INGEST_RATE_LIMITER?.limit === "function" &&
+      /^[0-9a-f]{64}$/.test(env?.WEBHOOK_TOKEN_SHA256 ?? "");
     if (request.method === "GET" && url.pathname === "/health")
-      return reply(200, "lab_only", { accepting: env?.INGEST_ENABLED === "true" });
+      return reply(200, "lab_only", { accepting: configured });
 
-    // Configurazione fail-closed. Senza D1 e segreto non si accetta nulla.
-    if (env?.INGEST_ENABLED !== "true" ||
-      !env?.TELEMETRY_DB?.prepare ||
-      !/^[0-9a-f]{64}$/.test(env?.WEBHOOK_TOKEN_SHA256 ?? ""))
-      return reply(503, "disabled");
+    // Fail-closed: anche con INGEST_ENABLED=true, senza limiter si rifiuta.
+    if (!configured) return reply(503, "disabled");
     if (request.method !== "POST") return reply(404, "not_found");
     const match = url.pathname.match(/^\/ingest\/([A-Za-z0-9_-]{32,128})$/);
     if (!match || url.search) return reply(404, "not_found");
@@ -223,6 +226,16 @@ export default {
     if (!authorized) return reply(403, "not_authorized");
     if (!/^application\/json(?:\s*;|$)/i.test(request.headers.get("content-type") ?? ""))
       return reply(415, "json_required");
+
+    // Limite approssimativo per il flusso autorizzato PRIMA di consumare D1.
+    // Il binding usa una namespace dedicata e un budget configurato a 20/60s;
+    // non protegge dalle richieste anonime che già consumano Worker CPU/quota.
+    try {
+      const decision = await env.INGEST_RATE_LIMITER.limit({ key: "remura-tv-fxcm-eurusd-m5" });
+      if (decision?.success !== true) return reply(429, "rate_limited");
+    } catch {
+      return reply(503, "limiter_unavailable");
+    }
 
     try {
       const rawJson = await readBoundedText(request);
