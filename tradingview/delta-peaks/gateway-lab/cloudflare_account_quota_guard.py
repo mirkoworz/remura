@@ -86,10 +86,9 @@ def parse_analytics(payload: object, day: str) -> tuple[int, int] | None:
         seen.add(database_id)
         for label in ("rowsRead", "rowsWritten"):
             val = counts.get(label)
-            if (not isinstance(val, (int, float)) or isinstance(val, bool)
-                    or not math.isfinite(val) or val < 0 or not val.is_integer()
-                    if isinstance(val, float) else
-                    type(val) is not int or val < 0):
+            if (type(val) not in (int, float)
+                    or not math.isfinite(val) or val < 0
+                    or (type(val) is float and not val.is_integer())):
                 raise AuditError("graphql_invalid_counter")
         reads += int(counts["rowsRead"])
         writes += int(counts["rowsWritten"])
