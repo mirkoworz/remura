@@ -1,0 +1,97 @@
+# REMURA v0.8.13 — DAILY FREE BUDGET (read-only) — 13/11/2026, ore 11:13 CET
+# ISOLATED DEFAULT-BRANCH SCHEDULER; no merge PR #102, deploy, D1 SQL writes or orders.
+# Pinned audited research commit: scripts cannot change when research branch updates.
+name: REMURA Cloudflare Free Budget DAILY (read-only)
+
+on:
+  schedule:
+    - cron: '37 8 * * *'
+      timezone: 'Europe/Rome'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/remura-cloudflare-budget-daily.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: remura-cf-budget-daily-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  budget-readonly:
+    if: github.repository == 'mirkoworz/remura' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout immutable reviewed monitoring commit (no credentials persisted)
+        uses: actions/checkout@v4
+        with:
+          ref: '1e3c38b772df01b0e66679f0e727ffcdbf83c80a'
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Confirm only known offline safety tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          for suite in test_cloudflare_account_quota_guard.py test_cloudflare_workers_usage_guard.py test_cloudflare_d1_storage_guard.py test_readonly_budget_report.py; do
+            python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p "$suite" -q
+          done
+          python3 -m py_compile \
+            tradingview/delta-peaks/gateway-lab/cloudflare_account_quota_guard.py \
+            tradingview/delta-peaks/gateway-lab/cloudflare_workers_usage_guard.py \
+            tradingview/delta-peaks/gateway-lab/cloudflare_d1_storage_guard.py \
+            tradingview/delta-peaks/gateway-lab/readonly_budget_report.py
+
+      - name: Read-only Cloudflare daily quotas and generate safe GitHub summary
+        env:
+          REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+          REMURA_CF_ANALYTICS_READ_TOKEN: ${{ secrets.REMURA_CF_ANALYTICS_READ_TOKEN }}
+          REMURA_CF_D1_READ_TOKEN: ${{ secrets.REMURA_CF_D1_READ_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${REMURA_CF_ACCOUNT_ID:-}" || -z "${REMURA_CF_ANALYTICS_READ_TOKEN:-}" || -z "${REMURA_CF_D1_READ_TOKEN:-}" ]]; then
+            echo '::error::Uno o piu GitHub Secrets di sola lettura non sono configurati.'
+            echo 'REMURA_DAILY_BUDGET=INCOMPLETE_MISSING_SECRETS'
+            exit 1
+          fi
+          result=0
+          python3 tradingview/delta-peaks/gateway-lab/cloudflare_account_quota_guard.py \
+            | tee "$RUNNER_TEMP/remura-d1-daily.log" || result=1
+          python3 tradingview/delta-peaks/gateway-lab/cloudflare_workers_usage_guard.py \
+            | tee "$RUNNER_TEMP/remura-workers-daily.log" || result=1
+          python3 tradingview/delta-peaks/gateway-lab/cloudflare_d1_storage_guard.py \
+            | tee "$RUNNER_TEMP/remura-d1-test-storage.log" || result=1
+
+          python3 tradingview/delta-peaks/gateway-lab/readonly_budget_report.py \
+            "$RUNNER_TEMP/remura-d1-daily.log" \
+            "$RUNNER_TEMP/remura-workers-daily.log" \
+            "$RUNNER_TEMP/remura-d1-test-storage.log" || result=1
+
+          # UNKNOWN / missing data is not green; adaptive data is not exact billing.
+          if ! grep -qE '^REMURA_CF_ACCOUNT_QUOTA=(OK|WARNING|CRITICAL)$' "$RUNNER_TEMP/remura-d1-daily.log"; then
+            echo '::error::D1 Analytics non verificabile; controllare il report.'
+            result=1
+          fi
+          if ! grep -qE '^REMURA_CF_WORKERS_USAGE=(OK|WARNING|CRITICAL)$' "$RUNNER_TEMP/remura-workers-daily.log"; then
+            echo '::error::Workers Analytics non verificabile; controllare il report.'
+            result=1
+          fi
+          if ! grep -qE '^REMURA_D1_TEST_STORAGE=(OK|WARNING|CRITICAL)$' "$RUNNER_TEMP/remura-d1-test-storage.log"; then
+            echo '::error::D1 TEST storage non verificabile; controllare il report.'
+            result=1
+          fi
+          if grep -qE '^REMURA_(CF_ACCOUNT_QUOTA|CF_WORKERS_USAGE|D1_TEST_STORAGE)=WARNING$' \
+            "$RUNNER_TEMP/remura-d1-daily.log" "$RUNNER_TEMP/remura-workers-daily.log" "$RUNNER_TEMP/remura-d1-test-storage.log"; then
+            echo '::warning::REMURA vicino ad almeno una soglia gratuita.'
+          fi
+          if [[ "$result" -eq 0 ]]; then
+            echo 'REMURA_DAILY_BUDGET=READ_ONLY_COMPLETE'
+          else
+            echo 'REMURA_DAILY_BUDGET=INCOMPLETE_OR_CRITICAL'
+          fi
+          exit "$result"
