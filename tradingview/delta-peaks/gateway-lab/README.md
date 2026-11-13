@@ -1,6 +1,27 @@
-# REMURA — GATEWAY ISOLATO Cloudflare Worker + D1 (documentazione v0.8.10)
-**Versione/aggiornamento: documentazione v0.8.10 — 13/11/2026, ore 06:57 CET**
+# REMURA — GATEWAY ISOLATO Cloudflare Worker + D1 (documentazione v0.8.11)
+**Versione/aggiornamento: documentazione v0.8.11 — 13/11/2026, ore 10:01 CET**
 **Worker principale v0.8.5 distribuito MA FAIL-CLOSED. Il codice v0.8.6 è SOLO su GitHub, NON distribuito. PR #102 DRAFT, NO MERGE.**
+
+## Checkpoint credenziali Analytics e prime metriche REALI — 13/11/2026 ore 10:01 CET
+- [x] L'utente ha configurato in GitHub Secrets il token **Account Analytics → Read**
+  separato, denominato `REMURA_CF_ANALYTICS_READ_TOKEN`. Non è mai
+  stato copiato in chat o inserito nel repository.
+- [x] [Run GitHub #43397743147](https://github.com/mirkoworz/remura/actions/runs/43397743147):
+  test offline SUCCESS, job `account-analytics-readonly` SUCCESS;
+  codice `REMURA_CF_ACCOUNT_QUOTA=OK`.
+- [x] Cloudflare GraphQL ha restituito per il giorno UTC **2026-11-13**
+  la stima Analytics account-wide `rowsRead=1` e `rowsWritten=0`.
+  Limiti Free di riferimento 5.000.000 read e 100.000 write/giorno.
+  **Questi numeri non rappresentano contatori di billing esatti**
+  né comprovano che tutte le operazioni giornaliere siano zero:
+  il dataset è adattivo, potenzialmente ritardato.
+- [x] Nessuna nuova API di scrittura, deploy o accesso al database
+  prospettico `remura-tv-lab`; PR #102 ancora DRAFT.
+- [ ] Quote Workers (richieste/CPU), costo reale di Rate Limiting e
+  spazio complessivo D1 ancora da misurare.
+- [ ] Workflow Analytics su branch di ricerca: avvio su push mirati
+  o manualmente; **non** è ancora un monitoraggio giornaliero schedulato.
+  Non fare merge nel main per attivare il cron senza autorizzazione.
 
 ## Account Analytics quotidiane e Worker pubblico — checkpoint 13/11/2026
 ### Test Worker pubblico
