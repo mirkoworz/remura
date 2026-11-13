@@ -1,5 +1,20 @@
 # REMURA — Roadmap operativa unica
 
+## 13/11/2026 — BACKLOG FUTURO: SHARK NETWORK — sala analisti collaborativa (NON IMPLEMENTATO)
+
+**Stato:** idea approvata per sviluppo successivo; **nessuna implementazione, deploy, merge o modifica infrastrutturale in questa fase**. Modulo funzionale futuro collegato al **Track B** (validazione scientifica) e al **Track C** (dashboard/beta), non quarto filone di infrastruttura.
+
+- [ ] **Accessi Google selettivi:** consentire solo account approvati dall'ADMIN; definire ruoli `ADMIN`, `ANALISTA` e `VIEWER`. L'analista visualizza i dati autorizzati e può inserire/correggere esclusivamente i propri livelli; non può modificare impostazioni, strategie, configurazioni o motori di REMURA.
+- [ ] **Sala Analisti su iPhone/web:** form per coppia/strumento, prezzo/livello o zona, tipo di evidenza (picchi delta Daily/Weekly/Current Monthly/Previous Monthly, footprint, assorbimento ecc.), timeframe e sessione, fonte/feed/broker e contratto futures se pertinente, direzione/ipotesi, note e timestamp di osservazione. Tracciare autore, creazione, rettifiche e storico, distinguendo dato osservato e interpretazione.
+- [ ] **Ingest protetto e controllato:** API dedicata alla sola scrittura dei contributi degli analisti, con verifica identità **e autorizzazioni lato server**, validazione dei campi, limiti richieste, audit e blocco di interrogazioni/esecuzioni sulle API private; il browser non deve ricevere credenziali Oracle, D1 o servizi interni. Riutilizzare Cloudflare Worker + D1 ove opportuno, previa verifica quote e configurazione.
+- [ ] **Dati per REMURA, non segnali automatici:** livelli umani archiviati separatamente e marcati `sperimentali`; deduplicazione, scadenza/revisioni, controlli qualità e mappatura corretta futures CME ↔ prezzi forex/CFD (tick size, scadenza, feed e differenze prezzo). Non confondere livelli volumetrici con prove dirette di attività istituzionale.
+- [ ] **Validazione nel Track B:** test prospettici quando il prezzo raggiunge il livello, con timestamp realmente disponibili, confronto con baseline senza livelli umani, spread/slippage, rischio di look-ahead e metriche per analista, mercato e regime. Nessun peso nei verdetti di Squalincome o notifiche operative finché non emerge un vantaggio statistico riproducibile.
+- [ ] **Gate sicurezza/costi prima dello sviluppo:** controllare piano gratuito Cloudflare Access/Workers/D1 e volumi reali (scritture, letture, storage), autorizzazione alle fonti condivise, privacy/retention, revoca utenti e isolamento dei ruoli; nessun servizio a pagamento o aumento chiamate broker senza consenso.
+
+**Principio:** i collaboratori inviano solo i contributi necessari, non possono avviare elaborazioni né accedere all'infrastruttura. La dashboard può mostrare risultati precomputati; l'inserimento di livelli richiede inevitabilmente una richiesta autenticata al backend. Pianificare una realizzazione isolata con test e PR dedicate quando verrà data priorità a questo backlog.
+
+
+
 ## 04/11/2026 — DUE BINARI PARALLELI A/B, ROADMAP ATTIVA
 
 **Questo blocco è la fonte di stato corrente, mentre le sezioni datate 03/11 e precedenti sotto rimangono lo storico.** Il progetto non è bloccato da costi accertati: nessuna fattura aggiuntiva è stata verificata, ma i consumi reali su GitHub Actions/Oracle/Firestore/cTrader vanno periodicamente controllati. Si procede gratis ove possibile e si interrompe qualsiasi cambiamento che richieda pagamento senza consenso.
