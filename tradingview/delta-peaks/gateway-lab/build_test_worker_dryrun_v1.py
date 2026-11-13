@@ -15,7 +15,7 @@ from pathlib import Path
 import shutil
 import sys
 
-from predeploy_test_manifest_guard_v1 import verify_manifest
+from predeploy_test_manifest_guard_v1 import verify_manifest, ManifestError
 
 BASE = Path(__file__).resolve().parent
 EXAMPLE = BASE / "wrangler.webhook-test.EXAMPLE.json"
@@ -35,7 +35,11 @@ def make_bundle(outdir: Path, *, example_path: Path = EXAMPLE,
     if outdir.exists():
         raise DryRunError("destination_must_not_exist")
     template = json.loads(Path(example_path).read_text(encoding="utf-8"))
-    if verify_manifest(template) != "EXAMPLE_BLOCKED_BY_UNRESOLVED_IDS":
+    try:
+        source_status = verify_manifest(template)
+    except ManifestError:
+        raise DryRunError("source_template_invalid") from None
+    if source_status != "EXAMPLE_BLOCKED_BY_UNRESOLVED_IDS":
         raise DryRunError("source_template_must_remain_blocked")
     materialized = dict(template)
     materialized.pop("$comment")
@@ -46,7 +50,11 @@ def make_bundle(outdir: Path, *, example_path: Path = EXAMPLE,
     materialized["d1_databases"][0]["database_id"] = FAKE_TEST_UUID
     materialized["ratelimits"][0]["namespace_id"] = FAKE_LIMITER_NAMESPACE
     guarded = dict(materialized, **{"$comment": template["$comment"]})
-    if verify_manifest(guarded) != "STRUCTURALLY_READY_OFFLINE_ONLY":
+    try:
+        generated_status = verify_manifest(guarded)
+    except ManifestError:
+        raise DryRunError("generated_synthetic_manifest_invalid") from None
+    if generated_status != "STRUCTURALLY_READY_OFFLINE_ONLY":
         raise DryRunError("generated_synthetic_manifest_invalid")
     if materialized["name"] != EXPECTED_WORKER or materialized["vars"] != {
         "INGEST_ENABLED": "false"
