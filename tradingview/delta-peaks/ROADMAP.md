@@ -1,6 +1,15 @@
-# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.23-doc (Worker Production noto v0.8.5, gateway sorgente v0.8.6 offline)
-**Aggiornamento roadmap: 13/11/2026, ore 15:34 CET — Wrangler build TEST solo sintetico, no deploy**
+# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.24-doc (Worker Production noto v0.8.5, gateway sorgente v0.8.6 offline)
+**Aggiornamento roadmap: 13/11/2026, ore 15:54 CET — Workers Free verificato in UI**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView OFF, nessun ordine.**
+
+## CHECKPOINT v0.8.24 — PIANO WORKERS FREE REALE VERIFICATO — 13/11/2026, ore 15:54 CET
+- [x] Acquisito screenshot utente Cloudflare → Compute → **Workers plans**: piano **Free $0**, pulsante **Current plan** disattivato sulla scheda Free, piano Paid **$5/month + usage** con opzione di upgrade; **Workers Free è il piano attuale dell'account alla data dello screenshot**, non una semplice pagina prezzi generica. Nessun clic su Upgrade o Change.
+- [x] **Risolto blocco precedente "piano effettivo sconosciuto"** per Workers. Rimangono non accertati eventuali altri servizi/prodotti a pagamento, situazione delle fatture, disponibilità del Rate Limiting binding nell'account, contatori CPU reali per POST, numero di Worker e consumi condivisi. NON affermare "tutti i servizi Cloudflare sono gratis" né "fattura zero" sulla base della sola schermata Workers.
+- [x] Limiti da documentazione ufficiale Cloudflare Workers Free verificata al 13/11/2026: **100.000 request/giorno/account**, **10 ms CPU/invocazione**, **100 Worker/account**; condizioni diverse per risorse esterne. Sforare quote Free può produrre errori/interruzioni e non deve essere presentato come capacità illimitata. Fonte: https://developers.cloudflare.com/workers/platform/limits/ e https://developers.cloudflare.com/workers/platform/pricing/
+- [x] Rate Limiting API Cloudflare documentata con `namespace_id` univoco, `simple.limit` e `simple.period`, conteggi approssimativi per località e soggetti a overshoot; la documentazione non costituisce conferma di **binding attivo/reale sul Worker TEST**. https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
+- [x] Monitor GitHub `main` v0.8.14 con avvisi Free già attivo e verificato al checkpoint precedente; **nessuna modifica a main**, nessuna duplicazione dei monitor; la prossima esecuzione cron effettiva va verificata dopo 14/11 ore 08:37 CET.
+- [ ] Prossimo gate: autorizzazione separata del primo **solo deploy TEST con ingest OFF**; prima preparare permesso Cloudflare minimo per **nuovo Worker TEST**, vero binding `TELEMETRY_DB → remura-tv-lab-test`, Rate Limiting e Secret TEST distinto, confermandoli senza usare l'URL Worker Production. Non eseguire deploy, POST reali o accendere TradingView da questa chat senza consenso separato. La compilazione `--dry-run` v0.8.23 era sintetica, non prova dei binding live.
+- [x] D1 principale e record sintetico TEST immutati, Worker Production invariato, PR #102 DRAFT/OPEN, nessun segreto condiviso, nessun upgrade/servizio a pagamento, nessun trade, filoni A/B/C non toccati.
 
 ## CHECKPOINT v0.8.23 — REAL WRANGLER DRY-RUN, ZERO DEPLOY — 13/11/2026, ore 15:34 CET
 - [x] Ripresa dal checkpoint v0.8.22 PR #102 DRAFT/OPEN; nessuna sonda pubblica 403 ripetuta, nessun altro test di lettura D1 reale eseguito (identità D1 TEST già verificata).
