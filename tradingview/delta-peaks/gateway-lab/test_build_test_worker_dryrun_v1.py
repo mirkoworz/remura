@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# REMURA v0.8.23 TEST — 13/11/2026, 15:28:19 Europe/Rome
+# REMURA v0.8.31 TEST — 13/11/2026, ore 21:07 CET
 # Pure temporary local files. No npm, Cloudflare, network or deploy.
 from __future__ import annotations
 import copy
@@ -22,6 +22,9 @@ class TestSyntheticDryRun(unittest.TestCase):
             cfg = json.loads(config_path.read_text(encoding="utf-8"))
             self.assertEqual(cfg["name"], "remura-tv-webhook-test")
             self.assertEqual(cfg["vars"], {"INGEST_ENABLED": "false"})
+            self.assertIs(cfg["preview_urls"], False)
+            self.assertNotIn("routes", cfg)
+            self.assertNotIn("route", cfg)
             self.assertEqual(cfg["d1_databases"][0]["database_name"],
                              "remura-tv-lab-test")
             self.assertEqual(cfg["d1_databases"][0]["database_id"], FAKE_TEST_UUID)
