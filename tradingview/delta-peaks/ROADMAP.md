@@ -1,6 +1,16 @@
-# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.7-doc (Worker runtime v0.8.5)
-**Aggiornamento roadmap: 12/11/2026, ore 23:43 CET**
+# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.8-doc (Worker runtime v0.8.5, sorgente v0.8.6 offline)
+**Aggiornamento roadmap: 13/11/2026, ore 06:38 CET**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView OFF, nessun ordine.**
+
+## CHECKPOINT 2FA + LIMITER v0.8.6 OFFLINE — 13/11/2026, ore 06:38 CET
+- [x] Utente conferma **2FA TradingView attiva** (13/11/2026); non ripetere richiesta né chiedere codici.
+- [x] Verificata limitazione `workers.dev`: appartiene alla zona Cloudflare gestita, regole WAF del proprio dominio **non si applicano automaticamente**. Rate Limiting Workers disponibile a livello API binding, ma soglie **approssimative per Cloudflare location**, non garantiscono limite globale; costi/disponibilità account Free ancora da verificare.
+- [x] Preparata SOLO nel branch PR #102 sorgente **gateway v0.8.6**, ancora NON distribuita: richiede `INGEST_RATE_LIMITER.limit()` presente prima di qualunque ingest; se assente, risponde 503, `/health.accepting=false` anche qualora INGEST_ENABLED=true.
+- [x] Blocco rate limit applicato dopo controllo IP/token e prima di D1; oltre soglia 429, errore limiter 503; nessuna scrittura in Cloudflare, nessun deploy.
+- [x] Aggiornati test Node con regressioni per missing binding, risposta health, rejection/throw, no write e IP non autorizzato. [CI](https://github.com/mirkoworz/remura/actions/runs/43373136227) verde sul commit del gateway+test, senza webhook live.
+- [x] Guida gateway aggiornata a **v0.8.8-doc** con esempio NON attivo di binding e costi da verificare.
+- [ ] Preflight prima del vero utilizzo: verifica effettiva tariffazione/rate-limit binding nel tuo account Free, identificatore namespace univoco, possibilità di configurazione sicura con risorse già in uso, test end-to-end autorizzati, protezione traffico anonimo su workers.dev, quote/latency/CPU reali.
+- [ ] Non aggiungere `INGEST_ENABLED=true`, non distribuire il Worker v0.8.6, non toccare altri Worker, D1 principale, filoni A/B/C. PR #102 deve rimanere DRAFT.
 
 ## CHECKPOINT AUDIT IP TRADINGVIEW E QUOTE — 12/11/2026 ore 23:43 CET
 - [x] Confrontate le quattro IPv4 allowlisted nel `worker.mjs` v0.8.5 con la [guida webhook TradingView](https://it.tradingview.com/support/solutions/43000529348/): corrispondono all'elenco ufficiale (12/11/2026).
