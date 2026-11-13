@@ -1,6 +1,6 @@
-# REMURA v0.8.14 — DAILY FREE BUDGET (read-only) — 13/11/2026, ore 12:51 CET
+# REMURA v0.8.14 — DAILY FREE BUDGET (read-only) — 13/11/2026, ore 12:54 CET
 # ISOLATED DEFAULT-BRANCH SCHEDULER; no merge PR #102, deploy, D1 SQL writes or orders.
-# Pinned audited research commit: 85/85 offline tests and Cloudflare read-only run #43414271846 succeeded.
+# Pinned audited research commit: 85 offline tests + real Cloudflare inventory run 43414271846 verified.
 name: REMURA Cloudflare Free Budget DAILY (read-only)
 
 on:
@@ -89,32 +89,12 @@ jobs:
             echo '::error::D1 TEST storage non verificabile; controllare il report.'
             result=1
           fi
-          if ! grep -qE '^REMURA_D1_ACCOUNT_STORAGE=(OK|WARNING|CRITICAL)
-            "$RUNNER_TEMP/remura-d1-daily.log" "$RUNNER_TEMP/remura-workers-daily.log" "$RUNNER_TEMP/remura-d1-test-storage.log" "$RUNNER_TEMP/remura-d1-account-storage.log"; then
-            echo '::warning::REMURA vicino ad almeno una soglia gratuita.'
-          fi
-          if [[ "$result" -eq 0 ]]; then
-            echo 'REMURA_DAILY_BUDGET=READ_ONLY_COMPLETE'
-          else
-            echo 'REMURA_DAILY_BUDGET=INCOMPLETE_OR_CRITICAL'
-          fi
-          exit "$result"
- "$RUNNER_TEMP/remura-d1-account-storage.log"; then
+          if ! grep -qE '^REMURA_D1_ACCOUNT_STORAGE=(OK|WARNING|CRITICAL)$' "$RUNNER_TEMP/remura-d1-account-storage.log"; then
             echo '::error::D1 account metadata non verificabili; controllare il report.'
             result=1
           fi
-          if grep -qE '^REMURA_(CF_ACCOUNT_QUOTA|CF_WORKERS_USAGE|D1_TEST_STORAGE|D1_ACCOUNT_STORAGE)=WARNING
-            "$RUNNER_TEMP/remura-d1-daily.log" "$RUNNER_TEMP/remura-workers-daily.log" "$RUNNER_TEMP/remura-d1-test-storage.log"; then
-            echo '::warning::REMURA vicino ad almeno una soglia gratuita.'
-          fi
-          if [[ "$result" -eq 0 ]]; then
-            echo 'REMURA_DAILY_BUDGET=READ_ONLY_COMPLETE'
-          else
-            echo 'REMURA_DAILY_BUDGET=INCOMPLETE_OR_CRITICAL'
-          fi
-          exit "$result"
- \
-            "$RUNNER_TEMP/remura-d1-daily.log" "$RUNNER_TEMP/remura-workers-daily.log" "$RUNNER_TEMP/remura-d1-test-storage.log"; then
+          if grep -qE '^REMURA_(CF_ACCOUNT_QUOTA|CF_WORKERS_USAGE|D1_TEST_STORAGE|D1_ACCOUNT_STORAGE)=WARNING$' \
+            "$RUNNER_TEMP/remura-d1-daily.log" "$RUNNER_TEMP/remura-workers-daily.log" "$RUNNER_TEMP/remura-d1-test-storage.log" "$RUNNER_TEMP/remura-d1-account-storage.log"; then
             echo '::warning::REMURA vicino ad almeno una soglia gratuita.'
           fi
           if [[ "$result" -eq 0 ]]; then
