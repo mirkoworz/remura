@@ -1,6 +1,18 @@
-# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.12-doc (Worker runtime v0.8.5, sorgente v0.8.6 offline)
-**Aggiornamento roadmap: 13/11/2026, ore 10:12 CET**
+# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.13-doc (Worker runtime v0.8.5, sorgente v0.8.6 offline)
+**Aggiornamento roadmap: 13/11/2026, ore 11:15 CET**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView OFF, nessun ordine.**
+
+## CHECKPOINT MONITOR GIORNALIERO ATTIVO IN MAIN — 13/11/2026, ore 11:15 CET
+- [x] Utente ha autorizzato esplicitamente un **minimo workflow quotidiano di sola lettura** in `main`, isolato dalla PR #102; nessun merge della PR o deploy Cloudflare.
+- [x] Creato solo `.github/workflows/remura-cloudflare-budget-daily.yml` su `main`, **REMURA v0.8.13**, [commit `3443c1e5`](https://github.com/mirkoworz/remura/commit/3443c1e521849c6e956d31d4028ce1ef06963db1). Esecuzione programmata **08:37 Europe/Rome ogni giorno**, con `workflow_dispatch` e `push` limitato alla modifica del solo file workflow. GitHub può ritardare o saltare esecuzioni sotto carico; non dichiarare consegna garantita.
+- [x] Workflow con `permissions: contents:read`, checkout `persist-credentials:false` di codice read-only da **commit fisso e immutabile** `1e3c38b772df01b0e66679f0e727ffcdbf83c80a`, timeout 5 min. Nessun `git push`, SQL D1 Write, deploy Worker, webhook, merge o ordini; token GitHub Secrets mai stampati.
+- [x] Esegue ogni volta **63 test offline**, poi metriche effettivamente interpellate via Account Analytics Read (Workers e D1 giornalieri) + D1 Read (metadati solo DB TEST); genera `GITHUB_STEP_SUMMARY` con valori disponibili/UNKNOWN. Mancanza secrets o stato non verificabile = job failure; `WARNING` a 70%, `CRITICAL` a 90% delle soglie calcolate. P99 CPU non fatturazione esatta.
+- [x] [Prima esecuzione su `main` #43407561296](https://github.com/mirkoworz/remura/actions/runs/43407561296) SUCCESS, `REMURA_DAILY_BUDGET=READ_ONLY_COMPLETE`; stime 13/11/2026: **111 richieste Workers, 0 errori, D1 1 read/0 write**, dimensione reale D1 TEST **28.672 byte**. NON contatori billing esatti né prova di tutte le risorse account senza spese.
+- [x] Il commit `main` ha attivato anche workflow esistenti (GitHub Pages build/deployment, price checks, insights checks); tutti osservati **SUCCESS**. Nessun file UI/applicativo modificato: il rebuild automatico di GitHub Pages è effetto collaterale del commit `main`, NON un deploy Worker o merge della PR #102.
+- [ ] Prima esecuzione da `schedule` attesa **14/11/2026, verso le 08:37 Europe/Rome**; l'esito cron non è ancora verificabile. Il semplice risultato SUCCESS del push non prova che l'evento `schedule` venga attivato domani. Monitor consultabile tramite GitHub Actions; nessuna email/Telegram di allerta automaticamente configurata.
+- [ ] Versioni future di script PR #102 **non entreranno** nel monitor schedulato senza un nuovo pin SHA testato e intervento deliberato su `main`.
+- [ ] Restano non verificati: piano/costi billing esatti, Workers edge 403/403 da runner GitHub, protezione rate limiter reale, spazio aggregato tutti D1. Ingest OFF da ultimo checkpoint attendibile; non autorizzare webhook/ordini da stato monitor verde.
+- [x] PR #102 resta OPEN/DRAFT, branch di ricerca indipendente, nessun tocco ai filoni A/B/C.
 
 ## CHECKPOINT MONITOR UNIFICATO FREE D1 + WORKERS — 13/11/2026 ore 10:12 CET
 - [x] Fonti ufficiali Cloudflare: `workersInvocationsAdaptive` GraphQL con `sum.requests`, `sum.errors`, `quantiles.cpuTimeP99`, richiedendo solo il token **Account Analytics Read** esistente. Il dato è adattivo/stimato, non fatturazione esatta. Workers Free 100.000 req/die e 10ms CPU per singola invocazione.
