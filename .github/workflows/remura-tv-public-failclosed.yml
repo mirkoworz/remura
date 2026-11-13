@@ -1,4 +1,4 @@
-# REMURA Public Worker Fail-Closed v0.1 — aggiornamento 13/11/2026 ore 06:50 CET
+# REMURA Public Worker Fail-Closed v0.2 — aggiornamento 13/11/2026 ore 06:51 CET
 # Solo 2 GET /health e / al gateway esistente, NO webhook, POST, secret, deploy.
 name: REMURA TV Public Fail-Closed LAB
 
@@ -28,7 +28,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Test offline: no POST, no token, strict fail-closed
+      - name: 'Test offline - no POST, no token, strict fail-closed'
         run: python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_worker_public_failclosed_audit.py' -v
-      - name: Public read-only probe: exactly two GET, abort if ingest enabled
+      - name: 'Public read-only probe - two GET, abort if ingest enabled'
         run: python3 tradingview/delta-peaks/gateway-lab/worker_public_failclosed_audit.py
