@@ -49,7 +49,8 @@ class PrepareOffTests(unittest.TestCase):
             self.assertEqual((account, token, suffix), (ACCOUNT, EDITOR, "/settings"))
             calls.append("TEST_SETTINGS")
             return worker() if settings is None else settings
-        with (patch.object(p, "api_request", side_effect=api),
+        with (patch.object(p, "require_account_id", return_value=ACCOUNT),
+              patch.object(p, "api_request", side_effect=api),
               patch.object(p, "api_get", side_effect=metadata)):
             cfg = p.verified_off_candidate(ACCOUNT, READ, EDITOR, TEMPLATE)
         return cfg, calls
@@ -93,8 +94,10 @@ class PrepareOffTests(unittest.TestCase):
                 self.build(d1=data)
 
     def test_rejects_missing_editor_token_without_api(self):
-        with patch.object(p, "api_request") as d1, patch.object(p, "api_get") as get:
-            with self.assertRaises(AuditError):
+        with (patch.object(p, "require_account_id", return_value=ACCOUNT),
+              patch.object(p, "api_request") as d1,
+              patch.object(p, "api_get") as get):
+            with self.assertRaisesRegex(AuditError, "editor_token_unavailable"):
                 p.verified_off_candidate(ACCOUNT, READ, "", TEMPLATE)
         d1.assert_not_called()
         get.assert_not_called()
