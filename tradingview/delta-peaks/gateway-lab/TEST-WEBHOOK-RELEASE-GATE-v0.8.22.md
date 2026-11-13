@@ -1,6 +1,13 @@
-# REMURA — TEST WEBHOOK RELEASE GATE v0.8.25 (NESSUN DEPLOY)
-**Aggiornamento: 13/11/2026, ore 16:33 CET**  
-**Sola documentazione e prove offline, PR #102 OPEN/DRAFT. Worker Production v0.8.5 non modificato.**
+# REMURA — TEST WEBHOOK RELEASE GATE v0.8.30 (BOOTSTRAP TEST DISTRIBUITO; INGEST OFF)
+**Aggiornamento: 13/11/2026, ore 20:48 CET**  
+**Bootstrap inerte TEST realmente distribuito, gateway completo NON distribuito. PR #102 OPEN/DRAFT; Worker Production v0.8.5 non modificato.**
+
+## Checkpoint v0.8.30 — bootstrap LIVE riuscito (13/11/2026 ore 20:45 CET)
+- [GitHub run #43495068875](https://github.com/mirkoworz/remura/actions/runs/43495068875) SUCCESS, con input manuale confermato, controlli offline, GET autenticato che ha letto **zero binding del TEST prima del deploy**, dry-run e successivo deploy Wrangler esclusivamente `remura-tv-webhook-test` con sorgente inerte pinned `6f7ae923261ca1bc0d1099188b1edfbe5c333d4a`.
+- Cloudflare `Uploaded` e `Deployed` realmente riusciti; ID versione `f5a43b49-f07f-404b-a9dd-4606a22afa3c`. URL workers.dev attivo `https://remura-tv-webhook-test.mirkoworz.workers.dev`. Test codice: `GET /health` risponde `accepting:false`, tutte le altre richieste incluse `POST /ingest` HTTP 503; **GET live esterno /health non ancora confermato separatamente**.
+- Avviso Wrangler: `preview_urls` non specificato → preview URL abilitati automaticamente. Valutare disattivazione per prossimo deploy e verificare prima che la configurazione del Worker TEST sia separata. **Non è autorizzata ingestione, collegamento D1 o attivazione TradingView**.
+- Il token dedicato ha superato lettura metadata e deploy del Worker selezionato, senza evidenza di privilegi sul Worker Production; il perimetro per-worker deriva dagli screenshot dei permessi Cloudflare `Specified Workers`, non da tentativi distruttivi su altri Worker.
+- **Due gate rimasti distinti:** (1) installare eventualmente gateway TEST `INGEST_ENABLED=false` con D1 TEST, Secret TEST e limiter dopo nuovo consenso; (2) abilitare temporaneamente ingest + alert TradingView per primo evento dopo altra autorizzazione e protezioni complete. Monitorare Free. Non cancellare dati TEST.
 
 ## Checkpoint bootstrap a privilegi minimi — 13/11/2026, ore 16:33 CET
 - **Nuova informazione documentale Cloudflare (Sep 2026):** la creazione di un Worker richiede ruolo `Admin` di prodotto Workers. Un token `Editor` limitato a **un singolo Worker** può fare deploy soltanto se quel Worker **esiste già**: https://developers.cloudflare.com/workers/authorization/workers/. NON autorizzare un token Workers Admin product-wide per automatizzare l'innocuo primo bootstrap del TEST.
