@@ -1,4 +1,4 @@
-# REMURA Worker PUBLIC FAIL-CLOSED AUDIT v0.2 — 13/11/2026 ore 06:52 CET
+# REMURA Worker PUBLIC FAIL-CLOSED AUDIT v0.3 — 13/11/2026 ore 06:56 CET
 # Solo 2 GET senza credenziali: /health e /, MAI POST /ingest né token URL.
 """Read-only verification that the deployed public TV LAB Worker remains disabled."""
 from __future__ import annotations
@@ -58,6 +58,17 @@ def validate_failclosed(health: tuple[int, dict], root: tuple[int, dict]) -> Non
         raise GatewayNotSafe("root_not_disabled")
 
 
+def classify_public_state(health: tuple[int, dict],
+                          root: tuple[int, dict]) -> str:
+    """403/403 = blocked probe, NOT confirmation of disabled ingest."""
+    if (health[0] == 403 and root[0] == 403
+            and health[1].get("accepting") is not True
+            and root[1].get("accepting") is not True):
+        return "INCONCLUSIVE_EDGE_403"
+    validate_failclosed(health, root)
+    return "VERIFIED_DISABLED"
+
+
 def main() -> int:
     try:
         health = fetch_public("/health")
@@ -79,10 +90,14 @@ def main() -> int:
         print("REMURA_PUBLIC_ROOT_STATUS=" +
               (root_status if root_status in ("lab_only", "disabled", "not_found")
                else "UNEXPECTED"))
-        validate_failclosed(health, root)
+        state = classify_public_state(health, root)
     except GatewayNotSafe as error:
         print("REMURA_TV_PUBLIC_FAILCLOSED=ERROR:" + str(error))
         return 1
+    if state == "INCONCLUSIVE_EDGE_403":
+        print("REMURA_TV_PUBLIC_FAILCLOSED=INCONCLUSIVE_EDGE_403")
+        print("INGEST_STATUS=NOT_VERIFIED; EXTERNAL_GET=DENIED; INGEST_POST=NOT_ATTEMPTED")
+        return 0
     print("REMURA_TV_PUBLIC_FAILCLOSED=VERIFIED")
     print("HEALTH=lab_only; ACCEPTING=false; ROOT=disabled; HTTP_METHOD=GET; INGEST_POST=NOT_ATTEMPTED")
     return 0
