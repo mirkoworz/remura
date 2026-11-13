@@ -1,7 +1,13 @@
-# REMURA — TEST WEBHOOK RELEASE GATE v0.8.31 (BOOTSTRAP TEST LIVE, GATEWAY OFF PREPARATO SOLO OFFLINE)
-**Aggiornamento: 13/11/2026, ore 21:01 CET**  
+# REMURA — TEST WEBHOOK RELEASE GATE v0.8.32 (BOOTSTRAP LIVE; ROLLBACK TEST MANUALE PRONTO)
+**Aggiornamento: 13/11/2026, ore 21:09 CET**  
 **Bootstrap inerte TEST realmente distribuito, gateway completo NON distribuito. PR #102 OPEN/DRAFT; Worker Production v0.8.5 non modificato.**
 
+## Checkpoint v0.8.32 — rollback TEST preparato, non eseguito
+- Workflow `.github/workflows/remura-tv-rollback-test-manual.yml` su `main`: azione esclusivamente manuale, owner `mirkoworz`, branch main, conferma a scelta `ROLLBACK_TEST_TO_BOOTSTRAP_OFF`, codice pinned `ac68fabf95a26ec9c62f4e2cd270661c32622578`. Concurrency serializzata con precedente workflow bootstrap. Creato e non avviato; **nessun deploy su Cloudflare in questa fase**.
+- Preflight `worker_rollback_preflight_v1.py` usa due GET autenticati per riconoscere bootstrap senza binding o gateway TEST con D1 TEST, limiter e `INGEST_ENABLED=false`, rifiutando configurazioni diverse. [GitHub CI #43498033946](https://github.com/mirkoworz/remura/actions/runs/43498033946) verde, 6 test mock aggiunti. Non è prova di rollback live.
+- Se autorizzato in futuro, il workflow distribuisce solo bootstrap inerte con `preview_urls:false` e richiede verifica metadata a zero binding. Il rollback **non supporta ancora** uno stato `INGEST_ENABLED=true` con Secret TEST: dovrà essere ampliato e testato **prima** di qualunque webhook reale e fase di emergenza.
+- Prossima fase: preparare il separato deploy gateway TEST `INGEST_ENABLED=false` e verificarne la compatibilità live del rate limiter, poi consenso ulteriore per una singola prova TradingView. Non eseguire da solo né `main` né PR.
+  
 ## Checkpoint v0.8.31 — verifica LIVE postdeploy + preparazione gateway OFF
 - **Control-plane reale**: [GitHub run #43496120098](https://github.com/mirkoworz/remura/actions/runs/43496120098) SUCCESS, GET API della versione esatta del bootstrap `f5a43b49-f07f-404b-a9dd-4606a22afa3c`, zero binding sia nella versione sia nelle impostazioni Worker TEST; **NON** prova 100% del traffico o `/health` pubblico. Nessun webhook.
 - **Futuro gateway TEST**: l'esempio `wrangler.webhook-test.EXAMPLE.json` è ancora intenzionalmente **non deployabile** (UUID e namespace segnaposto). Ora richiede `preview_urls:false`, `workers_dev:true`, `INGEST_ENABLED:false`, binding **solo D1 TEST** e limiter 20/60. [Wrangler dry-run #43496797754](https://github.com/mirkoworz/remura/actions/runs/43496797754) SUCCESS; nessun deploy.
