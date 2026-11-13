@@ -1,4 +1,4 @@
-# REMURA TradingView Telemetry LAB v0.8.32 — aggiornamento 13/11/2026 21:08 CET.
+# REMURA TradingView Telemetry LAB v0.8.33 — aggiornamento 13/11/2026 CET.
 # SOLO CI OFFLINE. Nessun deploy, webhook, credenziale o trade automatico.
 name: REMURA TradingView Telemetry LAB
 on:
@@ -41,6 +41,10 @@ jobs:
         run: |
           python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_worker_rollback_preflight_v1.py' -v
           python3 -m py_compile tradingview/delta-peaks/gateway-lab/worker_rollback_preflight_v1.py
+      - name: Ephemeral isolated gateway TEST OFF package (offline only)
+        run: |
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_prepare_test_off_bundle_v1.py' -v
+          python3 -m py_compile tradingview/delta-peaks/gateway-lab/prepare_test_off_bundle_v1.py
       - name: Offline rollback strict OFF-only gate (no Cloudflare)
         run: |
           python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_off_gateway_rollback_guard_v1.py' -v
