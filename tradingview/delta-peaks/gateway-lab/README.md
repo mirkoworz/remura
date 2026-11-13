@@ -1,6 +1,31 @@
-# REMURA — GATEWAY ISOLATO Cloudflare Worker + D1 (documentazione v0.8.8)
-**Versione/aggiornamento: documentazione v0.8.8 — 13/11/2026, ore 06:37 CET**
+# REMURA — GATEWAY ISOLATO Cloudflare Worker + D1 (documentazione v0.8.9)
+**Versione/aggiornamento: documentazione v0.8.9 — 13/11/2026, ore 06:44 CET**
 **Worker principale v0.8.5 distribuito MA FAIL-CLOSED. Il codice v0.8.6 è SOLO su GitHub, NON distribuito. PR #102 DRAFT, NO MERGE.**
+
+## D1 Free Storage — misurazione reale automatizzata 13/11/2026
+- Token esistente **Cloudflare D1 Read** in GitHub Secrets. Nessun nuovo
+  token e nessun accesso Workers Edit.
+- `cloudflare_d1_storage_guard.py` v0.1: Cloudflare
+  **GET** metadati `remura-tv-lab-test` (EU), controllo nome/giurisdizione/
+  UUID, dimensione `file_size` reale e soglie conservative 70% e 90%
+  dei 500 MB Free. Nessuna query o richiesta sul D1 prospettico.
+- [Run GitHub #43373867720](https://github.com/mirkoworz/remura/actions/runs/43373867720):
+  entrambi i job **SUCCESS**. D1 TEST misura **28.672 byte** su
+  **500.000.000 byte** stimati come limite Free, cioè **0,0057%**.
+  Log `REMURA_D1_TEST_STORAGE=OK`, `REMURA_D1_READONLY_AUDIT=record_verified`.
+- Suite offline: 21 regressioni audit + 13 cleanup in-memory +
+  **13 nuovi test storage** = **47 test** verdi. Nessuna scrittura
+  su Cloudflare, nessun deploy e nessun costo aggiuntivo autorizzato.
+- La quota **giornaliera condivisa** di letture/scritture D1 e il consumo
+  complessivo dei 2 DB **NON sono stati misurati**; non interpretarli come
+  0%. Per il secondo DB servirà autorizzare uno specifico controllo di
+  metadati prima di valutarne la dimensione reale. Workers requests/CPU
+  e Rate Limiting binding restano da verificare nel proprio account.
+- Le GitHub Actions in un **branch DRAFT** eseguono questi controlli
+  su push mirati e manualmente, non come monitoraggio autonomo
+  giornaliero: `schedule` opera sul branch default e non è stato attivato.
+- Documentazione API: https://developers.cloudflare.com/api/resources/d1/subresources/database/methods/get/
+  e https://developers.cloudflare.com/d1/platform/limits/ .
 
 ## Preflight RATE LIMITER v0.8.6 — 13/11/2026 (SOLO OFFLINE)
 - L'utente ha confermato 2FA TradingView **attiva** il 13/11/2026.
