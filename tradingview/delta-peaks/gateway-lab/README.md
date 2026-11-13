@@ -1,6 +1,52 @@
-# REMURA — GATEWAY ISOLATO Cloudflare Worker + D1 (documentazione v0.8.9)
-**Versione/aggiornamento: documentazione v0.8.9 — 13/11/2026, ore 06:44 CET**
+# REMURA — GATEWAY ISOLATO Cloudflare Worker + D1 (documentazione v0.8.10)
+**Versione/aggiornamento: documentazione v0.8.10 — 13/11/2026, ore 06:57 CET**
 **Worker principale v0.8.5 distribuito MA FAIL-CLOSED. Il codice v0.8.6 è SOLO su GitHub, NON distribuito. PR #102 DRAFT, NO MERGE.**
+
+## Account Analytics quotidiane e Worker pubblico — checkpoint 13/11/2026
+### Test Worker pubblico
+- Implementati `worker_public_failclosed_audit.py` v0.3, test offline
+  (**17/17**) e workflow [Public Fail-Closed](../../../../.github/workflows/remura-tv-public-failclosed.yml).
+  Il controllo **non invia POST, token o dati di mercato**: esegue solo
+  GET `/health` e GET `/` e confronta codice/stato/booleano.
+- [Run #43374850790](https://github.com/mirkoworz/remura/actions/runs/43374850790):
+  **17 test offline SUCCESS**; i due GET dal runner GitHub
+  restituiscono **HTTP 403 / HTTP 403**. Esito corretto:
+  `REMURA_TV_PUBLIC_FAILCLOSED=INCONCLUSIVE_EDGE_403`.
+  Il Worker **non è verificato come disattivato da GitHub**; l'accesso
+  esterno è bloccato, ma non sappiamo se la negazione provenga
+  da una configurazione di accesso Cloudflare oppure da altro. Questo
+  stato **NON** autorizza abilitazione ingest.
+- L'esito `INCONCLUSIVE` non è `VERIFIED`. La CI può essere verde
+  anche se la conclusione remota è inconcludente: leggere sempre
+  l'indicatore di risultato, non solo il colore GitHub.
+
+### Quote giornaliere D1 intero account — prerequisito non disponibile
+- Cloudflare espone metriche `rowsRead`/`rowsWritten`
+  sull'intero account tramite **GraphQL Analytics API**, dati
+  aggregati/adattivi e non misurazione live esatta dei consumi.
+- Lo scope necessario è **Account → Account Analytics → Read**;
+  il nostro token D1 Read attuale NON autorizza l'API Analytics.
+  Non cambiare i permessi del token esistente senza approvazione.
+- Pronto `cloudflare_account_quota_guard.py` v0.1 (20 test offline
+  verdi), più [workflow dedicato](../../../../.github/workflows/remura-tv-account-analytics-readonly.yml).
+  Legge la data UTC attuale e somma fino a 10 gruppi per DB dei
+  contatori D1 del giorno. Warning 70%, Critical 90% dei limiti
+  5.000.000 righe lette e 100.000 righe scritte al giorno.
+  `NO_DATA` = UNKNOWN, mai zero inventato; stime, non billing.
+- [Run #43375218853](https://github.com/mirkoworz/remura/actions/runs/43375218853):
+  **20 test offline SUCCESS**, job Analytics ha stampato
+  `SKIPPED_MISSING_ANALYTICS_READ_TOKEN`, cioè **nessun accesso
+  ad Analytics e NESSUNA quota giornaliera misurata**.
+- Un'eventuale attivazione richiederà un **nuovo token separato** con
+  solo Account Analytics Read salvato in GitHub Secret
+  `REMURA_CF_ANALYTICS_READ_TOKEN`, senza condividerlo in chat.
+  Nessun token nuovo è stato creato e nessuna API Analytics è stata
+  interrogata dal workflow fino a qui.
+- Riferimenti:
+  https://developers.cloudflare.com/d1/observability/metrics-analytics/
+  https://developers.cloudflare.com/analytics/graphql-api/getting-started/authentication/api-token-auth/
+  https://developers.cloudflare.com/d1/platform/pricing/
+- Nessun deploy, modifica a D1, merge o invio webhook in questo checkpoint.
 
 ## D1 Free Storage — misurazione reale automatizzata 13/11/2026
 - Token esistente **Cloudflare D1 Read** in GitHub Secrets. Nessun nuovo
