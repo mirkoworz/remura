@@ -5,7 +5,7 @@
 ## Account Analytics quotidiane e Worker pubblico — checkpoint 13/11/2026
 ### Test Worker pubblico
 - Implementati `worker_public_failclosed_audit.py` v0.3, test offline
-  (**17/17**) e workflow [Public Fail-Closed](../../../../.github/workflows/remura-tv-public-failclosed.yml).
+  (**17/17**) e workflow [Public Fail-Closed](../../../.github/workflows/remura-tv-public-failclosed.yml).
   Il controllo **non invia POST, token o dati di mercato**: esegue solo
   GET `/health` e GET `/` e confronta codice/stato/booleano.
 - [Run #43374850790](https://github.com/mirkoworz/remura/actions/runs/43374850790):
@@ -28,7 +28,7 @@
   il nostro token D1 Read attuale NON autorizza l'API Analytics.
   Non cambiare i permessi del token esistente senza approvazione.
 - Pronto `cloudflare_account_quota_guard.py` v0.1 (20 test offline
-  verdi), più [workflow dedicato](../../../../.github/workflows/remura-tv-account-analytics-readonly.yml).
+  verdi), più [workflow dedicato](../../../.github/workflows/remura-tv-account-analytics-readonly.yml).
   Legge la data UTC attuale e somma fino a 10 gruppi per DB dei
   contatori D1 del giorno. Warning 70%, Critical 90% dei limiti
   5.000.000 righe lette e 100.000 righe scritte al giorno.
