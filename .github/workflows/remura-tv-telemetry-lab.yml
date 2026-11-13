@@ -1,4 +1,4 @@
-# REMURA TradingView Telemetry LAB v0.8.27 — aggiornamento 13/11/2026 18:37 CET.
+# REMURA TradingView Telemetry LAB v0.8.31 — aggiornamento 13/11/2026 21:21 CET.
 # SOLO CI OFFLINE. Nessun deploy, webhook, credenziale o trade automatico.
 name: REMURA TradingView Telemetry LAB
 on:
@@ -37,6 +37,10 @@ jobs:
         run: python3 -m py_compile tradingview/delta-peaks/validate_telemetry_v1.py tradingview/delta-peaks/test_telemetry_v1.py tradingview/delta-peaks/outcome_audit_v1.py tradingview/delta-peaks/test_outcome_audit_v1.py tradingview/delta-peaks/quota_budget_v1.py tradingview/delta-peaks/test_quota_budget_v1.py tradingview/delta-peaks/remura_tv_bridge_preview_v1.py tradingview/delta-peaks/test_remura_tv_bridge_preview_v1.py tradingview/delta-peaks/test_offline_webhook_roundtrip_v1.py tradingview/delta-peaks/gateway-lab/d1_preview_reader_v1.py tradingview/delta-peaks/gateway-lab/test_d1_preview_reader_v1.py tradingview/delta-peaks/gateway-lab/predeploy_test_manifest_guard_v1.py tradingview/delta-peaks/gateway-lab/test_manifest_guard_v1.py
       - name: Node v22 test gateway Cloudflare D1 simulato (offline, senza pacchetti)
         run: node --test tradingview/delta-peaks/gateway-lab/worker.test.mjs
+      - name: Offline rollback strict OFF-only gate (no Cloudflare)
+        run: |
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_off_gateway_rollback_guard_v1.py' -v
+          python3 -m py_compile tradingview/delta-peaks/gateway-lab/off_gateway_rollback_guard_v1.py
       - name: Offline per-Worker bootstrap GET metadata preflight test
         run: |
           python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_bootstrap_settings_guard_v1.py' -v
