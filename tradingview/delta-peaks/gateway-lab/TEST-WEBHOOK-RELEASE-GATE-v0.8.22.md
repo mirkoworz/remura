@@ -1,6 +1,12 @@
-# REMURA — TEST WEBHOOK RELEASE GATE v0.8.22 (NESSUN DEPLOY)
-**Aggiornamento: 13/11/2026, ore 15:27 CET**  
+# REMURA — TEST WEBHOOK RELEASE GATE v0.8.23 (NESSUN DEPLOY)
+**Aggiornamento: 13/11/2026, ore 15:34 CET**  
 **Sola documentazione e prove offline, PR #102 OPEN/DRAFT. Worker Production v0.8.5 non modificato.**
+
+## Nuova prova non distruttiva (v0.8.23)
+- [Wrangler compile-only #43443677850](https://github.com/mirkoworz/remura/actions/runs/43443677850) SUCCESS: 5 test isolati più compilazione reale `wrangler@4.157.0 deploy --dry-run`; pacchetto 11,76 KiB (gzip 4,06 KiB). Non è avvenuto upload né deploy. Config TEST temporanea con D1 e rate limiter sintetici; account, Secrets, Worker Production e dati D1 non toccati.
+- Un primo test di eccezione del manifest aveva fallito e viene registrato correttamente; fix `1c6a783f` ha reso la prova fail-closed. **Questo non è un preflight finale di autorizzazione al deploy**.
+- Numero teorico di heartbeat EURUSD M5 = 288/24 h, pari a 0,288% delle 100k richieste giornaliere Free se fosse l'unico utilizzo. Non compresi ritrasmissioni, altri Worker e richieste anonime. **Piano Cloudflare, CPU e fatture effettive NON ancora verificati.**
+- Al prossimo rilascio reale, NON caricare la configurazione sintetica del dry-run: occorre generare separatamente il file di Worker TEST da identità D1 verificata nell'account, Secret separato, limiter univoco e autorizzazione esplicita. **Nessun token dev'essere incollato in chat.**
 
 ## Evidenze accertate
 - Cloudflare Worker **Production** `remura-tv-ingest-lab` è legato a D1 **PRINCIPALE**: `TELEMETRY_DB → remura-tv-lab`; confermato da screenshot dell'utente. **Mai usarlo come banco di prova**.
