@@ -122,6 +122,24 @@ class BridgeTests(unittest.TestCase):
         self.assertEqual(len(out["observations"]), 1)
         self.assertEqual(out["counts"]["DUPLICATE_SKIPPED"], 1)
 
+    def test_conflicting_duplicate_is_quarantined_not_a_cherry_picked_signal(self):
+        first = row()
+        second_payload = sample()
+        second_payload["ohlc"]["close"] = 1.1105
+        second = row(second_payload)
+        out = preview_export([first, second])
+        self.assertEqual(out["observations"], [])
+        self.assertEqual(out["counts"]["CONFLICTING_DUPLICATE_QUARANTINED"], 1)
+        self.assertEqual(out["counts"]["OBSERVATION_ONLY"], 0)
+
+    def test_conflict_remains_quarantined_after_more_duplicates(self):
+        a = row()
+        b_p = sample()
+        b_p["ohlc"]["close"] = 1.1105
+        out = preview_export([a, row(b_p), a])
+        self.assertEqual(out["observations"], [])
+        self.assertEqual(out["counts"]["CONFLICTING_DUPLICATE_QUARANTINED"], 2)
+
     def test_invalid_row_quarantined_without_echo(self):
         x = row()
         x["bad_secret_field"] = "should-not-appear"
