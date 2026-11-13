@@ -1,13 +1,14 @@
 # REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.14-doc (Worker runtime v0.8.5, sorgente v0.8.6 offline)
-**Aggiornamento roadmap: 13/11/2026, ore 12:00 CET**
+**Aggiornamento roadmap: 13/11/2026, ore 12:06 CET**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView OFF, nessun ordine.**
 
-## CHECKPOINT D1 ACCOUNT STORAGE READ-ONLY PREPARATO — 13/11/2026, ore 12:00 CET
+## CHECKPOINT D1 ACCOUNT STORAGE READ-ONLY PREPARATO — 13/11/2026, ore 12:06 CET
 - [x] Verificati solo PR #102 OPEN/DRAFT, roadmap v0.8.13 e scheduler in main v0.8.13; **nessun audit ripetuto, nessun deploy, merge o cambiamento su main**.
 - [x] Nuovo `gateway-lab/cloudflare_d1_account_storage_guard.py` **v0.8.14** nel SOLO branch DRAFT: API GET di token verify, elenco D1 account con `page=1&per_page=100` e GET `file_size` di ogni database. Nessuna query SQL, POST, token in output, Cloudflare write o lettura delle tabelle. Riutilizza esclusivamente `REMURA_CF_D1_READ_TOKEN` e `REMURA_CF_ACCOUNT_ID` già presenti.
 - [x] Controlli fail-closed contro elenco incompleto/paginazione mancante, UUID duplicati, metadata mancanti, assenza dei due D1 REMURA previsti o giurisdizione non UE per tali database. **UNKNOWN non è zero.** Inventario vincolato a max 100 elementi, senza assumere che il piano reale sia Free.
 - [x] Soglie comparative Free su 10 DB/account, 500.000.000 byte/DB, 5.000.000.000 byte/account; WARNING a 70%, CRITICAL a 90%. `file_size` è metadata reale API ma **non contatore di fatturazione esatto**. Fonte: documentazione ufficiale D1 API e limits Cloudflare consultata il 13/11/2026.
 - [x] Aggiunti test **esclusivamente sintetici/offline** `test_cloudflare_d1_account_storage_guard.py`, report esteso con campo D1 account e nuovi test summary. Workflow di LAB `.github/workflows/remura-tv-account-analytics-readonly.yml` modificato per tentare la quarta sonda **solo nel branch DRAFT**. Commit codice `b826817c`, test `c765ca63`, summary `54773f10`, test summary `5abeffb4`, workflow `119280ac`. Test e chiamata remota **da verificare su run GitHub Actions**, non dichiararli verdi prima del riscontro.
+- [x] Raffinamento dello script per giurisdizione facoltativa dei **soli DB estranei a REMURA**, preservando il controllo EU obbligatorio sui due D1 REMURA; [commit `cb7f4663`](https://github.com/mirkoworz/remura/commit/cb7f4663bbce0e9e8ec8097d8682decae57ae34a). Aggiunto caso di test [commit `08ee9d8f`](https://github.com/mirkoworz/remura/commit/08ee9d8f5ba0b4655f4b0b84245afc7cb7a360c8). Esecuzione remota CI non ancora verificata da questa sessione. **Nessun nuovo dato live dichiarato.**
 - [ ] Verificare CI e nuovo inventario D1 LIVE: se non disponibili o incompleti, segnalare UNKNOWN e non dichiarare misurata la dimensione dei due D1. Non richiedere nuove credenziali.
 - [ ] Solo dopo risultato positivo, valutare eventuale aggiornamento deliberato del pinned monitor giornaliero `main` per includere inventario account, senza sostituire in modo implicito `1e3c38b7`; prima execution schedule attesa il 14/11/2026 alle 08:37 CET.
 - [ ] Notifiche: in `main`, WARNING è attualmente annotazione GitHub; CRITICAL/UNKNOWN causa job failure. Le notifiche email/web dipendono dalle impostazioni GitHub dell'utente e NON sono state provate o attivate da REMURA; nessun canale a pagamento aggiunto.
