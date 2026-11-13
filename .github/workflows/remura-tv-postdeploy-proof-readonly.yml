@@ -1,0 +1,52 @@
+# REMURA v0.8.31 — 13/11/2026, 21:02 CET — READ ONLY postdeploy
+# GET version metadata + current bindings of the TEST Worker. No deploy/SQL/edge GET.
+name: REMURA TEST Bootstrap POSTDEPLOY proof (read only)
+
+on:
+  push:
+    branches:
+      - research/tradingview-delta-peaks-20261111
+    paths:
+      - ".github/workflows/remura-tv-postdeploy-proof-readonly.yml"
+      - "tradingview/delta-peaks/gateway-lab/bootstrap_postdeploy_audit_v1.py"
+      - "tradingview/delta-peaks/gateway-lab/test_bootstrap_postdeploy_audit_v1.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: remura-tv-postdeploy-readonly-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  postdeploy-test-only:
+    if: github.repository == 'mirkoworz/remura' && github.ref == 'refs/heads/research/tradingview-delta-peaks-20261111'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    env:
+      REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+      REMURA_CF_TEST_WORKER_EDITOR_TOKEN: ${{ secrets.REMURA_CF_TEST_WORKER_EDITOR_TOKEN }}
+    steps:
+      - name: Checkout LAB branch without persistent creds
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run offline postdeploy API format and scope regression tests
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_bootstrap_postdeploy_audit_v1.py' -v
+          python3 -m py_compile tradingview/delta-peaks/gateway-lab/bootstrap_postdeploy_audit_v1.py
+      - name: GET expected deployed TEST version and current settings ONLY
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/bootstrap_postdeploy_audit_v1.py |
+            tee "$RUNNER_TEMP/remura-tv-postdeploy-proof.txt"
+          {
+            echo '## REMURA v0.8.31 — Cloudflare TEST Worker postdeploy control plane only'
+            echo '~~~text'
+            cat "$RUNNER_TEMP/remura-tv-postdeploy-proof.txt"
+            echo '~~~'
+            echo 'No Worker edge GET/POST, D1 query, token disclosure, deploy or main Worker request.'
+          } >> "$GITHUB_STEP_SUMMARY"
