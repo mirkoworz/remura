@@ -1,0 +1,62 @@
+# REMURA v0.8.28 — 13/11/2026, 20:35:15 Europe/Rome
+# Sole due prove: test offline + un GET API Cloudflare sul Worker TEST. MAI deploy.
+name: REMURA TEST Worker Editor READ-ONLY proof
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/remura-tv-test-worker-editor-readonly.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: remura-tv-editor-readonly-proof
+  cancel-in-progress: false
+
+jobs:
+  metadata-only:
+    if: github.repository == 'mirkoworz/remura' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    env:
+      REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+      REMURA_CF_TEST_WORKER_EDITOR_TOKEN: ${{ secrets.REMURA_CF_TEST_WORKER_EDITOR_TOKEN }}
+    steps:
+      - name: Checkout pinned reviewed guard ONLY
+        uses: actions/checkout@v4
+        with:
+          ref: 6f7ae923261ca1bc0d1099188b1edfbe5c333d4a
+          persist-credentials: false
+      - name: Offline fail-closed unit tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_bootstrap_settings_guard_v1.py' -v
+          python3 -m py_compile tradingview/delta-peaks/gateway-lab/bootstrap_settings_guard_v1.py
+      - name: Verify scoped token present WITHOUT printing its value
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "$REMURA_CF_ACCOUNT_ID" ] || [ -z "$REMURA_CF_TEST_WORKER_EDITOR_TOKEN" ]; then
+            echo '::error::Account ID or TEST scoped token not available. No deploy performed.'
+            exit 2
+          fi
+          echo "REMURA_TEST_TOKEN=SECRET_PRESENT_NOT_DISCLOSED"
+      - name: Cloudflare API GET on TEST Worker only, no deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/bootstrap_settings_guard_v1.py | tee "$RUNNER_TEMP/remura-test-readonly-proof.txt"
+          {
+            echo "### REMURA v0.8.28 — Worker TEST scope verification"
+            echo '~~~text'
+            cat "$RUNNER_TEMP/remura-test-readonly-proof.txt"
+            echo '~~~'
+            echo "READ-ONLY: Cloudflare GET for remura-tv-webhook-test only."
+            echo "No deploy, no D1 access, no webhook, no Production Worker requests."
+            echo "Green job proves only metadata and absence of bindings at the time checked."
+          } >> "$GITHUB_STEP_SUMMARY"
