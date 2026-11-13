@@ -1,6 +1,14 @@
-# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.20-doc (ultimo Worker noto v0.8.5, sorgente v0.8.6 offline)
-**Aggiornamento roadmap: 13/11/2026, ore 15:09 CET — screenshot Secret Name parziale Production**
+# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.21-doc (ultimo Worker noto v0.8.5, sorgente v0.8.6 offline)
+**Aggiornamento roadmap: 13/11/2026, ore 15:11 CET — binding D1 Production identificato esattamente**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView OFF, nessun ordine.**
+
+## CHECKPOINT v0.8.21 — TARGET D1 DEL WORKER PRODUCTION CERTIFICATO DA SCHERMATA — 13/11/2026 ore 15:11 CET
+- [x] Screenshot utente iPhone ruotato in orizzontale: Worker `remura-tv-ingest-lab`, ambiente **Production**, sezione Settings → **Bindings**: riga completa **Type `D1 database` | Name `TELEMETRY_DB` | Value `remura-tv-lab`**. Confermata destinazione del binding sul **DB PRINCIPALE**, non quello TEST. Questo è un dato della **configurazione UI**, non un test del percorso webhook o della ricezione effettiva.
+- [x] Chiuso il requisito manuale precedente sui nomi binding senza richiedere altri screenshot. Secret Production visto in precedente immagine come nome parziale `WEBHOOK_TOKE...`, valore encrypted; NON riesaminare/ricreare il secret, né affermare nome completo verificato da screenshot.
+- [x] Il Worker Production NON va riutilizzato per il primo webhook di prova: mantenere separato un eventuale `remura-tv-webhook-test` legato **solo** al `remura-tv-lab-test`, con `INGEST_ENABLED=false` prima dell'autorizzazione. Manifest template e guard di v0.8.18 ancora non distribuibili, nessun UUID o token inserito.
+- [x] Nella porzione di tabella Production è mostrato **un D1 binding** e **nessun Rate Limiting binding visibile**. Non affermare che rate limiter sia configurato né che la sua mancanza sia prova dell'intero runtime. Sorgente gateway GitHub v0.8.6 richiede `INGEST_RATE_LIMITER` in modalità ingest ON, altrimenti rimane fail-closed: non consentire tentativi senza verifica effettiva. La documentazione Cloudflare consente configurazione `ratelimits` con namespace_id stringa positiva, `simple.limit`, `simple.period=10|60`; limite approssimativo per location, non protezione assoluta dell'account. Fonte: https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
+- [ ] Prossimo passo: rendere pronto **in modo reversibile e senza deploy** il percorso del Worker TEST (binding D1 TEST, limiter, segreto separato, test isolato, costo Free, rollback) e chiedere consenso soltanto per distribuire/abilitare successivamente. Non modificare `main` o il Worker Production; non fare read/write sul database.
+- [x] PR #102 sempre DRAFT OPEN all'ultima verifica, monitor daily main v0.8.14 intatto; nessuna modifica Cloudflare, nessuna spesa attivata, nessun alert TradingView, nessun ordine e filoni A/B/C non interferiti.
 
 ## CHECKPOINT v0.8.20 — SEGRETO PRODUCTION NOME PARZIALE — 13/11/2026 ore 15:09 CET
 - [x] Acquisito nuovo screenshot iPhone in orizzontale, Worker `remura-tv-ingest-lab` → **Production** → Settings → Runtime variables and secrets. **Tipo `Secret`**, **nome visibile `WEBHOOK_TOKE...`**, **valore `Value encrypted`**. Nome visibile coerente col precedente `WEBHOOK_TOKEN_SHA256`, ma **troncato: NON conferma esattamente nome completo, contenuto, autenticazione o abilitazione dell'ingestione**.
