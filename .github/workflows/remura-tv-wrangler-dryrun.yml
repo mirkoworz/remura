@@ -1,8 +1,16 @@
-# REMURA v0.8.23 — 13/11/2026, 15:29:06 Europe/Rome
+# REMURA v0.8.23 — 13/11/2026, 15:33 CET Europe/Rome
 # Compile-only synthetic Worker. No Cloudflare keys, deployment or network to Worker.
 name: REMURA TEST Worker Wrangler DRY RUN
 
 on:
+  pull_request:
+    paths:
+      - ".github/workflows/remura-tv-wrangler-dryrun.yml"
+      - "tradingview/delta-peaks/gateway-lab/build_test_worker_dryrun_v1.py"
+      - "tradingview/delta-peaks/gateway-lab/test_build_test_worker_dryrun_v1.py"
+      - "tradingview/delta-peaks/gateway-lab/predeploy_test_manifest_guard_v1.py"
+      - "tradingview/delta-peaks/gateway-lab/wrangler.webhook-test.EXAMPLE.json"
+      - "tradingview/delta-peaks/gateway-lab/worker.mjs"
   push:
     branches:
       - research/tradingview-delta-peaks-20261111
@@ -23,7 +31,7 @@ concurrency:
 
 jobs:
   compile-only:
-    if: github.repository == 'mirkoworz/remura' && github.ref == 'refs/heads/research/tradingview-delta-peaks-20261111'
+    if: github.repository == 'mirkoworz/remura' && ((github.event_name == 'pull_request' && github.event.pull_request.number == 102) || (github.event_name == 'push' && github.ref == 'refs/heads/research/tradingview-delta-peaks-20261111'))
     runs-on: ubuntu-latest
     timeout-minutes: 7
     env:
