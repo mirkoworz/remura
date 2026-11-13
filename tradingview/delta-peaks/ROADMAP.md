@@ -1,6 +1,15 @@
-# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.16-doc (Worker runtime v0.8.5, sorgente v0.8.6 offline)
-**Aggiornamento roadmap: 13/11/2026, ore 13:11 CET**
+# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.17-doc (ultimo Worker noto v0.8.5, sorgente v0.8.6 offline)
+**Aggiornamento roadmap: 13/11/2026, ore 13:44 CET — screenshot Cloudflare, nessun deploy**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView OFF, nessun ordine.**
+
+## CHECKPOINT v0.8.17 — CLOUDFARE DOMAINS / ROUTES DA SCHERMATE UTENTE — 13/11/2026 ore 13:44 CET
+- [x] **Nuova verifica manuale, diversa dalla sonda pubblica GitHub**: screenshot Cloudflare Workers & Pages → `remura-tv-ingest-lab` → Settings → Domains & Routes, inviati il 13/11/2026 alle 13:44 CET. Vista `Worker URL` **Production**, hostname pubblico `remura-tv-ingest-lab.mirkoworz.workers.dev`, testo **`Anyone with this URL can visit`** e pulsante **`Enable Access`**. Questi elementi indicano **Access non attivato per quel collegamento Production nella vista corrente**, **non** garantiscono l'assenza di altre policy di accesso a livello account/hostname.
+- [x] Sezione Custom Domains and Routes: **No custom domains**; nessuna custom route elencata. È presente anche una URL **Preview** distinta; NON utilizzare il percorso Preview per webhook senza valutare sicurezza e routing.
+- [x] Non è stato cliccato alcun controllo mutativo: **no Enable Access, Add Route, Add Domain**, nessun cambio di infrastruttura, secrets, database o Worker.
+- [x] Aggiornata diagnosi `INCONCLUSIVE_EDGE_403`: il precedente 403/403 GitHub è **ancora inconcludente**, ma non deve più essere attribuito senza prove al login di Cloudflare Access per l'URL Production. Cloudflare documenta un **Browser Integrity Check (BIC) obbligatorio sull'hostname workers.dev**, che può respingere client automatizzati prima che il Worker venga invocato; è **un'ipotesi tecnica, NON la diagnosi verificata del vecchio 403**. [Documentazione Workers.dev](https://developers.cloudflare.com/workers/configuration/routing/workers-dev/), [Access](https://developers.cloudflare.com/workers/configuration/cloudflare-access/).
+- [ ] Prossima verifica necessaria **non duplicata**: binding/versione/settings Worker reali con canale autenticato read-only e permessi minimi. Evitare nuove richieste dal runner GitHub che replichino GET `/health` e `/` con lo stesso comportamento già classificato inconcludente.
+- [ ] Il fatto che l'URL sia pubblico **non equivale ad ingest abilitato**; ultimo runtime noto v0.8.5, Pine alert OFF, primo webhook reale NON inviato. Prima di abilitarlo servono rate limiter, protezione anti-abuso e consenso distinto, idealmente primo test su D1 TEST.
+- [x] PR #102 DRAFT/OPEN, main budget v0.8.14 invariato, Filoni A/B/C non coinvolti. **Nessuna operazione manuale ulteriore richiesta all'utente in questo checkpoint**.
 
 ## CHECKPOINT v0.8.16 — SIMULAZIONE FULL CHAIN E READER MAIN D1 OFFLINE — 13/11/2026, ore 13:11 CET
 - [x] Nessun repeat dei vecchi audit Cloudflare: ripreso dal checkpoint v0.8.15 e PR #102 verificata OPEN/DRAFT. Esaminati esclusivamente Pine v0.8.1, gateway v0.8.6, bridge v0.8.15 e workflow CI pertinenti. `main` resta monitor giornaliero v0.8.14 con pinned commit precedente; Worker online non modificato, ingest OFF ultimo checkpoint.
