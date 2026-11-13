@@ -1,0 +1,48 @@
+name: Track D Pine research - offline specification
+
+on:
+  pull_request:
+    paths:
+      - 'experiments/tradingview/**'
+      - 'tests/test_track_d_tv_cvd_reference.py'
+      - 'tests/test_track_d_tv_v03_source.py'
+      - 'tests/test_track_d_tv_v04_source.py'
+      - 'tests/test_track_d_tv_v05_diagnostics.py'
+      - 'tests/test_track_d_tv_v06_comparison.py'
+      - 'tests/test_track_d_tv_v07_continuity.py'
+      - 'tests/test_track_d_tv_v07_csv_audit.py'
+      - 'tests/test_track_d_tv_v07_event_study.py'
+      - 'tests/test_track_d_tv_v08_baseline.py'
+      - 'tests/test_track_d_tv_v08_snapshots.py'
+      - 'ROADMAP-D-TRADINGVIEW-CVD.md'
+      - '.github/workflows/track-d-pine-offline.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  track-d-offline-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run local specification and causal reference tests
+        run: python -m unittest discover -s tests -p 'test_track_d_tv*.py' -v
+      - name: Confirm scope and absence of Pine compilation claim
+        run: |
+          test -s experiments/tradingview/remura_shark_cvd_fxcm_v01.pine
+          test -s experiments/tradingview/remura_shark_cvd_fxcm_v03.pine
+          test -s experiments/tradingview/remura_shark_cvd_fx_v04.pine
+          test -s experiments/tradingview/remura_shark_cvd_fx_v05.pine
+          test -s experiments/tradingview/remura_shark_cvd_fx_v06.pine
+          test -s experiments/tradingview/remura_shark_cvd_fx_v07.pine
+          test -s experiments/tradingview/analyze_d07_export.py
+          test -s experiments/tradingview/evaluate_d07_events.py
+          test -s experiments/tradingview/remura_shark_cvd_fx_v08.pine
+          test -s experiments/tradingview/compare_d08_baseline.py
+          test -s experiments/tradingview/record_d08_snapshots.py
+          test -s ROADMAP-D-TRADINGVIEW-CVD.md
+          echo "TRACK_D_OFFLINE_REFERENCE_TESTS_ONLY=YES"
+          echo "PINE_COMPILED_IN_TRADINGVIEW=NOT_VERIFIED"
+          echo "NO_VPS_NO_BROKER_NO_ALERTS=YES"
