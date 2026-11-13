@@ -1,4 +1,4 @@
-// REMURA Gateway LAB v0.8.2 — aggiornamento 11/11/2026 17:51 CET
+// REMURA Gateway LAB v0.8.6 — aggiornamento 13/11/2026 06:35 CET
 // Test di richieste SINTETICHE in Node: non richiedono rete né Cloudflare.
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -41,7 +41,16 @@ async function env() {
   const hex = [...new Uint8Array(digest)]
     .map((v) => v.toString(16).padStart(2, "0")).join("");
   return { INGEST_ENABLED: "true", WEBHOOK_TOKEN_SHA256: hex,
-    TELEMETRY_DB: new FakeD1() };
+    TELEMETRY_DB: new FakeD1(),
+    INGEST_RATE_LIMITER: {
+      calls: 0,
+      async limit({ key }) {
+        assert.equal(key, "remura-tv-fxcm-eurusd-m5");
+        this.calls++;
+        return { success: true };
+      }
+    }
+  };
 }
 function sample(barCloseMs = Date.now() - 5000) {
   return {
@@ -123,6 +132,59 @@ test("fail-closed disabled even if bindings configured", async () => {
   const { status } = await send(e, sample());
   assert.equal(status, 503);
 });
+test("health returns accepting=false if limiter is missing with ingest enabled", async () => {
+  const e = await env(); delete e.INGEST_RATE_LIMITER;
+  const res = await gateway.fetch(new Request("https://example.invalid/health"), e);
+  assert.equal((await res.json()).accepting, false);
+});
+test("health returns accepting=true only with complete configured mock bindings", async () => {
+  const e = await env();
+  const res = await gateway.fetch(new Request("https://example.invalid/health"), e);
+  assert.equal((await res.json()).accepting, true);
+});
+test("fail-closed no limiter even with enabled ingestion, zero database writes", async () => {
+  const e = await env(); delete e.INGEST_RATE_LIMITER;
+  const response = await send(e, sample());
+  assert.equal(response.status, 503);
+  assert.equal(response.body.status, "disabled");
+  assert.equal(e.TELEMETRY_DB.rows.size, 0);
+});
+test("limiter denies authenticated requests before D1 reads and writes", async () => {
+  const e = await env();
+  e.INGEST_RATE_LIMITER.limit = async () => {
+    e.INGEST_RATE_LIMITER.calls++;
+    return { success: false };
+  };
+  const response = await send(e, sample());
+  assert.equal(response.status, 429);
+  assert.equal(response.body.status, "rate_limited");
+  assert.equal(e.TELEMETRY_DB.rows.size, 0);
+  assert.equal(e.INGEST_RATE_LIMITER.calls, 1);
+});
+test("limiter error returns 503 and fails closed without D1 operations", async () => {
+  const e = await env();
+  e.INGEST_RATE_LIMITER.limit = async () => {
+    throw new Error("limiter unavailable");
+  };
+  const response = await send(e, sample());
+  assert.equal(response.status, 503);
+  assert.equal(response.body.status, "limiter_unavailable");
+  assert.equal(e.TELEMETRY_DB.rows.size, 0);
+});
+test("bad source IP is rejected without consuming the authenticated limiter", async () => {
+  const e = await env();
+  const response = await send(e, sample(), { ip: "198.51.100.1" });
+  assert.equal(response.status, 403);
+  assert.equal(e.INGEST_RATE_LIMITER.calls, 0);
+  assert.equal(e.TELEMETRY_DB.rows.size, 0);
+});
+test("correctly authenticated request hits limiter exactly once", async () => {
+  const e = await env();
+  const response = await send(e, sample());
+  assert.equal(response.status, 200);
+  assert.equal(e.INGEST_RATE_LIMITER.calls, 1);
+});
+
 test("valid record stored once, not sent downstream", async () => {
   const e = await env();
   const { status, body } = await send(e, sample());
