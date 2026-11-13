@@ -1,6 +1,15 @@
-# REMURA — TEST WEBHOOK RELEASE GATE v0.8.30 (BOOTSTRAP TEST DISTRIBUITO; INGEST OFF)
-**Aggiornamento: 13/11/2026, ore 20:48 CET**  
+# REMURA — TEST WEBHOOK RELEASE GATE v0.8.31 (BOOTSTRAP TEST LIVE, GATEWAY OFF PREPARATO SOLO OFFLINE)
+**Aggiornamento: 13/11/2026, ore 21:01 CET**  
 **Bootstrap inerte TEST realmente distribuito, gateway completo NON distribuito. PR #102 OPEN/DRAFT; Worker Production v0.8.5 non modificato.**
+
+## Checkpoint v0.8.31 — verifica LIVE postdeploy + preparazione gateway OFF
+- **Control-plane reale**: [GitHub run #43496120098](https://github.com/mirkoworz/remura/actions/runs/43496120098) SUCCESS, GET API della versione esatta del bootstrap `f5a43b49-f07f-404b-a9dd-4606a22afa3c`, zero binding sia nella versione sia nelle impostazioni Worker TEST; **NON** prova 100% del traffico o `/health` pubblico. Nessun webhook.
+- **Futuro gateway TEST**: l'esempio `wrangler.webhook-test.EXAMPLE.json` è ancora intenzionalmente **non deployabile** (UUID e namespace segnaposto). Ora richiede `preview_urls:false`, `workers_dev:true`, `INGEST_ENABLED:false`, binding **solo D1 TEST** e limiter 20/60. [Wrangler dry-run #43496797754](https://github.com/mirkoworz/remura/actions/runs/43496797754) SUCCESS; nessun deploy.
+- **Autenticazione D1 reale in sola lettura**: `gateway_off_candidate_v1.py` usa i token esistenti per controllare UUID distinti UE MAIN/TEST e generare in memoria un candidato coerente. [Run #43496787646](https://github.com/mirkoworz/remura/actions/runs/43496787646) SUCCESS, 10 mock test PASS, nessun UUID, namespace o Secret nei log; il namespace proposto **non è stato verificato contro altri limiter dell'account**.
+- **Rollback**: `off_gateway_rollback_guard_v1.py` vieta main D1, ingest ON, Secrets inattesi, namespace differente e binding non conosciuti; 12 test mock PASS [CI #43497283571](https://github.com/mirkoworz/remura/actions/runs/43497283571). È **soltanto il guard offline**: prima di distribuire gateway OFF servirà un vero workflow manuale di rollback con preflight autenticato e codice bootstrap pinned. Il vecchio workflow `bootstrap-test-only-manual.yml` rifiuterebbe un Worker che ha binding D1/limiter: NON usarlo come rollback senza aggiornamento.
+- **Consensi da mantenere separati**: (i) eventuale distribuzione gateway TEST `INGEST_ENABLED=false` con D1 TEST/limiter e rollback pronto; (ii) eventuale inserimento Secret TEST + `INGEST_ENABLED=true` + prova webhook reale da TradingView. Non autorizzare (ii) implicitamente tramite (i).
+- **Rischi irrisolti**: CPU Workers Free 10 ms/invocazione, traffico anonimo, disponibilità/costo effettivo limiter sul Free e quota aggregata account; rate limit per-location approssimativo non sostituisce protezione edge. Nessun dato mercato vero ancora raccolto da questa pipeline.
+- Documentazione ufficiale: https://developers.cloudflare.com/workers/versions-and-deployments/version-urls/ , https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/ , https://developers.cloudflare.com/workers/authorization/workers/ .
 
 ## Checkpoint v0.8.30 — bootstrap LIVE riuscito (13/11/2026 ore 20:45 CET)
 - [GitHub run #43495068875](https://github.com/mirkoworz/remura/actions/runs/43495068875) SUCCESS, con input manuale confermato, controlli offline, GET autenticato che ha letto **zero binding del TEST prima del deploy**, dry-run e successivo deploy Wrangler esclusivamente `remura-tv-webhook-test` con sorgente inerte pinned `6f7ae923261ca1bc0d1099188b1edfbe5c333d4a`.
