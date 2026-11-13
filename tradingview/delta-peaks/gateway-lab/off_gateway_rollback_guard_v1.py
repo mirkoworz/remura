@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# REMURA v0.8.31 — 13/11/2026 ore 21:19 CET
+# REMURA v0.8.31 — 13/11/2026, ore 21:09 CET
 # OFF-only rollback preflight: in-memory validation, no Cloudflare mutation.
 """Verify strict TEST Worker bindings before any future rollback to inert bootstrap.
 
