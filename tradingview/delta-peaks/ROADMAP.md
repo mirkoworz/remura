@@ -1,6 +1,18 @@
-# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.9-doc (Worker runtime v0.8.5, sorgente v0.8.6 offline)
-**Aggiornamento roadmap: 13/11/2026, ore 06:45 CET**
+# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.10-doc (Worker runtime v0.8.5, sorgente v0.8.6 offline)
+**Aggiornamento roadmap: 13/11/2026, ore 06:57 CET**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView OFF, nessun ordine.**
+
+## CHECKPOINT PUBBLICO 403 + QUOTE GIORNALIERE PREPARATE — 13/11/2026 ore 06:57 CET
+- [x] PR #102 ancora **OPEN/DRAFT**, commit isolati sul branch `research/tradingview-delta-peaks-20261111`; Worker pubblico runtime v0.8.5 non modificato, sorgente v0.8.6 solo GitHub, ingest OFF da ultimo stato confermato dall'utente (nuova verifica pubblica inconcludente).
+- [x] `worker_public_failclosed_audit.py` v0.3 e [workflow GitHub](https://github.com/mirkoworz/remura/actions/runs/43374850790): esegue **solo GET** `/health` e `/`, mai POST o URL contenente token. 17 test offline verdi.
+- [x] Esito reale dal runner GitHub: **HTTP 403/403**, `REMURA_TV_PUBLIC_FAILCLOSED=INCONCLUSIVE_EDGE_403`. Importante: il job verde indica che il caso 403 è stato classificato correttamente, NON che `accepting=false` sia stato verificato da GitHub. Senza nuovo controllo dall'account non dichiarare il Worker provato OFF.
+- [x] Fonte Cloudflare GraphQL: il consumo D1 account-wide `rowsRead`/`rowsWritten` richiede **Account Analytics → Read**; il token D1 Read separato non basta. Metriche analytics adattive, non prove esatte della fatturazione. Non autorizzare scritture o nuovi privilegi.
+- [x] `cloudflare_account_quota_guard.py` v0.1: query GraphQL **read-only**, giorno UTC, max 10 gruppi DB su Free, soglie 70% WARNING e 90% CRITICAL per 5.000.000 read / 100.000 write giornaliere. `NO_DATA` non equivale a 0.
+- [x] [Workflow Account Analytics](https://github.com/mirkoworz/remura/actions/runs/43375218853): **20/20 test offline verdi**, job remoto `REMURA_CF_ACCOUNT_QUOTA=SKIPPED_MISSING_ANALYTICS_READ_TOKEN`, cioè nessun dato account-wide raccolto. Nessuna chiamata GraphQL remota.
+- [ ] Per automatizzare il bilancio quotidiano serve un token **separato** e minimo Cloudflare Account Analytics Read salvato in GitHub Secret `REMURA_CF_ANALYTICS_READ_TOKEN`. Richiedere all'utente solo al momento opportuno; mai chiedere valore/screenshot token in chat. Non modificare `REMURA_CF_D1_READ_TOKEN`.
+- [ ] In assenza di nuovo token, usare solo prova effettiva spazio D1 TEST (28.672 byte, 0,0057% del limite), non inventare utilizzo giornaliero Workers/D1 o costo realizzato.
+- [ ] Se necessario controllare da sessione autenticata `/health` e `/` senza aprire `/ingest`, per chiarire 403 edge. Worker pubblico non testato end-to-end e webhook TradingView/heartbeat OFF.
+- [x] `gateway-lab/README.md` aggiornato a v0.8.10-doc; nessun deploy, merge, ordine, o modifica ai filoni A/B/C. Nessun nuovo servizio a pagamento.
 
 ## CHECKPOINT D1 FREE STORAGE REALE AUTOMATIZZATO — 13/11/2026 ore 06:45 CET
 - [x] Confermata fonte ufficiale Cloudflare per **GET metadati D1** con permesso D1 Read e campo `file_size`. Token GitHub esistente `REMURA_CF_D1_READ_TOKEN` riutilizzato, nessuna nuova credenziale.
