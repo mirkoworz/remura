@@ -1,6 +1,13 @@
-# REMURA — TEST WEBHOOK RELEASE GATE v0.8.23 (NESSUN DEPLOY)
-**Aggiornamento: 13/11/2026, ore 15:34 CET**  
+# REMURA — TEST WEBHOOK RELEASE GATE v0.8.24 (NESSUN DEPLOY)
+**Aggiornamento: 13/11/2026, ore 15:55 CET**  
 **Sola documentazione e prove offline, PR #102 OPEN/DRAFT. Worker Production v0.8.5 non modificato.**
+
+## Checkpoint piano Workers Free — 13/11/2026, ore 15:55 CET
+- Screenshot reale dell'utente Cloudflare → **Workers plans**: `Free $0` indicato come **Current plan**, Paid `$5/month + usage` disponibile ma non selezionato. **Verificato l'effettivo piano Workers Free** per l'account alla data del controllo; non richiedere di nuovo uno screenshot del piano.
+- Per i soli Workers Free: 100.000 richieste/giorno/account, 10 ms CPU per richiesta, massimo 100 Worker (documentazione ufficiale 2026). La conferma Workers Free **non prova l'assenza di altri prodotti a pagamento né una fattura a zero**. Restano non accertati CPU reale, consumo aggregato di tutti i Worker, eventuali fatture e binding limiter del Worker TEST.
+- Modificare solo il piano Workers è operazione da non fare: **NO upgrade** senza nuova richiesta e consenso utente. Nessuna necessità attuale di passare a Paid per una compilazione TEST o piccoli volumi teorici.
+- Il rate limiter per Workers è approssimativo, attivo solo dopo l'arrivo della richiesta al codice, e non protegge da abuso anonimo sul conteggio account; la documentazione non dimostra né quota né disponibilità reale del binding per questo nuovo Worker. Serve preflight prima di abilitarne l'ingestione.
+- **Prossimo gate indipendente**: preparare credenziali minime Workers *per il solo Worker TEST* e binding confermati senza sostituire quelli già configurati del Worker Production. Il primo deploy è autorizzabile **solo OFF**, separatamente dal consenso a eventuali webhook TradingView reali.
 
 ## Nuova prova non distruttiva (v0.8.23)
 - [Wrangler compile-only #43443677850](https://github.com/mirkoworz/remura/actions/runs/43443677850) SUCCESS: 5 test isolati più compilazione reale `wrangler@4.157.0 deploy --dry-run`; pacchetto 11,76 KiB (gzip 4,06 KiB). Non è avvenuto upload né deploy. Config TEST temporanea con D1 e rate limiter sintetici; account, Secrets, Worker Production e dati D1 non toccati.
@@ -14,7 +21,7 @@
 - Manifest `wrangler.webhook-test.EXAMPLE.json` intenzionalmente non distribuibile: Worker name `remura-tv-webhook-test`, solo `TELEMETRY_DB → remura-tv-lab-test`, `INGEST_ENABLED=false`, UUID e namespace limiter segnaposto. È una **bozza**, non la configurazione Cloudflare.
 - Sorgente gateway GitHub v0.8.6: se flag OFF o manca limiter/D1/secret, l'endpoint ingest risponde **503 disabled**; test Node con FakeD1; non è una verifica del Worker distribuito. `test_d1_test_target_preflight_v1.py` controlla identity e no-POST; `worker.test.mjs` simula kill-switch ON → OFF, senza cancellare alcun record TEST.
 - API Cloudflare Worker Settings con token D1 READ ha già restituito `403` sul control-plane: non riutilizzare per tentativi identici e non attribuire questa causa al BIC del sito pubblico. Non è attualmente disponibile un token autorizzato al deploy.
-- Cloudflare Free **limiti pubblicati**: Workers **100.000 richieste/giorno/account**, **10 ms CPU/invocazione**; D1 Free **10 DB/account, 500 MB/DB, 5 GB/account**. Nessun controllo di **piano effettivo/account billing/CPU per invocazione** ancora dimostrato per questo Worker. Aggiungere un Worker non prova che il costo sarà zero, e la quota account è condivisa da altri servizi.
+- Cloudflare Free **limiti pubblicati**: Workers **100.000 richieste/giorno/account**, **10 ms CPU/invocazione**; D1 Free **10 DB/account, 500 MB/DB, 5 GB/account**. **Workers Free confermato da screenshot del proprietario 13/11/2026**; restano non verificati fatture/account billing aggregato e CPU per invocazione sul nuovo Worker. Aggiungere un Worker non prova che il costo sarà zero, e la quota account è condivisa da altri servizi.
 - Rate Limiting binding Cloudflare: `namespace_id` deve essere una stringa di intero positivo univoco per l'account; `simple.limit=20`, `simple.period=60`; quota **approssimativa per Cloudflare location**, non un tetto globale né protezione di richieste anonime che arrivano prima del codice. Namespace reale e disponibilità/costi del binding **NON confermati**.
 
 ## Gate necessari, nell'ordine
@@ -35,7 +42,8 @@
 | Secret per Worker TEST | NON CREATO |
 | Permesso Worker EDIT/DEPLOY | NON DISPONIBILE IN QUESTA CHAT |
 | Primo deploy e primo webhook live | NON AUTORIZZATI |
-| Budget Free reale/account billing | NON CONCLUSO |
+| Piano Workers Free | CONFERMATO con screenshot dashboard 13/11/2026 |
+| Fatturazione aggregata account/CPU Worker TEST | NON VERIFICATE |
 | Trading automatico | NON AUTORIZZATO |
 
 **STOP GUARANTEE**: nessun GitHub Actions della PR #102 può effettuare deploy, variare `INGEST_ENABLED` su Cloudflare o spedire webhook con gli attuali script di questo filone.
