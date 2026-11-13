@@ -1,4 +1,4 @@
-# REMURA Workers Analytics Guard tests v0.1 — aggiornamento 13/11/2026, ore 10:06 CET
+# REMURA Workers Analytics Guard tests v0.2 — aggiornamento 13/11/2026, ore 10:13 CET
 # Solo sintesi GraphQL offline, nessun token o chiamata internet.
 import os
 import unittest
@@ -84,9 +84,8 @@ class WorkerMetricsTests(unittest.TestCase):
                 guard.parse_workers(p)
 
     def test_null_cpu_is_allowed_when_unavailable(self):
-        self.assertEqual(
-            guard.parse_workers(sample_rows(cpu=None))["max_reported_cpu_p99_us"],
-            0.0)
+        self.assertIsNone(
+            guard.parse_workers(sample_rows(cpu=None))["max_reported_cpu_p99_us"])
 
     def test_inconsistent_errors_rejected(self):
         with self.assertRaises(AuditError):
