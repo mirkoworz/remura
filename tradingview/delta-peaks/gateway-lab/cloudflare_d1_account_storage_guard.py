@@ -1,4 +1,4 @@
-# REMURA D1 ACCOUNT STORAGE GUARD v0.8.14 — 13/11/2026, ore 11:56 CET
+# REMURA D1 ACCOUNT STORAGE GUARD v0.8.14 — 13/11/2026, ore 12:05 CET
 # GET-only, account D1 Read; non legge tabelle, non modifica database o Worker.
 """Inventory account D1 file sizes. Partial, missing or conflicting metadata is UNKNOWN.
 
@@ -64,10 +64,11 @@ def read_db_size(payload: object, name: str, uid: str, jurisdiction: str | None)
     if not isinstance(payload, dict) or payload.get("success") is not True:
         raise AuditError("d1_account_metadata_unavailable")
     item = payload.get("result")
-    if not isinstance(item, dict) or any(
-        item.get(k) != v for k, v in
-        (("name", name), ("uuid", uid), ("jurisdiction", jurisdiction))
-    ):
+    if (not isinstance(item, dict) or item.get("name") != name
+            or item.get("uuid") != uid
+            or (jurisdiction is not None and item.get("jurisdiction") != jurisdiction)
+            or (name in (MAIN_DB_NAME, EXPECTED_NAME)
+                and item.get("jurisdiction") != EXPECTED_JURISDICTION)):
         raise AuditError("d1_account_metadata_identity_mismatch")
     size = item.get("file_size")
     if type(size) is not int or size < 0:
