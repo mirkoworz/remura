@@ -1,4 +1,4 @@
-# REMURA D1 ACCOUNT STORAGE TESTS v0.8.14 — 13/11/2026, ore 11:57 CET
+# REMURA D1 ACCOUNT STORAGE TESTS v0.8.14 — 13/11/2026, ore 12:05 CET
 # Solo fixture sintetiche; nessuna rete, credenziali o D1 reale.
 import unittest
 from unittest.mock import patch
@@ -76,6 +76,15 @@ class AccountStorageTests(unittest.TestCase):
         row = entries()[0]
         with self.assertRaises(AuditError):
             guard.read_db_size(metadata(row, 300), row["name"], ID2, "eu")
+
+    def test_optional_jurisdiction_for_unrelated_database(self):
+        row = {"name": "unrelated-db", "uuid": ID3}
+        meta = {"success": True, "result": {
+            "name": row["name"], "uuid": ID3,
+            "jurisdiction": "us", "file_size": 2048}}
+        self.assertEqual(guard.read_db_size(meta, row["name"], ID3, None), 2048)
+        with self.assertRaises(AuditError):
+            guard.read_db_size(meta, row["name"], ID3, "eu")
 
     def test_missing_or_noninteger_size_rejected(self):
         row = entries()[0]
