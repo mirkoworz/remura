@@ -1,4 +1,4 @@
-# REMURA v0.8.23 — 13/11/2026, 15:33 CET Europe/Rome
+# REMURA v0.8.25 — 13/11/2026, 16:33 CET Europe/Rome
 # Compile-only synthetic Worker. No Cloudflare keys, deployment or network to Worker.
 name: REMURA TEST Worker Wrangler DRY RUN
 
@@ -11,6 +11,8 @@ on:
       - "tradingview/delta-peaks/gateway-lab/predeploy_test_manifest_guard_v1.py"
       - "tradingview/delta-peaks/gateway-lab/wrangler.webhook-test.EXAMPLE.json"
       - "tradingview/delta-peaks/gateway-lab/worker.mjs"
+      - "tradingview/delta-peaks/gateway-lab/bootstrap_test_worker.mjs"
+      - "tradingview/delta-peaks/gateway-lab/bootstrap_test_worker.test.mjs"
   push:
     branches:
       - research/tradingview-delta-peaks-20261111
@@ -21,6 +23,8 @@ on:
       - "tradingview/delta-peaks/gateway-lab/predeploy_test_manifest_guard_v1.py"
       - "tradingview/delta-peaks/gateway-lab/wrangler.webhook-test.EXAMPLE.json"
       - "tradingview/delta-peaks/gateway-lab/worker.mjs"
+      - "tradingview/delta-peaks/gateway-lab/bootstrap_test_worker.mjs"
+      - "tradingview/delta-peaks/gateway-lab/bootstrap_test_worker.test.mjs"
 
 permissions:
   contents: read
@@ -73,3 +77,29 @@ jobs:
             echo "Bundling success, no deployment, no real Cloudflare auth or DB access."
             echo "Template remains undeployable with placeholders."
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Compile inert bootstrap Worker ONLY without DB, limiter or Secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/remura-inert-bootstrap"
+          cp tradingview/delta-peaks/gateway-lab/bootstrap_test_worker.mjs \
+            "$RUNNER_TEMP/remura-inert-bootstrap/bootstrap_test_worker.mjs"
+          cat > "$RUNNER_TEMP/remura-inert-bootstrap/wrangler.json" <<'JSON'
+          {
+            "name": "remura-tv-webhook-test",
+            "main": "bootstrap_test_worker.mjs",
+            "compatibility_date": "2026-11-13",
+            "workers_dev": false
+          }
+          JSON
+          node --test tradingview/delta-peaks/gateway-lab/bootstrap_test_worker.test.mjs
+          npx --yes wrangler@4.157.0 deploy --dry-run \
+            --config "$RUNNER_TEMP/remura-inert-bootstrap/wrangler.json" \
+            --outdir "$RUNNER_TEMP/remura-inert-bootstrap-built"
+          test -s "$RUNNER_TEMP/remura-inert-bootstrap-built/bootstrap_test_worker.js" || \
+            test -s "$RUNNER_TEMP/remura-inert-bootstrap-built/bootstrap_test_worker.mjs" || \
+            test -s "$RUNNER_TEMP/remura-inert-bootstrap-built/worker.js"
+          echo "REMURA_BOOTSTRAP_COMPILE=OFFLINE_ONLY"
+          echo "NO_D1_BINDINGS=YES; NO_SECRETS=YES; WORKERS_DEV=DISABLED_IN_SYNTHETIC_CONFIG"
+          echo "CLOUDFLARE_DEPLOY=NO; WORKER_NOT_CREATED"
