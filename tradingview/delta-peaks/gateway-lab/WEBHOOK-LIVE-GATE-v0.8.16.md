@@ -1,6 +1,14 @@
-# REMURA v0.8.17-doc — Piano di autorizzazione WEBHOOK REALE (NON ATTIVO)
-**Aggiornamento: 13/11/2026, ore 13:44 CET — nuovo checkpoint Domains & Routes**
+# REMURA v0.8.18-doc — Piano di autorizzazione WEBHOOK REALE (NON ATTIVO)
+**Aggiornamento: 13/11/2026, ore 13:58 CET — metadata API e Test Worker**
 **PR #102: DRAFT · Worker runtime v0.8.5 · sorgente v0.8.6 in GitHub · monitor main v0.8.14.**
+
+## Checkpoint Worker metadata GET — 13/11/2026 13:58 CET
+- [Run #43428754941](https://github.com/mirkoworz/remura/actions/runs/43428754941): 11 test offline OK, API **GET autenticata** al Worker configurazione con token D1 Read esistente; esito `REMURA_WORKER_SETTINGS=INCONCLUSIVE_HTTP_403`. **Nessun permesso Worker Metadata confermato, nessuna risposta settings utilizzabile**. Il successo del workflow significa che il diniego è stato classificato correttamente; non equivale a verifica LIVE del Worker.
+- Questo 403 riguarda **api.cloudflare.com** e non è la stessa sonda GET pubblica `workers.dev` già inconcludente: non attribuirlo al BIC di `workers.dev`. Presumibile carenza permessi Workers del token, ma non dimostrata in modo definitivo. **Non ripetere stesso test**.
+- Preparato nuovo Worker di test **SOLO COME MANIFEST NON DEPLOYABILE**, `wrangler.webhook-test.EXAMPLE.json`: D1 `remura-tv-lab-test`, flag ingest OFF, UUID e limiter namespace placeholder, nessun segreto. Guard `predeploy_test_manifest_guard_v1.py` + test CI [#43429329813](https://github.com/mirkoworz/remura/actions/runs/43429329813) superati. Protegge contro target `remura-tv-lab` reale e flag ON.
+- Prossima verifica dal proprietario, **solo quando indispensabile**: in Dashboard Worker Settings, mostrare **nomi e tipi dei binding e Variabili/Secrets senza aprire valori**. Non duplicare screenshot Domains & Routes già archiviato. I binding rate limiter potrebbero non apparire in dashboard (documentazione Cloudflare); per quelli servirà altro preflight prima di autorizzare distribuzione.
+- Non creare token Workers Write né disabilitare Access; per un futuro permesso API, valutare esclusivamente Worker Metadata Read-Only su quel singolo Worker, se e solo se la UI non basta. Nessuna credenziale da inviare in chat.
+- Tutto resta DRAFT, nessun deploy, nessuna scrittura D1, nessun alert TradingView.
 
 ## Nuovo checkpoint screenshot Cloudflare (13/11/2026 13:44 CET)
 - `remura-tv-ingest-lab.mirkoworz.workers.dev` appare **Production** con `Anyone with this URL can visit` e `Enable Access`: **Access non abilitato nella vista specifica dell'URL Production**. Non è prova esaustiva su tutte le policy account-wide/hostname.
