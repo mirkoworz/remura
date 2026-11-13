@@ -1,4 +1,4 @@
-# REMURA v0.8.27 — 13/11/2026, ore 18:41 CET
+# REMURA v0.8.29 — 13/11/2026, 20:41:22 (Europe/Rome)
 # BOOTSTRAP SOLO MANUALE: worker già esistente, codice inerte, nessun D1/Secret/ingest.
 # Zero automatismi push/cron/PR; richiede conferma esatta e token Cloudflare limitato.
 name: REMURA TEST Worker BOOTSTRAP (manual only)
@@ -7,9 +7,11 @@ on:
   workflow_dispatch:
     inputs:
       confirmation:
-        description: 'Digita DEPLOY_BOOTSTRAP_TEST_OFF_ONLY (solo Worker TEST, nessun webhook)'
+        description: 'Conferma il SOLO bootstrap inerte del Worker TEST, senza webhook'
         required: true
-        type: string
+        type: choice
+        options:
+          - DEPLOY_BOOTSTRAP_TEST_OFF_ONLY
 
 permissions:
   contents: read
