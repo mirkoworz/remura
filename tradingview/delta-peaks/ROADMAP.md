@@ -1,6 +1,16 @@
-# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.33-doc (Worker Production noto v0.8.5, gateway sorgente v0.8.6 offline)
-**Aggiornamento roadmap: 13/11/2026, ore 22:36 CET — gateway TEST OFF manuale predisposto, nessun nuovo deploy**
+# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.34-doc (Worker Production noto v0.8.5, gateway sorgente v0.8.6 offline)
+**Aggiornamento roadmap: 13/11/2026, ore 23:00 CET — gateway TEST OFF realmente distribuito; webhook non attivo**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView OFF, nessun ordine.**
+
+## CHECKPOINT v0.8.34 — DEPLOY GATEWAY COMPLETO TEST OFF VERIFICATO — 13/11/2026, ore 23:00 CET
+- [x] L'utente ha autorizzato con `workflow_dispatch` su `main` la prima installazione del **solo** gateway TEST con `INGEST_ENABLED=false`. Esecuzione [#43515467198](https://github.com/mirkoworz/remura/actions/runs/43515467198): `completed/SUCCESS`, job `deploy-gateway-test-off-only` e tutti gli step applicabili **SUCCESS**.
+- [x] Test offline, identificazione GET-only di D1 TEST EU e Worker TEST bootstrap vuoto, bundle privato effimero, Wrangler 4.157.0 dry-run, ultimo controllo binding vuoti, deployment e readback postdeploy superati; nessuna credenziale richiesta all'utente oltre ai GitHub Secrets già esistenti.
+- [x] Log del deploy: `Uploaded remura-tv-webhook-test`, `Deployed remura-tv-webhook-test triggers`, Cloudflare **Version ID `1d47f428-c176-48d3-8d80-10ed0a94a43e`**. Binding elencati da Wrangler: `TELEMETRY_DB -> remura-tv-lab-test`, `INGEST_RATE_LIMITER=20/60`, `INGEST_ENABLED="false"`; `preview_urls=false` nel manifest. Nessun Secret webhook.
+- [x] Verifica LIVE postdeploy delle settings tramite GET autenticati: `REMURA_TEST_ROLLBACK_PREFLIGHT=TEST_GATEWAY_OFF_STRICT_NO_SECRET`, verifica UUID D1 TEST distinto da MAIN e limiter vincolato; non equivale a prova dell'HTTP edge, allocazione traffico o reale ingest. Il bundle temporaneo è stato rimosso; D1 principale e Worker Production `remura-tv-ingest-lab` non modificati.
+- [x] Warning **non bloccante** Wrangler `Unexpected fields found in top-level field: "$comment"` su un manifesto temporaneo generato da template: compilazione, deploy e readback riusciti. Eliminare il campo commento soltanto da un futuro bundle temporaneo testato prima della prossima installazione; non rifare per questo il deploy già avvenuto.
+- [ ] **Prossima attività OFFLINE**: progettare un Secret TEST completamente separato e custodito esclusivamente in GitHub Secrets/Cloudflare (mai in Pine o JSON), prima del primo POST live; implementare rollback/spegnimento d'emergenza che funzioni **anche dopo** l'aggiunta Secret e con ingest ON (l'attuale workflow rollback v0.8.32 blocca ON/Secret). Verificare costo del rate limiter e sicurezza endpoint prima di ON; deploy ON solo con autorizzazione specifica.
+- [ ] Dopo il nuovo gate: configurare l'alert webhook TradingView su `FXCM:EURUSD` M5 con JSON `remura.tv.flow.v1` e 2FA, provare risposta accettata/deduplica/rifiuti, misurare latenza e throughput D1 TEST senza esportazione a produzione. La disponibilità di `/health` edge e la consegna reale TradingView restano **NON VERIFICATE**.
+- [x] PR #102 resta DRAFT; nessun merge o release REMURA Oracle, nessun nuovo ordine o notifica, nessuna evidenza di vantaggio scientifico. Main aggiornato soltanto con workflow manuale, monitor budget protetto.
 
 ## CHECKPOINT v0.8.33 — WORKFLOW GATEWAY TEST OFF PRONTO, MA NON AVVIATO — 13/11/2026, ore 22:36 CET
 - [x] Ripreso il punto v0.8.32 senza ripetere audit D1/Workers/Account, creare token o modificare Oracle. GitHub PR #102 rimane DRAFT/OPEN; `main` non contiene il codice del gateway e l'app LIVE non cambia versione.
