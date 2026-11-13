@@ -1,4 +1,4 @@
-# REMURA Workers Analytics Guard v0.1 — aggiornamento 13/11/2026, ore 10:05 CET
+# REMURA Workers Analytics Guard v0.2 — aggiornamento 13/11/2026, ore 10:13 CET
 # Solo lettura GraphQL con token Account Analytics Read già presente, no deploy.
 """Account-wide Workers daily invocation estimate, without any write or token logging.
 
@@ -66,7 +66,7 @@ def parse_workers(payload: object) -> dict | None:
         raise AuditError("workers_graphql_truncated_at_1000")
     requests = errors = subrequests = 0
     script_names = set()
-    worst_reported_p99 = 0.0
+    worst_reported_p99 = None
     for row in rows:
         if not isinstance(row, dict):
             raise AuditError("workers_graphql_bad_row")
@@ -84,7 +84,7 @@ def parse_workers(payload: object) -> dict | None:
         if cpu_p99 is not None:
             if type(cpu_p99) not in (int, float) or not math.isfinite(cpu_p99) or cpu_p99 < 0:
                 raise AuditError("workers_graphql_invalid_cpu")
-            worst_reported_p99 = max(worst_reported_p99, float(cpu_p99))
+            worst_reported_p99 = max(worst_reported_p99 or 0.0, float(cpu_p99))
     if errors > requests:
         raise AuditError("workers_graphql_inconsistent_counts")
     return {
@@ -159,7 +159,9 @@ def main() -> int:
     print("WORKERS_ACCOUNT_REQUESTS_ESTIMATE=" + str(metrics["requests_estimate"]))
     print("WORKERS_ACCOUNT_ERRORS_ESTIMATE=" + str(metrics["errors_estimate"]))
     print("WORKERS_ACCOUNT_SCRIPT_COUNT=" + str(metrics["script_count"]))
-    print("WORKERS_MAX_REPORTED_CPU_P99_US=" + str(metrics["max_reported_cpu_p99_us"]))
+    print("WORKERS_MAX_REPORTED_CPU_P99_US=" +
+          (str(metrics["max_reported_cpu_p99_us"])
+           if metrics["max_reported_cpu_p99_us"] is not None else "NOT_AVAILABLE"))
     print("WORKERS_FREE_DAILY_REQUEST_LIMIT=" + str(WORKERS_FREE_REQUESTS_PER_DAY))
     print("WORKERS_CPU_AND_COST=NOT_VERIFIED_BY_BILLING")
     return 2 if status == "CRITICAL" else 0
