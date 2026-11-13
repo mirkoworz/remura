@@ -1,6 +1,16 @@
-# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.10-doc (Worker runtime v0.8.5, sorgente v0.8.6 offline)
-**Aggiornamento roadmap: 13/11/2026, ore 06:57 CET**
+# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.11-doc (Worker runtime v0.8.5, sorgente v0.8.6 offline)
+**Aggiornamento roadmap: 13/11/2026, ore 10:01 CET**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView OFF, nessun ordine.**
+
+## CHECKPOINT ANALYTICS ACCOUNT-WIDE REALI RIUSCITE — 13/11/2026 ore 10:01 CET
+- [x] Utente ha confermato inserimento nel GitHub Secret `REMURA_CF_ANALYTICS_READ_TOKEN` del token Cloudflare separato **Account Analytics → Read**. Non vengono richieste modifiche ai precedenti token D1 Read.
+- [x] GitHub Action [run 43397743147](https://github.com/mirkoworz/remura/actions/runs/43397743147) rilanciata automaticamente tramite commit isolato alla workflow del branch DRAFT: offline-safety SUCCESS, `account-analytics-readonly` SUCCESS.
+- [x] Output autentico GraphQL del **13/11/2026 UTC**: `REMURA_CF_ACCOUNT_QUOTA=OK`, `D1_ACCOUNT_ROWS_READ_ESTIMATE=1`, `D1_ACCOUNT_ROWS_WRITTEN_ESTIMATE=0`; limiti gratuiti di riferimento 5.000.000 read e 100.000 write/die. **Stime Analytics adattive, non contatori billing esatti** e potenzialmente incomplete/ritardate.
+- [x] Token Analytics funzionante; nessuna query SQL di scrittura, mutazione API, deploy Worker, merce o ordine. README gateway aggiornato **v0.8.11-doc**, 13/11/2026 ore 10:01.
+- [ ] Stato gateway pubblico dal runner GitHub resta `INCONCLUSIVE_EDGE_403`: 403/403 non prova disabilitazione né attivazione. Prima di ogni test webhook servono verifica da account, protezione edge e misure effettive Workers.
+- [ ] Restano sconosciuti: consumo giornaliero Workers/CPU, dati billing esatti, spazio combinato dei due D1, disponibilità/costo Rate Limiting binding sul piano Free. Non dichiarare l'account completamente sicuro per i costi solo da D1 Analytics.
+- [ ] Monitoring giornaliero vero **non ancora schedulato**. Workflow su branch research con `push` e `workflow_dispatch`; GitHub `schedule` userebbe main e va progettato separatamente con autorizzazione.
+- [x] PR #102 verificata OPEN/DRAFT: mantenere no merge/no deploy/no activation; altri filoni A/B/C non modificati.
 
 ## CHECKPOINT PUBBLICO 403 + QUOTE GIORNALIERE PREPARATE — 13/11/2026 ore 06:57 CET
 - [x] PR #102 ancora **OPEN/DRAFT**, commit isolati sul branch `research/tradingview-delta-peaks-20261111`; Worker pubblico runtime v0.8.5 non modificato, sorgente v0.8.6 solo GitHub, ingest OFF da ultimo stato confermato dall'utente (nuova verifica pubblica inconcludente).
