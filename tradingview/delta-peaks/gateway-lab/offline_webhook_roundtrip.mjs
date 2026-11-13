@@ -1,4 +1,4 @@
-// REMURA v0.8.16 — 13/11/2026, ore 13:12 CET
+// REMURA v0.8.16 — 13/11/2026, ore 13:11 CET
 // 100% OFFLINE synthetic webhook -> fake D1 -> JSONL feed; no network or secrets.
 import assert from "node:assert/strict";
 import gateway from "./worker.mjs";

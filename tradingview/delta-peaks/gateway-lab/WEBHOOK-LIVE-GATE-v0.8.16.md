@@ -1,5 +1,5 @@
 # REMURA v0.8.16 — Piano di autorizzazione WEBHOOK REALE (NON ATTIVO)
-**Aggiornamento: 13/11/2026, ore 13:17 CET**
+**Aggiornamento: 13/11/2026, ore 13:11 CET**
 **PR #102: DRAFT · Worker runtime v0.8.5 · sorgente v0.8.6 in GitHub · monitor main v0.8.14.**
 
 ## Stato dimostrato, non supposizioni

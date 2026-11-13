@@ -1,4 +1,4 @@
-# REMURA TradingView Telemetry LAB v0.8.16 — aggiornamento 13/11/2026 13:14 CET.
+# REMURA TradingView Telemetry LAB v0.8.16 — aggiornamento 13/11/2026 13:11 CET.
 # SOLO CI OFFLINE. Nessun deploy, webhook, credenziale o trade automatico.
 name: REMURA TradingView Telemetry LAB
 on:
