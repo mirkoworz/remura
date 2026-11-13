@@ -111,11 +111,26 @@ def ensure_table(db):
     # Provenance is deliberately append-only and does not backfill existing rows.
     db.commit()
 
-def collect_once(db_path, now=None, fetch=download):
+def collect_once(db_path, now=None, fetch=download, *, research_response_observer=None,
+                 research_atomic_witness=None):
     """At most 2 official dataset requests (with one fallback host each).
 
     Leave older good records untouched when a dataset fetch fails.
+    Track C future-only hook DEFAULT OFF: observe original normalized CFTC
+    response with UTC clocks sampled immediately before/AFTER fetch, BEFORE
+    any SQLite change. The hook is NOT called in normal production; it is
+    not an independently authenticated timestamp or an automatic recorder.
+    Any callback error must block that dataset's write, not weaken checks.
+    Research atomic witness is a SEPARATE explicit opt-in, default OFF,
+    running as the last statement of the original COT transaction. The
+    approved B witness commits that transaction with the source values; an
+    arbitrary callback might not, so the caller MUST use the reviewed bridge.
+    No observer is configured by the normal server loop.
     """
+    if research_response_observer is not None and not callable(research_response_observer):
+        raise ValueError("explicit_callable_research_response_observer_required")
+    if research_atomic_witness is not None and not callable(research_atomic_witness):
+        raise ValueError("explicit_callable_atomic_witness_required")
     now=now or utcnow()
     db=connect(db_path)
     ensure_table(db)
@@ -124,7 +139,31 @@ def collect_once(db_path, now=None, fetch=download):
     try:
         for dataset in DATASETS:
             try:
-                records=normalize(dataset,fetch(dataset,now),now)
+                # Preserve the exact normal path when research is OFF.
+                # Sampling the clock is deliberately adjacent to the actual
+                # fetch return; the old cot_first_seen uses the collector's
+                # entry clock and MUST NOT be reinterpreted as HTTP receipt.
+                researching=(research_response_observer is not None or
+                             research_atomic_witness is not None)
+                started=utcnow() if researching else None
+                original=fetch(dataset,now)
+                received=utcnow() if researching else None
+                if researching and (
+                        not isinstance(started,dt.datetime)
+                        or not isinstance(received,dt.datetime)
+                        or started.tzinfo is None or received.tzinfo is None
+                        or started.utcoffset()!=dt.timedelta(0)
+                        or received.utcoffset()!=dt.timedelta(0)
+                        or received<started):
+                    raise ValueError("nonmonotonic_research_cot_receipt_clock")
+                records=normalize(dataset,original,now)
+                if researching:
+                    # Immutable primitive tuples, not a mutable map the
+                    # observer could rewrite before cot_reports persistence.
+                    frozen=tuple(sorted((kind,code,report,*tuple(values))
+                                        for (kind,code,report),values in records.items()))
+                    if research_response_observer is not None:
+                        research_response_observer(dataset,started,received,frozen)
                 with db:
                     # Only NEW contract/week rows receive a first-seen timestamp.
                     # Older records are never retroactively claimed as captured.
@@ -146,6 +185,15 @@ def collect_once(db_path, now=None, fetch=download):
                          if (code,date) not in existing])
                     db.execute("DELETE FROM cot_reports WHERE report_date < ?",
                         ((now-dt.timedelta(days=KEEP_DAYS)).date().isoformat(),))
+                    if research_atomic_witness is not None:
+                        # Record the local attestation clock AFTER source UPSERT.
+                        # The reviewed Track C/B bridge checks that frozen
+                        # source bytes match this very SQLite transaction and
+                        # invokes B.witness LAST, which commits source+proof.
+                        # Never expose this hook on a live scheduler.
+                        attested=utcnow()
+                        research_atomic_witness(
+                            db,dataset,started,received,attested,frozen)
                 saved[dataset]=len(records)
                 set_status(db,**{"cot_"+dataset+"_last_success":now.isoformat(),
                                   "cot_"+dataset+"_state":"ok"})
