@@ -1,4 +1,4 @@
-# REMURA Budget Report unit tests v0.1 — aggiornamento 13/11/2026, ore 10:09 CET
+# REMURA Budget Report unit tests v0.8.14 — aggiornamento 13/11/2026, ore 11:59 CET
 # Solo stringhe sintetiche, nessuna rete o secret reale.
 import unittest
 
@@ -17,6 +17,11 @@ WORKERS_MAX_REPORTED_CPU_P99_US=3080.0
 STORAGE = """REMURA_D1_TEST_STORAGE=OK
 REMURA_D1_TEST_STORAGE_BYTES=28672
 REMURA_D1_TEST_STORAGE_PERCENT=0.0057
+"""
+ACCOUNT_STORAGE = """REMURA_D1_ACCOUNT_STORAGE=OK
+D1_ACCOUNT_DATABASE_COUNT=2
+D1_ACCOUNT_STORAGE_BYTES=49152
+D1_ACCOUNT_LARGEST_DB_BYTES=28672
 """
 
 
@@ -89,6 +94,32 @@ class BudgetReportTests(unittest.TestCase):
     def test_report_never_claims_billing_exactness(self):
         summary = report.build_report(D1, WORKERS, STORAGE, "2026-11-13")
         self.assertIn("non sono contatori di fatturazione esatti", summary.lower())
+
+
+    def test_account_storage_real_metadata_row(self):
+        summary = report.build_report(D1, WORKERS, STORAGE, "2026-11-13",
+                                      ACCOUNT_STORAGE)
+        self.assertIn("D1 account: dimensione complessiva", summary)
+        self.assertIn("49152 byte", summary)
+        self.assertIn("2 | 10", summary)
+
+    def test_account_storage_unknown_never_prints_stale_values(self):
+        unknown = ACCOUNT_STORAGE.replace("REMURA_D1_ACCOUNT_STORAGE=OK",
+                                           "REMURA_D1_ACCOUNT_STORAGE=UNKNOWN:api")
+        summary = report.build_report(D1, WORKERS, STORAGE, "2026-11-13", unknown)
+        self.assertIn("D1 account: dimensione complessiva | UNKNOWN | non disponibile", summary)
+        self.assertNotIn("49152 byte", summary)
+
+    def test_account_storage_critical_is_visible(self):
+        critical = ACCOUNT_STORAGE.replace("REMURA_D1_ACCOUNT_STORAGE=OK",
+                                            "REMURA_D1_ACCOUNT_STORAGE=CRITICAL")
+        summary = report.build_report(D1, WORKERS, STORAGE, "2026-11-13", critical)
+        self.assertIn("D1 account: database | CRITICAL", summary)
+
+    def test_account_storage_private_fields_never_render(self):
+        injected = ACCOUNT_STORAGE + "BEARER_TOKEN=not-for-logs\\n"
+        summary = report.build_report(D1, WORKERS, STORAGE, "2026-11-13", injected)
+        self.assertNotIn("not-for-logs", summary)
 
 
 if __name__ == "__main__":
