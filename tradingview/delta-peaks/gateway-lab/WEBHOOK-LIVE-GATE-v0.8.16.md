@@ -1,6 +1,12 @@
-# REMURA v0.8.16 — Piano di autorizzazione WEBHOOK REALE (NON ATTIVO)
-**Aggiornamento: 13/11/2026, ore 13:11 CET**
+# REMURA v0.8.17-doc — Piano di autorizzazione WEBHOOK REALE (NON ATTIVO)
+**Aggiornamento: 13/11/2026, ore 13:44 CET — nuovo checkpoint Domains & Routes**
 **PR #102: DRAFT · Worker runtime v0.8.5 · sorgente v0.8.6 in GitHub · monitor main v0.8.14.**
+
+## Nuovo checkpoint screenshot Cloudflare (13/11/2026 13:44 CET)
+- `remura-tv-ingest-lab.mirkoworz.workers.dev` appare **Production** con `Anyone with this URL can visit` e `Enable Access`: **Access non abilitato nella vista specifica dell'URL Production**. Non è prova esaustiva su tutte le policy account-wide/hostname.
+- `No custom domains` nella sezione Custom Domains and Routes; visibile un hostname Preview differente. Non serve acquistare dominio o aggiungere route per il laboratorio.
+- Il vecchio `INCONCLUSIVE_EDGE_403` non va ripetuto: esito ancora inspiegato. Cloudflare documenta che Browser Integrity Check è applicato a `workers.dev` e che alcuni client automatizzati possono essere bloccati prima dell'esecuzione del Worker (anche senza Access). Questo è **un possibile meccanismo**, NON prova retrospettiva della causa del 403. Fonti: https://developers.cloudflare.com/workers/configuration/routing/workers-dev/ e https://developers.cloudflare.com/workers/configuration/cloudflare-access/.
+- Nessun deploy, modifica alla configurazione Access, ai binding, agli alert TradingView o alle risorse Cloudflare da questa verifica. Prossimo controllo: lettura autentica metadata Worker e stato binding, minimizzando permessi; non chiedere un'altra foto delle stesse schermate.
 
 ## Stato dimostrato, non supposizioni
 - Pine v0.8.1 compila, include `alert(payload, alert.freq_once_per_bar_close)` e opzioni telemetria/heartbeat impostate OFF. TradingView Premium/2FA: utente ha già confermato 2FA, non richiederla ancora.
@@ -17,7 +23,7 @@
   `/accounts/{account_id}/workers/scripts/remura-tv-ingest-lab/settings` e la sua configurazione di accesso nel pannello Cloudflare. La documentazione API indica che è disponibile uno scope di tipo **Workers Metadata Read-Only/Workers Scripts Read** per la lettura; i GitHub Secrets oggi disponibili sono SOLO D1 Read e Account Analytics Read, **non presumere che autorizzino Workers Settings**.
 - Verificare in modo autenticato: route/hostname e Cloudflare Access; `TELEMETRY_DB` associato a `remura-tv-lab`, eventuale `INGEST_ENABLED`, presenza di `WEBHOOK_TOKEN_SHA256` (solo nome, MAI valore), stato binding `INGEST_RATE_LIMITER`, versione Worker realmente distribuita. Alcuni dettagli non sono disponibili da un singolo endpoint: assenti → UNKNOWN.
 - **Non esporre nei log** risposta integrale, script, binding secrets, token, URL segreto o corpo di richieste. Leggere, sanificare e pubblicare solo stati allowlisted.
-- Cloudflare Access può imporre login sul Worker; TradingView invia webhook POST e non dispone nel normale alert di un login browser o dei custom header Access Service Token. Se esiste un Access login sul percorso webhook, il POST **non funzionerebbe senza un'architettura di accesso diversa**. L'esito 403 resta quindi una **possibile** spiegazione, non un fatto accertato. NON disabilitare Access senza piano separato e consenso.
+- Nella schermata dell'utente, il collegamento `workers.dev` Production risulta **pubblico senza il pulsante di Access attivato**; non presumere login Access su quel collegamento. Una policy più ampia o regole di hostname richiederebbero comunque verifica specifica. Controllare separatamente BIC `workers.dev` e altre protezioni edge; non interpretare 403 come prova di una causa specifica e **non cambiare Access** per tentativi.
 - Nessun token nuovo deve essere creato automaticamente o condiviso in chat. Prima valutare connettori Cloudflare autorizzati o la UI read-only già accessibile al proprietario; solo se davvero inevitabile scegliere il minimo permesso temporaneo.
 
 ### B. Contenimento Free prima del deploy
