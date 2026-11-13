@@ -1,4 +1,4 @@
-# REMURA Worker PUBLIC FAIL-CLOSED AUDIT v0.1 — 13/11/2026 ore 06:49 CET
+# REMURA Worker PUBLIC FAIL-CLOSED AUDIT v0.2 — 13/11/2026 ore 06:52 CET
 # Solo 2 GET senza credenziali: /health e /, MAI POST /ingest né token URL.
 """Read-only verification that the deployed public TV LAB Worker remains disabled."""
 from __future__ import annotations
@@ -62,6 +62,23 @@ def main() -> int:
     try:
         health = fetch_public("/health")
         root = fetch_public("/")
+        health_code, health_body = health
+        root_code, root_body = root
+        # Sanitized diagnostics only: never print raw Cloudflare body.
+        health_status = health_body.get("status")
+        root_status = root_body.get("status")
+        health_flag = health_body.get("accepting")
+        print("REMURA_PUBLIC_HEALTH_HTTP=" + str(health_code))
+        print("REMURA_PUBLIC_HEALTH_STATUS=" +
+              (health_status if health_status in ("lab_only", "disabled", "not_found")
+               else "UNEXPECTED"))
+        print("REMURA_PUBLIC_HEALTH_ACCEPTING=" +
+              ("true" if health_flag is True else
+               "false" if health_flag is False else "UNKNOWN"))
+        print("REMURA_PUBLIC_ROOT_HTTP=" + str(root_code))
+        print("REMURA_PUBLIC_ROOT_STATUS=" +
+              (root_status if root_status in ("lab_only", "disabled", "not_found")
+               else "UNEXPECTED"))
         validate_failclosed(health, root)
     except GatewayNotSafe as error:
         print("REMURA_TV_PUBLIC_FAILCLOSED=ERROR:" + str(error))
