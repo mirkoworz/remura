@@ -1,6 +1,13 @@
-# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.19-doc (ultimo Worker noto v0.8.5, sorgente v0.8.6 offline)
-**Aggiornamento roadmap: 13/11/2026, ore 15:03 CET — screenshot Production Settings**
+# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.20-doc (ultimo Worker noto v0.8.5, sorgente v0.8.6 offline)
+**Aggiornamento roadmap: 13/11/2026, ore 15:09 CET — screenshot Secret Name parziale Production**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView OFF, nessun ordine.**
+
+## CHECKPOINT v0.8.20 — SEGRETO PRODUCTION NOME PARZIALE — 13/11/2026 ore 15:09 CET
+- [x] Acquisito nuovo screenshot iPhone in orizzontale, Worker `remura-tv-ingest-lab` → **Production** → Settings → Runtime variables and secrets. **Tipo `Secret`**, **nome visibile `WEBHOOK_TOKE...`**, **valore `Value encrypted`**. Nome visibile coerente col precedente `WEBHOOK_TOKEN_SHA256`, ma **troncato: NON conferma esattamente nome completo, contenuto, autenticazione o abilitazione dell'ingestione**.
+- [x] Non esposti né richiesti valori segreti. Nessuna nuova operazione Cloudflare / GitHub da parte dell'utente, nessun token o costo nuovo.
+- [ ] Informazione nuova indispensabile: schermata **Bindings** con colonne **Name / Type**, possibilmente nome D1 `TELEMETRY_DB` e database associato quando visibile, evitando qualsiasi valore sensibile; screenshot precedente mostrava solo tipo `D1 database`, non nome. Non richiedere nuovamente screenshot del Secret o Domains/Access.
+- [ ] Binding `INGEST_RATE_LIMITER` e valore `INGEST_ENABLED` restano NON verificati nell'ultima configurazione runtime; screenshot parziale NON dimostra assenza di elementi oltre inquadratura. Nessun deploy, webhook o ingest finché preflight/consenso separato.
+- [x] PR #102 DRAFT, nessun merge, ultimo monitor `main` v0.8.14 invariato, record sintetico D1 TEST preservato. Le prove full-chain attuali restano esclusivamente offline/sintetiche.
 
 ## CHECKPOINT v0.8.19 — WORKER PRODUCTION SETTINGS, SCREENSHOT UTENTE — 13/11/2026 ore 15:03 CET
 - [x] Nuovo screenshot reale Cloudflare dashboard `remura-tv-ingest-lab` → **Settings** → tab **Production**. In `Runtime variables and secrets` visibile **un elemento di tipo Secret**; in `Bindings` visibile **un elemento di tipo D1 database**. In `Observability` spunta su `Include Invocation logs` nell'area visibile. Nessuna modifica effettuata.
