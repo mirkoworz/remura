@@ -44,6 +44,8 @@ from cot_week_watch import cot_week_watch_status
 from session_gaps import session_gap_overview
 from ctrader_tokens import access_token, path_for, read_file
 from resource_monitor import snapshot as resource_snapshot
+from storage_cache_v165 import StorageMetadataCache
+_STORAGE_CACHE=StorageMetadataCache()
 from squalincome_timing import record as record_scan_timing, summary as scan_timing_summary
 from batch_timing import record as record_batch_timing, summary as batch_timing_summary, SCHEMA as BATCH_TIMING_SCHEMA
 from h1_batch_comparison import compare_paired_h1
@@ -326,7 +328,11 @@ def http_handler(db_path):
                     request_counts["privateGet"]+=1
                 counts=request_counts.copy()
             if path==RESOURCES_PATH:
-                self.response(200,resource_snapshot(counts))
+                data=resource_snapshot(counts)
+                # DRAFT v1.65 optional metadata; OFF by default. No file IO in GET.
+                if os.environ.get("REMURA_STORAGE_DIAG_ENABLED","0")=="1":
+                    data["storageInventory"]=_STORAGE_CACHE.peek()
+                self.response(200,data)
                 return
             if path==UPDATE_STATUS_PATH:
                 self.response(200,safe_update_status(db_path))
@@ -1080,6 +1086,9 @@ def main():
     finally:
         db.close()
     stop=threading.Event()
+    if os.environ.get("REMURA_STORAGE_DIAG_ENABLED","0")=="1":
+        # This daemon is optional and separate from the price/HTTP threads.
+        _STORAGE_CACHE.start(db_path,stop)
     if os.environ.get("REMURA_COLLECTOR_ENABLED","0")=="1":
         thread=threading.Thread(target=collector_loop,args=(db_path,stop),daemon=True)
         thread.start()
