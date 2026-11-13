@@ -1,4 +1,4 @@
-# REMURA Worker PUBLIC FAIL-CLOSED AUDIT tests v0.1 — 13/11/2026 ore 06:49 CET
+# REMURA Worker PUBLIC FAIL-CLOSED AUDIT tests v0.2 — 13/11/2026 ore 06:57 CET
 # Prove esclusivamente offline: non fare richieste HTTP reali.
 """Unit tests for strict GET-only Cloudflare Worker public health auditing."""
 import unittest
@@ -28,6 +28,26 @@ class FakeOpener:
 
 
 class PublicFailclosedAuditTests(unittest.TestCase):
+    def test_two_edge_denials_are_inconclusive_not_verified(self):
+        self.assertEqual(audit.classify_public_state(
+            (403, {"status": "forbidden"}), (403, {"status": "forbidden"})),
+            "INCONCLUSIVE_EDGE_403")
+
+    def test_mixed_403_and_health_200_is_not_verified(self):
+        with self.assertRaises(audit.GatewayNotSafe):
+            audit.classify_public_state(
+                (403, {"status": "forbidden"}), (503, {"status": "disabled"}))
+
+    def test_true_ingest_in_403_body_is_never_classed_as_safe(self):
+        with self.assertRaises(audit.GatewayNotSafe):
+            audit.classify_public_state(
+                (403, {"accepting": True}), (403, {"status": "forbidden"}))
+
+    def test_valid_public_health_is_verified(self):
+        self.assertEqual(audit.classify_public_state(
+            (200, {"status": "lab_only", "accepting": False}),
+            (503, {"status": "disabled"})), "VERIFIED_DISABLED")
+
     def test_valid_failclosed_response(self):
         audit.validate_failclosed(
             (200, {"status": "lab_only", "accepting": False}),
