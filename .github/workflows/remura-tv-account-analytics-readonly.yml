@@ -1,4 +1,4 @@
-# REMURA Account Analytics Read-Only v0.2 — 13/11/2026 ore 10:00 CET
+# REMURA Account Analytics Read-Only v0.3 — 13/11/2026 ore 10:08 CET
 # Verification re-trigger after user confirms GitHub Analytics Read secret added.
 # Solo GraphQL read-only, account quota daily estimate; nessun deploy, webhook o modifica D1.
 # Se manca il secret ANALYTICS, salta esplicitamente il job remoto senza fare alcuna chiamata.
@@ -12,6 +12,8 @@ on:
       - ".github/workflows/remura-tv-account-analytics-readonly.yml"
       - "tradingview/delta-peaks/gateway-lab/cloudflare_account_quota_guard.py"
       - "tradingview/delta-peaks/gateway-lab/test_cloudflare_account_quota_guard.py"
+      - "tradingview/delta-peaks/gateway-lab/cloudflare_workers_usage_guard.py"
+      - "tradingview/delta-peaks/gateway-lab/test_cloudflare_workers_usage_guard.py"
   workflow_dispatch:
 
 permissions:
@@ -32,8 +34,10 @@ jobs:
           persist-credentials: false
       - name: Offline GraphQL free quota parser guard tests
         run: python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_cloudflare_account_quota_guard.py' -v
+      - name: Offline Workers account usage parser regression tests
+        run: python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_cloudflare_workers_usage_guard.py' -v
       - name: Static Python syntax
-        run: python3 -m py_compile tradingview/delta-peaks/gateway-lab/cloudflare_account_quota_guard.py
+        run: python3 -m py_compile tradingview/delta-peaks/gateway-lab/cloudflare_account_quota_guard.py tradingview/delta-peaks/gateway-lab/cloudflare_workers_usage_guard.py
 
   account-analytics-readonly:
     needs: offline-safety
@@ -56,3 +60,4 @@ jobs:
             exit 0
           fi
           python3 tradingview/delta-peaks/gateway-lab/cloudflare_account_quota_guard.py
+          python3 tradingview/delta-peaks/gateway-lab/cloudflare_workers_usage_guard.py
