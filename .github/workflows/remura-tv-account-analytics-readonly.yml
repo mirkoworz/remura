@@ -1,4 +1,5 @@
-# REMURA Account Analytics Read-Only v0.1 — 13/11/2026 ore 06:55 CET
+# REMURA Account Analytics Read-Only v0.2 — 13/11/2026 ore 10:00 CET
+# Verification re-trigger after user confirms GitHub Analytics Read secret added.
 # Solo GraphQL read-only, account quota daily estimate; nessun deploy, webhook o modifica D1.
 # Se manca il secret ANALYTICS, salta esplicitamente il job remoto senza fare alcuna chiamata.
 name: REMURA Cloudflare Account Analytics READ-ONLY LAB
