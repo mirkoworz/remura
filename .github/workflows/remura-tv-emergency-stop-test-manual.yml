@@ -1,0 +1,132 @@
+# REMURA TradingView LAB v0.8.35 — 13/11/2026 CET.
+# WARNING: Manual emergency change to TEST Worker ONLY. No automatic trigger.
+# Pinned review source. The TEST bootstrap never reads D1, limiter, or secrets.
+name: REMURA TEST Worker EMERGENCY STOP (manual only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'SOLO spegnimento Worker TEST: sostituisce gateway con bootstrap inerte'
+        required: true
+        type: choice
+        options:
+          - STOP_TEST_TO_INERT_BOOTSTRAP
+
+permissions:
+  contents: read
+
+concurrency:
+  group: remura-test-worker-bootstrap-manual
+  cancel-in-progress: false
+
+jobs:
+  emergency-stop-test-only:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/main' &&
+      github.actor == 'mirkoworz' &&
+      inputs.confirmation == 'STOP_TEST_TO_INERT_BOOTSTRAP'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CI: 'true'
+      WRANGLER_SEND_METRICS: 'false'
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.REMURA_CF_TEST_WORKER_EDITOR_TOKEN }}
+      REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+      REMURA_CF_D1_READ_TOKEN: ${{ secrets.REMURA_CF_D1_READ_TOKEN }}
+      REMURA_CF_TEST_WORKER_EDITOR_TOKEN: ${{ secrets.REMURA_CF_TEST_WORKER_EDITOR_TOKEN }}
+    steps:
+      - name: Checkout immutable reviewed emergency guard and inert bootstrap
+        uses: actions/checkout@v4
+        with:
+          ref: be11918d619121ce7c1388a987e78db576709e65
+          persist-credentials: false
+      - name: Run offline safety and bootstrap regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$REMURA_CF_ACCOUNT_ID"
+          test -n "$REMURA_CF_D1_READ_TOKEN"
+          test -n "$REMURA_CF_TEST_WORKER_EDITOR_TOKEN"
+          node --test tradingview/delta-peaks/gateway-lab/bootstrap_test_worker.test.mjs
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_emergency_stop_test_guard_v1.py' -v
+          python3 -m py_compile tradingview/delta-peaks/gateway-lab/emergency_stop_test_guard_v1.py
+          echo 'REMURA_TEST_EMERGENCY_OFFLINE=PASS'
+      - name: Verify current TEST state against D1 identity and strict permitted bindings
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/emergency_stop_test_guard_v1.py
+      - name: Build temporary inert-only bootstrap without D1, rate limiter, variables or secret
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/remura-emergency-stop-test"
+          cp tradingview/delta-peaks/gateway-lab/bootstrap_test_worker.mjs \
+            "$RUNNER_TEMP/remura-emergency-stop-test/bootstrap_test_worker.mjs"
+          cat > "$RUNNER_TEMP/remura-emergency-stop-test/wrangler.json" <<'JSON'
+          {
+            "name": "remura-tv-webhook-test",
+            "main": "bootstrap_test_worker.mjs",
+            "compatibility_date": "2026-11-13",
+            "workers_dev": true,
+            "preview_urls": false
+          }
+          JSON
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          p = Path(os.environ["RUNNER_TEMP"]) / "remura-emergency-stop-test/wrangler.json"
+          cfg = json.loads(p.read_text(encoding="utf-8"))
+          assert set(cfg) == {"name", "main", "compatibility_date", "workers_dev", "preview_urls"}
+          assert cfg["name"] == "remura-tv-webhook-test"
+          assert cfg["main"] == "bootstrap_test_worker.mjs"
+          assert cfg["workers_dev"] is True and cfg["preview_urls"] is False
+          PY
+          echo 'REMURA_TEST_EMERGENCY_TARGET=TEST_ONLY; CODE=INERT; DB=NONE; PREVIEW=OFF'
+      - name: Compile pinned bootstrap safely; does not change Cloudflare
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.157.0 deploy --dry-run \
+            --config "$RUNNER_TEMP/remura-emergency-stop-test/wrangler.json" \
+            --outdir "$RUNNER_TEMP/remura-emergency-stop-test-dryrun"
+          echo 'REMURA_TEST_EMERGENCY_DRY_RUN=PASS'
+      - name: Refresh authenticated GET preflight immediately before emergency deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/emergency_stop_test_guard_v1.py
+      - name: Replace ONLY existing TEST Worker with inert bootstrap
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.157.0 deploy \
+            --config "$RUNNER_TEMP/remura-emergency-stop-test/wrangler.json"
+          echo 'REMURA_TEST_EMERGENCY=DEPLOY_COMMAND_SUCCEEDED_PENDING_READBACK'
+      - name: Verify after deploy no D1, limiter or ingest flag remains
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/emergency_stop_test_guard_v1.py --postdeploy \
+            | tee "$RUNNER_TEMP/remura-emergency-postdeploy.txt"
+          grep -Eq '^REMURA_TEST_EMERGENCY_POSTDEPLOY=INERT_(NO_BINDINGS|SECRET_STILL_STORED)$' \
+            "$RUNNER_TEMP/remura-emergency-postdeploy.txt"
+          {
+            echo '### REMURA TEST Worker emergency stop — owner dispatched'
+            echo 'Pinned inert bootstrap deployed to remura-tv-webhook-test.'
+            echo 'Worker settings show no D1, limiter, or INGEST_ENABLED variable.'
+            echo 'An existing hash secret may remain stored in Cloudflare; it was never read.'
+            echo 'Production Worker and D1 main untouched by this workflow.'
+            echo 'Edge traffic allocation and HTTP health are NOT independently verified.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Remove temporary bundle
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf -- "$RUNNER_TEMP/remura-emergency-stop-test" \
+            "$RUNNER_TEMP/remura-emergency-stop-test-dryrun"
+          echo 'REMURA_TEST_EMERGENCY_CLEANUP=ATTEMPTED'
