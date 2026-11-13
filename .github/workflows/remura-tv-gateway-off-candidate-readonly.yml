@@ -1,0 +1,53 @@
+# REMURA v0.8.31 — 13/11/2026 ore 21:15 CET — NO DEPLOY
+# Read-only D1 account inventory + in-memory candidate with preview OFF, no GitHub outputs.
+name: REMURA TEST Gateway OFF candidate (read only)
+
+on:
+  push:
+    branches:
+      - research/tradingview-delta-peaks-20261111
+    paths:
+      - ".github/workflows/remura-tv-gateway-off-candidate-readonly.yml"
+      - "tradingview/delta-peaks/gateway-lab/gateway_off_candidate_v1.py"
+      - "tradingview/delta-peaks/gateway-lab/test_gateway_off_candidate_v1.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: remura-tv-off-candidate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-readonly:
+    if: github.repository == 'mirkoworz/remura' && github.ref == 'refs/heads/research/tradingview-delta-peaks-20261111'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    env:
+      REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+      REMURA_CF_D1_READ_TOKEN: ${{ secrets.REMURA_CF_D1_READ_TOKEN }}
+    steps:
+      - name: Checkout LAB in read-only mode
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: OFF candidate synthetic and privacy regression suite
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_gateway_off_candidate_v1.py' -v
+          python3 -m py_compile tradingview/delta-peaks/gateway-lab/gateway_off_candidate_v1.py
+      - name: Verify LIVE D1 TEST identity and build non-persistent candidate only
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/gateway_off_candidate_v1.py |
+            tee "$RUNNER_TEMP/remura-off-candidate-proof.txt"
+          {
+            echo '## REMURA v0.8.31 — TEST gateway in-memory OFF candidate'
+            echo '~~~text'
+            cat "$RUNNER_TEMP/remura-off-candidate-proof.txt"
+            echo '~~~'
+            echo 'No UUID, namespace, token, Wrangler deploy, D1 write or Worker call.'
+            echo 'This is NOT deploy authorization and does NOT prove limiter Free availability.'
+          } >> "$GITHUB_STEP_SUMMARY"
