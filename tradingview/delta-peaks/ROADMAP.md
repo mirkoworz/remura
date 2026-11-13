@@ -1,6 +1,17 @@
-# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.8-doc (Worker runtime v0.8.5, sorgente v0.8.6 offline)
-**Aggiornamento roadmap: 13/11/2026, ore 06:38 CET**
+# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.9-doc (Worker runtime v0.8.5, sorgente v0.8.6 offline)
+**Aggiornamento roadmap: 13/11/2026, ore 06:45 CET**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView OFF, nessun ordine.**
+
+## CHECKPOINT D1 FREE STORAGE REALE AUTOMATIZZATO — 13/11/2026 ore 06:45 CET
+- [x] Confermata fonte ufficiale Cloudflare per **GET metadati D1** con permesso D1 Read e campo `file_size`. Token GitHub esistente `REMURA_CF_D1_READ_TOKEN` riutilizzato, nessuna nuova credenziale.
+- [x] Script `gateway-lab/cloudflare_d1_storage_guard.py` v0.1: solo D1 `remura-tv-lab-test` nella giurisdizione EU, 3 richieste **GET** (verify token, list DB TEST, get metadata TEST); nessun SQL sulla D1 prospettica e nessuna write.
+- [x] Soglie automatiche storage sul singolo DB TEST: OK sotto 70%, WARNING da 70%, CRITICAL da 90% sul limite conservativo **500.000.000 byte** per DB Free. Le soglie sono guardie locali, non alert di notifica.
+- [x] Workflow [run #43373867720](https://github.com/mirkoworz/remura/actions/runs/43373867720) **SUCCESS**: `REMURA_D1_READONLY_AUDIT=record_verified`, `REMURA_D1_TEST_STORAGE=OK`, `REMURA_D1_TEST_STORAGE_BYTES=28672`, quota TEST misurata **0,0057%**.
+- [x] Test offline **47/47**: 21 read-only + 13 cleanup sintetico in SQLite memory + 13 storage metadata. GitHub Actions non fa merge/deploy.
+- [x] README gateway aggiornato a v0.8.9-doc, 13/11/2026 ore 06:44.
+- [ ] **Non ancora misurati:** consumo aggregato dei due database, quota D1 giornaliera letture/scritture, chiamate Worker/CPU e funzionalità/costo effettivo rate limiting binding sull'account Free. Non inventare `0%` o "tutto gratis" senza dashboard.
+- [ ] Non aggiungere `schedule` nel branch DRAFT come se funzionasse: GitHub cron esegue workflow dal branch default; attuale audit parte solo su push selettivi/manuale.
+- [ ] Il prossimo test pratico di ricezione richiederà preflight quota edge, rate-limiter binding e autorizzazione distinta. Ingest OFF, PR #102 DRAFT/OPEN, nessun alert/ordine.
 
 ## CHECKPOINT 2FA + LIMITER v0.8.6 OFFLINE — 13/11/2026, ore 06:38 CET
 - [x] Utente conferma **2FA TradingView attiva** (13/11/2026); non ripetere richiesta né chiedere codici.
