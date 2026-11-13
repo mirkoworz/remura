@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# REMURA v0.8.15 LAB — 13/11/2026, ore 12:57 CET
+# REMURA v0.8.15 LAB — 13/11/2026, ore 13:00 CET
 # SOLO OFFLINE: esportazione D1 -> osservazioni spiegabili, NO network/ordini.
 """Adapt an offline D1 JSONL export to a NON-TRADING REMURA observation preview.
 
@@ -138,21 +138,34 @@ def preview_record(row: object) -> dict:
 def preview_export(rows: list[object]) -> dict:
     if not isinstance(rows, list) or len(rows) > MAX_EXPORT_ROWS:
         raise BridgeInputError("export_row_limit_exceeded")
-    seen = set()
-    events = []
+    # Identical repeats are ignored; conflicting payloads sharing one event_key
+    # quarantine the entire key, never silently keeping a convenient version.
+    seen: dict[str, tuple[str, dict]] = {}
+    conflicted = set()
     counts = Counter()
-    for idx, row in enumerate(rows):
+    for row in rows:
         try:
             view = preview_record(row)
         except BridgeInputError:
             counts["REJECTED_INVALID"] += 1
             continue
-        if view["event_key"] in seen:
-            counts["DUPLICATE_SKIPPED"] += 1
+        key = view["event_key"]
+        if key in conflicted:
+            counts["CONFLICTING_DUPLICATE_QUARANTINED"] += 1
             continue
-        seen.add(view["event_key"])
+        if key in seen:
+            previous_raw, previous_view = seen[key]
+            if previous_raw == row["raw_json"]:
+                counts["DUPLICATE_SKIPPED"] += 1
+            else:
+                counts["CONFLICTING_DUPLICATE_QUARANTINED"] += 1
+                counts[previous_view["status"]] -= 1
+                del seen[key]
+                conflicted.add(key)
+            continue
+        seen[key] = (row["raw_json"], view)
         counts[view["status"]] += 1
-        events.append(view)
+    events = [value[1] for value in seen.values()]
     return {
         "schema": "remura.tv.preview.batch.v1",
         "version": VERSION,
