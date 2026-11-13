@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; img-src 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; base-uri 'none';">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="theme-color" content="#0b1721">
+<title>REMURA LAB — Token locale per webhook TEST</title>
+<style>
+  :root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0b1721;color:#eff7fa}
+  *{box-sizing:border-box}
+  body{margin:0;padding:18px 15px 48px;max-width:700px;margin-inline:auto}
+  .version{font-size:12px;color:#a2c9c4;margin-bottom:14px}
+  h1{font-size:25px;line-height:1.18;margin:0 0 12px}
+  p{font-size:15px;line-height:1.55;color:#c8dade}
+  .panel{background:#142736;border:1px solid #305769;border-radius:17px;padding:18px;margin:18px 0}
+  .tag{font-size:11px;letter-spacing:.11em;color:#9ddcc9;text-transform:uppercase;font-weight:700}
+  label{display:block;font-weight:700;margin:14px 0 7px}
+  textarea{width:100%;resize:none;min-height:76px;padding:12px;border-radius:10px;background:#08131e;color:#e5f8ff;border:1px solid #497085;word-break:break-all;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}
+  button{border:0;border-radius:10px;background:#66d5af;color:#062019;padding:12px 16px;font-size:15px;font-weight:750;min-height:45px;cursor:pointer}
+  button.sub{background:#25495b;color:#e6fbfa;margin-top:8px}
+  button:disabled{opacity:.42;cursor:not-allowed}
+  .warning{border-left:3px solid #e2ac59;padding:10px 12px;background:#342b22;color:#ffe7bb;font-size:13px;line-height:1.5}
+  .caption{font-size:12px;color:#9cb6c2;margin:6px 0 12px}
+  .status{font-size:13px;min-height:22px;margin:14px 0 0;color:#9bedd0}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="version">REMURA · Sicurezza LAB · v0.8.35 · 13/11/2026 23:10 CET</div>
+<h1>Token privato per il futuro webhook TEST</h1>
+<p>Questa pagina genera un token casuale <strong>direttamente sul tuo iPhone</strong> e ne calcola l'impronta SHA-256. Non invia informazioni a REMURA, Cloudflare, GitHub o altri server.</p>
+<div class="panel">
+<div class="tag">Prima di iniziare</div>
+<p>Usa questa pagina soltanto quando avremo completato i controlli di sicurezza e saremo pronti a configurare il primo alert. <strong>Non attiva nulla.</strong></p>
+<button id="generate" type="button">Genera nuovo token TEST</button>
+<div id="values" hidden>
+<label for="hash">1. Hash SHA-256 da salvare nel futuro GitHub Secret TEST</label>
+<textarea id="hash" readonly autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
+<button class="sub" type="button" data-copy="hash">Copia solo l'hash</button>
+<p class="caption">È l'hash del token, non il token originale. Non va nel Pine Script.</p>
+<label for="url">2. URL privato da inserire solo nell'alert TradingView</label>
+<textarea id="url" readonly autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
+<button class="sub" type="button" data-copy="url">Copia URL webhook TEST</button>
+<p class="caption">L'URL contiene il token originale: trattalo come una password.</p>
+<button class="sub" id="clear" type="button">Nascondi e cancella dalla pagina</button>
+</div>
+<p id="status" class="status" role="status" aria-live="polite"></p>
+</div>
+<div class="warning"><strong>Attenzione:</strong> non incollare il token o l'URL nella chat, nelle issue GitHub, nei commit, nei log, in uno screenshot o nel codice Pine. Non attivare l'alert finché non te lo indico. La pagina non conserva un backup: se perdi l'URL dovrai generarne uno nuovo e aggiornare anche l'hash.</div>
+<script>
+"use strict";
+(() => {
+  const byId = id => document.getElementById(id);
+  const box = byId("values"), status = byId("status");
+  const clear = () => {
+    byId("hash").value = "";
+    byId("url").value = "";
+    box.hidden = true;
+    status.textContent = "Token cancellato dalla pagina.";
+  };
+  byId("clear").addEventListener("click", clear);
+  byId("generate").addEventListener("click", async () => {
+    clear();
+    if (!globalThis.isSecureContext || !crypto?.getRandomValues || !crypto?.subtle ||
+        !globalThis.TextEncoder || !globalThis.btoa) {
+      status.textContent = "Browser non sicuro o Web Crypto non disponibile. Nessun token creato.";
+      return;
+    }
+    try {
+      const bytes = crypto.getRandomValues(new Uint8Array(32));
+      const token = btoa(String.fromCharCode(...bytes))
+        .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+      if (!/^[A-Za-z0-9_-]{43}$/.test(token)) throw Error("invalid_token");
+      const digest = new Uint8Array(await crypto.subtle.digest(
+        "SHA-256", new TextEncoder().encode(token)));
+      const hash = Array.from(digest, v => v.toString(16).padStart(2, "0")).join("");
+      bytes.fill(0);
+      byId("hash").value = hash;
+      byId("url").value = "https://remura-tv-webhook-test.mirkoworz.workers.dev/ingest/" + token;
+      box.hidden = false;
+      status.textContent = "Token TEST generato localmente. Conservalo solo nei due posti indicati.";
+    } catch {
+      clear();
+      status.textContent = "Generazione non riuscita. Nessun token utilizzabile.";
+    }
+  });
+  document.querySelectorAll("[data-copy]").forEach(button => {
+    button.addEventListener("click", async () => {
+      const kind = button.dataset.copy;
+      if (kind !== "hash" && kind !== "url") return;
+      const input = byId(kind);
+      try {
+        if (!navigator.clipboard?.writeText) throw Error("clipboard_unavailable");
+        await navigator.clipboard.writeText(input.value);
+        status.textContent = kind === "hash" ? "Hash copiato." : "URL TEST copiato. Non condividerlo.";
+      } catch {
+        input.focus();
+        input.select();
+        status.textContent = "Copia automatica non disponibile: seleziona e copia manualmente il campo.";
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>
