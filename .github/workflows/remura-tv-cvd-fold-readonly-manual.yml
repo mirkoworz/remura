@@ -1,0 +1,51 @@
+# REMURA v0.8.72 — 14/11/2026 16:59 CET
+# Owner-only, closed fixed calendar fold. No schedule or deployment.
+name: REMURA CVD TEST Fold Reader
+on:
+  workflow_dispatch:
+    inputs:
+      fold:
+        description: 'Periodo scientifico fisso già concluso (UTC)'
+        required: true
+        type: choice
+        options:
+          - DEVELOPMENT
+          - HOLDOUT_1
+          - HOLDOUT_2
+      confirmation:
+        description: 'Solo SELECT aggregato TEST, massimo 28 finestre'
+        required: true
+        type: choice
+        options:
+          - READ_CLOSED_CVD_TEST_FOLD_ONLY
+permissions:
+  contents: read
+concurrency:
+  group: remura-tv-test-cvd-analytic-read
+  cancel-in-progress: false
+jobs:
+  read:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/main' &&
+      github.actor == 'mirkoworz' &&
+      github.triggering_actor == 'mirkoworz' &&
+      inputs.confirmation == 'READ_CLOSED_CVD_TEST_FOLD_ONLY'
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 7cc9e7bc6f2f4fc5c395d5ac9ef5126bffe05353
+          persist-credentials: false
+      - name: Offline validation gates
+        run: python3 -m unittest discover -s tradingview/delta-peaks -p 'test_cvd*.py' -v
+      - name: Read fixed closed TEST fold only
+        env:
+          REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+          REMURA_CF_D1_READ_TOKEN: ${{ secrets.REMURA_CF_D1_READ_TOKEN }}
+          FOLD: ${{ inputs.fold }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/cvd_test_fold_reader_v1.py --live-read --fold "$FOLD"
