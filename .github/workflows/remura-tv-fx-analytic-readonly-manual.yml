@@ -1,0 +1,57 @@
+# REMURA v0.8.52 — 14/11/2026 11:25 CET
+# Owner-only, manual EURUSD TEST diagnostic; no deployment, writes, or scheduler.
+name: REMURA EURUSD TEST Analytic Reader
+on:
+  workflow_dispatch:
+    inputs:
+      start_utc:
+        description: 'Prima chiusura M5 effettiva del pilota (YYYY-MM-DDTHH:MMZ, UTC)'
+        required: true
+        type: string
+      end_utc:
+        description: 'Ultima chiusura M5 da analizzare, maturata da almeno 120s (UTC)'
+        required: true
+        type: string
+      confirmation:
+        description: 'Solo lettura aggregata EURUSD nel database TEST'
+        required: true
+        type: choice
+        default: READ_FX_TEST_ANALYTICS_ONLY
+        options:
+          - READ_FX_TEST_ANALYTICS_ONLY
+permissions:
+  contents: read
+concurrency:
+  group: remura-tv-test-fx-analytic-read
+  cancel-in-progress: false
+jobs:
+  read:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/main' &&
+      github.actor == 'mirkoworz' &&
+      github.triggering_actor == 'mirkoworz' &&
+      inputs.confirmation == 'READ_FX_TEST_ANALYTICS_ONLY'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout immutable CI-tested source
+        uses: actions/checkout@v4
+        with:
+          ref: 8c3cdfdb56f2d5988c4d62b485ecfc68069c05db
+          persist-credentials: false
+      - name: Offline gate without secrets
+        run: |
+          python3 -m unittest discover -s tradingview/delta-peaks -p 'test_fx_pilot_analytic_reader_v1.py' -v
+          python3 -m unittest discover -s tradingview/delta-peaks -p 'test_fx_pilot_config_v1.py' -v
+          python3 -m unittest discover -s tradingview/delta-peaks -p 'test_fx_asof_handoff_v1.py' -v
+      - name: Read only explicit mature FX TEST window
+        env:
+          REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+          REMURA_CF_D1_READ_TOKEN: ${{ secrets.REMURA_CF_D1_READ_TOKEN }}
+          FX_START_UTC: ${{ inputs.start_utc }}
+          FX_END_UTC: ${{ inputs.end_utc }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/fx_pilot_analytic_reader_v1.py --live-read --start-utc "$FX_START_UTC" --end-utc "$FX_END_UTC"
