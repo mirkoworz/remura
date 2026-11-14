@@ -45,6 +45,8 @@ jobs:
         run: |
           python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_prepare_test_off_bundle_v1.py' -v
           python3 -m py_compile tradingview/delta-peaks/gateway-lab/prepare_test_off_bundle_v1.py
+      - name: TEST-only first webhook receipt audit regression (offline, no Cloudflare)
+        run: python3 tradingview/delta-peaks/gateway-lab/test_pilot_receipt_audit_v1.py --self-test
       - name: TEST-only future ingest ON candidate, strict OFF plus hash required (offline only)
         run: |
           python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_prepare_test_ingest_on_v1.py' -v
