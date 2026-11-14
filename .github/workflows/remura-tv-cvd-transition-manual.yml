@@ -1,4 +1,4 @@
-# REMURA v0.8.64 — 14/11/2026 12:59 CET
+# REMURA v0.8.65 — 14/11/2026 CET
 # Owner-only explicit transition of the existing isolated TEST Worker.
 name: REMURA CVD TEST Transition (manual only)
 on:
@@ -36,7 +36,7 @@ jobs:
       - name: Checkout immutable CI-verified candidate
         uses: actions/checkout@v4
         with:
-          ref: 7ca0736ee6d933071c02b31917b94d99684bba5f
+          ref: 58dc84e0de93b48eb5a6c596664d4d338548754a
           persist-credentials: false
       - name: Offline gates without Cloudflare credentials
         shell: bash
@@ -73,7 +73,15 @@ jobs:
         run: |
           set -euo pipefail
           for bundle in "$REMURA_CVD_CANDIDATE" "$REMURA_CVD_ROLLBACK"; do
-            npx --yes wrangler@4.157.0 deploy --dry-run --config "$bundle/wrangler.json" --outdir "$RUNNER_TEMP/remura-cvd-dryrun-$(basename "$bundle")"
+            scratch="$(mktemp -d "$RUNNER_TEMP/remura-cvd-compile-XXXXXX")"
+            trap 'rm -rf -- "$scratch"' EXIT
+            cp -p "$bundle/"{worker.mjs,wrangler.json} "$scratch/"
+            npx --yes wrangler@4.157.0 deploy --dry-run --config "$scratch/wrangler.json" --outdir "$RUNNER_TEMP/remura-cvd-dryrun-$(basename "$bundle")"
+            cmp "$bundle/worker.mjs" "$scratch/worker.mjs"
+            cmp "$bundle/wrangler.json" "$scratch/wrangler.json"
+            test "$(find "$bundle" -mindepth 1 -maxdepth 1 | wc -l)" -eq 2
+            rm -rf -- "$scratch"
+            trap - EXIT
           done
       - name: Fresh state and exact bundle check, then explicit TEST-only mutation
         id: mutation
@@ -88,10 +96,11 @@ jobs:
         run: |
           set -euo pipefail
           python3 tradingview/delta-peaks/gateway-lab/cvd_transition_live_bundle_v1.py "$OPERATION" precheck
+          echo "started=true" >> "$GITHUB_OUTPUT"
           npx --yes wrangler@4.157.0 deploy --config "$REMURA_CVD_TARGET/wrangler.json"
           echo 'REMURA_CVD_MUTATION=COMMAND_SUCCEEDED_PENDING_READBACK'
       - name: Read back exact settings after attempted transition
-        if: always() && steps.mutation.outcome != 'skipped' && steps.mutation.outcome != ''
+        if: always() && steps.mutation.outputs.started == 'true'
         env:
           REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
           REMURA_CF_D1_READ_TOKEN: ${{ secrets.REMURA_CF_D1_READ_TOKEN }}
