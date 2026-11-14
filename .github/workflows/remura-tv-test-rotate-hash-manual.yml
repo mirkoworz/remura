@@ -1,0 +1,111 @@
+# REMURA LAB v0.8.43 — 14/11/2026
+# Owner-only rotation of the existing TEST hash; no code deploy, no D1 writes.
+# Uses the reviewed current weekend TEST manifest and exact ON+hash preflight.
+name: REMURA TEST Rotate Webhook HASH (manual only)
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Sostituisci solo hash del Worker TEST attivo con il nuovo GitHub Secret'
+        required: true
+        type: choice
+        options:
+          - ROTATE_TEST_HASH_KEEP_GATEWAY_ON
+permissions:
+  contents: read
+concurrency:
+  group: remura-test-worker-bootstrap-manual
+  cancel-in-progress: false
+jobs:
+  rotate-test-hash-only:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/main' &&
+      github.actor == 'mirkoworz' &&
+      inputs.confirmation == 'ROTATE_TEST_HASH_KEEP_GATEWAY_ON'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      CI: 'true'
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 9b6fae547761153c5d4d0b9aa8b7ec3e281f6662
+          persist-credentials: false
+      - name: Offline checks
+        run: |
+          set -euo pipefail
+          node --test tradingview/delta-peaks/gateway-lab/worker.test.mjs
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_prepare_test_ingest_on_v1.py' -v
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_emergency_stop_test_guard_v1.py' -v
+      - name: Check new digest format only; never print it
+        env:
+          REMURA_CF_TV_TEST_WEBHOOK_SHA256: ${{ secrets.REMURA_CF_TV_TEST_WEBHOOK_SHA256 }}
+        run: |
+          python3 - <<'PY'
+          import os, re, sys
+          if not re.fullmatch(r"[0-9a-f]{64}", os.getenv("REMURA_CF_TV_TEST_WEBHOOK_SHA256", "")):
+              print("REMURA_ROTATION_HASH_FORMAT=INVALID_OR_MISSING")
+              sys.exit(2)
+          print("REMURA_ROTATION_HASH_FORMAT=VALID_NOT_ECHOED")
+          PY
+      - name: Verify actual TEST ON plus existing secret and construct private manifest
+        env:
+          REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+          REMURA_CF_D1_READ_TOKEN: ${{ secrets.REMURA_CF_D1_READ_TOKEN }}
+          REMURA_CF_TEST_WORKER_EDITOR_TOKEN: ${{ secrets.REMURA_CF_TEST_WORKER_EDITOR_TOKEN }}
+        run: python3 tradingview/delta-peaks/gateway-lab/prepare_test_ingest_on_v1.py --weekend-refresh
+      - name: Compile-only candidate
+        run: |
+          set -euo pipefail
+          test -f "$REMURA_TEST_ON_BUNDLE/wrangler.json"
+          npx --yes wrangler@4.157.0 deploy --dry-run \
+            --config "$REMURA_TEST_ON_BUNDLE/wrangler.json" \
+            --outdir "$RUNNER_TEMP/remura-hash-rotate-dryrun"
+      - name: Fresh TEST identity and ON+hash preflight
+        env:
+          REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+          REMURA_CF_D1_READ_TOKEN: ${{ secrets.REMURA_CF_D1_READ_TOKEN }}
+          REMURA_CF_TEST_WORKER_EDITOR_TOKEN: ${{ secrets.REMURA_CF_TEST_WORKER_EDITOR_TOKEN }}
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/emergency_stop_test_guard_v1.py \
+            | grep -Fx 'REMURA_TEST_EMERGENCY_PREFLIGHT=TEST_GATEWAY_ON_WITH_HASH_SECRET'
+      - name: Rotate existing TEST secret only; no raw token and no code deployment command
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.REMURA_CF_TEST_WORKER_EDITOR_TOKEN }}
+          REMURA_CF_TV_TEST_WEBHOOK_SHA256: ${{ secrets.REMURA_CF_TV_TEST_WEBHOOK_SHA256 }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$REMURA_CF_TV_TEST_WEBHOOK_SHA256" \
+            | npx --yes wrangler@4.157.0 secret put WEBHOOK_TOKEN_SHA256 \
+                --name remura-tv-webhook-test --config "$REMURA_TEST_ON_BUNDLE/wrangler.json"
+          echo 'REMURA_TEST_HASH_ROTATION=COMMAND_SUCCEEDED_PENDING_POSTCHECK'
+      - name: Read back TEST ON, database, limiter and secret name only
+        env:
+          REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+          REMURA_CF_D1_READ_TOKEN: ${{ secrets.REMURA_CF_D1_READ_TOKEN }}
+          REMURA_CF_TEST_WORKER_EDITOR_TOKEN: ${{ secrets.REMURA_CF_TEST_WORKER_EDITOR_TOKEN }}
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/emergency_stop_test_guard_v1.py \
+            | grep -Fx 'REMURA_TEST_EMERGENCY_PREFLIGHT=TEST_GATEWAY_ON_WITH_HASH_SECRET'
+          echo 'REMURA_TEST_HASH_ROTATION_POSTCHECK=ON_WITH_HASH_SECRET'
+          {
+            echo '### TEST hash rotation'
+            echo 'Hash update succeeded; isolated TEST bindings and ON state verified.'
+            echo 'Wrangler secret put creates a Worker version. Secret value and old/new equality cannot be read back.'
+            echo 'End-to-end authentication still requires a real TradingView delivery with the newly generated URL.'
+            echo 'No code deploy command, SQL writes, production changes or new credentials.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Remove temporary private files
+        if: always()
+        run: |
+          set -euo pipefail
+          if [[ -n "${REMURA_TEST_ON_BUNDLE:-}" &&
+                "$REMURA_TEST_ON_BUNDLE" == "$RUNNER_TEMP"/remura-test-off-* ]]; then
+            rm -rf -- "$REMURA_TEST_ON_BUNDLE"
+          fi
+          rm -rf -- "$RUNNER_TEMP/remura-hash-rotate-dryrun"
