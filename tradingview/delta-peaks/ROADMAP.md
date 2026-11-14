@@ -1,6 +1,13 @@
-# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.38-doc (Worker Production noto v0.8.5, gateway TEST v0.8.6 ON)
-**Aggiornamento roadmap: 14/11/2026, ore 07:05 CET — gateway TEST ON confermato, primo webhook non ancora osservato**
-**PR #102 DRAFT/OPEN — nessun merge, alert TradingView OFF, nessun ordine.**
+# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.39-doc (Worker Production noto v0.8.5, gateway TEST v0.8.6 ON)
+**Aggiornamento roadmap: 14/11/2026, 07:41 CET — health pubblica TEST confermata dall'utente, primo webhook ancora da verificare**
+**PR #102 DRAFT/OPEN — nessun merge, alert TradingView da confermare, nessun ordine.**
+
+## CHECKPOINT v0.8.39 — HEALTH HTTP TEST CONFERMATA DA IPHONE — 14/11/2026, 07:41 CET
+- [x] Il proprietario ha riportato la risposta di `https://remura-tv-webhook-test.mirkoworz.workers.dev/health`: `{"status":"lab_only","accepting":true}`. Evidenza **HTTP reale da iPhone riportata dall'utente**: gateway pubblico raggiungibile e prerequisiti runtime riconosciuti. Non è un POST TradingView: corrispondenza token originale/digest, allowlist IP, scrittura D1, deduplica e prestazioni ancora da provare. Non ripetere health salvo guasto.
+- [x] Il proprietario ha detto "Ok fatto" dopo il recupero del suo URL privato; non rigenerare token. L'effettiva configurazione completa dell'alert (due input LAB, FXCM:EURUSD M5, qualsiasi alert()) non è ancora attestata separatamente; mantenere l'alert attivo se già configurato. Mai chiedere screenshot del token.
+- [x] CI preparazione verificatore ricezione [#43564547527](https://github.com/mirkoworz/remura/actions/runs/43564547527) e [#43564547535](https://github.com/mirkoworz/remura/actions/runs/43564547535) entrambe SUCCESS.
+- [ ] Prima prova reale attesa alla riapertura FXCM EURUSD: controllare log alert TradingView e poi eseguire una volta [REMURA TEST First Webhook Receipt](https://github.com/mirkoworz/remura/actions/workflows/remura-tv-test-first-receipt-readonly.yml), owner-only manuale, SELECT TEST. Se assenza eventi non equiparare a successo/fallimento del trasporto; verificare stato alert. Il risultato deve distinguere ricezione assente, lettura fallita, heartbeat/eventi, latenza di chiusura barra. Solo dopo esito reale procedere al bridge e all'analisi scientifica.
+- [ ] Nel frattempo possibile lavorare offline a bridge/analisi e verifiche quote senza toccare gateway ON, D1 produzione, PR #102 DRAFT o Oracle. Nessun altro deploy Cloudflare o alert sintetico effettuato. 
 
 ## CHECKPOINT v0.8.38 — GATEWAY TEST ON REALMENTE DISTRIBUITO; PRIMO ALERT DA CONFIGURARE — 14/11/2026 ore 07:05 CET
 - [x] Proprietario ha avviato il workflow manuale [#43564400558](https://github.com/mirkoworz/remura/actions/runs/43564400558): **completed SUCCESS**. Job #132354954983, tutti gli step verdi, preflight `TEST_GATEWAY_OFF_WITH_HASH_SECRET`, compilazione, deploy Wrangler reale del solo `remura-tv-webhook-test`, Cloudflare Version ID `abbd45b0-3926-472a-a613-025d37308746` alle 07:03:11 CET. Readback `TEST_GATEWAY_ON_WITH_HASH_SECRET`, D1 EU `remura-tv-lab-test`, limiter 20/60, flag `INGEST_ENABLED=true`, Secret hash conservato. Worker production, D1 main e Oracle non coinvolti.
