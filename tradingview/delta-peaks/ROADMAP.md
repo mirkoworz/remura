@@ -1,6 +1,11 @@
 # REMURA TradingView — ROADMAP v0.8.65-lab (transition retry safe isolation)
-**Aggiornamento 14/11/2026 CET — tentativo bloccato prima del deploy, isolamento dry-run**
+**Aggiornamento 14/11/2026 CET — CI v0.8.65 verde, workflow TEST corretto**
 **PR #102 DRAFT/OPEN — nessun merge, nessun nuovo deploy, nessun ordine.**
+
+## CHECKPOINT v0.8.65 — RETRY PRONTO
+- [x] CI #43592771886 SUCCESS (190 test Python principali); dry-run #43592771885 e #43592767761 SUCCESS, marker REMURA_CVD_TRANSITION=COMPILED_CANDIDATE_AND_ROLLBACK_SYNTHETIC_ONLY. Verificato isolamento copia e integrità dei bundle su fixture.
+- [x] Workflow main REMURA CVD TEST Transition aggiornato commit a972031837f0d3bf8129dc2228238a1160dc8a3a, pin immutabile 58dc84e0de93b48eb5a6c596664d4d338548754a. Dry-run su copie separate, cmp sorgenti/manifest e conteggio file originali, flag started solo dopo precheck e prima del comando di deploy; postcheck solo se comando tentato. Diagnostica sanificata. Guardia invariata.
+- [ ] Owner avvia NUOVO Run workflow (non Re-run jobs del run precedente) con DEPLOY_CVD_TEST dalla pagina https://github.com/mirkoworz/remura/actions/workflows/remura-tv-cvd-transition-manual.yml. Primo fallimento non ha eseguito comando deploy; causa esatta non attestata, ipotesi file temporanei Wrangler. Nessuna attivazione CVD o modifica Pine/alert prima del readback positivo. Nessuna mutazione remota in questo checkpoint. Quote effettive non misurate, produzione esclusa.
 
 ## CHECKPOINT v0.8.65 — CORREZIONE TRANSIZIONE
 - [x] Run reale #43592678190 FAILURE, job 132440557995: test offline e metadati iniziali TEST superati ovvero LEGACY ON; entrambi i dry-run riusciti. Precheck finale BLOCKED_FAIL_CLOSED prima di deploy; nessun marker mutazione. Postcheck chiamato erroneamente nonostante precheck bloccante; non prova modifica remota. Sorgente gateway live e alert non modificati da questo run.
