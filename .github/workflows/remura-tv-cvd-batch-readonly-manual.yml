@@ -1,4 +1,5 @@
-# REMURA v0.8.80 — 14/11/2026 CET
+# REMURA v0.8.88 LAB — 14/11/2026 21:18 CET
+# Rollback: restore previous workflow blob 55e043feeb5c8691d4588b2413d53fb318a54a38 (V2 pin, no mode input).
 # Owner-only read-only CVD TEST diagnostics. No deployment or scheduler.
 name: REMURA CVD TEST Batch Reader
 on:
@@ -12,6 +13,14 @@ on:
         description: 'Ultima chiusura maturata da almeno 120s, UTC YYYY-MM-DDTHH:MMZ'
         required: true
         type: string
+      mode:
+        description: 'Ricezione (max 12 slot, senza esiti) oppure batch V3 (max 576 slot)'
+        required: true
+        type: choice
+        default: receipt-only
+        options:
+          - receipt-only
+          - batch
       confirmation:
         description: 'Solo lettura aggregata CVD TEST batch (max 576 slot)'
         type: choice
@@ -31,13 +40,14 @@ jobs:
       github.ref == 'refs/heads/main' &&
       github.actor == 'mirkoworz' &&
       github.triggering_actor == 'mirkoworz' &&
-      inputs.confirmation == 'READ_CVD_TEST_BATCH_ONLY'
+      inputs.confirmation == 'READ_CVD_TEST_BATCH_ONLY' &&
+      (inputs.mode == 'receipt-only' || inputs.mode == 'batch')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 9f9012fcb52087be30a92b9bb2ab3b2da99539bf
+          ref: 4f1f9cb250241007bc5f9a97527972d3a47b9d2a
           persist-credentials: false
       - name: Offline validation gates
         run: python3 -m unittest discover -s tradingview/delta-peaks -p 'test_cvd*.py' -v
@@ -45,9 +55,16 @@ jobs:
         env:
           REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
           REMURA_CF_D1_READ_TOKEN: ${{ secrets.REMURA_CF_D1_READ_TOKEN }}
+          READ_MODE: ${{ inputs.mode }}
           START_UTC: ${{ inputs.start_utc }}
           END_UTC: ${{ inputs.end_utc }}
         shell: bash
         run: |
           set -euo pipefail
-          python3 tradingview/delta-peaks/gateway-lab/cvd_test_batch_reader_v2.py --live-read --start-utc "$START_UTC" --end-utc "$END_UTC"
+          extra=()
+          case "$READ_MODE" in
+            receipt-only) extra+=(--receipt-only) ;;
+            batch) ;;
+            *) exit 2 ;;
+          esac
+          python3 tradingview/delta-peaks/gateway-lab/cvd_test_batch_reader_v3.py --live-read --start-utc "$START_UTC" --end-utc "$END_UTC" "${extra[@]}"
