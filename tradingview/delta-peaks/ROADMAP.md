@@ -1,6 +1,12 @@
-# REMURA TradingView — ROADMAP v0.8.59-lab (EURUSD visual confirmed, CVD telemetry preview)
-**Aggiornamento: 14/11/2026 12:45 CET — CVD EURUSD visivo riuscito, formato telemetrico isolato**
+# REMURA TradingView — ROADMAP v0.8.60-lab (CVD gateway candidate)
+**Aggiornamento 14/11/2026 CET — validatore gateway CVD isolato**
 **PR #102 DRAFT/OPEN — nessun merge, nessun nuovo deploy, nessun ordine.**
+
+## CHECKPOINT v0.8.60 — GATEWAY CVD SEPARATO, NO DEPLOY
+- [x] v0.8.59 CI #43591645674 e dry-run #43591645688 SUCCESS: 184 test Python, 8 nuovi CVD.
+- [x] Nuovo worker_cvd_candidate.mjs: deriva dal gateway v0.8.40, aggiunge esclusivamente schema CVD preview FX:EURUSD/FX M5 con flag CVD_PREVIEW_ENABLED=true, configurazione congelata e controlli qualità, pivot, 120s. Legacy FXCM/BTC invariati. Auth/allowlist/limiter e cap body invariati. Identità CVD per barra/versione e is_timely=0 per escludere vecchi lettori scientifici; tempestività trasporto verificata separatamente. Raw envelope archiviato nella tabella già esistente (no migrazione necessaria); INSERT OR IGNORE conserva prima riga, non rileva conflitto su duplicato, limite da risolvere prima di pilot. Event_type legacy riguarda delta e non comprende CVD-only, reader dedicato dovrà distinguere.
+- [x] Aggiunti 6 test Node con mock D1 e integrazione CI offline. Manifest/deploy esistenti puntano ancora worker.mjs; nessun deploy candidato. Nessun costo nuovo.
+- [ ] Verificare CI, aggiungere lettore CVD dedicato, test parità JS/Python su stessi fixture, doppioni conflittuali, gate deploy TEST e compilazione Pine v0.9.1. Non inviare nuovo formato al vecchio webhook. Raccolta BTC invariata. PR #102 DRAFT.
 
 ## CHECKPOINT v0.8.59 — CVD INTEGRATO SU FX:EURUSD
 - [x] Foto utente 14/11/2026 circa 12:45 CET: Pine v0.9 CVD LAB su EURUSD M5, chart ID FX:EURUSD (non FXCM:EURUSD), qualità 5/5 OK, CONTINUO, CVD giorno -2.073K, segmento circa -2.06K/287 barre, prezzo/CVD 30/6, marcatori CV+/CV- visibili con RT e livelli. Conferma rendering e calcolo storico, non parità numerica certificata, cattura live o edge; nessuna nuova validazione alert BTC.

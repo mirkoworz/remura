@@ -90,3 +90,6 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}/_remura_b_reference:${{ github.workspace }}/_remura_b_reference/tests
         run: python3 tradingview/delta-peaks/crosstrack_research_fixture_v1.py
+
+      - name: CVD gateway candidate offline authentication and storage tests
+        run: node --test tradingview/delta-peaks/gateway-lab/worker_cvd_candidate.test.mjs
