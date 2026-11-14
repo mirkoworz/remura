@@ -1,4 +1,4 @@
-# REMURA v0.8.71 — 14/11/2026 16:57 CET
+# REMURA v0.8.80 — 14/11/2026 CET
 # Owner-only read-only CVD TEST diagnostics. No deployment or scheduler.
 name: REMURA CVD TEST Batch Reader
 on:
@@ -37,7 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 631a38489b8393054ccca9f7b5b2dcfffc5c28fb
+          ref: 9f9012fcb52087be30a92b9bb2ab3b2da99539bf
           persist-credentials: false
       - name: Offline validation gates
         run: python3 -m unittest discover -s tradingview/delta-peaks -p 'test_cvd*.py' -v
@@ -50,4 +50,4 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 tradingview/delta-peaks/gateway-lab/cvd_test_batch_reader_v1.py --live-read --start-utc "$START_UTC" --end-utc "$END_UTC"
+          python3 tradingview/delta-peaks/gateway-lab/cvd_test_batch_reader_v2.py --live-read --start-utc "$START_UTC" --end-utc "$END_UTC"

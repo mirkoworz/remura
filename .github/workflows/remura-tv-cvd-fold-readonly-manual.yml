@@ -1,4 +1,4 @@
-# REMURA v0.8.72 — 14/11/2026 16:59 CET
+# REMURA v0.8.80 — 14/11/2026 CET
 # Owner-only, closed fixed calendar fold. No schedule or deployment.
 name: REMURA CVD TEST Fold Reader
 on:
@@ -36,7 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 7cc9e7bc6f2f4fc5c395d5ac9ef5126bffe05353
+          ref: 9f9012fcb52087be30a92b9bb2ab3b2da99539bf
           persist-credentials: false
       - name: Offline validation gates
         run: python3 -m unittest discover -s tradingview/delta-peaks -p 'test_cvd*.py' -v
@@ -48,4 +48,4 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 tradingview/delta-peaks/gateway-lab/cvd_test_fold_reader_v1.py --live-read --fold "$FOLD"
+          python3 tradingview/delta-peaks/gateway-lab/cvd_test_fold_reader_v2.py --live-read --fold "$FOLD"
