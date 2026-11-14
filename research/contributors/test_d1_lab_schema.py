@@ -53,6 +53,8 @@ class D1Tests(unittest.TestCase):
         self.enable()
         self.db.execute("UPDATE lab_catalog SET active=0")
         self.assertEqual(self.submit().rowcount,0)
+    def test_access_context_node(self):
+        subprocess.run(["node",str(ROOT/"test_access_context_lab.mjs")],check=True,timeout=20)
     def test_adapter_node(self):
         subprocess.run(["node",str(ROOT/"test_d1_lab_adapter.mjs")],check=True,timeout=20)
 
