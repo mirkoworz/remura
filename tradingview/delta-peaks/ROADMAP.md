@@ -1,13 +1,19 @@
-# REMURA TradingView — ROADMAP v0.8.77-lab (runtime leggero e profilo)
-**Aggiornamento 14/11/2026 17:33 CET — runtime leggero e profilo**
+# REMURA TradingView — ROADMAP v0.8.78-lab (gate risorse)
+**Aggiornamento 14/11/2026 18:00 CET — gate risorse**
 **PR #102 DRAFT/OPEN — deploy TEST autorizzato riuscito, produzione e ordini esclusi.**
+
+## CHECKPOINT v0.8.78 — GATE RISORSE PREVIEW
+- [x] v0.8.77 CI 43616345499 SUCCESS 252 test, dry-run 43616345501 SUCCESS, profilo 290 barre/20 coppie mock: archive 322.412ms, validate 151.228ms, runtime 204.611ms, allocazioni Python 3736605 byte; commento 6880759961. Non VPS/RSS.
+- [x] Verificato file workflow main remura-cloudflare-budget-daily.yml: cron 08:37 Europe/Rome e pin esistente. Nessun run odierno recuperato via connettore (non lista workflow runs per workflow), non inferire quote correnti da 13/11. Non riavviare vecchi audit. 
+- [x] cvd_runtime_resource_gate_v1: wrapper esplicito one-shot, prima di letture TEST valuta evidenza caller host <=60s, memoria >=256MiB e load1/CPU visibili <=0.75; report account completo <=30min stesso giorno UTC, 4 stati OK, valori numerici e headroom sotto 70%, reserve 20k letture, coerenza dimensioni. Soglie locali conservative non attestazione cgroup, costo o piano; report adattivi e clock non firmati. 7 test sintetici. Non cambia entrypoint esistente, nessuna attivazione.
+- [ ] CI da verificare. Occorre acquisire evidenze reali e snapshot isolati, profilo host e autorizzazione; residuo benchmark accoppiamento esiti mancanti da correggere prima dei fold. Nessun deploy, main/B/Oracle modificati.
 
 ## CHECKPOINT v0.8.77 — RUNTIME LEGGERO E PROFILO
 - [x] v0.8.76 CI 43614348245 SUCCESS 249 test, dry-run 43614348239 SUCCESS, fixture REMURA_D_PRIVATE_RUNTIME_SYNTHETIC PASS (log job 132506024548).
 - [x] Separata validazione identica archive da radar/outcome/benchmark/fold; percorso giornaliero usa solo validazione + dossier, lettori scientifici invariati nella logica. Conflitti bloccati, dedup solo dopo validazione. Niente nuova chiamata, risorsa o servizio.
 - [x] 3 test aggiunti: equivalenza copertura/dedup, benchmark non invocati, profilo 290 barre sintetiche e 20 coppie B mocked. Misure CPU e picco allocazioni Python sul runner, NON VPS/RSS/costo; valori da log CI dopo verde.
 - [x] Primo run 43616292696: test di profilo respinto correttamente dal gate B_PAIR_OUTSIDE_ASOF (prima decisione mock fuori giorno). Corretto solo indice fixture 1..20, senza ampliare cutoff.
-- [ ] CI v0.8.77 corretta da verificare. Prima ricezione Forex, quote effettive, profilo host reale e snapshot isolati restano gate. Nessun deploy, scheduler, B/main o produzione modificati.
+- [x] CI v0.8.77 verificata nel checkpoint v0.8.78. Prima ricezione Forex, quote effettive, profilo host reale e snapshot isolati restano gate. Nessun deploy, scheduler, B/main o produzione modificati.
 
 ## CHECKPOINT v0.8.76 — RUNTIME PRIVATO PREVIEW
 - [x] v0.8.75 CI 43613939494 SUCCESS 243 test, dry-run 43613939546 SUCCESS, fixture B/dossier/render PASS; commento 6880364585.

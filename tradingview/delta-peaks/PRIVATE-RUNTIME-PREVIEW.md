@@ -1,4 +1,4 @@
-# REMURA v0.8.77 LAB — 14/11/2026 17:33 CET
+# REMURA v0.8.78 LAB — 14/11/2026 18:00 CET
 ## Runtime privato, non attivo
 - Il percorso giornaliero usa la stessa validazione completa delle finestre senza rieseguire i benchmark scientifici. La profilazione sintetica del runner non certifica l'host Oracle.
 `gateway-lab/cvd_private_runtime_preview_v1.py` è una libreria per un futuro chiamante privato sul nodo esistente. Non è un endpoint, cron, nuovo Worker o comando da eseguire sul DB LIVE.
@@ -8,3 +8,5 @@
 - Restituisce HTML aggregato e notice diagnostico non inviato in memoria. Nessuna scrittura automatica. I dati FXCM legacy non sono raccolti da questo percorso; il report non implica assenza di quel feed. Ultime barre immature escluse. Non è un ciclo in tempo reale.
 - CT/private e retail sono opzionali: prove mancanti UNKNOWN. Il reconciler B retail è solo lab isolato e usa lock locale. Non attaccare direttamente gli shard live. Cap B 20 coppie EURUSD: eccedenza blocca, niente campionamento arbitrario.
 - Gate prima dell'attivazione: verifica token e quota effettiva, primo alert Forex, sorgenti snapshot reali e restore, profilo CPU/RAM, autorizzazione del runtime e del trasporto privato; nessuna notifica o ordine. Nessun nuovo servizio richiesto.
+
+- Wrapper facoltativo `cvd_runtime_resource_gate_v1.guarded_collect`: input privati genuini e recenti, 4 report del monitor esistente (d1/workers/storage/account_storage), clock host <=60s e report <=30min nello stesso giorno UTC, memoria >=256MiB, load1/CPU <=0.75, soglie 70% con riserva 20k read. Non è un autentificatore, non misura cgroup/RSS/quote reali, non autorizza LIVE. Il caller futuro deve ottenere le evidenze con canale privato; se assenti bloccare. Non sostituisce il controllo della fatturazione, del piano e del carico reale.
