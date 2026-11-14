@@ -1,6 +1,11 @@
-# REMURA TradingView — ROADMAP v0.8.64-lab (owner transition gates)
-**Aggiornamento 14/11/2026 12:59 CET — workflow manuali TEST pronti, nessun deploy eseguito**
+# REMURA TradingView — ROADMAP v0.8.65-lab (transition retry safe isolation)
+**Aggiornamento 14/11/2026 CET — tentativo bloccato prima del deploy, isolamento dry-run**
 **PR #102 DRAFT/OPEN — nessun merge, nessun nuovo deploy, nessun ordine.**
+
+## CHECKPOINT v0.8.65 — CORREZIONE TRANSIZIONE
+- [x] Run reale #43592678190 FAILURE, job 132440557995: test offline e metadati iniziali TEST superati ovvero LEGACY ON; entrambi i dry-run riusciti. Precheck finale BLOCKED_FAIL_CLOSED prima di deploy; nessun marker mutazione. Postcheck chiamato erroneamente nonostante precheck bloccante; non prova modifica remota. Sorgente gateway live e alert non modificati da questo run.
+- [x] Ipotesi da verificare: Wrangler può generare file temporanei nella cartella config e violare i due file esatti del bundle. Dry-run su copia temporanea separata, originali intatti, test cmp e conteggio esatto. Non rilassare guardia. Reason codes fissi sanificati per distinguere cause; nessun log segreti.
+- [ ] CI aggiornata da verificare; aggiornare workflow main affinché dry-run lavori solo su copie e postcheck scatti solo dopo avvio effettivo di deploy. Retry owner-only dopo CI. Non attivare nuovo alert. Nessuna mutazione/SQL/nuova risorsa; quote effettive non misurate.
 
 ## CHECKPOINT v0.8.64 — WORKFLOW PRONTI (12:59 CET)
 - [x] CI #43592538636 e dry-run #43592538637 SUCCESS; 190 test principali, 5/5 gate live bundle incl. byte/manifest match, marker compilazione candidato e rollback. Pin immutabile 7ca0736ee6d933071c02b31917b94d99684bba5f.

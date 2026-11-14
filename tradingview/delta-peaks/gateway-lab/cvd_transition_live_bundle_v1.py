@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# REMURA v0.8.64 LAB — 14/11/2026 CET
+# REMURA v0.8.65 LAB — 14/11/2026 CET
 """Prepare and recheck the isolated TEST transition. No remote mutations here."""
 import argparse,json,os,shutil
 from pathlib import Path
@@ -92,7 +92,14 @@ def main():
             if args.phase=="precheck":
                 verify_target(args.operation,cfg,os.getenv("RUNNER_TEMP",""),os.getenv("REMURA_CVD_TARGET",""))
             print("REMURA_CVD_TRANSITION_"+args.phase.upper()+"=SETTINGS_VERIFIED")
-    except Exception:
+    except Exception as exc:
+        # Only allow fixed, known internal reason codes, never API text or paths.
+        allowed={"bad_private_target","bad_bundle_files","bundle_file_not_private",
+                 "bundle_changed_since_prepare","not_legacy_on","not_cvd_on",
+                 "unknown_stop_state","unexpected_post_state","editor_missing",
+                 "private_runner_required","cvd_flag_invalid","cvd_state_not_known"}
+        reason=str(exc) if isinstance(exc,StopUnsafe) and str(exc) in allowed else "UNCLASSIFIED_SANITIZED"
+        print("REMURA_CVD_BLOCK_REASON="+reason)
         for folder in folders:
             shutil.rmtree(folder,ignore_errors=True)
         print("REMURA_CVD_TRANSITION=BLOCKED_FAIL_CLOSED")
