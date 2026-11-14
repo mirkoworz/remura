@@ -1,6 +1,12 @@
-# REMURA TradingView — ROADMAP v0.8.60-lab (CVD gateway candidate)
-**Aggiornamento 14/11/2026 CET — validatore gateway CVD isolato**
+# REMURA TradingView — ROADMAP v0.8.61-lab (CVD reader and duplicate protection)
+**Aggiornamento 14/11/2026 CET — pipeline CVD candidata offline**
 **PR #102 DRAFT/OPEN — nessun merge, nessun nuovo deploy, nessun ordine.**
+
+## CHECKPOINT v0.8.61 — LETTORE DEDICATO E PARITÀ VALIDATORI
+- [x] Gateway candidato distingue retry byte-identico da payload conflittuale (409, conserva prima riga). Non è ledger persistente dei conflitti: non dichiarare assenza di conflitti solo da D1. Legacy invariato.
+- [x] Lettore CVD TEST dedicato (SELECT con simbolo/versione/finestra esplicita, verifica identità EU TEST, cap 100 righe + sentinella). Conteggi qualità CVD, baseline, eventi delta, footprint, confronto delta e diagnostica matematica; raw non loggato; is_timely=0 obbligatorio, no ammissione scientifica. Nessun workflow live aggiunto ancora.
+- [x] Test reader e parità accettazione/chiave JS-Python su fixture sintetiche condivise, CI da verificare. CVD-only eventi conteggiati separatamente da event_type legacy.
+- [ ] Compilare v0.9.1 separatamente, predisporre manifest/gate TEST esplicito e verifica live dopo riapertura. Non collegare nuovo payload al vecchio Worker. BTC/produzione e PR #100 invariati. Consumi effettivi non misurati.
 
 ## CHECKPOINT v0.8.60 — GATEWAY CVD SEPARATO, NO DEPLOY
 - [x] v0.8.59 CI #43591645674 e dry-run #43591645688 SUCCESS: 184 test Python, 8 nuovi CVD.

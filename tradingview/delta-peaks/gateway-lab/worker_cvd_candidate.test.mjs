@@ -14,6 +14,7 @@ class FakeD1 {
     return {
       bind: (...params) => ({
         first: async () => {
+          if (sql.startsWith("SELECT raw_json")) return this.rows.get(params[0]) ?? null;
           assert.match(sql, /^SELECT COUNT/);
           const since = params[0];
           return { n: [...this.rows.values()]
@@ -173,7 +174,7 @@ test("HTTP authenticated CVD stores once and retains schema, distinct from legac
   assert.equal(row.is_timely,0);
   assert.equal(JSON.parse(row.raw_json).schema,CVD_SCHEMA);
   const other=cvd();other.cvd.segment_cvd=123;
-  assert.equal((await send(e,other)).body.status,"duplicate");
+  assert.equal((await send(e,other)).status,409);
   assert.equal(JSON.parse(row.raw_json).cvd.segment_cvd,2800);
   assert.equal((await send(e,sample(T))).body.status,"accepted");
   assert.equal(e.TELEMETRY_DB.rows.size,2);

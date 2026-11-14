@@ -336,6 +336,16 @@ export default {
         rawJson).run();
       if (!result?.success || !Number.isFinite(result.meta?.changes))
         return reply(503, "storage_unavailable");
+      // For the CVD cohort, only an exact byte-for-byte retry is a duplicate.
+      // Preserve the first receipt; reject conflicting retries without overwriting.
+      // This is not a persistent conflict ledger.
+      if (snap.version === CVD_VERSION && result.meta.changes === 0) {
+        const first = await env.TELEMETRY_DB.prepare(
+          "SELECT raw_json FROM tv_flow_events WHERE event_key = ?"
+        ).bind(snap.key).first();
+        if (typeof first?.raw_json !== "string") return reply(503, "storage_unavailable");
+        if (first.raw_json !== rawJson) return reply(409, "conflicting_retry");
+      }
       return reply(200, result.meta.changes === 0 ? "duplicate" : "accepted", {
         stored: result.meta.changes > 0, timely_for_prospective: snap.timely
       });
