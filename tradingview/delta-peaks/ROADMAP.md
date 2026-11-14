@@ -1,11 +1,17 @@
-# REMURA TradingView — ROADMAP v0.8.83-lab (stato privato e dedup)
-**Aggiornamento 14/11/2026 20:31 CET — deduplicazione sequenziale**
+# REMURA TradingView — ROADMAP v0.8.84-lab (dashboard privata)
+**Aggiornamento 14/11/2026 20:34 CET — dashboard, verifica integrata e perimetro risorse**
 **PR #102 DRAFT/OPEN — deploy TEST autorizzato riuscito, produzione e ordini esclusi.**
+
+## CHECKPOINT v0.8.84 — DASHBOARD PRIVATA E CAPACITY ENVELOPE
+- [x] v0.8.83 CI 43632600122 SUCCESS, dry-run 43632600120 SUCCESS, checkpoint 6883051179.
+- [x] Reader locale read-only da generazione atomica, senza D1/SQLite/lock writer. Stato corrente (vuoto/parziale/completo slot), obsoleto, claim incompleto, clock incoerente o stato non verificabile. Banner data italiana e age cutoff. Nessun endpoint/polling. 6 test sintetici + fixture B pinned persistita con dedup e dashboard.
+- [x] Envelope massimo 96 bucket/UTC, 96 inventory + 480 SELECT, soglia osservata 1.92M read/giorno nominale (NON hard cap, non billing), stato 256 KiB + temp. Riferimenti A/B esistenti verificati a livello codice; nessun host access.
+- [ ] CI v0.8.84, gate reali e export A/B autorizzati, verifica Oracle/quote e primo Forex. No scheduler, endpoint, trasporto o invio. Reader non autentica caller, non inferisce guasto da claim incompleto.
 
 ## CHECKPOINT v0.8.83 — STATO PRIVATO E DEDUP SEQUENZIALE
 - [x] v0.8.82 CI 43632358432 SUCCESS, dry-run 43632358438 SUCCESS, checkpoint 6883022244; B pinned fixture integrata verde.
 - [x] Entry V2 opzionale: massimo un tentativo per bucket M15 UTC, cutoff close+180s per handoff B, claim persistito prima di D1, niente retry stesso bucket anche dopo errore. Singolo stato aggregato 256 KiB, file privato 0600, hash integrità, replace atomico e fsync, ultimo successo conservato durante claim. Origin separata, blocco clock regressivo. Nessun server o scheduler. Fingerprint solo equivalenza aggregata notice senza cutoff/ID; non dedup eventi né invio. 8 test sintetici.
-- [ ] CI v0.8.83; staging/host/quote fresche reali, verifica cronologia e spazio, pin B e account dedicato, nessuna attivazione. Privacy locale non crittografia; cancellazione stato da operatore resetta claim, niente esclusione cross-host, quota non prenotata. Integrare reader privato dashboard con stato stale esplicito.
+- [x] CI v0.8.83 verde; reader privato v0.8.84; restano staging/host/quote fresche reali, verifica cronologia e spazio, pin B e account dedicato, nessuna attivazione. Privacy locale non crittografia; cancellazione stato da operatore resetta claim, niente esclusione cross-host, quota non prenotata. Integrare reader privato dashboard con stato stale esplicito.
 
 ## CHECKPOINT v0.8.82 — ONE-SHOT COORDINATO
 - [x] v0.8.81 CI 43629591604 SUCCESS, dry-run 43629591620 SUCCESS, commento 6882637966.
