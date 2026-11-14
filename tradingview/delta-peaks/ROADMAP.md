@@ -1,6 +1,11 @@
-# REMURA TradingView — ROADMAP v0.8.54-lab (FX outcome readiness and pilot runbook)
-**Aggiornamento roadmap: 14/11/2026 CET — valutazione maturazione esiti e piano pilot EURUSD**
+# REMURA TradingView — ROADMAP v0.8.55-lab (M15 decision pairing candidate)
+**Aggiornamento roadmap: 14/11/2026, 11:44 CET — FX outcome workflow verificato, raccordo D-B**
 **PR #102 DRAFT/OPEN — nessun merge, nessun nuovo deploy, nessun ordine.**
+
+## CHECKPOINT v0.8.55-lab — RACCORDO DECISIONE B M15 / TRADINGVIEW M5
+- [x] v0.8.54 CI #43586578003 e dry-run #43586578075 SUCCESS, 8/8 nuovi test e 149 principali; workflow manuale EURUSD su main aggiornato al pin `dd6855f189c85633b366bf84c561131d4056ce9e`, commit `8aa90fec0a6d5ff33c852fa38cf46cfa17326e1a`. Nessun deploy.
+- [x] Consultato in sola lettura Filone B PR #89 HEAD 8dc51e8a199dc1cfd45e4cd2e7b339510af2eb2b, schema effettivo research_signal_ingest_source_links e vincoli clock/ID di shark_signal_ingest_decision_link.py. Nuovo [raccordo offline](fx_m15_decision_preview_v1.py) commit `9d380b4dbe9dd01471acfa463fdeb1e455efe54c`: esatto close M15 EURUSD → M5 FXCM EURUSD, receipt D <= observed B, nessun fallback su altre barre, audit cutoff e finestra B, forma hash e ID. Input B dichiarato dal chiamante, non verificato contro DB, niente COT/CVD/retail verificati, nessuna equivalenza prezzi cross-feed o integrazione live. [6 regressioni](test_fx_m15_decision_preview_v1.py) commit `29831f2adb086cede55c8991abdff1221164ee4e`, CI da verificare.
+- [ ] Continuare offline con raccordo a prove B effettive e dashboard diagnostica; coordinare con B prima di qualunque scrittura o collegamento live. Nessuna modifica ai filoni A/B/C o produzione. BTC già validato sul campione di 42 barre, non ripetere subito; lasciare raccolta e spegnere alert domenica sera. Pilot EURUSD alla riapertura secondo runbook. Quote effettive da verificare.
 
 ## CHECKPOINT v0.8.54-lab — ESITI MATURI E RUNBOOK EURUSD
 - [x] v0.8.53 CI #43586450902 e dry-run #43586450921 SUCCESS; 6/6 test envelope e 141 test principali.
