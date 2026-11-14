@@ -1,4 +1,4 @@
-# REMURA v0.8.54 — 14/11/2026 CET
+# REMURA v0.8.57 — 14/11/2026 11:48 CET
 # Owner-only, manual EURUSD TEST diagnostic; no deployment, writes, or scheduler.
 name: REMURA EURUSD TEST Analytic Reader
 on:
@@ -38,7 +38,7 @@ jobs:
       - name: Checkout immutable CI-tested source
         uses: actions/checkout@v4
         with:
-          ref: dd6855f189c85633b366bf84c561131d4056ce9e
+          ref: 3aaad585d9f2dde996facae6a6fe7fcc055107b7
           persist-credentials: false
       - name: Offline gate without secrets
         run: |
