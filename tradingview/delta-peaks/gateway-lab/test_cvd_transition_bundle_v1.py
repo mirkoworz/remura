@@ -3,7 +3,7 @@
 import json,tempfile,unittest
 from copy import deepcopy
 from test_prepare_test_ingest_on_v1 import worker,TEMPLATE,MAIN,TEST,NS
-from cvd_transition_bundle_v1 import build_pair,inspect_state,CVD_FLAG,HERE,StopUnsafe
+from cvd_transition_bundle_v1 import build_pair,inspect_state,CVD_FLAG,HERE,StopUnsafe,AuditError,ManifestError
 
 def config():
     c=deepcopy(TEMPLATE)
@@ -53,10 +53,10 @@ class TransitionTests(unittest.TestCase):
             self.assertEqual(json.loads((b/"wrangler.json").read_text())["vars"],{"INGEST_ENABLED":"true"})
     def test_unresolved_and_wrong_target_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
-            with self.assertRaises(ValueError):
+            with self.assertRaisesRegex(AuditError,"unsafe_bundle_inputs"):
                 build_pair(TEMPLATE,tmp)
             c=config();c["name"]="remura-tv-ingest-lab"
-            with self.assertRaises(ValueError):
+            with self.assertRaisesRegex(ManifestError,"test_worker_name_mismatch"):
                 build_pair(c,tmp)
 if __name__=="__main__":
     unittest.main()

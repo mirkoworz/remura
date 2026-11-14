@@ -115,6 +115,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_cvd_transition_bundle_v1.py' -v
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_cvd_transition_preflight_v1.py' -v
           python3 tradingview/delta-peaks/gateway-lab/cvd_transition_bundle_v1.py --synthetic-dry-run --outdir "$RUNNER_TEMP/remura-cvd-synthetic"
           for kind in candidate rollback; do
             npx --yes wrangler@4.157.0 deploy --dry-run --config "$RUNNER_TEMP/remura-cvd-synthetic/$kind/wrangler.json" --outdir "$RUNNER_TEMP/remura-cvd-built-$kind"

@@ -1,6 +1,12 @@
-# REMURA TradingView — ROADMAP v0.8.62-lab (CVD transition and rollback offline)
-**Aggiornamento 14/11/2026 12:52 CET — bundle candidati e rollback isolato**
+# REMURA TradingView — ROADMAP v0.8.63-lab (CVD transition preflight)
+**Aggiornamento 14/11/2026 CET — compilazione Pine confermata, preflight TEST**
 **PR #102 DRAFT/OPEN — nessun merge, nessun nuovo deploy, nessun ordine.**
+
+## CHECKPOINT v0.8.63 — PINE COMPILATO E PREFLIGHT TRANSIZIONE
+- [x] Utente conferma compilazione Pine v0.9.1 CVD TELEMETRY PREVIEW. Non implica trasmissione live o verifica runtime del nuovo payload. Indicatore originale e alert BTC non modificati dal repository.
+- [x] v0.8.62 CI Telemetry #43592148416 SUCCESS 190 Python; dry-run #43592148446 e #43592145314 FAILURE perché test attende ValueError invece di AuditError sul manifest irrisolto. Fail-closed corretto. Corretto solo test con eccezione e messaggio esatti per entrambi i casi, nessun allentamento.
+- [x] Nuovo preflight GET-only per stato LEGACY TEST ON, hash secret nome/tipo, D1 EU distinto, limiter noto; rifiuta stato CVD già attivo e stati inattesi. Tre test mock, aggiunti al dry-run. Nessun accesso live/stima billing implicita.
+- [ ] Verificare CI aggiornata; predisporre workflow owner-only read-only per preflight e matrice rollback, poi workflow di transizione con guardia specifica. Nessun deploy prima di prova e approvazione esplicita. Non attivare alert CVD; stop BTC domenica sera. PR #102 DRAFT. Produzione intatta.
 
 ## CHECKPOINT v0.8.62 — TRANSIZIONE CVD E ROLLBACK
 - [x] v0.8.61 CI #43591911967 e dryrun legacy #43591911943 SUCCESS, 190 test Python e 6 Node CVD, parità sui fixture. Legacy worker.mjs confrontato byte per byte col pin weekend effettivamente distribuito 9b6fae547761153c5d4d0b9aa8b7ec3e281f6662: identico.
