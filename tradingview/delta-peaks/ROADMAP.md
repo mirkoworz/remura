@@ -1,11 +1,16 @@
-# REMURA TradingView — ROADMAP v0.8.79-lab (matching causale V2)
-**Aggiornamento 14/11/2026 18:22 CET — benchmark scientifico V2**
+# REMURA TradingView — ROADMAP v0.8.80-lab (lettori V2)
+**Aggiornamento 14/11/2026 18:30 CET — migrazione lettori scientifici TEST V2**
 **PR #102 DRAFT/OPEN — deploy TEST autorizzato riuscito, produzione e ordini esclusi.**
+
+## CHECKPOINT v0.8.80 — LETTORI SCIENTIFICI V2
+- [x] v0.8.79 commit a7d76abfa7a66e8896cfeb12dccae11ca869bb65; CI 43620907984 SUCCESS, dry-run 43620908078 SUCCESS. Log dettagliato non recuperato (timeout connettore); non attestare conteggio effettivo.
+- [x] Archive, batch e fold V2 separati; validazione V1 riusata intatta; stesse query, cutoff, cap. Fold V2 usa solo validazione + protocollo V2. Batch V2 oscura outcome e benchmark descrittivi per qualsiasi finestra sovrapposta al calendario preregistrato; radar resta diagnostica, non prova di blindaggio indipendente. Reader V1 conservati per rollback.
+- [ ] CI v0.8.80, poi pin dei soli workflow manuali TEST batch/fold su main (nessun avvio). Nessun servizio attivo, dati reali, costi certificati o deploy.
 
 ## CHECKPOINT v0.8.79 — MATCHING CAUSALE V2
 - [x] v0.8.78 CI 43618758605 SUCCESS 259 test e dry-run 43618758595 SUCCESS, checkpoint riferito 6881112710.
 - [x] Benchmark e protocollo V2 separati, V1 intatto: assegnazioni FIFO prima degli esiti, nessun rimpiazzo, conteggi e digest, candidati tardivi esclusi prima della riserva. Fold/strati/orizzonti invariati; nessuna inferenza.
-- [ ] CI e regressioni V2 da verificare; dopo verde migrare reader/pin con versione esplicita, senza attivare servizi. Persistenza causale indipendente/ledger conflitti non attestati. Quote/host reali ignoti.
+- [x] CI e dry-run V2 SUCCESS; migrazione reader separata in v0.8.80, pin ancora da aggiornare. Persistenza causale indipendente/ledger conflitti non attestati. Quote/host reali ignoti.
 - [ ] Prima ricezione Forex alla riapertura; stop alert BTC temporaneo domenica sera senza fermare Forex; coordinare Oracle con A. Nessun deploy, merge, trade.
  
 ## CHECKPOINT v0.8.78 — GATE RISORSE PREVIEW
