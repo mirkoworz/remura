@@ -1,11 +1,12 @@
 # REMURA TradingView — ROADMAP v0.8.88-lab (prima ricezione FX)
-**Aggiornamento 14/11/2026 21:16 CET — trasporto batch e controllo ricezione**
+**Aggiornamento 14/11/2026 21:18 CET — collegamento batch V3 su main**
 **PR #102 DRAFT/OPEN — deploy TEST autorizzato riuscito, produzione e ordini esclusi.**
 
 ## CHECKPOINT v0.8.88 — BATCH TRANSPORT E PRIMO FX
 - [x] v0.8.87 CI 43635976362 SUCCESS, dry-run 43635976369 SUCCESS, checkpoint 6883515081.
 - [x] Individuato limite generico 200k byte V2 batch, rischio risposta troncata. V3 separato riusa trasporto SELECT fisso fold V2 (4.5 MB, no redirect, 15s), metadata obbligatori e stop 20k letture osservate, no retry. Receipt-only max 12 slot, no esiti/benchmark, radar e latenza aggregati. Batch normale mantiene protocollo V2 e withholding. 7 test sintetici incluso pagina >200k.
-- [ ] CI V3; il workflow main resta pin V2 invariato. Solo dopo review/esplicita autorizzazione pin main verso V3 e opzione receipt-only (nessun deploy). Fino ad allora per prima ricezione usare batch V2 con breve finestra maturata, non reader legacy V1 per fold. Non interrogare FX a mercato chiuso. Stop solo BTC temporaneo domenica sera prima di 01:00 CET lunedì; lasciare alert Forex.
+- [x] CI V3 43636625615 SUCCESS e Wrangler dry-run 43636625625 SUCCESS (checkpoint 6883602458, HEAD codice `4f1f9cb250241007bc5f9a97527972d3a47b9d2a`). Main commit `445efa018479e70e8d9df9563b74d8f63998ef0d`: solo workflow batch manuale aggiornato, V3 pin immutabile, `receipt-only` default max 12 slot, `batch` esplicito max 576 slot. Owner/triggering actor, main, read-only, concurrency, no scheduler conservati. Diff e blob main riletti; nessun dispatch, test runtime o nuova lettura. Rollback ripristino blob V2 `55e043feeb5c8691d4588b2413d53fb318a54a38`. Fold V2, Worker, Pine e produzione intatti.
+- [ ] Alla riapertura: prima finestra effettivamente maturata di FX:EURUSD M5, 12 slot al massimo, start/end UTC espliciti con ultimo close +120s. Valutare matching, missing requested slots, lag, radar e metadati read/write; no matching non distingue alert mancante, errore o mercato chiuso. Nessun esito scientifico. Promemoria BTC domenica 15/11 circa 19 CET programmato, Forex resta attivo. Coordinare Oracle A prima del runtime privato; nessun nuovo wrapper.
 - [ ] Prima ricezione FX e gate reali Oracle/B; niente esiti intermedi dei fold, non cambiare calendario.
 
 ## CHECKPOINT v0.8.87 — RACCORDo B E UNKNOWN
