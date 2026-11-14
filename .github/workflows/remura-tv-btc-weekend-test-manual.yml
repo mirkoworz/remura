@@ -1,0 +1,149 @@
+# REMURA v0.8.40 — 14/11/2026 CET
+# Owner-only manual deploy to existing TEST or read-only BTC transport receipt audit.
+# Fixed expiry at 16/11 00:00 UTC; no schedule, no production mutation.
+name: REMURA BTCUSDT Weekend TEST (manual only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Deploy temporaneo BTC sul Worker TEST oppure verifica ricezione in sola lettura'
+        required: true
+        type: choice
+        default: READ_BTC_RECEIPTS_ONLY
+        options:
+          - READ_BTC_RECEIPTS_ONLY
+          - DEPLOY_BTC_WEEKEND_TEST
+
+permissions:
+  contents: read
+
+concurrency:
+  group: remura-test-worker-bootstrap-manual
+  cancel-in-progress: false
+
+jobs:
+  deploy-weekend-test-only:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/main' &&
+      github.actor == 'mirkoworz' &&
+      inputs.confirmation == 'DEPLOY_BTC_WEEKEND_TEST'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CI: 'true'
+      WRANGLER_SEND_METRICS: 'false'
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.REMURA_CF_TEST_WORKER_EDITOR_TOKEN }}
+      REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+      REMURA_CF_D1_READ_TOKEN: ${{ secrets.REMURA_CF_D1_READ_TOKEN }}
+      REMURA_CF_TEST_WORKER_EDITOR_TOKEN: ${{ secrets.REMURA_CF_TEST_WORKER_EDITOR_TOKEN }}
+    steps:
+      - name: Checkout immutable reviewed TEST-only source
+        uses: actions/checkout@v4
+        with:
+          ref: 9b6fae547761153c5d4d0b9aa8b7ec3e281f6662
+          persist-credentials: false
+      - name: Offline regression gate - no remote requests
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$REMURA_CF_ACCOUNT_ID"
+          test -n "$REMURA_CF_D1_READ_TOKEN"
+          test -n "$REMURA_CF_TEST_WORKER_EDITOR_TOKEN"
+          node --test tradingview/delta-peaks/gateway-lab/worker.test.mjs
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_prepare_test_ingest_on_v1.py' -v
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_emergency_stop_test_guard_v1.py' -v
+          python3 tradingview/delta-peaks/gateway-lab/test_btc_weekend_receipt_audit_v1.py --self-test
+          echo 'REMURA_BTC_WEEKEND_OFFLINE_GATES=PASS'
+      - name: Authenticate existing Worker TEST ON with hash, verify D1 TEST and build private bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/prepare_test_ingest_on_v1.py --weekend-refresh
+          echo 'REMURA_INGEST_ON_CANDIDATE=ISOLATED_TEST_READY'
+      - name: Wrangler compile-only with validated TEMP manifest, no deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${REMURA_TEST_ON_BUNDLE:-}"
+          test -f "$REMURA_TEST_ON_BUNDLE/wrangler.json"
+          test -f "$REMURA_TEST_ON_BUNDLE/worker.mjs"
+          npx --yes wrangler@4.157.0 deploy --dry-run \
+            --config "$REMURA_TEST_ON_BUNDLE/wrangler.json" \
+            --outdir "$RUNNER_TEMP/remura-on-test-dryrun"
+          echo 'REMURA_TEST_ON_WRANGLER=DRY_RUN_PASSED'
+      - name: FRESH authorized GET, must still be TEST ON with hash immediately before mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/emergency_stop_test_guard_v1.py \
+            | grep -Fx 'REMURA_TEST_EMERGENCY_PREFLIGHT=TEST_GATEWAY_ON_WITH_HASH_SECRET'
+      - name: Owner-authorized deploy temporary BTC extension to existing TEST Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -c 'import datetime as d; n=d.datetime.now(d.timezone.utc); assert d.datetime(2026,11,14,tzinfo=d.timezone.utc) <= n < d.datetime(2026,11,16,tzinfo=d.timezone.utc), "Weekend expired"'
+          npx --yes wrangler@4.157.0 deploy \
+            --config "$REMURA_TEST_ON_BUNDLE/wrangler.json"
+          echo 'REMURA_BTC_WEEKEND_DEPLOY=COMMAND_SUCCEEDED_PENDING_POSTCHECK'
+      - name: Strict readback of ON, D1 TEST, limiter and Secret name (never value)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/emergency_stop_test_guard_v1.py \
+            | grep -Fx 'REMURA_TEST_EMERGENCY_PREFLIGHT=TEST_GATEWAY_ON_WITH_HASH_SECRET'
+          {
+            echo '### REMURA BTCUSDT weekend transport TEST — owner-only deploy'
+            echo 'Target: remura-tv-webhook-test. D1: remura-tv-lab-test EU.'
+            echo 'Verified: INGEST_ENABLED=true; required Secret name and limiter present.'
+            echo 'BINANCE:BTCUSDT M5 accepted only before 16/11/2026 00:00 UTC. BTC never eligible for Forex prospective research. No trades.'
+            echo 'IMPORTANT: HTTP edge availability and request delivery not yet confirmed.'
+            echo 'Emergency STOP: .github/workflows/remura-tv-emergency-stop-test-manual.yml.'
+            echo 'Stop immediately if unexpected requests or billing/CPU issue.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Always remove isolated ephemeral bundle and dry-run output
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -n "${REMURA_TEST_ON_BUNDLE:-}" &&
+                "$REMURA_TEST_ON_BUNDLE" == "$RUNNER_TEMP"/remura-test-off-* ]]; then
+            rm -rf -- "$REMURA_TEST_ON_BUNDLE"
+          fi
+          rm -rf -- "$RUNNER_TEMP/remura-on-test-dryrun"
+          echo 'REMURA_TEST_ON_TEMP_CLEANUP=ATTEMPTED'
+
+  read-btc-receipts-only:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/main' &&
+      github.actor == 'mirkoworz' &&
+      inputs.confirmation == 'READ_BTC_RECEIPTS_ONLY'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 9b6fae547761153c5d4d0b9aa8b7ec3e281f6662
+          persist-credentials: false
+      - name: Offline BTC audit safety tests
+        run: python3 tradingview/delta-peaks/gateway-lab/test_btc_weekend_receipt_audit_v1.py --self-test
+      - name: Read bounded BTC transport receipt metadata from D1 TEST
+        env:
+          REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+          REMURA_CF_D1_READ_TOKEN: ${{ secrets.REMURA_CF_D1_READ_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/test_btc_weekend_receipt_audit_v1.py --live-read | tee "$RUNNER_TEMP/remura-btc-summary.txt"
+          {
+            echo '### REMURA BTCUSDT transport only — D1 TEST'
+            echo 'Read-only SELECT; no raw JSON, price data, or deploy.'
+            echo 'First 100 matching BTC rows, not total if MORE_AVAILABLE=True.'
+            echo 'Transport latency since candle close; not a signal or Forex validation.'
+            echo '~~~'
+            cat "$RUNNER_TEMP/remura-btc-summary.txt"
+            echo '~~~'
+          } >> "$GITHUB_STEP_SUMMARY"
