@@ -1,6 +1,14 @@
-# REMURA TradingView — ROADMAP v0.8.46-lab (gateway TEST ON, offline volume features)
-**Aggiornamento roadmap: 14/11/2026, 08:14 CET — adattatore volumetrico offline e regressioni sintetiche**
+# REMURA TradingView — ROADMAP v0.8.47-lab (gateway TEST ON, analytic aggregate reader)
+**Aggiornamento roadmap: 14/11/2026, 09:32 CET — 17 ricezioni BTC reali, prime 6 BAR_EVENT, reader TEST candidato**
 **PR #102 DRAFT/OPEN — nessun merge, nessun nuovo deploy, nessun ordine.**
+
+## CHECKPOINT v0.8.47-lab — 17 RICEZIONI REALI E PRIMI BAR_EVENT
+- [x] [Run #43576218225](https://github.com/mirkoworz/remura/actions/runs/43576218225), job #132390929891, completato SUCCESS alle 09:31 CET; job deploy skipped. Log effettivi: RECEIPTS_PRESENT, SAMPLE_ROWS=17, MORE_AVAILABLE=False, HEARTBEATS=11, BAR_EVENTS=6, TRANSPORT_WITHIN_120S=17, FIRST_RECEIVED_MS=1794640201649, MAX_BAR_CLOSE_LAG_MS=4312. Conteggio compatibile con 17 chiusure 08:10–09:30 CET, ma timestamp individuali non ancora verificati. SELECT D1 TEST metadati, raw JSON non letto; nessun dato scientifico Forex, nessuna prova di efficacia.
+- [x] CI finale v0.8.46 su `c7a77c11f6bf90a7a6e92ca4eeef358d75b2c5dc` SUCCESS (#43570296161 e #43570296168); tutti 14 nuovi test feature confermati nei log #43570270744.
+- [x] [Reader analitico TEST](gateway-lab/pilot_analytic_reader_v1.py) commit `5059f9acf0c81d1beb618660f4248eaf0a745ff2`: riusa motore v0.8.46; SELECT parametrizzata solo su D1 TEST EU verificato, esclusivamente BTC M5; massimo 72 slot maturi e cap 100 righe + sentinella. Finestra parte dalla prima chiusura verificata 08:10 CET e scorre dopo 6 ore; attende 120s per ogni slot, verifica anche gap iniziali/finali. Solo conteggi aggregati, no raw JSON/prezzi nei log, no export o scritture. Distinzione tra lettura fallita, nessuna riga, finestra incompleta e incompatibilità/conflitti. Completezza di trasporto non implica accuratezza dati.
+- [x] [11 regressioni sintetiche/mock](test_pilot_analytic_reader_v1.py) commit `62b83f1d16ee3aa83cea943348c8f9e7ef39e679`; CI #43576368525 e #43576368482 in corso al checkpoint. Nessun accesso live effettuato dal reader nuovo.
+- [ ] Dopo CI positiva predisporre workflow manuale owner-only su main, pin immutabile del sorgente testato, token D1 read esistente solo nello step live. Nessun merge della PR, nessun deploy, nessuna nuova risorsa, nessun accesso D1 produzione. Leggere aggregati veri e distinguere eventuali incompatibilità schema, campi mancanti, anomalie. Non ricreare alert BTC.
+- [ ] Spegnere alert domenica 15/11 sera prima del 16/11 ore 01:00 CET. Proseguire D3 con controlli coerenza numerica/rilevamento retest e D4 solo dopo osservazioni valide. Quote effettive da verificare separatamente. Filoni A/B/C invariati.
 
 ## CHECKPOINT v0.8.46-lab — BRIDGE VOLUMETRICO OFFLINE
 - [x] HEAD precedente v0.8.45 `e062092c62bb339da52d8f3140bc36e0992914c9` e PR #102 DRAFT/OPEN verificati. Primo heartbeat BTC reale già attestato da run #43569836612; non ripetere autenticazione, configurazione o deploy.
