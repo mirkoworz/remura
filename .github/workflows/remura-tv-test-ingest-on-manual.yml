@@ -1,0 +1,113 @@
+# REMURA TradingView TEST v0.8.37 — 14/11/2026 ore 02:00 CET
+# MANUAL, OWNER-ONLY, TEST-only. Deploys ingest ON ONLY after explicit approval.
+# Never deploy automatically on push, PR, cron or workflow completion.
+# First webhook MUST be independently approved/configured in TradingView.
+name: REMURA TEST Gateway INGEST ON (manual only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'ATTIVA ricezione webhook SOLO sul Worker TEST con D1 TEST'
+        required: true
+        type: choice
+        options:
+          - ENABLE_TEST_INGEST_ONLY_AFTER_SEPARATE_CONSENT
+
+permissions:
+  contents: read
+
+concurrency:
+  group: remura-test-worker-bootstrap-manual
+  cancel-in-progress: false
+
+jobs:
+  enable-ingest-test-only:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/main' &&
+      github.actor == 'mirkoworz' &&
+      inputs.confirmation == 'ENABLE_TEST_INGEST_ONLY_AFTER_SEPARATE_CONSENT'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CI: 'true'
+      WRANGLER_SEND_METRICS: 'false'
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.REMURA_CF_TEST_WORKER_EDITOR_TOKEN }}
+      REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+      REMURA_CF_D1_READ_TOKEN: ${{ secrets.REMURA_CF_D1_READ_TOKEN }}
+      REMURA_CF_TEST_WORKER_EDITOR_TOKEN: ${{ secrets.REMURA_CF_TEST_WORKER_EDITOR_TOKEN }}
+    steps:
+      - name: Checkout immutable reviewed TEST-only source
+        uses: actions/checkout@v4
+        with:
+          ref: 759d0236e79e42141a6402c717b5e5a663dac8e9
+          persist-credentials: false
+      - name: Offline regression gate - no remote requests
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$REMURA_CF_ACCOUNT_ID"
+          test -n "$REMURA_CF_D1_READ_TOKEN"
+          test -n "$REMURA_CF_TEST_WORKER_EDITOR_TOKEN"
+          node --test tradingview/delta-peaks/gateway-lab/worker.test.mjs
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_prepare_test_ingest_on_v1.py' -v
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_emergency_stop_test_guard_v1.py' -v
+          echo 'REMURA_TEST_ON_OFFLINE_GATES=PASS'
+      - name: Authenticate Worker TEST OFF with hash, verify D1 TEST and build private bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/prepare_test_ingest_on_v1.py
+          echo 'REMURA_INGEST_ON_CANDIDATE=ISOLATED_TEST_READY'
+      - name: Wrangler compile-only with validated TEMP manifest, no deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${REMURA_TEST_ON_BUNDLE:-}"
+          test -f "$REMURA_TEST_ON_BUNDLE/wrangler.json"
+          test -f "$REMURA_TEST_ON_BUNDLE/worker.mjs"
+          npx --yes wrangler@4.157.0 deploy --dry-run \
+            --config "$REMURA_TEST_ON_BUNDLE/wrangler.json" \
+            --outdir "$RUNNER_TEMP/remura-on-test-dryrun"
+          echo 'REMURA_TEST_ON_WRANGLER=DRY_RUN_PASSED'
+      - name: FRESH authorized GET, must still be TEST OFF with hash immediately before mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/emergency_stop_test_guard_v1.py \
+            | grep -Fx 'REMURA_TEST_EMERGENCY_PREFLIGHT=TEST_GATEWAY_OFF_WITH_HASH_SECRET'
+      - name: Owner-authorized deploy TEST gateway ON only, previous Secret retained
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.157.0 deploy \
+            --config "$REMURA_TEST_ON_BUNDLE/wrangler.json"
+          echo 'REMURA_TEST_INGEST_ON=DEPLOY_COMMAND_SUCCEEDED_PENDING_POSTCHECK'
+      - name: Strict readback of ON, D1 TEST, limiter and Secret name (never value)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/emergency_stop_test_guard_v1.py \
+            | grep -Fx 'REMURA_TEST_EMERGENCY_PREFLIGHT=TEST_GATEWAY_ON_WITH_HASH_SECRET'
+          {
+            echo '### REMURA TEST INGEST ON — owner-only manual action'
+            echo 'Target: remura-tv-webhook-test. D1: remura-tv-lab-test EU.'
+            echo 'Verified: INGEST_ENABLED=true; required Secret name and limiter present.'
+            echo 'No TradingView webhook was sent by this workflow. No trade permitted.'
+            echo 'IMPORTANT: HTTP edge availability and request delivery not yet confirmed.'
+            echo 'Emergency STOP: .github/workflows/remura-tv-emergency-stop-test-manual.yml.'
+            echo 'Stop immediately if unexpected requests or billing/CPU issue.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Always remove isolated ephemeral bundle and dry-run output
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -n "${REMURA_TEST_ON_BUNDLE:-}" &&
+                "$REMURA_TEST_ON_BUNDLE" == "$RUNNER_TEMP"/remura-test-off-* ]]; then
+            rm -rf -- "$REMURA_TEST_ON_BUNDLE"
+          fi
+          rm -rf -- "$RUNNER_TEMP/remura-on-test-dryrun"
+          echo 'REMURA_TEST_ON_TEMP_CLEANUP=ATTEMPTED'
