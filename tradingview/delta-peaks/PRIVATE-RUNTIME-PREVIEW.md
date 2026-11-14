@@ -1,5 +1,6 @@
-# REMURA v0.8.76 LAB — 14/11/2026 17:10 CET
+# REMURA v0.8.77 LAB — 14/11/2026 17:33 CET
 ## Runtime privato, non attivo
+- Il percorso giornaliero usa la stessa validazione completa delle finestre senza rieseguire i benchmark scientifici. La profilazione sintetica del runner non certifica l'host Oracle.
 `gateway-lab/cvd_private_runtime_preview_v1.py` è una libreria per un futuro chiamante privato sul nodo esistente. Non è un endpoint, cron, nuovo Worker o comando da eseguire sul DB LIVE.
 - Preparare copie SQLite coerenti, isolate e query-only; mai passare il database attivo o credenziali a GitHub. Il chiamante deve usare il checkout B immutabile 8dc51e8a199dc1cfd45e4cd2e7b339510af2eb2b, separato dal checkout D verificato; il pin è un requisito del chiamante, non verificato crittograficamente dalla libreria.
 - `preview`: nessuna rete; finestra esatta pianificata su un giorno con buffer 3 minuti, solo chiusure M5 maturate 120s. Cap massimo cinque finestre, 72 slot ciascuna. Fornire anche finestre vuote; no gap del perimetro richiesto, no interpolazione.

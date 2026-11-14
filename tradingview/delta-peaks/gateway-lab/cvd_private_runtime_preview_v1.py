@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# REMURA v0.8.76 LAB — 14/11/2026 17:10 CET
+# REMURA v0.8.77 LAB — 14/11/2026 17:33 CET
 """Private, explicit, in-memory D1 TEST -> B snapshot -> HTML/notice.
 No scheduler, file writes, stdout, production connection or notification transport.
 Inputs are trusted caller snapshots, not proof of independent provenance.
@@ -7,7 +7,7 @@ Inputs are trusted caller snapshots, not proof of independent provenance.
 import sqlite3
 from datetime import datetime,timezone
 from urllib.parse import quote
-from cvd_archive_preview_v1 import assemble,MIN_CLOSE_MS
+from cvd_archive_preview_v1 import validate_windows,MIN_CLOSE_MS
 from cvd_telemetry_preview_v1 import M5
 from cvd_test_batch_reader_v1 import unpack,MAX_SLOTS
 from cvd_test_fold_reader_v1 import fetch_page
@@ -49,21 +49,22 @@ def preview(core,windows,*,now,origin="LOCAL_SNAPSHOT",private=None,secret=None,
     expected=plan(now)
     if [(w.get("start_ms"),w.get("end_ms")) for w in windows]!=expected:
         raise ValueError("runtime_window_scope")
-    archive=assemble(windows,as_of_ms=now)
-    # Do not discard conflict evidence before validation. Exact duplicates
-    # remain available to the decision adapter, which deduplicates as-of.
-    rows=[r for w in windows for r in w["rows"]]
+    valid,archive=validate_windows(windows,as_of_ms=now)
+    # Full window validation rejects conflicts before exact duplicates are collapsed.
+    # Scientific reports stay in the separate batch/fold readers.
+    rows=[row for row,_,_ in valid]
     at=datetime.fromtimestamp(now//1000,tz=timezone.utc).replace(microsecond=(now%1000)*1000).isoformat().replace("+00:00","Z")
     r=dossier(core,[],as_of_utc=at,days=1,origin=origin,cvd_rows=rows,auxiliary=True,
               private_cvd_db=private,cvd_secret=secret,retail_root=retail_root,retail_authorized_at=authorized_at)
     notice=notification_preview(r)
-    return {"schema":"remura.tv.private.runtime.preview.v1","version":"0.8.76-lab",
+    return {"schema":"remura.tv.private.runtime.preview.v1","version":"0.8.77-lab",
             "origin":origin,"status":"LOCAL_PREVIEW_ONLY","html":render(r),"notice":notice,
             "coverage":{"requested_slots":archive["requested_slots"],"valid_unique_bars":archive["valid_unique_bars"],
                         "missing_requested_slots":archive["missing_requested_slots"],
                         "first_requested_close_ms":expected[0][0],"last_requested_close_ms":expected[-1][1],
                         "basis":"MATURE_REQUESTED_SLOTS_NOT_MARKET_CALENDAR",
-                        "latest_immature_bars_not_queried":True,"legacy_fxcm_export_supplied":False},
+                        "latest_immature_bars_not_queried":True,"legacy_fxcm_export_supplied":False,
+                        "scientific_benchmarks_computed":False},
             "raw_export_returned":False,"independent_provenance":False,"notifications_enabled":False,
             "orders_enabled":False,"edge":"NOT_ESTABLISHED"}
 

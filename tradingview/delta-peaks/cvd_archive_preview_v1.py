@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# REMURA v0.8.71 LAB — 14/11/2026 16:56 CET
+# REMURA v0.8.77 LAB — 14/11/2026 17:33 CET
 """Offline assembly of explicit, disjoint <=72-slot CVD TEST export windows.
 No D1/API/file writes; input raw export must be supplied privately by trusted caller.
 Does not prove origin, conflict ledger or market-session completeness.
@@ -17,7 +17,8 @@ from remura_tv_bridge_preview_v1 import EXPECTED_COLUMNS
 from datetime import datetime,timezone
 MIN_CLOSE_MS=int(datetime(2026,11,14,12,40,tzinfo=timezone.utc).timestamp())*1000
 
-def assemble(windows,*,as_of_ms):
+def validate_windows(windows,*,as_of_ms):
+    """Same strict validation, independent of expensive outcome computation."""
     if type(as_of_ms) is not int or type(windows) is not list or len(windows)>140:
         raise ValueError("archive_scope")
     valid=[]; total=0; requested=0; end_prior=None
@@ -56,9 +57,14 @@ def assemble(windows,*,as_of_ms):
             else:
                 seen[t]=(row,e,v)
         valid.extend(seen[t] for t in sorted(seen))
-    return {"schema":"remura.tv.cvd.archive.aggregate.preview.v1","version":"0.8.71-lab",
-            "requested_slots":requested,"valid_unique_bars":len(valid),
-            "missing_requested_slots":requested-len(valid),"duplicate_rows":total-len(valid),
+    stats={"requested_slots":requested,"valid_unique_bars":len(valid),
+           "missing_requested_slots":requested-len(valid),"duplicate_rows":total-len(valid)}
+    return valid,stats
+
+def assemble(windows,*,as_of_ms):
+    valid,stats=validate_windows(windows,as_of_ms=as_of_ms)
+    return {"schema":"remura.tv.cvd.archive.aggregate.preview.v1","version":"0.8.77-lab",
+            **stats,
             "scope":"EXPLICIT_WINDOWS_NOT_MARKET_CALENDAR","provenance_attested":False,
             "conflict_ledger_available":False,
             "radar":aggregate_radar(valid,as_of_ms=as_of_ms),
