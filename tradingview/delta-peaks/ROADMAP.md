@@ -1,6 +1,12 @@
-# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.40-doc (Worker Production noto v0.8.5, gateway TEST v0.8.6 ON)
-**Aggiornamento roadmap: 14/11/2026, 07:48 CET — candidato BTC weekend pronto, deploy non avviato**
+# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.41-doc (Worker Production noto v0.8.5, gateway TEST v0.8.6 ON)
+**Aggiornamento roadmap: 14/11/2026, 07:49 CET — deploy BTC weekend confermato; ricezione da verificare**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView da confermare, nessun ordine.**
+
+## CHECKPOINT v0.8.41-doc — BTC WEEKEND DEPLOY REALE RIUSCITO — 14/11/2026, 07:49 CET
+- [x] Proprietario ha avviato DEPLOY_BTC_WEEKEND_TEST. [Run #43568131360](https://github.com/mirkoworz/remura/actions/runs/43568131360) completed SUCCESS; job #132366387268 tutti gli step verdi, job read-only saltato come previsto. Deploy reale solo remura-tv-webhook-test 14/11/2026 07:49:05 CET; versione Cloudflare `313fcee3-31f3-4709-bde6-4a13a05d3ada`. Preflight e postcheck `TEST_GATEWAY_ON_WITH_HASH_SECRET`, marker `REMURA_BTC_WEEKEND_DEPLOY=COMMAND_SUCCEEDED_PENDING_POSTCHECK` seguito dal postcheck positivo. Sorgente v0.8.40 pin `9b6fae547761153c5d4d0b9aa8b7ec3e281f6662`. D1 TEST e limiter invariati; produzione non coinvolta.
+- [x] CI documento precedente #43568097384 e #43568097383 SUCCESS.
+- [ ] Dopo almeno una candela M5 chiusa successiva al deploy (07:50 CET o successiva), con alert BTC attivo e input LAB abilitati, eseguire una volta READ_BTC_RECEIPTS_ONLY sullo stesso [workflow](https://github.com/mirkoworz/remura/actions/workflows/remura-tv-btc-weekend-test-manual.yml). Leggere conteggi e lag, verificare log TradingView. Al checkpoint nessuna ricezione reale ancora dimostrata, nessun dato o profitto inventato. BTC autorizzato fino a 16/11/2026 ore 01:00 CET esclusa, restano esclusione dal cohort Forex e stessa autorizzazione FXCM:EURUSD.
+- [ ] Nessuna ulteriore modifica live necessaria prima della verifica. Nessun nuovo abbonamento o token.
 
 ## CHECKPOINT v0.8.40 — TEST TRASPORTO BTC WEEKEND — 14/11/2026, 07:48 CET
 - [x] Utente ha scelto `BINANCE:BTCUSDT` spot su TradingView durante chiusura Forex. Non confondere USD con USDT, né spot con perpetual. M5, versione indicatore TELEMETRY v0.8.1-lab, stessi token/URL TEST; entrambi input LAB abilitati da verificare nella creazione alert.
