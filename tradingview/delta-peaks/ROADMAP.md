@@ -1,6 +1,12 @@
 # REMURA TradingView — ROADMAP v0.8.52-lab (FX TEST aggregate reader candidate)
-**Aggiornamento roadmap: 14/11/2026, 11:00 CET — lettore FX separato e finestra esplicita**
+**Aggiornamento roadmap: 14/11/2026, 11:25 CET — lettore FX verificato e workflow pronto**
 **PR #102 DRAFT/OPEN — nessun merge, nessun nuovo deploy, nessun ordine.**
+
+## CHECKPOINT v0.8.52 — WORKFLOW EURUSD PRONTO (11:25 CET)
+- [x] CI finale `8c3cdfdb56f2d5988c4d62b485ecfc68069c05db` Telemetry LAB #43582958403 e Wrangler dry run #43582958372 SUCCESS; log confermano 8/8 test specifici del lettore FX, 135 test Python principali.
+- [x] Creato [workflow owner-only REMURA EURUSD TEST Analytic Reader](https://github.com/mirkoworz/remura/actions/workflows/remura-tv-fx-analytic-readonly-manual.yml) su main, commit `2a376012cc7c294787852a9a851948753d6452f8`, pin immutabile del candidato CI verificato. Input start_utc/end_utc espliciti in UTC e READ_FX_TEST_ANALYTICS_ONLY; token D1 read solo step live, regressioni senza segreti, nessun cron/deploy/scrittura. Non eseguito perché mercato chiuso. Al pilot scegliere prima chiusura reale dopo attivazione, non una data stimata.
+- [x] Controllo sequenziale previsto per le 11 già eseguito alle 10:54 (run #43582760320): 33/33, 3/3 effort e 10/10 retest coerenti. Alle 11:25 ultimo run disponibile ancora quello; nuova lettura BTC opzionale, non ripetere per necessità di validazione già soddisfatta. Solo proprietario può avviare manualmente; nessuna automazione aggiunta.
+- [ ] Prossima fase: attestazione config e raccolta EURUSD dopo riapertura; restano da verificare quote effettive account. PR #102 DRAFT, nessuna modifica alla produzione o ai filoni A/B/C. Stop alert BTC domenica sera prima del 16/11 01:00 CET.
 
 ## CHECKPOINT v0.8.52-lab — LETTORE EURUSD TEST OFFLINE
 - [x] v0.8.51 CI Telemetry LAB #43582860610 SUCCESS; dry run #43582860601 non ancora verificato. Worker candidato già distribuito v0.8.40 accetta EURUSD M5 indipendentemente dal limite temporale BTC; nessun nuovo deploy necessario per payload v1.
