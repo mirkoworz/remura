@@ -1,12 +1,18 @@
-# REMURA TradingView — ROADMAP v0.8.87-lab (raccordo prove B)
-**Aggiornamento 14/11/2026 21:08 CET — evidenze reali e separazione radar/prove B**
+# REMURA TradingView — ROADMAP v0.8.88-lab (prima ricezione FX)
+**Aggiornamento 14/11/2026 21:16 CET — trasporto batch e controllo ricezione**
 **PR #102 DRAFT/OPEN — deploy TEST autorizzato riuscito, produzione e ordini esclusi.**
+
+## CHECKPOINT v0.8.88 — BATCH TRANSPORT E PRIMO FX
+- [x] v0.8.87 CI 43635976362 SUCCESS, dry-run 43635976369 SUCCESS, checkpoint 6883515081.
+- [x] Individuato limite generico 200k byte V2 batch, rischio risposta troncata. V3 separato riusa trasporto SELECT fisso fold V2 (4.5 MB, no redirect, 15s), metadata obbligatori e stop 20k letture osservate, no retry. Receipt-only max 12 slot, no esiti/benchmark, radar e latenza aggregati. Batch normale mantiene protocollo V2 e withholding. 7 test sintetici incluso pagina >200k.
+- [ ] CI V3; il workflow main resta pin V2 invariato. Solo dopo review/esplicita autorizzazione pin main verso V3 e opzione receipt-only (nessun deploy). Fino ad allora per prima ricezione usare batch V2 con breve finestra maturata, non reader legacy V1 per fold. Non interrogare FX a mercato chiuso. Stop solo BTC temporaneo domenica sera prima di 01:00 CET lunedì; lasciare alert Forex.
+- [ ] Prima ricezione FX e gate reali Oracle/B; niente esiti intermedi dei fold, non cambiare calendario.
 
 ## CHECKPOINT v0.8.87 — RACCORDo B E UNKNOWN
 - [x] v0.8.86 CI 43633688606 SUCCESS, dry-run 43633688638 SUCCESS, checkpoint 6883203878. Evidenze manuali 6883483185: Python 3.12.3, SQLite 3.45.1, deserialize presente, core 12.08 MiB, WAL/SHM assenti al campione, MemAvailable 663688 kB, CPU 2, load1 0.20556, disco libero 41170 MiB. Compatibilità preliminare, non cgroup o prova detachment/restore; non riusare come fresco.
 - [x] Verificato main 793e1663b3920c447e20cca36113296c6ba77793: assenti moduli B causal pair/signal evidence/price evidence/cot witness, private_server non contiene le tre tabelle. PR89 DRAFT al pin B, roadmap B NO-GO. Non prova schema VPS, non assumere dati B presenti. Vietato creare/backfill prove da eventi storici.
 - [x] Corretto notice per popolazione B sconosciuta: B_PROOFS_UNAVAILABLE, conteggi null/N/D anziché zero; fingerprint distingue stato. Fixture vera pinned B senza tabelle proof, radar indipendente con barra valida e dossier non promuove associazione. Nessun nuovo collector o wrapper. Formato HTML storico compatibile con stato privato.
-- [ ] CI v0.8.87; alla riapertura verificare primo FX attraverso lettori TEST già esistenti, mantenere radar separato da confluence B; coordinare continuità Oracle A e disponibilità reale prove B prima di export e runtime. Nessun nuovo intervento Termius oggi. Nessuna ammissione o backfill.
+- [x] CI v0.8.87 verde; resta alla riapertura verificare primo FX attraverso lettori TEST già esistenti, mantenere radar separato da confluence B; coordinare continuità Oracle A e disponibilità reale prove B prima di export e runtime. Nessun nuovo intervento Termius oggi. Nessuna ammissione o backfill.
 
 ## CHECKPOINT v0.8.86 — PREFLIGHT METADATI E REVIEW
 - [x] v0.8.85 CI 43633303343 SUCCESS, dry-run 43633303360 SUCCESS, commento 6883150713.

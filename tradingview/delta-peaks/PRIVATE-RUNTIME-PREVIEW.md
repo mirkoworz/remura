@@ -1,4 +1,4 @@
-# REMURA v0.8.87 LAB — 14/11/2026 21:08 CET
+# REMURA v0.8.88 LAB — 14/11/2026 21:16 CET
 ## Runtime privato, non attivo
 - Il percorso giornaliero usa la stessa validazione completa delle finestre senza rieseguire i benchmark scientifici. La profilazione sintetica del runner non certifica l'host Oracle.
 `gateway-lab/cvd_private_runtime_preview_v1.py` è una libreria per un futuro chiamante privato sul nodo esistente. Non è un endpoint, cron, nuovo Worker o comando da eseguire sul DB LIVE.
@@ -48,3 +48,8 @@
 - Main esaminato 793e1663b3920c447e20cca36113296c6ba77793 privo dei moduli B e riferimenti alle tre tabelle proof nel private_server. Pin B 8dc51e8a199dc1cfd45e4cd2e7b339510af2eb2b ancora DRAFT/NO-GO; storico LIVE non equivale a main. Non inferire schema VPS né fabbricare retroattivamente tabelle/prove. La prova COT/price causale richiede research_squalincome_cot_links, research_squalincome_price_evidence, research_cot_asof_attestations, squalincome_history e trigger previsti B.
 - Radar TEST autonomo già disponibile tramite batch V2 pin attivo; dossier richiede B locale, ma unknown non è zero: notice B_PROOFS_UNAVAILABLE, conteggi null, UI N/D. Fixture pinned B senza proof + barra sintetica valida verifica separazione, no live read. Fingerprint notice include stato; precedenti fingerprint diagnostici non sono equivalenti al nuovo formato, nessun invio. Banner producer storico mantenuto per compatibilità interna con state V1.
 - Non creare snapshot inutili ora: prima primo FX a mercato aperto e verifica continuità A, poi schema/provenienza B autorizzati, genuine quota fresh e preflight locale. Nessuna schedulazione, modifica A/B, deploy o nuova spesa.
+
+## Prima ricezione FX e trasporto batch V3
+- V2 batch su main usa helper HTTP generico limitato a 200k byte, rischio truncation con footprint. V3 su D draft riusa trasporto SELECT del fold V2, max 4.5MB per pagina, no redirect e timeout 15s. Read metadata obbligatori, stop oltre 20k osservate, non hard cap, max 8 SELECT + inventory; niente retry. Legacy V2 immutato.
+- `--receipt-only`: max 12 slot (60m), verifica identità FX:EURUSD M5 versione CVD, finestra esplicita e matura 120s, no esiti/benchmark; radar aggregato e lag massimo. No matching non distingue errore/mercato chiuso/alert mancante. Completezza slot non calendario. Normal batch mantiene withholding V2; non usare reader legacy V1 per esiti intermedi. Nessun dato BTC nel campione FX.
+- Main workflow batch resta pin 9f9012fcb52087be30a92b9bb2ab3b2da99539bf; V3 necessita futura modifica autorizzata del solo workflow (pin e opzione), non richiesta runtime VPS. Prima ricezione breve su V2 comunque possibile, senza modificare workflow. Non avviare pre-apertura. Nessun deploy, quota reale o installazione.
