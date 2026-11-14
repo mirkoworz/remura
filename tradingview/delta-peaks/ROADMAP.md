@@ -1,12 +1,17 @@
-# REMURA TradingView — ROADMAP v0.8.85-lab (evidenza quota fresca)
-**Aggiornamento 14/11/2026 20:39 CET — acquisition privata quote su richiesta**
+# REMURA TradingView — ROADMAP v0.8.86-lab (preflight metadati)
+**Aggiornamento 14/11/2026 20:43 CET — preflight locale e checklist reale**
 **PR #102 DRAFT/OPEN — deploy TEST autorizzato riuscito, produzione e ordini esclusi.**
+
+## CHECKPOINT v0.8.86 — PREFLIGHT METADATI E REVIEW
+- [x] v0.8.85 CI 43633303343 SUCCESS, dry-run 43633303360 SUCCESS, commento 6883150713.
+- [x] Probe locale esplicito metadata-only: Python/SQLite deserialize su memoria sintetica, timezone, host/cgroup, file snapshot privati e sidecar, cap 32 MiB, inode lock, spazio stato >= max(256MiB,10% volume)+512KiB. Non apre DB reali, nessuna rete/scrittura. Checklist attestazioni caller (pin B, D dichiarato, export/restore/quote/Oracle/FX/autorizzazione), non ammissione. 6 test sintetici.
+- [ ] CI v0.8.86; evidenze reali assenti, nessun comando host eseguito. Riusare diagnostica A e ottenere metadata-only dal nodo quando autorizzato; se manca export legittimo, bloccare. Nessun ulteriore sviluppo che presupponga attivazione reale prima di risolvere questi gate.
 
 ## CHECKPOINT v0.8.85 — ACQUISITION PRIVATA QUOTE
 - [x] v0.8.84 CI 43632885985 SUCCESS, dry-run 43632885941 SUCCESS, cross-track persistita verde, commento 6883092010.
 - [x] Incompatibilità cron giornaliero con gate 30m identificata. Collector privato esplicito riusa parser e query read-only: 2 GraphQL, 1 token verify + 1 inventory + max 6 metadata GET, niente SQL, no retry, start clock non completion, stop sui warning/unknown/UTC rollover. 7 test sintetici. Nessuna integrazione automatica o credenziale spostata.
 - [x] Repo collector privato: ultimo run diagnostica feriale 43446613998 SUCCESS 13/11 (non evidenza host attuale); risorse rendono solo percentuali RAM/disco, non MemAvailable/cgroup/size/Python. Workflow costi Oracle esistente manuale; nessun avvio o replica. Filoni invariati.
-- [ ] CI v0.8.85; acquisizione privata autorizzata, verifica host/snapshot/costi e primo Forex. Il provider non attesta scope token, billing o freshness dei dati upstream. Decisione cadenza acquisizione quote e budget overhead prima di scheduler. Nessuna attivazione.
+- [x] CI v0.8.85 verde; restano acquisizione privata autorizzata, verifica host/snapshot/costi e primo Forex. Il provider non attesta scope token, billing o freshness dei dati upstream. Decisione cadenza acquisizione quote e budget overhead prima di scheduler. Nessuna attivazione.
 
 ## CHECKPOINT v0.8.84 — DASHBOARD PRIVATA E CAPACITY ENVELOPE
 - [x] v0.8.83 CI 43632600122 SUCCESS, dry-run 43632600120 SUCCESS, checkpoint 6883051179.
