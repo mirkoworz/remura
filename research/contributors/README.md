@@ -1,4 +1,4 @@
-# REMURA Contributors v0.1 LAB — 14/11/2026 23:16 CET
+# REMURA Contributors v0.1 LAB — 14/11/2026 23:20 CET
 ## Filone E — indipendente, DRAFT, NO MERGE / NO DEPLOY
 Obiettivo: due collaboratori invitati possono inviare livelli volumetrici manuali senza accedere a impostazioni, dati privati, broker, infrastruttura o elaborazioni. Nessuna modifica ai filoni A/B/C/D.
 
@@ -11,6 +11,13 @@ Obiettivo: due collaboratori invitati possono inviare livelli volumetrici manual
 - [ ] Archivio persistente separato dal DB live, ruoli contributor (solo invio e propri ricevuti) e owner (revisione). Identità pseudonima, retention e cancellazione concordate, audit delle correzioni senza sovrascritture, dedup semantica e qualità, limiti per autore e globali; distinguere osservato da ricevuto, UTC; sanitizzare output HTML e non esporre note ad altri. Niente password, API key, screenshot o dati conto.
 - [ ] Revisione manuale, provenienza e autorizzazione fonti. Solo livelli approvati come nuova fonte dichiarata manuale; non contare più amici che usano stessa fonte come prove indipendenti, non inferire identità istituzionali. Nessuna influenza retroattiva sui fold D o B congelati; eventuale nuovo protocollo prospettico separato.
 - [ ] Raccordo a REMURA Volumetrica solo dopo coordinamento A/B/C/D, test reali, consenso deploy e check quote/costo; nessun ordine.
+
+## Confronto livelli manuali e automatici — approvato 14/11/2026 23:20 CET
+- [ ] Dopo revisione owner, confrontare i livelli manuali disponibili all'istante di valutazione con quelli automatici REMURA, distinguendo feed, eventuale contratto, periodo/anchor e timestamp di nascita. Nessuna equivalenza automatica fra spot e future.
+- [ ] Mostrare distanza in tick/pip o ATR quando confrontabile; tolleranza da definire e congelare prima dello studio, nessun valore inventato. Classificare accordo, disaccordo e non confrontabile; preservare anche livelli isolati.
+- [ ] Registrare fonte/metodo dichiarati e raggruppare contributi correlati (stessa fonte o indicatore): consenso umano non significa evidenze indipendenti né conferma istituzionale.
+- [ ] Valutare prospetticamente l'informazione aggiuntiva rispetto al radar automatico senza alterare fold B/D, selezionare a posteriori o produrre segnali operativi. Nessuna promozione al motore prima della validazione.
+- [ ] UI futura owner: livelli automatici, manuali approvati e sovrapposizioni distinguibili, stato N/D se dati non confrontabili. Nessun accesso dei collaboratori al dossier riservato.
 
 ### Limiti attuali
 Il ledger vive solo nella memoria del processo e perde i record a chiusura. Non è multi-thread, non è un servizio né una barriera di sicurezza contro chiamanti Python ostili, non implementa autenticazione, sessioni o revoca, revisione o dedup fra request ID diversi. Il tempo di ricezione deve provenire da clock fidato del futuro server; non usare date storiche come prove causali. Limiti arbitrari prudenziali LAB da riesaminare. Nessuna spesa aggiuntiva o servizio cloud creato; futura gratuità non attestata.
