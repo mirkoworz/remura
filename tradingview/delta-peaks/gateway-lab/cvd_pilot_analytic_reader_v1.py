@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# REMURA v0.8.66 LAB — 14/11/2026 CET
+# REMURA v0.8.67 LAB — 14/11/2026 CET
 """Dedicated CVD TEST reader; no order calls, writes, raw payload or prices in logs."""
 import json
 from collections import Counter,defaultdict
@@ -10,6 +10,7 @@ from d1_test_target_preflight_v1 import MAIN_DB, TEST_DB,inspect_verified_invent
 from cvd_telemetry_preview_v1 import validate,VERSION,SYMBOL
 from remura_tv_bridge_preview_v1 import EXPECTED_COLUMNS
 from volume_quality_v1 import diagnose
+from cvd_outcome_readiness_v1 import summarize
 
 # First aligned M5 close after actual successful TEST deployment at 12:36:36 UTC.
 MIN_CLOSE_MS=utc_ms("2026-11-14T12:40Z")
@@ -78,7 +79,7 @@ def aggregate(response,start,end,now):
     status=("INVALID_OR_CONFLICTING_ROWS" if counts["invalid_rows"] or counts["conflicted_bars"] else
             "NO_MATCHING_ROWS" if not rows else "COMPLETE_REQUESTED_WINDOW" if len(valid)==expected
             else "INCOMPLETE_REQUESTED_WINDOW")
-    return {"schema":"remura.tv.cvd.test.aggregate.preview.v1","version":"0.8.66-lab",
+    return {"schema":"remura.tv.cvd.test.aggregate.preview.v1","version":"0.8.67-lab",
             "status":status,"symbol":SYMBOL,"window_start_ms":start,"window_end_ms":end,
             "requested_slots":expected,"valid_unique_bars":len(valid),"missing_requested_slots":expected-len(valid),
             "coverage_basis":"REQUESTED_SLOTS_NOT_MARKET_CALENDAR","row_counts":dict(counts),
@@ -87,6 +88,7 @@ def aggregate(response,start,end,now):
             "delta_max_abs_difference":max(differences,default=None),
             "max_lag_ms":max((x[2]["lag_ms"] for x in valid),default=None),
             "target":"EU_D1_TEST_ONLY","raw_json_logged":False,"conflict_ledger_available":False,
+            "outcome_readiness":({"status":"BLOCKED_INVALID_OR_CONFLICT"} if counts["invalid_rows"] or counts["conflicted_bars"] else summarize(valid,as_of_ms=min(now,end+120000))),
             "scientific_admission":False,"orders_enabled":False,"notifications_enabled":False}
 
 def read_live(account_id,token,*,start,end,now,explicit=False):
