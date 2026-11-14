@@ -1,12 +1,18 @@
-# REMURA TradingView — ROADMAP v0.8.71-lab (protocollo prospettico)
-**Aggiornamento 14/11/2026 16:56 CET — protocollo prospettico e fonti ausiliarie**
+# REMURA TradingView — ROADMAP v0.8.72-lab (raccolta fold settimanale)
+**Aggiornamento 14/11/2026 16:59 CET — raccolta fold settimanale**
 **PR #102 DRAFT/OPEN — deploy TEST autorizzato riuscito, produzione e ordini esclusi.**
+
+## CHECKPOINT v0.8.72 — LETTORE FOLD CHIUSO
+- [x] v0.8.71 CI 43612925296 SUCCESS 226 test, dry-run 43612925221 SUCCESS; batch main pin 631a38489b8393054ccca9f7b5b2dcfffc5c28fb commit 9b56b412f72d16b27927a690637d12844856feee; commento 6880200504.
+- [x] cvd_test_fold_reader_v1.py: solo fold congelato già chiuso; 2016 slot inclusi weekend non attesi necessariamente, 28 SELECT da 72 slot + 1 inventory, cutoff ricezione end-1, memoria privata, nessun raw artifact o upload. Report solo fold selezionato, no outcome anticipato. Nessuna prova di completezza mercato o atomicità fra pagine. Helper POST dedicato a SELECT fisso, no redirect, cap 4.5MB per risposta (helper generico invariato).
+- [x] Circuit breaker 100k righe lette osservate per run (NON hard limit server o quota account), meta rows_read e rows_written=0 obbligatori; inconoscibile o superamento blocca nuove query. Nessun costo reale misurato né query reale effettuata. 6 test sintetici.
+- [ ] CI da verificare; se verde owner-only workflow fold dedicato con stesso gruppo concurrency dei lettori, pin immutabile. Non avviare prima chiusura fold. Reader breve e batch restano immutati. Quote account e prima ricezione FX aperte; CVD cTrader/sentiment per-decisione ancora non attestati. Nessuna modifica B/produzione.
 
 ## CHECKPOINT v0.8.71 — PROTOCOLLO PROSPETTICO
 - [x] v0.8.70 CI 43612686426 SUCCESS 219 test, dry-run 43612686428 SUCCESS; workflow batch main 16970ad9030eb3789f564a998bfbd4506706efa8 pin 5ca2e4ee6952de7949e87e5335f45f1fa8722874, commento 6880160593.
 - [x] Protocollo fisso [CVD-PROSPECTIVE-PROTOCOL-V1.md](CVD-PROSPECTIVE-PROTOCOL-V1.md), modulo cvd_oos_protocol_preview_v1 e hash: development 16–22/11, holdout 23–29/11, replica 30/11–06/12 UTC; outcome solo dopo fine fold e scope richiesto completo; no matching cross-fold, no dati oltre cutoff, maturazione esistente. 7 nuovi test. Nessuna prova OOS reale o blindaggio indipendente, report precedenti restano descrittivi.
 - [x] Verificato codice B pin: triage HMAC espone solo aggregati, nessun sink privato per eventi verificati per decisione. Non correlare aggregati CVD B/D; sentiment idem senza witness. Necessario futuro raccordo con B senza toccarlo ora.
-- [ ] CI v0.8.71 da verificare. Non aggiornare reader se non verde; raccolta fold richiede export privati più lunghi del batch 48h. Rimangono prima ricezione reale, quote effettive, verifica costi/OOS. PR #102 DRAFT, nessun deploy.
+- [x] CI v0.8.71 e pin batch verificati nel checkpoint v0.8.72. Rimangono prima ricezione reale, quote effettive, verifica costi/OOS. PR #102 DRAFT, nessun deploy.
 
 ## CHECKPOINT v0.8.70 — RACCOLTA PRIVATA E BENCHMARK
 - [x] v0.8.69 CI 43612478643 e dry-run 43612478649 SUCCESS, 211 test principali, 8/8 nuovi e fixture pinned B PASS; commento 6880115837. Main reader resta v0.8.68.
