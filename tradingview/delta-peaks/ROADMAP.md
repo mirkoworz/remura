@@ -1,6 +1,12 @@
-# REMURA TradingView — ROADMAP v0.8.57-lab (D4/D5 integrated offline research)
-**Aggiornamento: 14/11/2026 11:47 CET — primo test D-B E2E verde e copertura fonti separata**
+# REMURA TradingView — ROADMAP v0.8.58-lab (CVD D0.8 integration candidate)
+**Aggiornamento: 14/11/2026 11:50 CET — Pine v0.9 CVD LAB visual-only**
 **PR #102 DRAFT/OPEN — nessun merge, nessun nuovo deploy, nessun ordine.**
+
+## CHECKPOINT v0.8.58 — RECUPERATO CVD D0.8, PINE INTEGRATO v0.9
+- [x] Recuperato D0.8 da PR #100 branch experiment/track-d-tv-fxcm-cvd-20261109, blob immutabile 4160994d14240ab2af5eff0c67d00c95671d7567. Protocollo storico congelato resta intatto. D0.8 su FX:EURUSD: 4679/4679 delta continui uguali a CVD nativo nel CSV storico; 439 candidati prezzo, 87 con CVD, differenza media 1h -0.6680 pip (non prova di edge, nessun miglioramento storico primario). Non equiparare FX:EURUSD e FXCM:EURUSD né cumulare coorti o attribuire aggressioni istituzionali.
+- [x] Nuovo [Pine v0.9 CVD visual-only](REMURA-ALL-IN-ONE-Premium-v0.9-CVD-LAB.pine) commit 37377a79dd9f2735e7f464ab80a080a1b911ad94 e 2a1832dd39445e4c7a0e70ae29d6459a7f10a073: preserva corpo Delta/ER/Footprint/livelli; port D0.8 M1 x5, stesso grafico standard M5 e lowerTF=1, feed FX o FXCM distinti; warmup, segmento, reset giorno, gap, pivot causali, benchmark prezzo-only, marcatori CV+/CV- barra conferma; pannello bottom-left e Data Window con differenza delta indipendente vs delta esistente. Una sola request.footprint; nessun alert()/alertcondition e nessuna telemetria. Compilazione TradingView NON verificata (CI statica). D0.8 e v0.8.1 live invariati, nessuna modifica worker/schema o alert BTC. Nuova revisione non ancora paragonata al CSV.
+- [x] 7 regressioni statiche commit d49801a0f84bb0b52fb4200f6495ae55e18fae15. CI da verificare. Prossimo passaggio manuale indispensabile per compilazione visuale su EURUSD M5, NON sostituire alert esistente; verificare identità feed e confronto native delta. Solo dopo si potrà preparare telemetria CVD versionata e validatore/gateway compatibile. Usare benchmark storico D0.8 congelato, non ottimizzare a posteriori.
+- [ ] Pilot FX v1 già predisposto alla riapertura, non bloccato da prova visuale v0.9. D4/D5 v0.8.57 169 test verdi, CVD B proxy separato, sentiment non ancora riconciliato. PR #102 DRAFT, nessun merge o deploy, quota effettiva non verificata. Stop alert BTC domenica sera.
 
 ## CHECKPOINT v0.8.57 — BATCH INTEGRATO D4/D5, STRATEGIE E COPERTURA CVD
 - [x] v0.8.56 commit 6376929c5fcc23c2d6e6d78c0b6457b74bbca804: CI #43586913453 e dry-run #43586913460 SUCCESS. 162 test principali, marker REMURA_D_B_CROSS_TRACK_SYNTHETIC=PASS (reale codice B pin, fixture sintetica, nessun DB live).
