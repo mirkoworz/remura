@@ -1,12 +1,18 @@
-# REMURA TradingView — ROADMAP v0.8.72-lab (raccolta fold settimanale)
-**Aggiornamento 14/11/2026 16:59 CET — raccolta fold settimanale**
+# REMURA TradingView — ROADMAP v0.8.73-lab (fonti ausiliarie per decisione)
+**Aggiornamento 14/11/2026 17:04 CET — fonti ausiliarie per decisione**
 **PR #102 DRAFT/OPEN — deploy TEST autorizzato riuscito, produzione e ordini esclusi.**
+
+## CHECKPOINT v0.8.73 — FONTI AUSILIARIE PER DECISIONE B
+- [x] v0.8.72 CI 43613121718 SUCCESS 232 test, dry-run 43613121699 SUCCESS; workflow fold main 0be663d19781b043a9edb039bd6dc785f3d3aeb5 pin 7cc9e7bc6f2f4fc5c395d5ac9ef5126bffe05353, commento 6880237795.
+- [x] cvd_auxiliary_same_decision_preview_v1: separato adapter offline, usa sink B COT/OHLC audit, exact cTrader HMAC source.match + chronology e trigger, retail original pin via B reconcile in lab isolato (lock locale), TV exact close as-of. Solo 20 coppie EURUSD e 1000 eventi CT per run, niente selezione retroattiva; core/private query_only e snapshot caller. Matrice aggregata e conteggi sullo stesso identificativo B, no raw o segreti; tier CT prefix precedente non incluso, retail direzione non usata, unknown non classe negativa. Cross-DB non atomico, clocks locali, nessuna prova di uso retail originale o edge.
+- [x] 5 nuovi unit test mocked e fixture pinned B con exact CT/HMAC reale sintetico e retail pin reale sintetico separati; verifica secret diverso e shard mancante, no backfill TV predeploy. Non prova quattro fonti autentiche simultanee.
+- [ ] CI da verificare. Prossimo: collegare adapter al dossier/dashboard con gate di qualità; prima ricezione FX, quote effettive, real data e OOS aperti. Nessuna modifica B, deploy, query D1, live DB o workflow owner-only.
 
 ## CHECKPOINT v0.8.72 — LETTORE FOLD CHIUSO
 - [x] v0.8.71 CI 43612925296 SUCCESS 226 test, dry-run 43612925221 SUCCESS; batch main pin 631a38489b8393054ccca9f7b5b2dcfffc5c28fb commit 9b56b412f72d16b27927a690637d12844856feee; commento 6880200504.
 - [x] cvd_test_fold_reader_v1.py: solo fold congelato già chiuso; 2016 slot inclusi weekend non attesi necessariamente, 28 SELECT da 72 slot + 1 inventory, cutoff ricezione end-1, memoria privata, nessun raw artifact o upload. Report solo fold selezionato, no outcome anticipato. Nessuna prova di completezza mercato o atomicità fra pagine. Helper POST dedicato a SELECT fisso, no redirect, cap 4.5MB per risposta (helper generico invariato).
 - [x] Circuit breaker 100k righe lette osservate per run (NON hard limit server o quota account), meta rows_read e rows_written=0 obbligatori; inconoscibile o superamento blocca nuove query. Nessun costo reale misurato né query reale effettuata. 6 test sintetici.
-- [ ] CI da verificare; se verde owner-only workflow fold dedicato con stesso gruppo concurrency dei lettori, pin immutabile. Non avviare prima chiusura fold. Reader breve e batch restano immutati. Quote account e prima ricezione FX aperte; CVD cTrader/sentiment per-decisione ancora non attestati. Nessuna modifica B/produzione.
+- [x] CI e workflow fold verificati nel checkpoint v0.8.73. Non avviare prima chiusura fold. Reader breve e batch restano immutati. Quote account e prima ricezione FX aperte; CVD cTrader/sentiment per-decisione ancora non attestati. Nessuna modifica B/produzione.
 
 ## CHECKPOINT v0.8.71 — PROTOCOLLO PROSPETTICO
 - [x] v0.8.70 CI 43612686426 SUCCESS 219 test, dry-run 43612686428 SUCCESS; workflow batch main 16970ad9030eb3789f564a998bfbd4506706efa8 pin 5ca2e4ee6952de7949e87e5335f45f1fa8722874, commento 6880160593.

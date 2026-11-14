@@ -64,6 +64,39 @@ def run_cvd():
     finally:
         t.tearDown()
 
+def run_aux():
+    from test_shark_cvd_cot_price_triage import TripleCausalTriageTests,SECRET,NOW
+    from test_shark_retail_crossdb_predecision import PredecisionCrossDbTests,AUTHORIZED,NOW as RETAIL_NOW
+    from cvd_auxiliary_same_decision_preview_v1 import audit
+    t=TripleCausalTriageTests(); t.setUp()
+    try:
+        t._proof(); t._cvd()
+        for db in (t.main,t.private): db.execute("PRAGMA query_only=ON")
+        before=(t.main.total_changes,t.private.total_changes)
+        r=audit(t.main,t.private,[],as_of_utc=iso(NOW+timedelta(seconds=5)),secret=SECRET)
+        assert r["counts"]["CT_EXACT_ALIGNED"]==1 and r["counts"]["TV_BEFORE_CVD_DEPLOYMENT"]==1
+        assert r["counts"]["RETAIL_UNKNOWN"]==1
+        assert "ALL_LOCAL_PROOF_TYPES_SAME_B_DECISION" not in r["counts"]
+        assert before==(t.main.total_changes,t.private.total_changes)
+        wrong=audit(t.main,t.private,[],as_of_utc=iso(NOW+timedelta(seconds=5)),secret=b"other-authorized-private-secret!!")
+        assert wrong["counts"]["CT_EXACT_UNKNOWN"]==1
+    finally:
+        t.tearDown()
+    t=PredecisionCrossDbTests(); t.setUp()
+    try:
+        t.original(t.prepare()); t.core.execute("PRAGMA query_only=ON")
+        before=t.core.total_changes
+        r=audit(t.core,None,[],as_of_utc=iso(RETAIL_NOW+timedelta(seconds=5)),retail_root=t.folder,authorized_at=AUTHORIZED)
+        assert r["counts"]["RETAIL_LOCAL_ORIGINAL_PIN_VERIFIED"]==1,r
+        assert r["counts"]["CT_EXACT_UNKNOWN"]==1 and t.core.total_changes==before
+        (t.folder/"retail-000001.sqlite3").unlink() # disposable synthetic fixture only
+        r=audit(t.core,None,[],as_of_utc=iso(RETAIL_NOW+timedelta(seconds=5)),retail_root=t.folder,authorized_at=AUTHORIZED)
+        assert r["counts"]["RETAIL_UNKNOWN"]==1
+    finally:
+        t.tearDown()
+    print("REMURA_D_AUX_SAME_B_DECISION_SYNTHETIC=PASS; EXACT_CT_AND_RETAIL_SEPARATE_FIXTURES; NO_LIVE_DB")
+
 if __name__=="__main__":
     run()
     run_cvd()
+    run_aux()
