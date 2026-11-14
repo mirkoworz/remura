@@ -43,7 +43,7 @@ def worker(flag="false", secret=True, db=TEST, name="remura-tv-webhook-test"):
 
 
 class IngestOnSafetyTests(unittest.TestCase):
-    def prepare(self, settings=None, d1=None):
+    def prepare(self, settings=None, d1=None, *, weekend_refresh=False):
         observed = []
         def api(method, path, token):
             self.assertEqual(method, "GET")
@@ -61,7 +61,7 @@ class IngestOnSafetyTests(unittest.TestCase):
               patch.object(a, "choose_candidate_namespace", return_value=NS),
               patch.object(a, "api_request", side_effect=api),
               patch.object(a, "api_get", side_effect=get)):
-            cfg = a.build_on_candidate(ACCOUNT,READ,EDITOR,TEMPLATE)
+            cfg = a.build_on_candidate(ACCOUNT,READ,EDITOR,TEMPLATE, weekend_refresh=weekend_refresh)
         return cfg, observed
 
     def test_prepared_on_only_if_secret_present_and_receiver_off(self):
@@ -83,6 +83,15 @@ class IngestOnSafetyTests(unittest.TestCase):
                          worker(flag="true",secret=False)):
             with self.subTest(settings=settings["result"]["bindings"][2]), self.assertRaises(AuditError):
                 self.prepare(settings=settings)
+
+    def test_weekend_refresh_requires_existing_on_with_secret(self):
+        cfg, calls = self.prepare(settings=worker(flag="true"), weekend_refresh=True)
+        self.assertEqual(calls, ["D1", "TEST"])
+        self.assertEqual(cfg["vars"], {"INGEST_ENABLED": "true"})
+        for settings in (worker(flag="false"), worker(flag="true",secret=False),
+                         worker(flag="true",db=MAIN)):
+            with self.assertRaises(AuditError):
+                self.prepare(settings=settings, weekend_refresh=True)
 
     def test_refuses_main_db_and_other_worker(self):
         for settings in (worker(db=MAIN),
@@ -154,7 +163,7 @@ class IngestOnSafetyTests(unittest.TestCase):
         with (patch.dict(os.environ,{"GITHUB_ENV":"","RUNNER_TEMP":""}),
               patch.object(a,"api_request") as api,
               contextlib.redirect_stdout(StringIO()) as out):
-            self.assertEqual(a.main(),2)
+            self.assertEqual(a.main([]),2)
         api.assert_not_called()
         self.assertIn("BLOCKED_FAIL_CLOSED",out.getvalue())
 
