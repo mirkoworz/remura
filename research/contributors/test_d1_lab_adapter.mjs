@@ -22,7 +22,7 @@ const db={prepare(sql){
    },
    async run(){
     assert.equal(sql,SQL.insert);
-    assert.equal(args.length,18);
+    assert.equal(args.length,19);
     assert.equal(args[9],"1.0854");
     assert.equal(args[12],now);
     stored={id:1,...normalize(payload,now)};
