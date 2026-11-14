@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# REMURA v0.8.52 LAB — 14/11/2026 11:00 CET
+# REMURA v0.8.54 LAB — 14/11/2026 CET
 """Explicit bounded EURUSD TEST read. No BTC, writes, predictions or raw logs."""
 import argparse
 from collections import Counter
@@ -18,8 +18,9 @@ from volume_features_v1 import analyze_export, decode, BTC_END, M5
 from remura_tv_bridge_preview_v1 import EXPECTED_COLUMNS
 from volume_sequence_v1 import sequential_diagnostics
 from fx_pilot_config_v1 import REFERENCE, compare_v1_fields, inspect_declared_config
+from fx_outcome_readiness_v1 import readiness
 
-VERSION = "0.8.52-lab"
+VERSION = "0.8.54-lab"
 SYMBOL = "FXCM:EURUSD"
 MAX_SLOTS = 72
 LIMIT = 100
@@ -108,6 +109,7 @@ def aggregate(response, start, end, now_ms):
         "label_counts":dict(sorted(labels.items())),"missing_field_counts":dict(sorted(missing.items())),
         "diagnostic_counts":dict(sorted(checks.items())),
         "sequence_diagnostics":sequential_diagnostics(obs),
+        "outcome_readiness":readiness(rows,as_of_ms=min(now_ms,end+120_000)),
         "reference_config_sha256":inspect_declared_config(REFERENCE)["declared_config_sha256"],
         "v1_config_matching_bars":sum(not x for x in config.values()),
         "v1_config_difference_counts":dict(sorted(differences.items())),
