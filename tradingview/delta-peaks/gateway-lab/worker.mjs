@@ -1,7 +1,7 @@
-// REMURA GATEWAY LAB v0.8.6 (SOLO GITHUB, NO DEPLOY) — aggiornamento 13/11/2026 06:35 CET
-// Guard rail prima di D1: binding obbligatorio INGEST_RATE_LIMITER quando ingest è ON.
-// Receiver LIVE Cloudflare resta v0.8.5, disabilitato.
-// Il deploy è ancora a cura dell'utente: ingest disattivato di default.
+// REMURA TEST GATEWAY v0.8.40 — 14/11/2026 07:43 CET — offline candidate only.
+// Weekend transport diagnostic: BINANCE:BTCUSDT M5, bounded by receiver clock.
+// EURUSD unchanged; BTC never eligible for the prospective FX research cohort.
+// Deploy only to the isolated TEST Worker with owner dispatch; default remains OFF.
 // Ricevitore Cloudflare Worker + D1. Fail-closed per configurazione predefinita.
 // Ingresso SOLO da TradingView su IP documentati + token segreto nell'URL HTTPS.
 // Token MAI nel repository, nel Pine, nel corpo JSON o nei log.
@@ -9,6 +9,9 @@
 const ALLOWED_IPS = new Set([
   "52.89.214.238", "34.212.75.30", "54.218.53.128", "52.32.178.7"
 ]);
+// Fixed UTC bounds: no new configuration, permission, or scheduled mutation.
+const BTC_TEST_START_MS = Date.UTC(2026, 10, 14, 0, 0, 0);
+const BTC_TEST_END_MS = Date.UTC(2026, 10, 16, 0, 0, 0);
 const MAX_BYTES = 20_000;
 const MAX_EVENTS_PER_MINUTE = 20;
 const MAX_PROSPECTIVE_LAG_MS = 120_000;
@@ -68,8 +71,10 @@ export function validateSnapshot(payload, receivedMs = Date.now()) {
     p.version === "0.8.1-lab", "contract");
   ensure(p.event_type === "BAR_EVENT" || p.event_type === "HEARTBEAT",
     "event_type");
-  ensure(p.symbol === "FXCM:EURUSD" && p.feed === "FXCM" &&
-    p.timeframe === "5", "pilot_feed_or_timeframe");
+  const eurPilot = p.symbol === "FXCM:EURUSD" && p.feed === "FXCM";
+  const btcTransportOnly = p.symbol === "BINANCE:BTCUSDT" && p.feed === "BINANCE" &&
+    receivedMs >= BTC_TEST_START_MS && receivedMs < BTC_TEST_END_MS;
+  ensure((eurPilot || btcTransportOnly) && p.timeframe === "5", "pilot_feed_or_timeframe");
   ensure(p.confirmed === true && p.realtime === true, "not_closed_realtime");
   ensure(ms(p.bar_open_ms) && ms(p.bar_close_ms) && ms(p.sent_clock_ms) &&
     p.bar_close_ms - p.bar_open_ms === 300_000, "timestamps");
@@ -144,7 +149,8 @@ export function validateSnapshot(payload, receivedMs = Date.now()) {
     p.version, p.event_type].join("|");
   return {
     key, lagMs,
-    timely: lagMs >= 0 && lagMs <= MAX_PROSPECTIVE_LAG_MS,
+    // For BTC is_timely stays zero by design (not eligible for FX prospective analysis).
+    timely: eurPilot && lagMs >= 0 && lagMs <= MAX_PROSPECTIVE_LAG_MS,
     symbol: p.symbol, timeframe: p.timeframe,
     eventType: p.event_type, barCloseMs: p.bar_close_ms, version: p.version
   };
@@ -228,7 +234,7 @@ export default {
       return reply(415, "json_required");
 
     // Limite approssimativo per il flusso autorizzato PRIMA di consumare D1.
-    // Il binding usa una namespace dedicata e un budget configurato a 20/60s;
+    // Shared original limiter key for both symbols: combined 20/60s, not doubled.
     // non protegge dalle richieste anonime che già consumano Worker CPU/quota.
     try {
       const decision = await env.INGEST_RATE_LIMITER.limit({ key: "remura-tv-fxcm-eurusd-m5" });
