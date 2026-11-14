@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<title>REMURA Contributors v0.2 LAB</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font:16px system-ui,sans-serif;color:#e8f0fb;background:#0b1523}main{max-width:540px;margin:auto;padding:24px 18px 44px}small{color:#adc3dc}h1{font-size:29px;margin:16px 0 4px}h2{font-size:18px}p{line-height:1.5}.panel{background:#142439;border:1px solid #314762;border-radius:18px;padding:18px;margin:18px 0}label{display:block;font-weight:650;margin:15px 0 7px}input,select,textarea,button{font:inherit;width:100%;border:1px solid #526c87;border-radius:10px;padding:12px;min-height:46px;color:#e8f0fb;background:#0d1b2d}textarea{resize:vertical;min-height:80px}button{background:#81d6de;color:#09242e;font-weight:750;cursor:pointer;margin-top:16px;border:0}button.secondary{background:#233b54;color:#e8f0fb}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #81d6de;outline-offset:2px}.notice{color:#f9d99b}.status{min-height:28px;margin-top:12px}.receipt{overflow-wrap:anywhere;border-top:1px solid #314762;padding:12px 0;line-height:1.6}.tag{color:#f9d99b;font-size:13px} [hidden]{display:none!important}
+</style>
+</head>
+<body><main>
+<header><small>v0.2 LAB · 14/11/2026 23:21 CET</small><h1>REMURA Contributors</h1><p>Condividi un livello volumetrico.</p></header>
+<section class="panel"><strong class="notice">DEMO OFFLINE — SOLO DATI FITTIZI</strong><p>Nessun accesso Google reale, nessun invio o salvataggio permanente. Non inserire livelli reali, email, credenziali o dati del conto.</p>
+<button id="enter" type="button">Entra come collaboratore demo</button><p id="session" hidden>Sessione fittizia · Collaboratore demo</p></section>
+<section id="workspace" hidden>
+<form id="intake" class="panel" autocomplete="off">
+<h2>Nuovo livello</h2>
+<label for="symbol">Mercato e feed</label><select id="symbol"><option value="FX:EURUSD">FX:EURUSD</option><option value="FXCM:EURUSD">FXCM:EURUSD</option><option value="OANDA:XAUUSD">OANDA:XAUUSD</option></select>
+<label for="period">Periodo</label><select id="period"><option value="DAY">Day</option><option value="WEEK">Week</option><option value="CURRENT_MONTH">Current month</option><option value="PREVIOUS_MONTH">Previous month</option></select>
+<label for="kind">Tipo di livello</label><select id="kind"><option value="DELTA_PEAK">Picco di delta</option><option value="EFFORT_RESULT">Effort Result</option><option value="OTHER_VOLUME_LEVEL">Altro livello volumetrico</option></select>
+<label for="price">Prezzo fittizio</label><input id="price" type="text" inputmode="decimal" maxlength="17" required placeholder="1.08540" aria-describedby="pricehelp"><small id="pricehelp">Punto o virgola decimale, senza separatori delle migliaia.</small>
+<label for="observed">Osservato alle (UTC)</label><input id="observed" type="text" maxlength="20" required placeholder="2026-11-14T20:00:00Z">
+<label for="note">Nota facoltativa (solo esempio)</label><textarea id="note" maxlength="280" rows="3" placeholder="Es. picco di delta settimanale"></textarea>
+<button type="button" class="secondary" id="example">Carica esempio fittizio</button>
+<button type="submit">Registra livello demo</button><p role="status" aria-live="polite" id="message" class="status"></p>
+</form>
+<section class="panel"><h2>Le tue ricevute demo</h2><small id="count">0 / 20</small><div id="receipts"></div><button id="exit" type="button" class="secondary">Esci e cancella la sessione demo</button></section>
+</section>
+</main>
+<script id="demo-core">
+"use strict";
+const SYMBOLS=["FX:EURUSD","FXCM:EURUSD","OANDA:XAUUSD"];
+const PERIODS=["DAY","WEEK","CURRENT_MONTH","PREVIOUS_MONTH"];
+const KINDS=["DELTA_PEAK","EFFORT_RESULT","OTHER_VOLUME_LEVEL"];
+function stamp(ms){return new Date(Math.floor(ms/1000)*1000).toISOString().replace(".000Z","Z")}
+function validateDemo(p,now){
+  if(!SYMBOLS.includes(p.symbol)||!PERIODS.includes(p.period)||!KINDS.includes(p.kind))throw Error("Mercato o classificazione non validi.");
+  const price=p.price.trim().replace(",",".");
+  if(!/^(?:0|[1-9][0-9]{0,7})(?:\.[0-9]{1,8})?$/.test(price)||!/[1-9]/.test(price))throw Error("Prezzo non valido.");
+  const t=p.observed_utc;
+  if(!/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$/.test(t)||t.slice(0,4)==="0000"||!Number.isFinite(Date.parse(t))||stamp(Date.parse(t))!==t||Date.parse(t)>now)throw Error("Istante UTC non valido o futuro.");
+  if([...p.note].length>280||/[\u0000-\u001f]/.test(p.note))throw Error("Nota non valida: massimo 280 caratteri, una sola riga.");
+  return {symbol:p.symbol,period:p.period,kind:p.kind,price:price.includes(".")?price.replace(/0+$/,"").replace(/\.$/,""):price,observed_utc:t,note:p.note};
+}
+function demoReceipt(records,p,now){
+  const data=validateDemo(p,now);
+  if(records.some(x=>JSON.stringify(x.data)===JSON.stringify(data)))throw Error("Questo esempio è già presente.");
+  if(records.length>=20)throw Error("Limite della sessione demo raggiunto.");
+  const receipt={id:records.length+1,status:"UNREVIEWED",received_utc:stamp(now),data};
+  records.push(receipt);return receipt;
+}
+</script>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+let records=[],active=false;
+function render(){
+ $("receipts").replaceChildren();$("count").textContent=records.length+" / 20";
+ for(const r of records.slice().reverse()){
+  const row=document.createElement("div");row.className="receipt";
+  const label=document.createElement("strong");label.textContent=r.data.symbol+" · "+r.data.price;
+  const detail=document.createElement("div");detail.textContent=r.data.period+" · "+r.data.kind;
+  const status=document.createElement("div");status.className="tag";status.textContent="N. "+r.id+" · Non verificato · "+r.received_utc;
+  row.append(label,detail,status);$("receipts").append(row);
+ }
+}
+$("enter").addEventListener("click",()=>{active=true;$("workspace").hidden=false;$("session").hidden=false;$("enter").hidden=true; $("observed").value=stamp(Date.now());render()});
+$("example").addEventListener("click",()=>{$("symbol").value="FX:EURUSD";$("period").value="WEEK";$("kind").value="DELTA_PEAK";$("price").value="1.08540";$("observed").value=stamp(Date.now()-60000);$("note").value="Esempio fittizio"});
+$("intake").addEventListener("submit",event=>{
+ event.preventDefault();if(!active)return;
+ try{const p={};for(const key of ["symbol","period","kind","price","note"])p[key]=$(key).value;p.observed_utc=$("observed").value;
+ const r=demoReceipt(records,p,Date.now());render();$("message").textContent="Ricevuta demo n. "+r.id+" — non verificata. Nessun dato inviato.";}
+ catch(e){$("message").textContent=e.message;}
+});
+$("exit").addEventListener("click",()=>{active=false;records=[];render();$("intake").reset();$("message").textContent="";$("workspace").hidden=true;$("session").hidden=true;$("enter").hidden=false});
+</script>
+</body></html>
