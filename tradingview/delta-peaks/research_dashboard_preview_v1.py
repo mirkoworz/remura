@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # REMURA v0.8.75 LAB — 14/11/2026 17:07 CET
-"""Render the aggregate research dossier offline; no external assets or scripts."""
+"""Render the aggregate research dossier offline; no external assets or scripts.
+Compatibility note v0.8.87: unknown B population yields null diagnostic counts;
+legacy HTML producer stamp retained for existing private-state format.
+"""
 from html import escape
 from hashlib import sha256
 from datetime import datetime, timezone
@@ -35,10 +38,14 @@ def notification_preview(r):
     n_cvd=cvd_pairs.get("DESCRIPTIVE_MATCH",0)
     if n_cvd:
         state="CVD_DESCRIPTIVE_MATCHES_PRESENT"
-    fingerprint=sha256(json.dumps([r["origin"],r["as_of_ms"],r["days"],counts,cvd_pairs,cvd_reasons,aux],
+    if b is None:
+        if counts or join is not None:raise ValueError("unknown_population_has_join")
+        state="B_PROOFS_UNAVAILABLE"
+        paired=n_cvd=None
+    fingerprint=sha256(json.dumps([r["origin"],r["as_of_ms"],r["days"],counts,cvd_pairs,cvd_reasons,aux,state],
         sort_keys=True,separators=(",",":")).encode()).hexdigest()
     return {"schema":"remura.tv.diagnostic.notice.preview.v1","notice_id":fingerprint,
-            "state":state,"text":"REMURA LAB: verifica descrittiva. Nessun segnale operativo.",
+            "state":state,"text":("REMURA LAB: prove causali B non disponibili. Nessun segnale operativo." if b is None else "REMURA LAB: verifica descrittiva. Nessun segnale operativo."),
             "candidate_count":paired,"tv_cvd_match_count":n_cvd,
             "tv_cvd_reasons":dict(sorted(cvd_reasons.items())),
             "auxiliary_summary":aux,"would_send":False,"sent":False,
@@ -100,5 +107,5 @@ table{border-collapse:collapse;width:100%;font-size:.88rem}td{padding:8px 4px;bo
 <section><h2>Confluenze COT, TradingView, cTrader e sentiment</h2>"""+aux_panel+"""<p>Retail: disponibilità originale, non direzione. CVD cTrader: proxy CLV × tick, solo documento esatto. Non un segnale, non una probabilità.</p></section>
 <section><h2>TradingView CVD — FX:EURUSD M5, fonte distinta</h2>"""+cvd_panel+"""<p>Associazione temporale descrittiva, non conferma istituzionale. ER non direzionale.</p></section>
 <h2>Disponibilità esiti prospettici</h2><div class="grid">"""+horizons+"""</div>
-<section><h2>Anteprima notifica diagnostica (non inviata)</h2><p>"""+escape(notice["text"])+"""</p><p>Coppie CVD descrittive: """+str(notice["tv_cvd_match_count"])+"""</p><p>Tutte le tipologie di prova locale sulla stessa decisione: """+("N/D" if aux is None else str(aux["all_local_proof_types"]))+"""</p><table>"""+_counts(notice["tv_cvd_reasons"])+"""</table></section>
+<section><h2>Anteprima notifica diagnostica (non inviata)</h2><p>"""+escape(notice["text"])+"""</p><p>Coppie CVD descrittive: """+("N/D" if notice["tv_cvd_match_count"] is None else str(notice["tv_cvd_match_count"]))+"""</p><p>Tutte le tipologie di prova locale sulla stessa decisione: """+("N/D" if aux is None else str(aux["all_local_proof_types"]))+"""</p><table>"""+_counts(notice["tv_cvd_reasons"])+"""</table></section>
 <footer>Solo ricerca. Nessun collegamento live, ordine, invio, o equivalenza tra feed presunta.</footer></main></body></html>"""

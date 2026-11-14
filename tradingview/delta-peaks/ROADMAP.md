@@ -1,6 +1,12 @@
-# REMURA TradingView — ROADMAP v0.8.86-lab (preflight metadati)
-**Aggiornamento 14/11/2026 20:43 CET — preflight locale e checklist reale**
+# REMURA TradingView — ROADMAP v0.8.87-lab (raccordo prove B)
+**Aggiornamento 14/11/2026 21:08 CET — evidenze reali e separazione radar/prove B**
 **PR #102 DRAFT/OPEN — deploy TEST autorizzato riuscito, produzione e ordini esclusi.**
+
+## CHECKPOINT v0.8.87 — RACCORDo B E UNKNOWN
+- [x] v0.8.86 CI 43633688606 SUCCESS, dry-run 43633688638 SUCCESS, checkpoint 6883203878. Evidenze manuali 6883483185: Python 3.12.3, SQLite 3.45.1, deserialize presente, core 12.08 MiB, WAL/SHM assenti al campione, MemAvailable 663688 kB, CPU 2, load1 0.20556, disco libero 41170 MiB. Compatibilità preliminare, non cgroup o prova detachment/restore; non riusare come fresco.
+- [x] Verificato main 793e1663b3920c447e20cca36113296c6ba77793: assenti moduli B causal pair/signal evidence/price evidence/cot witness, private_server non contiene le tre tabelle. PR89 DRAFT al pin B, roadmap B NO-GO. Non prova schema VPS, non assumere dati B presenti. Vietato creare/backfill prove da eventi storici.
+- [x] Corretto notice per popolazione B sconosciuta: B_PROOFS_UNAVAILABLE, conteggi null/N/D anziché zero; fingerprint distingue stato. Fixture vera pinned B senza tabelle proof, radar indipendente con barra valida e dossier non promuove associazione. Nessun nuovo collector o wrapper. Formato HTML storico compatibile con stato privato.
+- [ ] CI v0.8.87; alla riapertura verificare primo FX attraverso lettori TEST già esistenti, mantenere radar separato da confluence B; coordinare continuità Oracle A e disponibilità reale prove B prima di export e runtime. Nessun nuovo intervento Termius oggi. Nessuna ammissione o backfill.
 
 ## CHECKPOINT v0.8.86 — PREFLIGHT METADATI E REVIEW
 - [x] v0.8.85 CI 43633303343 SUCCESS, dry-run 43633303360 SUCCESS, commento 6883150713.

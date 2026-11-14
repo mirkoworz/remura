@@ -212,6 +212,41 @@ def run_persisted():
             print("REMURA_D_PERSISTED_DASHBOARD_SYNTHETIC=PASS; PINNED_B; MOCK_D1; DUPLICATE_ZERO_IO")
     finally:db.close()
 
+
+def run_missing_b():
+    # Main does not currently carry the pinned B proof modules. This fixture
+    # models absent B tables, not a claim about the actual live DB schema.
+    import sqlite3,sys
+    from pathlib import Path
+    from test_cvd_squalincome_asof_preview_v1 import coherent
+    from test_cvd_telemetry_preview_v1 import T0
+    from test_research_dossier_preview_v1 import stamp
+    from cvd_archive_preview_v1 import validate_windows
+    from cvd_radar_preview_v1 import aggregate_radar
+    sys.path.insert(0,str(Path(__file__).resolve().parent/"gateway-lab"))
+    from cvd_private_runtime_preview_v1 import preview,plan
+    db=sqlite3.connect(":memory:")
+    try:
+        db.execute("CREATE TABLE squalincome_history(id INTEGER PRIMARY KEY)")
+        db.execute("PRAGMA query_only=ON")
+        before=db.total_changes
+        now=T0+120000; row=coherent()
+        r=dossier(db,[],as_of_utc=stamp(now),origin="SYNTHETIC",cvd_rows=[row],auxiliary=True)
+        assert r["b_audit_status"]=="LOCAL_PROOF_TABLES_INCOMPLETE"
+        assert r["b_local_pairs"] is None and r["tv_cvd_join"] is None
+        n=notification_preview(r)
+        assert n["state"]=="B_PROOFS_UNAVAILABLE" and n["candidate_count"] is None and n["tv_cvd_match_count"] is None
+        w=[{"start_ms":a,"end_ms":z,"rows":[row] if a<=T0<=z else []} for a,z in plan(now)]
+        valid,stats=validate_windows(w,as_of_ms=now)
+        radar=aggregate_radar(valid,as_of_ms=now)
+        assert stats["valid_unique_bars"]==1 and radar["counts"]["OBSERVATION_ONLY"]==1
+        out=preview(db,w,now=now,origin="SYNTHETIC")
+        assert out["coverage"]["valid_unique_bars"]==1 and out["notice"]["tv_cvd_match_count"] is None
+        assert "prove causali B non disponibili" in out["html"] and "Coppie CVD descrittive: N/D" in out["html"]
+        assert db.total_changes==before and not out["orders_enabled"] and not out["notice"]["sent"]
+        print("REMURA_D_MISSING_B_SYNTHETIC=PASS; UNKNOWN_NOT_ZERO; RADAR_INDEPENDENT; NO_LIVE_DB")
+    finally:db.close()
+
 if __name__=="__main__":
     run()
     run_cvd()
@@ -219,3 +254,4 @@ if __name__=="__main__":
     run_runtime()
     run_one_shot()
     run_persisted()
+    run_missing_b()
