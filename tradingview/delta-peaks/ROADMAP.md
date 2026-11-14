@@ -1,7 +1,13 @@
-# REMURA TradingView — ROADMAP v0.8.78-lab (gate risorse)
-**Aggiornamento 14/11/2026 18:00 CET — gate risorse**
+# REMURA TradingView — ROADMAP v0.8.79-lab (matching causale V2)
+**Aggiornamento 14/11/2026 18:22 CET — benchmark scientifico V2**
 **PR #102 DRAFT/OPEN — deploy TEST autorizzato riuscito, produzione e ordini esclusi.**
 
+## CHECKPOINT v0.8.79 — MATCHING CAUSALE V2
+- [x] v0.8.78 CI 43618758605 SUCCESS 259 test e dry-run 43618758595 SUCCESS, checkpoint riferito 6881112710.
+- [x] Benchmark e protocollo V2 separati, V1 intatto: assegnazioni FIFO prima degli esiti, nessun rimpiazzo, conteggi e digest, candidati tardivi esclusi prima della riserva. Fold/strati/orizzonti invariati; nessuna inferenza.
+- [ ] CI e regressioni V2 da verificare; dopo verde migrare reader/pin con versione esplicita, senza attivare servizi. Persistenza causale indipendente/ledger conflitti non attestati. Quote/host reali ignoti.
+- [ ] Prima ricezione Forex alla riapertura; stop alert BTC temporaneo domenica sera senza fermare Forex; coordinare Oracle con A. Nessun deploy, merge, trade.
+ 
 ## CHECKPOINT v0.8.78 — GATE RISORSE PREVIEW
 - [x] v0.8.77 CI 43616345499 SUCCESS 252 test, dry-run 43616345501 SUCCESS, profilo 290 barre/20 coppie mock: archive 322.412ms, validate 151.228ms, runtime 204.611ms, allocazioni Python 3736605 byte; commento 6880759961. Non VPS/RSS.
 - [x] Verificato file workflow main remura-cloudflare-budget-daily.yml: cron 08:37 Europe/Rome e pin esistente. Nessun run odierno recuperato via connettore (non lista workflow runs per workflow), non inferire quote correnti da 13/11. Non riavviare vecchi audit. 
