@@ -1,4 +1,4 @@
-# REMURA v0.8.52 — 14/11/2026 11:25 CET
+# REMURA v0.8.54 — 14/11/2026 CET
 # Owner-only, manual EURUSD TEST diagnostic; no deployment, writes, or scheduler.
 name: REMURA EURUSD TEST Analytic Reader
 on:
@@ -38,13 +38,14 @@ jobs:
       - name: Checkout immutable CI-tested source
         uses: actions/checkout@v4
         with:
-          ref: 8c3cdfdb56f2d5988c4d62b485ecfc68069c05db
+          ref: dd6855f189c85633b366bf84c561131d4056ce9e
           persist-credentials: false
       - name: Offline gate without secrets
         run: |
           python3 -m unittest discover -s tradingview/delta-peaks -p 'test_fx_pilot_analytic_reader_v1.py' -v
           python3 -m unittest discover -s tradingview/delta-peaks -p 'test_fx_pilot_config_v1.py' -v
           python3 -m unittest discover -s tradingview/delta-peaks -p 'test_fx_asof_handoff_v1.py' -v
+          python3 -m unittest discover -s tradingview/delta-peaks -p 'test_fx_outcome_readiness_v1.py' -v
       - name: Read only explicit mature FX TEST window
         env:
           REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
