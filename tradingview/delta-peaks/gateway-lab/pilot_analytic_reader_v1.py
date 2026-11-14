@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# REMURA v0.8.47 LAB — 14/11/2026 09:32 CET
+# REMURA v0.8.48 LAB — 14/11/2026 09:38 CET
 """Bounded diagnostic BTC pilot read: TEST D1 only, aggregate output only.
 No writes, exports, trading decisions, production access or FX research.
 """
@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from volume_features_v1 import analyze_export, BTC_START, BTC_END, M5
 from remura_tv_bridge_preview_v1 import EXPECTED_COLUMNS
 
-VERSION = "0.8.47-lab"
+VERSION = "0.8.48-lab"
 SYMBOL = "BINANCE:BTCUSDT"
 FIRST_CLOSE = BTC_START + (7 * 60 + 10) * 60_000
 MAX_SLOTS = 72
@@ -74,9 +74,12 @@ def aggregate(payload, start, end, now_ms):
            or v["hypotheses"] or v["orders_enabled"] for v in observations):
         raise AuditError("cohort_violation")
     labels, missing = Counter(), Counter()
+    checks = {}
     for v in observations:
         labels.update(v["observed_labels"])
         missing.update(v["missing_fields"])
+        for name, value in v["diagnostic_checks"].items():
+            checks.setdefault(name, Counter())[value] += 1
     expected = (end - start) // M5 + 1
     counts = parsed["counts"]
     status = ("NO_MATCHING_ROWS" if not rows else
@@ -100,6 +103,8 @@ def aggregate(payload, start, end, now_ms):
         "partial_bars": sum(v["quality"] == "PARTIAL" for v in observations),
         "observed_label_counts": dict(sorted(labels.items())),
         "missing_field_counts": dict(sorted(missing.items())),
+        "diagnostic_check_counts": {k: dict(sorted(v.items())) for k,v in sorted(checks.items())},
+        "diagnostic_tolerances": "PROVISIONAL_NOT_CALIBRATED",
         "target": "EU_D1_TEST_ONLY", "cohort": "BTC_TRANSPORT_ONLY",
         "raw_json_logged": False, "signal_validation": "NOT_PERFORMED",
         "orders_enabled": False,
