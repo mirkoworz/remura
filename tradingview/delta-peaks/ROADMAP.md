@@ -1,6 +1,12 @@
-# REMURA TradingView — ROADMAP v0.8.50-lab (FX as-of handoff candidate)
-**Aggiornamento roadmap: 14/11/2026, 10:46 CET — candidato passaggio D → B con causalità esplicita**
+# REMURA TradingView — ROADMAP v0.8.51-lab (BTC sequence verified, FX configuration candidate)
+**Aggiornamento roadmap: 14/11/2026, 10:55 CET — 33 barre complete e preparazione EURUSD**
 **PR #102 DRAFT/OPEN — nessun merge, nessun nuovo deploy, nessun ordine.**
+
+## CHECKPOINT v0.8.51-lab — SEQUENZA REALE E CONFIGURAZIONE FX
+- [x] [Run #43582760320](https://github.com/mirkoworz/remura/actions/runs/43582760320), job 132410812719 SUCCESS alle 10:54 CET. v0.8.49: COMPLETE_WINDOW 33/33 M5 08:10–10:50 CET; 23 heartbeat, 10 BAR_EVENT, zero invalidi/duplicati/conflitti/gap. Max lag 5524ms, 33 entro 120s. Footprint 27 presenti/6 mancanti. 211 controlli matematici applicabili coerenti (135 footprint +66 ER aritmetica +10 retest); 3/3 ricostruzioni effort DEFAULT30 coerenti, 30 warmup non valutabili, 10/10 RETEST_NEW_VISIT_CONSISTENT. Label DAY1=1, DAY2=3, DAY3=6. Nessuna prova di vantaggio, tolleranze provvisorie, parametri alert non attestati. BTC escluso dalla ricerca FX.
+- [x] v0.8.50 CI #43582223412 e dry run #43582223419 SUCCESS; log 10/10 handoff e 121 test Python principali.
+- [x] [fx_pilot_config_v1.py](fx_pilot_config_v1.py) commit `ddff62be3e326ee606e671a10b38c3caf74fae7e`: configurazione riferimento FXCM:EURUSD M5, default protocollo + heartbeat/telemetry ON; campi esatti, tipi, confronto e SHA256 canonico della configurazione dichiarata. Confronto dei 5 campi osservabili v1, il resto resta non attestato. Nessuna ammissione scientifica. [6 test sintetici](test_fx_pilot_config_v1.py) commit `59d72dff906c1a16666c4c296880bed4740a0624`; CI da verificare.
+- [ ] Non necessario ripetere subito BTC audit già riusciti. Lasciare raccolta diagnostica attiva e disattivare alert domenica 15/11 sera prima del 16/11 01:00 CET. Nessuna modifica Pine, Worker, DB, main, A/B/C. Prossimo passo: predisporre pilot EURUSD alla riapertura, prima ricezione e continuità, attestazione parametri effettivi da risolvere. Quote reali Free non verificate. Riprendere da questo checkpoint.
 
 ## CHECKPOINT v0.8.50-lab — HANDOFF CAUSALE FX OFFLINE
 - [x] PR #102 DRAFT verificata su precedente HEAD; ultimo run reale rimane #43578611804, nessuna nuova lettura avviata autonomamente. Consultato filone B PR #89 DRAFT in sola lettura (shark_sample_admission.py), senza modifica.
