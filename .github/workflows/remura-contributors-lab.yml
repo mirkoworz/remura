@@ -1,0 +1,19 @@
+# REMURA Contributors v0.1 LAB — 14/11/2026 23:16 CET
+name: REMURA Contributors LAB
+on:
+  pull_request:
+    paths:
+      - 'research/contributors/**'
+      - '.github/workflows/remura-contributors-lab.yml'
+permissions:
+  contents: read
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Synthetic intake only
+        run: python3 -m unittest discover -s research/contributors -p 'test_*.py' -v
