@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# REMURA v0.8.69 LAB — 14/11/2026 CET
+# REMURA v0.8.75 LAB — 14/11/2026 17:07 CET
 """Read-only research dossier; uses the existing B causal audit, no live wiring.
 All source identities are local proofs, not independently authenticated inputs.
 No future evidence, prices in the report, execution, orders or notifications.
@@ -13,8 +13,9 @@ from fx_outcome_readiness_v1 import readiness
 from volume_features_v1 import MAX_EXPORT_ROWS, decode
 from fx_pilot_config_v1 import REFERENCE, compare_v1_fields
 from cvd_squalincome_asof_preview_v1 import join_local_pairs
+from cvd_auxiliary_same_decision_preview_v1 import _from_verified_pairs
 
-VERSION = "0.8.69-lab"
+VERSION = "0.8.75-lab"
 B_PIN = "8dc51e8a199dc1cfd45e4cd2e7b339510af2eb2b"
 B_SCHEMA = "remura-track-b-causal-local-cot-price-join-v1"
 
@@ -25,7 +26,8 @@ def relation(side, value):
         return "NEUTRAL"
     return "ALIGNED" if side == value else "OPPOSED"
 
-def dossier(db, rows, *, as_of_utc, days=1, origin="LOCAL_SNAPSHOT", cvd_rows=None):
+def dossier(db, rows, *, as_of_utc, days=1, origin="LOCAL_SNAPSHOT", cvd_rows=None, auxiliary=False,
+            private_cvd_db=None, cvd_secret=None, retail_root=None, retail_authorized_at=None):
     """Caller supplies an explicit query-only SQLite snapshot and D1 export.
     B source must be made available by the isolated, pinned research checkout.
     The adapter does not open a production DB or establish source authenticity.
@@ -38,6 +40,13 @@ def dossier(db, rows, *, as_of_utc, days=1, origin="LOCAL_SNAPSHOT", cvd_rows=No
         raise ValueError("invalid_days")
     if not isinstance(rows,list) or len(rows)>MAX_EXPORT_ROWS:
         raise ValueError("invalid_export")
+    if type(auxiliary) is not bool or (not auxiliary and any(x is not None for x in
+        (private_cvd_db,cvd_secret,retail_root,retail_authorized_at))):
+        raise ValueError("explicit_auxiliary_required")
+    if auxiliary and (cvd_rows is None or db.in_transaction or
+        (private_cvd_db is None)!=(cvd_secret is None) or
+        (retail_root is None)!=(retail_authorized_at is None)):
+        raise ValueError("auxiliary_scope")
     at=utc(as_of_utc)
     cutoff=ms(at)
     from scripts import shark_causal_pair_audit
@@ -105,6 +114,8 @@ def dossier(db, rows, *, as_of_utc, days=1, origin="LOCAL_SNAPSHOT", cvd_rows=No
         raise ValueError("nonconserving_pair_population")
     outcome=readiness(window_rows,as_of_ms=cutoff)
     cvd_join=None if cvd_rows is None or n is None else join_local_pairs(pairs,cvd_rows,as_of_ms=cutoff)
+    aux=None if not auxiliary else _from_verified_pairs(db,private_cvd_db,cvd_rows,pairs,n,
+        as_of_utc=as_of_utc,days=days,secret=cvd_secret,retail_root=retail_root,authorized_at=retail_authorized_at)
     return {
         "schema":"remura.tv.research.dossier.preview.v1","version":VERSION,
         "origin":origin,"as_of_ms":cutoff,"days":days,
@@ -115,8 +126,9 @@ def dossier(db, rows, *, as_of_utc, days=1, origin="LOCAL_SNAPSHOT", cvd_rows=No
         "outcomes":outcome,"cot_source":"B_LOCAL_VALUE_VERSION_PROOF",
         "price_source":"B_LOCAL_PRICE_PROOF_AND_TV_SEPARATE_FEED",
         "cvd_status":"UNKNOWN_NOT_JOINED" if cvd_join is None else cvd_join["status"],
-        "tv_cvd_join":cvd_join,"ctrader_cvd_status":"UNKNOWN_NOT_JOINED",
-        "sentiment_status":"UNKNOWN_NOT_JOINED",
+        "tv_cvd_join":cvd_join,"auxiliary_same_decision":aux,
+        "ctrader_cvd_status":"UNKNOWN_NOT_JOINED" if aux is None else "SEE_LOCAL_AUXILIARY_COUNTS",
+        "sentiment_status":"UNKNOWN_NOT_JOINED" if aux is None else "SEE_LOCAL_AUXILIARY_COUNTS",
         "config_status":"NOT_ATTESTED",
         "cross_feed_price_equivalence_assumed":False,
         "independent_source_proof":False,"predictive_admission":False,

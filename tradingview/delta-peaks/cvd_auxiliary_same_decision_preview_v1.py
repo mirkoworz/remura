@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# REMURA v0.8.74 LAB — 14/11/2026 17:06 CET
+# REMURA v0.8.75 LAB — 14/11/2026 17:07 CET
 """Narrow exact-document cTrader and original retail pin association.
 Use original B local audited pairs, no aggregate-to-individual inference.
 Earlier prefix-only cTrader is UNKNOWN here, not a negative class.
@@ -77,11 +77,22 @@ def audit(core,private,cvd_rows,*,as_of_utc,days=1,secret=None,retail_root=None,
         raise ValueError("auxiliary_scope")
     if type(days) is not int or not 1<=days<=7:
         raise ValueError("auxiliary_days")
-    cutoff=utc(as_of_utc); groups=index_rows(cvd_rows)
     pairs=[]
     report=b.audit(core,as_of=as_of_utc,days=days,_verified_pairs=pairs)
-    n=report["locallyJoinedCausalPairs"]
-    if n is None and pairs or n is not None and n!=len(pairs):
+    if report.get("schema")!="remura-track-b-causal-local-cot-price-join-v1":
+        raise ValueError("unexpected_b_schema")
+    return _from_verified_pairs(core,private,cvd_rows,pairs,report["locallyJoinedCausalPairs"],
+        as_of_utc=as_of_utc,days=days,secret=secret,retail_root=retail_root,authorized_at=authorized_at)
+
+def _from_verified_pairs(core,private,cvd_rows,pairs,n,*,as_of_utc,days,secret=None,retail_root=None,authorized_at=None):
+    """Internal sink of the same pinned B call in dossier; NOT an external import API."""
+    for db in ([core] if private is None else [core,private]):
+        if not isinstance(db,sqlite3.Connection) or db.in_transaction or db.execute("PRAGMA query_only").fetchone()[0]!=1:
+            raise ValueError("isolated_query_only_snapshot_required")
+    if core is private or (retail_root is None)!=(authorized_at is None) or type(days) is not int or not 1<=days<=7:
+        raise ValueError("auxiliary_scope")
+    cutoff=utc(as_of_utc); groups=index_rows(cvd_rows)
+    if n is None and pairs or n is not None and (type(n) is not int or n!=len(pairs)):
         raise ValueError("pair_scope")
     fx=[p for p in pairs if p[0]=="EURUSD"]
     if len(fx)>MAX_PAIRS:
@@ -112,7 +123,7 @@ def audit(core,private,cvd_rows,*,as_of_utc,days=1,secret=None,retail_root=None,
         matrix["TV_"+tv_dir+"|CT_"+ct+"|RETAIL_"+retail]+=1
     if sum(matrix.values())!=len(fx):
         raise ValueError("matrix_denominator")
-    return {"schema":"remura.tv.auxiliary.same.decision.preview.v1","version":"0.8.74-lab",
+    return {"schema":"remura.tv.auxiliary.same.decision.preview.v1","version":"0.8.75-lab",
             "status":"LOCAL_ASSOCIATIONS_ONLY" if n is not None else "B_PROOFS_UNAVAILABLE",
             "b_local_pairs":n,"eurusd_pairs":len(fx) if n is not None else None,
             "counts":dict(sorted(counts.items())),"matrix":dict(sorted(matrix.items())),

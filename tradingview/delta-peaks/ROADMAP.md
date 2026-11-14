@@ -1,10 +1,16 @@
-# REMURA TradingView — ROADMAP v0.8.74-lab (regressione clock B)
-**Aggiornamento 14/11/2026 17:06 CET — correzione fixture clock B**
+# REMURA TradingView — ROADMAP v0.8.75-lab (dashboard confluenze)
+**Aggiornamento 14/11/2026 17:07 CET — dashboard confluenze**
 **PR #102 DRAFT/OPEN — deploy TEST autorizzato riuscito, produzione e ordini esclusi.**
+
+## CHECKPOINT v0.8.75 — DOSSIER E DASHBOARD CONFLUENZE
+- [x] v0.8.74 CI 43613723449 SUCCESS 237 test, dry-run 43613723452 SUCCESS, fixture CT exact/retail separati PASS; commento 6880330273.
+- [x] Dossier opzionale auxiliary=True, stessi pair B già auditati, cap 20, no secondo B audit, caller snapshot query-only, autorizzazione esplicita e segreti solo in memoria. Nessun cambio default.
+- [x] Gate aggregati: label whitelist, denominatori, marginali e limiti intersezioni; separa disponibilità delle prove da direzione dei due CVD, retail non direzionale, UNKNOWN non negativo. Dashboard/notice spiegano concordanza, opposizione, conflitto, N/D; hash notice include summary, nessun punteggio o invio. 6 nuovi test e fixture B separate con dossier/render effettivi. Nessuna prova reale.
+- [ ] CI v0.8.75, controllo quote effettive, primo alert FX, percorso runtime privato da progettare. Nessuna modifica B, main, produzione o deploy.
 
 ## CHECKPOINT v0.8.74 — REGRESSIONE CLOCK B
 - [x] v0.8.73: 237 unit test OK; CI cross-track 43613656660 fallita perché fixture CT ha observation 11:16 rispetto a close 11:00; la guardia corretta è B_CLOCK_OUTSIDE_TV_HANDOFF prima di verificare pre-deploy. Corretto solo il risultato atteso del fixture; nessun allargamento del clock. Aggiunta guardia duplicati identità B.
-- [ ] CI v0.8.74 da verificare. Nessuna modifica B, main, produzione, letture reali o segnali.
+- [x] CI v0.8.74 verificata nel checkpoint v0.8.75. Nessuna modifica B, main, produzione, letture reali o segnali.
  
 ## CHECKPOINT v0.8.73 — FONTI AUSILIARIE PER DECISIONE B
 - [x] v0.8.72 CI 43613121718 SUCCESS 232 test, dry-run 43613121699 SUCCESS; workflow fold main 0be663d19781b043a9edb039bd6dc785f3d3aeb5 pin 7cc9e7bc6f2f4fc5c395d5ac9ef5126bffe05353, commento 6880237795.

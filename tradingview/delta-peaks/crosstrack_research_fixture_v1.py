@@ -76,6 +76,10 @@ def run_aux():
         r=audit(t.main,t.private,[],as_of_utc=iso(NOW+timedelta(seconds=5)),secret=SECRET)
         assert r["counts"]["CT_EXACT_ALIGNED"]==1 and r["counts"]["TV_B_CLOCK_OUTSIDE_TV_HANDOFF"]==1
         assert r["counts"]["RETAIL_UNKNOWN"]==1
+        dossier_ct=dossier(t.main,[],as_of_utc=iso(NOW+timedelta(seconds=5)),origin="SYNTHETIC",cvd_rows=[],
+                           auxiliary=True,private_cvd_db=t.private,cvd_secret=SECRET)
+        assert notification_preview(dossier_ct)["auxiliary_summary"]["ct_exact_known"]==1
+        assert "CT_EXACT_ALIGNED" in render(dossier_ct)
         assert "ALL_LOCAL_PROOF_TYPES_SAME_B_DECISION" not in r["counts"]
         assert before==(t.main.total_changes,t.private.total_changes)
         wrong=audit(t.main,t.private,[],as_of_utc=iso(NOW+timedelta(seconds=5)),secret=b"other-authorized-private-secret!!")
@@ -89,6 +93,10 @@ def run_aux():
         r=audit(t.core,None,[],as_of_utc=iso(RETAIL_NOW+timedelta(seconds=5)),retail_root=t.folder,authorized_at=AUTHORIZED)
         assert r["counts"]["RETAIL_LOCAL_ORIGINAL_PIN_VERIFIED"]==1,r
         assert r["counts"]["CT_EXACT_UNKNOWN"]==1 and t.core.total_changes==before
+        dossier_retail=dossier(t.core,[],as_of_utc=iso(RETAIL_NOW+timedelta(seconds=5)),origin="SYNTHETIC",
+                               cvd_rows=[],auxiliary=True,retail_root=t.folder,retail_authorized_at=AUTHORIZED)
+        assert notification_preview(dossier_retail)["auxiliary_summary"]["retail_pin_verified"]==1
+        assert "RETAIL_LOCAL_ORIGINAL_PIN_VERIFIED" in render(dossier_retail)
         (t.folder/"retail-000001.sqlite3").unlink() # disposable synthetic fixture only
         r=audit(t.core,None,[],as_of_utc=iso(RETAIL_NOW+timedelta(seconds=5)),retail_root=t.folder,authorized_at=AUTHORIZED)
         assert r["counts"]["RETAIL_UNKNOWN"]==1
