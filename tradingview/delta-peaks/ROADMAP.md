@@ -1,6 +1,16 @@
-# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.45-doc (Worker Production noto v0.8.5, gateway TEST v0.8.6 ON)
-**Aggiornamento roadmap: 14/11/2026, 08:11 CET — primo heartbeat reale BTC ricevuto; latenza 1.649 s**
-**PR #102 DRAFT/OPEN — nessun merge, alert TradingView da confermare, nessun ordine.**
+# REMURA TradingView — ROADMAP v0.8.46-lab (gateway TEST ON, offline volume features)
+**Aggiornamento roadmap: 14/11/2026, 08:14 CET — adattatore volumetrico offline e regressioni sintetiche**
+**PR #102 DRAFT/OPEN — nessun merge, nessun nuovo deploy, nessun ordine.**
+
+## CHECKPOINT v0.8.46-lab — BRIDGE VOLUMETRICO OFFLINE
+- [x] HEAD precedente v0.8.45 `e062092c62bb339da52d8f3140bc36e0992914c9` e PR #102 DRAFT/OPEN verificati. Primo heartbeat BTC reale già attestato da run #43569836612; non ripetere autenticazione, configurazione o deploy.
+- [x] Riutilizzati validatore e bridge v0.8.15 esistenti. Nuovo [volume_features_v1.py](volume_features_v1.py), commit `ce4bf6ab89b756423b256e4e603aee46d34b1c57`: normalizza export privati D1, verifica identità e feed, M5 completo, origine livelli non futura, finestra BTC e is_timely=0; espone OHLC, delta stimato, effort/risultato/efficienza riportati, footprint/POC/imbalance, distanza livelli in ATR e intersezioni solo con livelli già nati. BTC escluso da ipotesi e ricerca FX anche con trasporto tempestivo.
+- [x] Duplicati identici ignorati; conflitti su stessa barra (anche HEARTBEAT/BAR_EVENT) quarantinati. Conteggi di slot non osservati solo tra prima/ultima barra osservata, non prova di outage; nessun calendario Forex implicito. Null distinti da zero. Ipotesi ER e discordanza direzione prezzo/delta non equivalgono a conferma di assorbimento/esecuzioni istituzionali. Nessun segnale, probabilità o ordine. Non pubblicare export o output per-barra nei log.
+- [x] [14 test sintetici](test_volume_features_v1.py), commit `45cdcf1978e15442229757be2af2223c2f5fd50a`, scoperti dalla CI Python esistente. Esito CI non ancora osservato al momento della scrittura. Nessuna nuova risorsa cloud e nessuna modifica a Worker, D1 o filoni A/B/C.
+- [ ] D1: aggiungere report continuità live TEST a finestre limitate e senza raw JSON; audit precedente campiona solo prime 100 righe. Metadati vuoti != lettura fallita; gap != evento assente. Iniziare con nuovo READ_BTC_RECEIPTS_ONLY manuale (connector GitHub non espone dispatch parametrico). Non rieseguire job di deploy.
+- [ ] D2/D3: aggiungere reader TEST-only separato, SELECT strettamente limitata, aggregati redatti; non usare il reader v0.8.16 che punta a D1 principale. Verificare campione reale, coerenza numerica footprint ed ER, qualità retest, esaurimento e confluenze; solo dopo eventuale confronto prospettico con B. Nessun dato BTC scientifico.
+- [ ] Verificare CI aggiornata e quote account effettive, poi estendere controllatamente a FXCM:EURUSD M5 e successivamente Gold; nessuna promozione live.
+- [ ] Disattivare alert BTC domenica 15/11 in serata, prima di lunedì 16/11 01:00 CET. Promemoria ChatGPT non creato: limite 5/5 automazioni attive. Non cancellare altri promemoria senza consenso.
 
 ## CHECKPOINT v0.8.45-doc — PRIMO WEBHOOK REALE BTCUSDT RICEVUTO — 14/11/2026, 08:11 CET
 - [x] Dopo rotazione hash e sostituzione URL utente ha eseguito READ_BTC_RECEIPTS_ONLY. [Run #43569836612](https://github.com/mirkoworz/remura/actions/runs/43569836612) completed SUCCESS, job #132371598282 SUCCESS, deploy skipped. Marker effettivi `REMURA_BTC_TEST_RECEIPTS=RECEIPTS_PRESENT`, SAMPLE_ROWS=1, MORE_AVAILABLE=False, HEARTBEATS=1, BAR_EVENTS=0, TRANSPORT_WITHIN_120S=1, FIRST_RECEIVED_MS=1794640201649 (2026-11-14T07:10:01.649Z), MAX_BAR_CLOSE_LAG_MS=1649 (1.649 s dalla chiusura barra). SELECT D1 TEST, raw JSON non letto, validazione segnali non effettuata.
