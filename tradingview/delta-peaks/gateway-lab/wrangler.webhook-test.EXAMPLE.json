@@ -1,0 +1,28 @@
+{
+  "$comment": "REMURA v0.8.31 — 13/11/2026 ore 21:04 CET. SOLO ESEMPIO NON DEPLOYABILE. Preview disabilitati. Nessun segreto o deploy automatico.",
+  "name": "remura-tv-webhook-test",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-11-13",
+  "workers_dev": true,
+  "preview_urls": false,
+  "vars": {
+    "INGEST_ENABLED": "false"
+  },
+  "d1_databases": [
+    {
+      "binding": "TELEMETRY_DB",
+      "database_name": "remura-tv-lab-test",
+      "database_id": "REPLACE_WITH_D1_TEST_UUID"
+    }
+  ],
+  "ratelimits": [
+    {
+      "name": "INGEST_RATE_LIMITER",
+      "namespace_id": "REPLACE_WITH_UNIQUE_POSITIVE_INTEGER",
+      "simple": {
+        "limit": 20,
+        "period": 60
+      }
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+# REMURA v0.8.22 — 13/11/2026, ore 15:24 CET — GET-only identity, NO deploy
+# One-shot only on isolated DRAFT branch; no schedule, webhook or D1 SQL.
+name: REMURA D1 TEST Target Preflight READ-ONLY
+
+on:
+  push:
+    branches:
+      - research/tradingview-delta-peaks-20261111
+    paths:
+      - ".github/workflows/remura-tv-test-target-preflight-readonly.yml"
+      - "tradingview/delta-peaks/gateway-lab/d1_test_target_preflight_v1.py"
+      - "tradingview/delta-peaks/gateway-lab/test_d1_test_target_preflight_v1.py"
+      - "tradingview/delta-peaks/gateway-lab/wrangler.webhook-test.EXAMPLE.json"
+      - "tradingview/delta-peaks/gateway-lab/predeploy_test_manifest_guard_v1.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: remura-tv-target-preflight-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  read-only-target-proof:
+    if: github.repository == 'mirkoworz/remura' && github.ref == 'refs/heads/research/tradingview-delta-peaks-20261111'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout no write permissions
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Pure mocked D1 and manifest tests
+        run: |
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_d1_test_target_preflight_v1.py' -v
+          python3 -m py_compile tradingview/delta-peaks/gateway-lab/d1_test_target_preflight_v1.py
+      - name: Account D1 inventory GET only - no Worker or DB query
+        env:
+          REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+          REMURA_CF_D1_READ_TOKEN: ${{ secrets.REMURA_CF_D1_READ_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/d1_test_target_preflight_v1.py \
+            | tee "$RUNNER_TEMP/remura-target-proof.txt"
+          {
+            echo "## REMURA v0.8.22 — D1 TEST target identity"
+            echo ""
+            echo "GET API metadata only. No UUID/token disclosure or deploy authorization."
+            echo '~~~text'
+            cat "$RUNNER_TEMP/remura-target-proof.txt"
+            echo '~~~'
+            echo "No Cloudflare Worker settings access proven; no change to billing or resources."
+          } >> "$GITHUB_STEP_SUMMARY"

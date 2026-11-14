@@ -1,0 +1,68 @@
+# REMURA Cloudflare D1 audit LAB v0.4 — aggiornamento 13/11/2026 ore 06:47 CET
+# Solo branch PR #102; test offline sempre, API solo read-only con secret configurati.
+# Nessun deploy, nessuna query SQL di scrittura, nessun webhook o segreto nel repository.
+name: REMURA Cloudflare D1 READ-ONLY Lab
+
+on:
+  push:
+    branches:
+      - research/tradingview-delta-peaks-20261111
+    paths:
+      - ".github/workflows/remura-tv-cloudflare-d1-readonly.yml"
+      - "tradingview/delta-peaks/gateway-lab/cloudflare_d1_readonly_audit.py"
+      - "tradingview/delta-peaks/gateway-lab/test_cloudflare_d1_readonly_audit.py"
+      - "tradingview/delta-peaks/gateway-lab/synthetic_cleanup_plan_v1.py"
+      - "tradingview/delta-peaks/gateway-lab/test_synthetic_cleanup_plan_v1.py"
+      - "tradingview/delta-peaks/gateway-lab/cloudflare_d1_storage_guard.py"
+      - "tradingview/delta-peaks/gateway-lab/test_cloudflare_d1_storage_guard.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: remura-tv-d1-readonly-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  offline-safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout senza credenziali persistenti
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Test offline di separazione D1 e SQL sola lettura
+        run: python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p "test_cloudflare_d1_readonly_audit.py" -v
+      - name: Prova offline pulizia strettamente sintetica (solo SQLite in-memory)
+        run: python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p "test_synthetic_cleanup_plan_v1.py" -v
+      - name: Verifica offline soglie storage D1 Free senza rete
+        run: python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p "test_cloudflare_d1_storage_guard.py" -v
+      - name: Controllo sintassi
+        run: python3 -m py_compile tradingview/delta-peaks/gateway-lab/cloudflare_d1_readonly_audit.py tradingview/delta-peaks/gateway-lab/synthetic_cleanup_plan_v1.py tradingview/delta-peaks/gateway-lab/cloudflare_d1_storage_guard.py
+
+  cloudflare-readonly:
+    needs: offline-safety
+    if: github.ref == 'refs/heads/research/tradingview-delta-peaks-20261111' && github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout senza credenziali persistenti
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Interroga solo D1 LAB TEST se le credenziali esistono
+        env:
+          REMURA_CF_D1_READ_TOKEN: ${{ secrets.REMURA_CF_D1_READ_TOKEN }}
+          REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${REMURA_CF_D1_READ_TOKEN:-}" || -z "${REMURA_CF_ACCOUNT_ID:-}" ]]; then
+            echo "REMURA_D1_READONLY_AUDIT=SKIPPED_MISSING_SECRETS"
+            echo "D1 read-only: credenziali non configurate; nessuna chiamata Cloudflare." >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
+          python3 tradingview/delta-peaks/gateway-lab/cloudflare_d1_readonly_audit.py
+          python3 tradingview/delta-peaks/gateway-lab/cloudflare_d1_storage_guard.py

@@ -1,0 +1,131 @@
+# REMURA v0.8.25 — 13/11/2026, 16:33 CET Europe/Rome
+# Compile-only synthetic Worker. No Cloudflare keys, deployment or network to Worker.
+name: REMURA TEST Worker Wrangler DRY RUN
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/remura-tv-wrangler-dryrun.yml"
+      - "tradingview/delta-peaks/gateway-lab/build_test_worker_dryrun_v1.py"
+      - "tradingview/delta-peaks/gateway-lab/test_build_test_worker_dryrun_v1.py"
+      - "tradingview/delta-peaks/gateway-lab/predeploy_test_manifest_guard_v1.py"
+      - "tradingview/delta-peaks/gateway-lab/wrangler.webhook-test.EXAMPLE.json"
+      - "tradingview/delta-peaks/gateway-lab/worker.mjs"
+      - "tradingview/delta-peaks/gateway-lab/worker_cvd_candidate.mjs"
+      - "tradingview/delta-peaks/gateway-lab/cvd_transition_bundle_v1.py"
+      - "tradingview/delta-peaks/gateway-lab/test_cvd_transition_bundle_v1.py"
+      - "tradingview/delta-peaks/gateway-lab/bootstrap_test_worker.mjs"
+      - "tradingview/delta-peaks/gateway-lab/bootstrap_test_worker.test.mjs"
+  push:
+    branches:
+      - research/tradingview-delta-peaks-20261111
+    paths:
+      - ".github/workflows/remura-tv-wrangler-dryrun.yml"
+      - "tradingview/delta-peaks/gateway-lab/build_test_worker_dryrun_v1.py"
+      - "tradingview/delta-peaks/gateway-lab/test_build_test_worker_dryrun_v1.py"
+      - "tradingview/delta-peaks/gateway-lab/predeploy_test_manifest_guard_v1.py"
+      - "tradingview/delta-peaks/gateway-lab/wrangler.webhook-test.EXAMPLE.json"
+      - "tradingview/delta-peaks/gateway-lab/worker.mjs"
+      - "tradingview/delta-peaks/gateway-lab/worker_cvd_candidate.mjs"
+      - "tradingview/delta-peaks/gateway-lab/cvd_transition_bundle_v1.py"
+      - "tradingview/delta-peaks/gateway-lab/test_cvd_transition_bundle_v1.py"
+      - "tradingview/delta-peaks/gateway-lab/bootstrap_test_worker.mjs"
+      - "tradingview/delta-peaks/gateway-lab/bootstrap_test_worker.test.mjs"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: remura-tv-synthetic-dryrun-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compile-only:
+    if: github.repository == 'mirkoworz/remura' && ((github.event_name == 'pull_request' && github.event.pull_request.number == 102) || (github.event_name == 'push' && github.ref == 'refs/heads/research/tradingview-delta-peaks-20261111'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    env:
+      CI: "true"
+      WRANGLER_SEND_METRICS: "false"
+      CLOUDFLARE_API_TOKEN: ""
+      CLOUDFLARE_API_KEY: ""
+      CLOUDFLARE_ACCOUNT_ID: ""
+    steps:
+      - name: Checkout immutable code for offline review
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: All safety checks on synthetic Worker config
+        run: |
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_build_test_worker_dryrun_v1.py' -v
+          python3 tradingview/delta-peaks/gateway-lab/predeploy_test_manifest_guard_v1.py
+      - name: Prepare temporary fake D1 and fake limiter namespace
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/build_test_worker_dryrun_v1.py \
+            --outdir "$RUNNER_TEMP/remura-test-only-synthetic"
+          echo 'Real Cloudflare account/db settings were never retrieved or modified.'
+      - name: Wrangler compile ONLY (explicit dry-run, no upload)
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.157.0 deploy \
+            --dry-run \
+            --config "$RUNNER_TEMP/remura-test-only-synthetic/wrangler.json" \
+            --outdir "$RUNNER_TEMP/remura-dryrun-bundle"
+          test -s "$RUNNER_TEMP/remura-dryrun-bundle/worker.js" || \
+            test -s "$RUNNER_TEMP/remura-dryrun-bundle/worker.mjs"
+          echo "REMURA_WRANGLER_DRYRUN=COMPILED_SYNTHETIC_ONLY"
+          echo "WORKER_DEPLOY=NO; D1_REAL_UUID=NOT_USED; INGEST=OFF; WEBHOOK=OFF"
+          {
+            echo "### REMURA v0.8.23 — Wrangler synthetic compile check"
+            echo "Bundling success, no deployment, no real Cloudflare auth or DB access."
+            echo "Template remains undeployable with placeholders."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Compile inert bootstrap Worker ONLY without DB, limiter or Secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/remura-inert-bootstrap"
+          cp tradingview/delta-peaks/gateway-lab/bootstrap_test_worker.mjs \
+            "$RUNNER_TEMP/remura-inert-bootstrap/bootstrap_test_worker.mjs"
+          cat > "$RUNNER_TEMP/remura-inert-bootstrap/wrangler.json" <<'JSON'
+          {
+            "name": "remura-tv-webhook-test",
+            "main": "bootstrap_test_worker.mjs",
+            "compatibility_date": "2026-11-13",
+            "workers_dev": false
+          }
+          JSON
+          node --test tradingview/delta-peaks/gateway-lab/bootstrap_test_worker.test.mjs
+          npx --yes wrangler@4.157.0 deploy --dry-run \
+            --config "$RUNNER_TEMP/remura-inert-bootstrap/wrangler.json" \
+            --outdir "$RUNNER_TEMP/remura-inert-bootstrap-built"
+          test -s "$RUNNER_TEMP/remura-inert-bootstrap-built/bootstrap_test_worker.js" || \
+            test -s "$RUNNER_TEMP/remura-inert-bootstrap-built/bootstrap_test_worker.mjs" || \
+            test -s "$RUNNER_TEMP/remura-inert-bootstrap-built/worker.js"
+          echo "REMURA_BOOTSTRAP_COMPILE=OFFLINE_ONLY"
+          echo "NO_D1_BINDINGS=YES; NO_SECRETS=YES; WORKERS_DEV=DISABLED_IN_SYNTHETIC_CONFIG"
+          echo "CLOUDFLARE_DEPLOY=NO; WORKER_NOT_CREATED"
+
+      - name: CVD candidate and legacy rollback compile-only (fake bindings)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_cvd_transition_bundle_v1.py' -v
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_cvd_transition_preflight_v1.py' -v
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_cvd_transition_live_bundle_v1.py' -v
+          python3 tradingview/delta-peaks/gateway-lab/cvd_transition_bundle_v1.py --synthetic-dry-run --outdir "$RUNNER_TEMP/remura-cvd-synthetic"
+          for kind in candidate rollback; do
+            original="$RUNNER_TEMP/remura-cvd-synthetic/$kind"
+            scratch="$(mktemp -d "$RUNNER_TEMP/remura-cvd-compile-XXXXXX")"
+            cp -p "$original/"{worker.mjs,wrangler.json} "$scratch/"
+            npx --yes wrangler@4.157.0 deploy --dry-run --config "$scratch/wrangler.json" --outdir "$RUNNER_TEMP/remura-cvd-built-$kind"
+            cmp "$original/worker.mjs" "$scratch/worker.mjs"
+            cmp "$original/wrangler.json" "$scratch/wrangler.json"
+            test "$(find "$original" -mindepth 1 -maxdepth 1 | wc -l)" -eq 2
+            rm -rf -- "$scratch"
+          done
+          echo 'REMURA_CVD_TRANSITION=COMPILED_CANDIDATE_AND_ROLLBACK_SYNTHETIC_ONLY'

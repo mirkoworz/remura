@@ -1,0 +1,696 @@
+//@version=6
+// REMURA ALL-IN-ONE Premium v0.9 CVD LAB — 14/11/2026 11:50 CET
+// VISUAL ONLY: old live Pine v0.8.1 untouched; no telemetry/alerts in candidate.
+// CVD D0.8 source: blob 4160994d14240ab2af5eff0c67d00c95671d7567; new feed-specific cohort.
+// Ricerca sperimentale: delta STIMATO, non ordini istituzionali osservati.
+// Nessun collegamento con la versione live di REMURA.
+import TradingView/ta/14 as tv
+
+indicator("REMURA ALL-IN-ONE Premium v0.9 CVD LAB - 14/11/2026 11:50 CET", overlay=true, max_lines_count=30)
+
+// PARAMETRI
+lowerTF = input.timeframe("1", "Timeframe delta intrabar")
+lookback = input.int(30, "Barre di riferimento", minval=5)
+multiplier = input.float(3.5, "Forza minima picco", minval=1, step=0.25)
+maxEfficiency = input.float(0.07, "Efficienza ER massima", minval=-1.0, maxval=1.0, step=0.01)
+showLevels = input.bool(true, "Mostra livelli WEEK / MONTH")
+minPeakGap = input.int(6, "Minimo barre tra picchi (5m = 30 min)", minval=0, maxval=100)
+showPeaks = input.bool(false, "Mostra anche D+/D- (diagnostica)")
+showER = input.bool(true, "Mostra ER (sforzo / risultato)")
+showPanel = input.bool(true, "Mostra pannello REMURA")
+showHistory = input.bool(true, "Mostra gli ultimi 3 eventi")
+colorBars = input.bool(false, "Colora candele anomale (anche LIVE)")
+
+// PREMIUM: scelta pannello, un unico footprint nativo per la barra corrente.
+viewMode = input.string("COMPLETO", "Vista pannello", options=["COMPLETO", "FOOTPRINT", "RADAR"])
+fpTicks = input.int(10, "Footprint tick per riga", minval=1)
+fpImbThreshold = input.float(300.0, "Footprint imbalance %", minval=100, step=25.0)
+showPocDots = input.bool(false, "Mostra POC come punti (candele chiuse)")
+
+// PICCHI DELTA INTRADAY
+showDailyLevels = input.bool(true, "Mostra linee DAY: top 3 picchi delta")
+dailyMinEffort = input.float(1.5, "Soglia picchi DAY (delta/media)", minval=0.0, step=0.25)
+dailyAnchor = input.string("HL2", "Prezzo linee DAY", options=["HL2", "POC FOOTPRINT"])
+showPrevDay = input.bool(true, "Mostra DAY precedente (massimo)")
+
+// DELTA STIMATO DA TIMEFRAME INFERIORE
+// Il periodo di accumulo coincide con la candela del grafico:
+// deltaBar rappresenta quindi il delta stimato di una barra.
+[deltaOpen, deltaHigh, deltaLow, deltaBar] = tv.requestVolumeDelta(lowerTF, timeframe.period)
+
+absDelta = math.abs(deltaBar)
+// Solo barre precedenti: evitiamo che il picco alteri la propria soglia.
+avgDelta = ta.sma(absDelta[1], lookback)
+atrValue = ta.atr(14)
+
+// Gap tra picchi confermati. La vista LIVE puo' cambiare.
+var int lastPeakBar = na
+gapOK = na(lastPeakBar) or bar_index - lastPeakBar > minPeakGap
+
+// SFORZO / RISULTATO: METRICA SPERIMENTALE, NON PROVA DI ASSORBIMENTO
+// Sforzo = |delta barra| / media(|delta| delle 30 barre precedenti).
+// Risultato direzionale = sign(delta) * (close - open) / ATR(14).
+// Efficienza ER = risultato direzionale / sforzo.
+// Negativa: corpo nella direzione opposta al delta. Circa zero: poco corpo.
+effort = not na(avgDelta) and avgDelta > 0 ? absDelta / avgDelta : na
+signedResult = not na(atrValue) and atrValue > 0 and not na(deltaBar) ? math.sign(deltaBar) * (close - open) / atrValue : na
+efficiency = not na(effort) and effort > 0 and not na(signedResult) ? signedResult / effort : na
+// Anteprima della barra aperta; solo alla chiusura si conferma.
+previewPeak = not na(effort) and effort >= multiplier and gapOK
+previewER = previewPeak and not na(efficiency) and efficiency <= maxEfficiency
+isPeak = barstate.isconfirmed and previewPeak
+erCandidate = barstate.isconfirmed and previewER
+erPositiveDelta = erCandidate and deltaBar > 0
+erNegativeDelta = erCandidate and deltaBar < 0
+
+// Ultimi tre eventi CONFERMATI; orario di apertura barra in Italia.
+var string event1 = "N/D"
+var string event2 = "N/D"
+var string event3 = "N/D"
+if isPeak
+    lastPeakBar := bar_index
+    event3 := event2
+    event2 := event1
+    string eventType = erPositiveDelta ? "ER+" : erNegativeDelta ? "ER-" : deltaBar > 0 ? "D+" : "D-"
+    event1 := str.format_time(time, "dd/MM HH:mm", "Europe/Rome") + " " + eventType + " " + str.tostring(effort, "#.0") + "x"
+
+// Colori della PRESSIONE e dell'ANOMALIA separati.
+hasDelta = not na(deltaBar)
+hasEffort = not na(effort)
+strength = not hasEffort ? 0 : effort < 1 ? 1 : effort < 2 ? 2 : effort < 3.5 ? 3 : effort < 5 ? 4 : 5
+strengthMeter = strength == 0 ? "N/D" : strength == 1 ? "1/5 |...." : strength == 2 ? "2/5 ||..." : strength == 3 ? "3/5 |||.." : strength == 4 ? "4/5 ||||." : "5/5 |||||"
+deltaColor = not hasDelta ? color.gray : deltaBar > 0 ? color.lime : deltaBar < 0 ? color.red : color.silver
+anomalyColor = previewER ? color.fuchsia : previewPeak ? color.orange : strength >= 3 ? color.yellow : color.gray
+pressureText = not hasDelta ? "N/D" : deltaBar > 0 ? "BUY stimato" : deltaBar < 0 ? "SELL stimato" : "NEUTRO"
+anomalyText = not hasEffort ? "N/D" : previewER ? (deltaBar > 0 ? "ER+ | EFF. BASSA" : "ER- | EFF. BASSA") : previewPeak ? "PICCO DELTA" : effort >= 2 ? "PRESSIONE ALTA" : "NORMALE"
+
+// Facoltativa: colorazione barra corrente PROVVISORIA finche' aperta.
+barcolor(colorBars ? (previewER ? color.purple : previewPeak ? color.orange : na) : na)
+
+// MARCATORI - ER+ = pressione positiva inefficiente, ER- = pressione negativa inefficiente
+plotshape(showPeaks and isPeak and deltaBar > 0 and not erPositiveDelta, title="Picco positivo", style=shape.circle, location=location.abovebar, color=color.lime, size=size.tiny, text="D+")
+plotshape(showPeaks and isPeak and deltaBar < 0 and not erNegativeDelta, title="Picco negativo", style=shape.circle, location=location.belowbar, color=color.red, size=size.tiny, text="D-")
+plotshape(showER and erPositiveDelta, title="ER delta positivo", style=shape.triangledown, location=location.abovebar, color=color.orange, size=size.small, text="ER+")
+plotshape(showER and erNegativeDelta, title="ER delta negativo", style=shape.triangleup, location=location.belowbar, color=color.aqua, size=size.small, text="ER-")
+
+// MASSIMI ASSOLUTI DEL DELTA NEI PERIODI DISPONIBILI
+var float weekMax = na
+var float monthMax = na
+var float weekPrice = na
+var float monthPrice = na
+var float previousMonthPrice = na
+var int weekOriginCloseMs = na
+var int monthOriginCloseMs = na
+var int previousMonthOriginCloseMs = na
+
+var line weekLine = na
+var line monthLine = na
+var line previousLine = na
+
+// NUOVA SETTIMANA
+if timeframe.change("1W")
+    weekMax := na
+    weekPrice := na
+    weekOriginCloseMs := na
+    if not na(weekLine)
+        line.delete(weekLine)
+        weekLine := na
+
+// NUOVO MESE
+if timeframe.change("1M")
+    previousMonthPrice := monthPrice
+    previousMonthOriginCloseMs := monthOriginCloseMs
+    if not na(previousLine)
+        line.delete(previousLine)
+    previousLine := monthLine
+    if not na(previousLine)
+        line.set_color(previousLine, color.gray)
+        line.set_style(previousLine, line.style_dashed)
+    monthLine := na
+    monthMax := na
+    monthPrice := na
+    monthOriginCloseMs := na
+
+// AGGIORNA I LIVELLI SOLO A CANDELA CHIUSA
+// Il prezzo tracciato e' hl2 della candela del massimo delta,
+// NON un volume profile POC o il prezzo esatto dello scambio.
+if barstate.isconfirmed and not na(deltaBar)
+    if na(weekMax) or absDelta > weekMax
+        weekMax := absDelta
+        weekPrice := hl2
+        weekOriginCloseMs := time_close
+        if not na(weekLine)
+            line.delete(weekLine)
+        if showLevels
+            weekLine := line.new(bar_index, weekPrice, bar_index + 1, weekPrice, extend=extend.right, color=color.aqua, width=2)
+
+    if na(monthMax) or absDelta > monthMax
+        monthMax := absDelta
+        monthPrice := hl2
+        monthOriginCloseMs := time_close
+        if not na(monthLine)
+            line.delete(monthLine)
+        if showLevels
+            monthLine := line.new(bar_index, monthPrice, bar_index + 1, monthPrice, extend=extend.right, color=color.yellow, width=2)
+
+// NATIVE FOOTPRINT PREMIUM — separato dai calcoli ER esistenti.
+// Nota: classificazione intrabar del volume FXCM != esecuzioni CME.
+// Limite Pine: UNA sola request.footprint() per script.
+footprint fp = request.footprint(fpTicks, va_percent=70, imbalance_percent=fpImbThreshold)
+bool hasFootprint = not na(fp)
+float fpBuy = hasFootprint ? fp.buy_volume() : na
+float fpSell = hasFootprint ? fp.sell_volume() : na
+float fpDelta = hasFootprint ? fp.delta() : na
+float fpTotal = hasFootprint ? fp.total_volume() : na
+float fpDeltaPct = hasFootprint and fpTotal > 0 ? 100.0 * fpDelta / fpTotal : na
+float fpPoc = na
+float fpVah = na
+float fpVal = na
+int fpBuyImb = 0
+int fpSellImb = 0
+
+if hasFootprint
+    volume_row pocRow = fp.poc()
+    volume_row vahRow = fp.vah()
+    volume_row valRow = fp.val()
+    fpPoc := math.avg(pocRow.up_price(), pocRow.down_price())
+    fpVah := vahRow.up_price()
+    fpVal := valRow.down_price()
+    for row in fp.rows()
+        if row.has_buy_imbalance()
+            fpBuyImb += 1
+        if row.has_sell_imbalance()
+            fpSellImb += 1
+
+// POC come punto facoltativo sul grafico; solo a candela chiusa.
+plot(showPocDots and barstate.isconfirmed ? fpPoc : na, "Footprint POC (centro riga)", color=color.orange, style=plot.style_circles, linewidth=2)
+plot(fpDelta, "Delta Footprint Premium (classificato)", display=display.data_window)
+plot(fpDeltaPct, "Delta Footprint % volume", display=display.data_window)
+
+// LIVELLI DAY: i 3 massimi di |delta intrabar| del giorno, su barre chiuse.
+// Soglia separata dagli ER; prezzo hl2 o POC del footprint della candela.
+// Il giorno segue il calendario del simbolo TradingView.
+var array<float> dayScores = array.new_float(3, na)
+var array<float> dayPrices = array.new_float(3, na)
+var array<int> dayOrigins = array.new_int(3, na)
+var array<int> dayOriginCloseMs = array.new_int(3, na)
+var array<line> dayLines = array.new_line(3, na)
+var array<int> dayTouches = array.new_int(3, 0)
+var array<bool> dayTouching = array.new_bool(3, false)
+var float previousDayPrice = na
+var int previousDayOriginCloseMs = na
+var array<bool> dayRetestFlags = array.new_bool(3, false)
+bool previousDayRetestFlag = false
+string dayLevelAction = "NONE"
+int dayLevelRank = na
+float evictedDayPrice = na
+int evictedDayOriginCloseMs = na
+var line previousDayLine = na
+var int previousDayTouches = 0
+var bool previousDayTouching = false
+bool dailyRetest = false
+
+if timeframe.change("1D")
+    previousDayPrice := array.get(dayPrices, 0)
+    previousDayOriginCloseMs := array.get(dayOriginCloseMs, 0)
+    if not na(previousDayLine)
+        line.delete(previousDayLine)
+        previousDayLine := na
+    previousDayTouches := 0
+    previousDayTouching := false
+    if showDailyLevels and showPrevDay and not na(previousDayPrice)
+        previousDayLine := line.new(bar_index, previousDayPrice, bar_index + 1, previousDayPrice, extend=extend.right, color=color.gray, style=line.style_dotted, width=2)
+    for i = 0 to 2
+        line oldLine = array.get(dayLines, i)
+        if not na(oldLine)
+            line.delete(oldLine)
+        array.set(dayScores, i, na)
+        array.set(dayPrices, i, na)
+        array.set(dayOrigins, i, na)
+        array.set(dayOriginCloseMs, i, na)
+        array.set(dayLines, i, na)
+        array.set(dayTouches, i, 0)
+        array.set(dayTouching, i, false)
+
+// Nessun dato futuro: i livelli possono essere rimpiazzati da picchi piu' forti,
+// ma vengono disegnati solo dopo la chiusura della candela di origine.
+float dayAnchorPrice = dailyAnchor == "POC FOOTPRINT" ? fpPoc : hl2
+bool dayEligible = barstate.isconfirmed and not na(deltaBar) and math.abs(deltaBar) > 0 and not na(dayAnchorPrice) and (dailyMinEffort == 0 or (not na(effort) and effort >= dailyMinEffort))
+if dayEligible
+    float candidateScore = math.abs(deltaBar)
+    int insertIndex = -1
+    for i = 0 to 2
+        float rankedScore = array.get(dayScores, i)
+        if insertIndex == -1 and (na(rankedScore) or candidateScore > rankedScore)
+            insertIndex := i
+    if insertIndex >= 0
+        evictedDayPrice := array.get(dayPrices, 2)
+        evictedDayOriginCloseMs := array.get(dayOriginCloseMs, 2)
+        dayLevelAction := na(evictedDayOriginCloseMs) ? "ADDED" : "REPLACED"
+        dayLevelRank := insertIndex + 1
+        line evicted = array.get(dayLines, 2)
+        if not na(evicted)
+            line.delete(evicted)
+        if insertIndex < 2
+            for j = 2 to insertIndex + 1
+                array.set(dayScores, j, array.get(dayScores, j - 1))
+                array.set(dayPrices, j, array.get(dayPrices, j - 1))
+                array.set(dayOrigins, j, array.get(dayOrigins, j - 1))
+                array.set(dayOriginCloseMs, j, array.get(dayOriginCloseMs, j - 1))
+                array.set(dayLines, j, array.get(dayLines, j - 1))
+                array.set(dayTouches, j, array.get(dayTouches, j - 1))
+                array.set(dayTouching, j, array.get(dayTouching, j - 1))
+        array.set(dayScores, insertIndex, candidateScore)
+        array.set(dayPrices, insertIndex, dayAnchorPrice)
+        array.set(dayOrigins, insertIndex, bar_index)
+        array.set(dayOriginCloseMs, insertIndex, time_close)
+        array.set(dayTouches, insertIndex, 0)
+        array.set(dayTouching, insertIndex, false)
+        line newLine = na
+        if showDailyLevels
+            newLine := line.new(bar_index, dayAnchorPrice, bar_index + 1, dayAnchorPrice, extend=extend.right, width=2)
+        array.set(dayLines, insertIndex, newLine)
+        for i = 0 to 2
+            line rankedLine = array.get(dayLines, i)
+            if not na(rankedLine)
+                color c = i == 0 ? color.fuchsia : i == 1 ? color.orange : color.aqua
+                line.set_color(rankedLine, c)
+                line.set_width(rankedLine, i == 0 ? 3 : 2)
+                line.set_style(rankedLine, i == 0 ? line.style_solid : line.style_dashed)
+
+// Flag evento per barra, indipendenti dal conteggio di visite.
+for i = 0 to 2
+    array.set(dayRetestFlags, i, false)
+
+// RETEST: High/Low attraversa il livello su barra SUCCESSIVA all'origine.
+// Un attraversamento su piu' barre consecutive conta una sola visita.
+// Non implica inversione, supporto, resistenza o vantaggio statistico.
+if barstate.isconfirmed and showDailyLevels
+    for i = 0 to 2
+        float level = array.get(dayPrices, i)
+        int originBar = array.get(dayOrigins, i)
+        bool intersects = not na(level) and not na(originBar) and bar_index > originBar and low <= level and high >= level
+        bool wasTouching = array.get(dayTouching, i)
+        if intersects and not wasTouching
+            array.set(dayTouches, i, array.get(dayTouches, i) + 1)
+            dailyRetest := true
+            array.set(dayRetestFlags, i, true)
+        array.set(dayTouching, i, intersects)
+        line currentLine = array.get(dayLines, i)
+        if not na(currentLine)
+            color baseColor = i == 0 ? color.fuchsia : i == 1 ? color.orange : color.aqua
+            line.set_color(currentLine, intersects and not wasTouching ? color.white : baseColor)
+    if showPrevDay and not na(previousDayPrice)
+        bool yIntersects = low <= previousDayPrice and high >= previousDayPrice
+        if yIntersects and not previousDayTouching
+            previousDayTouches += 1
+            dailyRetest := true
+            previousDayRetestFlag := true
+        previousDayTouching := yIntersects
+        if not na(previousDayLine)
+            line.set_color(previousDayLine, yIntersects ? color.white : color.gray)
+
+// RT appare solo su candela chiusa: un tocco rilevato, NON un ordine.
+plotshape(showDailyLevels and dailyRetest, title="Retest livello delta DAY", style=shape.diamond, location=location.abovebar, color=color.fuchsia, size=size.tiny, text="RT")
+
+// PANNELLO LIVE: aggiorna celle solo sull'ultima barra.
+var table panel = table.new(position.top_right, 2, 26, bgcolor=color.new(color.black, 15), border_width=1)
+if barstate.islast
+    if not showPanel
+        table.clear(panel, 0, 0, 1, 25)
+    else
+        // Vista unificata: stessi segnali delta/ER della v0.5, UNA sola richiesta footprint.
+        if viewMode == "COMPLETO"
+            color bg = color.new(color.black, 20)
+            color headBg = color.new(color.blue, 55)
+            color deltaFootColor = not hasFootprint ? color.gray : fpDelta > 0 ? color.lime : fpDelta < 0 ? color.red : color.silver
+            color erBg = previewER ? color.new(color.purple, 35) : previewPeak ? color.new(color.orange, 35) : bg
+            string stateText = barstate.isrealtime and not barstate.isconfirmed ? "LIVE / PROVVISORIO" : "CHIUSA / STORICO"
+            string fpPair = hasFootprint ? str.tostring(fpBuy, format.volume) + " / " + str.tostring(fpSell, format.volume) : "N/D"
+            string imbPair = hasFootprint ? str.tostring(fpBuyImb) + " / " + str.tostring(fpSellImb) : "N/D"
+            table.cell(panel, 0, 0, "REMURA ALL-IN-ONE", text_color=color.white, bgcolor=headBg, text_size=size.small)
+            table.cell(panel, 1, 0, "LAB v0.9", text_color=color.white, bgcolor=headBg, text_size=size.small)
+            table.cell(panel, 0, 1, "STATO", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 1, stateText, text_color=barstate.isrealtime and not barstate.isconfirmed ? color.orange : color.lime, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 0, 2, "DELTA intrabar", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 2, hasDelta ? str.tostring(deltaBar, format.volume) : "N/D", text_color=deltaColor, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 3, "DELTA footprint", text_color=color.white, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 1, 3, hasFootprint ? str.tostring(fpDelta, format.volume) : "N/D", text_color=deltaFootColor, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 4, "BUY / SELL stimati", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 4, fpPair, text_color=color.white, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 5, "DELTA / VOL %", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 5, na(fpDeltaPct) ? "N/D" : str.tostring(fpDeltaPct, "#.0") + "%", text_color=deltaFootColor, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 6, "SFORZO", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 6, hasEffort ? str.tostring(effort, "#.##") + "x" : "N/D", text_color=anomalyColor, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 7, "RISULTATO ATR", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 7, na(signedResult) ? "N/D" : str.tostring(signedResult, "#.###"), text_color=color.white, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 8, "EFFICIENZA ER", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 8, na(efficiency) ? "N/D" : str.tostring(efficiency, "#.###"), text_color=previewER ? color.fuchsia : color.white, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 9, "ANOMALIA", text_color=color.white, bgcolor=erBg, text_size=size.small)
+            table.cell(panel, 1, 9, anomalyText, text_color=anomalyColor, bgcolor=erBg, text_size=size.small)
+            table.cell(panel, 0, 10, "INTENSITA'", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 10, strengthMeter, text_color=anomalyColor, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 0, 11, "IMB BUY / SELL", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 11, imbPair, text_color=color.white, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 12, "POC footprint", text_color=color.orange, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 12, na(fpPoc) ? "N/D" : str.tostring(fpPoc, format.mintick), text_color=color.orange, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 13, "VAH 70%", text_color=color.fuchsia, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 13, na(fpVah) ? "N/D" : str.tostring(fpVah, format.mintick), text_color=color.fuchsia, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 14, "VAL 70%", text_color=color.fuchsia, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 14, na(fpVal) ? "N/D" : str.tostring(fpVal, format.mintick), text_color=color.fuchsia, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 15, "WEEK", text_color=color.aqua, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 15, na(weekPrice) ? "N/D" : str.tostring(weekPrice, format.mintick), text_color=color.aqua, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 16, "CURRENT MONTH", text_color=color.yellow, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 16, na(monthPrice) ? "N/D" : str.tostring(monthPrice, format.mintick), text_color=color.yellow, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 17, "PREVIOUS MONTH", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 17, na(previousMonthPrice) ? "N/D" : str.tostring(previousMonthPrice, format.mintick), text_color=color.silver, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 18, "DAY 1 MAX", text_color=color.fuchsia, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 18, na(array.get(dayPrices, 0)) ? "N/D" : str.tostring(array.get(dayPrices, 0), format.mintick), text_color=color.fuchsia, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 19, "DAY 2", text_color=color.orange, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 19, na(array.get(dayPrices, 1)) ? "N/D" : str.tostring(array.get(dayPrices, 1), format.mintick), text_color=color.orange, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 20, "DAY 3", text_color=color.aqua, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 20, na(array.get(dayPrices, 2)) ? "N/D" : str.tostring(array.get(dayPrices, 2), format.mintick), text_color=color.aqua, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 21, "PREVIOUS DAY", text_color=color.gray, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 21, showPrevDay and not na(previousDayPrice) ? str.tostring(previousDayPrice, format.mintick) : "N/D", text_color=color.silver, bgcolor=bg, text_size=size.small)
+            string retestInfo = "1:" + str.tostring(array.get(dayTouches, 0)) + " 2:" + str.tostring(array.get(dayTouches, 1)) + " 3:" + str.tostring(array.get(dayTouches, 2)) + " Y:" + str.tostring(previousDayTouches)
+            table.cell(panel, 0, 22, "RETEST DAY", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 22, retestInfo, text_color=dailyRetest ? color.white : color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 0, 23, showHistory ? "EVENTO #1" : "", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 23, showHistory ? event1 : "", text_color=color.white, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 0, 24, showHistory ? "EVENTO #2" : "", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 24, showHistory ? event2 : "", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 0, 25, showHistory ? "EVENTO #3" : "", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 25, showHistory ? event3 : "", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+        else if viewMode == "FOOTPRINT"
+            color bg = color.new(color.black, 20)
+            color footColor = not hasFootprint ? color.gray : fpDelta > 0 ? color.lime : fpDelta < 0 ? color.red : color.silver
+            string stateText = barstate.isrealtime and not barstate.isconfirmed ? "LIVE / PROVVISORIO" : "CHIUSA / STORICO"
+            color stateColor = barstate.isrealtime and not barstate.isconfirmed ? color.orange : color.lime
+            string imbSummary = not hasFootprint ? "N/D" : fpBuyImb > fpSellImb ? "PIU' BUY IMB" : fpSellImb > fpBuyImb ? "PIU' SELL IMB" : "IMB EQUILIBRIO"
+            table.cell(panel, 0, 0, "REMURA PREMIUM", text_color=color.white, bgcolor=color.new(color.blue, 55), text_size=size.small)
+            table.cell(panel, 1, 0, "LAB v0.9", text_color=color.white, bgcolor=color.new(color.blue, 55), text_size=size.small)
+            table.cell(panel, 0, 1, "STATO", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 1, stateText, text_color=stateColor, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 0, 2, "DATI FOOTPRINT", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 2, hasFootprint ? "PRESENTI" : "N/D", text_color=hasFootprint ? color.lime : color.orange, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 3, "BUY stimato", text_color=color.lime, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 1, 3, hasFootprint ? str.tostring(fpBuy, format.volume) : "N/D", text_color=color.lime, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 4, "SELL stimato", text_color=color.red, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 1, 4, hasFootprint ? str.tostring(fpSell, format.volume) : "N/D", text_color=color.red, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 5, "DELTA footprint", text_color=color.white, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 1, 5, hasFootprint ? str.tostring(fpDelta, format.volume) : "N/D", text_color=footColor, bgcolor=bg, text_size=size.normal)
+            table.cell(panel, 0, 6, "DELTA / VOL %", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 6, na(fpDeltaPct) ? "N/D" : str.tostring(fpDeltaPct, "#.0") + "%", text_color=footColor, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 7, "POC (centro)", text_color=color.orange, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 1, 7, na(fpPoc) ? "N/D" : str.tostring(fpPoc, format.mintick), text_color=color.orange, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 8, "VAH 70%", text_color=color.fuchsia, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 1, 8, na(fpVah) ? "N/D" : str.tostring(fpVah, format.mintick), text_color=color.fuchsia, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 9, "VAL 70%", text_color=color.fuchsia, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 1, 9, na(fpVal) ? "N/D" : str.tostring(fpVal, format.mintick), text_color=color.fuchsia, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 10, "BUY IMB / righe", text_color=color.lime, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 10, hasFootprint ? str.tostring(fpBuyImb) : "N/D", text_color=color.lime, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 11, "SELL IMB / righe", text_color=color.red, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 11, hasFootprint ? str.tostring(fpSellImb) : "N/D", text_color=color.red, bgcolor=bg, text_size=size.small)
+            table.cell(panel, 0, 12, "IMBALANCE", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 12, imbSummary, text_color=footColor, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 0, 13, "ER stimato", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 13, anomalyText, text_color=anomalyColor, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 0, 14, "SFORZO / EFF.", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+            table.cell(panel, 1, 14, (na(effort) ? "N/D" : str.tostring(effort, "#.0") + "x") + " / " + (na(efficiency) ? "N/D" : str.tostring(efficiency, "#.###")), text_color=color.white, bgcolor=bg, text_size=size.small)
+        else
+            string mode = barstate.isrealtime ? (barstate.isconfirmed ? "CHIUSA / OK" : "LIVE / PROVVISORIO") : "STORICO / CHIUSO"
+            color modeColor = barstate.isrealtime and not barstate.isconfirmed ? color.orange : color.lime
+            color base = color.new(color.black, 20)
+            color eventBg = previewER ? color.new(color.purple, 35) : previewPeak ? color.new(color.orange, 35) : base
+            table.cell(panel, 0, 0, "REMURA RADAR", text_color=color.white, bgcolor=color.new(color.blue, 55), text_size=size.small)
+            table.cell(panel, 1, 0, "LAB v0.9", text_color=color.white, bgcolor=color.new(color.blue, 55), text_size=size.small)
+            table.cell(panel, 0, 1, "STATO", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 1, 1, mode, text_color=modeColor, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 0, 2, "DELTA", text_color=color.white, bgcolor=base, text_size=size.small)
+            table.cell(panel, 1, 2, hasDelta ? str.tostring(deltaBar, format.volume) : "N/D", text_color=deltaColor, bgcolor=eventBg, text_size=size.normal)
+            table.cell(panel, 0, 3, "PRESSIONE", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 1, 3, pressureText, text_color=deltaColor, bgcolor=base, text_size=size.small)
+            table.cell(panel, 0, 4, "INTENSITA'", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 1, 4, strengthMeter, text_color=anomalyColor, bgcolor=base, text_size=size.small)
+            table.cell(panel, 0, 5, "SFORZO x", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 1, 5, hasEffort ? str.tostring(effort, "#.##") : "N/D", text_color=anomalyColor, bgcolor=base, text_size=size.small)
+            table.cell(panel, 0, 6, "RISULTATO ATR", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 1, 6, na(signedResult) ? "N/D" : str.tostring(signedResult, "#.###"), text_color=color.white, bgcolor=base, text_size=size.small)
+            table.cell(panel, 0, 7, "EFFICIENZA", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 1, 7, na(efficiency) ? "N/D" : str.tostring(efficiency, "#.###"), text_color=previewER ? color.fuchsia : color.white, bgcolor=base, text_size=size.small)
+            table.cell(panel, 0, 8, "ANOMALIA", text_color=color.white, bgcolor=eventBg, text_size=size.small)
+            table.cell(panel, 1, 8, anomalyText, text_color=anomalyColor, bgcolor=eventBg, text_size=size.small)
+            table.cell(panel, 0, 9, "WEEK", text_color=color.aqua, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 1, 9, na(weekPrice) ? "N/D" : str.tostring(weekPrice, format.mintick), text_color=color.aqua, bgcolor=base, text_size=size.small)
+            table.cell(panel, 0, 10, "CURRENT MONTH", text_color=color.yellow, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 1, 10, na(monthPrice) ? "N/D" : str.tostring(monthPrice, format.mintick), text_color=color.yellow, bgcolor=base, text_size=size.small)
+            table.cell(panel, 0, 11, "PREVIOUS MONTH", text_color=color.gray, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 1, 11, na(previousMonthPrice) ? "N/D" : str.tostring(previousMonthPrice, format.mintick), text_color=color.silver, bgcolor=base, text_size=size.small)
+            table.cell(panel, 0, 12, showHistory ? "ULTIMO #1" : "", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 1, 12, showHistory ? event1 : "", text_color=color.white, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 0, 13, showHistory ? "ULTIMO #2" : "", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 1, 13, showHistory ? event2 : "", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 0, 14, showHistory ? "ULTIMO #3" : "", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+            table.cell(panel, 1, 14, showHistory ? event3 : "", text_color=color.silver, bgcolor=base, text_size=size.tiny)
+
+
+// === CVD D0.8 PORT — research only, new revision; no merging of FX identifiers ===
+int cvd_leftBars = input.int(2, "Pivot: barre sinistre", minval=1, maxval=10)
+int cvd_rightBars = input.int(2, "Pivot: barre destre conferma", minval=1, maxval=10)
+int cvd_minDistance = input.int(3, "Separazione minima pivot", minval=1, maxval=100)
+int cvd_maxDistance = input.int(72, "Separazione massima pivot", minval=3, maxval=250)
+int cvd_warmupBars = input.int(12, "Warmup barre 5m consecutive", minval=6, maxval=250)
+int cvd_minPriceTicks = input.int(5, "Differenza minima prezzo (tick)", minval=1, maxval=1000)
+float cvd_minCvdDiff = input.float(10.0, "Differenza minima CVD (volumi feed)", minval=0.0, step=1.0)
+bool cvd_showStudyMarkers = input.bool(true, "CVD: mostra divergenze confermate (solo STUDIO)")
+
+string cvd_chartId = ticker.standard(syminfo.main_tickerid)
+// Separate feed-specific cohorts: FX:EURUSD reference, FXCM:EURUSD new pilot.
+// Never substitute one for the other.
+bool cvd_chartOk = chart.is_standard and (cvd_chartId == "FX:EURUSD" or cvd_chartId == "FXCM:EURUSD") and timeframe.isminutes and timeframe.multiplier == 5 and lowerTF == "1"
+float cvd_fxHigh = high
+float cvd_fxLow = low
+int cvd_fxTime = time
+int cvd_fxDay = time("D")
+float cvd_fxTick = syminfo.mintick
+[cvd_t1, cvd_o1, cvd_c1, cvd_v1] = request.security_lower_tf(syminfo.tickerid, "1", [time, open, close, volume], ignore_invalid_symbol=true, ignore_invalid_timeframe=true)
+bool cvd_newDay = not na(cvd_fxDay) and (na(cvd_fxDay[1]) or cvd_fxDay != cvd_fxDay[1])
+
+var float cvd_lastMinuteClose = na
+var int cvd_lastSign = 0
+var float cvd_dayCvd = 0.0
+var bool cvd_validDay = false
+var int cvd_invalidBarsToday = 0
+var int cvd_previousBarMs = na
+var int cvd_previousDayKey = na
+var bool cvd_previousBarValid = false
+var int cvd_segmentId = 0
+var int cvd_segmentBars = 0
+var float cvd_segmentCvd = 0.0
+var int cvd_latestIntraCount = 0
+var string cvd_qualityReason = "ATTESA CANDELA 5M CHIUSA"
+var float cvd_lastGoodDelta = na
+var int cvd_lastGoodCloseMs = na
+var int cvd_baseCountToday = 0
+var int cvd_cvdCountToday = 0
+var bool cvd_lastConfirmedPrevContinuous = false
+var int cvd_lastConfirmedBarCloseMs = na
+
+float cvd_complete5m = na
+float cvd_continuousPrev = na
+float cvd_rawDelta5m = na
+float cvd_trustworthyDelta5m = na
+float cvd_segmentSeries = na
+float cvd_validDaySeries = na
+float cvd_eligiblePivot = na
+int cvd_activeSegment = na
+
+if cvd_chartOk and barstate.isconfirmed
+    if cvd_newDay
+        cvd_validDay := not na(cvd_fxTime) and cvd_fxTime == cvd_fxDay
+        cvd_dayCvd := 0.0
+        cvd_invalidBarsToday := 0
+        cvd_baseCountToday := 0
+        cvd_cvdCountToday := 0
+        cvd_previousBarValid := false
+        cvd_lastMinuteClose := na
+        cvd_lastSign := 0
+
+    int n = array.size(cvd_t1)
+    cvd_latestIntraCount := n
+    bool good = true
+    string reason = "OK"
+    if na(cvd_fxTime)
+        good := false
+        reason := "PREZZI_5M_ASSENTI"
+    else if cvd_fxTime != time
+        good := false
+        reason := "TIMESTAMP_5M_ERRATO"
+    else if n != 5
+        good := false
+        reason := "INTRABAR_" + str.tostring(n) + "_SU_5"
+    else if array.size(cvd_o1) != n or array.size(cvd_c1) != n or array.size(cvd_v1) != n
+        good := false
+        reason := "ARRAY_1M_INCOERENTI"
+
+    // Context continuity is stricter than bar quality: the FIRST good bar
+    // after a gap is observable but its direction tie-break is untrusted.
+    bool continuous = good and cvd_previousBarValid and not cvd_newDay and not na(cvd_previousBarMs) and cvd_fxTime - cvd_previousBarMs == 300000 and cvd_fxDay == cvd_previousDayKey
+    cvd_complete5m := good ? 1.0 : 0.0
+    cvd_continuousPrev := good ? (continuous ? 1.0 : 0.0) : na
+
+    if not continuous
+        cvd_lastMinuteClose := na
+        cvd_lastSign := 0
+
+    float d = 0.0
+    if good
+        for i = 0 to n - 1
+            int tm = array.get(cvd_t1, i)
+            float o = array.get(cvd_o1, i)
+            float c = array.get(cvd_c1, i)
+            float v = array.get(cvd_v1, i)
+            if tm != cvd_fxTime + i * 60000
+                good := false
+                reason := "ORARIO_1M_NON_CONTIGUO"
+                break
+            if na(o) or na(c) or na(v) or v < 0
+                good := false
+                reason := "PREZZO_VOLUME_1M_ND"
+                break
+            int sign = c > o ? 1 : c < o ? -1 : na(cvd_lastMinuteClose) ? cvd_lastSign : c > cvd_lastMinuteClose ? 1 : c < cvd_lastMinuteClose ? -1 : cvd_lastSign
+            d += sign * v
+            cvd_lastMinuteClose := c
+            cvd_lastSign := sign
+
+    // If the intrabar loop fails, invalidate both quality flags.
+    if not good
+        continuous := false
+        cvd_complete5m := 0.0
+        cvd_continuousPrev := na
+        cvd_validDay := false
+        cvd_invalidBarsToday += 1
+        cvd_segmentBars := 0
+        cvd_segmentCvd := 0.0
+        cvd_lastMinuteClose := na
+        cvd_lastSign := 0
+    else
+        cvd_rawDelta5m := d
+        cvd_lastGoodDelta := d
+        cvd_lastGoodCloseMs := cvd_fxTime + 300000
+        if not continuous
+            cvd_segmentId += 1
+            cvd_segmentBars := 1
+            // Exclude first uncertain delta from clean segment cumulative:
+            // it can disagree with the native CVD after a data hole.
+            cvd_segmentCvd := 0.0
+        else
+            cvd_segmentBars += 1
+            cvd_segmentCvd += d
+            cvd_trustworthyDelta5m := d
+
+        if cvd_segmentBars >= 2
+            cvd_segmentSeries := cvd_segmentCvd
+
+        if cvd_validDay
+            cvd_dayCvd += d
+            cvd_validDaySeries := cvd_dayCvd
+
+    // This display-only snapshot belongs to the last confirmed 5m bar,
+    // not the currently developing 5m bar (whose cvd_continuousPrev is na).
+    cvd_lastConfirmedPrevContinuous := good and continuous
+    cvd_lastConfirmedBarCloseMs := na(cvd_fxTime) ? na : cvd_fxTime + 300000
+    cvd_previousBarValid := good
+    cvd_previousBarMs := cvd_fxTime
+    cvd_previousDayKey := cvd_fxDay
+    cvd_qualityReason := reason
+    cvd_activeSegment := cvd_segmentId
+    cvd_eligiblePivot := good and continuous and cvd_segmentBars >= cvd_warmupBars ? 1.0 : 0.0
+
+// The price pivot is confirmed on the current (rightmost) bar.
+// Evaluate the CVD at the SAME price-pivot candle, never search future data.
+float cvd_pricePivotLow = ta.pivotlow(cvd_fxLow, cvd_leftBars, cvd_rightBars)
+float cvd_pricePivotHigh = ta.pivothigh(cvd_fxHigh, cvd_leftBars, cvd_rightBars)
+var float cvd_previousLowPrice = na
+var float cvd_previousLowCvd = na
+var int cvd_previousLowIndex = na
+var int cvd_previousLowSeg = na
+var float cvd_previousHighPrice = na
+var float cvd_previousHighCvd = na
+var int cvd_previousHighIndex = na
+var int cvd_previousHighSeg = na
+bool cvd_bullishStudy = false
+bool cvd_bearishStudy = false
+bool cvd_bullishPriceOnly = false
+bool cvd_bearishPriceOnly = false
+
+// A candidate is allowed only after warmup, on a fully contiguous segment
+// containing both the old and new price pivots and their confirmation bars.
+if cvd_chartOk and barstate.isconfirmed and cvd_eligiblePivot == 1.0 and cvd_activeSegment == cvd_activeSegment[cvd_rightBars] and cvd_activeSegment == cvd_activeSegment[cvd_rightBars + cvd_leftBars] and cvd_eligiblePivot[cvd_rightBars] == 1.0
+    int pointIndex = bar_index - cvd_rightBars
+    float pointCvd = cvd_segmentSeries[cvd_rightBars]
+    if not na(pointCvd)
+        if not na(cvd_pricePivotLow)
+            float p = cvd_fxLow[cvd_rightBars]
+            int dist = na(cvd_previousLowIndex) ? 0 : pointIndex - cvd_previousLowIndex
+            // PRICE-ONLY reversal candidate: identical pivot, distance, extrema,
+            // warmup, segment and confirmation rules as the CVD research arm.
+            cvd_bullishPriceOnly := not na(cvd_previousLowPrice) and cvd_previousLowSeg == cvd_activeSegment and dist >= cvd_minDistance and dist <= cvd_maxDistance and p < cvd_previousLowPrice - cvd_minPriceTicks * cvd_fxTick
+            // CVD is the only ADDITIONAL filter. This must be a subset.
+            cvd_bullishStudy := cvd_bullishPriceOnly and pointCvd > cvd_previousLowCvd + cvd_minCvdDiff
+            cvd_previousLowPrice := p
+            cvd_previousLowCvd := pointCvd
+            cvd_previousLowIndex := pointIndex
+            cvd_previousLowSeg := cvd_activeSegment
+        if not na(cvd_pricePivotHigh)
+            float p = cvd_fxHigh[cvd_rightBars]
+            int dist = na(cvd_previousHighIndex) ? 0 : pointIndex - cvd_previousHighIndex
+            cvd_bearishPriceOnly := not na(cvd_previousHighPrice) and cvd_previousHighSeg == cvd_activeSegment and dist >= cvd_minDistance and dist <= cvd_maxDistance and p > cvd_previousHighPrice + cvd_minPriceTicks * cvd_fxTick
+            cvd_bearishStudy := cvd_bearishPriceOnly and pointCvd < cvd_previousHighCvd - cvd_minCvdDiff
+            cvd_previousHighPrice := p
+            cvd_previousHighCvd := pointCvd
+            cvd_previousHighIndex := pointIndex
+            cvd_previousHighSeg := cvd_activeSegment
+
+    // Count confirmed events only, never the current unfinished 5m bar.
+    if cvd_bullishPriceOnly or cvd_bearishPriceOnly
+        cvd_baseCountToday += 1
+    if cvd_bullishStudy or cvd_bearishStudy
+        cvd_cvdCountToday += 1
+
+
+plot(deltaBar, "Delta stimato", display=display.data_window)
+plot(effort, "Sforzo relativo (x)", display=display.data_window)
+plot(signedResult, "Risultato orientato al delta (ATR)", display=display.data_window)
+plot(efficiency, "Efficienza ER", display=display.data_window)
+// Mark at CONFIRMATION bar, not at historical pivot. No future-offset labels.
+plotshape(cvd_showStudyMarkers and cvd_bullishStudy, title="CVD DIV+ confermata STUDY", style=shape.triangleup, location=location.belowbar, color=color.teal, size=size.small, text="CV+")
+plotshape(cvd_showStudyMarkers and cvd_bearishStudy, title="CVD DIV- confermata STUDY", style=shape.triangledown, location=location.abovebar, color=color.red, size=size.small, text="CV-")
+plot(cvd_validDaySeries, "CVD GIORNALIERO INTEGRO", display=display.data_window)
+plot(cvd_segmentSeries, "CVD SEGMENTO PARZIALE", display=display.data_window)
+plot(cvd_rawDelta5m, "CVD_DELTA_5M_GREZZO", display=display.data_window)
+plot(cvd_trustworthyDelta5m, "CVD_DELTA_5M_CONTINUO", display=display.data_window)
+plot(cvd_chartOk and not na(cvd_trustworthyDelta5m) and not na(deltaBar) ? cvd_trustworthyDelta5m - deltaBar : na, "CVD_DELTA_MENO_DELTA_NATIVO", display=display.data_window)
+plot(cvd_complete5m, "CVD_QUALITA_5M", display=display.data_window)
+plot(cvd_continuousPrev, "CVD_CONTINUITA_5M", display=display.data_window)
+plot(cvd_eligiblePivot, "CVD_ELIGIBILE", display=display.data_window)
+plot(cvd_chartOk and barstate.isconfirmed ? (cvd_bullishStudy ? 1.0 : 0.0) : na, "CVD_STUDIO_RIALZISTA", display=display.data_window)
+plot(cvd_chartOk and barstate.isconfirmed ? (cvd_bearishStudy ? 1.0 : 0.0) : na, "CVD_STUDIO_RIBASSISTA", display=display.data_window)
+plot(cvd_chartOk and barstate.isconfirmed ? (cvd_bullishPriceOnly ? 1.0 : 0.0) : na, "CVD_BASELINE_PREZZO_RIALZISTA", display=display.data_window)
+plot(cvd_chartOk and barstate.isconfirmed ? (cvd_bearishPriceOnly ? 1.0 : 0.0) : na, "CVD_BASELINE_PREZZO_RIBASSISTA", display=display.data_window)
+// Separate diagnostics: values are last confirmed bar only.
+bool showCvdPanel = input.bool(true, "CVD: pannello diagnostico")
+var table cvdPanel = table.new(position.bottom_left, 2, 6, border_width=1)
+if barstate.islast and showCvdPanel
+    table.cell(cvdPanel, 0, 0, "CVD LAB v0.9", text_color=color.white, bgcolor=color.new(color.blue, 50))
+    table.cell(cvdPanel, 1, 0, cvd_chartId, text_color=color.white, bgcolor=color.new(color.blue, 50))
+    table.cell(cvdPanel, 0, 1, "QUALITA' M1", text_color=color.white, bgcolor=color.new(color.black, 15))
+    table.cell(cvdPanel, 1, 1, cvd_chartOk ? str.tostring(cvd_latestIntraCount) + "/5 | " + cvd_qualityReason : "SOLO EURUSD M5 STANDARD / M1", text_color=color.yellow, bgcolor=color.new(color.black, 15))
+    table.cell(cvdPanel, 0, 2, "CONTINUITA'", text_color=color.white, bgcolor=color.new(color.black, 15))
+    table.cell(cvdPanel, 1, 2, cvd_chartOk and cvd_lastConfirmedPrevContinuous ? "CONTINUO" : "N/D", text_color=color.aqua, bgcolor=color.new(color.black, 15))
+    table.cell(cvdPanel, 0, 3, "CVD GIORNO", text_color=color.white, bgcolor=color.new(color.black, 15))
+    table.cell(cvdPanel, 1, 3, cvd_chartOk and cvd_validDay ? str.tostring(cvd_dayCvd, format.volume) : "PARZIALE", text_color=color.yellow, bgcolor=color.new(color.black, 15))
+    table.cell(cvdPanel, 0, 4, "SEGMENTO", text_color=color.white, bgcolor=color.new(color.black, 15))
+    table.cell(cvdPanel, 1, 4, cvd_chartOk and cvd_segmentBars >= 2 ? str.tostring(cvd_segmentCvd, format.volume) + " | " + str.tostring(cvd_segmentBars) + " barre" : "N/D", text_color=color.aqua, bgcolor=color.new(color.black, 15))
+    table.cell(cvdPanel, 0, 5, "PREZZO / CVD", text_color=color.white, bgcolor=color.new(color.black, 15))
+    table.cell(cvdPanel, 1, 5, cvd_chartOk ? str.tostring(cvd_baseCountToday) + " / " + str.tostring(cvd_cvdCountToday) : "N/D", text_color=color.yellow, bgcolor=color.new(color.black, 15))

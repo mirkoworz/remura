@@ -1,0 +1,53 @@
+# REMURA WORKER METADATA READ-ONLY v0.8.18 — 13/11/2026, ore 13:54 CET
+# Once per targeted research change. No schedule, no deploy, no webhook/SQL.
+name: REMURA Cloudflare Worker Settings GET LAB
+
+on:
+  push:
+    branches:
+      - research/tradingview-delta-peaks-20261111
+    paths:
+      - ".github/workflows/remura-tv-worker-settings-readonly.yml"
+      - "tradingview/delta-peaks/gateway-lab/worker_metadata_probe_v1.py"
+      - "tradingview/delta-peaks/gateway-lab/test_worker_metadata_probe_v1.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: remura-tv-worker-metadata-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  worker-settings-get:
+    if: github.repository == 'mirkoworz/remura' && github.ref == 'refs/heads/research/tradingview-delta-peaks-20261111'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Checkout safe branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Offline scope and redaction tests
+        run: |
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_worker_metadata_probe_v1.py' -v
+          python3 -m py_compile tradingview/delta-peaks/gateway-lab/worker_metadata_probe_v1.py
+      - name: One authenticated GET worker settings using existing READ token
+        env:
+          REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+          REMURA_CF_D1_READ_TOKEN: ${{ secrets.REMURA_CF_D1_READ_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/worker_metadata_probe_v1.py             | tee "$RUNNER_TEMP/remura-worker-status.txt"
+          {
+            echo "## REMURA v0.8.18 - Worker metadata GET only"
+            echo ""
+            echo "Classification only. A green job does not prove Worker is secured or disabled."
+            echo '~~~text'
+            cat "$RUNNER_TEMP/remura-worker-status.txt"
+            echo '~~~'
+            echo ""
+            echo "No deploy, HTTP webhook, database query, raw binding values or secrets."
+          } >> "$GITHUB_STEP_SUMMARY"

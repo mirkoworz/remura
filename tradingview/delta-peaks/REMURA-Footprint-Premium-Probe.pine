@@ -1,0 +1,84 @@
+//@version=6
+// REMURA Footprint Premium PROBE v0.1
+// Aggiornamento: 11/11/2026 11:58 CET
+// Laboratorio indipendente: nessun ordine, segnale BUY/SELL o dato CME certificato.
+// Richiede piano TradingView Premium/Ultimate; non sostituisce REMURA Radar v0.4.
+indicator("REMURA Footprint Premium PROBE v0.1 - 11/11/2026", overlay=true)
+
+// Dimensione delle righe: su EURUSD con mintick 0.00001, 10 tick = 1 pip.
+ticksPerRow = input.int(10, "Tick per riga del footprint", minval=1)
+imbalancePct = input.float(300.0, "Sbilanciamento richiesto (%)", minval=100.0, step=25.0)
+showPocDots = input.bool(false, "Mostra POC di ogni candela")
+showPanel = input.bool(true, "Mostra tabella Premium")
+
+// UNA SOLA request.footprint(): vincolo esplicito della documentazione Pine.
+footprint fp = request.footprint(ticksPerRow, va_percent=70, imbalance_percent=imbalancePct)
+bool available = not na(fp)
+float buyVol = available ? fp.buy_volume() : na
+float sellVol = available ? fp.sell_volume() : na
+float deltaVol = available ? fp.delta() : na
+float totalVol = available ? fp.total_volume() : na
+
+float pocMid = na
+float vahPrice = na
+float valPrice = na
+int countBuyImb = 0
+int countSellImb = 0
+
+if available
+    volume_row pocRow = fp.poc()
+    volume_row vahRow = fp.vah()
+    volume_row valRow = fp.val()
+    // Prezzo rappresentativo del POC: centro dell'intervallo della riga.
+    pocMid := math.avg(pocRow.up_price(), pocRow.down_price())
+    vahPrice := vahRow.up_price()
+    valPrice := valRow.down_price()
+    for row in fp.rows()
+        if row.has_buy_imbalance()
+            countBuyImb += 1
+        if row.has_sell_imbalance()
+            countSellImb += 1
+
+// Diagnostica, non sono prezzi di ingresso. POC sul grafico opzionale.
+plot(showPocDots ? pocMid : na, "Footprint POC (centro riga)", color=color.orange, linewidth=2, style=plot.style_circles)
+plot(deltaVol, "Delta Footprint Premium", display=display.data_window)
+plot(buyVol, "Buy volume classificato", display=display.data_window)
+plot(sellVol, "Sell volume classificato", display=display.data_window)
+
+// Dashboard leggera: aggiornamento durante la candela, senza alert automatici.
+var table t = table.new(position.top_left, 2, 12, border_width=1)
+if barstate.islast
+    if not showPanel
+        table.clear(t, 0, 0, 1, 11)
+    else
+        color bg = color.new(color.black, 15)
+        color positiveColor = color.lime
+        color negativeColor = color.red
+        color dColor = na(deltaVol) ? color.gray : deltaVol > 0 ? positiveColor : deltaVol < 0 ? negativeColor : color.silver
+        string barMode = barstate.isrealtime and not barstate.isconfirmed ? "LIVE / PROVVISORIO" : "CHIUSA / STORICO"
+        string availabilityText = available ? "DATI PRESENTI" : "N/D - NO FOOTPRINT"
+        string domText = not available ? "N/D" : countBuyImb > countSellImb ? "PIU' BUY IMB" : countSellImb > countBuyImb ? "PIU' SELL IMB" : "EQUILIBRIO IMB"
+        table.cell(t, 0, 0, "REMURA FOOTPRINT", text_color=color.white, bgcolor=color.new(color.blue, 55), text_size=size.small)
+        table.cell(t, 1, 0, "PREMIUM v0.1", text_color=color.white, bgcolor=color.new(color.blue, 55), text_size=size.small)
+        table.cell(t, 0, 1, "STATO", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+        table.cell(t, 1, 1, barMode, text_color=barstate.isrealtime and not barstate.isconfirmed ? color.orange : color.lime, bgcolor=bg, text_size=size.tiny)
+        table.cell(t, 0, 2, "DATI", text_color=color.silver, bgcolor=bg, text_size=size.tiny)
+        table.cell(t, 1, 2, availabilityText, text_color=available ? color.lime : color.orange, bgcolor=bg, text_size=size.small)
+        table.cell(t, 0, 3, "BUY stimato", text_color=color.silver, bgcolor=bg, text_size=size.small)
+        table.cell(t, 1, 3, available ? str.tostring(buyVol, format.volume) : "N/D", text_color=color.lime, bgcolor=bg, text_size=size.small)
+        table.cell(t, 0, 4, "SELL stimato", text_color=color.silver, bgcolor=bg, text_size=size.small)
+        table.cell(t, 1, 4, available ? str.tostring(sellVol, format.volume) : "N/D", text_color=color.red, bgcolor=bg, text_size=size.small)
+        table.cell(t, 0, 5, "DELTA footprint", text_color=color.white, bgcolor=bg, text_size=size.small)
+        table.cell(t, 1, 5, available ? str.tostring(deltaVol, format.volume) : "N/D", text_color=dColor, bgcolor=bg, text_size=size.normal)
+        table.cell(t, 0, 6, "POC (centro riga)", text_color=color.orange, bgcolor=bg, text_size=size.tiny)
+        table.cell(t, 1, 6, na(pocMid) ? "N/D" : str.tostring(pocMid, format.mintick), text_color=color.orange, bgcolor=bg, text_size=size.small)
+        table.cell(t, 0, 7, "VAH (70%)", text_color=color.fuchsia, bgcolor=bg, text_size=size.tiny)
+        table.cell(t, 1, 7, na(vahPrice) ? "N/D" : str.tostring(vahPrice, format.mintick), text_color=color.fuchsia, bgcolor=bg, text_size=size.small)
+        table.cell(t, 0, 8, "VAL (70%)", text_color=color.fuchsia, bgcolor=bg, text_size=size.tiny)
+        table.cell(t, 1, 8, na(valPrice) ? "N/D" : str.tostring(valPrice, format.mintick), text_color=color.fuchsia, bgcolor=bg, text_size=size.small)
+        table.cell(t, 0, 9, "BUY IMB (righe)", text_color=color.lime, bgcolor=bg, text_size=size.tiny)
+        table.cell(t, 1, 9, available ? str.tostring(countBuyImb) : "N/D", text_color=color.lime, bgcolor=bg, text_size=size.small)
+        table.cell(t, 0, 10, "SELL IMB (righe)", text_color=color.red, bgcolor=bg, text_size=size.tiny)
+        table.cell(t, 1, 10, available ? str.tostring(countSellImb) : "N/D", text_color=color.red, bgcolor=bg, text_size=size.small)
+        table.cell(t, 0, 11, "LETTURA", text_color=color.white, bgcolor=bg, text_size=size.tiny)
+        table.cell(t, 1, 11, domText, text_color=color.silver, bgcolor=bg, text_size=size.tiny)
