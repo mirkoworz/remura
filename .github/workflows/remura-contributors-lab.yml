@@ -1,4 +1,4 @@
-# REMURA Contributors v0.1 LAB — 14/11/2026 23:16 CET
+# REMURA Contributors v0.2 LAB — 14/11/2026 23:21 CET
 name: REMURA Contributors LAB
 on:
   pull_request:
@@ -17,3 +17,6 @@ jobs:
           persist-credentials: false
       - name: Synthetic intake only
         run: python3 -m unittest discover -s research/contributors -p 'test_*.py' -v
+
+      - name: Offline mobile demo checks
+        run: node research/contributors/test_demo.cjs
