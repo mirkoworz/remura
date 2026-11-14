@@ -328,3 +328,53 @@ test("isolated TEST Worker can remain OFF with all other bindings configured", a
   const health = await gateway.fetch(new Request("https://example.invalid/health"), e);
   assert.equal((await health.json()).accepting, false);
 });
+
+test("weekend BTCUSDT transport only: fixed UTC bounds, never FX prospective", () => {
+  const start = Date.UTC(2026, 10, 14), end = Date.UTC(2026, 10, 16);
+  for (const at of [start, start + 60000, end - 1]) {
+    const p = sample(at - 5000);
+    p.symbol = "BINANCE:BTCUSDT"; p.feed = "BINANCE";
+    const s = validateSnapshot(p, at);
+    assert.equal(s.symbol, p.symbol);
+    assert.equal(s.timely, false);
+    assert.match(s.key, /^BINANCE:BTCUSDT\|/);
+  }
+  for (const at of [start - 1, end, end + 60000]) {
+    const p = sample(at - 5000);
+    p.symbol = "BINANCE:BTCUSDT"; p.feed = "BINANCE";
+    assert.throws(() => validateSnapshot(p, at), /pilot_feed_or_timeframe/);
+    assert.equal(validateSnapshot(sample(at - 5000), at).timely, true);
+  }
+});
+test("BTC weekend still rejects other venues, quote currencies and timeframes", () => {
+  const at = Date.UTC(2026, 10, 14, 10);
+  for (const [symbol, feed, tf] of [
+    ["BINANCE:BTCUSD","BINANCE","5"], ["BINANCE:BTCUSDT.P","BINANCE","5"],
+    ["COINBASE:BTCUSDT","COINBASE","5"], ["BINANCE:BTCUSDT","FXCM","5"],
+    ["BINANCE:BTCUSDT","BINANCE","1"]]) {
+    const p = sample(at - 5000);
+    p.symbol = symbol; p.feed = feed; p.timeframe = tf;
+    assert.throws(() => validateSnapshot(p, at), /pilot_feed_or_timeframe/);
+  }
+});
+test("BTC authenticated transport stores separate row, no prospective eligibility, dedupes", async () => {
+  const at = Date.UTC(2026, 10, 14, 10);
+  const originalNow = Date.now;
+  Date.now = () => at;
+  try {
+    const e = await env(), p = sample(at - 5000);
+    p.symbol = "BINANCE:BTCUSDT"; p.feed = "BINANCE";
+    assert.equal((await send(e,p,{ip:"203.0.113.2"})).status,403);
+    const first = await send(e,p), second = await send(e,p);
+    assert.equal(first.status,200);
+    assert.equal(first.body.timely_for_prospective,false);
+    assert.equal(second.body.status,"duplicate");
+    assert.equal(e.TELEMETRY_DB.rows.size,1);
+    const row = [...e.TELEMETRY_DB.rows.values()][0];
+    assert.equal(row.symbol,"BINANCE:BTCUSDT");
+    assert.equal(row.is_timely,0);
+    assert.equal((await send(e,sample(at - 5000))).status,200);
+    assert.equal(e.TELEMETRY_DB.rows.size,2);
+    assert.equal(e.INGEST_RATE_LIMITER.calls,3);
+  } finally { Date.now = originalNow; }
+});
