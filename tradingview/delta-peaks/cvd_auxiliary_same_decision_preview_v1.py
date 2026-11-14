@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# REMURA v0.8.73 LAB — 14/11/2026 17:04 CET
+# REMURA v0.8.74 LAB — 14/11/2026 17:06 CET
 """Narrow exact-document cTrader and original retail pin association.
 Use original B local audited pairs, no aggregate-to-individual inference.
 Earlier prefix-only cTrader is UNKNOWN here, not a negative class.
@@ -86,6 +86,9 @@ def audit(core,private,cvd_rows,*,as_of_utc,days=1,secret=None,retail_root=None,
     fx=[p for p in pairs if p[0]=="EURUSD"]
     if len(fx)>MAX_PAIRS:
         raise ValueError("auxiliary_pair_cap")
+    identities={(p[0],p[1],utc(p[2]),utc(p[3])) for p in fx}
+    if len(identities)!=len(fx):
+        raise ValueError("duplicate_auxiliary_pair")
     events=None if private is None else exact_events(private,earliest=cutoff-timedelta(days=days,minutes=90),cutoff=cutoff,secret=secret)
     counts=Counter(); matrix=Counter()
     for pair in fx:
@@ -109,7 +112,7 @@ def audit(core,private,cvd_rows,*,as_of_utc,days=1,secret=None,retail_root=None,
         matrix["TV_"+tv_dir+"|CT_"+ct+"|RETAIL_"+retail]+=1
     if sum(matrix.values())!=len(fx):
         raise ValueError("matrix_denominator")
-    return {"schema":"remura.tv.auxiliary.same.decision.preview.v1","version":"0.8.73-lab",
+    return {"schema":"remura.tv.auxiliary.same.decision.preview.v1","version":"0.8.74-lab",
             "status":"LOCAL_ASSOCIATIONS_ONLY" if n is not None else "B_PROOFS_UNAVAILABLE",
             "b_local_pairs":n,"eurusd_pairs":len(fx) if n is not None else None,
             "counts":dict(sorted(counts.items())),"matrix":dict(sorted(matrix.items())),

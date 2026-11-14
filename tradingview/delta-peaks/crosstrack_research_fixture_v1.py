@@ -74,7 +74,7 @@ def run_aux():
         for db in (t.main,t.private): db.execute("PRAGMA query_only=ON")
         before=(t.main.total_changes,t.private.total_changes)
         r=audit(t.main,t.private,[],as_of_utc=iso(NOW+timedelta(seconds=5)),secret=SECRET)
-        assert r["counts"]["CT_EXACT_ALIGNED"]==1 and r["counts"]["TV_BEFORE_CVD_DEPLOYMENT"]==1
+        assert r["counts"]["CT_EXACT_ALIGNED"]==1 and r["counts"]["TV_B_CLOCK_OUTSIDE_TV_HANDOFF"]==1
         assert r["counts"]["RETAIL_UNKNOWN"]==1
         assert "ALL_LOCAL_PROOF_TYPES_SAME_B_DECISION" not in r["counts"]
         assert before==(t.main.total_changes,t.private.total_changes)

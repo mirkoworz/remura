@@ -1,7 +1,11 @@
-# REMURA TradingView — ROADMAP v0.8.73-lab (fonti ausiliarie per decisione)
-**Aggiornamento 14/11/2026 17:04 CET — fonti ausiliarie per decisione**
+# REMURA TradingView — ROADMAP v0.8.74-lab (regressione clock B)
+**Aggiornamento 14/11/2026 17:06 CET — correzione fixture clock B**
 **PR #102 DRAFT/OPEN — deploy TEST autorizzato riuscito, produzione e ordini esclusi.**
 
+## CHECKPOINT v0.8.74 — REGRESSIONE CLOCK B
+- [x] v0.8.73: 237 unit test OK; CI cross-track 43613656660 fallita perché fixture CT ha observation 11:16 rispetto a close 11:00; la guardia corretta è B_CLOCK_OUTSIDE_TV_HANDOFF prima di verificare pre-deploy. Corretto solo il risultato atteso del fixture; nessun allargamento del clock. Aggiunta guardia duplicati identità B.
+- [ ] CI v0.8.74 da verificare. Nessuna modifica B, main, produzione, letture reali o segnali.
+ 
 ## CHECKPOINT v0.8.73 — FONTI AUSILIARIE PER DECISIONE B
 - [x] v0.8.72 CI 43613121718 SUCCESS 232 test, dry-run 43613121699 SUCCESS; workflow fold main 0be663d19781b043a9edb039bd6dc785f3d3aeb5 pin 7cc9e7bc6f2f4fc5c395d5ac9ef5126bffe05353, commento 6880237795.
 - [x] cvd_auxiliary_same_decision_preview_v1: separato adapter offline, usa sink B COT/OHLC audit, exact cTrader HMAC source.match + chronology e trigger, retail original pin via B reconcile in lab isolato (lock locale), TV exact close as-of. Solo 20 coppie EURUSD e 1000 eventi CT per run, niente selezione retroattiva; core/private query_only e snapshot caller. Matrice aggregata e conteggi sullo stesso identificativo B, no raw o segreti; tier CT prefix precedente non incluso, retail direzione non usata, unknown non classe negativa. Cross-DB non atomico, clocks locali, nessuna prova di uso retail originale o edge.
