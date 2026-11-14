@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# REMURA v0.8.48 LAB — 14/11/2026 09:38 CET
+# REMURA v0.8.49 LAB — 14/11/2026 10:02 CET
 """Bounded diagnostic BTC pilot read: TEST D1 only, aggregate output only.
 No writes, exports, trading decisions, production access or FX research.
 """
@@ -20,8 +20,9 @@ from d1_test_target_preflight_v1 import MAIN_DB, TEST_DB, inspect_verified_inven
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from volume_features_v1 import analyze_export, BTC_START, BTC_END, M5
 from remura_tv_bridge_preview_v1 import EXPECTED_COLUMNS
+from volume_sequence_v1 import sequential_diagnostics
 
-VERSION = "0.8.48-lab"
+VERSION = "0.8.49-lab"
 SYMBOL = "BINANCE:BTCUSDT"
 FIRST_CLOSE = BTC_START + (7 * 60 + 10) * 60_000
 MAX_SLOTS = 72
@@ -105,6 +106,7 @@ def aggregate(payload, start, end, now_ms):
         "missing_field_counts": dict(sorted(missing.items())),
         "diagnostic_check_counts": {k: dict(sorted(v.items())) for k,v in sorted(checks.items())},
         "diagnostic_tolerances": "PROVISIONAL_NOT_CALIBRATED",
+        "sequence_diagnostics": sequential_diagnostics(observations),
         "target": "EU_D1_TEST_ONLY", "cohort": "BTC_TRANSPORT_ONLY",
         "raw_json_logged": False, "signal_validation": "NOT_PERFORMED",
         "orders_enabled": False,
