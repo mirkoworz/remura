@@ -26,6 +26,15 @@ class ReaderTests(unittest.TestCase):
         self.assertEqual(r["delta_exact_matches"],1)
         self.assertFalse(r["scientific_admission"])
         self.assertFalse(r["raw_json_logged"])
+    def test_cvd_window_uses_actual_deployment_not_btc_expiry(self):
+        start=m.utc_ms("2026-11-14T12:40Z")
+        m.check_window(start,start,start+120000)
+        sunday=m.utc_ms("2026-11-15T22:05Z")
+        m.check_window(sunday,sunday,sunday+120000)
+        with self.assertRaises(m.AuditError):
+            m.check_window(start-m.M5,start,start+120000)
+        with self.assertRaises(m.AuditError):
+            m.check_window(start,start,start+119999)
     def test_empty(self):
         self.assertEqual(run([])["status"],"NO_MATCHING_ROWS")
     def test_invalid(self):

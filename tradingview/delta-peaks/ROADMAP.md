@@ -1,6 +1,12 @@
-# REMURA TradingView — ROADMAP v0.8.65-lab (transition retry safe isolation)
-**Aggiornamento 14/11/2026 CET — CI v0.8.65 verde, workflow TEST corretto**
-**PR #102 DRAFT/OPEN — nessun merge, nessun nuovo deploy, nessun ordine.**
+# REMURA TradingView — ROADMAP v0.8.66-lab (CVD TEST deployed)
+**Aggiornamento 14/11/2026 — deploy verificato alle 13:36 CET**
+**PR #102 DRAFT/OPEN — deploy TEST autorizzato riuscito, produzione e ordini esclusi.**
+
+## CHECKPOINT v0.8.66 — GATEWAY CVD TEST DISTRIBUITO
+- [x] Owner run #43595646049, job 132449430228 SUCCESS, precheck e postcheck SETTINGS_VERIFIED, Wrangler version d237bb64-aab8-4cb2-8680-d692fe73cd5a 14/11/2026 12:36:36 UTC. TEST ON + CVD_TRUE, binding D1 TEST EU e limiter/secret name verificati. Nessuna modifica produzione o D1 schema. Correzione v0.8.65 riuscita, causa iniziale specifica resta ipotesi. Edge e nuova ricezione non ancora provati.
+- [x] Nuovo runbook [PILOT-CVD-EURUSD-RUNBOOK.md](PILOT-CVD-EURUSD-RUNBOOK.md). Preparare alert v0.9.1 su FX:EURUSD M5, input telemetria ON e config congelata, Any alert() function call, stesso URL TEST privato, senza toccare BTC. Mercato chiuso; prima ricezione solo a chiusura realtime effettiva.
+- [x] Adeguato reader CVD: limite inferiore prima chiusura M5 dopo deploy (14/11 12:40 UTC), non più cutoff BTC. 1 nuovo test include finestra domenicale pre-cutoff e maturazione; CI da verificare, poi aggiornare pin del workflow di lettura CVD. Il ricevitore distribuito resta invariato.
+- [ ] Stop BTC domenica sera precedente cutoff. Prima prova CVD reale alla riapertura, nessuna inferenza di edge. Quote effettive da misurare. Nessuna ulteriore mutazione remota in questo checkpoint.
 
 ## CHECKPOINT v0.8.65 — RETRY PRONTO
 - [x] CI #43592771886 SUCCESS (190 test Python principali); dry-run #43592771885 e #43592767761 SUCCESS, marker REMURA_CVD_TRANSITION=COMPILED_CANDIDATE_AND_ROLLBACK_SYNTHETIC_ONLY. Verificato isolamento copia e integrità dei bundle su fixture.

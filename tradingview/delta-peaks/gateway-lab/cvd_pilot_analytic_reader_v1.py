@@ -1,15 +1,24 @@
 #!/usr/bin/env python3
-# REMURA v0.8.61 LAB — 14/11/2026 CET
+# REMURA v0.8.66 LAB — 14/11/2026 CET
 """Dedicated CVD TEST reader; no order calls, writes, raw payload or prices in logs."""
 import json
 from collections import Counter,defaultdict
 from urllib.parse import quote
-from fx_pilot_analytic_reader_v1 import check_window, LIMIT, M5
+from fx_pilot_analytic_reader_v1 import LIMIT, M5, MAX_SLOTS, utc_ms
 from cloudflare_d1_readonly_audit import AuditError,api_request,require_account_id,require_account_token
 from d1_test_target_preflight_v1 import MAIN_DB, TEST_DB,inspect_verified_inventory
 from cvd_telemetry_preview_v1 import validate,VERSION,SYMBOL
 from remura_tv_bridge_preview_v1 import EXPECTED_COLUMNS
 from volume_quality_v1 import diagnose
+
+# First aligned M5 close after actual successful TEST deployment at 12:36:36 UTC.
+MIN_CLOSE_MS=utc_ms("2026-11-14T12:40Z")
+
+def check_window(start,end,now):
+    if (any(type(x) is not int for x in (start,end,now)) or start<MIN_CLOSE_MS
+        or start%M5 or end%M5 or start>end or end-start>=MAX_SLOTS*M5
+        or end+120000>now):
+        raise AuditError("invalid_mature_cvd_window")
 
 SQL=("SELECT event_key, received_at_ms, bar_close_ms, symbol, timeframe, event_type, version, is_timely, raw_json "
      "FROM tv_flow_events WHERE symbol = ? AND timeframe = ? AND version = ? "
@@ -69,7 +78,7 @@ def aggregate(response,start,end,now):
     status=("INVALID_OR_CONFLICTING_ROWS" if counts["invalid_rows"] or counts["conflicted_bars"] else
             "NO_MATCHING_ROWS" if not rows else "COMPLETE_REQUESTED_WINDOW" if len(valid)==expected
             else "INCOMPLETE_REQUESTED_WINDOW")
-    return {"schema":"remura.tv.cvd.test.aggregate.preview.v1","version":"0.8.61-lab",
+    return {"schema":"remura.tv.cvd.test.aggregate.preview.v1","version":"0.8.66-lab",
             "status":status,"symbol":SYMBOL,"window_start_ms":start,"window_end_ms":end,
             "requested_slots":expected,"valid_unique_bars":len(valid),"missing_requested_slots":expected-len(valid),
             "coverage_basis":"REQUESTED_SLOTS_NOT_MARKET_CALENDAR","row_counts":dict(counts),
