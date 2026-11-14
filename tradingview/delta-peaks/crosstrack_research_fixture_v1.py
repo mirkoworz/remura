@@ -34,6 +34,11 @@ def run():
         assert r["b_local_pairs"]==1 and r["pair_counts"]=={"DESCRIPTIVE_CANDIDATE_ONLY":1},r["pair_counts"]
         assert r["relations"]["cot_vs_intrabar_delta"]=={"ALIGNED":1}
         assert db.total_changes==before
+        # Real pinned B proof fixture predates the TEST CVD deployment:
+        # ensure it cannot be backfilled by the new adapter.
+        cvd=dossier(db,rows,as_of_utc=iso(now+timedelta(seconds=3)),origin="SYNTHETIC",cvd_rows=[])
+        assert cvd["tv_cvd_join"]["pair_counts"]=={"BEFORE_CVD_DEPLOYMENT":1}
+        assert db.total_changes==before
         assert not r["predictive_admission"] and not notification_preview(r)["sent"]
         page=render(r)
         assert "DATI SINTETICI" in page and "PRIVATE_FAKE_BROKER_IDENTIFIER" not in page

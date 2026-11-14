@@ -1,12 +1,19 @@
-# REMURA TradingView — ROADMAP v0.8.68-lab (CVD radar e archivio offline)
-**Aggiornamento 14/11/2026 16:46 CET — radar e archivio offline**
+# REMURA TradingView — ROADMAP v0.8.69-lab (raccordo CVD SQUALINCOME)
+**Aggiornamento 14/11/2026 CET — raccordo CVD causale e dashboard**
 **PR #102 DRAFT/OPEN — deploy TEST autorizzato riuscito, produzione e ordini esclusi.**
+
+## CHECKPOINT v0.8.69 — CVD E SQUALINCOME PREVIEW
+- [x] v0.8.68: CI 43612132691 e dry-run 43612132655 SUCCESS, 203 test principali, 7/7 nuovi; pin reader main 9e24c20f3f3a069c20c8e75c19e6ba9197d3124d, commit ffdb25220942717ea22388ec3cce1d0bb3877594. Chiusura anche in commento PR 6880059718.
+- [x] cvd_squalincome_asof_preview_v1: usa coppie B locali dal sink audit esistente; exact close M15/M5, ricezione <= decisione e 120s, guardia pre-deploy, no fallback, doppioni esatti/conflict as-of, blocco REVIEW/ambiguità/non eligible. COT vs sola direzione candidata CVD selezionata; nessun peso, ER non direzionale, nessuna equivalenza prezzo FX/FXCM. CVD cTrader e sentiment same-decision restano UNKNOWN.
+- [x] Dossier e dashboard esistenti estesi opzionalmente, denominatori B per FX/FXCM separati e non sommabili, motivazioni aggregate e notice id deterministico, no invio, no raw. 8 nuovi test sintetici e regressione fixture B pin pre-deploy (nessun backfill).
+- [ ] CI v0.8.69 da verificare. Prossimo export privato e confronto non-overlap dei filtri; prima ricezione CVD e costi effettivi non verificati, edge non dimostrato. Nessun deploy o variazione alert. PR #102 DRAFT.
 
 ## CHECKPOINT v0.8.68 — RADAR E ARCHIVIO OFFLINE
 - [x] v0.8.67 CI #43605796330 SUCCESS: 196 test principali, tutti 5 nuovi outcome OK da log job 132480034715; dry-run #43605796313 SUCCESS. Main reader pin 1571b23880dac8e646254b8caa3f4641daea9ef8, commit 9cf293b1c45650b438e2c52cb478a88d4c9f71a2, header 16:46 CET; nessun avvio owner-only.
 - [x] cvd_radar_preview_v1: per-bar causal as-of, ER non direzionale, delta/footprint/CVD coerenza di segno non uguaglianza, prossimità ATR e touch solo livelli disponibili ad apertura, contesto UTC e range ATR. REVIEW e ambiguità bloccano ipotesi. Nessun peso probabilistico o segnale operativo. Reader TEST aggiunge soli conteggi aggregati.
 - [x] cvd_archive_preview_v1: assemblaggio offline di finestre esplicite ordinate disgiunte <=72 slot, cap 10000 righe/slot, verifica schema/identità/tempo, dedup esatto, conflitto blocca, nessun riempimento, outcome ricalcolati sul totale (non media report spezzati). Nessun export reale o attestazione origine; manca ancora trasporto privato delle finestre.
-- [ ] CI v0.8.68 da verificare (7 nuovi test sintetici), pin reader solo dopo verde. Poi integrazione research dashboard/SQUALINCOME preview con feed FX separato, fonte e receipt time, confronto fuori campione (D0.8 precedente -0.6680 pip), controllo overlap/costi, verifica quote effettive e prima ricezione CVD. Nessun deploy o modifica produzione.
+- [x] CI v0.8.68 e pin verificati nel checkpoint v0.8.69.
+- [ ] Poi integrazione research dashboard/SQUALINCOME preview con feed FX separato, fonte e receipt time, confronto fuori campione (D0.8 precedente -0.6680 pip), controllo overlap/costi, verifica quote effettive e prima ricezione CVD. Nessun deploy o modifica produzione.
 
 ## CHECKPOINT v0.8.67 — ESITI CVD E CONFLUENZE
 - [x] v0.8.66 CI #43596280059 SUCCESS 191 test, dry-run #43596280067 verde; main reader pin a6a0e7b6d8be64d3b82084b7c03533243104263e commit 7ea00a8dfbcf634d5d494ebcd4f0849574a06d63. Utente ha riferito configurazione alert, simbolo esatto FX:EURUSD da assicurare; nessuna ricezione CVD ancora attestata. BTC v0.8.1 separato.

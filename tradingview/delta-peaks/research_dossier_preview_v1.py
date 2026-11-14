@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# REMURA v0.8.57 LAB — 14/11/2026 11:47 CET
+# REMURA v0.8.69 LAB — 14/11/2026 CET
 """Read-only research dossier; uses the existing B causal audit, no live wiring.
 All source identities are local proofs, not independently authenticated inputs.
 No future evidence, prices in the report, execution, orders or notifications.
@@ -12,8 +12,9 @@ from fx_asof_handoff_v1 import handoff
 from fx_outcome_readiness_v1 import readiness
 from volume_features_v1 import MAX_EXPORT_ROWS, decode
 from fx_pilot_config_v1 import REFERENCE, compare_v1_fields
+from cvd_squalincome_asof_preview_v1 import join_local_pairs
 
-VERSION = "0.8.57-lab"
+VERSION = "0.8.69-lab"
 B_PIN = "8dc51e8a199dc1cfd45e4cd2e7b339510af2eb2b"
 B_SCHEMA = "remura-track-b-causal-local-cot-price-join-v1"
 
@@ -24,7 +25,7 @@ def relation(side, value):
         return "NEUTRAL"
     return "ALIGNED" if side == value else "OPPOSED"
 
-def dossier(db, rows, *, as_of_utc, days=1, origin="LOCAL_SNAPSHOT"):
+def dossier(db, rows, *, as_of_utc, days=1, origin="LOCAL_SNAPSHOT", cvd_rows=None):
     """Caller supplies an explicit query-only SQLite snapshot and D1 export.
     B source must be made available by the isolated, pinned research checkout.
     The adapter does not open a production DB or establish source authenticity.
@@ -103,6 +104,7 @@ def dossier(db, rows, *, as_of_utc, days=1, origin="LOCAL_SNAPSHOT"):
     if sum(counts.values())!=len(pairs):
         raise ValueError("nonconserving_pair_population")
     outcome=readiness(window_rows,as_of_ms=cutoff)
+    cvd_join=None if cvd_rows is None or n is None else join_local_pairs(pairs,cvd_rows,as_of_ms=cutoff)
     return {
         "schema":"remura.tv.research.dossier.preview.v1","version":VERSION,
         "origin":origin,"as_of_ms":cutoff,"days":days,
@@ -112,7 +114,8 @@ def dossier(db, rows, *, as_of_utc, days=1, origin="LOCAL_SNAPSHOT"):
         "paired_event_counts":dict(sorted(event_counts.items())),
         "outcomes":outcome,"cot_source":"B_LOCAL_VALUE_VERSION_PROOF",
         "price_source":"B_LOCAL_PRICE_PROOF_AND_TV_SEPARATE_FEED",
-        "cvd_status":"UNKNOWN_NOT_JOINED",
+        "cvd_status":"UNKNOWN_NOT_JOINED" if cvd_join is None else cvd_join["status"],
+        "tv_cvd_join":cvd_join,"ctrader_cvd_status":"UNKNOWN_NOT_JOINED",
         "sentiment_status":"UNKNOWN_NOT_JOINED",
         "config_status":"NOT_ATTESTED",
         "cross_feed_price_equivalence_assumed":False,
