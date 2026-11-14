@@ -1,0 +1,41 @@
+# REMURA v0.8.47 — 14/11/2026 09:32 CET
+# Owner-only manual D1 TEST read; source pinned to offline CI verified commit.
+name: REMURA BTC TEST Analytic Reader
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Diagnostica aggregata BTC dal solo D1 TEST, nessuna scrittura'
+        type: choice
+        required: true
+        default: READ_TEST_ANALYTICS_ONLY
+        options:
+          - READ_TEST_ANALYTICS_ONLY
+permissions:
+  contents: read
+concurrency:
+  group: remura-tv-test-analytic-read
+  cancel-in-progress: false
+jobs:
+  read:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/main' &&
+      github.actor == 'mirkoworz' &&
+      github.triggering_actor == 'mirkoworz' &&
+      inputs.confirmation == 'READ_TEST_ANALYTICS_ONLY'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Checkout reviewed immutable source
+        uses: actions/checkout@v4
+        with:
+          ref: 62b83f1d16ee3aa83cea943348c8f9e7ef39e679
+          persist-credentials: false
+      - name: Offline synthetic regressions without secrets
+        run: python3 -m unittest discover -s tradingview/delta-peaks -p 'test_pilot_analytic_reader_v1.py' -v
+      - name: D1 TEST only bounded aggregate read
+        env:
+          REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+          REMURA_CF_D1_READ_TOKEN: ${{ secrets.REMURA_CF_D1_READ_TOKEN }}
+        run: python3 tradingview/delta-peaks/gateway-lab/pilot_analytic_reader_v1.py --live-read
