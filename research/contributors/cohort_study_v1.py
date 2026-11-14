@@ -23,6 +23,7 @@ def freeze(manual,automatic,rules,*,cutoff_utc,synthetic=False):
     if synthetic is not True:raise ValueError("synthetic_only")
     cutoff=_time(cutoff_utc)
     if cutoff.minute%5 or cutoff.second:raise ValueError("cutoff_alignment")
+    if type(rules) not in (list,tuple):raise ValueError("rules_sequence")
     result=compare(manual,automatic,rules,asof_utc=cutoff_utc,synthetic=True)
     m={row["id"]:row["data"] for row in manual}
     a={row["id"]:row for row in automatic}
@@ -69,6 +70,7 @@ def evaluate(manifest,expected_digest,windows,*,evaluated_utc,synthetic=False):
     cutoff=manifest["cutoff_utc"]
     if _time(evaluated_utc)<_time(cutoff):raise ValueError("evaluation_before_cutoff")
     out=[];metrics={k:dict(total=0,touched=0,no_touch=0,n_d=0,closed_across=0,reasons=Counter()) for k in COHORTS}
+    shared={}
     for u in units:
         cohort=u["cohort"];s=metrics[cohort];s["total"]+=1
         if cohort=="N_D_RULE":
@@ -82,6 +84,10 @@ def evaluate(manifest,expected_digest,windows,*,evaluated_utc,synthetic=False):
             if w["instrument"]!=u["key"][:5]:
                 rr=dict(status="N_D",reason="FEED_MISMATCH")
             else:
+                identity=tuple(w["instrument"])
+                raw=_canonical(w)
+                if identity in shared and shared[identity]!=raw:raise ValueError("inconsistent_feed_window")
+                shared[identity]=raw
                 rr=reaction(level=u["price"],cutoff_utc=cutoff,evaluated_utc=evaluated_utc,
                             previous_close=w["previous_close"],bars=w["bars"],synthetic=True)
         if rr["status"]=="TOUCHED":
