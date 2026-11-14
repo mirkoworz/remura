@@ -1,6 +1,13 @@
-# REMURA TradingView — ROADMAP v0.8.48-lab (real TEST analytics and arithmetic diagnostics)
-**Aggiornamento roadmap: 14/11/2026, 09:38 CET — primo bridge analitico reale riuscito**
+# REMURA TradingView — ROADMAP v0.8.49-lab (real arithmetic checks and sequence diagnostics)
+**Aggiornamento roadmap: 14/11/2026, 10:02 CET — 23 barre complete, 143 controlli coerenti**
 **PR #102 DRAFT/OPEN — nessun merge, nessun nuovo deploy, nessun ordine.**
+
+## CHECKPOINT v0.8.49-lab — DIAGNOSTICA MATEMATICA REALE E SEQUENZIALE
+- [x] [Run #43578611804](https://github.com/mirkoworz/remura/actions/runs/43578611804), job #132398292616, SUCCESS, 10:02 CET. Marker v0.8.48: COMPLETE_WINDOW, 23/23 M5 08:10–10:00 CET, 16 HEARTBEAT, 7 BAR_EVENT, zero gap/invalidi/duplicati/conflitti; tutte 23 consegne entro 120s, max lag 4312ms. Footprint presente 18, non disponibile 5. Tutti 143 controlli applicabili coerenti (5*18 footprint + 2*23 risultato/efficienza + 7 retest); 25 footprint NOT_EVALUABLE, ER assente. Retest DAY2=3, DAY3=4. Tolleranze provvisorie, nessuna prova di feed accuracy o profitto. BTC diagnostica, dati Forex non contaminati.
+- [x] [Diagnostica sequenziale](volume_sequence_v1.py), commit `82b53c207781a8dbed6a1482f6b6baf635e3926f`: ricostruzione effort solo usando 30 delta precedenti consecutivi, tempestivi, disponibili, stesso simbolo/timeframe; gap/late azzerano storico. Lookback 30 valore Pine default NON attestato nello snapshot alert, confronto condizionale, non errore certo. Controllo nuovi retest rispetto a intersezione barra precedente per identità origine/prezzo, anche con cambio rank; ignora assenze/future e non ricostruisce reset sessione o toggle non telemetrizzati.
+- [x] Otto test sintetici `57fdbe76595cf7bdb14caf2c81f0a5ed9c96f0ec`; integrato nel reader aggregato `999469dd57943da95064d5b881478982a44a80c0`. Esito CI ancora da verificare. Nessuna modifica a Pine, Worker, D1 o filoni A/B/C.
+- [ ] Dopo CI positiva aggiornare pin stesso workflow READ_TEST_ANALYTICS_ONLY. Primo slot con 30 barre precedenti dal 14/11 10:40 CET, utile nuova lettura non prima delle 10:42 CET (120s di maturazione); preferire ore 11:00 o dopo. Nessuna necessità di ricreare alert o verificare di nuovo prima. 
+- [ ] Proseguire con telemetria parametri effettivi, continuità retest/sessioni, controlli scientifici e piano quote reali; nessun segnale operativo. Ricordare stop BTC domenica sera prima del 16/11 01:00 CET.
 
 ## CHECKPOINT v0.8.48-lab — PRIMA ANALISI REALE COMPLETA
 - [x] [Run #43576754550](https://github.com/mirkoworz/remura/actions/runs/43576754550), job #132392552941, SUCCESS alle 09:38 CET. Marker REMURA_TV_TEST_ANALYTIC: COMPLETE_WINDOW, 18/18 slot M5 da 08:10 a 09:35 CET, 12 HEARTBEAT, 6 BAR_EVENT, 18 consegne entro 120s, max lag 4312ms, zero righe invalide/duplicate/conflitti/quarantena, zero slot non osservati. Footprint disponibile 13/18, 5 parziali per footprint mancante. Label RETEST_DAY2=2, RETEST_DAY3=4; nessun ER/picco riportato. Raw JSON letto solo in memoria da D1 TEST, non loggato. BTC esclusivamente diagnostico; nessuna validazione statistica o trading.
