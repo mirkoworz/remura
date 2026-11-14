@@ -1,6 +1,13 @@
-# REMURA TradingView — ROADMAP v0.8.55-lab (M15 decision pairing candidate)
-**Aggiornamento roadmap: 14/11/2026, 11:44 CET — FX outcome workflow verificato, raccordo D-B**
+# REMURA TradingView — ROADMAP v0.8.56-lab (cross-track research dossier and dashboard preview)
+**Aggiornamento: 14/11/2026 CET — batch D4/D5 offline integrato**
 **PR #102 DRAFT/OPEN — nessun merge, nessun nuovo deploy, nessun ordine.**
+
+## CHECKPOINT v0.8.56 — DOSSIER D4/D5 E TEST CROSS-TRACK
+- [x] v0.8.55 CI #43586726553 e Wrangler dry-run #43586726572 SUCCESS.
+- [x] D4: dossier con audit causale B esistente (pin 8dc51e8a199dc1cfd45e4cd2e7b339510af2eb2b), connessione SQLite query_only esplicita, join esatto M15/M5, ricevuto prima osservazione, denominatori e UNKNOWN distinti. Relazioni COT/delta intrabar/corpo/footprint descrittive; CVD e retail UNKNOWN, nessun calcolo score operativo. Riuso esiti v0.8.54.
+- [x] D5: renderer HTML responsive offline e notifica diagnostica solo anteprima con ID deterministico. Nessun server, pubblicazione, invio, credenziale, costo nuovo o collegamento live. Separazione SYNTHETIC/LOCAL_SNAPSHOT. Nessun dato privato nei log.
+- [x] Test sintetici unitari e fixture end-to-end con B realmente importato da checkout separato pin immutabile, DB SQLite in memoria, CI senza segreti. Esito CI da verificare.
+- [ ] Se CI positiva, valutare evidenze CVD e sentiment realmente causali disponibili in B (non sostituire UNKNOWN con zero), dashboard TEST solo a seguito revisione. Pilot EURUSD alla riapertura, stop BTC domenica sera. Quote effettive non ancora verificabili dal connettore. PR #102 DRAFT, nessun merge, Worker/DB e A/B/C intatti.
 
 ## CHECKPOINT v0.8.55-lab — RACCORDO DECISIONE B M15 / TRADINGVIEW M5
 - [x] v0.8.54 CI #43586578003 e dry-run #43586578075 SUCCESS, 8/8 nuovi test e 149 principali; workflow manuale EURUSD su main aggiornato al pin `dd6855f189c85633b366bf84c561131d4056ce9e`, commit `8aa90fec0a6d5ff33c852fa38cf46cfa17326e1a`. Nessun deploy.
