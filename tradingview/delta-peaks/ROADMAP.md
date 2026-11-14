@@ -1,12 +1,18 @@
-# REMURA TradingView — ROADMAP v0.8.84-lab (dashboard privata)
-**Aggiornamento 14/11/2026 20:34 CET — dashboard, verifica integrata e perimetro risorse**
+# REMURA TradingView — ROADMAP v0.8.85-lab (evidenza quota fresca)
+**Aggiornamento 14/11/2026 20:39 CET — acquisition privata quote su richiesta**
 **PR #102 DRAFT/OPEN — deploy TEST autorizzato riuscito, produzione e ordini esclusi.**
+
+## CHECKPOINT v0.8.85 — ACQUISITION PRIVATA QUOTE
+- [x] v0.8.84 CI 43632885985 SUCCESS, dry-run 43632885941 SUCCESS, cross-track persistita verde, commento 6883092010.
+- [x] Incompatibilità cron giornaliero con gate 30m identificata. Collector privato esplicito riusa parser e query read-only: 2 GraphQL, 1 token verify + 1 inventory + max 6 metadata GET, niente SQL, no retry, start clock non completion, stop sui warning/unknown/UTC rollover. 7 test sintetici. Nessuna integrazione automatica o credenziale spostata.
+- [x] Repo collector privato: ultimo run diagnostica feriale 43446613998 SUCCESS 13/11 (non evidenza host attuale); risorse rendono solo percentuali RAM/disco, non MemAvailable/cgroup/size/Python. Workflow costi Oracle esistente manuale; nessun avvio o replica. Filoni invariati.
+- [ ] CI v0.8.85; acquisizione privata autorizzata, verifica host/snapshot/costi e primo Forex. Il provider non attesta scope token, billing o freshness dei dati upstream. Decisione cadenza acquisizione quote e budget overhead prima di scheduler. Nessuna attivazione.
 
 ## CHECKPOINT v0.8.84 — DASHBOARD PRIVATA E CAPACITY ENVELOPE
 - [x] v0.8.83 CI 43632600122 SUCCESS, dry-run 43632600120 SUCCESS, checkpoint 6883051179.
 - [x] Reader locale read-only da generazione atomica, senza D1/SQLite/lock writer. Stato corrente (vuoto/parziale/completo slot), obsoleto, claim incompleto, clock incoerente o stato non verificabile. Banner data italiana e age cutoff. Nessun endpoint/polling. 6 test sintetici + fixture B pinned persistita con dedup e dashboard.
 - [x] Envelope massimo 96 bucket/UTC, 96 inventory + 480 SELECT, soglia osservata 1.92M read/giorno nominale (NON hard cap, non billing), stato 256 KiB + temp. Riferimenti A/B esistenti verificati a livello codice; nessun host access.
-- [ ] CI v0.8.84, gate reali e export A/B autorizzati, verifica Oracle/quote e primo Forex. No scheduler, endpoint, trasporto o invio. Reader non autentica caller, non inferisce guasto da claim incompleto.
+- [x] CI v0.8.84 verde; ancora da verificare gate reali e export A/B autorizzati, verifica Oracle/quote e primo Forex. No scheduler, endpoint, trasporto o invio. Reader non autentica caller, non inferisce guasto da claim incompleto.
 
 ## CHECKPOINT v0.8.83 — STATO PRIVATO E DEDUP SEQUENZIALE
 - [x] v0.8.82 CI 43632358432 SUCCESS, dry-run 43632358438 SUCCESS, checkpoint 6883022244; B pinned fixture integrata verde.
