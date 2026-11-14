@@ -27,7 +27,10 @@ def reaction(*,level,cutoff_utc,evaluated_utc,previous_close,bars,synthetic=Fals
         return _unknown("WINDOW_NOT_MATURE")
     if type(previous_close) is not dict or set(previous_close)!={"close_utc","available_utc","close"}:
         raise ValueError("previous_close")
-    if _time(previous_close["close_utc"])!=cutoff or _time(previous_close["available_utc"])>cutoff:
+    previous_at=_time(previous_close["close_utc"])
+    previous_available=_time(previous_close["available_utc"])
+    if previous_available<previous_at:raise ValueError("previous_chronology")
+    if previous_at!=cutoff or previous_available>cutoff:
         return _unknown("PREVIOUS_CLOSE_NOT_AVAILABLE")
     prior=_positive(previous_close["close"])
     if type(bars) is not list or len(bars)>MAX_BARS:raise ValueError("capacity")
