@@ -1,12 +1,19 @@
-# REMURA TradingView — ROADMAP v0.8.67-lab (CVD outcomes preview)
-**Aggiornamento 14/11/2026 CET — benchmark CVD e confluenze offline**
+# REMURA TradingView — ROADMAP v0.8.68-lab (CVD radar e archivio offline)
+**Aggiornamento 14/11/2026 16:46 CET — radar e archivio offline**
 **PR #102 DRAFT/OPEN — deploy TEST autorizzato riuscito, produzione e ordini esclusi.**
+
+## CHECKPOINT v0.8.68 — RADAR E ARCHIVIO OFFLINE
+- [x] v0.8.67 CI #43605796330 SUCCESS: 196 test principali, tutti 5 nuovi outcome OK da log job 132480034715; dry-run #43605796313 SUCCESS. Main reader pin 1571b23880dac8e646254b8caa3f4641daea9ef8, commit 9cf293b1c45650b438e2c52cb478a88d4c9f71a2, header 16:46 CET; nessun avvio owner-only.
+- [x] cvd_radar_preview_v1: per-bar causal as-of, ER non direzionale, delta/footprint/CVD coerenza di segno non uguaglianza, prossimità ATR e touch solo livelli disponibili ad apertura, contesto UTC e range ATR. REVIEW e ambiguità bloccano ipotesi. Nessun peso probabilistico o segnale operativo. Reader TEST aggiunge soli conteggi aggregati.
+- [x] cvd_archive_preview_v1: assemblaggio offline di finestre esplicite ordinate disgiunte <=72 slot, cap 10000 righe/slot, verifica schema/identità/tempo, dedup esatto, conflitto blocca, nessun riempimento, outcome ricalcolati sul totale (non media report spezzati). Nessun export reale o attestazione origine; manca ancora trasporto privato delle finestre.
+- [ ] CI v0.8.68 da verificare (7 nuovi test sintetici), pin reader solo dopo verde. Poi integrazione research dashboard/SQUALINCOME preview con feed FX separato, fonte e receipt time, confronto fuori campione (D0.8 precedente -0.6680 pip), controllo overlap/costi, verifica quote effettive e prima ricezione CVD. Nessun deploy o modifica produzione.
 
 ## CHECKPOINT v0.8.67 — ESITI CVD E CONFLUENZE
 - [x] v0.8.66 CI #43596280059 SUCCESS 191 test, dry-run #43596280067 verde; main reader pin a6a0e7b6d8be64d3b82084b7c03533243104263e commit 7ea00a8dfbcf634d5d494ebcd4f0849574a06d63. Utente ha riferito configurazione alert, simbolo esatto FX:EURUSD da assicurare; nessuna ricezione CVD ancora attestata. BTC v0.8.1 separato.
 - [x] cvd_outcome_readiness_v1.py: benchmark PREZZO_ONLY_NON_SELEZIONATO vs CVD_SELEZIONATO, direzione del pivot confermato, 1h primaria, 4h/24h secondarie D0.8, mediana e confronto media su stessa data/fascia UTC/direzione; co-occorrenze ER/retest/footprint non interpretate come direzionali. No ingresso retrodatato, no interpolazione, maturazione 120s, diagnostic REVIEW blocca, ambiguità doppio lato esclusa. Ritorni ATR descrittivi, non PnL o prova edge. 5 test sintetici, CI da verificare.
 - [x] Collegato al reader aggregato TEST, 72 slot max: 24h non valutabile in singola finestra; futura aggregazione offline su export verificato più lungo. Nessuna nuova chiamata D1, alert, deploy, notifica o modifica produzione. Nessun nuovo costo previsto, effettivo non misurato.
-- [ ] CI e pin reader se verde; prova reale dopo riapertura, BTC stop domenica sera, verifica integrità e confronto con COT/B solo su match causali, no fusione feed. PR #102 DRAFT.
+- [x] CI e pin reader verificati nel checkpoint v0.8.68.
+- [ ] Prova reale dopo riapertura, BTC stop domenica sera, verifica integrità e confronto con COT/B solo su match causali, no fusione feed. PR #102 DRAFT.
 
 ## CHECKPOINT v0.8.66 — GATEWAY CVD TEST DISTRIBUITO
 - [x] Owner run #43595646049, job 132449430228 SUCCESS, precheck e postcheck SETTINGS_VERIFIED, Wrangler version d237bb64-aab8-4cb2-8680-d692fe73cd5a 14/11/2026 12:36:36 UTC. TEST ON + CVD_TRUE, binding D1 TEST EU e limiter/secret name verificati. Nessuna modifica produzione o D1 schema. Correzione v0.8.65 riuscita, causa iniziale specifica resta ipotesi. Edge e nuova ricezione non ancora provati.
