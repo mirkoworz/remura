@@ -1,6 +1,12 @@
-# REMURA TradingView — ROADMAP v0.8.53-lab (configured telemetry envelope preview)
-**Aggiornamento roadmap: 14/11/2026, 11:39 CET — 42 barre BTC e contratto configurazione candidato**
+# REMURA TradingView — ROADMAP v0.8.54-lab (FX outcome readiness and pilot runbook)
+**Aggiornamento roadmap: 14/11/2026 CET — valutazione maturazione esiti e piano pilot EURUSD**
 **PR #102 DRAFT/OPEN — nessun merge, nessun nuovo deploy, nessun ordine.**
+
+## CHECKPOINT v0.8.54-lab — ESITI MATURI E RUNBOOK EURUSD
+- [x] v0.8.53 CI #43586450902 e dry-run #43586450921 SUCCESS; 6/6 test envelope e 141 test principali.
+- [x] [fx_outcome_readiness_v1.py](fx_outcome_readiness_v1.py) commit `84188f95da7a0ab90d639d402cac80d61e8b04f5`, 8 regressioni `e7d020be25e9344171a3ed9739d949210ccda6be`: riuso funzioni outcome v0.8.3, identità D1 e conflitti verificati prima, solo FX, cutoff as-of esplicito, 15/30/60 minuti con 120s di maturazione, distingue pending e missing, controlli baseline HEARTBEAT stessa fascia UTC, nessun prezzo/esito per-barra nei risultati. Input non attestati, nessun edge o ammissione scientifica.
+- [x] Integrato nel reader FX candidato `cf3842ae843886496ee1f3643217aff588957286`, cutoff limitato a end+120s per non dichiarare esiti oltre finestra. [Runbook pilota](PILOT-EURUSD-RUNBOOK.md) commit `06fe6b3ec58edf6157685cf26de49a3af83ba846`: stop BTC domenica sera, verifica input effettivi, alert FX v1 e primo timestamp reale, workflow già pronti. Nessun nuovo deploy/credenziale/risorsa.
+- [ ] CI v0.8.54 da verificare; aggiornare pin del workflow FX solo dopo successo. Nessuna lettura BTC necessaria ora; raccolta continua. Quote effettive ancora da verificare. Nessuna modifica ai filoni A/B/C o produzione. PR #102 DRAFT.
 
 ## CHECKPOINT v0.8.53-lab — BTC 42 BARRE E CONFIGURAZIONE TELEMETRICA
 - [x] [Run #43586332330](https://github.com/mirkoworz/remura/actions/runs/43586332330), job #132421515016 SUCCESS alle 11:39 CET. v0.8.49 COMPLETE_WINDOW: 42/42 M5 08:10–11:35 CET, 31 heartbeat, 11 BAR_EVENT, zero gap/invalidi/conflitti/duplicati, 42 tempestivi entro 120s, max lag 6322ms. Footprint 36/42 (6 mancanti). 275 controlli matematici applicabili coerenti, 12/12 effort default30, 11/11 nuove visite; totale 298 controlli applicabili coerenti. DAY1=2 DAY2=3 DAY3=6; nessun ER o PEAK osservato. Parametri e tolleranze restano non attestati/calibrati, BTC escluso dalla ricerca FX.
