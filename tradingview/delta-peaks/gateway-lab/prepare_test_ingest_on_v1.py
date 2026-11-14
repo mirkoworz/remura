@@ -107,10 +107,10 @@ def make_private_on_bundle(candidate: dict, runner_temp: str) -> Path:
     return folder
 
 
-def main() -> int:
+def main(argv=None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--weekend-refresh", action="store_true")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     bundle = None
     try:
         if args.weekend_refresh:
