@@ -670,6 +670,7 @@ plot(cvd_validDaySeries, "CVD GIORNALIERO INTEGRO", display=display.data_window)
 plot(cvd_segmentSeries, "CVD SEGMENTO PARZIALE", display=display.data_window)
 plot(cvd_rawDelta5m, "CVD_DELTA_5M_GREZZO", display=display.data_window)
 plot(cvd_trustworthyDelta5m, "CVD_DELTA_5M_CONTINUO", display=display.data_window)
+plot(cvd_chartOk and not na(cvd_trustworthyDelta5m) and not na(deltaBar) ? cvd_trustworthyDelta5m - deltaBar : na, "CVD_DELTA_MENO_DELTA_NATIVO", display=display.data_window)
 plot(cvd_complete5m, "CVD_QUALITA_5M", display=display.data_window)
 plot(cvd_continuousPrev, "CVD_CONTINUITA_5M", display=display.data_window)
 plot(cvd_eligiblePivot, "CVD_ELIGIBILE", display=display.data_window)
@@ -679,7 +680,7 @@ plot(cvd_chartOk and barstate.isconfirmed ? (cvd_bullishPriceOnly ? 1.0 : 0.0) :
 plot(cvd_chartOk and barstate.isconfirmed ? (cvd_bearishPriceOnly ? 1.0 : 0.0) : na, "CVD_BASELINE_PREZZO_RIBASSISTA", display=display.data_window)
 // Separate diagnostics: values are last confirmed bar only.
 bool showCvdPanel = input.bool(true, "CVD: pannello diagnostico")
-var table cvdPanel = table.new(position.bottom_right, 2, 6, border_width=1)
+var table cvdPanel = table.new(position.bottom_left, 2, 6, border_width=1)
 if barstate.islast and showCvdPanel
     table.cell(cvdPanel, 0, 0, "CVD LAB v0.9", text_color=color.white, bgcolor=color.new(color.blue, 50))
     table.cell(cvdPanel, 1, 0, cvd_chartId, text_color=color.white, bgcolor=color.new(color.blue, 50))
