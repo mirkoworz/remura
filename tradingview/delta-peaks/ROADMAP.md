@@ -1,6 +1,13 @@
-# REMURA TradingView — ROADMAP v0.8.58-lab (CVD D0.8 integration candidate)
-**Aggiornamento: 14/11/2026 11:50 CET — Pine v0.9 CVD LAB visual-only**
+# REMURA TradingView — ROADMAP v0.8.59-lab (EURUSD visual confirmed, CVD telemetry preview)
+**Aggiornamento: 14/11/2026 12:45 CET — CVD EURUSD visivo riuscito, formato telemetrico isolato**
 **PR #102 DRAFT/OPEN — nessun merge, nessun nuovo deploy, nessun ordine.**
+
+## CHECKPOINT v0.8.59 — CVD INTEGRATO SU FX:EURUSD
+- [x] Foto utente 14/11/2026 circa 12:45 CET: Pine v0.9 CVD LAB su EURUSD M5, chart ID FX:EURUSD (non FXCM:EURUSD), qualità 5/5 OK, CONTINUO, CVD giorno -2.073K, segmento circa -2.06K/287 barre, prezzo/CVD 30/6, marcatori CV+/CV- visibili con RT e livelli. Conferma rendering e calcolo storico, non parità numerica certificata, cattura live o edge; nessuna nuova validazione alert BTC.
+- [x] Gateway TEST attuale ammette esattamente FXCM:EURUSD/FXCM (o BTC nella finestra). FX:EURUSD/FX NON equivale automaticamente a quel cohort. Mantenerli distinti e non inviare nuovi payload al Worker attivo.
+- [x] Pine v0.9.1 CVD TELEMETRY PREVIEW separato: sender OFF per default, nuovo envelope e snapshot versionati, solo FX:EURUSD M5 standard/M1, unico alert per barra realtime confermata quando abilitato, heartbeat sempre; configurazione Delta+CVD dichiarata, stato qualità/segmento, flag prezzo/CVD e timestamp pivot. Correzione gap M5 intraday invalida giornaliero. Originale v0.9 visivo e v0.8.1 live restano immutati.
+- [x] cvd_telemetry_preview_v1.py validatore offline: schema strict, nuova identità per barra, ricezione entro 120s, coorte FX distinta, config di riferimento D0.8 port, null preservati, subset benchmark, conferma pivot, controllo disponibilità delta e CVD. Confronto delta non prova accuratezza feed. Non connesso al Worker o a B/D4; nessuna ammissione scientifica. 8 regressioni candidate, CI da verificare.
+- [ ] Verifica compilazione v0.9.1 dopo CI, sempre nuovo indicatore separato senza abilitare alert/webhook. Poi gateway TEST compatibile e migrazione separata con autorizzazioni/gate, reader e prova reale alla riapertura. Non modificare raccolta BTC. Nessun nuovo costo, quote effettive ancora non misurate.
 
 ## CHECKPOINT v0.8.58 — COMPILAZIONE VISUALE BTC CONFERMATA
 - [x] CI Telemetry LAB #43587330856 e Wrangler dry-run #43587330870 SUCCESS; log 176 test Python principali, 7/7 nuovi statici, markers D-B e copertura CVD sintetici PASS.
