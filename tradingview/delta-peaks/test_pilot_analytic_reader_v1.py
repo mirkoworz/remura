@@ -35,6 +35,14 @@ class AnalyticReaderTests(unittest.TestCase):
         self.assertEqual(r["cohort"], "BTC_TRANSPORT_ONLY")
         self.assertFalse(r["orders_enabled"])
 
+    def test_aggregate_diagnostic_counts(self):
+        r = report([fixture(T, btc=True), fixture(T+m.M5, btc=True)])
+        checks = r["diagnostic_check_counts"]
+        self.assertEqual(checks["FP_TOTAL"], {"CONSISTENT": 2})
+        self.assertEqual(checks["SIGNED_RESULT_ATR"], {"REVIEW": 2})
+        self.assertEqual(sum(checks["RETEST_DAY1"].values()), 2)
+        self.assertEqual(r["diagnostic_tolerances"], "PROVISIONAL_NOT_CALIBRATED")
+
     def test_leading_trailing_gaps(self):
         r = report([fixture(T+m.M5, btc=True)])
         self.assertEqual(r["status"], "INCOMPLETE_WINDOW")
