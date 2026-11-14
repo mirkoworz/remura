@@ -104,7 +104,33 @@ def run_aux():
         t.tearDown()
     print("REMURA_D_AUX_SAME_B_DECISION_SYNTHETIC=PASS; EXACT_CT_AND_RETAIL_SEPARATE_FIXTURES; NO_LIVE_DB")
 
+def run_runtime():
+    import sys
+    from pathlib import Path
+    sys.path.insert(0,str(Path(__file__).resolve().parent/"gateway-lab"))
+    from cvd_private_runtime_preview_v1 import preview,plan,MIN_CLOSE_MS
+    db,doc=create()
+    try:
+        observed=CLOSE+timedelta(seconds=60)
+        witness.witness(db,clock=AT)
+        with db:
+            hid=insert_history(db,observed=observed,closed=CLOSE)
+            b=bundle.record(db,history_id=hid,observed_document=doc,clock=observed+timedelta(seconds=2))
+        assert b["state"]=="BOTH_LOCAL_PROOFS_PRESENT"
+        db.execute("PRAGMA query_only=ON")
+        before=db.total_changes
+        now=MIN_CLOSE_MS+120000
+        windows=[{"start_ms":a,"end_ms":z,"rows":[]} for a,z in plan(now)]
+        result=preview(db,windows,now=now,origin="SYNTHETIC")
+        assert "DATI SINTETICI" in result["html"]
+        assert result["coverage"]["valid_unique_bars"]==0 and result["notice"]["sent"] is False
+        assert db.total_changes==before
+        print("REMURA_D_PRIVATE_RUNTIME_SYNTHETIC=PASS; NO_NETWORK; NO_RAW_OUTPUT")
+    finally:
+        db.close()
+
 if __name__=="__main__":
     run()
     run_cvd()
     run_aux()
+    run_runtime()

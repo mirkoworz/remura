@@ -1,12 +1,17 @@
-# REMURA TradingView — ROADMAP v0.8.75-lab (dashboard confluenze)
-**Aggiornamento 14/11/2026 17:07 CET — dashboard confluenze**
+# REMURA TradingView — ROADMAP v0.8.76-lab (runtime privato)
+**Aggiornamento 14/11/2026 17:10 CET — runtime privato**
 **PR #102 DRAFT/OPEN — deploy TEST autorizzato riuscito, produzione e ordini esclusi.**
 
+## CHECKPOINT v0.8.76 — RUNTIME PRIVATO PREVIEW
+- [x] v0.8.75 CI 43613939494 SUCCESS 243 test, dry-run 43613939546 SUCCESS, fixture B/dossier/render PASS; commento 6880364585.
+- [x] cvd_private_runtime_preview_v1: unica pipeline privata in memoria: finestre TEST mature 1d+buffer -> archive strict -> dossier B -> HTML/notice. Solo snapshot caller query-only, no CLI/endpoint/cron o persistenza; nessun legacy FXCM raccolto. Cap 5 SELECT + inventory, stop 20k righe osservate e meta obbligatori, nessuna nuova quota/misura account. 6 test sintetici + fixture B pinned vuota; [runbook](PRIVATE-RUNTIME-PREVIEW.md).
+- [ ] CI da verificare. Prima ricezione FX, quote effettive, snapshot privati reali, convalida carico e attivazione separata; nessun deploy, query vera, main o B modificati.
+ 
 ## CHECKPOINT v0.8.75 — DOSSIER E DASHBOARD CONFLUENZE
 - [x] v0.8.74 CI 43613723449 SUCCESS 237 test, dry-run 43613723452 SUCCESS, fixture CT exact/retail separati PASS; commento 6880330273.
 - [x] Dossier opzionale auxiliary=True, stessi pair B già auditati, cap 20, no secondo B audit, caller snapshot query-only, autorizzazione esplicita e segreti solo in memoria. Nessun cambio default.
 - [x] Gate aggregati: label whitelist, denominatori, marginali e limiti intersezioni; separa disponibilità delle prove da direzione dei due CVD, retail non direzionale, UNKNOWN non negativo. Dashboard/notice spiegano concordanza, opposizione, conflitto, N/D; hash notice include summary, nessun punteggio o invio. 6 nuovi test e fixture B separate con dossier/render effettivi. Nessuna prova reale.
-- [ ] CI v0.8.75, controllo quote effettive, primo alert FX, percorso runtime privato da progettare. Nessuna modifica B, main, produzione o deploy.
+- [x] CI v0.8.75 verificata nel checkpoint v0.8.76. Controllo quote effettive, primo alert FX e runtime reale ancora aperti. Nessuna modifica B, main, produzione o deploy.
 
 ## CHECKPOINT v0.8.74 — REGRESSIONE CLOCK B
 - [x] v0.8.73: 237 unit test OK; CI cross-track 43613656660 fallita perché fixture CT ha observation 11:16 rispetto a close 11:00; la guardia corretta è B_CLOCK_OUTSIDE_TV_HANDOFF prima di verificare pre-deploy. Corretto solo il risultato atteso del fixture; nessun allargamento del clock. Aggiunta guardia duplicati identità B.
