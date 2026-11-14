@@ -91,7 +91,7 @@ class RuntimeTests(unittest.TestCase):
         rows=[row for row,_,_ in triples(n=290,events=tuple(range(0,280,14)))]
         for page in w:
             page["rows"]=[row for row in rows if page["start_ms"]<=row["bar_close_ms"]<=page["end_ms"]]
-        pairs=[("EURUSD","2026-11-10",stamp(T0+3*i*m.M5),stamp(T0+3*i*m.M5+6000),"a"*64,1) for i in range(20)]
+        pairs=[("EURUSD","2026-11-10",stamp(T0+3*i*m.M5),stamp(T0+3*i*m.M5+6000),"a"*64,1) for i in range(1,21)]
         import scripts
         with patch.object(scripts.shark_causal_pair_audit,"audit",mock_audit(pairs)):
             def measured(fn):

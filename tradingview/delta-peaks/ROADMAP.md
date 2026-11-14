@@ -6,7 +6,8 @@
 - [x] v0.8.76 CI 43614348245 SUCCESS 249 test, dry-run 43614348239 SUCCESS, fixture REMURA_D_PRIVATE_RUNTIME_SYNTHETIC PASS (log job 132506024548).
 - [x] Separata validazione identica archive da radar/outcome/benchmark/fold; percorso giornaliero usa solo validazione + dossier, lettori scientifici invariati nella logica. Conflitti bloccati, dedup solo dopo validazione. Niente nuova chiamata, risorsa o servizio.
 - [x] 3 test aggiunti: equivalenza copertura/dedup, benchmark non invocati, profilo 290 barre sintetiche e 20 coppie B mocked. Misure CPU e picco allocazioni Python sul runner, NON VPS/RSS/costo; valori da log CI dopo verde.
-- [ ] CI v0.8.77 da verificare. Prima ricezione Forex, quote effettive, profilo host reale e snapshot isolati restano gate. Nessun deploy, scheduler, B/main o produzione modificati.
+- [x] Primo run 43616292696: test di profilo respinto correttamente dal gate B_PAIR_OUTSIDE_ASOF (prima decisione mock fuori giorno). Corretto solo indice fixture 1..20, senza ampliare cutoff.
+- [ ] CI v0.8.77 corretta da verificare. Prima ricezione Forex, quote effettive, profilo host reale e snapshot isolati restano gate. Nessun deploy, scheduler, B/main o produzione modificati.
 
 ## CHECKPOINT v0.8.76 — RUNTIME PRIVATO PREVIEW
 - [x] v0.8.75 CI 43613939494 SUCCESS 243 test, dry-run 43613939546 SUCCESS, fixture B/dossier/render PASS; commento 6880364585.
