@@ -9,6 +9,8 @@ The existing Cloudflare secret's value is never read, printed or copied.
 """
 from __future__ import annotations
 from copy import deepcopy
+import argparse
+import datetime
 import json
 import os
 from pathlib import Path
@@ -28,7 +30,7 @@ ON_FLAG = {"INGEST_ENABLED": "true"}
 
 
 def build_on_candidate(account_id: str, d1_read: str, test_editor: str,
-                       template: object) -> dict:
+                       template: object, *, weekend_refresh: bool = False) -> dict:
     account = require_account_id(account_id)
     read_token = require_account_token(d1_read)
     if (not isinstance(test_editor, str) or len(test_editor) < 24 or
@@ -45,9 +47,11 @@ def build_on_candidate(account_id: str, d1_read: str, test_editor: str,
             namespace=choose_candidate_namespace(account))
     except StopUnsafe:
         raise AuditError("worker_test_settings_unsafe") from None
-    # ON is permitted only from a fully configured and already OFF Worker.
-    if state != "TEST_GATEWAY_OFF_WITH_HASH_SECRET":
-        raise AuditError("must_be_off_with_secret")
+    # A refresh may ONLY replace the already ON isolated TEST Worker.
+    expected = ("TEST_GATEWAY_ON_WITH_HASH_SECRET" if weekend_refresh
+                else "TEST_GATEWAY_OFF_WITH_HASH_SECRET")
+    if state != expected:
+        raise AuditError("unexpected_test_ingest_state")
     off = make_candidate(template, ids, account)
     if verify_manifest(off) != "STRUCTURALLY_READY_OFFLINE_ONLY":
         raise AuditError("off_candidate_not_verified")
@@ -104,8 +108,17 @@ def make_private_on_bundle(candidate: dict, runner_temp: str) -> Path:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--weekend-refresh", action="store_true")
+    args = parser.parse_args()
     bundle = None
     try:
+        if args.weekend_refresh:
+            now = datetime.datetime.now(datetime.timezone.utc)
+            start = datetime.datetime(2026, 11, 14, tzinfo=datetime.timezone.utc)
+            end = datetime.datetime(2026, 11, 16, tzinfo=datetime.timezone.utc)
+            if not start <= now < end:
+                raise AuditError("weekend_refresh_expired")
         envfile = os.getenv("GITHUB_ENV", "")
         runner = os.getenv("RUNNER_TEMP", "")
         if not envfile or not Path(envfile).is_file() or not runner:
@@ -114,7 +127,8 @@ def main() -> int:
             os.getenv("REMURA_CF_ACCOUNT_ID", ""),
             os.getenv("REMURA_CF_D1_READ_TOKEN", ""),
             os.getenv("REMURA_CF_TEST_WORKER_EDITOR_TOKEN", ""),
-            json.loads(EXAMPLE.read_text(encoding="utf-8")))
+            json.loads(EXAMPLE.read_text(encoding="utf-8")),
+            weekend_refresh=args.weekend_refresh)
         bundle = make_private_on_bundle(candidate, runner)
         print("::add-mask::" + candidate["d1_databases"][0]["database_id"])
         print("::add-mask::" + candidate["ratelimits"][0]["namespace_id"])
