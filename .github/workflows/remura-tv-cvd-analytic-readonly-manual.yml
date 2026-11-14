@@ -1,4 +1,4 @@
-# REMURA v0.8.64 — 14/11/2026 12:59 CET
+# REMURA v0.8.66 — 14/11/2026 15:29 CET
 # Owner-only read-only CVD TEST diagnostics. No deployment or scheduler.
 name: REMURA CVD TEST Analytic Reader
 on:
@@ -37,7 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 7ca0736ee6d933071c02b31917b94d99684bba5f
+          ref: a6a0e7b6d8be64d3b82084b7c03533243104263e
           persist-credentials: false
       - name: Offline validation gates
         run: python3 -m unittest discover -s tradingview/delta-peaks -p 'test_cvd*.py' -v
