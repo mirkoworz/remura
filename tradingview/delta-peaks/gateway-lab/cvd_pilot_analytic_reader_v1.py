@@ -93,3 +93,24 @@ def read_live(account_id,token,*,start,end,now,explicit=False):
     response=api_request("POST",base+"/"+quote(ids[TEST_DB],safe="")+"/query",token,
         {"sql":SQL,"params":[SYMBOL,"5",VERSION,start,end,now,LIMIT+1]})
     return aggregate(response,start,end,now)
+
+def main():
+    import argparse,os,time
+    from fx_pilot_analytic_reader_v1 import utc_ms
+    parser=argparse.ArgumentParser()
+    parser.add_argument("--live-read",action="store_true",required=True)
+    parser.add_argument("--start-utc",required=True)
+    parser.add_argument("--end-utc",required=True)
+    args=parser.parse_args()
+    try:
+        r=read_live(os.getenv("REMURA_CF_ACCOUNT_ID",""),os.getenv("REMURA_CF_D1_READ_TOKEN",""),
+                    start=utc_ms(args.start_utc),end=utc_ms(args.end_utc),
+                    now=time.time_ns()//1000000,explicit=True)
+        print("REMURA_CVD_TEST_ANALYTIC="+json.dumps(r,sort_keys=True,allow_nan=False))
+        return 2 if r["status"]=="INVALID_OR_CONFLICTING_ROWS" else 0
+    except Exception:
+        print("REMURA_CVD_TEST_ANALYTIC=UNKNOWN_READ_FAILED")
+        return 2
+
+if __name__=="__main__":
+    raise SystemExit(main())

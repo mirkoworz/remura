@@ -1,6 +1,11 @@
-# REMURA TradingView — ROADMAP v0.8.61-lab (CVD reader and duplicate protection)
-**Aggiornamento 14/11/2026 CET — pipeline CVD candidata offline**
+# REMURA TradingView — ROADMAP v0.8.62-lab (CVD transition and rollback offline)
+**Aggiornamento 14/11/2026 12:52 CET — bundle candidati e rollback isolato**
 **PR #102 DRAFT/OPEN — nessun merge, nessun nuovo deploy, nessun ordine.**
+
+## CHECKPOINT v0.8.62 — TRANSIZIONE CVD E ROLLBACK
+- [x] v0.8.61 CI #43591911967 e dryrun legacy #43591911943 SUCCESS, 190 test Python e 6 Node CVD, parità sui fixture. Legacy worker.mjs confrontato byte per byte col pin weekend effettivamente distribuito 9b6fae547761153c5d4d0b9aa8b7ec3e281f6662: identico.
+- [x] Nuovo cvd_transition_bundle_v1.py: riconosce soltanto quinto binding CVD_PREVIEW_ENABLED noto e delega i 4 originali alla guardia già esistente, prepara due bundle privati, candidato e rollback con sorgente legacy identico; default OFF, dry-run CLI solo ID sintetici. 6 test sicurezza e Wrangler compile-only su entrambi. Lettore CVD ora ha CLI esplicita con log aggregato sanificato.
+- [ ] CI da verificare. Importante: vecchi workflow di emergenza/refresh non riconoscono quinto binding, NON distribuire candidato finché guardia dedicata non è disponibile su main e non è provato rollback con metadati attuali. Prima compilare Pine v0.9.1 su TradingView senza abilitare alert. Nessun deploy, nessun cambio BTC o produzione, nessuna risorsa nuova, quote reali ancora non misurate.
 
 ## CHECKPOINT v0.8.61 — LETTORE DEDICATO E PARITÀ VALIDATORI
 - [x] Gateway candidato distingue retry byte-identico da payload conflittuale (409, conserva prima riga). Non è ledger persistente dei conflitti: non dichiarare assenza di conflitti solo da D1. Legacy invariato.
