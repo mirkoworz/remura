@@ -1,6 +1,10 @@
-# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.41-doc (Worker Production noto v0.8.5, gateway TEST v0.8.6 ON)
-**Aggiornamento roadmap: 14/11/2026, 07:49 CET — deploy BTC weekend confermato; ricezione da verificare**
+# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.42-doc (Worker Production noto v0.8.5, gateway TEST v0.8.6 ON)
+**Aggiornamento roadmap: 14/11/2026, 07:51 CET — prima lettura BTC D1 riuscita, zero ricevute**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView da confermare, nessun ordine.**
+
+## CHECKPOINT v0.8.42-doc — PRIMA LETTURA BTC TEST RIUSCITA, ZERO RIGHE — 14/11/2026, 07:51 CET
+- [x] Run manuale READ_BTC_RECEIPTS_ONLY [#43568259551](https://github.com/mirkoworz/remura/actions/runs/43568259551), avviato 07:50:17 CET, job #132366774473 SUCCESS; deploy saltato. Log effettivi `REMURA_BTC_TEST_RECEIPTS=NO_MATCHING_RECEIPTS`, SAMPLE_ROWS=0, HEARTBEATS=0, BAR_EVENTS=0, MORE_AVAILABLE=False, FIRST_RECEIVED_MS=None, MAX_BAR_CLOSE_LAG_MS=None. SELECT D1 TEST riuscita, nessuna prova di webhook consegnato. Non interpretare verde come ricezione.
+- [ ] Primo controllo avvenuto poco dopo chiusura M5 07:50 CET, circa un minuto dopo deploy 07:49:05. Verificare prima che alert TradingView BTCUSDT BINANCE M5 sia attivo, snapshot entrambi input LAB ON, condizione qualsiasi alert(), registro alert / stato webhook. Chiedere solo screenshot registro senza URL o token. Poi nuova lettura dopo almeno una chiusura M5 successiva; distinguere nessun evento, errore HTTP e D1 vuoto. Non cambiare codice/credenziali o ripetere deploy senza evidenze. PR #102 DRAFT, produzione invariata.
 
 ## CHECKPOINT v0.8.41-doc — BTC WEEKEND DEPLOY REALE RIUSCITO — 14/11/2026, 07:49 CET
 - [x] Proprietario ha avviato DEPLOY_BTC_WEEKEND_TEST. [Run #43568131360](https://github.com/mirkoworz/remura/actions/runs/43568131360) completed SUCCESS; job #132366387268 tutti gli step verdi, job read-only saltato come previsto. Deploy reale solo remura-tv-webhook-test 14/11/2026 07:49:05 CET; versione Cloudflare `313fcee3-31f3-4709-bde6-4a13a05d3ada`. Preflight e postcheck `TEST_GATEWAY_ON_WITH_HASH_SECRET`, marker `REMURA_BTC_WEEKEND_DEPLOY=COMMAND_SUCCEEDED_PENDING_POSTCHECK` seguito dal postcheck positivo. Sorgente v0.8.40 pin `9b6fae547761153c5d4d0b9aa8b7ec3e281f6662`. D1 TEST e limiter invariati; produzione non coinvolta.
