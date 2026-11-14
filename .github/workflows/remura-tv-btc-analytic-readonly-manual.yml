@@ -1,4 +1,4 @@
-# REMURA v0.8.47 — 14/11/2026 09:32 CET
+# REMURA v0.8.48 — 14/11/2026 09:40 CET
 # Owner-only manual D1 TEST read; source pinned to offline CI verified commit.
 name: REMURA BTC TEST Analytic Reader
 on:
@@ -30,10 +30,12 @@ jobs:
       - name: Checkout reviewed immutable source
         uses: actions/checkout@v4
         with:
-          ref: 62b83f1d16ee3aa83cea943348c8f9e7ef39e679
+          ref: 88016b26286527a0e7779497790e0bdd303055cf
           persist-credentials: false
       - name: Offline synthetic regressions without secrets
-        run: python3 -m unittest discover -s tradingview/delta-peaks -p 'test_pilot_analytic_reader_v1.py' -v
+        run: |
+          python3 -m unittest discover -s tradingview/delta-peaks -p 'test_pilot_analytic_reader_v1.py' -v
+          python3 -m unittest discover -s tradingview/delta-peaks -p 'test_volume_quality_v1.py' -v
       - name: D1 TEST only bounded aggregate read
         env:
           REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
