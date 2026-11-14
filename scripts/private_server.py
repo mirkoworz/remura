@@ -588,15 +588,39 @@ def collector_command(symbols, days, output):
     return args
 
 
-def collect_once(db_path, symbols, days=2, runner=subprocess.run, now=None, source="primary"):
+def collect_once(db_path, symbols, days=2, runner=subprocess.run, now=None,
+                 source="primary", *, research_ingest_first_seen=False):
     """Isolated child process: Twisted reactor and cTrader TCP live outside HTTP server.
 
     No secrets in args; all cTrader credentials are inherited via environment.
     No file is written under the public asset allowlist.
+
+    Future Track B explicit research gate, OFF by default and NOT wired to
+    collector_loop or environment. Only primary EURUSD/XAUUSD experiments
+    with pre-installed append-only schema can pass the original parent's
+    actual child-file READ clock to the same price_store.ingest transaction.
+    That is NOT a broker-signed response timestamp.
     """
     now=now or utcnow()
     if source not in ("primary","backup"):
         raise ValueError("Unexpected cTrader source")
+    if type(research_ingest_first_seen) is not bool:
+        raise ValueError("research_first_seen_explicit_boolean_required")
+    if research_ingest_first_seen:
+        # Absolutely no auto-schema creation, extra network request, backup
+        # credential use or implicit full-universe research capture.
+        if (source != "primary" or type(symbols) not in (tuple,list)
+                or not 1 <= len(symbols) <= 2
+                or any(type(s) is not str or s not in ("EURUSD","XAUUSD")
+                       for s in symbols)
+                or len(set(symbols)) != len(symbols)):
+            raise ValueError("research_first_seen_primary_two_market_pilot_only")
+        from scripts import shark_ingest_first_seen as research_first_seen
+        research_db=connect(db_path)
+        try:
+            research_first_seen.require_schema(research_db)
+        finally:
+            research_db.close()
     secondary=backup_ctrader_environment(db_path) if source=="backup" else None
     if source=="backup" and secondary is None:
         return {"saved":{},"errors":{"backup":"not_configured"}}
@@ -642,14 +666,27 @@ def collect_once(db_path, symbols, days=2, runner=subprocess.run, now=None, sour
             raise RuntimeError("Collettore senza risposta valida da cTrader.")
         if temp_path.stat().st_size>15_000_000:
             raise RuntimeError("Risposta del collettore troppo grande.")
-        payload=json.loads(temp_path.read_text("utf-8"))
+        # Existing private one-time JSON read; NO extra broker GET or
+        # repeat file read. A separate clock is acquired immediately AFTER
+        # successfully reading bytes, BEFORE parsing or rewriting any market.
+        raw_payload=temp_path.read_text("utf-8")
+        parent_json_read_at=utcnow() if research_ingest_first_seen else None
+        payload=json.loads(raw_payload)
         if source=="backup" and isinstance(payload.get("markets"),dict):
             for market in payload["markets"].values():
                 if isinstance(market,dict) and isinstance(market.get("providerSymbol"),str):
                     market["providerSymbol"]="BACKUP · "+market["providerSymbol"]
         db=connect(db_path)
         try:
-            report=ingest(db,payload,now=utcnow())
+            if research_ingest_first_seen:
+                # Same received JSON, explicit read instant, same original
+                # market UPSERT transaction. Missing schema/corrupt payload
+                # is a hard error, never a fabricated scientific witness.
+                report=ingest(
+                    db,payload,now=utcnow(),
+                    research_parent_read_at=parent_json_read_at)
+            else:
+                report=ingest(db,payload,now=utcnow())
             count=len(report["saved"])
             errors=len(report["errors"])+len(payload.get("errors",{}))
             reason=safe_ctrader_reason(payload,getattr(process,"returncode",0))
@@ -700,12 +737,31 @@ def collect_once(db_path, symbols, days=2, runner=subprocess.run, now=None, sour
             temp_path.unlink(missing_ok=True)
 
 
-def retail_once(db_path,runner=subprocess.run):
-    """Reuse the existing official Myfxbook API collector in a PRIVATE cwd.
+def retail_once(db_path,runner=subprocess.run, *,
+                research_retail_first_seen=False,
+                research_retail_numeric_features=False):
+    """Default OFF local first-seen witness; normal Myfxbook path unchanged.
 
-    No Git commits, no data writes to public repository, no credentials in stdout.
+    The normal retail_loop never passes research_retail_first_seen=True.
+    No extra broker or Myfxbook API request, env switch, or auto migration.
     """
+    if type(research_retail_first_seen) is not bool:
+        raise ValueError("research_retail_opt_in_boolean_required")
+    if type(research_retail_numeric_features) is not bool:
+        raise ValueError("numeric_feature_opt_in_boolean_required")
+    if research_retail_numeric_features and not research_retail_first_seen:
+        raise ValueError("numeric_features_require_original_first_seen_opt_in")
     db=connect(db_path)
+    if research_retail_first_seen:
+        from scripts import shark_retail_first_seen as retail_research
+        try:
+            retail_research.require_schema(db)
+            if research_retail_numeric_features:
+                from scripts import shark_retail_numeric_features as numeric_research
+                numeric_research.require_schema(db)
+        finally:
+            db.close()
+        db=connect(db_path)
     if not (os.environ.get("MYFXBOOK_EMAIL") and os.environ.get("MYFXBOOK_PASSWORD")):
         try:set_status(db,retail_status="awaiting_credentials")
         finally:db.close()
@@ -716,19 +772,63 @@ def retail_once(db_path,runner=subprocess.run):
     target.mkdir(parents=True,exist_ok=True,mode=0o700)
     command=[sys.executable,str(ROOT/"scripts"/"update_myfxbook.py")]
     try:
+        latest_file=target/"data"/"myfxbook"/"latest.json"
+        previous_identity=None
+        if research_retail_first_seen:
+            # Only a successful, NEW file generation may become an original
+            # FIRST-SEEN receipt. A child returning 0 without updating the
+            # preserved cache must not turn that cache into new research data.
+            try:
+                previous=latest_file.stat()
+            except FileNotFoundError:
+                pass
+            else:
+                previous_identity=(
+                    previous.st_dev,previous.st_ino,
+                    previous.st_mtime_ns,previous.st_ctime_ns,previous.st_size)
         run=runner(command,cwd=target,stdin=subprocess.DEVNULL,
                    stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
                    timeout=120,check=False)
-        latest_file=target/"data"/"myfxbook"/"latest.json"
-        data=retail_document(db_path,RETAIL_LATEST)
-        if run.returncode!=0 or data is None:
-            raise RuntimeError("Nessun aggiornamento Myfxbook convalidato.")
+        if research_retail_first_seen and run.returncode!=0:
+            raise RuntimeError("Retail research collector unsuccessful.")
+        if research_retail_first_seen:
+            # A changed local file identity is a necessary sanity check, not
+            # a provider-signed publication time or proof of API provenance.
+            current=latest_file.stat()
+            current_identity=(
+                current.st_dev,current.st_ino,
+                current.st_mtime_ns,current.st_ctime_ns,current.st_size)
+            if previous_identity is not None and current_identity==previous_identity:
+                raise RuntimeError("Retail research original file not refreshed.")
+            # The exact original private file is read just once. The
+            # independent local read clock comes IMMEDIATELY after read_text.
+            if not latest_file.is_file() or latest_file.stat().st_size>3_000_000:
+                raise ValueError("research_original_retail_file_unavailable")
+            raw=latest_file.read_text("utf-8")
+            read_at=utcnow()
+            original=json.loads(raw)
+            if (not isinstance(original,dict)
+                    or original.get("status")!="ok"
+                    or not isinstance(original.get("symbols"),dict)):
+                raise RuntimeError("Retail research JSON non convalidato.")
+            proof_db=connect(db_path)
+            try:
+                retail_research.capture_pair(
+                    proof_db,original_snapshot=original,
+                    file_read_at=read_at,clock=utcnow(),
+                    research_numeric_features=research_retail_numeric_features)
+            finally:
+                proof_db.close()
+        else:
+            data=retail_document(db_path,RETAIL_LATEST)
+            if run.returncode!=0 or data is None:
+                raise RuntimeError("Nessun aggiornamento Myfxbook convalidato.")
         db=connect(db_path)
         try:set_status(db,retail_status="running",retail_last_success=utcnow().isoformat(),
                        retail_last_error="")
         finally:db.close()
         return True
-    except (OSError,ValueError,RuntimeError,subprocess.SubprocessError):
+    except (OSError,ValueError,RuntimeError,subprocess.SubprocessError,sqlite3.DatabaseError):
         db=connect(db_path)
         try:set_status(db,retail_status="failed",retail_last_error="Myfxbook non aggiornato.")
         finally:db.close()
@@ -1034,6 +1134,52 @@ def squalincome_enabled(env=None):
             values.get("REMURA_COT_SYNC_ENABLED","1")=="1")
 
 
+def observe_periodic_squalincome(db_path, env=None):
+    """Single-pass research feature gate; not a second scanner or scheduler.
+
+    The deployed v1.62 path remains the default. Both independent explicit
+    switches are required for future research; any missing, unexpected or
+    stale value fails CLOSED to the unchanged original observer. No import,
+    migration, research SQL, cTrader request or extra loop when disabled.
+    Only the existing FULL 34-market periodic scan can use compact mode;
+    targeted post-ingest and H1 paired tracking are deliberately unchanged.
+    This branch is research-only; do not enable before P0b/P0c/release gates.
+    """
+    values=os.environ if env is None else env
+    opted_in=(values.get("REMURA_SHARK_COMPACT_RESEARCH_ENABLED")=="1" and
+              values.get("REMURA_SHARK_COMPACT_RESEARCH_ACK")==
+              "ACK_UNVALIDATED_PROSPECTIVE_RESEARCH")
+    if not opted_in:
+        return observe_squalincome(db_path)
+    # First actual periodic opt-in entry is committed BEFORE any source
+    # reads. If the immutable witness is busy/broken, fail CLOSED: never
+    # produce an unanchored research sample or switch to a duplicate scan.
+    # Both imports stay lazy; default v1.62 does no new SQLite work.
+    from scripts import shark_first_invocation
+    entered_at=utcnow()
+    stage="ACTIVATION"
+    try:
+        shark_first_invocation.first_invocation(db_path)
+        stage="COMPACT_SCAN"
+        from signals_monitor import scan_once_with_compact_price_only_research
+        return scan_once_with_compact_price_only_research(db_path)
+    except Exception as exc:
+        # Only failures actually seen by THIS process are eligible.
+        # A SIGKILL, missed schedule or failure to acquire the telemetry
+        # writer remains UNKNOWN; never claim inferred reasons for a gap.
+        # The original scanner error is preserved if telemetry fails.
+        try:
+            from scripts import shark_scan_failures
+            shark_scan_failures.record(
+                db_path,stage=stage,exc=exc,started_at=entered_at,
+                logged_at=utcnow())
+        except Exception:
+            # Never expose exception strings, account identifiers or prices.
+            print("REMURA research failure telemetry unavailable",
+                  file=sys.stderr)
+        raise
+
+
 def squalincome_loop(db_path,stop):
     # No network requests: this only reads the local COT and cTrader caches.
     while not stop.is_set():
@@ -1043,7 +1189,7 @@ def squalincome_loop(db_path,stop):
                 t0=time.perf_counter()
                 result=None
                 try:
-                    result=observe_squalincome(db_path)
+                    result=observe_periodic_squalincome(db_path)
                 finally:
                     finished=utcnow()
                     try:
