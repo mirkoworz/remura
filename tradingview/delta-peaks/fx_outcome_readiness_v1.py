@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
-# REMURA v0.8.54 LAB — 14/11/2026 CET
+# REMURA v0.8.57 LAB — 14/11/2026 11:47 CET
 """Offline FX outcome readiness. No network, DB writes, prices in output or trades.
 Reuse the preregistered v0.8.3 outcome functions only after strict D1 row checks.
 Explicit observation cutoff; distinguish not-yet-due horizons from missing data.
 No authentic configuration/provenance, costs or out-of-sample proof is implied.
 """
-from collections import Counter
+from collections import Counter, defaultdict
+from statistics import median, mean
 from math import isfinite
 
 from volume_features_v1 import analyze_export, decode, M5, MAX_EXPORT_ROWS
 from fx_pilot_config_v1 import compare_v1_fields, REFERENCE
 from outcome_audit_v1 import HORIZONS, cohorts_for, _evaluate, _retest_label, _contrarian_label, session_id
 
-VERSION = "0.8.54-lab"
+VERSION = "0.8.57-lab"
 
 def readiness(rows, *, as_of_ms):
     if type(as_of_ms) is not int or as_of_ms <= 1_000_000_000_000:
@@ -75,7 +76,9 @@ def readiness(rows, *, as_of_ms):
             return None,"NONFINITE_OUTCOME"
         return out,err
     for h in HORIZONS:
-        baseline=Counter()
+        baseline=defaultdict(list)
+        event_returns=defaultdict(list)
+        matched_baseline=defaultdict(list)
         totals=Counter()
         by_cohort={}
         for t,b in sorted(bars.items()):
@@ -84,7 +87,7 @@ def readiness(rows, *, as_of_ms):
                 out,err=result_at(t,h)
                 totals["baseline_" + (err or "COMPLETE")]+=1
                 if err is None:
-                    baseline[session_id(t)]+=1
+                    baseline[session_id(t)].append(out["return_atr"])
         for t,b in sorted(bars.items()):
             p=b["payload"]
             cohorts=cohorts_for(p)
@@ -98,11 +101,27 @@ def readiness(rows, *, as_of_ms):
                     c[err]+=1
                     continue
                 c["COMPLETE"]+=1
-                c["MATCHED_BASELINE" if baseline[session_id(t)] else "NO_MATCHED_BASELINE"]+=1
+                event_returns[name].append(out["return_atr"])
+                controls=baseline.get(session_id(t),[])
+                c["MATCHED_BASELINE" if controls else "NO_MATCHED_BASELINE"]+=1
+                if controls:
+                    matched_baseline[name].append(mean(controls))
                 label=(_retest_label(p,out["close_h"],field) if field is not None else
                        _contrarian_label(name,out["return_atr"]))
                 if label is not None:
                     c[label]+=1
+        comparison={}
+        for name in sorted(by_cohort):
+            values=event_returns[name]
+            control=matched_baseline[name]
+            comparison[name]={
+                "complete_events":len(values),"matched_events":len(control),
+                "median_signed_close_return_atr":round(median(values),6) if values else None,
+                "mean_event_weighted_session_baseline_atr":round(mean(control),6) if control else None,
+                "not_execution_return":True,
+                "inference":"DESCRIPTIVE_ONLY_OVERLAP_AND_COSTS_NOT_RESOLVED",
+            }
         report["horizons"][str(h*5)]={"baseline_counts":dict(totals),
-                                      "event_counts":{k:dict(v) for k,v in sorted(by_cohort.items())}}
+                                      "event_counts":{k:dict(v) for k,v in sorted(by_cohort.items())},
+                                      "descriptive_comparison":comparison}
     return dict(report,status="DESCRIPTIVE_READINESS_ONLY")

@@ -56,6 +56,15 @@ class DossierTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.run_dossier([good()],[pair(),pair()])
 
+    def test_mismatched_config_not_paired(self):
+        r=self.run_dossier([changed(good(),lambda p:p["quality"].update(lower_tf="2"))])
+        self.assertEqual(r["pair_counts"],{"BLOCKED_CONFIG_METADATA_MISMATCH":1})
+        self.assertEqual(r["relations"]["cot_vs_intrabar_delta"],{})
+
+    def test_outcomes_exclude_older_than_window(self):
+        r=self.run_dossier([good(),fixture(T0-2*86400000)])
+        self.assertEqual(r["outcomes"]["selected_rows"],1)
+
     def test_snapshots_readonly(self):
         self.db.execute("PRAGMA query_only=OFF")
         with self.assertRaises(ValueError):

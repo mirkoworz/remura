@@ -40,5 +40,25 @@ def run():
         print("REMURA_D_B_CROSS_TRACK_SYNTHETIC=PASS; NO_LIVE_DB; NO_ORDERS; NO_SEND")
     finally:
         db.close()
+def run_cvd():
+    from test_shark_cvd_cot_price_triage import TripleCausalTriageTests,SECRET,OBSERVED,NOW
+    from aux_source_coverage_preview_v1 import coverage
+    t=TripleCausalTriageTests()
+    t.setUp()
+    try:
+        t._proof()
+        t._cvd()
+        for db in (t.main,t.private):
+            db.execute("PRAGMA query_only=ON")
+        before=(t.main.total_changes,t.private.total_changes)
+        r=coverage(t.main,t.private,as_of_utc=iso(NOW+timedelta(seconds=5)),days=1,secret=SECRET)
+        assert r["validLocalCotPricePairs"]==1 and r["distinctSignalsWithExactCVD"]==1
+        assert not r["same_tv_decision_proven"] and not r["orders_enabled"]
+        assert before==(t.main.total_changes,t.private.total_changes)
+        print("REMURA_B_CVD_COVERAGE_SYNTHETIC=PASS; SEPARATE_DENOMINATOR; NO_LIVE_DB")
+    finally:
+        t.tearDown()
+
 if __name__=="__main__":
     run()
+    run_cvd()

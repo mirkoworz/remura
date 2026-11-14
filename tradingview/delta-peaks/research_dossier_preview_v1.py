@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# REMURA v0.8.56 LAB — 14/11/2026 CET
+# REMURA v0.8.57 LAB — 14/11/2026 11:47 CET
 """Read-only research dossier; uses the existing B causal audit, no live wiring.
 All source identities are local proofs, not independently authenticated inputs.
 No future evidence, prices in the report, execution, orders or notifications.
@@ -10,9 +10,10 @@ import sqlite3
 from fx_m15_decision_preview_v1 import utc, ms, HEX
 from fx_asof_handoff_v1 import handoff
 from fx_outcome_readiness_v1 import readiness
-from volume_features_v1 import MAX_EXPORT_ROWS
+from volume_features_v1 import MAX_EXPORT_ROWS, decode
+from fx_pilot_config_v1 import REFERENCE, compare_v1_fields
 
-VERSION = "0.8.56-lab"
+VERSION = "0.8.57-lab"
 B_PIN = "8dc51e8a199dc1cfd45e4cd2e7b339510af2eb2b"
 B_SCHEMA = "remura-track-b-causal-local-cot-price-join-v1"
 
@@ -48,6 +49,8 @@ def dossier(db, rows, *, as_of_utc, days=1, origin="LOCAL_SNAPSHOT"):
     event_counts=Counter()
     seen=set()
     grouped=defaultdict(list)
+    window_rows=[]
+    lower=ms(at-timedelta(days=days))
     for row in rows:
         if not isinstance(row,dict):
             raise ValueError("malformed_export_metadata")
@@ -56,8 +59,9 @@ def dossier(db, rows, *, as_of_utc, days=1, origin="LOCAL_SNAPSHOT"):
         close,receipt=row.get("bar_close_ms"),row.get("received_at_ms")
         if type(close) is not int or type(receipt) is not int:
             raise ValueError("invalid_fx_export_metadata")
-        if receipt<=cutoff and close<=cutoff:
+        if receipt<=cutoff and lower<=close<=cutoff:
             grouped[close].append(row)
+            window_rows.append(row)
     n=b.get("locallyJoinedCausalPairs")
     if n is None:
         if pairs:
@@ -81,10 +85,16 @@ def dossier(db, rows, *, as_of_utc, days=1, origin="LOCAL_SNAPSHOT"):
             counts["B_DECISION_CLOCK_OUTSIDE_HANDOFF"]+=1
             continue
         tv=handoff(grouped.get(ms(close),[]),decision_ms=ms(observed),bar_close_ms=ms(close))
-        counts[tv["status"]]+=1
         candidate=tv["candidate"]
         if candidate is None:
+            counts[tv["status"]]+=1
             continue
+        # Check exactly the snapshot admitted as of the original decision.
+        matched=[r for r in grouped[ms(close)] if r["received_at_ms"]==candidate["received_at_ms"]]
+        if not matched or not all(compare_v1_fields(decode(r)[0],REFERENCE)["v1_fields_match"] for r in matched):
+            counts["BLOCKED_CONFIG_METADATA_MISMATCH"]+=1
+            continue
+        counts[tv["status"]]+=1
         o=candidate["observed"]
         relations["cot_vs_intrabar_delta"][relation(side,o["delta_sign"])]+=1
         relations["cot_vs_price_body"][relation(side,o["price_body_sign"])]+=1
@@ -92,7 +102,7 @@ def dossier(db, rows, *, as_of_utc, days=1, origin="LOCAL_SNAPSHOT"):
         event_counts.update(candidate["observed_labels"])
     if sum(counts.values())!=len(pairs):
         raise ValueError("nonconserving_pair_population")
-    outcome=readiness(rows,as_of_ms=cutoff)
+    outcome=readiness(window_rows,as_of_ms=cutoff)
     return {
         "schema":"remura.tv.research.dossier.preview.v1","version":VERSION,
         "origin":origin,"as_of_ms":cutoff,"days":days,

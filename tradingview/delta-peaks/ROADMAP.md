@@ -1,6 +1,13 @@
-# REMURA TradingView — ROADMAP v0.8.56-lab (cross-track research dossier and dashboard preview)
-**Aggiornamento: 14/11/2026 CET — batch D4/D5 offline integrato**
+# REMURA TradingView — ROADMAP v0.8.57-lab (D4/D5 integrated offline research)
+**Aggiornamento: 14/11/2026 11:47 CET — primo test D-B E2E verde e copertura fonti separata**
 **PR #102 DRAFT/OPEN — nessun merge, nessun nuovo deploy, nessun ordine.**
+
+## CHECKPOINT v0.8.57 — BATCH INTEGRATO D4/D5, STRATEGIE E COPERTURA CVD
+- [x] v0.8.56 commit 6376929c5fcc23c2d6e6d78c0b6457b74bbca804: CI #43586913453 e dry-run #43586913460 SUCCESS. 162 test principali, marker REMURA_D_B_CROSS_TRACK_SYNTHETIC=PASS (reale codice B pin, fixture sintetica, nessun DB live).
+- [x] Rafforzato dossier: limita finestra B/FX e blocca mismatch dei campi config v1 prima di confrontare relazioni. Correlazioni descrittive, non segnali. Dashboard aggiornata alla v0.8.57 con data/ora e cutoff.
+- [x] Valutazione esiti: mediana ritorni close-to-close in ATR e media baseline di sessione pesata per evento; 15/30/60 minuti. Contatori maturazione e missing preservati. Ritorni descrittivi, non PnL eseguibile; overlap, spread, slippage e OOS ancora non verificati. Nessuna ammissione scientifica.
+- [x] Nuovo bridge read-only CVD opzionale: usa audit B esistente con due snapshot query_only, HMAC privato fornito dal runtime, restituisce esclusivamente copertura B separata (mai presumere abbinamento allo stesso segnale TV). Fixture reale codice B in memoria aggiunta a CI. Retail resta UNKNOWN; riconciliazione shard e prova per singola decisione richiedono evidenze effettive e coordinamento B. Nessun segreto o DB privato usato.
+- [ ] CI v0.8.57 da verificare. Se verde aggiornare pin del workflow FX al commit verificato per includere esiti descrittivi. Nessuna attività manuale ora. Produzione e A/B/C intatti, PR #102 DRAFT. Pilot FX alla riapertura, stop BTC domenica sera; quota effettiva non misurata. Nessun nuovo server/deploy/costo.
 
 ## CHECKPOINT v0.8.56 — DOSSIER D4/D5 E TEST CROSS-TRACK
 - [x] v0.8.55 CI #43586726553 e Wrangler dry-run #43586726572 SUCCESS.

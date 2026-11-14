@@ -26,6 +26,15 @@ class ReadinessTests(unittest.TestCase):
         self.assertFalse(r["scientific_admission"])
         self.assertFalse(r["orders_enabled"])
 
+    def test_descriptive_comparison_only(self):
+        r=run([coherent()]+[coherent(T0+i*M5,True) for i in range(1,13)])
+        c=r["horizons"]["15"]["descriptive_comparison"]["ANY_EVENT"]
+        self.assertEqual(c["complete_events"],1)
+        self.assertEqual(c["matched_events"],1)
+        self.assertEqual(c["median_signed_close_return_atr"],0.0)
+        self.assertTrue(c["not_execution_return"])
+        self.assertFalse(r["trading_edge_established"])
+
     def test_pending_vs_mature_missing(self):
         r=run([coherent()],T0+3*M5+120000)
         self.assertEqual(r["horizons"]["15"]["event_counts"]["ANY_EVENT"]["MISSING_BAR"],1)

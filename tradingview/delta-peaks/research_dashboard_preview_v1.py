@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-# REMURA v0.8.56 LAB — 14/11/2026 CET
+# REMURA v0.8.57 LAB — 14/11/2026 11:47 CET
 """Render the aggregate research dossier offline; no external assets or scripts."""
 from html import escape
 from hashlib import sha256
+from datetime import datetime, timezone
 import json
 
 SCHEMA="remura.tv.research.dossier.preview.v1"
@@ -49,10 +50,11 @@ def render(r):
             data.get("baseline_counts",{}))+"</table></section>"
     origin="DATI SINTETICI — NON REALI" if r["origin"]=="SYNTHETIC" else "SNAPSHOT LOCALE — PROVENIENZA NON CERTIFICATA"
     pairs="N/D" if r["b_local_pairs"] is None else str(r["b_local_pairs"])
+    asof=datetime.fromtimestamp(r["as_of_ms"]/1000,tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     return """<!doctype html><html lang="it"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">
-<title>REMURA LAB — 0.8.56</title><style>
+<title>REMURA LAB — 0.8.57</title><style>
 *{box-sizing:border-box}body{margin:0;background:#0b141d;color:#e7eef4;font:16px system-ui,sans-serif}
 main{max-width:1040px;margin:auto;padding:22px}header{border-bottom:1px solid #354653;padding-bottom:18px}
 small,p{color:#b2c4d1}h1{font-size:1.8rem;margin:10px 0}h2{font-size:1.1rem}h3{font-size:.9rem}
@@ -60,8 +62,8 @@ small,p{color:#b2c4d1}h1{font-size:1.8rem;margin:10px 0}h2{font-size:1.1rem}h3{f
 section{background:#14212d;border:1px solid #354653;border-radius:12px;padding:16px;margin:8px 0}
 table{border-collapse:collapse;width:100%;font-size:.88rem}td{padding:8px 4px;border-bottom:1px solid #354653;overflow-wrap:anywhere}td:last-child{text-align:right;font-variant-numeric:tabular-nums}
 .notice{color:#e9ca81}footer{margin-top:20px;color:#b2c4d1;font-size:.85rem}
-</style></head><body><main><header><small>v0.8.56 LAB | 14/11/2026 CET | Anteprima offline</small>
-<h1>REMURA — Ricerca volumetrica EURUSD</h1><p class="notice">"""+origin+""" · Nessun segnale operativo</p></header>
+</style></head><body><main><header><small>v0.8.57 LAB | 14/11/2026 CET | Anteprima offline</small>
+<h1>REMURA — Ricerca volumetrica EURUSD</h1><p class="notice">"""+origin+""" · Nessun segnale operativo</p><p>Cutoff dati: """+escape(asof)+"""</p></header>
 <section><h2>Coppie COT/prezzo locali: """+escape(pairs)+"""</h2><table>"""+_counts(r["pair_counts"])+"""</table></section>
 <div class="grid">"""+relations+"""</div><section><h2>Fonti mancanti / non attestate</h2>
 <p>CVD: N/D · Sentiment retail: N/D · Parametri effettivi: non attestati. Nessuna prova di edge.</p></section>
