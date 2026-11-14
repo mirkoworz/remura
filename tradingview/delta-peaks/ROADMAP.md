@@ -1,12 +1,18 @@
-# REMURA TradingView — ROADMAP v0.8.70-lab (raccolta privata e benchmark)
-**Aggiornamento 14/11/2026 16:53 CET — raccolta privata e benchmark non-overlap**
+# REMURA TradingView — ROADMAP v0.8.71-lab (protocollo prospettico)
+**Aggiornamento 14/11/2026 16:56 CET — protocollo prospettico e fonti ausiliarie**
 **PR #102 DRAFT/OPEN — deploy TEST autorizzato riuscito, produzione e ordini esclusi.**
+
+## CHECKPOINT v0.8.71 — PROTOCOLLO PROSPETTICO
+- [x] v0.8.70 CI 43612686426 SUCCESS 219 test, dry-run 43612686428 SUCCESS; workflow batch main 16970ad9030eb3789f564a998bfbd4506706efa8 pin 5ca2e4ee6952de7949e87e5335f45f1fa8722874, commento 6880160593.
+- [x] Protocollo fisso [CVD-PROSPECTIVE-PROTOCOL-V1.md](CVD-PROSPECTIVE-PROTOCOL-V1.md), modulo cvd_oos_protocol_preview_v1 e hash: development 16–22/11, holdout 23–29/11, replica 30/11–06/12 UTC; outcome solo dopo fine fold e scope richiesto completo; no matching cross-fold, no dati oltre cutoff, maturazione esistente. 7 nuovi test. Nessuna prova OOS reale o blindaggio indipendente, report precedenti restano descrittivi.
+- [x] Verificato codice B pin: triage HMAC espone solo aggregati, nessun sink privato per eventi verificati per decisione. Non correlare aggregati CVD B/D; sentiment idem senza witness. Necessario futuro raccordo con B senza toccarlo ora.
+- [ ] CI v0.8.71 da verificare. Non aggiornare reader se non verde; raccolta fold richiede export privati più lunghi del batch 48h. Rimangono prima ricezione reale, quote effettive, verifica costi/OOS. PR #102 DRAFT, nessun deploy.
 
 ## CHECKPOINT v0.8.70 — RACCOLTA PRIVATA E BENCHMARK
 - [x] v0.8.69 CI 43612478643 e dry-run 43612478649 SUCCESS, 211 test principali, 8/8 nuovi e fixture pinned B PASS; commento 6880115837. Main reader resta v0.8.68.
 - [x] cvd_test_batch_reader_v1: memoria privata effimera, una inventory + max 8 SELECT da 72 slot (576 slot/48h), no raw log/artifact, query meta rows_read/written se disponibili, no stima account, no retry, no snapshot atomico. API helper esistente 200KB fail-closed: eventuale risposta troppo grande richiede finestra più corta, nessun cambio automatico di budget. Nessuna query reale ancora.
 - [x] cvd_nonoverlap_preview_v1: ingresso proxy chiusura M5 SUCCESSIVA a conferma/receipt, finestre non sovrapposte scelte cronologicamente prima degli esiti, controllo singolo per confronto, CVD vs price-only e ER/retest/FP sign tra CVD selezionati; unknown escluso. 1h primaria stessa data/fascia/direzione, 4/24h secondarie stessa fascia/direzione tra date. Costi round-trip 0/1/2 pip solo scenari ipotetici (non spread misurato), differenze descrittive, confronti distinti non indipendenti, OOS ancora da validare. Mantiene report v0.8.67 separato.
-- [ ] CI 8 nuovi test da verificare; dopo verde predisporre workflow owner-only batch con pin, nessun upload pubblico. Prima ricezione reale, quote account e prova OOS ancora aperte. Edge D0.8 negativo (-0.6680 pip), non ignorarlo. Nessun deploy/ordine/nuova risorsa.
+- [x] CI e workflow batch verificati nel checkpoint v0.8.71. Prima ricezione reale, quote account e prova OOS ancora aperte. Edge D0.8 negativo (-0.6680 pip), non ignorarlo. Nessun deploy/ordine/nuova risorsa.
 
 ## CHECKPOINT v0.8.69 — CVD E SQUALINCOME PREVIEW
 - [x] v0.8.68: CI 43612132691 e dry-run 43612132655 SUCCESS, 203 test principali, 7/7 nuovi; pin reader main 9e24c20f3f3a069c20c8e75c19e6ba9197d3124d, commit ffdb25220942717ea22388ec3cce1d0bb3877594. Chiusura anche in commento PR 6880059718.
