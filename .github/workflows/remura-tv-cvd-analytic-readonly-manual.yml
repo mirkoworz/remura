@@ -1,0 +1,53 @@
+# REMURA v0.8.64 — 14/11/2026 12:59 CET
+# Owner-only read-only CVD TEST diagnostics. No deployment or scheduler.
+name: REMURA CVD TEST Analytic Reader
+on:
+  workflow_dispatch:
+    inputs:
+      start_utc:
+        description: 'Prima chiusura M5 effettiva del pilota FX:EURUSD, UTC YYYY-MM-DDTHH:MMZ'
+        required: true
+        type: string
+      end_utc:
+        description: 'Ultima chiusura maturata da almeno 120s, UTC YYYY-MM-DDTHH:MMZ'
+        required: true
+        type: string
+      confirmation:
+        description: 'Solo lettura aggregata CVD TEST'
+        type: choice
+        required: true
+        default: READ_CVD_TEST_ONLY
+        options:
+          - READ_CVD_TEST_ONLY
+permissions:
+  contents: read
+concurrency:
+  group: remura-tv-test-cvd-analytic-read
+  cancel-in-progress: false
+jobs:
+  read:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/main' &&
+      github.actor == 'mirkoworz' &&
+      github.triggering_actor == 'mirkoworz' &&
+      inputs.confirmation == 'READ_CVD_TEST_ONLY'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 7ca0736ee6d933071c02b31917b94d99684bba5f
+          persist-credentials: false
+      - name: Offline validation gates
+        run: python3 -m unittest discover -s tradingview/delta-peaks -p 'test_cvd*.py' -v
+      - name: Read CVD TEST only
+        env:
+          REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+          REMURA_CF_D1_READ_TOKEN: ${{ secrets.REMURA_CF_D1_READ_TOKEN }}
+          START_UTC: ${{ inputs.start_utc }}
+          END_UTC: ${{ inputs.end_utc }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/gateway-lab/cvd_pilot_analytic_reader_v1.py --live-read --start-utc "$START_UTC" --end-utc "$END_UTC"
