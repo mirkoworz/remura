@@ -1,6 +1,11 @@
-# REMURA TradingView — ROADMAP v0.8.52-lab (FX TEST aggregate reader candidate)
-**Aggiornamento roadmap: 14/11/2026, 11:25 CET — lettore FX verificato e workflow pronto**
+# REMURA TradingView — ROADMAP v0.8.53-lab (configured telemetry envelope preview)
+**Aggiornamento roadmap: 14/11/2026, 11:39 CET — 42 barre BTC e contratto configurazione candidato**
 **PR #102 DRAFT/OPEN — nessun merge, nessun nuovo deploy, nessun ordine.**
+
+## CHECKPOINT v0.8.53-lab — BTC 42 BARRE E CONFIGURAZIONE TELEMETRICA
+- [x] [Run #43586332330](https://github.com/mirkoworz/remura/actions/runs/43586332330), job #132421515016 SUCCESS alle 11:39 CET. v0.8.49 COMPLETE_WINDOW: 42/42 M5 08:10–11:35 CET, 31 heartbeat, 11 BAR_EVENT, zero gap/invalidi/conflitti/duplicati, 42 tempestivi entro 120s, max lag 6322ms. Footprint 36/42 (6 mancanti). 275 controlli matematici applicabili coerenti, 12/12 effort default30, 11/11 nuove visite; totale 298 controlli applicabili coerenti. DAY1=2 DAY2=3 DAY3=6; nessun ER o PEAK osservato. Parametri e tolleranze restano non attestati/calibrati, BTC escluso dalla ricerca FX.
+- [x] [Configured envelope preview](configured_envelope_preview_v1.py) commit `85edbdd1017a79e3e8c3e4075ccf83b88c89be8d` e 6 regressioni sintetiche `2811584d4eb169cd7f5de94220b77b7c68273742`: struttura candidata schema+snapshot v1+config dichiarata; validazione stretta FXCM EURUSD M5, parametri coerenti col riferimento, timestamp gateway, cap byte, nessuna ammissione predittiva. SHA256 calcolato lato lettore, non prova di configurazione autentica. CI da verificare; non è accettato dal gateway live. Non modificare alert o deploy.
+- [ ] Prossimo passo: preparare piano pilot EURUSD v1 alla riapertura (workflow già pronto) e migrazione configurazione separata dopo revisione. Non sono necessarie ulteriori letture BTC ravvicinate; lasciare raccolta e spegnere alert entro domenica sera. Quote effettive account non verificate. A/B/C e produzione intatti.
 
 ## CHECKPOINT v0.8.52 — WORKFLOW EURUSD PRONTO (11:25 CET)
 - [x] CI finale `8c3cdfdb56f2d5988c4d62b485ecfc68069c05db` Telemetry LAB #43582958403 e Wrangler dry run #43582958372 SUCCESS; log confermano 8/8 test specifici del lettore FX, 135 test Python principali.
