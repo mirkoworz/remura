@@ -1,4 +1,4 @@
-// REMURA Contributors v0.2 LAB — 14/11/2026 23:21 CET
+// REMURA Contributors v0.3 LAB — 14/11/2026 23:30 CET
 "use strict";
 const fs=require("node:fs");
 const vm=require("node:vm");
@@ -14,11 +14,18 @@ assert.doesNotMatch(html,/\b(?:fetch|XMLHttpRequest|localStorage|sessionStorage|
 const c=vm.createContext({});
 vm.runInContext(core[1],c);
 const now=Date.parse("2026-11-14T22:21:00Z");
-const p={symbol:"FX:EURUSD",period:"WEEK",kind:"DELTA_PEAK",price:"1,08540",observed_utc:"2026-11-14T20:00:00Z",note:"Demo"};
+const p={market:"EURUSD",provider:"FX",ticker:"EURUSD",period:"WEEK",kind:"DELTA_PEAK",price:"1,08540",observed_utc:"2026-11-14T20:00:00Z",note:"Demo"};
 assert.equal(c.validateDemo(p,now).price,"1.0854");
 assert.equal(c.validateDemo({...p,price:"2000"},now).price,"2000");
 for(const price of ["0","0.000","1e2","-1","NaN","1.234567891","1,234.56"])assert.throws(()=>c.validateDemo({...p,price},now));
-for(const change of [{symbol:"EURUSD"},{period:"YEAR"},{kind:"BUY"},{observed_utc:"2026-02-30T20:00:00Z"},{observed_utc:"2026-11-14T22:21:01Z"},{note:"a\nb"},{note:"a".repeat(281)}])assert.throws(()=>c.validateDemo({...p,...change},now));
+for(const change of [{market:"INVALID"},{provider:"INVALID"},{ticker:"FX:EURUSD"},{ticker:""},{period:"YEAR"},{kind:"BUY"},{observed_utc:"2026-02-30T20:00:00Z"},{observed_utc:"2026-11-14T22:21:01Z"},{note:"a\nb"},{note:"a".repeat(281)}])assert.throws(()=>c.validateDemo({...p,...change},now));
+assert.equal(c.sourceIdentity("NAS100","PEPPERSTONE","NAS100"),"PEPPERSTONE:NAS100");
+assert.equal(c.sourceIdentity("XAUUSD","CAPITALCOM","GOLD"),"CAPITALCOM:GOLD");
+assert.equal(c.sourceIdentity("EURUSD","FXCM","EURUSD"),"FXCM:EURUSD");
+assert.throws(()=>c.sourceIdentity("NAS100","FX","NAS100"));
+assert.throws(()=>c.sourceIdentity("EURUSD","IG","EURUSD"));
+assert.equal(vm.runInContext("Object.values(CATALOG).flat().length",c),67);
+assert.equal(vm.runInContext("new Set(Object.values(CATALOG).flat()).size",c),67);
 const records=[];
 assert.equal(c.demoReceipt(records,p,now).status,"UNREVIEWED");
 assert.throws(()=>c.demoReceipt(records,{...p,price:"1.0854"},now));
@@ -26,14 +33,20 @@ for(let i=1;i<20;i++)c.demoReceipt(records,{...p,note:"Demo "+i},now);
 assert.throws(()=>c.demoReceipt(records,{...p,note:"Overflow"},now));
 assert.equal(records.length,20);
 // Execute actual UI listeners with a small DOM stub (not Safari rendering).
-const ids=["enter","workspace","session","observed","example","symbol","period","kind","price","note","intake","message","receipts","count","exit"];
+const ids=["enter","workspace","session","observed","example","market","provider","symbol","period","kind","price","note","intake","message","receipts","count","exit"];
 function el(){return {value:"",textContent:"",hidden:false,children:[],events:{},addEventListener(n,f){this.events[n]=f},replaceChildren(){this.children=[]},append(...x){this.children.push(...x)},reset(){}}}
 const dom=Object.fromEntries(ids.map(x=>[x,el()]));
 c.document={getElementById:id=>dom[id],createElement:()=>el()};
 const scripts=[...html.matchAll(/<script(?: id="demo-core")?>([\s\S]*?)<\/script>/g)];
 assert.equal(scripts.length,2);
 vm.runInContext(scripts[1][1],c);
-dom.enter.events.click();dom.example.events.click();
+dom.enter.events.click();
+dom.market.value="NAS100";dom.market.events.change();
+assert.equal(dom.provider.value,"");assert.equal(dom.symbol.value,"");
+dom.provider.value="PEPPERSTONE";dom.provider.events.change();assert.equal(dom.symbol.value,"");
+dom.symbol.value="NAS100";dom.market.value="EURUSD";dom.market.events.change();assert.equal(dom.symbol.value,"");
+dom.provider.value="FXCM";dom.provider.events.change();assert.equal(dom.symbol.value,"EURUSD");
+dom.example.events.click();
 dom.intake.events.submit({preventDefault(){}});
 assert.equal(dom.count.textContent,"1 / 20");
 assert.match(dom.message.textContent,/Nessun dato inviato/);
