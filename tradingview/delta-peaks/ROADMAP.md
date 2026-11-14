@@ -1,16 +1,22 @@
-# REMURA TradingView — ROADMAP v0.8.80-lab (lettori V2)
-**Aggiornamento 14/11/2026 18:30 CET — migrazione lettori scientifici TEST V2**
+# REMURA TradingView — ROADMAP v0.8.81-lab (staging privato)
+**Aggiornamento 14/11/2026 19:58 CET — snapshot SQLite e metriche host offline**
 **PR #102 DRAFT/OPEN — deploy TEST autorizzato riuscito, produzione e ordini esclusi.**
+
+## CHECKPOINT v0.8.81 — STAGING PRIVATO E HOST
+- [x] v0.8.80 CI 43621504958 SUCCESS, dry-run 43621504970 SUCCESS, main pin batch/fold V2 793e1663b3920c447e20cca36113296c6ba77793, commento 6881494924. Nessuna modifica deploy.
+- [x] Monitor 43604793944 14/11 15:25 CET: 4 OK, 363 letture, 348 scritture, 270 richieste, TEST 217088 B, account 245760 B. Stime, non billing; scaduto per gate 30 min.
+- [x] Staging detached export con digest, file privati, cap 32 MiB, query-only in memoria, quick_check; host evidence Linux cgroup v2; preflight doppio prima/dopo snapshot. 9 test sintetici aggiunti. Nessun accesso reale.
+- [ ] CI v0.8.81, verifica sorgenti/size/backup coerente A/B, evidenze host e quote fresche, single-flight e orchestrazione privata senza scheduler attivo. Nessun ordine o notifica.
 
 ## CHECKPOINT v0.8.80 — LETTORI SCIENTIFICI V2
 - [x] v0.8.79 commit a7d76abfa7a66e8896cfeb12dccae11ca869bb65; CI 43620907984 SUCCESS, dry-run 43620908078 SUCCESS. Log dettagliato non recuperato (timeout connettore); non attestare conteggio effettivo.
 - [x] Archive, batch e fold V2 separati; validazione V1 riusata intatta; stesse query, cutoff, cap. Fold V2 usa solo validazione + protocollo V2. Batch V2 oscura outcome e benchmark descrittivi per qualsiasi finestra sovrapposta al calendario preregistrato; radar resta diagnostica, non prova di blindaggio indipendente. Reader V1 conservati per rollback.
-- [ ] CI v0.8.80, poi pin dei soli workflow manuali TEST batch/fold su main (nessun avvio). Nessun servizio attivo, dati reali, costi certificati o deploy.
+- [x] CI v0.8.80 verde e pin manuali TEST aggiornati su main (nessun avvio). Nessun servizio attivo, dati reali, costi certificati o deploy.
 
 ## CHECKPOINT v0.8.79 — MATCHING CAUSALE V2
 - [x] v0.8.78 CI 43618758605 SUCCESS 259 test e dry-run 43618758595 SUCCESS, checkpoint riferito 6881112710.
 - [x] Benchmark e protocollo V2 separati, V1 intatto: assegnazioni FIFO prima degli esiti, nessun rimpiazzo, conteggi e digest, candidati tardivi esclusi prima della riserva. Fold/strati/orizzonti invariati; nessuna inferenza.
-- [x] CI e dry-run V2 SUCCESS; migrazione reader separata in v0.8.80, pin ancora da aggiornare. Persistenza causale indipendente/ledger conflitti non attestati. Quote/host reali ignoti.
+- [x] CI e dry-run V2 SUCCESS; migrazione reader separata in v0.8.80, pin aggiornati nel checkpoint v0.8.81. Persistenza causale indipendente/ledger conflitti non attestati. Quote/host reali ignoti.
 - [ ] Prima ricezione Forex alla riapertura; stop alert BTC temporaneo domenica sera senza fermare Forex; coordinare Oracle con A. Nessun deploy, merge, trade.
  
 ## CHECKPOINT v0.8.78 — GATE RISORSE PREVIEW

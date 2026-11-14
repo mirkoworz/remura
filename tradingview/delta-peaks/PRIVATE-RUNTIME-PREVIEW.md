@@ -1,4 +1,4 @@
-# REMURA v0.8.78 LAB — 14/11/2026 18:00 CET
+# REMURA v0.8.81 LAB — 14/11/2026 19:58 CET
 ## Runtime privato, non attivo
 - Il percorso giornaliero usa la stessa validazione completa delle finestre senza rieseguire i benchmark scientifici. La profilazione sintetica del runner non certifica l'host Oracle.
 `gateway-lab/cvd_private_runtime_preview_v1.py` è una libreria per un futuro chiamante privato sul nodo esistente. Non è un endpoint, cron, nuovo Worker o comando da eseguire sul DB LIVE.
@@ -10,3 +10,9 @@
 - Gate prima dell'attivazione: verifica token e quota effettiva, primo alert Forex, sorgenti snapshot reali e restore, profilo CPU/RAM, autorizzazione del runtime e del trasporto privato; nessuna notifica o ordine. Nessun nuovo servizio richiesto.
 
 - Wrapper facoltativo `cvd_runtime_resource_gate_v1.guarded_collect`: input privati genuini e recenti, 4 report del monitor esistente (d1/workers/storage/account_storage), clock host <=60s e report <=30min nello stesso giorno UTC, memoria >=256MiB, load1/CPU <=0.75, soglie 70% con riserva 20k read. Non è un autentificatore, non misura cgroup/RSS/quote reali, non autorizza LIVE. Il caller futuro deve ottenere le evidenze con canale privato; se assenti bloccare. Non sostituisce il controllo della fatturazione, del piano e del carico reale.
+
+## Preparazione staging v0.8.81 (offline, non attiva)
+- `cvd_detached_snapshots_v1.open_snapshots`: solo export SQLite già coerenti, separati e autorizzati dal responsabile del filone A/B; cartella privata proprietario UID corrente, file 0600 o più restrittivi, nomi fissi core.sqlite3/private.sqlite3, SHA-256 attesi forniti dal caller con provenienza privata. NO copia del file live o WAL, NO backup automatico dal nodo. Export standalone in modalità journal DELETE, nessun sidecar; limite 32 MiB complessivi, deserializzazione in memoria, quick_check con deadline indicativa, trusted_schema OFF, query_only ON, chiusura anche su errore. Non prova autenticità o atomicità fra due database, non è sandbox per codice Python non fidato. Richiede Python con sqlite3.deserialize (3.11+ e supporto SQLite).
+- `cvd_linux_host_evidence_v1.sample_host`: Linux, MemAvailable, affinity, load1, limiti visibili cgroup v2 (memoria residua, quota CPU intera minima); layout non supportato o metriche assenti bloccano. Non certifica limiti nascosti namespaces, RSS futuro o Oracle Always Free.
+- `cvd_staged_runtime_preflight_v1.prepared`: gate prima della copia in memoria e dopo, con clock corrente e budget originale fornito privatamente dal caller. Nessun network o chiamata D1 in questo modulo. Report del monitor 14/11 15:25 CET scaduto per gate 30 min. Non cambiare observed_ms per rendere fresco un report.
+- Resta da identificare sorgente di export autorizzata, verificare dimensioni effettive (il cap locale potrebbe bloccare), metodo di checkpoint coerente e profilo Oracle, coordinamento A/B, acquisizione report fresco senza duplicare monitor; nessuna attivazione, accesso a host o DB reali.
