@@ -1,11 +1,16 @@
-# REMURA TradingView — ROADMAP v0.8.82-lab (one-shot coordinato)
-**Aggiornamento 14/11/2026 20:28 CET — single-flight e raccolta privata protetta**
+# REMURA TradingView — ROADMAP v0.8.83-lab (stato privato e dedup)
+**Aggiornamento 14/11/2026 20:31 CET — deduplicazione sequenziale**
 **PR #102 DRAFT/OPEN — deploy TEST autorizzato riuscito, produzione e ordini esclusi.**
+
+## CHECKPOINT v0.8.83 — STATO PRIVATO E DEDUP SEQUENZIALE
+- [x] v0.8.82 CI 43632358432 SUCCESS, dry-run 43632358438 SUCCESS, checkpoint 6883022244; B pinned fixture integrata verde.
+- [x] Entry V2 opzionale: massimo un tentativo per bucket M15 UTC, cutoff close+180s per handoff B, claim persistito prima di D1, niente retry stesso bucket anche dopo errore. Singolo stato aggregato 256 KiB, file privato 0600, hash integrità, replace atomico e fsync, ultimo successo conservato durante claim. Origin separata, blocco clock regressivo. Nessun server o scheduler. Fingerprint solo equivalenza aggregata notice senza cutoff/ID; non dedup eventi né invio. 8 test sintetici.
+- [ ] CI v0.8.83; staging/host/quote fresche reali, verifica cronologia e spazio, pin B e account dedicato, nessuna attivazione. Privacy locale non crittografia; cancellazione stato da operatore resetta claim, niente esclusione cross-host, quota non prenotata. Integrare reader privato dashboard con stato stale esplicito.
 
 ## CHECKPOINT v0.8.82 — ONE-SHOT COORDINATO
 - [x] v0.8.81 CI 43629591604 SUCCESS, dry-run 43629591620 SUCCESS, commento 6882637966.
 - [x] Lock flock non bloccante, file stabile privato preesistente, niente creazione/cancellazione; solo processi cooperanti stesso host. Nuova raccolta protetta V2 con controllo risorse/quote e clock a ogni confine I/O, prima/dopo render. Cutoff unico congelato; 120s deadline cooperativa, non timeout duro. Nessun retry, stesso cap D1 TEST. Nessun retail, scheduler, invio o deploy. 8 test aggiunti e fixture B pinned end-to-end su export sintetico e D1 mock.
-- [ ] CI v0.8.82; verificare integrazione reale solo dopo evidenze host/quote fresche e sorgenti export autorizzate con A/B, prima ricezione FX, continuità Oracle. Quota non riservata atomicamente, niente coordinamento cross-host; dedup sequenziale/scheduler da progettare dopo verifica reale.
+- [x] CI v0.8.82 verde; dedup sequenziale implementato in v0.8.83; resta da verificare integrazione reale solo dopo evidenze host/quote fresche e sorgenti export autorizzate con A/B, prima ricezione FX, continuità Oracle. Quota non riservata atomicamente, niente coordinamento cross-host; dedup sequenziale/scheduler da progettare dopo verifica reale.
 
 ## CHECKPOINT v0.8.81 — STAGING PRIVATO E HOST
 - [x] v0.8.80 CI 43621504958 SUCCESS, dry-run 43621504970 SUCCESS, main pin batch/fold V2 793e1663b3920c447e20cca36113296c6ba77793, commento 6881494924. Nessuna modifica deploy.
