@@ -1,6 +1,13 @@
-# REMURA TradingView — ROADMAP v0.8.49-lab (real arithmetic checks and sequence diagnostics)
-**Aggiornamento roadmap: 14/11/2026, 10:02 CET — 23 barre complete, 143 controlli coerenti**
+# REMURA TradingView — ROADMAP v0.8.50-lab (FX as-of handoff candidate)
+**Aggiornamento roadmap: 14/11/2026, 10:46 CET — candidato passaggio D → B con causalità esplicita**
 **PR #102 DRAFT/OPEN — nessun merge, nessun nuovo deploy, nessun ordine.**
+
+## CHECKPOINT v0.8.50-lab — HANDOFF CAUSALE FX OFFLINE
+- [x] PR #102 DRAFT verificata su precedente HEAD; ultimo run reale rimane #43578611804, nessuna nuova lettura avviata autonomamente. Consultato filone B PR #89 DRAFT in sola lettura (shark_sample_admission.py), senza modifica.
+- [x] [fx_asof_handoff_v1.py](fx_asof_handoff_v1.py) commit `70146599ce3210aa749dc34c297fbc5ce4be7a16`: solo FXCM:EURUSD M5; finestra decisione esplicita, ricevuti dopo decisione esclusi, nessun fallback a barra vecchia, blocco invalidi/conflitti/late/review; partial con null preservati. Solo candidato descrittivo, provenance export e input alert non attestati. Nessuna ammissione istituzionale/predittiva, ordini, notifiche o integrazione B attiva.
+- [x] Dieci regressioni sintetiche `f8e2ca4c16fd2a35b39b23d0bafa22380e8ed1fa` e [contratto D-B](HANDOFF-D-B-V0850.md) `a6c1b48b9cbabd2b44de4085e5c0e212fb728f37`: piano futura attestazione parametri Pine e join as-of indipendente fonti. Nessuna modifica Pine, Worker, D1, main o filoni A/B/C in questo checkpoint. CI da confermare.
+- [ ] Ora possibile lettura sequenziale BTC v0.8.49 con stesso workflow READ_TEST_ANALYTICS_ONLY (primo slot valutabile 10:40 CET + 120s). Leggere aggregati, non ricreare alert. Non cambiare pin: handoff v0.8.50 non richiesto per BTC.
+- [ ] Prima di pilot FX scientifico: attestazione config effettiva, provenienza e decisioni; futuro schema versionato offline e coordinamento B, quote reali Free da verificare. Ricordare stop BTC domenica sera.
 
 ## CHECKPOINT v0.8.49-lab — DIAGNOSTICA MATEMATICA REALE E SEQUENZIALE
 - [x] [Run #43578611804](https://github.com/mirkoworz/remura/actions/runs/43578611804), job #132398292616, SUCCESS, 10:02 CET. Marker v0.8.48: COMPLETE_WINDOW, 23/23 M5 08:10–10:00 CET, 16 HEARTBEAT, 7 BAR_EVENT, zero gap/invalidi/duplicati/conflitti; tutte 23 consegne entro 120s, max lag 4312ms. Footprint presente 18, non disponibile 5. Tutti 143 controlli applicabili coerenti (5*18 footprint + 2*23 risultato/efficienza + 7 retest); 25 footprint NOT_EVALUABLE, ER assente. Retest DAY2=3, DAY3=4. Tolleranze provvisorie, nessuna prova di feed accuracy o profitto. BTC diagnostica, dati Forex non contaminati.
