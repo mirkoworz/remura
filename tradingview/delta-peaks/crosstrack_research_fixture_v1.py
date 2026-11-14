@@ -129,8 +129,44 @@ def run_runtime():
     finally:
         db.close()
 
+
+def run_one_shot():
+    # Pinned B real implementation, synthetic detached export, mock D1 transport.
+    import sqlite3,tempfile
+    from pathlib import Path
+    import sys
+    from hashlib import sha256
+    from unittest.mock import patch
+    sys.path.insert(0,str(Path(__file__).resolve().parent/"gateway-lab"))
+    import cvd_runtime_one_shot_v1 as o
+    import cvd_staged_runtime_preflight_v1 as p
+    import cvd_guarded_collection_v2 as c
+    from cvd_runtime_singleflight_v1 import NAME
+    from cvd_private_runtime_preview_v1 import MIN_CLOSE_MS
+    from test_cvd_runtime_resource_gate_v1 import fixture as evidence
+    from test_cvd_batch_nonoverlap_preview_v1 import response
+    db,doc=create()
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp); path=root/"core.sqlite3"
+            dest=sqlite3.connect(path)
+            try:db.backup(dest)
+            finally:dest.close()
+            path.chmod(0o600);(root/NAME).touch(mode=0o600)
+            raw=path.read_bytes()
+            host,budget=evidence();now=MIN_CLOSE_MS+120000
+            host["observed_ms"]=budget["observed_ms"]=now
+            with patch.object(o.time,"time_ns",return_value=now*1000000),patch.object(o,"sample_host",return_value=host),patch.object(p,"sample_host",return_value=host),patch.object(c,"require_account_id",return_value="account"),patch.object(c,"require_account_token",return_value="token"),patch.object(c,"inspect_verified_inventory",return_value={c.MAIN_DB:"main",c.TEST_DB:"test"}),patch.object(c,"api_request",return_value={}) as api,patch.object(c,"fetch_page",return_value=response([],{"rows_read":1,"rows_written":0})) as page:
+                r=o.run_once(root,{"core.sqlite3":sha256(raw).hexdigest()},root,"","",budget=budget,explicit=True,origin="SYNTHETIC")
+            assert api.call_count==1 and page.call_count==len(c.plan(now))
+            assert "DATI SINTETICI" in r["preview"]["html"] and not r["preview"]["notice"]["sent"]
+            assert path.read_bytes()==raw and not r["orders_enabled"]
+            print("REMURA_D_STAGED_ONE_SHOT_SYNTHETIC=PASS; PINNED_B; MOCK_D1; NO_LIVE_DB")
+    finally:db.close()
+
 if __name__=="__main__":
     run()
     run_cvd()
     run_aux()
     run_runtime()
+    run_one_shot()

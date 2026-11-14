@@ -1,12 +1,17 @@
-# REMURA TradingView — ROADMAP v0.8.81-lab (staging privato)
-**Aggiornamento 14/11/2026 19:58 CET — snapshot SQLite e metriche host offline**
+# REMURA TradingView — ROADMAP v0.8.82-lab (one-shot coordinato)
+**Aggiornamento 14/11/2026 20:28 CET — single-flight e raccolta privata protetta**
 **PR #102 DRAFT/OPEN — deploy TEST autorizzato riuscito, produzione e ordini esclusi.**
+
+## CHECKPOINT v0.8.82 — ONE-SHOT COORDINATO
+- [x] v0.8.81 CI 43629591604 SUCCESS, dry-run 43629591620 SUCCESS, commento 6882637966.
+- [x] Lock flock non bloccante, file stabile privato preesistente, niente creazione/cancellazione; solo processi cooperanti stesso host. Nuova raccolta protetta V2 con controllo risorse/quote e clock a ogni confine I/O, prima/dopo render. Cutoff unico congelato; 120s deadline cooperativa, non timeout duro. Nessun retry, stesso cap D1 TEST. Nessun retail, scheduler, invio o deploy. 8 test aggiunti e fixture B pinned end-to-end su export sintetico e D1 mock.
+- [ ] CI v0.8.82; verificare integrazione reale solo dopo evidenze host/quote fresche e sorgenti export autorizzate con A/B, prima ricezione FX, continuità Oracle. Quota non riservata atomicamente, niente coordinamento cross-host; dedup sequenziale/scheduler da progettare dopo verifica reale.
 
 ## CHECKPOINT v0.8.81 — STAGING PRIVATO E HOST
 - [x] v0.8.80 CI 43621504958 SUCCESS, dry-run 43621504970 SUCCESS, main pin batch/fold V2 793e1663b3920c447e20cca36113296c6ba77793, commento 6881494924. Nessuna modifica deploy.
 - [x] Monitor 43604793944 14/11 15:25 CET: 4 OK, 363 letture, 348 scritture, 270 richieste, TEST 217088 B, account 245760 B. Stime, non billing; scaduto per gate 30 min.
 - [x] Staging detached export con digest, file privati, cap 32 MiB, query-only in memoria, quick_check; host evidence Linux cgroup v2; preflight doppio prima/dopo snapshot. 9 test sintetici aggiunti. Nessun accesso reale.
-- [ ] CI v0.8.81, verifica sorgenti/size/backup coerente A/B, evidenze host e quote fresche, single-flight e orchestrazione privata senza scheduler attivo. Nessun ordine o notifica.
+- [x] CI v0.8.81 verificata; single-flight e orchestrazione v0.8.82. Verifica reale sorgenti/size/backup coerente A/B, host e quote fresche ancora aperta. Nessun ordine o notifica.
 
 ## CHECKPOINT v0.8.80 — LETTORI SCIENTIFICI V2
 - [x] v0.8.79 commit a7d76abfa7a66e8896cfeb12dccae11ca869bb65; CI 43620907984 SUCCESS, dry-run 43620908078 SUCCESS. Log dettagliato non recuperato (timeout connettore); non attestare conteggio effettivo.

@@ -1,4 +1,4 @@
-# REMURA v0.8.81 LAB — 14/11/2026 19:58 CET
+# REMURA v0.8.82 LAB — 14/11/2026 20:28 CET
 ## Runtime privato, non attivo
 - Il percorso giornaliero usa la stessa validazione completa delle finestre senza rieseguire i benchmark scientifici. La profilazione sintetica del runner non certifica l'host Oracle.
 `gateway-lab/cvd_private_runtime_preview_v1.py` è una libreria per un futuro chiamante privato sul nodo esistente. Non è un endpoint, cron, nuovo Worker o comando da eseguire sul DB LIVE.
@@ -16,3 +16,8 @@
 - `cvd_linux_host_evidence_v1.sample_host`: Linux, MemAvailable, affinity, load1, limiti visibili cgroup v2 (memoria residua, quota CPU intera minima); layout non supportato o metriche assenti bloccano. Non certifica limiti nascosti namespaces, RSS futuro o Oracle Always Free.
 - `cvd_staged_runtime_preflight_v1.prepared`: gate prima della copia in memoria e dopo, con clock corrente e budget originale fornito privatamente dal caller. Nessun network o chiamata D1 in questo modulo. Report del monitor 14/11 15:25 CET scaduto per gate 30 min. Non cambiare observed_ms per rendere fresco un report.
 - Resta da identificare sorgente di export autorizzata, verificare dimensioni effettive (il cap locale potrebbe bloccare), metodo di checkpoint coerente e profilo Oracle, coordinamento A/B, acquisizione report fresco senza duplicare monitor; nessuna attivazione, accesso a host o DB reali.
+
+## One-shot coordinato v0.8.82 (non attivo)
+- `cvd_runtime_one_shot_v1.run_once`: explicit=True, preflight privato, snapshot, raccolta TEST e render in memoria. Nessuna CLI o scheduler. Lock root 0700, UID corrente, file vuoto remura-d-preview.lock 0600 preesistente, inode stabile, niente creazione/troncamento/cleanup; tutte le istanze cooperanti sullo stesso host devono usare lo stesso root/inode, non sostituirlo. Non protegge altri processi/chiamate/host e non è dedup persistente.
+- Cutoff unico dopo preparazione; gate host/report originale e verifica lock prima inventory, ogni SELECT e prima/dopo render; stop su clock regressivo/drift oltre 5s o 120s elapsed. Controlli cooperativi tra operazioni, non deadline dura; una query in corso non si annulla. Budget 20k osservate, non prenotazione atomica account. Il report scaduto non è riutilizzabile. Nessun retry o log automatico, risultati solo memoria; su errore nessun output utilizzabile e lock rilasciato.
+- In questo passaggio retail escluso deliberatamente: serve staging shard autorizzato con B; private CT opzionale con HMAC caller; segreti esclusi da output. Test sintetico con vero B pinned + backup SQLite in temp e D1 mock; non host reale. Stessi vincoli di attivazione, nessun ordine.
