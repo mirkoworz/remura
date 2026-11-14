@@ -1,12 +1,18 @@
-# REMURA TradingView — ROADMAP v0.8.69-lab (raccordo CVD SQUALINCOME)
-**Aggiornamento 14/11/2026 CET — raccordo CVD causale e dashboard**
+# REMURA TradingView — ROADMAP v0.8.70-lab (raccolta privata e benchmark)
+**Aggiornamento 14/11/2026 16:53 CET — raccolta privata e benchmark non-overlap**
 **PR #102 DRAFT/OPEN — deploy TEST autorizzato riuscito, produzione e ordini esclusi.**
+
+## CHECKPOINT v0.8.70 — RACCOLTA PRIVATA E BENCHMARK
+- [x] v0.8.69 CI 43612478643 e dry-run 43612478649 SUCCESS, 211 test principali, 8/8 nuovi e fixture pinned B PASS; commento 6880115837. Main reader resta v0.8.68.
+- [x] cvd_test_batch_reader_v1: memoria privata effimera, una inventory + max 8 SELECT da 72 slot (576 slot/48h), no raw log/artifact, query meta rows_read/written se disponibili, no stima account, no retry, no snapshot atomico. API helper esistente 200KB fail-closed: eventuale risposta troppo grande richiede finestra più corta, nessun cambio automatico di budget. Nessuna query reale ancora.
+- [x] cvd_nonoverlap_preview_v1: ingresso proxy chiusura M5 SUCCESSIVA a conferma/receipt, finestre non sovrapposte scelte cronologicamente prima degli esiti, controllo singolo per confronto, CVD vs price-only e ER/retest/FP sign tra CVD selezionati; unknown escluso. 1h primaria stessa data/fascia/direzione, 4/24h secondarie stessa fascia/direzione tra date. Costi round-trip 0/1/2 pip solo scenari ipotetici (non spread misurato), differenze descrittive, confronti distinti non indipendenti, OOS ancora da validare. Mantiene report v0.8.67 separato.
+- [ ] CI 8 nuovi test da verificare; dopo verde predisporre workflow owner-only batch con pin, nessun upload pubblico. Prima ricezione reale, quote account e prova OOS ancora aperte. Edge D0.8 negativo (-0.6680 pip), non ignorarlo. Nessun deploy/ordine/nuova risorsa.
 
 ## CHECKPOINT v0.8.69 — CVD E SQUALINCOME PREVIEW
 - [x] v0.8.68: CI 43612132691 e dry-run 43612132655 SUCCESS, 203 test principali, 7/7 nuovi; pin reader main 9e24c20f3f3a069c20c8e75c19e6ba9197d3124d, commit ffdb25220942717ea22388ec3cce1d0bb3877594. Chiusura anche in commento PR 6880059718.
 - [x] cvd_squalincome_asof_preview_v1: usa coppie B locali dal sink audit esistente; exact close M15/M5, ricezione <= decisione e 120s, guardia pre-deploy, no fallback, doppioni esatti/conflict as-of, blocco REVIEW/ambiguità/non eligible. COT vs sola direzione candidata CVD selezionata; nessun peso, ER non direzionale, nessuna equivalenza prezzo FX/FXCM. CVD cTrader e sentiment same-decision restano UNKNOWN.
 - [x] Dossier e dashboard esistenti estesi opzionalmente, denominatori B per FX/FXCM separati e non sommabili, motivazioni aggregate e notice id deterministico, no invio, no raw. 8 nuovi test sintetici e regressione fixture B pin pre-deploy (nessun backfill).
-- [ ] CI v0.8.69 da verificare. Prossimo export privato e confronto non-overlap dei filtri; prima ricezione CVD e costi effettivi non verificati, edge non dimostrato. Nessun deploy o variazione alert. PR #102 DRAFT.
+- [x] CI v0.8.69 verificata nel checkpoint v0.8.70. Prossimo export privato e confronto non-overlap dei filtri; prima ricezione CVD e costi effettivi non verificati, edge non dimostrato. Nessun deploy o variazione alert. PR #102 DRAFT.
 
 ## CHECKPOINT v0.8.68 — RADAR E ARCHIVIO OFFLINE
 - [x] v0.8.67 CI #43605796330 SUCCESS: 196 test principali, tutti 5 nuovi outcome OK da log job 132480034715; dry-run #43605796313 SUCCESS. Main reader pin 1571b23880dac8e646254b8caa3f4641daea9ef8, commit 9cf293b1c45650b438e2c52cb478a88d4c9f71a2, header 16:46 CET; nessun avvio owner-only.

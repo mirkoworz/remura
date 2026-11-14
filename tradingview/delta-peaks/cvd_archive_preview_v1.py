@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# REMURA v0.8.68 LAB — 14/11/2026 16:46 CET
+# REMURA v0.8.70 LAB — 14/11/2026 16:53 CET
 """Offline assembly of explicit, disjoint <=72-slot CVD TEST export windows.
 No D1/API/file writes; input raw export must be supplied privately by trusted caller.
 Does not prove origin, conflict ledger or market-session completeness.
@@ -9,6 +9,7 @@ import json
 from cvd_telemetry_preview_v1 import validate,SYMBOL,VERSION,M5
 from cvd_outcome_readiness_v1 import summarize,MAX_ROWS
 from cvd_radar_preview_v1 import aggregate_radar
+from cvd_nonoverlap_preview_v1 import compare
 from remura_tv_bridge_preview_v1 import EXPECTED_COLUMNS
 
 # Use UTC calculation rather than depending on a handwritten timestamp.
@@ -54,11 +55,12 @@ def assemble(windows,*,as_of_ms):
             else:
                 seen[t]=(row,e,v)
         valid.extend(seen[t] for t in sorted(seen))
-    return {"schema":"remura.tv.cvd.archive.aggregate.preview.v1","version":"0.8.68-lab",
+    return {"schema":"remura.tv.cvd.archive.aggregate.preview.v1","version":"0.8.70-lab",
             "requested_slots":requested,"valid_unique_bars":len(valid),
             "missing_requested_slots":requested-len(valid),"duplicate_rows":total-len(valid),
             "scope":"EXPLICIT_WINDOWS_NOT_MARKET_CALENDAR","provenance_attested":False,
             "conflict_ledger_available":False,
             "radar":aggregate_radar(valid,as_of_ms=as_of_ms),
             "outcomes":summarize(valid,as_of_ms=as_of_ms),
+            "nonoverlap_benchmark":compare(valid,as_of_ms=as_of_ms),
             "scientific_admission":False,"orders_enabled":False}
