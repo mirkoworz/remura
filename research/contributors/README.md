@@ -1,4 +1,4 @@
-# REMURA Contributors v0.9 LAB — 14/11/2026 23:43 CET
+# REMURA Contributors v0.10 LAB — 14/11/2026 23:45 CET
 ## Filone E — indipendente, DRAFT, NO MERGE / NO DEPLOY
 Obiettivo: due collaboratori invitati possono inviare livelli volumetrici manuali senza accedere a impostazioni, dati privati, broker, infrastruttura o elaborazioni. Nessuna modifica ai filoni A/B/C/D.
 
@@ -21,6 +21,7 @@ Obiettivo: due collaboratori invitati possono inviare livelli volumetrici manual
 - [ ] Raccordo a REMURA Volumetrica solo dopo coordinamento A/B/C/D, test reali, consenso deploy e check quote/costo; nessun ordine.
 
 ## Confronto livelli manuali e automatici — approvato 14/11/2026 23:20 CET
+- [x] v0.10 level_confluence_v1.py: funzione pura sintetica, confronto esatto market/provider/ticker/product/contract/period/anchor/kind, selezione manuali approvati al cutoff tramite history e automatici disponibili al cutoff, nessuna lookahead. Prezzi Decimal; regola esplicita per strumento tick e tolleranza; NEAR, DISTANT, NO_COMPARABLE, NOT_COMPARABLE_NO_RULE; conserva manuali isolati, conta gruppi fonte dichiarati senza attestare indipendenza. Limite 200+200 livelli, nessuna rete, salvataggio, ricerca esiti o segnale. 12 test sintetici. Non è collegato a dati reali né a SQUALINCOME, input storia/cutoff/regole provenienti da chiamante fidato; non certifica completezza o provenienza, non congela tolleranze scientifiche. Restano adapter owner/archivio e livelli automatici, rendering, protocollo prospettico separato. Nessun cambio B/D.
 - [ ] Dopo revisione owner, confrontare i livelli manuali disponibili all'istante di valutazione con quelli automatici REMURA, distinguendo feed, eventuale contratto, periodo/anchor e timestamp di nascita. Nessuna equivalenza automatica fra spot e future.
 - [ ] Mostrare distanza in tick/pip o ATR quando confrontabile; tolleranza da definire e congelare prima dello studio, nessun valore inventato. Classificare accordo, disaccordo e non confrontabile; preservare anche livelli isolati.
 - [ ] Registrare fonte/metodo dichiarati e raggruppare contributi correlati (stessa fonte o indicatore): consenso umano non significa evidenze indipendenti né conferma istituzionale.
@@ -33,6 +34,6 @@ Il ledger v1 storico vive solo in RAM; il nuovo archive_v1 persiste esclusivamen
 Riferimenti: https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid e https://developers.google.com/identity/gsi/web/guides/verify-google-id-token.
 Test: python3 -m unittest discover -s research/contributors -p 'test_*.py' -v; node research/contributors/test_demo.cjs
 
-Checkpoint: CI v0.1 + roadmap Level Confluence `43647587792` SUCCESS, v0.2 codice 43647769664 SUCCESS e doc 43647783691 SUCCESS; v0.3 codice 43648454866 SUCCESS e doc 43648466014 SUCCESS; CI v0.4 finale 43648856881 SUCCESS; CI v0.6 codice 43649129664 SUCCESS incluse regressioni v0.5; HEAD doc v0.6 senza run restituito. CI v0.8 43649441047 SUCCESS incluse regressioni v0.7; nuova CI v0.9 da verificare. Nessun merge, deploy o risorsa nuova.
+Checkpoint: CI v0.1 + roadmap Level Confluence `43647587792` SUCCESS, v0.2 codice 43647769664 SUCCESS e doc 43647783691 SUCCESS; v0.3 codice 43648454866 SUCCESS e doc 43648466014 SUCCESS; CI v0.4 finale 43648856881 SUCCESS; CI v0.6 codice 43649129664 SUCCESS incluse regressioni v0.5; HEAD doc v0.6 senza run restituito. CI v0.8 43649441047 SUCCESS incluse regressioni v0.7; CI v0.9 codice 43649630503 e doc 43649643081 SUCCESS; nuova CI v0.10 da verificare. Nessun merge, deploy o risorsa nuova.
 
 Collaudo locale facoltativo su macchina di sviluppo (NON VPS): python3 research/contributors/local_lab_v1.py --synthetic-lab. Aprire esclusivamente URL loopback indicato. Ctrl-C chiude e rimuove il database temporaneo normalmente; arresto forzato può lasciare file temporanei. Non usare account o livelli reali.
