@@ -7,7 +7,8 @@ from cloudflare_d1_readonly_audit import api_request,require_account_id,require_
 from d1_test_target_preflight_v1 import MAIN_DB,TEST_DB,inspect_verified_inventory
 from gateway_off_candidate_v1 import choose_candidate_namespace,make_candidate,EXAMPLE
 from bootstrap_postdeploy_audit_v1 import api_get
-from cvd_transition_bundle_v1 import inspect_state,build_pair,StopUnsafe
+from cvd_transition_bundle_v1 import inspect_state,build_pair,StopUnsafe,HERE,CVD_FLAG
+from copy import deepcopy
 
 OPERATIONS=("DEPLOY_CVD_TEST","ROLLBACK_LEGACY_TEST","STOP_CVD_TEST")
 ON="TEST_GATEWAY_ON_WITH_HASH_SECRET"
@@ -45,6 +46,26 @@ def prepare(operation,account,read_token,editor,runner):
     folders=build_pair(cfg,runner,enable_cvd=operation!="STOP_CVD_TEST")
     return folders,cfg
 
+def verify_target(operation,cfg,runner,target):
+    root=Path(runner)
+    folder=Path(target)
+    if not root.is_absolute() or not folder.is_absolute() or folder.parent!=root or not folder.name.startswith("remura-test-off-") or folder.is_symlink() or not folder.is_dir():
+        raise StopUnsafe("bad_private_target")
+    if {x.name for x in folder.iterdir()}!={"worker.mjs","wrangler.json"}:
+        raise StopUnsafe("bad_bundle_files")
+    expected=deepcopy(cfg)
+    expected.pop("$comment")
+    expected["vars"]={"INGEST_ENABLED":"false" if operation=="STOP_CVD_TEST" else "true"}
+    source="worker.mjs"
+    if operation=="DEPLOY_CVD_TEST":
+        expected["vars"][CVD_FLAG]="true"
+        source="worker_cvd_candidate.mjs"
+    for path in (folder/"wrangler.json",folder/"worker.mjs"):
+        if path.is_symlink() or not path.is_file() or path.stat().st_mode & 0o777 != 0o600:
+            raise StopUnsafe("bundle_file_not_private")
+    if json.loads((folder/"wrangler.json").read_text())!=expected or (folder/"worker.mjs").read_bytes()!=(HERE/source).read_bytes():
+        raise StopUnsafe("bundle_changed_since_prepare")
+
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument("operation",choices=OPERATIONS)
@@ -66,8 +87,10 @@ def main():
                 f.write(f"REMURA_CVD_CANDIDATE={folders[0]}\nREMURA_CVD_ROLLBACK={folders[1]}\nREMURA_CVD_TARGET={target}\n")
             print("REMURA_CVD_LIVE_BUNDLES=PRIVATE_READY")
         else:
-            state,mode,_=inspect(*creds)
+            state,mode,cfg=inspect(*creds)
             gate(args.operation,state,mode,post=args.phase=="postcheck")
+            if args.phase=="precheck":
+                verify_target(args.operation,cfg,os.getenv("RUNNER_TEMP",""),os.getenv("REMURA_CVD_TARGET",""))
             print("REMURA_CVD_TRANSITION_"+args.phase.upper()+"=SETTINGS_VERIFIED")
     except Exception:
         for folder in folders:

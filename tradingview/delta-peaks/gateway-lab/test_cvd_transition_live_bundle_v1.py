@@ -24,6 +24,19 @@ class LiveBundleTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp,patch.object(m,"inspect",return_value=(m.ON,"CVD_TRUE",config())):
             (a,b),_=m.prepare("STOP_CVD_TEST","mock","mock","mock",tmp)
             self.assertEqual(json.loads((b/"wrangler.json").read_text())["vars"],{"INGEST_ENABLED":"false"})
+    def test_fresh_precheck_binds_exact_manifest_and_code(self):
+        with tempfile.TemporaryDirectory() as tmp,patch.object(m,"inspect",return_value=(m.ON,"LEGACY",config())):
+            (a,b),cfg=m.prepare("DEPLOY_CVD_TEST","mock","mock","mock",tmp)
+            m.verify_target("DEPLOY_CVD_TEST",cfg,tmp,str(a))
+            with self.assertRaises(m.StopUnsafe):
+                m.verify_target("DEPLOY_CVD_TEST",cfg,tmp,str(b))
+            changed=config()
+            changed["d1_databases"][0]["database_id"]="00000000-0000-4000-8000-000000000003"
+            with self.assertRaises(m.StopUnsafe):
+                m.verify_target("DEPLOY_CVD_TEST",changed,tmp,str(a))
+            (a/"worker.mjs").write_text("changed")
+            with self.assertRaises(m.StopUnsafe):
+                m.verify_target("DEPLOY_CVD_TEST",cfg,tmp,str(a))
     def test_bad_state_never_builds(self):
         with patch.object(m,"inspect",return_value=(m.OFF,"LEGACY",config())),patch.object(m,"build_pair") as build:
             with self.assertRaises(m.StopUnsafe):
