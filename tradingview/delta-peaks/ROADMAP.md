@@ -1,6 +1,10 @@
-# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.43-doc (Worker Production noto v0.8.5, gateway TEST v0.8.6 ON)
-**Aggiornamento roadmap: 14/11/2026, 08:04 CET — rotazione hash TEST predisposta, non eseguita**
+# REMURA TradingView — ROADMAP GATEWAY ONLINE v0.8.44-doc (Worker Production noto v0.8.5, gateway TEST v0.8.6 ON)
+**Aggiornamento roadmap: 14/11/2026, 08:10 CET — rotazione TEST riuscita, nuova consegna webhook da verificare**
 **PR #102 DRAFT/OPEN — nessun merge, alert TradingView da confermare, nessun ordine.**
+
+## CHECKPOINT v0.8.44-doc — ROTAZIONE HASH TEST RIUSCITA — 14/11/2026, 08:10 CET
+- [x] Utente conferma nuova coppia generata e aggiornamento GitHub Secret esistente. Run [#43569707989](https://github.com/mirkoworz/remura/actions/runs/43569707989) completed SUCCESS, job #132371212812 tutti gli step verdi; marker effettivi `REMURA_ROTATION_HASH_FORMAT=VALID_NOT_ECHOED`, `Success! Uploaded secret WEBHOOK_TOKEN_SHA256`, `REMURA_TEST_HASH_ROTATION_POSTCHECK=ON_WITH_HASH_SECRET`. Stato TEST ON+hash, D1 TEST e limiter verificati. Nessun deploy codice, nuovo API token, SQL write o intervento in produzione. Version ID aggiornato non letto; non inventare. Corrispondenza raw token con hash ancora da verificare end-to-end.
+- [ ] Utente sostituisce intero URL webhook nell'alert BTCUSDT M5 usando **Copia URL webhook TEST** della nuova coppia già salvata, senza ricomporlo, senza usare hash. Non generare un'altra coppia. Attendere nuova chiusura M5 e controllare registro, eseguire READ_BTC_RECEIPTS_ONLY. Non riportare segreti o URL privato in chat.
 
 ## CHECKPOINT v0.8.43-doc — ALERT SCATTA, ROTAZIONE HASH TEST PREDISPOSTA — 14/11/2026, 08:04 CET
 - [x] Screenshot confermano input LAB JSON+heartbeat, condizione qualsiasi alert(), M5 e webhook selezionato. Avviso arancione riguardava repainting, non errore bloccante. Dopo ricreazione alert utente riferisce evento scattato; causa precedente probabilmente snapshot obsoleto, non dimostrata.
