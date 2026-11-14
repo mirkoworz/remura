@@ -1,6 +1,12 @@
-# REMURA TradingView — ROADMAP v0.8.51-lab (BTC sequence verified, FX configuration candidate)
-**Aggiornamento roadmap: 14/11/2026, 10:55 CET — 33 barre complete e preparazione EURUSD**
+# REMURA TradingView — ROADMAP v0.8.52-lab (FX TEST aggregate reader candidate)
+**Aggiornamento roadmap: 14/11/2026, 11:00 CET — lettore FX separato e finestra esplicita**
 **PR #102 DRAFT/OPEN — nessun merge, nessun nuovo deploy, nessun ordine.**
+
+## CHECKPOINT v0.8.52-lab — LETTORE EURUSD TEST OFFLINE
+- [x] v0.8.51 CI Telemetry LAB #43582860610 SUCCESS; dry run #43582860601 non ancora verificato. Worker candidato già distribuito v0.8.40 accetta EURUSD M5 indipendentemente dal limite temporale BTC; nessun nuovo deploy necessario per payload v1.
+- [x] [Lettore FX TEST](gateway-lab/fx_pilot_analytic_reader_v1.py) commit `6b9f74313d64e88a53a32b8e2efee66ade18eae6` e [8 regressioni](test_fx_pilot_analytic_reader_v1.py) commit `a4670a4be7191831ec1fcc6241412d2c14ca49d2`. SELECT parametrizzata, ID D1 TEST EU verificato e distinto, solo FXCM:EURUSD M5, intervallo esplicito UTC da 16/11 00:00 UTC in poi, massimo 72 slot maturi, 100 righe + sentinella; versione non filtrata a priori per non occultare incompatibilità. Conteggi di qualità, configurazione v1 osservabile, latenza, gap, retest e effort; niente log raw o prezzi. Gap su slot richiesti, non prova di disservizio o calendario aperto. Nessuna ammissione scientifica o attestazione input.
+- [ ] CI candidata da verificare; poi workflow owner-only manuale con pin immutabile e token read esistente isolato nello step live. Non avviare ora: mercato chiuso. Finestra da impostare in base alla prima chiusura effettiva dopo attivazione FX, non assumere un orario di apertura. Nessuna modifica alert BTC/Pine/Worker/database o A/B/C. Disattivare BTC domenica sera prima delle 01:00 CET di lunedì.
+- [ ] Configurazione reale alert e provenienza scientifica da attestare; costi effettivi account ancora da verificare. Non ricreare token o ripetere audit BTC già conclusi.
 
 ## CHECKPOINT v0.8.51-lab — SEQUENZA REALE E CONFIGURAZIONE FX
 - [x] [Run #43582760320](https://github.com/mirkoworz/remura/actions/runs/43582760320), job 132410812719 SUCCESS alle 10:54 CET. v0.8.49: COMPLETE_WINDOW 33/33 M5 08:10–10:50 CET; 23 heartbeat, 10 BAR_EVENT, zero invalidi/duplicati/conflitti/gap. Max lag 5524ms, 33 entro 120s. Footprint 27 presenti/6 mancanti. 211 controlli matematici applicabili coerenti (135 footprint +66 ER aritmetica +10 retest); 3/3 ricostruzioni effort DEFAULT30 coerenti, 30 warmup non valutabili, 10/10 RETEST_NEW_VISIT_CONSISTENT. Label DAY1=1, DAY2=3, DAY3=6. Nessuna prova di vantaggio, tolleranze provvisorie, parametri alert non attestati. BTC escluso dalla ricerca FX.
