@@ -1,0 +1,45 @@
+// REMURA Contributors v0.2 LAB — 14/11/2026 23:21 CET
+"use strict";
+const fs=require("node:fs");
+const vm=require("node:vm");
+const assert=require("node:assert/strict");
+const path=require("node:path");
+const html=fs.readFileSync(path.join(__dirname,"demo.html"),"utf8");
+const core=html.match(/<script id="demo-core">([\s\S]*?)<\/script>/);
+assert.ok(core);
+assert.match(html,/connect-src 'none'; form-action 'none'/);
+assert.match(html,/DEMO OFFLINE — SOLO DATI FITTIZI/);
+assert.doesNotMatch(html,/<(?:script|link|img)[^>]+(?:src|href)=/i);
+assert.doesNotMatch(html,/\b(?:fetch|XMLHttpRequest|localStorage|sessionStorage|indexedDB|innerHTML)\b/);
+const c=vm.createContext({});
+vm.runInContext(core[1],c);
+const now=Date.parse("2026-11-14T22:21:00Z");
+const p={symbol:"FX:EURUSD",period:"WEEK",kind:"DELTA_PEAK",price:"1,08540",observed_utc:"2026-11-14T20:00:00Z",note:"Demo"};
+assert.equal(c.validateDemo(p,now).price,"1.0854");
+assert.equal(c.validateDemo({...p,price:"2000"},now).price,"2000");
+for(const price of ["0","0.000","1e2","-1","NaN","1.234567891","1,234.56"])assert.throws(()=>c.validateDemo({...p,price},now));
+for(const change of [{symbol:"EURUSD"},{period:"YEAR"},{kind:"BUY"},{observed_utc:"2026-02-30T20:00:00Z"},{observed_utc:"2026-11-14T22:21:01Z"},{note:"a\nb"},{note:"a".repeat(281)}])assert.throws(()=>c.validateDemo({...p,...change},now));
+const records=[];
+assert.equal(c.demoReceipt(records,p,now).status,"UNREVIEWED");
+assert.throws(()=>c.demoReceipt(records,{...p,price:"1.0854"},now));
+for(let i=1;i<20;i++)c.demoReceipt(records,{...p,note:"Demo "+i},now);
+assert.throws(()=>c.demoReceipt(records,{...p,note:"Overflow"},now));
+assert.equal(records.length,20);
+// Execute actual UI listeners with a small DOM stub (not Safari rendering).
+const ids=["enter","workspace","session","observed","example","symbol","period","kind","price","note","intake","message","receipts","count","exit"];
+function el(){return {value:"",textContent:"",hidden:false,children:[],events:{},addEventListener(n,f){this.events[n]=f},replaceChildren(){this.children=[]},append(...x){this.children.push(...x)},reset(){}}}
+const dom=Object.fromEntries(ids.map(x=>[x,el()]));
+c.document={getElementById:id=>dom[id],createElement:()=>el()};
+const scripts=[...html.matchAll(/<script(?: id="demo-core")?>([\s\S]*?)<\/script>/g)];
+assert.equal(scripts.length,2);
+vm.runInContext(scripts[1][1],c);
+dom.enter.events.click();dom.example.events.click();
+dom.intake.events.submit({preventDefault(){}});
+assert.equal(dom.count.textContent,"1 / 20");
+assert.match(dom.message.textContent,/Nessun dato inviato/);
+dom.intake.events.submit({preventDefault(){}});
+assert.equal(dom.count.textContent,"1 / 20");
+dom.exit.events.click();
+assert.equal(dom.count.textContent,"0 / 20");
+assert.equal(dom.workspace.hidden,true);
+console.log("REMURA offline demo: core and DOM-stub checks passed");
