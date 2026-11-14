@@ -111,6 +111,19 @@ class ArchiveTests(unittest.TestCase):
             p.chmod(0o600)
             with self.assertRaises(ValueError):Archive(Path(d).resolve(),**self.config)
             with sqlite3.connect(p) as db:self.assertIsNotNone(db.execute("SELECT name FROM sqlite_master WHERE name='unrelated'").fetchone())
+    def test_owner_preview(self):
+        from owner_preview_v1 import render_owner
+        self.submit(note="<script>alert(1)</script>")
+        self.db.review(O,1,"APPROVED",at_utc=LATER,reason="<b>checked</b>")
+        html=render_owner(self.db,O,generated_utc=LATEST)
+        self.assertIn("NAS100",html)
+        self.assertIn("&lt;script&gt;",html)
+        self.assertIn("&lt;b&gt;checked&lt;/b&gt;",html)
+        self.assertNotIn("<script>",html)
+        self.assertNotIn("<form",html)
+        self.assertIn("SOLO DATI SINTETICI",html)
+        with self.assertRaises(PermissionError):
+            render_owner(self.db,A,generated_utc=LATEST)
     def test_symlink(self):
         with tempfile.TemporaryDirectory() as d:
             (Path(d)/FILENAME).symlink_to(self.root/FILENAME)
