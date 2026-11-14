@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# REMURA v0.8.46 LAB — 14/11/2026 08:14 CET
+# REMURA v0.8.48 LAB — 14/11/2026 09:38 CET
 """Offline, isolated volume feature adapter. No network, trades or probability.
 BTC is diagnostic only. Inputs are private D1 export rows; caller controls provenance.
 No future candles used. Never log raw payloads.
@@ -14,8 +14,9 @@ from remura_tv_bridge_preview_v1 import (
     labels_for, decode_export_row,
 )
 from validate_telemetry_v1 import LEVEL_NAMES, validate_payload
+from volume_quality_v1 import diagnose
 
-VERSION = "0.8.46-lab"
+VERSION = "0.8.48-lab"
 M5 = 300_000
 BTC_START = int(datetime(2026, 11, 14, tzinfo=timezone.utc).timestamp()) * 1000
 BTC_END = BTC_START + 2 * 86_400_000
@@ -106,6 +107,7 @@ def features(p, parsed, received):
         "event_type": p["event_type"], "observed_labels": labels_for(p),
         "quality": "PARTIAL" if missing else "FIELDS_PRESENT_UNVERIFIED",
         "missing_fields": sorted(missing),
+        "diagnostic_checks": diagnose(p),
         "observed": {
             "ohlc": dict(o), "delta_intrabar_estimate": p["delta_intrabar"],
             "delta_sign": delta_sign, "price_body_sign": price_sign,
