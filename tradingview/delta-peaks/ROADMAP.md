@@ -1,6 +1,12 @@
 # REMURA TradingView — ROADMAP v0.8.64-lab (owner transition gates)
-**Aggiornamento 14/11/2026 CET — transizione protetta TEST**
+**Aggiornamento 14/11/2026 12:59 CET — workflow manuali TEST pronti, nessun deploy eseguito**
 **PR #102 DRAFT/OPEN — nessun merge, nessun nuovo deploy, nessun ordine.**
+
+## CHECKPOINT v0.8.64 — WORKFLOW PRONTI (12:59 CET)
+- [x] CI #43592538636 e dry-run #43592538637 SUCCESS; 190 test principali, 5/5 gate live bundle incl. byte/manifest match, marker compilazione candidato e rollback. Pin immutabile 7ca0736ee6d933071c02b31917b94d99684bba5f.
+- [x] Su main workflow owner-only [REMURA CVD TEST Transition](https://github.com/mirkoworz/remura/actions/workflows/remura-tv-cvd-transition-manual.yml) commit 08b9c1a3355dacd30263e5276f67714374d4031f: default READ_TEST_PREFLIGHT_ONLY; scelta esplicita DEPLOY_CVD_TEST, ROLLBACK_LEGACY_TEST, STOP_CVD_TEST. Gruppo concurrency condiviso coi vecchi workflow, pin verificato, test originali legacy anche sul candidato, bundle/compile/precheck fresco e postcheck; no rollback automatico, no SQL, no prod. Stop dedicato ripristina codice legacy OFF (non bootstrap inerte). Non utilizzare vecchia guardia emergenza mentre quinto binding CVD presente.
+- [x] Su main [CVD analytic reader](https://github.com/mirkoworz/remura/actions/workflows/remura-tv-cvd-analytic-readonly-manual.yml) commit bc33eb3f35324dc263c1b139a026d6a077a13cc5: lettura esclusiva FX:EURUSD versione 0.9.1 con UTC esplicito, 72 slot max e maturazione 120s; dopo prime barre reali. Entrambi workflow non ancora avviati.
+- [ ] Prossima operazione manuale: owner avvia DEPLOY_CVD_TEST se autorizza attivazione TEST; precheck integrato evita doppio run. BTC compatibilità verificata offline ma possibile breve interruzione durante deploy, da controllare successivamente con ricezione reale. Nessun alert CVD fino a esito deploy e readback. Non cambiare webhook/token. FX:EURUSD coorte separata. Quote effettive non misurate, nessuna nuova risorsa prevista.
 
 ## CHECKPOINT v0.8.64 — GATE ATTIVAZIONE/RIPRISTINO/STOP
 - [x] v0.8.63 CI #43592384643, dry-run #43592384648 e #43592379823 SUCCESS; 190 Python principali, 6/6 bundle, 3/3 preflight, marker REMURA_CVD_TRANSITION=COMPILED_CANDIDATE_AND_ROLLBACK_SYNTHETIC_ONLY.
