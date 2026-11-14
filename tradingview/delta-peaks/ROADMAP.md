@@ -1,6 +1,11 @@
-# REMURA TradingView — ROADMAP v0.8.63-lab (CVD transition preflight)
-**Aggiornamento 14/11/2026 CET — compilazione Pine confermata, preflight TEST**
+# REMURA TradingView — ROADMAP v0.8.64-lab (owner transition gates)
+**Aggiornamento 14/11/2026 CET — transizione protetta TEST**
 **PR #102 DRAFT/OPEN — nessun merge, nessun nuovo deploy, nessun ordine.**
+
+## CHECKPOINT v0.8.64 — GATE ATTIVAZIONE/RIPRISTINO/STOP
+- [x] v0.8.63 CI #43592384643, dry-run #43592384648 e #43592379823 SUCCESS; 190 Python principali, 6/6 bundle, 3/3 preflight, marker REMURA_CVD_TRANSITION=COMPILED_CANDIDATE_AND_ROLLBACK_SYNTHETIC_ONLY.
+- [x] cvd_transition_live_bundle_v1.py: GET-only metadata, build privato con ID verificati, gate operazioni DEPLOY_CVD_TEST (solo legacy ON), ROLLBACK_LEGACY_TEST (solo CVD ON), STOP_CVD_TEST (legacy OFF ripristinato), precheck e postcheck separati. Nessuna mutazione effettuata dal modulo. 4 regressioni mock aggiunte a CI. Nessuna autorizzazione deploy implicita.
+- [ ] CI da confermare, poi workflow owner-only main con pin immutabile, opzione default precheck sola lettura e opzioni esplicite per mutazione TEST. Nessun nuovo alert prima di deploy verificato. Conservare storico, nessun D1 write/migrazione, stop CVD non cancella dati. Edge traffic e quote effettive ancora non verificate. PR #102 DRAFT.
 
 ## CHECKPOINT v0.8.63 — PINE COMPILATO E PREFLIGHT TRANSIZIONE
 - [x] Utente conferma compilazione Pine v0.9.1 CVD TELEMETRY PREVIEW. Non implica trasmissione live o verifica runtime del nuovo payload. Indicatore originale e alert BTC non modificati dal repository.
