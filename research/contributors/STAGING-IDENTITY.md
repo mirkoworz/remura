@@ -1,0 +1,13 @@
+# REMURA Contributors v0.18 LAB — 15/11/2026 08:34 CET
+
+DRAFT / NO MERGE / NO DEPLOY. This is an identity-only staging candidate, not the contributor service.
+
+- `wrangler.staging.json`: dedicated name, no routes, workers.dev and previews false, observability off, no DB, bindings, scheduled triggers or credentials. Do not run deploy or upload. No account resources created by this commit.
+- `staging_identity_worker.mjs`: only GET / at exact configured HTTPS origin; explicit disabled default and exact audience/account/UUID/email test binding. No caller headers or role trusted, no service tokens, no fallback. Generic denial and no-store; no identity output, no network, logging or persistence. One test account only. Test binding must be set privately after identity is independently verified; no real identifiers in repository. No role or contributor authorization issued.
+- Before any exposure: confirm actual account Free / Zero Trust and latest aggregate report; require explicit staging deploy authorization; choose new unique name, check no collision; create isolated Worker with no ingress and disabled gate; configure Worker-level Access all traffic with Google-only and exact email test account; verify no overlapping path policy. If Access cannot be configured without activating ingress, leave handler disabled during creation. Never modify global policies or other Workers.
+- Bootstrap UUID: obtain only from trusted Access admin identity record (not user claim or email fallback), verify account and Google sign-in, bind exact test UUID/email privately. If unavailable, stop and design a controlled bootstrap before enabling. Runtime identity fields may differ; fail closed, never weaken check just to pass. No PII in logs/checkpoints.
+- On explicit authorization only: enable test ingress protected by Access, private env binding + IDENTITY_ONLY; verify anonymous denial, alternative IdP denial, wrong user, service token, spoofed header, removal/reinvite and revocation, Safari iPhone. Test response alone does not prove policy or revocation. If uncertain disable gate and ingress. No D1, data, POST or owner endpoint in this phase. App budget still not a hard cap.
+- Next: separately authorized D1 test DB / schema and form after identity probe, CSRF, mapping, access isolation, privacy, retention and restore gates. No automatic import or scientific admission.
+
+Sources: https://developers.cloudflare.com/workers/configuration/cloudflare-access/ and https://developers.cloudflare.com/workers/wrangler/configuration/ (15/11/2026).
+Local offline test: node research/contributors/test_staging_identity.mjs. CI node test is not evidence of real Access, Wrangler validation, or deployed auth.

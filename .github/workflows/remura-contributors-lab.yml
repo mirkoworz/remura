@@ -1,4 +1,4 @@
-# REMURA Contributors v0.2 LAB — 14/11/2026 23:21 CET
+# REMURA Contributors v0.18 LAB — 15/11/2026 08:34 CET
 name: REMURA Contributors LAB
 on:
   pull_request:
@@ -20,3 +20,6 @@ jobs:
 
       - name: Offline mobile demo checks
         run: node research/contributors/test_demo.cjs
+
+      - name: Closed staging identity checks
+        run: node research/contributors/test_staging_identity.mjs

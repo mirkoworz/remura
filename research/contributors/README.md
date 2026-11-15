@@ -1,4 +1,4 @@
-# REMURA Contributors v0.17 LAB — 14/11/2026 23:59 CET
+# REMURA Contributors v0.18 LAB — 15/11/2026 08:34 CET
 ## Filone E — indipendente, DRAFT, NO MERGE / NO DEPLOY
 Obiettivo: due collaboratori invitati possono inviare livelli volumetrici manuali senza accedere a impostazioni, dati privati, broker, infrastruttura o elaborazioni. Nessuna modifica ai filoni A/B/C/D.
 
@@ -12,6 +12,7 @@ Obiettivo: due collaboratori invitati possono inviare livelli volumetrici manual
 - Prossimo: report 15/11 + evidenza piano Free/Zero Trust e condizioni fatturazione; preparazione source/config staging isolata, senza deploy. Non considerare adapter sintetico pronto per account veri. Nessun costo aggiuntivo o accesso cloud modificato in questa fase.
 
 ### Roadmap
+- [x] v0.18 [staging identità isolato](STAGING-IDENTITY.md): Worker candidato chiuso di default, nessuna route/preview/DB, solo GET / HTTPS esatto e ctx.access runtime con binding test esplicito aud/account/UUID/email, rifiuto service token, niente header fidati, PII, fetch o scritture. Test Node sintetici nella CI dedicata, esito da verificare. Nessun deploy/risorsa. Piano effettivo e report 15/11 ancora non disponibili; approvazione deploy e test Google/Access reali obbligatori. Nessuna promozione scientifica.
 - [x] Registro in memoria SQLite, nessun file, HTTP, rete o segreto. Principal sintetico fornito da chiamante fidato; NON autenticazione. Allowlist subject e simboli completi del feed, prezzo decimale positivo, periodo DAY/WEEK/CURRENT_MONTH/PREVIOUS_MONTH, metodologia dichiarata, istante osservato UTC e istante ricezione separato. Request UUID idempotente per autore, cap sperimentale 20 invii/giorno UTC e 200 totali; invii UNREVIEWED, nessuna promozione o segnale.
 - [x] Test sintetici di rifiuto accessi, campi extra, date future, prezzi invalidi, feed ambiguo, classificazione e duplicazione.
 - [x] UI prototipo mobile offline [demo.html](demo.html): sessione demo esplicita, inserimento sintetico, convalida, ricevute in memoria, uscita cancella tutto, data/ora/versione, nessuna rete o login. Verifiche Node core e DOM stub, non collaudo Safari/iPhone. Il demo non è collegato al ledger Python e usa limiti/dedup locali solo dimostrativi. Eventuale livello da futures/non spot deve conservare simbolo, contratto e feed; nessuna conversione implicita. Se non autorizzata la redistribuzione dalla fonte, non raccogliere dati.
