@@ -1,4 +1,12 @@
 # REMURA Contributors v0.18 LAB — 15/11/2026 08:34 CET
+
+## Gate reale Access — evidenze 16/11/2026 00:47 CET (v0.18 LAB)
+- [x] Google-only Access: redirect anonimo in incognito alle 00:29; operatore riferisce risposta closed dopo login; registro Users mostra un'identità attiva e login 00:31. Cinque Secret cifrati presenti alle 00:42, handler DISABLED in quel momento.
+- [x] Test positivo owner IDENTITY_ONLY: screenshot 00:47 mostra il body esatto di successo v0.18 sullo staging. Compatibilità reale dei campi usati da ctx.access/getIdentity per questo caso; status HTTP, hash del codice remoto e ID deployment dopo cambio configurazione non acquisiti indipendentemente. Nessun dato personale registrato. [Checkpoint](https://github.com/mirkoworz/remura/pull/104#issuecomment-6903417939).
+- [ ] Confermare rollback attuale: Production OFF, Preview OFF, STAGING_ENABLED=DISABLED. Nessuna nuova apertura implicita.
+- [ ] Eseguire [matrice sicurezza reale](STAGING-IDENTITY.md#collaudo-negativo-reale--runbook) sotto autorizzazione separata e per il solo Worker, senza creare token, account o risorse. Non cancellare il proprietario né allargare policy; test distruttivi e rebind richiedono piano distinto.
+- [ ] D1 dedicato: autorizzazione distinta soltanto dopo chiusura e gate sicurezza; nessuna scrittura/contributo reale finché schema, isolamento, limiti, CSRF, retention e ripristino non verificati. Nessun SQUALINCOME operativo.
+
 ## Filone E — indipendente, DRAFT, NO MERGE / NO DEPLOY
 Obiettivo: due collaboratori invitati possono inviare livelli volumetrici manuali senza accedere a impostazioni, dati privati, broker, infrastruttura o elaborazioni. Nessuna modifica ai filoni A/B/C/D.
 
