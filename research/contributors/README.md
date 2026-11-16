@@ -1,4 +1,7 @@
-# REMURA Contributors v0.26 LAB — 16/11/2026 07:22 CET
+# REMURA Contributors v0.27 LAB — 16/11/2026 07:24 CET
+
+## v0.27 LAB — direct protected Worker candidate package
+- Four embedded assets with exact path, original trusted Access ctx, generation, rate limit and security headers; eight existing POST APIs; extra disabled-by-default flag, no deployment config. Before dispatch recheck UI epoch after intent issuance. [Package gate](WORKER-CANDIDATE-GATE.md). v0.26 CI not yet listed at preparation, v0.27 pending.
 
 ## v0.26 LAB — mobile candidate UI
 - v0.25 CI [43816179513](https://github.com/mirkoworz/remura/actions/runs/43816179513) SUCCESS, 165 tests. Added mobile contributor/owner views, server profile/catalog, explicit receipts and review history, no retry, lifecycle data clearing. [UI gate](UI-MOBILE-GATE.md). DOM stub tests pending; never served, no cloud changes.

@@ -20,4 +20,12 @@ const n=calls.length;await assert.rejects(c.mutate("/api/submit",body));assert.e
 await c.read("/api/receipts",{after:0});assert.equal(calls.length,n+1);
 fail=false;malformed=true;const d=new CandidateClient(f);await assert.rejects(d.mutate("/api/submit",body));assert.equal(d.uncertain,true);
 const e=new CandidateClient(async()=>{throw Error("issue failed");});await assert.rejects(e.mutate("/api/submit",body));assert.equal(e.uncertain,false);
+let sent=0,active=true;
+const closed=new CandidateClient(async(path,o)=>{
+ sent++;assert.equal(path,"/api/intent");active=false;
+ const exp=Math.floor(Date.now()/1000)+60;
+ return res({intent:"a".repeat(32)+"."+exp+"."+"b".repeat(64),expires_unix:exp});
+});
+await assert.rejects(closed.mutate("/api/submit",body,()=>active),/view_closed_before_dispatch/);
+assert.equal(sent,1);assert.equal(closed.uncertain,false);
 console.log("Candidate UI no-retry client checks passed");

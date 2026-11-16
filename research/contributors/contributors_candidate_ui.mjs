@@ -1,4 +1,4 @@
-// REMURA Contributors v0.26 LAB — 16/11/2026 07:22 CET
+// REMURA Contributors v0.27 LAB — 16/11/2026 07:24 CET
 // Candidate page only; no hosting or Worker entrypoint. Every response is rendered as text.
 import {CandidateClient} from "./contributors_candidate_client.mjs";
 const $=id=>document.getElementById(id);
@@ -64,7 +64,7 @@ $("intake").addEventListener("submit",e=>{e.preventDefault();act(async current=>
  if(profile?.role!=="CONTRIBUTOR"||!profile.can_write||$("mapping").value==="")throw Error("denied");
  const r=mappings[Number($("mapping").value)];if(!r||r.market!==$("market").value||r.provider!==$("provider").value)throw Error("mapping");
  const p={request_id:crypto.randomUUID(),market:r.market,provider:r.provider,ticker:r.ticker,product:r.product,contract:r.contract,period:$("period").value,kind:$("kind").value,price:$("price").value,anchor_utc:$("anchor").value,observed_utc:$("observed").value,note:$("note").value};
- const result=await client.mutate("/api/submit",p);if(!current())return;
+ const result=await client.mutate("/api/submit",p,current);if(!current())return;
  say("Ricevuta n. "+result.id+" · Non verificato. Aggiorna le ricevute manualmente.");$("price").value="";$("note").value="";
  });});
 $("review").addEventListener("submit",e=>{e.preventDefault();act(async current=>{
@@ -72,7 +72,7 @@ $("review").addEventListener("submit",e=>{e.preventDefault();act(async current=>
  const id=Number($("entry").value),action=$("decision").value;
  if(!Number.isSafeInteger(id)||id<1||!(action==="REVOKED"?profile.can_recover:["APPROVED","REJECTED"].includes(action)&&profile.can_write))throw Error("denied");
  if(!globalThis.confirm("Confermi "+action+" per il contributo "+id+"?"))return;
- const r=await client.mutate("/owner/review",{id,action,reason:$("reason").value});if(!current())return;
+ const r=await client.mutate("/owner/review",{id,action,reason:$("reason").value},current);if(!current())return;
  say("Decisione registrata: "+r.action+" · N. "+r.id);$("reason").value="";
  });});
 $("myLoad").addEventListener("click",()=>act(c=>page("my",true,c)));$("myNext").addEventListener("click",()=>act(c=>page("my",false,c)));

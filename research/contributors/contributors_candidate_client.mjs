@@ -1,4 +1,4 @@
-// REMURA Contributors v0.25 LAB — 16/11/2026 07:19 CET
+// REMURA Contributors v0.27 LAB — 16/11/2026 07:24 CET
 // Same-origin browser candidate. No polling, persistence, automatic retry or role authority.
 const PATHS=new Set(["/api/profile","/api/catalog","/api/receipts","/owner/queue","/owner/history","/api/intent","/api/submit","/owner/review"]);
 const MUTATIONS=new Set(["/api/submit","/owner/review"]);
@@ -23,13 +23,14 @@ class CandidateClient{
   if(MUTATIONS.has(path)||path==="/api/intent"||this.#busy)throw Error("request_denied");
   this.#busy=true;try{return await this.#request(path,body);}finally{this.#busy=false;}
  }
- async mutate(path,body){
-  if(!MUTATIONS.has(path)||this.#uncertain||this.#busy)throw Error("mutation_locked");
+ async mutate(path,body,stillCurrent=()=>true){
+  if(typeof stillCurrent!=="function"||stillCurrent()!==true||!MUTATIONS.has(path)||this.#uncertain||this.#busy)throw Error("mutation_locked");
   this.#busy=true;
   try{
    const p=JSON.parse(JSON.stringify(body));
    const i=await this.#request("/api/intent",{path,body:p});
    if(!i||!TOKEN.test(i.intent??"")||!Number.isSafeInteger(i.expires_unix)||i.expires_unix<Math.floor(Date.now()/1000)||i.expires_unix>Math.floor(Date.now()/1000)+90)throw Error("intent_denied");
+   if(stillCurrent()!==true)throw Error("view_closed_before_dispatch");
    this.#uncertain=true;
    const result=await this.#request(path,p,i.intent);
    if(path==="/api/submit"?(!Number.isSafeInteger(result?.id)||result.id<1||result.status!=="UNREVIEWED"||typeof result.duplicate!=="boolean"):

@@ -32,3 +32,6 @@ class CandidateUITests(unittest.TestCase):
 
     def test_candidate_dom(self):
         subprocess.run(["node",str(ROOT/"test_contributors_candidate_dom.mjs")],check=True,timeout=20)
+
+    def test_direct_candidate_worker(self):
+        subprocess.run(["node",str(ROOT/"test_contributors_worker_candidate.mjs")],check=True,timeout=20)
