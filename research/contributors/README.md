@@ -1,3 +1,7 @@
+# REMURA Contributors v0.35 LAB — 16/11/2026 16:17 CET
+
+Separate explicit synthetic level contract, positive/negative controls with existing exact E comparator, aggregate diagnostic handoff toward Squalincome, eight candidate tests. See [EXPLICIT-LEVEL-CONTRACT-LAB.md](EXPLICIT-LEVEL-CONTRACT-LAB.md). No legacy D relabeling, real source attestation, signals, UI/runtime change or enrollment. v0.34 CI 43892265611 SUCCESS (181+7); v0.35 CI pending.
+
 # REMURA Contributors v0.34 LAB — 16/11/2026 15:59 CET
 
 D–E synthetic compatibility gate, actual pinned D implementation cross-track CI, seven additional fixtures. Equal price does not permit cross-feed or period-anchor equivalence. See [TV-CONFLUENCE-COMPATIBILITY-LAB.md](TV-CONFLUENCE-COMPATIBILITY-LAB.md). No actual comparison of D prices admitted, no operational signal, no UI/runtime change or enrollment. v0.33 CI 43865859845 SUCCESS (181 tests), v0.34 CI pending.
