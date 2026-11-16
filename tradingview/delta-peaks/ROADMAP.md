@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.98-lab (cifratura pubblicazione congiunta)
+**Aggiornamento 16/11/2026 13:56 CET — PR #102 DRAFT**
+
+- v0.8.97 verified: 373 main tests, 8 joint tests OK; CI 43869848813 and Wrangler 43869848875 SUCCESS.
+- v0.8.98 synthetic AES-256-GCM joint codec, generation/sequence/cutoff binding, ciphertext-only writes; seven candidate tests. See JOINT-ENCRYPTION-LAB.md. CI pending. No live keys, external custody, provider calls or deployment.
+
 # REMURA TradingView — ROADMAP v0.8.97-lab (fixture temporale corretta)
 **Aggiornamento 16/11/2026 13:47 CET — PR #102 DRAFT**
 

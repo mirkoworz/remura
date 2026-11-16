@@ -75,21 +75,28 @@ def make_state(generation,rolling,core,ledger,boot,cutoff,cycles):
             "archive":{"first_cutoff":boot,"cycles":cycles,"records":records,"head":ledger.summary()["head"]}}
 
 class Joint:
+    filename=NAME
+    prefix=TMP
+    def file_limit(self):return MAX_FILE
+    def encode_file(self,plain):return plain
+    def decode_file(self,raw):return raw
     def __init__(self,fd,guard,custody,generation):
         self.fd=fd;self.guard=guard;self.c=custody;self.g=generation;self.failed=False
     def check(self):
         need(not self.failed);self.guard()
-        need(not any(n.startswith(TMP) for n in os.listdir(self.fd)))
+        need(not any(n.startswith(self.prefix) for n in os.listdir(self.fd)))
     def authority(self,p,phase):
         need(type(p) is Pin and p==self.c.latest() and p.generation==self.g and p.phase==phase)
     def read(self):
         self.check()
-        f=os.open(NAME,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=self.fd)
+        f=os.open(self.filename,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=self.fd)
         try:
             st=os.fstat(f);_private(st,stat.S_ISREG)
-            need(st.st_nlink==1 and 1<=st.st_size<=MAX_FILE)
-            with os.fdopen(os.dup(f),"rb") as stream:raw=stream.read(MAX_FILE+1)
+            need(st.st_nlink==1 and 1<=st.st_size<=self.file_limit())
+            with os.fdopen(os.dup(f),"rb") as stream:raw=stream.read(self.file_limit()+1)
             need(len(raw)==st.st_size)
+            raw=self.decode_file(raw)
+            need(1<=len(raw)<=MAX_FILE)
             w=json.loads(raw,object_pairs_hook=_no_duplicates)
             need(type(w) is dict and set(w)=={"state","sha256"} and w["sha256"]==digest(w["state"]) and encoded(w)==raw)
             l=validate(w["state"],self.g)
@@ -99,13 +106,15 @@ class Joint:
         self.check();validate(s,self.g)
         raw=encoded({"state":s,"sha256":digest(s)})
         need(len(raw)<=MAX_FILE)
-        tmp=TMP+secrets.token_hex(16)
+        raw=self.encode_file(raw)
+        need(1<=len(raw)<=self.file_limit())
+        tmp=self.prefix+secrets.token_hex(16)
         try:
             f=os.open(tmp,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600,dir_fd=self.fd)
             with os.fdopen(f,"wb") as stream:
                 stream.write(raw);stream.flush();os.fsync(stream.fileno())
             self.guard()
-            os.replace(tmp,NAME,src_dir_fd=self.fd,dst_dir_fd=self.fd)
+            os.replace(tmp,self.filename,src_dir_fd=self.fd,dst_dir_fd=self.fd)
             os.fsync(self.fd)
         except BaseException:
             self.failed=True
@@ -131,7 +140,7 @@ class Joint:
         return stable,self.status(stable)
     def bootstrap(self,core,*,expected,cutoff,windows,cycles):
         self.authority(expected,"GENESIS");self.check()
-        try:os.stat(NAME,dir_fd=self.fd,follow_symlinks=False)
+        try:os.stat(self.filename,dir_fd=self.fd,follow_symlinks=False)
         except FileNotFoundError:pass
         else:raise ValueError("synthetic_joint_existing")
         pending=self.c.reserve(expected,cutoff)
