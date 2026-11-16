@@ -1,3 +1,7 @@
+# REMURA Contributors v0.33 LAB — 16/11/2026 13:21 CET
+
+Synthetic-only offline subject projection rehearsal in disposable query-only in-memory SQLite, exact subject and supplied generation/pin, closed flags. Five regression tests (two-subject isolation, revoked access not reactivated, unknown/owner/wrong pin, open/mutable scope, disk/attached denied). Intentionally omits free text, owner/subject tags and all internal journal records: NOT a complete data-rights export, authentication, delivery or deletion mechanism. Existing privacy and real enrollment NO-GO unchanged, no policy acceptance inferred. No new resources or runtime/UI change. v0.32 CI 43864566182 SUCCESS (176 tests); v0.33 CI pending.
+
 # REMURA Contributors v0.32 LAB — 16/11/2026 13:08 CET
 
 Documentation-only checkpoint: [PRIVACY-LIFECYCLE-GATE.md](PRIVACY-LIFECYCLE-GATE.md) maps the actual v0.31 identity/entry/review/intent/admin tables and encrypted journal to an export/withdrawal/erasure design. Explicit unresolved immutable-schema vs erasure conflict; enrollment remains NO-GO. No changed runtime or UI version, no new resources, no actual records, no deletion, no deploy. Retention choices and new generation migration require explicit review; existing revocation/restore security remains intact. Prior 176-test CI is not new validation.
