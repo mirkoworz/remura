@@ -1,9 +1,11 @@
-// REMURA Contributors v0.21 LAB — 16/11/2026 07:05 CET
+// REMURA Contributors v0.22 LAB — 16/11/2026 07:08 CET
 // Offline request contract; NOT a Worker entrypoint. No wrangler binding or deployment.
 import {accessBinding} from "./access_binding_candidate.mjs";
+import {verifyGeneration,issueIntent,consumeIntent} from "./operation_intent_candidate.mjs";
 import {submit,receipts,queue,history,review,revokeContributor} from "./d1_access_candidate.mjs";
 const CAP=4096;
 const routes=Object.freeze({
+ "/api/intent":{fields:["path","body"],issue:true},
  "/api/submit":{fields:null,fn:(c,e,p)=>submit(c,e,p),mutation:true},
  "/api/receipts":{fields:["after"],fn:(c,e,p)=>receipts(c,e,p.after)},
  "/owner/queue":{fields:["after"],fn:(c,e,p)=>queue(c,e,p.after)},
@@ -63,10 +65,13 @@ async function candidateRequest(req,env,ctx){
   const r=await env.CONTRIBUTORS_RATE_LIMITER.limit({key:b.subject});
   if(r?.success===false)return reply(429,{error:"rate_limited"});
   if(r?.success!==true)return closed();
+  await verifyGeneration(env);
  }catch{return closed();}
  let body;
  try{body=await objectBody(req,route.fields);}catch{return reply(400,{error:"invalid_body"});}
  try{
+  if(route.issue)return reply(200,{data:await issueIntent(env,b,body.path,body.body)});
+  if(route.mutation)await consumeIntent(env,b,new URL(req.url).pathname,body,req.headers.get("X-Remura-Intent"));
   // Adapter revalidates current Access and durable role; no cached actor passed.
   return reply(200,{data:await route.fn(ctx,env,body)});
  }catch{

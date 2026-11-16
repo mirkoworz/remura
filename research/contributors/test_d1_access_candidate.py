@@ -1,9 +1,9 @@
-# REMURA Contributors v0.20 LAB — 16/11/2026 07:02 CET
-import sqlite3, unittest, subprocess
+# REMURA Contributors v0.22 LAB — 16/11/2026 07:08 CET
+import sqlite3, unittest, subprocess, tempfile, time, concurrent.futures
 from pathlib import Path
 from test_d1_lab_review import queries, I, R, K, T, L
 ROOT=Path(__file__).parent
-Q=queries("d1_access_candidate.mjs")
+Q=queries("d1_access_candidate.mjs"); N=queries("operation_intent_candidate.mjs")
 A="a"*64; B="b"*64; O="c"*64; EA="1"*64; EB="2"*64; EO="3"*64
 
 class AccessCandidateTests(unittest.TestCase):
@@ -92,6 +92,39 @@ class AccessCandidateTests(unittest.TestCase):
         self.db.execute("UPDATE lab_owner SET revoked=1")
         self.q("revoke",O,L,"friend-a",O,EO)
         self.assertEqual(self.db.execute("SELECT count(*) FROM lab_identity_revocations").fetchone()[0],0)
+    def test_intent_generation_and_burn(self):
+        g="1"*32; pin="2"*64; exp=int(time.time())+60
+        self.gates(1,1,1)
+        self.assertEqual(self.db.execute(N["generation"],(g,pin)).fetchall(),[])
+        self.db.execute("INSERT INTO lab_generation VALUES(1,?,?)",(g,pin))
+        a=(g,pin,"WRITE","CONTRIBUTOR",A,EA,"CONTRIBUTOR",A,EA)
+        self.assertEqual(self.db.execute(N["permission"],a).fetchone()["allowed"],1)
+        n="3"*32
+        data=(n,A,"WRITE","CONTRIBUTOR",exp,g,pin,exp,*a[2:])
+        self.assertEqual(self.db.execute(N["burn"],data).rowcount,1)
+        with self.assertRaises(sqlite3.IntegrityError):self.db.execute(N["burn"],data)
+        self.assertEqual(self.db.execute("SELECT count(*) FROM lab_intent_used").fetchone()[0],1)
+        for expiry,gen,tag in [(exp-120,g,EA),(exp,"4"*32,EA),(exp,g,EB)]:
+            d=("5"*32,A,"WRITE","CONTRIBUTOR",expiry,gen,pin,expiry,"WRITE","CONTRIBUTOR",A,tag,"CONTRIBUTOR",A,tag)
+            self.assertEqual(self.db.execute(N["burn"],d).rowcount,0)
+        self.db.execute("UPDATE lab_identities SET revoked=1 WHERE subject=?",(A,))
+        self.assertEqual(self.db.execute(N["burn"],("6"*32,*data[1:])).rowcount,0)
+    def test_concurrent_nonce_one_winner(self):
+        with tempfile.TemporaryDirectory() as d:
+            path=str(Path(d)/"fixture.sqlite")
+            db=sqlite3.connect(path);db.executescript((ROOT/"d1_access_candidate.sql").read_text())
+            db.execute("INSERT INTO lab_identities(subject,email_tag,slot) VALUES(?,?,'friend-a')",(A,EA))
+            db.execute("UPDATE lab_state SET write_enabled=1")
+            g="1"*32;pin="2"*64;db.execute("INSERT INTO lab_generation VALUES(1,?,?)",(g,pin));db.commit();db.close()
+            exp=int(time.time())+60
+            data=("3"*32,A,"WRITE","CONTRIBUTOR",exp,g,pin,exp,"WRITE","CONTRIBUTOR",A,EA,"CONTRIBUTOR",A,EA)
+            def go(_):
+                c=sqlite3.connect(path,timeout=5)
+                try:
+                    with c:return c.execute(N["burn"],data).rowcount
+                except sqlite3.IntegrityError:return 0
+                finally:c.close()
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:self.assertEqual(sorted(pool.map(go,range(2))),[0,1])
     def test_http_node(self):
         subprocess.run(["node",str(ROOT/"test_http_access_candidate.mjs")],check=True,timeout=20)
     def test_node(self):

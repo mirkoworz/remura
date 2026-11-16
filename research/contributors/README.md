@@ -1,4 +1,7 @@
-# REMURA Contributors v0.21 LAB — 16/11/2026 07:05 CET
+# REMURA Contributors v0.22 LAB — 16/11/2026 07:08 CET
+
+## v0.22 LAB — operation intents and offline revocation journal
+- v0.21 CI [43814687676](https://github.com/mirkoworz/remura/actions/runs/43814687676) SUCCESS, 136 tests, HTTP synthetic and Node checks. v0.22 adds seventh candidate route /api/intent, 90-second HMAC operation intent bound to exact payload, identity, purpose, generation and journal pin; primary nonce burn with live role and mode checks, no automatic retry. Separate bounded nonce capacity for owner recovery. Generation table empty, candidate fails closed until independently pinned. Pure offline enrollment/revocation journal and restore comparison (not actual persistence or restore). [Details](INTENT-RESTORE-CANDIDATE.md). New CI pending. No resources or deployment.
 
 ## v0.21 LAB — bounded HTTP candidate and recovery policy
 - Offline request contract only: six exact POST JSON routes, same-origin browser checks and custom CSRF header, 4 KiB streaming body cap, no CORS, no-store, generic errors, limiter mandatory before D1, no client role or actor. No default Worker entrypoint, config, binding or deploy. [HTTP and recovery gate](HTTP-RECOVERY-CANDIDATE.md).

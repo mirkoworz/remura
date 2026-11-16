@@ -1,4 +1,4 @@
--- REMURA Contributors v0.20 LAB — 16/11/2026 07:02 CET
+-- REMURA Contributors v0.22 LAB — 16/11/2026 07:08 CET
 -- Fresh EMPTY candidate only, derived from v0.19; never migrate or copy fixture records. NO DEPLOY.
 PRAGMA foreign_keys = ON;
 CREATE TABLE lab_state (
@@ -144,3 +144,30 @@ CREATE TRIGGER identity_revocation_no_update BEFORE UPDATE ON lab_identity_revoc
  SELECT RAISE(ABORT,'immutable_revocation'); END;
 CREATE TRIGGER identity_revocation_no_delete BEFORE DELETE ON lab_identity_revocations BEGIN
  SELECT RAISE(ABORT,'immutable_revocation'); END;
+
+-- Independent operator-pinned generation; empty/closed by default. Privileged provisioning only.
+CREATE TABLE lab_generation (
+ id INTEGER PRIMARY KEY CHECK(id=1),
+ generation TEXT NOT NULL CHECK(length(generation)=32 AND generation NOT GLOB '*[^0-9a-f]*'),
+ journal_pin TEXT NOT NULL CHECK(length(journal_pin)=64 AND journal_pin NOT GLOB '*[^0-9a-f]*')
+);
+-- A nonce is burned before its effect; no automatic retry on uncertain response.
+CREATE TABLE lab_intent_used (
+ nonce TEXT PRIMARY KEY NOT NULL CHECK(length(nonce)=32 AND nonce NOT GLOB '*[^0-9a-f]*'),
+ subject TEXT NOT NULL CHECK(length(subject)=64 AND subject NOT GLOB '*[^0-9a-f]*'),
+ mode TEXT NOT NULL CHECK(mode IN('WRITE','RECOVERY')),
+ role TEXT NOT NULL CHECK(role IN('OWNER','CONTRIBUTOR')),
+ expires INTEGER NOT NULL CHECK(expires>0),
+ CHECK(role='OWNER' OR mode='WRITE')
+);
+CREATE INDEX lab_intent_budget ON lab_intent_used(role,mode);
+CREATE TRIGGER intent_budget BEFORE INSERT ON lab_intent_used BEGIN
+ SELECT CASE WHEN (SELECT count(*) FROM lab_intent_used WHERE role=NEW.role AND mode=NEW.mode)>=
+ CASE WHEN NEW.role='CONTRIBUTOR' THEN 400 ELSE 450 END THEN RAISE(ABORT,'intent_capacity') END;
+END;
+CREATE TRIGGER intent_no_update BEFORE UPDATE ON lab_intent_used BEGIN
+ SELECT RAISE(ABORT,'immutable_intent');
+END;
+CREATE TRIGGER intent_no_delete BEFORE DELETE ON lab_intent_used BEGIN
+ SELECT RAISE(ABORT,'immutable_intent');
+END;
