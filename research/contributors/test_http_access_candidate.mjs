@@ -1,4 +1,4 @@
-// REMURA Contributors v0.22 LAB — 16/11/2026 07:08 CET
+// REMURA Contributors v0.23 LAB — 16/11/2026 07:14 CET
 import assert from "node:assert/strict";
 import {webcrypto} from "node:crypto";
 import {candidateRequest} from "./http_access_candidate.mjs";
@@ -56,4 +56,9 @@ assert.equal((await call(req(),ctx,{...env,CONTRIBUTORS_GENERATION:undefined})).
 allowed=false;assert.equal((await call(req())).status,403);
 role="OWNER";allowed=true;assert.equal((await call(req("/api/receipts"))).status,403);
 assert.equal((await call(req("/owner/queue"))).status,200);
+const beforeRevoke=queries.length;
+assert.equal((await call(req("/owner/revoke",'{"slot":"friend-a"}'))).status,403);
+assert.equal(queries.length,beforeRevoke);
+assert.equal((await call(req("/api/intent",'{"path":"/owner/revoke","body":{"slot":"friend-a"}}'))).status,403);
+assert.ok(queries.slice(beforeRevoke).every(q=>q.sql===intents.generation));
 console.log("HTTP candidate adversarial checks passed");

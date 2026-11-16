@@ -1,8 +1,8 @@
-// REMURA Contributors v0.22 LAB — 16/11/2026 07:08 CET
+// REMURA Contributors v0.23 LAB — 16/11/2026 07:14 CET
 // Offline request contract; NOT a Worker entrypoint. No wrangler binding or deployment.
 import {accessBinding} from "./access_binding_candidate.mjs";
 import {verifyGeneration,issueIntent,consumeIntent} from "./operation_intent_candidate.mjs";
-import {submit,receipts,queue,history,review,revokeContributor} from "./d1_access_candidate.mjs";
+import {submit,receipts,queue,history,review} from "./d1_access_candidate.mjs";
 const CAP=4096;
 const routes=Object.freeze({
  "/api/intent":{fields:["path","body"],issue:true},
@@ -10,8 +10,7 @@ const routes=Object.freeze({
  "/api/receipts":{fields:["after"],fn:(c,e,p)=>receipts(c,e,p.after)},
  "/owner/queue":{fields:["after"],fn:(c,e,p)=>queue(c,e,p.after)},
  "/owner/history":{fields:["id"],fn:(c,e,p)=>history(c,e,p.id)},
- "/owner/review":{fields:["id","action","reason"],fn:(c,e,p)=>review(c,e,p.id,p.action,p.reason),mutation:true},
- "/owner/revoke":{fields:["slot"],fn:(c,e,p)=>revokeContributor(c,e,p.slot),mutation:true}
+ "/owner/review":{fields:["id","action","reason"],fn:(c,e,p)=>review(c,e,p.id,p.action,p.reason),mutation:true}
 });
 const headers=Object.freeze({
  "Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store, max-age=0",

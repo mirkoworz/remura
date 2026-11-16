@@ -1,4 +1,7 @@
-# REMURA Contributors v0.22 LAB — 16/11/2026 07:08 CET
+# REMURA Contributors v0.23 LAB — 16/11/2026 07:14 CET
+
+## v0.23 LAB — independent journal storage and administrative reconciliation
+- v0.22 CI [43815326810](https://github.com/mirkoworz/remura/actions/runs/43815326810) SUCCESS, 144 Python tests incl. HTTP Node and concurrent local nonce test. v0.23 adds synthetic-only filesystem journal with exclusive append, fsync, lock, external pin and fail-closed recovery; pure admin plan and exact inventory reconciliation. Temporarily withholds HTTP identity revoke and intent until independent journal coordination is implemented; level review revocation retained. [Administration gate](ADMIN-IDENTITY-GATE.md). CI pending; no actual encrypted external journal, D1 provisioning, enrollment, deployment or resource change.
 
 ## v0.22 LAB — operation intents and offline revocation journal
 - v0.21 CI [43814687676](https://github.com/mirkoworz/remura/actions/runs/43814687676) SUCCESS, 136 tests, HTTP synthetic and Node checks. v0.22 adds seventh candidate route /api/intent, 90-second HMAC operation intent bound to exact payload, identity, purpose, generation and journal pin; primary nonce burn with live role and mode checks, no automatic retry. Separate bounded nonce capacity for owner recovery. Generation table empty, candidate fails closed until independently pinned. Pure offline enrollment/revocation journal and restore comparison (not actual persistence or restore). [Details](INTENT-RESTORE-CANDIDATE.md). New CI pending. No resources or deployment.

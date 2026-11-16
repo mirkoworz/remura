@@ -1,4 +1,4 @@
-// REMURA Contributors v0.22 LAB — 16/11/2026 07:08 CET
+// REMURA Contributors v0.23 LAB — 16/11/2026 07:14 CET
 // Candidate only; no secrets provisioned. No default Worker entrypoint.
 import {normalize} from "./d1_lab_adapter.mjs";
 const HEX32=/^[a-f0-9]{32}$/,HEX64=/^[a-f0-9]{64}$/;
@@ -41,9 +41,6 @@ function operation(path,p){
   if(!shape(p,["id","action","reason"])||!Number.isSafeInteger(p.id)||p.id<1||!["APPROVED","REJECTED","REVOKED"].includes(p.action)||
     typeof p.reason!=="string"||!p.reason.trim()||[...p.reason].length>280||/[\u0000-\u001f\u007f-\u009f\uD800-\uDFFF]/u.test(p.reason))throw deny();
   role="OWNER";if(p.action==="REVOKED")mode="RECOVERY";
- }else if(path==="/owner/revoke"){
-  if(!shape(p,["slot"])||!["friend-a","friend-b"].includes(p.slot))throw deny();
-  role="OWNER";mode="RECOVERY";
  }else throw deny();
  // Exact validated primitive fields; canonical order, no nested or client-derived identity.
  return {role,mode,body:JSON.stringify(Object.keys(p).sort().map(k=>[k,p[k]]))};
