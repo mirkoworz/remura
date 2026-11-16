@@ -1,8 +1,14 @@
+# REMURA TradingView — ROADMAP v0.8.110-lab (isolated transport rehearsal)
+**Aggiornamento 16/11/2026 17:23 CET — PR #102 DRAFT**
+
+- v0.8.109 verified: CI 43904792660 SUCCESS (431 tests), Wrangler 43904792685 SUCCESS; user local realtime log pair structurally complete, no trusted receipt.
+- v0.8.110 separate offline synthetic receiver, exact contract/config, capability hash, injected receipt clock, bounded 12 in-memory rows and replay/conflict guards; 9 candidate tests, CI pending. See LEVEL-TRANSPORT-RECEIVER-LAB.md. No live Pine/Worker changes, no provider calls, no operational admission.
+
 # REMURA TradingView — ROADMAP v0.8.109-lab (bounded local realtime sequence)
 **Aggiornamento 16/11/2026 — PR #102 DRAFT**
 
 - v0.8.108 verified: 424 principal tests CI 43904435156 SUCCESS job 133429359657; Wrangler 43904435166 SUCCESS. Three new clock regressions green; pinned B–D–E fixture green.
-- v0.8.109 local batch diagnostic of 1–12 new M5 realtime log claims; same identity/config, duplicate/order/gap controls, group shared peak origins and retain price disagreement; no price or origin export, no authenticated receipt or scientific admission. Seven new synthetic regressions, CI pending. See LEVEL-LOCAL-BATCH-LAB.md. Existing Pine unchanged, no provider calls/deploy; next manual gate two consecutive realtime logs.
+- v0.8.109 local batch diagnostic of 1–12 new M5 realtime log claims; same identity/config, duplicate/order/gap controls, group shared peak origins and retain price disagreement; no price or origin export, no authenticated receipt or scientific admission. Seven new synthetic regressions, CI 43904792660 SUCCESS (431), Wrangler 43904792685 SUCCESS. Manual pair received; no independent receipt. See LEVEL-LOCAL-BATCH-LAB.md. Existing Pine unchanged, no provider calls/deploy; next manual gate two consecutive realtime logs.
 
 # REMURA TradingView — ROADMAP v0.8.108-lab (real log clock compatibility)
 **Aggiornamento 16/11/2026 — PR #102 DRAFT**
