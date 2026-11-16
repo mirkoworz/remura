@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.95-lab (custodia e ledger sintetici)
+**Aggiornamento 16/11/2026 13:22 CET — PR #102 DRAFT**
+
+- v0.8.94 verified: CI 43865548301 SUCCESS, 353 tests, actual pinned B positive match and late excluded; Wrangler 43865547896 SUCCESS. Benchmark 12/12 equivalent, 322/3468 slots, peak RSS 46694400 B, file 922364 B, max store 535.293 ms; CI Linux only. Comment 6916254287.
+- v0.8.95 new synthetic custody reservation/finalize wrapper and first-observation ledger (12 regressions). No existing runtime integration, durable authority or real archive. See CUSTODY-AND-FIRST-OBSERVATION-LAB.md. CI pending.
+
 # REMURA TradingView — ROADMAP v0.8.94-lab (origine benchmark corretta)
 **Aggiornamento 16/11/2026 13:19 CET — PR #102 DRAFT**
 
