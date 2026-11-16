@@ -98,7 +98,7 @@ CREATE TRIGGER review_guard BEFORE INSERT ON lab_reviews BEGIN
  THEN RAISE(ABORT,'review_clock_or_entry') END;
  SELECT CASE WHEN NOT (
  (NEW.action IN('APPROVED','REJECTED') AND NOT EXISTS(SELECT 1 FROM lab_reviews WHERE entry_id=NEW.entry_id))
- OR (NEW.action='REVOKED' AND (SELECT action FROM lab_reviews WHERE entry_id=NEW.entry_id ORDER BY id DESC LIMIT 1)='APPROVED')
+ OR (NEW.action='REVOKED' AND COALESCE((SELECT action FROM lab_reviews WHERE entry_id=NEW.entry_id ORDER BY id DESC LIMIT 1),'UNREVIEWED')='APPROVED')
  ) THEN RAISE(ABORT,'review_transition') END;
  SELECT CASE WHEN NEW.action='APPROVED' AND NOT EXISTS(
  SELECT 1 FROM lab_entries e JOIN lab_identities i ON i.subject=e.subject AND i.revoked=0
