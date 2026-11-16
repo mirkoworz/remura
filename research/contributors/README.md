@@ -1,5 +1,14 @@
 # REMURA Contributors v0.18 LAB — 15/11/2026 08:34 CET
 
+## Sicurezza reale e preparazione D1 — 16/11/2026 01:12 CET (v0.18 LAB, solo documentazione)
+- [x] Primo ripristino dopo test Mac confermato dall'operatore: Production OFF, Preview OFF, DISABLED. [Evidenza](https://github.com/mirkoworz/remura/pull/104#issuecomment-6903455570). CI documentale 43776933859 SUCCESS.
+- [x] Sessione negativa autorizzata: curl anonimo 302, header identità fittizia 302, credenziali service token fittizie 401 (codici riferiti dall'operatore, Location non registrato). Nessun test con service token autentico; non prova il ramo Worker per questi rifiuti.
+- [x] Safari iPhone: risposta positiva owner riferita dall'operatore dopo URL pulito; precedente closed non riprodotto, causa non provata.
+- [x] Revoca specifica app: screenshot dell'editor Additional settings mostra Revoke existing tokens in Application Audience; dopo revoca operatore riferisce nuova richiesta Google nella stessa sessione iPhone. Evidenza comportamentale, non confronto crittografico di token, non revoca permanente dell'utente.
+- [ ] Conferma seconda chiusura Production/Preview OFF e DISABLED (richiesta, non ancora esplicitamente attestata). Restano path/query autenticati, account estraneo già disponibile se presente, identità reinserita/revoca permanente e vero service token (ultimi casi separati, non ammessi nella sessione appena conclusa). Nessuna promozione a produzione.
+- [ ] D1: [piano migrazione e gate](D1-STAGING-GATE.md), nessun DB creato o binding. Prima autorizzazione specifica, quota aggiornata e gate sicurezza; nessun contributo reale, nessuna modifica agli altri due database. Il cap 200 è soltanto sperimentale, non capacità definitiva.
+
+
 ## Gate reale Access — evidenze 16/11/2026 00:47 CET (v0.18 LAB)
 - [x] Google-only Access: redirect anonimo in incognito alle 00:29; operatore riferisce risposta closed dopo login; registro Users mostra un'identità attiva e login 00:31. Cinque Secret cifrati presenti alle 00:42, handler DISABLED in quel momento.
 - [x] Test positivo owner IDENTITY_ONLY: screenshot 00:47 mostra il body esatto di successo v0.18 sullo staging. Compatibilità reale dei campi usati da ctx.access/getIdentity per questo caso; status HTTP, hash del codice remoto e ID deployment dopo cambio configurazione non acquisiti indipendentemente. Nessun dato personale registrato. [Checkpoint](https://github.com/mirkoworz/remura/pull/104#issuecomment-6903417939).
