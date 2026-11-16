@@ -23,3 +23,15 @@ jobs:
 
       - name: Closed staging identity checks
         run: node research/contributors/test_staging_identity.mjs
+
+      - name: Checkout exact D LAB reference
+        uses: actions/checkout@v4
+        with:
+          ref: 3f279b9b762f3b53e57ffe7c1632b6e6d98db639
+          path: _remura_d_reference
+          persist-credentials: false
+
+      - name: D–E synthetic compatibility gate
+        env:
+          PYTHONPATH: _remura_d_reference/tradingview/delta-peaks
+        run: python3 research/contributors/crosstrack_tv_confluence_fixture_v1.py -v

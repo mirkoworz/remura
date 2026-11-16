@@ -1,3 +1,7 @@
+# REMURA Contributors v0.34 LAB — 16/11/2026 15:59 CET
+
+D–E synthetic compatibility gate, actual pinned D implementation cross-track CI, seven additional fixtures. Equal price does not permit cross-feed or period-anchor equivalence. See [TV-CONFLUENCE-COMPATIBILITY-LAB.md](TV-CONFLUENCE-COMPATIBILITY-LAB.md). No actual comparison of D prices admitted, no operational signal, no UI/runtime change or enrollment. v0.33 CI 43865859845 SUCCESS (181 tests), v0.34 CI pending.
+
 # REMURA Contributors v0.33 LAB — 16/11/2026 13:21 CET
 
 Synthetic-only offline subject projection rehearsal in disposable query-only in-memory SQLite, exact subject and supplied generation/pin, closed flags. Five regression tests (two-subject isolation, revoked access not reactivated, unknown/owner/wrong pin, open/mutable scope, disk/attached denied). Intentionally omits free text, owner/subject tags and all internal journal records: NOT a complete data-rights export, authentication, delivery or deletion mechanism. Existing privacy and real enrollment NO-GO unchanged, no policy acceptance inferred. No new resources or runtime/UI change. v0.32 CI 43864566182 SUCCESS (176 tests); v0.33 CI pending.
