@@ -285,6 +285,87 @@ def run_incremental_pinned():
         print("REMURA_D_INCREMENTAL_PINNED_B_SYNTHETIC=PASS; NO_LIVE_DB; NO_POSITIVE_SAME_DECISION_CLAIM")
     finally:db.close()
 
+
+def run_aligned_pinned():
+    # Fictional future fixture calendar: actual B witness + capture + audit,
+    # no mocked proof, no mutation of captured rows, no real market records.
+    from datetime import datetime,timezone
+    from copy import deepcopy
+    import sys
+    from pathlib import Path
+    sys.path.insert(0,str(Path(__file__).resolve().parent/"gateway-lab"))
+    from test_shark_signal_evidence import CURRENT,PRIOR
+    from test_cvd_batch_nonoverlap_preview_v1 import triples
+    from test_cvd_telemetry_preview_v1 import T0
+    from cvd_private_runtime_preview_v1 import preview,plan
+    from cvd_incremental_preview_v1 import RollingPreview,repage,PERIOD
+    from cvd_runtime_private_state_v1 import bucket
+    close=datetime.fromtimestamp(T0//1000,tz=timezone.utc)
+    observed=close+timedelta(seconds=60)
+    tue=(close.date()-timedelta(days=(close.weekday()-1)%7))
+    week=tue.isoformat(); prior=(tue-timedelta(days=7)).isoformat()
+    db,doc=create()
+    try:
+        # Change only the disposable input fixtures BEFORE witnesses exist.
+        db.execute("UPDATE cot_reports SET report_date=? WHERE report_date=?",(week,CURRENT))
+        db.execute("UPDATE cot_reports SET report_date=? WHERE report_date=?",(prior,PRIOR))
+        # Regenerate consistent UTC aligned rollups at the new synthetic close.
+        shift=close-CLOSE
+        def parse(s):return datetime.fromisoformat(s.replace("Z","+00:00"))
+        m15=doc["timeframes"]["M15"]
+        for r in m15:r["t"]=iso(parse(r["t"])+shift)
+        def roll(seconds):
+            groups={}
+            for r in m15:
+                t=int(parse(r["t"]).timestamp())//seconds*seconds
+                groups.setdefault(t,[]).append(r)
+            return [{"t":iso(datetime.fromtimestamp(t,tz=timezone.utc)),
+                     "o":rs[0]["o"],"h":max(r["h"] for r in rs),
+                     "l":min(r["l"] for r in rs),"c":rs[-1]["c"],
+                     "v":sum(r["v"] for r in rs)}
+                    for t,rs in sorted(groups.items()) if len(rs)==seconds//900]
+        doc["timeframes"]["H1"]=roll(3600)
+        doc["timeframes"]["H4"]=roll(14400)
+        doc["lastComplete"]=m15[-1]["t"]
+        db.execute("UPDATE prices SET updated_at=?,payload=?",(doc["lastComplete"],json.dumps(doc)))
+        db.commit()
+        witness.witness(db,clock=close-timedelta(minutes=1))
+        with db:
+            hid=insert_history(db,observed=observed,closed=close,report=week)
+            result=bundle.record(db,history_id=hid,observed_document=doc,clock=observed+timedelta(seconds=2))
+        assert result["state"]=="BOTH_LOCAL_PROOFS_PRESENT",result
+        db.execute("PRAGMA query_only=ON")
+        before=db.total_changes
+        rows=[r for r,_,_ in triples(20,events=(0,14),missing=(5,))]
+        now=bucket(T0+300000)
+        cache=RollingPreview(now=now,windows=repage(plan(now),rows),synthetic=True)
+        for i in range(4):
+            cutoff=now+i*PERIOD
+            if i:cache.advance(now=cutoff,windows=repage(cache.next_ranges(cutoff),rows))
+            full=repage(plan(cutoff),rows)
+            assert cache.compare_reference(full)["status"]=="EXACT_INPUT_MATCH"
+            left=preview(db,cache._windows,now=cutoff,origin="SYNTHETIC")
+            assert left==preview(db,full,now=cutoff,origin="SYNTHETIC")
+            assert left["notice"]["tv_cvd_match_count"]==1,left["notice"]
+            assert not left["notice"]["sent"] and left["edge"]=="NOT_ESTABLISHED"
+        # Same B decision: a valid row arriving 90s after close is too late
+        # for the original +60s decision, although received before our audit.
+        late=deepcopy(rows)
+        late[0]["received_at_ms"]=T0+90000
+        r=dossier(db,[],as_of_utc=iso(close+timedelta(minutes=3)),origin="SYNTHETIC",cvd_rows=[late[0]])
+        assert r["b_local_pairs"]==1 and r["tv_cvd_join"]["pair_counts"]=={"NOT_KNOWN_AT_DECISION":1}
+        r=dossier(db,[],as_of_utc=iso(close+timedelta(minutes=3)),origin="SYNTHETIC",cvd_rows=[rows[0]])
+        assert r["b_local_pairs"]==1 and r["tv_cvd_join"]["pair_counts"]=={"DESCRIPTIVE_MATCH":1}
+        assert not r["predictive_admission"] and db.total_changes==before
+        print("REMURA_D_ALIGNED_PINNED_B_SYNTHETIC=PASS; MATCH=1; LATE_EXCLUDED=1; NO_EDGE")
+    finally:db.close()
+
+def run_resource_profile():
+    # Fresh child process baseline/high-water; no API or live data.
+    import subprocess,sys
+    from pathlib import Path
+    subprocess.run([sys.executable,str(Path(__file__).with_name("cvd_incremental_resource_profile_v1.py"))],check=True)
+
 if __name__=="__main__":
     run()
     run_cvd()
@@ -294,3 +375,5 @@ if __name__=="__main__":
     run_persisted()
     run_missing_b()
     run_incremental_pinned()
+    run_aligned_pinned()
+    run_resource_profile()

@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.93-lab (profilo risorse e controllo causale)
+**Aggiornamento 16/11/2026 13:17 CET — PR #102 DRAFT**
+
+- v0.8.92 verified: 353 main tests; CI 43864880418 and Wrangler 43864880402 SUCCESS, comment 6916144359.
+- v0.8.93 adds actual B positive synthetic same-decision fixture and late exclusion, dense bounded resource benchmark; CI pending. See INCREMENTAL-RESOURCE-LAB-V1.md. No runtime or live changes.
+
 # REMURA TradingView — ROADMAP v0.8.92-lab (persistenza sintetica candidata)
 **Aggiornamento 16/11/2026 13:13 CET — PR #102 DRAFT, nessun deploy**
 
