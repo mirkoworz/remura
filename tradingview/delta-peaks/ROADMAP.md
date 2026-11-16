@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.101-lab (backup cifrato sintetico)
+**Aggiornamento 16/11/2026 14:57 CET — PR #102 DRAFT**
+
+- v0.8.100 verified: 388 tests, all eight recovery regressions, CI 43880567150 and Wrangler 43880567276 SUCCESS.
+- v0.8.101 bounded exact ciphertext backup preparation, two-copy cap and no overwrite, seven candidate tests including real local synthetic copy/restore/resume. See JOINT-BACKUP-LAB.md. CI pending. No external custody, actual archive, scheduler, provider calls or deploy.
+
 # REMURA TradingView — ROADMAP v0.8.100-lab (ripristino cifrato sintetico)
 **Aggiornamento 16/11/2026 14:54 CET — PR #102 DRAFT**
 
