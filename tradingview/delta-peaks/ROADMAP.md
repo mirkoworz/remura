@@ -1,3 +1,14 @@
+# REMURA TradingView — ROADMAP v0.8.91-lab (regressione incrementale candidata)
+**Aggiornamento 16/11/2026 13:08 CET — PR #102 DRAFT, nessun deploy**
+
+## CHECKPOINT 16/11/2026 — v0.8.90 consolidata; v0.8.91 candidata offline
+- [x] CI esatta HEAD 86aa9fde016c0c818649232484bb78714160b4e8: Telemetry 43863301505 SUCCESS, job 133285365737, 341 test principali (4 incrementali OK); Wrangler 43863301462 SUCCESS.
+- [x] Diagnostica Oracle post-trial ancora assente nella lista runs privata; ultimo schedule 43446613998 del 13/11, no replay manuale OIDC.
+- [x] Aggiunti test candidati di equivalenza intero preview D/B (mock B esistente), finestra densa/eviction, tardivo e conflitto; CI da verificare. Nessun risultato scientifico.
+- [x] Design gate persistenza privata: `INCREMENTAL-PERSISTENCE-GATE.md`; riuso singleflight/claim/dashboard, commit point unico, cache distinta da archivio, crash/recovery e budget. Non implementato.
+- [ ] Verificare CI nuova, integrare fixture B pinned per equivalenza con implementazione reale (dati sintetici), poi implementare storage sintetico isolato solo dopo revisione contratto crash. Nessuna raccolta o modifica runtime live. Protocollo fold invariato.
+- [ ] A/B e report risorse/budget freschi prima di qualunque attivazione; C congelato, E indipendente.
+
 # REMURA TradingView — ROADMAP v0.8.89-lab (audit ricezioni)
 **Aggiornamento 14/11/2026 21:18 CET — collegamento batch V3 su main**
 **PR #102 DRAFT/OPEN — deploy TEST autorizzato riuscito, produzione e ordini esclusi.**
