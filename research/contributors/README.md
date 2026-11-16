@@ -1,4 +1,7 @@
-# REMURA Contributors v0.23 LAB — 16/11/2026 07:14 CET
+# REMURA Contributors v0.24 LAB — 16/11/2026 07:17 CET
+
+## v0.24 LAB — transactional administrative and restore rehearsal
+- v0.23 CI [43815679216](https://github.com/mirkoworz/remura/actions/runs/43815679216) SUCCESS, 155 tests. v0.24 adds closed administrative audit, exact plan application and generation rotation in one owned in-memory SQLite transaction, rollback simulation and actual local SQLite snapshot-copy recovery with revocations replayed and flags closed. [Details](ADMIN-SQLITE-REHEARSAL.md). Tests added, CI pending. No actual D1, encryption, external pin service, deployment or account change.
 
 ## v0.23 LAB — independent journal storage and administrative reconciliation
 - v0.22 CI [43815326810](https://github.com/mirkoworz/remura/actions/runs/43815326810) SUCCESS, 144 Python tests incl. HTTP Node and concurrent local nonce test. v0.23 adds synthetic-only filesystem journal with exclusive append, fsync, lock, external pin and fail-closed recovery; pure admin plan and exact inventory reconciliation. Temporarily withholds HTTP identity revoke and intent until independent journal coordination is implemented; level review revocation retained. [Administration gate](ADMIN-IDENTITY-GATE.md). CI pending; no actual encrypted external journal, D1 provisioning, enrollment, deployment or resource change.

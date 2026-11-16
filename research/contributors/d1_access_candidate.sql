@@ -1,4 +1,4 @@
--- REMURA Contributors v0.22 LAB — 16/11/2026 07:08 CET
+-- REMURA Contributors v0.24 LAB — 16/11/2026 07:17 CET
 -- Fresh EMPTY candidate only, derived from v0.19; never migrate or copy fixture records. NO DEPLOY.
 PRAGMA foreign_keys = ON;
 CREATE TABLE lab_state (
@@ -170,4 +170,26 @@ CREATE TRIGGER intent_no_update BEFORE UPDATE ON lab_intent_used BEGIN
 END;
 CREATE TRIGGER intent_no_delete BEFORE DELETE ON lab_intent_used BEGIN
  SELECT RAISE(ABORT,'immutable_intent');
+END;
+
+-- Privileged closed administrative audit. Not accessible through HTTP.
+CREATE TABLE lab_admin_events (
+ seq INTEGER PRIMARY KEY CHECK(seq BETWEEN 1 AND 6),
+ event_pin TEXT NOT NULL UNIQUE CHECK(length(event_pin)=64 AND event_pin NOT GLOB '*[^0-9a-f]*'),
+ prev_pin TEXT NOT NULL CHECK(length(prev_pin)=64 AND prev_pin NOT GLOB '*[^0-9a-f]*'),
+ kind TEXT NOT NULL CHECK(kind IN('ENROLL','REVOKE')),
+ subject TEXT NOT NULL CHECK(length(subject)=64 AND subject NOT GLOB '*[^0-9a-f]*'),
+ at_utc TEXT NOT NULL CHECK(length(at_utc)=20 AND at_utc GLOB '????-??-??T??:??:??Z')
+);
+CREATE TRIGGER admin_event_guard BEFORE INSERT ON lab_admin_events BEGIN
+ SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM lab_state WHERE id=1 AND write_enabled=0 AND read_enabled=0 AND recovery_enabled=0)
+ OR NEW.seq<>(SELECT count(*)+1 FROM lab_admin_events)
+ OR NEW.prev_pin<>COALESCE((SELECT event_pin FROM lab_admin_events ORDER BY seq DESC LIMIT 1),printf('%064d',0))
+ THEN RAISE(ABORT,'admin_event_denied') END;
+END;
+CREATE TRIGGER admin_event_no_update BEFORE UPDATE ON lab_admin_events BEGIN
+ SELECT RAISE(ABORT,'immutable_admin_event');
+END;
+CREATE TRIGGER admin_event_no_delete BEFORE DELETE ON lab_admin_events BEGIN
+ SELECT RAISE(ABORT,'immutable_admin_event');
 END;
