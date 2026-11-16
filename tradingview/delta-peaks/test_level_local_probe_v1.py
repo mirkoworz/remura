@@ -1,4 +1,4 @@
-# REMURA v0.8.107 LAB — 16/11/2026 16:38 CET
+# REMURA v0.8.108 LAB — 16/11/2026
 import unittest,json,re
 from pathlib import Path
 from level_local_probe_v1 import parse,ORDER
@@ -65,4 +65,21 @@ class ProbeTests(unittest.TestCase):
         p=fixture();first=check(p);p["configuration"]["daily_min_effort"]=2.0
         self.assertNotEqual(first["configuration_digest"],check(p)["configuration_digest"])
         with self.assertRaises(ValueError):parse(json.dumps(p)[:-1]+',"symbol":"FX:EURUSD"}')
+    def test_sender_subsecond_real_shape_fixture(self):
+        p=fixture()
+        p["sender_clock_ms"]=T+123457
+        self.assertEqual(check(p)["present_levels"],4)
+        p["sender_clock_ms"]=T+1
+        self.assertFalse(check(p)["receipt_authenticated"])
+    def test_sender_clock_still_fail_closed(self):
+        for v in (T-1, True, 123.5, str(T), 4102444800000, -1):
+            p=fixture();p["sender_clock_ms"]=v
+            with self.assertRaises(ValueError):check(p)
+    def test_bar_and_anchor_clocks_not_relaxed(self):
+        for k in ("snapshot_open_ms","snapshot_close_ms"):
+            p=fixture();p[k]+=1
+            with self.assertRaises(ValueError):check(p)
+        for k in ("peak_origin_close_ms","period_start_ms","period_end_ms"):
+            p=fixture();p["levels"][0][k]+=1
+            with self.assertRaises(ValueError):check(p)
 if __name__=="__main__":unittest.main()

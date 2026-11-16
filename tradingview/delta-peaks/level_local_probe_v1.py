@@ -1,4 +1,4 @@
-# REMURA v0.8.107 LAB — 16/11/2026 16:38 CET
+# REMURA v0.8.108 LAB — 16/11/2026
 """Untrusted local Pine log structural diagnostic; never an E wire or receipt."""
 import json, math, re
 from hashlib import sha256
@@ -10,8 +10,8 @@ LF=set("period rank price peak_origin_close_ms period_start_ms period_end_ms bou
 ORDER=[("DAY",1),("DAY",2),("DAY",3),("WEEK",1),("CURRENT_MONTH",1),("PREVIOUS_OBSERVED_MONTH",1)]
 def need(ok):
     if not ok:raise ValueError("local_level_probe_invalid")
-def clock(v):
-    need(type(v) is int and 0<v<4102444800000 and v%1000==0)
+def clock(v, *, whole_second=True):
+    need(type(v) is int and 0<v<4102444800000 and (not whole_second or v%1000==0))
     return v
 def unique(items):
     result={}
@@ -30,7 +30,8 @@ def parse(raw):
          and p["method_er"]=="SIGNED_BODY_ATR_OVER_RELATIVE_ABS_DELTA_V1")
     need(all(type(p[k]) is str and 0<len(p[k])<=100 for k in ("chart_type","timezone","session")))
     op,cl=clock(p["snapshot_open_ms"]),clock(p["snapshot_close_ms"])
-    clock(p["sender_clock_ms"])
+    # Pine timenow is an epoch millisecond clock, not a bar timestamp.
+    clock(p["sender_clock_ms"],whole_second=False)
     need(0<cl-op<=300000 and cl<=p["sender_clock_ms"])
     c=p["configuration"]
     need(type(c) is dict and set(c)==CF)

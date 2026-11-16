@@ -1,8 +1,13 @@
+# REMURA TradingView — ROADMAP v0.8.108-lab (real log clock compatibility)
+**Aggiornamento 16/11/2026 — PR #102 DRAFT**
+
+- v0.8.107 verified CI 43899175614 SUCCESS (421 main tests), Wrangler 43899175597 SUCCESS. User compiled Pine v0.9.2 and supplied real historical reconstruction log; all 6 slots present. v0.8.107 rejected millisecond sender clock; narrow v0.8.108 fix passed exact submitted log locally, no raw market data committed. Three new synthetic regressions; CI pending. No alert, webhook or deploy. DAY/WEEK may share origin: do not count as independent. Historical reconstruction is not prospective evidence. No scientific or operational admission. See PINE-LEVEL-LOCAL-PROBE-LAB.md.
+
 # REMURA TradingView — ROADMAP v0.8.107-lab (Pine local level contract)
 **Aggiornamento 16/11/2026 16:38 CET — PR #102 DRAFT**
 
 - v0.8.106 verified: CI 43898367826 and Wrangler 43898367914 SUCCESS, pinned B–D–E wire fixture PASS and 414 principal tests.
-- v0.8.107 separate Pine v0.9.2 log-only candidate, original calculation body preserved. Actual TradingView period anchors, origin, snapshot, sender clock, exact FX identity/settings; no attested product/contract/receipt, no E admission. New diagnostic local parser and seven static/structural tests. See [PINE-LEVEL-LOCAL-PROBE-LAB.md](PINE-LEVEL-LOCAL-PROBE-LAB.md). No active Pine or webhook change. CI pending; Pine compilation remains manual.
+- v0.8.107 separate Pine v0.9.2 log-only candidate, original calculation body preserved. Actual TradingView period anchors, origin, snapshot, sender clock, exact FX identity/settings; no attested product/contract/receipt, no E admission. New diagnostic local parser and seven static/structural tests. See [PINE-LEVEL-LOCAL-PROBE-LAB.md](PINE-LEVEL-LOCAL-PROBE-LAB.md). No active Pine or webhook change. CI 43899175614 SUCCESS (421), Wrangler 43899175597 SUCCESS; Pine compilation confirmed by user screenshot.
 
 # REMURA TradingView — ROADMAP v0.8.106-lab (wire B–D–E)
 **Aggiornamento 16/11/2026 16:34 CET — PR #102 DRAFT**
