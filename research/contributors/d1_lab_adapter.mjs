@@ -1,4 +1,4 @@
-// REMURA Contributors v0.16 LAB — 14/11/2026 23:56 CET
+// REMURA Contributors v0.19 LAB — 16/11/2026 01:16 CET
 // Synthetic D1 adapter only. NO fetch handler, no routes, no real identity.
 // The trusted test caller supplies a fixture actor and server clock.
 // Not a deployable service or verification of Cloudflare Access claims.
@@ -9,7 +9,7 @@ const SQL=Object.freeze({
  gate:"SELECT slot FROM lab_identities WHERE subject=? AND revoked=0 AND EXISTS(SELECT 1 FROM lab_state WHERE id=1 AND enabled=1)",
  existing:"SELECT e.id,e.request_id,e.market,e.provider,e.ticker,e.product,e.contract,e.period,e.kind,e.price,e.anchor_utc,e.observed_utc,e.note FROM lab_entries e JOIN lab_identities i ON i.subject=e.subject AND i.revoked=0 WHERE e.subject=? AND e.request_id=? AND EXISTS(SELECT 1 FROM lab_state WHERE id=1 AND enabled=1)",
  insert:"INSERT INTO lab_entries(subject,request_id,market,provider,ticker,product,contract,period,kind,price,anchor_utc,observed_utc,received_utc,note,source_group) SELECT ?,?,?,?,?,?,?,?,?,?,?,?,?,?,source_group FROM lab_catalog WHERE market=? AND provider=? AND ticker=? AND product=? AND contract=? AND active=1 ON CONFLICT(subject,request_id) DO NOTHING",
- receipts:"SELECT e.id,e.market,e.provider,e.ticker,e.product,e.contract,e.period,e.kind,e.price,e.anchor_utc,e.observed_utc,e.received_utc,e.note FROM lab_entries e JOIN lab_identities i ON i.subject=e.subject AND i.revoked=0 WHERE e.subject=? AND e.id>? AND EXISTS(SELECT 1 FROM lab_state WHERE id=1 AND enabled=1) ORDER BY e.id LIMIT 20"
+ receipts:"SELECT e.id,e.market,e.provider,e.ticker,e.product,e.contract,e.period,e.kind,e.price,e.anchor_utc,e.observed_utc,e.received_utc,e.note,COALESCE((SELECT r.action FROM lab_reviews r WHERE r.entry_id=e.id ORDER BY r.id DESC LIMIT 1),'UNREVIEWED') AS status,(SELECT r.at_utc FROM lab_reviews r WHERE r.entry_id=e.id ORDER BY r.id DESC LIMIT 1) AS reviewed_utc FROM lab_entries e JOIN lab_identities i ON i.subject=e.subject AND i.revoked=0 WHERE e.subject=? AND e.id>? AND EXISTS(SELECT 1 FROM lab_state WHERE id=1 AND enabled=1) ORDER BY e.id LIMIT 20"
 });
 function validateStamp(s){
  if(typeof s!=="string"||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$/.test(s)||!Number.isFinite(Date.parse(s))||new Date(s).toISOString().replace(".000Z","Z")!==s)throw Error("utc");
@@ -42,6 +42,7 @@ async function submit(db,actor,p,{now,synthetic=false}={}){
  const existing=()=>db.prepare(SQL.existing).bind(s,data.request_id).first();
  const check=(row,duplicate)=>{
   if(!row||FIELDS.some(k=>row[k]!==data[k]))throw Error("conflict_or_denied");
+  // Acceptance receipt describes original intake; current review state is in receipts().
   return {id:row.id,status:"UNREVIEWED",duplicate};
  };
  const prior=await existing();

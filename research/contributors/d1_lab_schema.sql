@@ -1,4 +1,4 @@
--- REMURA Contributors v0.16 LAB — 14/11/2026 23:56 CET
+-- REMURA Contributors v0.19 LAB — 16/11/2026 01:16 CET
 -- SYNTHETIC ONLY: NOT a migration for any existing database; no deployment.
 PRAGMA foreign_keys = ON;
 CREATE TABLE lab_state (
@@ -64,4 +64,51 @@ CREATE TRIGGER entry_no_update BEFORE UPDATE ON lab_entries BEGIN
 END;
 CREATE TRIGGER entry_no_delete BEFORE DELETE ON lab_entries BEGIN
  SELECT RAISE(ABORT,'immutable_entry');
+END;
+
+-- Review layer: empty synthetic owner registry; never populate from browser input.
+CREATE TABLE lab_owner (
+ id INTEGER PRIMARY KEY CHECK(id=1),
+ subject TEXT NOT NULL UNIQUE CHECK(subject='fixture-owner'),
+ revoked INTEGER NOT NULL DEFAULT 0 CHECK(revoked IN(0,1))
+);
+CREATE TRIGGER owner_no_delete BEFORE DELETE ON lab_owner BEGIN
+ SELECT RAISE(ABORT,'immutable_owner');
+END;
+CREATE TRIGGER owner_no_rebind BEFORE UPDATE ON lab_owner
+WHEN OLD.id<>NEW.id OR OLD.subject<>NEW.subject OR NEW.revoked<OLD.revoked
+BEGIN SELECT RAISE(ABORT,'immutable_owner'); END;
+CREATE TABLE lab_reviews (
+ id INTEGER PRIMARY KEY,
+ entry_id INTEGER NOT NULL REFERENCES lab_entries(id),
+ owner TEXT NOT NULL REFERENCES lab_owner(subject),
+ action TEXT NOT NULL CHECK(action IN('APPROVED','REJECTED','REVOKED')),
+ at_utc TEXT NOT NULL CHECK(length(at_utc)=20 AND at_utc GLOB '????-??-??T??:??:??Z'),
+ reason TEXT NOT NULL CHECK(length(trim(reason)) BETWEEN 1 AND 280 AND length(reason)<=280),
+ UNIQUE(entry_id,action)
+);
+CREATE INDEX lab_reviews_entry ON lab_reviews(entry_id,id);
+CREATE TRIGGER review_guard BEFORE INSERT ON lab_reviews BEGIN
+ SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM lab_state WHERE id=1 AND enabled=1)
+ THEN RAISE(ABORT,'disabled') END;
+ SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM lab_owner WHERE id=1 AND subject=NEW.owner AND revoked=0)
+ THEN RAISE(ABORT,'owner_denied') END;
+ SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM lab_entries WHERE id=NEW.entry_id AND received_utc<=NEW.at_utc)
+ OR EXISTS(SELECT 1 FROM lab_reviews WHERE at_utc>NEW.at_utc)
+ THEN RAISE(ABORT,'review_clock_or_entry') END;
+ SELECT CASE WHEN NOT (
+ (NEW.action IN('APPROVED','REJECTED') AND NOT EXISTS(SELECT 1 FROM lab_reviews WHERE entry_id=NEW.entry_id))
+ OR (NEW.action='REVOKED' AND (SELECT action FROM lab_reviews WHERE entry_id=NEW.entry_id ORDER BY id DESC LIMIT 1)='APPROVED')
+ ) THEN RAISE(ABORT,'review_transition') END;
+ SELECT CASE WHEN NEW.action='APPROVED' AND NOT EXISTS(
+ SELECT 1 FROM lab_entries e JOIN lab_identities i ON i.subject=e.subject AND i.revoked=0
+ JOIN lab_catalog m ON m.market=e.market AND m.provider=e.provider AND m.ticker=e.ticker
+ AND m.product=e.product AND m.contract=e.contract AND m.source_group=e.source_group AND m.active=1
+ WHERE e.id=NEW.entry_id) THEN RAISE(ABORT,'approval_source_denied') END;
+END;
+CREATE TRIGGER review_no_update BEFORE UPDATE ON lab_reviews BEGIN
+ SELECT RAISE(ABORT,'immutable_review');
+END;
+CREATE TRIGGER review_no_delete BEFORE DELETE ON lab_reviews BEGIN
+ SELECT RAISE(ABORT,'immutable_review');
 END;

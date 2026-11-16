@@ -1,4 +1,11 @@
-# REMURA Contributors v0.18 LAB — 15/11/2026 08:34 CET
+# REMURA Contributors v0.19 LAB — 16/11/2026 01:16 CET
+
+## v0.19 LAB — D1 owner review (offline)
+- Owner confirms second shutdown after revocation: Production OFF, Preview OFF, DISABLED. Operator declaration, no independent API GET. No Cloudflare resource creation authorized.
+- Extended existing D1 SQL with empty fixture-owner registry, immutable review history, atomic transition/clock/owner/source guards. Approve/reject UNREVIEWED; revoke APPROVED only. Revoked contributor or inactive/source-changed mapping cannot receive new approval. Revoking a contributor does not rewrite prior approved contributions; separate owner review needed.
+- New synthetic owner adapter queue/history/review with bounded 20 entries / 2 decisions, no caller-derived real owner role, all SQL bound; contributor receipts only own current status and timestamp, no private review reason or owner identifier. Intake acceptance receipt remains original UNREVIEWED even on replay; use receipts for current status.
+- Seven added Python test cases (including Node harness) exercise actual local SQLite statements and fake D1 API. Cloudflare D1 engine, concurrency/restore/CSRF/HTTP, real identity binding, permanent role revocation and retention not yet certified. SQL is fresh empty LAB schema only, not a production migration. No new Worker code, endpoint, database, secrets, policy, merge or changes elsewhere.
+- CI requested only by branch update, result pending. See D1-STAGING-GATE.md for remaining gate.
 
 ## Sicurezza reale e preparazione D1 — 16/11/2026 01:12 CET (v0.18 LAB, solo documentazione)
 - [x] Primo ripristino dopo test Mac confermato dall'operatore: Production OFF, Preview OFF, DISABLED. [Evidenza](https://github.com/mirkoworz/remura/pull/104#issuecomment-6903455570). CI documentale 43776933859 SUCCESS.
