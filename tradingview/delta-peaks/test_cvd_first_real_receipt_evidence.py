@@ -23,3 +23,12 @@ class FirstReceiptEvidence(unittest.TestCase):
         self.assertNotIn("schedule:",new)
         self.assertIn("default: receipt-only",new)
         self.assertIn("persist-credentials: false",new)
+
+    def test_two_actual_disjoint_receipts(self):
+        first=json.loads((ROOT/"evidence"/"fx_first_receipt_20261116.json").read_text())
+        second=json.loads((ROOT/"evidence"/"fx_second_receipt_20261116.json").read_text())
+        o=aggregate_receipts([first,second])
+        self.assertEqual((o["windows"],o["requested_slots"],o["valid_unique_bars"],o["missing_requested_slots"],o["duplicate_rows"]),(2,16,16,0,0))
+        self.assertEqual((o["max_lag_ms"],o["collection_rows_read"],o["collection_rows_written"]),(21660,34,0))
+        self.assertFalse(o["scientific_admission"])
+        with self.assertRaises(AuditError):aggregate_receipts([first,second,second])
