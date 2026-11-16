@@ -1,7 +1,13 @@
+# REMURA TradingView — ROADMAP v0.8.109-lab (bounded local realtime sequence)
+**Aggiornamento 16/11/2026 — PR #102 DRAFT**
+
+- v0.8.108 verified: 424 principal tests CI 43904435156 SUCCESS job 133429359657; Wrangler 43904435166 SUCCESS. Three new clock regressions green; pinned B–D–E fixture green.
+- v0.8.109 local batch diagnostic of 1–12 new M5 realtime log claims; same identity/config, duplicate/order/gap controls, group shared peak origins and retain price disagreement; no price or origin export, no authenticated receipt or scientific admission. Seven new synthetic regressions, CI pending. See LEVEL-LOCAL-BATCH-LAB.md. Existing Pine unchanged, no provider calls/deploy; next manual gate two consecutive realtime logs.
+
 # REMURA TradingView — ROADMAP v0.8.108-lab (real log clock compatibility)
 **Aggiornamento 16/11/2026 — PR #102 DRAFT**
 
-- v0.8.107 verified CI 43899175614 SUCCESS (421 main tests), Wrangler 43899175597 SUCCESS. User compiled Pine v0.9.2 and supplied real historical reconstruction log; all 6 slots present. v0.8.107 rejected millisecond sender clock; narrow v0.8.108 fix passed exact submitted log locally, no raw market data committed. Three new synthetic regressions; CI pending. No alert, webhook or deploy. DAY/WEEK may share origin: do not count as independent. Historical reconstruction is not prospective evidence. No scientific or operational admission. See PINE-LEVEL-LOCAL-PROBE-LAB.md.
+- v0.8.107 verified CI 43899175614 SUCCESS (421 main tests), Wrangler 43899175597 SUCCESS. User compiled Pine v0.9.2 and supplied real historical reconstruction log; all 6 slots present. v0.8.107 rejected millisecond sender clock; narrow v0.8.108 fix passed exact submitted log locally, no raw market data committed. Three new synthetic regressions; CI 43904435156 SUCCESS (424); Wrangler 43904435166 SUCCESS. No alert, webhook or deploy. DAY/WEEK may share origin: do not count as independent. Historical reconstruction is not prospective evidence. No scientific or operational admission. See PINE-LEVEL-LOCAL-PROBE-LAB.md.
 
 # REMURA TradingView — ROADMAP v0.8.107-lab (Pine local level contract)
 **Aggiornamento 16/11/2026 16:38 CET — PR #102 DRAFT**
