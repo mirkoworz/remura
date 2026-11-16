@@ -1,4 +1,4 @@
-# REMURA v0.8.96 LAB — 16/11/2026 13:46 CET
+# REMURA v0.8.97 LAB — 16/11/2026 13:47 CET
 import json,os,sqlite3,sys,tempfile,types,unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -12,7 +12,7 @@ from cvd_first_observation_ledger_v1 import Ledger
 from cvd_telemetry_preview_v1 import M5
 from test_cvd_batch_nonoverlap_preview_v1 import triples
 from test_cvd_telemetry_preview_v1 import T0
-from test_research_dossier_preview_v1 import pair,mock_audit
+from test_research_dossier_preview_v1 import mock_audit
 G="a"*32
 class JointPublicationTests(unittest.TestCase):
     def setUp(self):
@@ -21,7 +21,7 @@ class JointPublicationTests(unittest.TestCase):
         self.path=self.root/m.NAME
         self.db=sqlite3.connect(":memory:");self.addCleanup(self.db.close)
         self.db.execute("PRAGMA query_only=ON")
-        p=types.ModuleType("scripts");p.shark_causal_pair_audit=types.SimpleNamespace(audit=mock_audit([pair()]))
+        p=types.ModuleType("scripts");p.shark_causal_pair_audit=types.SimpleNamespace(audit=mock_audit([]))
         ctx=patch.dict(sys.modules,{"scripts":p});ctx.start();self.addCleanup(ctx.stop)
         self.c=m.JointCustody(G,synthetic=True)
         self.now=bucket(T0+289*M5)

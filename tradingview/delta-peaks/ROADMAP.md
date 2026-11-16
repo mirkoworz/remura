@@ -1,3 +1,8 @@
+# REMURA TradingView — ROADMAP v0.8.97-lab (fixture temporale corretta)
+**Aggiornamento 16/11/2026 13:47 CET — PR #102 DRAFT**
+
+- CI v0.8.96 43869728759 failed in eight new fixtures with b_pair_outside_asof: static B mock pair predated the rolling 24h window. Corrected only joint publication fixture to an empty B cohort (positive temporal B test remains separate in pinned cross-track CI); scientific filter unchanged. CI pending.
+
 # REMURA TradingView — ROADMAP v0.8.96-lab (pubblicazione congiunta)
 **Aggiornamento 16/11/2026 13:46 CET — PR #102 DRAFT**
 
