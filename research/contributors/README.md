@@ -1,4 +1,7 @@
-# REMURA Contributors v0.29 LAB — 16/11/2026 08:24 CET
+# REMURA Contributors v0.30 LAB — 16/11/2026 08:29 CET
+
+## v0.30 LAB — operational acceptance and custody plan
+- v0.28 CI [43823741131](https://github.com/mirkoworz/remura/actions/runs/43823741131) SUCCESS 171; v0.29 CI [43823883084](https://github.com/mirkoworz/remura/actions/runs/43823883084) SUCCESS 176. New [operational acceptance plan](OPERATIONAL-ACCEPTANCE-GATE.md), exact gate order, free-first independent custody options, real D1/Safari test protocol and privacy blockers. Documentation only; v0.28 runtime untouched, no actual provisioning or activation.
 
 ## v0.29 LAB — encrypted journal and end-to-end admin rehearsal
 - Synthetic-only AES-256-GCM append records, context/sequence authentication, independent latest pin, tamper/wrong-key/rollback tests and integrated SQLite restore. [Encrypted journal gate](ENCRYPTED-JOURNAL-GATE.md). v0.28 UI unchanged. No actual keys/resources or D1; CI pending.
