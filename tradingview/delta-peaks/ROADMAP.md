@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.99-lab (profilo risorse congiunto)
+**Aggiornamento 16/11/2026 14:49 CET — PR #102 DRAFT**
+
+- v0.8.98 CI 43871394982 SUCCESS, job 133313222494: 380 tests, 7 encrypted tests OK, actual pinned B positive control PASS; Wrangler 43871394945 SUCCESS.
+- v0.8.99 comparative 12+12 cycle dense joint plaintext/encrypted benchmark and fail-closed recovery acceptance design; CI pending. See JOINT-RESOURCE-AND-RECOVERY-LAB.md. No actual recovery implementation, external custody, live changes or provider calls. A post-trial scheduled diagnostic still absent at starting inventory.
+
 # REMURA TradingView — ROADMAP v0.8.98-lab (cifratura pubblicazione congiunta)
 **Aggiornamento 16/11/2026 13:56 CET — PR #102 DRAFT**
 

@@ -365,6 +365,7 @@ def run_resource_profile():
     import subprocess,sys
     from pathlib import Path
     subprocess.run([sys.executable,str(Path(__file__).with_name("cvd_incremental_resource_profile_v1.py"))],check=True)
+    subprocess.run([sys.executable,str(Path(__file__).with_name("cvd_joint_resource_profile_v1.py"))],check=True,timeout=210)
 
 if __name__=="__main__":
     run()
