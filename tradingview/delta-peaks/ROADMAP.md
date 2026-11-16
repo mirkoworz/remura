@@ -1,8 +1,14 @@
+# REMURA TradingView — ROADMAP v0.8.105-lab (B–D–E dossier)
+**Aggiornamento 16/11/2026 16:27 CET — PR #102 DRAFT**
+
+- v0.8.104 verified: 414 tests, CI 43882380435 and Wrangler 43882380408 SUCCESS.
+- v0.8.105 synthetic E context at ORIGINAL B decision cutoff using verified E v0.35 pinned 4fa2fffe0d66d8c6fa4fe4aa996e8bd839e28ad2. Existing dossier extended opt-in, existing HTML unchanged without E. Separate synthetic LABFX context, no feed mapping/attestation, no orders or edge. Pinned B/D/E CI fixture positive, late, missing and incompatible. E v0.36 new wire is a separate candidate pending validation. CI pending. No provider calls or deploy.
+
 # REMURA TradingView — ROADMAP v0.8.104-lab (autenticazione storica)
 **Aggiornamento 16/11/2026 15:05 CET — PR #102 DRAFT**
 
 - v0.8.103 verified: 407 tests, six rotation tests passed, CI 43881888670 and Wrangler 43881888865 SUCCESS.
-- v0.8.104 synthetic historical pin receipts and read-only authentication of previous backup before prune/cycle, exact archive-prefix check, seven candidate tests. See HISTORICAL-BACKUP-LAB.md. CI pending. No real keys, durable independent authority, automatic deletion, provider calls or deploy.
+- v0.8.104 synthetic historical pin receipts and read-only authentication of previous backup before prune/cycle, exact archive-prefix check, seven candidate tests. See HISTORICAL-BACKUP-LAB.md. CI 43882380435 SUCCESS (414 tests). No real keys, durable independent authority, automatic deletion, provider calls or deploy.
 
 # REMURA TradingView — ROADMAP v0.8.103-lab (rotazione sintetica protetta)
 **Aggiornamento 16/11/2026 15:02 CET — PR #102 DRAFT**

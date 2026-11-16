@@ -85,10 +85,23 @@ def render(r):
         "</table><h3>Copertura e motivi di esclusione</h3><table>"+_counts(aux["source_counts"])+
         "</table><h3>Matrice per stessa decisione (non sommare righe di fonti diverse)</h3><table>"+
         _counts(aux["matrix"])+"</table>")
+    level=r.get("level_context")
+    level_panel=""
+    if level is not None:
+        if (r["origin"]!="SYNTHETIC" or level.get("schema")!="remura.tv.e.context.synthetic.v1"
+            or any(level.get(k) is not False for k in ("scientific_admission","operational_signal","source_equivalence_attested"))):
+            raise ValueError("invalid_level_context")
+        labels={"CANDIDATE_NEAR_CONTEXT":"confluenza candidata (sintetica)","DISTANT_CONTEXT":"livelli distanti",
+                "INCOMPATIBLE_METADATA_PRESENT":"metadati incompatibili","AUTOMATIC_LATE":"automatico tardivo",
+                "AUTOMATIC_MISSING":"automatico mancante","MANUAL_NOT_AVAILABLE_ASOF":"manuale non disponibile al cutoff",
+                "NO_COMPARABLE_LEVEL":"nessun livello confrontabile","OTHER_B_MARKET":"altro mercato B"}
+        if any(k not in labels for k in level["decision_counts"]):
+            raise ValueError("unknown_level_state")
+        level_panel="<section><h2>Level Confluence — SOLO DATI SINTETICI</h2><p>Contesto temporale LABFX, non equivalenza di feed. Nessuna confluenza confermata.</p><table>"+_counts({labels[k]:v for k,v in level["decision_counts"].items()})+"</table></section>"
     origin="DATI SINTETICI — NON REALI" if r["origin"]=="SYNTHETIC" else "SNAPSHOT LOCALE — PROVENIENZA NON CERTIFICATA"
     pairs="N/D" if r["b_local_pairs"] is None else str(r["b_local_pairs"])
     asof=datetime.fromtimestamp(r["as_of_ms"]/1000,tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-    return """<!doctype html><html lang="it"><head><meta charset="utf-8">
+    page = """<!doctype html><html lang="it"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">
 <title>REMURA LAB — 0.8.75</title><style>
@@ -106,6 +119,10 @@ table{border-collapse:collapse;width:100%;font-size:.88rem}td{padding:8px 4px;bo
 <p>Parametri effettivi e provenienza indipendente: non attestati. Nessuna prova di edge.</p></section>
 <section><h2>Confluenze COT, TradingView, cTrader e sentiment</h2>"""+aux_panel+"""<p>Retail: disponibilità originale, non direzione. CVD cTrader: proxy CLV × tick, solo documento esatto. Non un segnale, non una probabilità.</p></section>
 <section><h2>TradingView CVD — FX:EURUSD M5, fonte distinta</h2>"""+cvd_panel+"""<p>Associazione temporale descrittiva, non conferma istituzionale. ER non direzionale.</p></section>
-<h2>Disponibilità esiti prospettici</h2><div class="grid">"""+horizons+"""</div>
+"""+level_panel+"""<h2>Disponibilità esiti prospettici</h2><div class="grid">"""+horizons+"""</div>
 <section><h2>Anteprima notifica diagnostica (non inviata)</h2><p>"""+escape(notice["text"])+"""</p><p>Coppie CVD descrittive: """+("N/D" if notice["tv_cvd_match_count"] is None else str(notice["tv_cvd_match_count"]))+"""</p><p>Tutte le tipologie di prova locale sulla stessa decisione: """+("N/D" if aux is None else str(aux["all_local_proof_types"]))+"""</p><table>"""+_counts(notice["tv_cvd_reasons"])+"""</table></section>
 <footer>Solo ricerca. Nessun collegamento live, ordine, invio, o equivalenza tra feed presunta.</footer></main></body></html>"""
+
+    if level is not None:
+        page=page.replace("0.8.75","0.8.105").replace("14/11/2026 CET","16/11/2026 16:27 CET")
+    return page

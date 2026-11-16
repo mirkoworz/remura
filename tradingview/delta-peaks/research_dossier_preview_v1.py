@@ -27,7 +27,7 @@ def relation(side, value):
     return "ALIGNED" if side == value else "OPPOSED"
 
 def dossier(db, rows, *, as_of_utc, days=1, origin="LOCAL_SNAPSHOT", cvd_rows=None, auxiliary=False,
-            private_cvd_db=None, cvd_secret=None, retail_root=None, retail_authorized_at=None):
+            private_cvd_db=None, cvd_secret=None, retail_root=None, retail_authorized_at=None, level_evidence=None):
     """Caller supplies an explicit query-only SQLite snapshot and D1 export.
     B source must be made available by the isolated, pinned research checkout.
     The adapter does not open a production DB or establish source authenticity.
@@ -47,6 +47,8 @@ def dossier(db, rows, *, as_of_utc, days=1, origin="LOCAL_SNAPSHOT", cvd_rows=No
         (private_cvd_db is None)!=(cvd_secret is None) or
         (retail_root is None)!=(retail_authorized_at is None)):
         raise ValueError("auxiliary_scope")
+    if level_evidence is not None and origin!="SYNTHETIC":
+        raise ValueError("synthetic_level_context_only")
     at=utc(as_of_utc)
     cutoff=ms(at)
     from scripts import shark_causal_pair_audit
@@ -116,7 +118,12 @@ def dossier(db, rows, *, as_of_utc, days=1, origin="LOCAL_SNAPSHOT", cvd_rows=No
     cvd_join=None if cvd_rows is None or n is None else join_local_pairs(pairs,cvd_rows,as_of_ms=cutoff)
     aux=None if not auxiliary else _from_verified_pairs(db,private_cvd_db,cvd_rows,pairs,n,
         as_of_utc=as_of_utc,days=days,secret=cvd_secret,retail_root=retail_root,authorized_at=retail_authorized_at)
+    level_context=None
+    if level_evidence is not None:
+        from level_context_asof_preview_v1 import join
+        level_context=join(None if n is None else pairs,level_evidence,as_of_ms=cutoff,origin=origin)
     return {
+        **({"level_context":level_context} if level_evidence is not None else {}),
         "schema":"remura.tv.research.dossier.preview.v1","version":VERSION,
         "origin":origin,"as_of_ms":cutoff,"days":days,
         "b_audit_status":b["status"],"b_local_pairs":n,
