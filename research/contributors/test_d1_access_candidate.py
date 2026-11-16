@@ -40,6 +40,22 @@ class AccessCandidateTests(unittest.TestCase):
             ("INSERT INTO lab_identities(subject,email_tag,slot) VALUES(?,?,'friend-a')",("d"*64,EO)),
             ("INSERT INTO lab_identities(subject,email_tag,slot) VALUES(?,?,'friend-a')",("fixture-a","4"*64))]:
             with self.assertRaises(sqlite3.IntegrityError):self.db.execute(sql,args)
+    def test_cross_role_trigger_before_slot_conflict(self):
+        db=sqlite3.connect(":memory:")
+        try:
+            db.executescript((ROOT/"d1_access_candidate.sql").read_text())
+            db.execute("INSERT INTO lab_owner(id,subject,email_tag) VALUES(1,?,?)",(O,EO))
+            for s,e in [(O,EA),(A,EO)]:
+                with self.assertRaisesRegex(sqlite3.IntegrityError,"role_conflict"):
+                    db.execute("INSERT INTO lab_identities(subject,email_tag,slot) VALUES(?,?,'friend-a')",(s,e))
+        finally:db.close()
+        db=sqlite3.connect(":memory:")
+        try:
+            db.executescript((ROOT/"d1_access_candidate.sql").read_text())
+            db.execute("INSERT INTO lab_identities(subject,email_tag,slot) VALUES(?,?,'friend-a')",(A,EA))
+            with self.assertRaisesRegex(sqlite3.IntegrityError,"role_conflict"):
+                db.execute("INSERT INTO lab_owner(id,subject,email_tag) VALUES(1,?,?)",(O,EA))
+        finally:db.close()
     def test_isolation_and_gate_split(self):
         self.gates(1,0,0);self.insert(A,1);self.insert(B,2)
         self.assertEqual(self.q("receipts",A,EA,0),[])
@@ -76,6 +92,8 @@ class AccessCandidateTests(unittest.TestCase):
         self.db.execute("UPDATE lab_owner SET revoked=1")
         self.q("revoke",O,L,"friend-a",O,EO)
         self.assertEqual(self.db.execute("SELECT count(*) FROM lab_identity_revocations").fetchone()[0],0)
+    def test_http_node(self):
+        subprocess.run(["node",str(ROOT/"test_http_access_candidate.mjs")],check=True,timeout=20)
     def test_node(self):
         subprocess.run(["node",str(ROOT/"test_d1_access_candidate.mjs")],check=True,timeout=20)
 

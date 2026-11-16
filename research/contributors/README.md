@@ -1,4 +1,8 @@
-# REMURA Contributors v0.20 LAB — 16/11/2026 07:02 CET
+# REMURA Contributors v0.21 LAB — 16/11/2026 07:05 CET
+
+## v0.21 LAB — bounded HTTP candidate and recovery policy
+- Offline request contract only: six exact POST JSON routes, same-origin browser checks and custom CSRF header, 4 KiB streaming body cap, no CORS, no-store, generic errors, limiter mandatory before D1, no client role or actor. No default Worker entrypoint, config, binding or deploy. [HTTP and recovery gate](HTTP-RECOVERY-CANDIDATE.md).
+- v0.20 CI [43814306504](https://github.com/mirkoworz/remura/actions/runs/43814306504) SUCCESS, job 133122727956, 134 Python incl. Node candidate, demo and staging checks. v0.21 CI pending. New tests cover route/body/role/limiter/replay and cross-role trigger before slot conflict. No actual D1 or Access HTTP validation.
 
 ## v0.20 LAB — durable Access/D1 candidate (offline)
 - Fresh candidate derived from v0.19: pseudonymous UUID/email HMAC binding, disjoint owner/contributor registries, separate closed read/write/recovery gates, primary-only queries, atomic contributor revocation journal. Fixture APIs unchanged; no HTTP wiring, enrollment, resources or deployment. [Candidate design and remaining gates](ACCESS-D1-CANDIDATE.md).
