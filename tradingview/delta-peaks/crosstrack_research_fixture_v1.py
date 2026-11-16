@@ -247,6 +247,44 @@ def run_missing_b():
         print("REMURA_D_MISSING_B_SYNTHETIC=PASS; UNKNOWN_NOT_ZERO; RADAR_INDEPENDENT; NO_LIVE_DB")
     finally:db.close()
 
+
+def run_incremental_pinned():
+    # Actual B implementation in pinned checkout, synthetic B and TV fixtures.
+    # Historical B proof is not a same-decision TV proof after deployment.
+    import sys
+    from pathlib import Path
+    sys.path.insert(0,str(Path(__file__).resolve().parent/"gateway-lab"))
+    from cvd_incremental_preview_v1 import RollingPreview,repage,PERIOD
+    from cvd_runtime_private_state_v1 import bucket
+    from cvd_private_runtime_preview_v1 import preview,plan
+    from test_cvd_batch_nonoverlap_preview_v1 import triples
+    from test_cvd_telemetry_preview_v1 import T0
+    db,doc=create()
+    try:
+        observed=CLOSE+timedelta(seconds=60)
+        witness.witness(db,clock=AT)
+        with db:
+            hid=insert_history(db,observed=observed,closed=CLOSE)
+            b=bundle.record(db,history_id=hid,observed_document=doc,clock=observed+timedelta(seconds=2))
+        assert b["state"]=="BOTH_LOCAL_PROOFS_PRESENT"
+        db.execute("PRAGMA query_only=ON")
+        before=db.total_changes
+        rows=[r for r,_,_ in triples(20,events=(0,14),missing=(5,))]
+        now=bucket(T0+300000)
+        cache=RollingPreview(now=now,windows=repage(plan(now),rows),synthetic=True)
+        for i in range(4):
+            cutoff=now+i*PERIOD
+            if i:cache.advance(now=cutoff,windows=repage(cache.next_ranges(cutoff),rows))
+            full=repage(plan(cutoff),rows)
+            assert cache.compare_reference(full)["status"]=="EXACT_INPUT_MATCH"
+            left=preview(db,cache._windows,now=cutoff,origin="SYNTHETIC")
+            right=preview(db,full,now=cutoff,origin="SYNTHETIC")
+            assert left==right and left["coverage"]["valid_unique_bars"]>0
+            assert not left["notice"]["sent"] and not left["orders_enabled"]
+        assert db.total_changes==before
+        print("REMURA_D_INCREMENTAL_PINNED_B_SYNTHETIC=PASS; NO_LIVE_DB; NO_POSITIVE_SAME_DECISION_CLAIM")
+    finally:db.close()
+
 if __name__=="__main__":
     run()
     run_cvd()
@@ -255,3 +293,4 @@ if __name__=="__main__":
     run_one_shot()
     run_persisted()
     run_missing_b()
+    run_incremental_pinned()

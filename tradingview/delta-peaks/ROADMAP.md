@@ -1,3 +1,12 @@
+# REMURA TradingView — ROADMAP v0.8.92-lab (persistenza sintetica candidata)
+**Aggiornamento 16/11/2026 13:13 CET — PR #102 DRAFT, nessun deploy**
+
+## v0.8.92 LAB
+- v0.8.91 verified: 345 tests, CI 43864133293 and Wrangler 43864133513 SUCCESS; checkpoint comment 6916047676.
+- New isolated atomic persistence rehearsal and adversarial regression; no existing runtime change. See INCREMENTAL-PERSISTENCE-LAB-V1.md. CI pending.
+- Existing pinned B implementation exercised in extended cross-track synthetic fixture; historical proof not evidence of same-decision match. CI pending.
+- Next: validate CI; quantify synthetic CPU/RSS/disk; independent pin, archive and recovery contract before any real adapter. Oracle schedule still absent at start; no provider requests.
+
 # REMURA TradingView — ROADMAP v0.8.91-lab (regressione incrementale candidata)
 **Aggiornamento 16/11/2026 13:08 CET — PR #102 DRAFT, nessun deploy**
 
