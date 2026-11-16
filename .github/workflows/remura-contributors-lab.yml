@@ -27,7 +27,7 @@ jobs:
       - name: Checkout exact D LAB reference
         uses: actions/checkout@v4
         with:
-          ref: 3f279b9b762f3b53e57ffe7c1632b6e6d98db639
+          ref: a44644f653e3f6d423f2120b678dda7eeaecc83e
           path: _remura_d_reference
           persist-credentials: false
 
@@ -35,3 +35,8 @@ jobs:
         env:
           PYTHONPATH: _remura_d_reference/tradingview/delta-peaks
         run: python3 research/contributors/crosstrack_tv_confluence_fixture_v1.py -v
+
+      - name: D–E local-level declared metadata readiness
+        env:
+          PYTHONPATH: _remura_d_reference/tradingview/delta-peaks
+        run: python3 research/contributors/crosstrack_local_level_readiness_v1.py -v
