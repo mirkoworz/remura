@@ -1,4 +1,8 @@
-# REMURA Contributors v0.19 LAB — 16/11/2026 01:16 CET
+# REMURA Contributors v0.20 LAB — 16/11/2026 07:02 CET
+
+## v0.20 LAB — durable Access/D1 candidate (offline)
+- Fresh candidate derived from v0.19: pseudonymous UUID/email HMAC binding, disjoint owner/contributor registries, separate closed read/write/recovery gates, primary-only queries, atomic contributor revocation journal. Fixture APIs unchanged; no HTTP wiring, enrollment, resources or deployment. [Candidate design and remaining gates](ACCESS-D1-CANDIDATE.md).
+- Tests: actual local SQLite candidate SQL and Node simulated Access/D1 metadata. CI pending; real D1, concurrency, CSRF, rate limits, enrollment and restore fence still NO-GO.
 
 ## v0.19 LAB — D1 owner review (offline)
 - Owner confirms second shutdown after revocation: Production OFF, Preview OFF, DISABLED. Operator declaration, no independent API GET. No Cloudflare resource creation authorized.
@@ -12,7 +16,7 @@
 - [x] Sessione negativa autorizzata: curl anonimo 302, header identità fittizia 302, credenziali service token fittizie 401 (codici riferiti dall'operatore, Location non registrato). Nessun test con service token autentico; non prova il ramo Worker per questi rifiuti.
 - [x] Safari iPhone: risposta positiva owner riferita dall'operatore dopo URL pulito; precedente closed non riprodotto, causa non provata.
 - [x] Revoca specifica app: screenshot dell'editor Additional settings mostra Revoke existing tokens in Application Audience; dopo revoca operatore riferisce nuova richiesta Google nella stessa sessione iPhone. Evidenza comportamentale, non confronto crittografico di token, non revoca permanente dell'utente.
-- [ ] Conferma seconda chiusura Production/Preview OFF e DISABLED (richiesta, non ancora esplicitamente attestata). Restano path/query autenticati, account estraneo già disponibile se presente, identità reinserita/revoca permanente e vero service token (ultimi casi separati, non ammessi nella sessione appena conclusa). Nessuna promozione a produzione.
+- [x] Seconda chiusura Production/Preview OFF e DISABLED attestata dall'operatore (non GET indipendente). Restano path/query autenticati, account estraneo già disponibile se presente, identità reinserita/revoca permanente e vero service token (ultimi casi separati, non ammessi nella sessione appena conclusa). Nessuna promozione a produzione.
 - [ ] D1: [piano migrazione e gate](D1-STAGING-GATE.md), nessun DB creato o binding. Prima autorizzazione specifica, quota aggiornata e gate sicurezza; nessun contributo reale, nessuna modifica agli altri due database. Il cap 200 è soltanto sperimentale, non capacità definitiva.
 
 
