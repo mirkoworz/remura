@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.100-lab (ripristino cifrato sintetico)
+**Aggiornamento 16/11/2026 14:54 CET — PR #102 DRAFT**
+
+- v0.8.99 verified: CI 43879728417 SUCCESS, 380 tests, 24/24 joint cycles and identical commitments. Wrangler 43879729194 SUCCESS. Comparative resource evidence in JOINT-RECOVERY-LAB.md.
+- v0.8.100 exact synthetic ciphertext recovery into absent private file, no-clobber publication, auth+semantic+latest-pin verification, 8 candidate regressions. No actual backup/key custody, production or provider calls. CI pending. A post-trial scheduled diagnostic absent at starting inventory.
+
 # REMURA TradingView — ROADMAP v0.8.99-lab (profilo risorse congiunto)
 **Aggiornamento 16/11/2026 14:49 CET — PR #102 DRAFT**
 
