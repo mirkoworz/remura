@@ -1,8 +1,14 @@
+# REMURA TradingView — ROADMAP v0.8.111-lab (transactional fixture store and separate Pine)
+**Aggiornamento 16/11/2026 17:39 CET — PR #102 DRAFT**
+
+- v0.8.110 verified CI 43907067946 SUCCESS (440 main tests, 9 new), Wrangler 43907067909 SUCCESS; E v0.38 CI 43907298298 SUCCESS (218).
+- v0.8.111 disposable SQLite receiver rehearsal with transactional first receipts, restart/STOP/capacity/conflict controls, separate Pine v0.9.3 bounded transport preview with both switches OFF. Eight storage + three static tests; CI pending. No real receiver, D1, webhook changes, deployment, authenticated custody or operational admission. See LEVEL-TRANSPORT-SQLITE-LAB.md.
+
 # REMURA TradingView — ROADMAP v0.8.110-lab (isolated transport rehearsal)
 **Aggiornamento 16/11/2026 17:23 CET — PR #102 DRAFT**
 
 - v0.8.109 verified: CI 43904792660 SUCCESS (431 tests), Wrangler 43904792685 SUCCESS; user local realtime log pair structurally complete, no trusted receipt.
-- v0.8.110 separate offline synthetic receiver, exact contract/config, capability hash, injected receipt clock, bounded 12 in-memory rows and replay/conflict guards; 9 candidate tests, CI pending. See LEVEL-TRANSPORT-RECEIVER-LAB.md. No live Pine/Worker changes, no provider calls, no operational admission.
+- v0.8.110 separate offline synthetic receiver, exact contract/config, capability hash, injected receipt clock, bounded 12 in-memory rows and replay/conflict guards; 9 tests verified, CI 43907067946 SUCCESS (440), Wrangler 43907067909 SUCCESS. See LEVEL-TRANSPORT-RECEIVER-LAB.md. No live Pine/Worker changes, no provider calls, no operational admission.
 
 # REMURA TradingView — ROADMAP v0.8.109-lab (bounded local realtime sequence)
 **Aggiornamento 16/11/2026 — PR #102 DRAFT**
