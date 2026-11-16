@@ -1,8 +1,14 @@
+# REMURA TradingView — ROADMAP v0.8.112-lab (offline HTTP boundary)
+**Aggiornamento 16/11/2026 17:43 CET — PR #102 DRAFT**
+
+- v0.8.111 verified CI 43910257730 SUCCESS (451), Wrangler 43910257690 SUCCESS. Pine static checks only; compiler gate next.
+- v0.8.112 isolated synthetic HTTP-shaped adapter against actual SQLite fixture receiver; bounded request, strict auth/peer/header/body contracts, bounded attempt counters, sanitized responses. Eight candidate tests, CI pending. No server, endpoint, Worker, provider calls or deploy. See LEVEL-TRANSPORT-HTTP-LAB.md. Real streaming/shared rate limits and custody remain gates.
+
 # REMURA TradingView — ROADMAP v0.8.111-lab (transactional fixture store and separate Pine)
 **Aggiornamento 16/11/2026 17:39 CET — PR #102 DRAFT**
 
 - v0.8.110 verified CI 43907067946 SUCCESS (440 main tests, 9 new), Wrangler 43907067909 SUCCESS; E v0.38 CI 43907298298 SUCCESS (218).
-- v0.8.111 disposable SQLite receiver rehearsal with transactional first receipts, restart/STOP/capacity/conflict controls, separate Pine v0.9.3 bounded transport preview with both switches OFF. Eight storage + three static tests; CI pending. No real receiver, D1, webhook changes, deployment, authenticated custody or operational admission. See LEVEL-TRANSPORT-SQLITE-LAB.md.
+- v0.8.111 disposable SQLite receiver rehearsal with transactional first receipts, restart/STOP/capacity/conflict controls, separate Pine v0.9.3 bounded transport preview with both switches OFF. Eight storage + three static tests verified; CI 43910257730 SUCCESS (451), Wrangler 43910257690 SUCCESS. No real receiver, D1, webhook changes, deployment, authenticated custody or operational admission. See LEVEL-TRANSPORT-SQLITE-LAB.md.
 
 # REMURA TradingView — ROADMAP v0.8.110-lab (isolated transport rehearsal)
 **Aggiornamento 16/11/2026 17:23 CET — PR #102 DRAFT**
