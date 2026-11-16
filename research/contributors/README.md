@@ -1,6 +1,10 @@
+# REMURA Contributors v0.37 LAB — 16/11/2026 16:33 CET
+
+Aggregate wire dashboard using existing v0.36 evaluator and original comparator. Seven candidate tests; CI pending. v0.36 CI 43897229956 SUCCESS (197+7), all eight new transport tests passed. See [WIRE-CONFLUENCE-DASHBOARD-LAB.md](WIRE-CONFLUENCE-DASHBOARD-LAB.md) for the dashboard and next Pine clock contract. No real data, enrollment, deployment, new resources or changed legacy owner report.
+
 # REMURA Contributors v0.36 LAB — 16/11/2026 16:27 CET
 
-Future Pine wire rehearsal and transport-to-existing-comparator path (synthetic only). Exact instrument/config/anchor/receipt and explicit matching manual config. See [EXPLICIT-PINE-WIRE-LAB.md](EXPLICIT-PINE-WIRE-LAB.md). v0.35 CI 43895337919 SUCCESS (189+7). Eight new tests expected; v0.36 CI pending. No actual Pine, UI, runtime, enrollment, deployment or new resource.
+Future Pine wire rehearsal and transport-to-existing-comparator path (synthetic only). Exact instrument/config/anchor/receipt and explicit matching manual config. See [EXPLICIT-PINE-WIRE-LAB.md](EXPLICIT-PINE-WIRE-LAB.md). v0.35 CI 43895337919 SUCCESS (189+7). Eight new tests expected; v0.36 CI 43897229956 SUCCESS (197+7). No actual Pine, UI, runtime, enrollment, deployment or new resource.
 
 # REMURA Contributors v0.35 LAB — 16/11/2026 16:17 CET
 

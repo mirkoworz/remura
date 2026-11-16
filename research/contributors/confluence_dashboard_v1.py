@@ -75,3 +75,34 @@ def owner_report(lab,token,automatic,rules,*,asof_utc=None,synthetic=False):
         raise ValueError("dashboard_capacity")
     result=compare(manual,automatic,rules,asof_utc=cutoff,synthetic=True)
     return {"result":result,"html":_render(result,manual,automatic)}
+
+# v0.37: independent synthetic aggregate view, no archive/session/HTTP exposure.
+def wire_report(manual,envelopes,*,asof_utc,synthetic=False):
+    """Render the exact wire handoff result, with no private rows in HTML."""
+    from explicit_pine_wire_lab_v1 import handoff
+    result=handoff(manual,envelopes,asof_utc=asof_utc,synthetic=synthetic)
+    counts=result["automatic_status_counts"]
+    parts=['<!doctype html><html lang="it"><head><meta charset="utf-8">',
+           '<meta name="viewport" content="width=device-width,initial-scale=1">',
+           '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\'; form-action \'none\'; base-uri \'none\'">',
+           '<title>REMURA Level Confluence v0.37 LAB</title><style>'+STYLE+'</style></head><body>',
+           '<div class="release">REMURA · Level Confluence v0.37 LAB · 16/11/2026 16:33 CET</div><main>',
+           '<small>REMURA / VOLUMETRICA / LEVEL CONFLUENCE</small><h1>Confluenze volumetriche</h1>',
+           '<p>SOLO DATI SINTETICI — LABFX fittizio. Nessuna confluenza confermata, nessun segnale operativo.</p>',
+           '<p>Cutoff UTC: '+_e(result["asof_utc"])+'</p>',
+           '<section><h2>Disponibilità delle fonti</h2>',
+           '<p>Automatici disponibili: '+str(result["automatic_eligible"])+'<br>Manuali approvati e compatibili: '+str(result["manual_eligible"])+'</p>',
+           '<p>Automatici tardivi: '+str(result["automatic_late"])+'<br>Manuali esclusi dalla revisione: '+str(result["manual_review_excluded"])+'</p>',
+           '<p>Automatici con metadati incompatibili: '+str(result["automatic_metadata_blocked"])+'<br>Manuali con metadati non ammessi: '+str(result["manual_metadata_blocked"])+'</p></section>',
+           '<section><h2>Confronti causali</h2>',
+           '<p>Automatici confrontati: '+str(result["automatic_compared"])+'<br>Coppie vicine candidate: '+str(result["near_pair_count"])+'</p>']
+    for key,value in sorted(counts.items()):
+        parts.append('<p>'+_e(LABELS[key])+': '+str(value)+'</p>')
+    if not result["price_comparison_performed"]:
+        parts.append('<p class="missing">N/D — confronto di prezzo non eseguito. Assenza di evidenza non significa disaccordo.</p>')
+    parts.extend(['</section><section><h2>Attendibilità</h2>',
+                  '<p>Identità della configurazione: '+_e(result["config_id"])+'</p>',
+                  '<p>Configurazione, orologio di ricezione, equivalenza feed e indipendenza fonti non attestati. Soglie esclusivamente sintetiche.</p>',
+                  '<p>Ammissione scientifica: NO · Ordini: NO · Notifiche: NO</p>',
+                  '</section></main></body></html>'])
+    return {"result":result,"html":"".join(parts)}
