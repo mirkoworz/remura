@@ -1,7 +1,12 @@
-# REMURA TradingView — ROADMAP v0.8.88-lab (prima ricezione FX)
+# REMURA TradingView — ROADMAP v0.8.89-lab (audit ricezioni)
 **Aggiornamento 14/11/2026 21:18 CET — collegamento batch V3 su main**
 **PR #102 DRAFT/OPEN — deploy TEST autorizzato riuscito, produzione e ordini esclusi.**
 
+## CHECKPOINT v0.8.89 LAB — audit disjoint receipt windows (16/11/2026 10:29 CET)
+- Actual Nov16 first receipt remains 4/4 via existing pinned V3, no repeat reads. V4 candidate emits explicit close start/end/as-of in receipt v2 and uses consistent V4 failure label; ordinary batch retains existing prospective outcome withholding and transport. Separate file, no replacement of deployed reader or main workflow.
+- Pure aggregate audit accepts historical V1 with separately verified explicit run/window, V2 with matching window; enforces maturity, max 12 slots, unique run IDs, strict chronological nonoverlap, exact sender/protocol/scope, consistent counts, zero SQL writes and no operational/scientific flags. No file or network action, no inferred coverage of gaps, no independent provenance, no billing guarantee or scientific admission. Rejects repeat windows even if run ID differs. Added synthetic tests; CI pending.
+- Real next data evidence remains prospective confirmed receipt window, not automatic reads or reruns. Budget daily and VPS evidence not yet available as of latest inventory; no production/main changes.
+ 
 ## CHECKPOINT 16/11/2026 — prima ricezione Forex REALE (v0.8.88 LAB)
 - [x] Owner screenshot TradingView 10:24 CET: EURUSD M5 alerts at 10:05:03, 10:10:00, 10:15:00, 10:20:00; owner dispatched existing main receipt-only workflow. Exact run [43839770016](https://github.com/mirkoworz/remura/actions/runs/43839770016), job 133205256168 SUCCESS, 147 offline tests, checkout 4f1f9cb250241007bc5f9a97527972d3a47b9d2a, UTC 09:05–09:20 inclusive. Log 09:26:47 UTC, schema remura.tv.cvd.first.receipt.preview.v1; symbol FX:EURUSD, sender 0.9.1-cvd-lab, reader 0.8.88-lab.
 - [x] COMPLETE_REQUESTED_WINDOW: 4 requested / 4 valid unique / 0 missing / 0 duplicate rows. Max lag 7092ms. One inventory + one SELECT, 9 rows read / 0 written, only collection metadata, account quota UNKNOWN. EU_D1_TEST_ONLY; no raw logged or persisted by reader.
