@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.94-lab (origine benchmark corretta)
+**Aggiornamento 16/11/2026 13:19 CET — PR #102 DRAFT**
+
+- v0.8.93 run 43865389173 failed at dense benchmark coverage assertion; pinned B aligned positive control independently passed (MATCH=1, LATE_EXCLUDED=1), 353 main tests passed, Wrangler 43865389132 SUCCESS. Cause: first bucket was 285 slots after T0 instead of 288, 3 pre-fixture mature slots missing; no runtime issue inferred.
+- Corrected first synthetic cutoff, asserted exact first/last close, retained strict 289 valid bars and equality. New CI pending. No runtime, provider or scientific protocol changes.
+
 # REMURA TradingView — ROADMAP v0.8.93-lab (profilo risorse e controllo causale)
 **Aggiornamento 16/11/2026 13:17 CET — PR #102 DRAFT**
 

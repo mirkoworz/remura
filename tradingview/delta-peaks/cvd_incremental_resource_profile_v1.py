@@ -1,4 +1,4 @@
-# REMURA v0.8.93 LAB — 16/11/2026 13:17 CET
+# REMURA v0.8.94 LAB — 16/11/2026 13:19 CET
 """Fixed finite synthetic resource profile for CI Linux, not Oracle capacity proof."""
 import json,os,resource,sys,tempfile,time
 from pathlib import Path
@@ -20,7 +20,9 @@ def main():
     before=db.total_changes
     rows=[r for r,_,_ in triples(340,events=(0,14,290),missing=())]
     cycles=12
-    now=bucket(T0+287*M5+300000)
+    # First full dense window: closes T0 through T0+288*M5 inclusive.
+    now=bucket(T0+289*M5)
+    assert plan(now)[0][0]==T0 and plan(now)[-1][1]==T0+288*M5
     max_file=0; max_dir=0; peak_allocated=0
     wall=[];cpu=[];reference_wall=[];incremental_slots=0;full_slots=0
     try:
@@ -45,7 +47,7 @@ def main():
                 reference=preview(db,full,now=cutoff,origin="SYNTHETIC")
                 reference_wall.append(time.perf_counter_ns()-start)
                 assert result["preview"]==reference
-                assert reference["coverage"]["valid_unique_bars"]==289
+                assert reference["coverage"]["valid_unique_bars"]==289,(i,reference["coverage"])
                 assert not result["scientific_admission"]
                 st=(root/NAME).stat()
                 max_file=max(max_file,st.st_size)
