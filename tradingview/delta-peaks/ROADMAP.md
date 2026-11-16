@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.102-lab (backup prima della conferma)
+**Aggiornamento 16/11/2026 14:59 CET — PR #102 DRAFT**
+
+- v0.8.101 verified: 395 tests, all seven backup regressions, CI 43880921195 and Wrangler 43880921103 SUCCESS.
+- v0.8.102 synthetic backed publication wrapper: current backup check and capacity preflight, exact new copy before finalization, fail closed; six candidate tests. Independent custody proposal documented, not deployed. See BACKUP-BEFORE-FINALIZE-LAB.md. CI pending. No external resources or provider calls.
+
 # REMURA TradingView — ROADMAP v0.8.101-lab (backup cifrato sintetico)
 **Aggiornamento 16/11/2026 14:57 CET — PR #102 DRAFT**
 
