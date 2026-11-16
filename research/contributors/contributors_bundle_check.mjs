@@ -1,8 +1,8 @@
-// REMURA Contributors v0.28 LAB — 16/11/2026 08:22 CET
+// REMURA Contributors v0.31 LAB — 16/11/2026 09:08 CET
 // Reproducible offline check only. No network, npm, Wrangler, writes or deployment.
 import {readFileSync} from "node:fs";
 import {createHash} from "node:crypto";
-const header="// REMURA Contributors v0.28 LAB — 16/11/2026 08:22 CET";
+const header="// REMURA Contributors v0.31 LAB — 16/11/2026 09:08 CET";
 const map=Object.freeze({
  "/":["text/html; charset=utf-8","contributors_candidate.html"],
  "/contributors_candidate.css":["text/css; charset=utf-8","contributors_candidate.css"],
@@ -31,7 +31,7 @@ function build(read=local){
   }
  }
  const entries=files.map(n=>({file:n,bytes:data[n].length,sha256:hash(data[n])}));
- return {kind:"REMURA_CONTRIBUTORS_OFFLINE_MANIFEST",version:"0.28 LAB",files:entries,manifest_sha256:hash(JSON.stringify(entries))};
+ return {kind:"REMURA_CONTRIBUTORS_OFFLINE_MANIFEST",version:"0.31 LAB",files:entries,manifest_sha256:hash(JSON.stringify(entries))};
 }
 export {build,files};
 if(process.argv[1]?.endsWith("/contributors_bundle_check.mjs")){

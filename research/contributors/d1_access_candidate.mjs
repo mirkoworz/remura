@@ -1,4 +1,4 @@
-// REMURA Contributors v0.25 LAB — 16/11/2026 07:19 CET
+// REMURA Contributors v0.31 LAB — 16/11/2026 09:08 CET
 // Offline candidate only. All calls derive identity from trusted Access context, never a client actor.
 // No HTTP export, binding configuration or automatic enrollment.
 import {accessBinding} from "./access_binding_candidate.mjs";
@@ -37,14 +37,14 @@ async function rows(db,sql,args,max){
  if(!Array.isArray(x.results)||x.results.length>max)throw deny();
  return x.results;
 }
-async function gate(ctx,env,owner,mode){
- const a=await accessBinding(ctx,env),db=env.CONTRIBUTORS_DB;
+async function gate(ctx,env,owner,mode,expected){
+ const a=await accessBinding(ctx,env,expected),db=env.CONTRIBUTORS_DB;
  const found=await rows(db,owner?SQL.owner:SQL.contributor,[a.subject,a.email_tag,mode],1);
  if(found.length!==1||(owner?found[0].id!==1:!["friend-a","friend-b"].includes(found[0].slot)))throw deny();
  return {db,a};
 }
-async function submit(ctx,env,p){
- const now=clock(),data=normalize(p,now),{db,a}=await gate(ctx,env,false,"WRITE");
+async function submit(ctx,env,p,expected){
+ const now=clock(),data=normalize(p,now),{db,a}=await gate(ctx,env,false,"WRITE",expected);
  const existing=()=>rows(db,SQL.existing,[a.subject,a.email_tag,data.request_id],1);
  const receipt=(rr,duplicate)=>{
   if(rr.length!==1||Object.keys(data).some(k=>rr[0][k]!==data[k])||!Number.isSafeInteger(rr[0].id)||rr[0].id<1)throw deny();
@@ -56,34 +56,34 @@ async function submit(ctx,env,p){
  // Fresh guarded lookup for idempotent reconciliation, never automatic write retry.
  return receipt(await existing(),x.meta.changes===0);
 }
-async function receipts(ctx,env,after=0){
- cursor(after);const {db,a}=await gate(ctx,env,false,"READ");
+async function receipts(ctx,env,after=0,expected){
+ cursor(after);const {db,a}=await gate(ctx,env,false,"READ",expected);
  return rows(db,SQL.receipts,[a.subject,a.email_tag,after],20);
 }
-async function queue(ctx,env,after=0){
- cursor(after);const {db,a}=await gate(ctx,env,true,"READ");
+async function queue(ctx,env,after=0,expected){
+ cursor(after);const {db,a}=await gate(ctx,env,true,"READ",expected);
  return rows(db,SQL.queue,[after,a.subject,a.email_tag],20);
 }
-async function history(ctx,env,id){
- cursor(id,1);const {db,a}=await gate(ctx,env,true,"RECOVERY");
+async function history(ctx,env,id,expected){
+ cursor(id,1);const {db,a}=await gate(ctx,env,true,"RECOVERY",expected);
  return rows(db,SQL.history,[id,a.subject,a.email_tag],2);
 }
-async function review(ctx,env,id,action,reason){
+async function review(ctx,env,id,action,reason,expected){
  cursor(id,1);if(!["APPROVED","REJECTED","REVOKED"].includes(action))throw deny();
- const reasonSafe=reasonText(reason),now=clock(),{db,a}=await gate(ctx,env,true,action==="REVOKED"?"RECOVERY":"WRITE");
+ const reasonSafe=reasonText(reason),now=clock(),{db,a}=await gate(ctx,env,true,action==="REVOKED"?"RECOVERY":"WRITE",expected);
  const x=await result(db,reviews.decision,[id,a.subject,action,now,reasonSafe],true);
  if(x.meta.changes!==1)throw Error("write_unknown_or_denied");
  return {id,action,at_utc:now};
 }
-async function revokeContributor(ctx,env,slot){
+async function revokeContributor(ctx,env,slot,expected){
  if(!["friend-a","friend-b"].includes(slot))throw deny();
- const now=clock(),{db,a}=await gate(ctx,env,true,"RECOVERY");
+ const now=clock(),{db,a}=await gate(ctx,env,true,"RECOVERY",expected);
  const x=await result(db,SQL.revoke,[a.subject,now,slot,a.subject,a.email_tag],true);
  if(x.meta.changes!==1)throw Error("write_unknown_or_denied");
  return {slot,status:"REVOKED",at_utc:now};
 }
-async function profile(ctx,env){
- const a=await accessBinding(ctx,env),db=env.CONTRIBUTORS_DB;
+async function profile(ctx,env,expected){
+ const a=await accessBinding(ctx,env,expected),db=env.CONTRIBUTORS_DB;
  const x=await rows(db,SQL.profile,[a.subject,a.email_tag,a.subject,a.email_tag],1);
  if(x.length!==1)throw deny();
  const r=x[0];
@@ -91,8 +91,8 @@ async function profile(ctx,env){
    ![r.write_enabled,r.read_enabled,r.recovery_enabled].every(v=>v===0||v===1))throw deny();
  return {role:r.role,can_write:r.write_enabled===1,can_read:r.read_enabled===1,can_recover:r.recovery_enabled===1};
 }
-async function catalog(ctx,env){
- const {db,a}=await gate(ctx,env,false,"WRITE");
+async function catalog(ctx,env,expected){
+ const {db,a}=await gate(ctx,env,false,"WRITE",expected);
  const list=await rows(db,SQL.catalog,[a.subject,a.email_tag],256);
  for(const r of list){
   if(typeof r.market!=="string"||typeof r.provider!=="string"||typeof r.ticker!=="string"||

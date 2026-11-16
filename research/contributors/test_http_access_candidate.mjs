@@ -1,4 +1,4 @@
-// REMURA Contributors v0.25 LAB — 16/11/2026 07:19 CET
+// REMURA Contributors v0.31 LAB — 16/11/2026 09:08 CET
 import assert from "node:assert/strict";
 import {webcrypto} from "node:crypto";
 import {candidateRequest} from "./http_access_candidate.mjs";
@@ -65,4 +65,23 @@ const p=await call(req("/api/profile","{}"));assert.equal(p.status,200);assert.d
 assert.equal((await call(req("/api/catalog","{}"))).status,403);
 role="CONTRIBUTOR";const cat=await call(req("/api/catalog","{}"));assert.equal(cat.status,200);assert.equal((await cat.json()).data[0].ticker,"EURUSD");
 allowed=false;assert.equal((await call(req("/api/profile","{}"))).status,403);
+allowed=true;role="CONTRIBUTOR";failWrite=false;prior=[];
+const switched=(at,patch)=>{let n=0;return {access:{aud:env.ACCESS_AUD,getIdentity:async()=>++n>=at?{...i,...patch}:i}};};
+for(const change of [{user_uuid:"22345678-1234-1234-1234-123456789abc"},{email:"other@example.invalid"}]){
+ const n=queries.length;
+ assert.equal((await call(req(),switched(2,change))).status,403);
+ assert.ok(queries.slice(n).every(q=>q.sql===intents.generation));
+ const before=queries.length;
+ assert.equal((await call(req("/api/intent",JSON.stringify({path:"/api/submit",body:payload})),switched(2,change))).status,403);
+ assert.ok(queries.slice(before).every(q=>q.sql===intents.generation));
+ const t=await issue();
+ const request=()=>req("/api/submit",JSON.stringify(payload),{"X-Remura-Intent":t});
+ const n2=queries.length;
+ assert.equal((await call(request(),switched(2,change))).status,409);
+ assert.ok(queries.slice(n2).every(q=>q.sql===intents.generation));
+ const n3=queries.length;
+ assert.equal((await call(request(),switched(3,change))).status,409);
+ assert.ok(queries.slice(n3).some(q=>q.sql===intents.burn));
+ assert.ok(queries.slice(n3).every(q=>[intents.generation,intents.burn].includes(q.sql)));
+}
 console.log("HTTP candidate adversarial checks passed");

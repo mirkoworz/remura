@@ -1,4 +1,4 @@
-// REMURA Contributors v0.27 LAB — 16/11/2026 07:24 CET
+// REMURA Contributors v0.31 LAB — 16/11/2026 09:08 CET
 // Offline candidate direct Worker handler. No Wrangler config, deployment, bindings or public route.
 // No Static Assets router; pass the original trusted ctx through to each handler.
 import {assets} from "./contributors_candidate_assets.mjs";
@@ -29,7 +29,7 @@ async function workerCandidate(req,env,ctx){
   // All four assets require trusted Access and current generation. Only HTML also
   // checks live durable role; other assets contain static code, no user records.
   await verifyGeneration(env);
-  if(url.pathname==="/")await profile(ctx,env);
+  if(url.pathname==="/")await profile(ctx,env,a);
   const asset=assets[url.pathname];
   return new Response(asset.body,{status:200,headers:{...common,"Content-Type":asset.mime}});
  }catch{return plain(403);}

@@ -1,4 +1,7 @@
-# REMURA Contributors v0.30 LAB — 16/11/2026 08:29 CET
+# REMURA Contributors v0.31 LAB — 16/11/2026 09:08 CET
+
+## v0.31 LAB — request identity continuity
+- v0.30 CI [43824270895](https://github.com/mirkoworz/remura/actions/runs/43824270895) SUCCESS (176 tests). Revalidate exact trusted identity across initial limiter, intent, D1 adapter and HTML profile; deny changes, including after nonce burn. Manifest and UI version bumped. [Identity continuity gate](IDENTITY-CONTINUITY-GATE.md). CI pending; no deployments.
 
 ## v0.30 LAB — operational acceptance and custody plan
 - v0.28 CI [43823741131](https://github.com/mirkoworz/remura/actions/runs/43823741131) SUCCESS 171; v0.29 CI [43823883084](https://github.com/mirkoworz/remura/actions/runs/43823883084) SUCCESS 176. New [operational acceptance plan](OPERATIONAL-ACCEPTANCE-GATE.md), exact gate order, free-first independent custody options, real D1/Safari test protocol and privacy blockers. Documentation only; v0.28 runtime untouched, no actual provisioning or activation.

@@ -1,4 +1,4 @@
-// REMURA Contributors v0.28 LAB — 16/11/2026 08:22 CET
+// REMURA Contributors v0.31 LAB — 16/11/2026 09:08 CET
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {webcrypto} from "node:crypto";
@@ -21,7 +21,7 @@ env.CONTRIBUTORS_DB={withSession(mode){assert.equal(mode,"first-primary");return
 const call=(p="/",e=env,c=ctx,method="GET",host=origin)=>workerCandidate(new Request(host+p,{method,...(method==="POST"?{body:"{}",headers:{"Origin":origin,"Sec-Fetch-Site":"same-origin","X-Remura-CSRF":"1","Content-Type":"application/json"}}:{})}),e,c);
 for(const [p,e,c,m,h] of [["/",{...env,WORKER_CANDIDATE_ENABLED:undefined},ctx],["/",env,{}],["/?x=1",env,ctx],["/README.md",env,ctx],["/d1_access_candidate.sql",env,ctx],["/",env,ctx,"HEAD"],["/",env,ctx,"GET","https://evil.invalid"],["/owner/revoke",env,ctx,"POST"]])assert.equal((await call(p,e,c,m,h)).status,403);
 assert.equal(db,0);assert.equal(limits,0);
-const r=await call();assert.equal(r.status,200);assert.match(await r.text(),/v0\.28 LAB/);assert.match(r.headers.get("Content-Security-Policy"),/frame-ancestors 'none'/);assert.equal(r.headers.get("Cache-Control"),"no-store, max-age=0");
+const r=await call();assert.equal(r.status,200);assert.match(await r.text(),/v0\.31 LAB/);assert.match(r.headers.get("Content-Security-Policy"),/frame-ancestors 'none'/);assert.equal(r.headers.get("Cache-Control"),"no-store, max-age=0");
 for(const path of Object.keys(assets).filter(x=>x!=="/"))assert.equal((await call(path)).status,200);
 assert.equal(db,5);assert.equal(limits,4);
 allowed=false;assert.equal((await call()).status,403);allowed=true;
@@ -29,4 +29,7 @@ gen=false;assert.equal((await call("/contributors_candidate.css")).status,403);g
 primary=false;assert.equal((await call()).status,403);primary=true;
 limit=false;assert.equal((await call()).status,429);limit=true;
 const api=await call("/api/profile",env,ctx,"POST");assert.equal(api.status,200);assert.equal((await api.json()).data.role,"OWNER");
+let reads=0;
+const swapped={access:{aud:env.ACCESS_AUD,getIdentity:async()=>++reads===1?id:{...id,email:"different@example.invalid"}}};
+const before=db;assert.equal((await call("/",env,swapped)).status,403);assert.equal(db,before+1);
 console.log("Direct candidate Worker exact asset and API checks passed");

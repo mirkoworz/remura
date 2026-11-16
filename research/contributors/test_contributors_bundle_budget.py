@@ -18,7 +18,7 @@ class BundleBudgetTests(unittest.TestCase):
     def test_unknown_and_excess(self):
         now=datetime(2026,11,16,7,22,tzinfo=timezone.utc)
         self.assertEqual(review_evidence({},now)["status"],"NO_GO")
-        e=dict(observed_at=now.isoformat(),candidate="0.28 LAB",complete=True,account_free_verified=True,aggregate_below_70_percent=True,usage={k:0 for k in TARGET},planned={k:1 for k in TARGET})
+        e=dict(observed_at=now.isoformat(),candidate="0.31 LAB",complete=True,account_free_verified=True,aggregate_below_70_percent=True,usage={k:0 for k in TARGET},planned={k:1 for k in TARGET})
         self.assertEqual(review_evidence(e,now)["status"],"EVIDENCE_SHAPE_PASS_ONLY")
         self.assertFalse(review_evidence(e,now)["may_activate"])
         for field,value in [("complete",False),("aggregate_below_70_percent",None),("observed_at",(now-timedelta(hours=2)).isoformat()),("observed_at",(now+timedelta(seconds=1)).isoformat()),("candidate","other"),("usage",{"requests":0})]:

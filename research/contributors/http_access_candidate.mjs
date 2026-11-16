@@ -1,18 +1,18 @@
-// REMURA Contributors v0.25 LAB — 16/11/2026 07:19 CET
+// REMURA Contributors v0.31 LAB — 16/11/2026 09:08 CET
 // Offline request contract; NOT a Worker entrypoint. No wrangler binding or deployment.
 import {accessBinding} from "./access_binding_candidate.mjs";
 import {verifyGeneration,issueIntent,consumeIntent} from "./operation_intent_candidate.mjs";
 import {submit,receipts,queue,history,review,profile,catalog} from "./d1_access_candidate.mjs";
 const CAP=4096;
 const routes=Object.freeze({
- "/api/profile":{fields:[],fn:(c,e)=>profile(c,e)},
- "/api/catalog":{fields:[],fn:(c,e)=>catalog(c,e)},
+ "/api/profile":{fields:[],fn:(c,e,p,b)=>profile(c,e,b)},
+ "/api/catalog":{fields:[],fn:(c,e,p,b)=>catalog(c,e,b)},
  "/api/intent":{fields:["path","body"],issue:true},
- "/api/submit":{fields:null,fn:(c,e,p)=>submit(c,e,p),mutation:true},
- "/api/receipts":{fields:["after"],fn:(c,e,p)=>receipts(c,e,p.after)},
- "/owner/queue":{fields:["after"],fn:(c,e,p)=>queue(c,e,p.after)},
- "/owner/history":{fields:["id"],fn:(c,e,p)=>history(c,e,p.id)},
- "/owner/review":{fields:["id","action","reason"],fn:(c,e,p)=>review(c,e,p.id,p.action,p.reason),mutation:true}
+ "/api/submit":{fields:null,fn:(c,e,p,b)=>submit(c,e,p,b),mutation:true},
+ "/api/receipts":{fields:["after"],fn:(c,e,p,b)=>receipts(c,e,p.after,b)},
+ "/owner/queue":{fields:["after"],fn:(c,e,p,b)=>queue(c,e,p.after,b)},
+ "/owner/history":{fields:["id"],fn:(c,e,p,b)=>history(c,e,p.id,b)},
+ "/owner/review":{fields:["id","action","reason"],fn:(c,e,p,b)=>review(c,e,p.id,p.action,p.reason,b),mutation:true}
 });
 const headers=Object.freeze({
  "Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store, max-age=0",
@@ -71,10 +71,10 @@ async function candidateRequest(req,env,ctx){
  let body;
  try{body=await objectBody(req,route.fields);}catch{return reply(400,{error:"invalid_body"});}
  try{
-  if(route.issue)return reply(200,{data:await issueIntent(env,b,body.path,body.body)});
-  if(route.mutation)await consumeIntent(env,b,new URL(req.url).pathname,body,req.headers.get("X-Remura-Intent"));
-  // Adapter revalidates current Access and durable role; no cached actor passed.
-  return reply(200,{data:await route.fn(ctx,env,body)});
+  if(route.issue){await accessBinding(ctx,env,b);return reply(200,{data:await issueIntent(env,b,body.path,body.body)});}
+  if(route.mutation){await accessBinding(ctx,env,b);await consumeIntent(env,b,new URL(req.url).pathname,body,req.headers.get("X-Remura-Intent"));}
+  // Expected actor originates only from the initial trusted Access binding. Adapter revalidates and compares both tags.
+  return reply(200,{data:await route.fn(ctx,env,body,b)});
  }catch{
   // A mutation may already be committed. No exception, identifier, SQL or automatic retry exposed.
   // Deliberately do not disclose whether a target receipt/review exists.

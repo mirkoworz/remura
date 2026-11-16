@@ -1,4 +1,4 @@
-# REMURA Contributors v0.28 LAB — 16/11/2026 08:22 CET
+# REMURA Contributors v0.31 LAB — 16/11/2026 09:08 CET
 """Internal planning ceilings, not a measurement or representation of Cloudflare billing.
 No live calls, credentials, resource changes or automatic activation.
 """
@@ -24,7 +24,7 @@ def review_evidence(e,now):
     missing=[]
     required={"observed_at","candidate","complete","account_free_verified","aggregate_below_70_percent","usage","planned"}
     if type(e) is not dict or set(e)!=required:return {"status":"NO_GO","reasons":["missing_or_unknown_evidence"],"may_activate":False}
-    if e["candidate"]!="0.28 LAB":missing.append("wrong_candidate")
+    if e["candidate"]!="0.31 LAB":missing.append("wrong_candidate")
     if e["complete"] is not True:missing.append("incomplete")
     if e["account_free_verified"] is not True:missing.append("free_plan_unverified")
     if e["aggregate_below_70_percent"] is not True:missing.append("aggregate_unknown_or_high")
