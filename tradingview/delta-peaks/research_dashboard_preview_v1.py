@@ -97,7 +97,17 @@ def render(r):
                 "NO_COMPARABLE_LEVEL":"nessun livello confrontabile","OTHER_B_MARKET":"altro mercato B"}
         if any(k not in labels for k in level["decision_counts"]):
             raise ValueError("unknown_level_state")
-        level_panel="<section><h2>Level Confluence — SOLO DATI SINTETICI</h2><p>Contesto temporale LABFX, non equivalenza di feed. Nessuna confluenza confermata.</p><table>"+_counts({labels[k]:v for k,v in level["decision_counts"].items()})+"</table></section>"
+        transport={"SYNTHETIC_WIRE_V1":"Trasporto Pine sintetico",
+                   "SYNTHETIC_EXPLICIT_ROWS":"Righe sintetiche esplicite"}
+        coverage_labels={"NEAR_PRESENT":"Vicinanza candidata presente","DISTANT_PRESENT":"Distanza presente",
+            "AUTOMATIC_LATE_PRESENT":"Automatico tardivo presente","MANUAL_REVIEW_EXCLUDED_PRESENT":"Manuale escluso dalla revisione",
+            "INCOMPATIBLE_METADATA_PRESENT":"Incompatibilità presente","NO_AUTOMATIC_ELIGIBLE":"Nessun automatico ammesso",
+            "NO_MANUAL_ELIGIBLE":"Nessun manuale ammesso"}
+        coverage=level.get("coverage_counts",{})
+        mode=level.get("transport","SYNTHETIC_EXPLICIT_ROWS")
+        if mode not in transport or any(k not in coverage_labels for k in coverage):
+            raise ValueError("unknown_level_coverage")
+        level_panel="<section><h2>Level Confluence — SOLO DATI SINTETICI</h2><p>"+transport[mode]+". Contesto temporale LABFX, non equivalenza di feed. Nessuna confluenza confermata.</p><table>"+_counts({labels[k]:v for k,v in level["decision_counts"].items()})+"</table><h3>Copertura per decisione (non sommare: motivi coesistenti)</h3><table>"+_counts({coverage_labels[k]:v for k,v in coverage.items()})+"</table></section>"
     origin="DATI SINTETICI — NON REALI" if r["origin"]=="SYNTHETIC" else "SNAPSHOT LOCALE — PROVENIENZA NON CERTIFICATA"
     pairs="N/D" if r["b_local_pairs"] is None else str(r["b_local_pairs"])
     asof=datetime.fromtimestamp(r["as_of_ms"]/1000,tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
@@ -124,5 +134,5 @@ table{border-collapse:collapse;width:100%;font-size:.88rem}td{padding:8px 4px;bo
 <footer>Solo ricerca. Nessun collegamento live, ordine, invio, o equivalenza tra feed presunta.</footer></main></body></html>"""
 
     if level is not None:
-        page=page.replace("0.8.75","0.8.105").replace("14/11/2026 CET","16/11/2026 16:27 CET")
+        page=page.replace("0.8.75","0.8.106").replace("14/11/2026 CET","16/11/2026 16:34 CET")
     return page

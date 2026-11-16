@@ -97,7 +97,7 @@ jobs:
       - name: Checkout pinned Track E offline research dependency
         uses: actions/checkout@v4
         with:
-          ref: 4fa2fffe0d66d8c6fa4fe4aa996e8bd839e28ad2
+          ref: 9b4145e7b815dc04986eee5569bf009fc18fe535
           path: _remura_e_reference
           persist-credentials: false
       - name: Cross-track B D E original-cutoff context (synthetic)

@@ -1,8 +1,14 @@
+# REMURA TradingView — ROADMAP v0.8.106-lab (wire B–D–E)
+**Aggiornamento 16/11/2026 16:34 CET — PR #102 DRAFT**
+
+- v0.8.105 verified: 414 main tests, real pinned B–D–E synthetic original-cutoff fixture PASS, CI 43897680123 and Wrangler 43897680013 SUCCESS.
+- v0.8.106 extends existing E context opt-in with actual E v0.36 handoff, pin 9b4145e7b815dc04986eee5569bf009fc18fe535 (CI 43897229956, 204 tests). Exact envelopes + external receipt; no real Pine input or source equivalence. Nonexclusive coverage counts preserve simultaneous near/distant, late and incompatible evidence. Pinned fixture checks positive, late receipt/review, mixed and rejected wrong feed/config. Updated existing dossier panel only on E context. CI pending. No deploy or provider calls. Next real Pine candidate must keep peak origin, snapshot, anchor and receiver clocks separate; no real source attestation yet.
+
 # REMURA TradingView — ROADMAP v0.8.105-lab (B–D–E dossier)
 **Aggiornamento 16/11/2026 16:27 CET — PR #102 DRAFT**
 
 - v0.8.104 verified: 414 tests, CI 43882380435 and Wrangler 43882380408 SUCCESS.
-- v0.8.105 synthetic E context at ORIGINAL B decision cutoff using verified E v0.35 pinned 4fa2fffe0d66d8c6fa4fe4aa996e8bd839e28ad2. Existing dossier extended opt-in, existing HTML unchanged without E. Separate synthetic LABFX context, no feed mapping/attestation, no orders or edge. Pinned B/D/E CI fixture positive, late, missing and incompatible. E v0.36 new wire is a separate candidate pending validation. CI pending. No provider calls or deploy.
+- v0.8.105 synthetic E context at ORIGINAL B decision cutoff using verified E v0.35 pinned 4fa2fffe0d66d8c6fa4fe4aa996e8bd839e28ad2. Existing dossier extended opt-in, existing HTML unchanged without E. Separate synthetic LABFX context, no feed mapping/attestation, no orders or edge. Pinned B/D/E CI fixture positive, late, missing and incompatible. E v0.36 verified separately. CI 43897680123 SUCCESS (414 main tests and cross-track fixture). No provider calls or deploy.
 
 # REMURA TradingView — ROADMAP v0.8.104-lab (autenticazione storica)
 **Aggiornamento 16/11/2026 15:05 CET — PR #102 DRAFT**
