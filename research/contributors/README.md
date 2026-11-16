@@ -1,3 +1,7 @@
+# REMURA Contributors v0.32 LAB — 16/11/2026 13:08 CET
+
+Documentation-only checkpoint: [PRIVACY-LIFECYCLE-GATE.md](PRIVACY-LIFECYCLE-GATE.md) maps the actual v0.31 identity/entry/review/intent/admin tables and encrypted journal to an export/withdrawal/erasure design. Explicit unresolved immutable-schema vs erasure conflict; enrollment remains NO-GO. No changed runtime or UI version, no new resources, no actual records, no deletion, no deploy. Retention choices and new generation migration require explicit review; existing revocation/restore security remains intact. Prior 176-test CI is not new validation.
+
 # REMURA Contributors v0.31 LAB — 16/11/2026 09:08 CET
 
 ## v0.31 LAB — request identity continuity
