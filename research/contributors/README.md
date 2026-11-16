@@ -1,4 +1,7 @@
-# REMURA Contributors v0.27 LAB — 16/11/2026 07:24 CET
+# REMURA Contributors v0.28 LAB — 16/11/2026 08:22 CET
+
+## v0.28 LAB — reproducible package and resource evidence gate
+- v0.27 CI [43816788803](https://github.com/mirkoworz/remura/actions/runs/43816788803) SUCCESS, 167 tests. Deterministic 13-file manifest, exact asset rebuild check, internal budget model and fail-closed evidence contract. [Package/resource gate](BUNDLE-BUDGET-GATE.md). CI pending. No deployment or infrastructure changes.
 
 ## v0.27 LAB — direct protected Worker candidate package
 - Four embedded assets with exact path, original trusted Access ctx, generation, rate limit and security headers; eight existing POST APIs; extra disabled-by-default flag, no deployment config. Before dispatch recheck UI epoch after intent issuance. [Package gate](WORKER-CANDIDATE-GATE.md). v0.26 CI not yet listed at preparation, v0.27 pending.

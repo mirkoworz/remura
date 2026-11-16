@@ -1,4 +1,4 @@
-// REMURA Contributors v0.27 LAB — 16/11/2026 07:24 CET
+// REMURA Contributors v0.28 LAB — 16/11/2026 08:22 CET
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {webcrypto} from "node:crypto";
@@ -21,7 +21,7 @@ env.CONTRIBUTORS_DB={withSession(mode){assert.equal(mode,"first-primary");return
 const call=(p="/",e=env,c=ctx,method="GET",host=origin)=>workerCandidate(new Request(host+p,{method,...(method==="POST"?{body:"{}",headers:{"Origin":origin,"Sec-Fetch-Site":"same-origin","X-Remura-CSRF":"1","Content-Type":"application/json"}}:{})}),e,c);
 for(const [p,e,c,m,h] of [["/",{...env,WORKER_CANDIDATE_ENABLED:undefined},ctx],["/",env,{}],["/?x=1",env,ctx],["/README.md",env,ctx],["/d1_access_candidate.sql",env,ctx],["/",env,ctx,"HEAD"],["/",env,ctx,"GET","https://evil.invalid"],["/owner/revoke",env,ctx,"POST"]])assert.equal((await call(p,e,c,m,h)).status,403);
 assert.equal(db,0);assert.equal(limits,0);
-const r=await call();assert.equal(r.status,200);assert.match(await r.text(),/v0\.27 LAB/);assert.match(r.headers.get("Content-Security-Policy"),/frame-ancestors 'none'/);assert.equal(r.headers.get("Cache-Control"),"no-store, max-age=0");
+const r=await call();assert.equal(r.status,200);assert.match(await r.text(),/v0\.28 LAB/);assert.match(r.headers.get("Content-Security-Policy"),/frame-ancestors 'none'/);assert.equal(r.headers.get("Cache-Control"),"no-store, max-age=0");
 for(const path of Object.keys(assets).filter(x=>x!=="/"))assert.equal((await call(path)).status,200);
 assert.equal(db,5);assert.equal(limits,4);
 allowed=false;assert.equal((await call()).status,403);allowed=true;
