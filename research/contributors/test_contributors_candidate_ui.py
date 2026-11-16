@@ -29,3 +29,6 @@ class CandidateUITests(unittest.TestCase):
         finally:db.close()
     def test_client_node(self):
         subprocess.run(["node",str(ROOT/"test_contributors_candidate_client.mjs")],check=True,timeout=20)
+
+    def test_candidate_dom(self):
+        subprocess.run(["node",str(ROOT/"test_contributors_candidate_dom.mjs")],check=True,timeout=20)

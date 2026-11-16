@@ -1,4 +1,7 @@
-# REMURA Contributors v0.25 LAB — 16/11/2026 07:19 CET
+# REMURA Contributors v0.26 LAB — 16/11/2026 07:22 CET
+
+## v0.26 LAB — mobile candidate UI
+- v0.25 CI [43816179513](https://github.com/mirkoworz/remura/actions/runs/43816179513) SUCCESS, 165 tests. Added mobile contributor/owner views, server profile/catalog, explicit receipts and review history, no retry, lifecycle data clearing. [UI gate](UI-MOBILE-GATE.md). DOM stub tests pending; never served, no cloud changes.
 
 ## v0.25 LAB — server-derived interface contract and no-retry client
 - v0.24 CI [43815926253](https://github.com/mirkoworz/remura/actions/runs/43815926253) SUCCESS, 163 tests. Added protected profile/catalog queries and bounded no-retry browser client; mobile page wiring follows after CI. [Interface contract](UI-D1-CANDIDATE.md). No hosting or cloud changes; CI pending.
