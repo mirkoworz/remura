@@ -1,4 +1,7 @@
-# REMURA Contributors v0.28 LAB — 16/11/2026 08:22 CET
+# REMURA Contributors v0.29 LAB — 16/11/2026 08:24 CET
+
+## v0.29 LAB — encrypted journal and end-to-end admin rehearsal
+- Synthetic-only AES-256-GCM append records, context/sequence authentication, independent latest pin, tamper/wrong-key/rollback tests and integrated SQLite restore. [Encrypted journal gate](ENCRYPTED-JOURNAL-GATE.md). v0.28 UI unchanged. No actual keys/resources or D1; CI pending.
 
 ## v0.28 LAB — reproducible package and resource evidence gate
 - v0.27 CI [43816788803](https://github.com/mirkoworz/remura/actions/runs/43816788803) SUCCESS, 167 tests. Deterministic 13-file manifest, exact asset rebuild check, internal budget model and fail-closed evidence contract. [Package/resource gate](BUNDLE-BUDGET-GATE.md). CI pending. No deployment or infrastructure changes.
