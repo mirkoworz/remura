@@ -1,6 +1,10 @@
+# REMURA Contributors v0.36 LAB — 16/11/2026 16:27 CET
+
+Future Pine wire rehearsal and transport-to-existing-comparator path (synthetic only). Exact instrument/config/anchor/receipt and explicit matching manual config. See [EXPLICIT-PINE-WIRE-LAB.md](EXPLICIT-PINE-WIRE-LAB.md). v0.35 CI 43895337919 SUCCESS (189+7). Eight new tests expected; v0.36 CI pending. No actual Pine, UI, runtime, enrollment, deployment or new resource.
+
 # REMURA Contributors v0.35 LAB — 16/11/2026 16:17 CET
 
-Separate explicit synthetic level contract, positive/negative controls with existing exact E comparator, aggregate diagnostic handoff toward Squalincome, eight candidate tests. See [EXPLICIT-LEVEL-CONTRACT-LAB.md](EXPLICIT-LEVEL-CONTRACT-LAB.md). No legacy D relabeling, real source attestation, signals, UI/runtime change or enrollment. v0.34 CI 43892265611 SUCCESS (181+7); v0.35 CI pending.
+Separate explicit synthetic level contract, positive/negative controls with existing exact E comparator, aggregate diagnostic handoff toward Squalincome, eight candidate tests. See [EXPLICIT-LEVEL-CONTRACT-LAB.md](EXPLICIT-LEVEL-CONTRACT-LAB.md). No legacy D relabeling, real source attestation, signals, UI/runtime change or enrollment. v0.34 CI 43892265611 SUCCESS (181+7); v0.35 CI 43895337919 SUCCESS (189+7).
 
 # REMURA Contributors v0.34 LAB — 16/11/2026 15:59 CET
 
