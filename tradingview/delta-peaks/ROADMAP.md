@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.104-lab (autenticazione storica)
+**Aggiornamento 16/11/2026 15:05 CET — PR #102 DRAFT**
+
+- v0.8.103 verified: 407 tests, six rotation tests passed, CI 43881888670 and Wrangler 43881888865 SUCCESS.
+- v0.8.104 synthetic historical pin receipts and read-only authentication of previous backup before prune/cycle, exact archive-prefix check, seven candidate tests. See HISTORICAL-BACKUP-LAB.md. CI pending. No real keys, durable independent authority, automatic deletion, provider calls or deploy.
+
 # REMURA TradingView — ROADMAP v0.8.103-lab (rotazione sintetica protetta)
 **Aggiornamento 16/11/2026 15:02 CET — PR #102 DRAFT**
 
