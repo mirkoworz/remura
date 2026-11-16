@@ -1,4 +1,7 @@
-# REMURA Contributors v0.24 LAB — 16/11/2026 07:17 CET
+# REMURA Contributors v0.25 LAB — 16/11/2026 07:19 CET
+
+## v0.25 LAB — server-derived interface contract and no-retry client
+- v0.24 CI [43815926253](https://github.com/mirkoworz/remura/actions/runs/43815926253) SUCCESS, 163 tests. Added protected profile/catalog queries and bounded no-retry browser client; mobile page wiring follows after CI. [Interface contract](UI-D1-CANDIDATE.md). No hosting or cloud changes; CI pending.
 
 ## v0.24 LAB — transactional administrative and restore rehearsal
 - v0.23 CI [43815679216](https://github.com/mirkoworz/remura/actions/runs/43815679216) SUCCESS, 155 tests. v0.24 adds closed administrative audit, exact plan application and generation rotation in one owned in-memory SQLite transaction, rollback simulation and actual local SQLite snapshot-copy recovery with revocations replayed and flags closed. [Details](ADMIN-SQLITE-REHEARSAL.md). Tests added, CI pending. No actual D1, encryption, external pin service, deployment or account change.

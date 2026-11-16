@@ -1,10 +1,12 @@
-// REMURA Contributors v0.23 LAB — 16/11/2026 07:14 CET
+// REMURA Contributors v0.25 LAB — 16/11/2026 07:19 CET
 // Offline request contract; NOT a Worker entrypoint. No wrangler binding or deployment.
 import {accessBinding} from "./access_binding_candidate.mjs";
 import {verifyGeneration,issueIntent,consumeIntent} from "./operation_intent_candidate.mjs";
-import {submit,receipts,queue,history,review} from "./d1_access_candidate.mjs";
+import {submit,receipts,queue,history,review,profile,catalog} from "./d1_access_candidate.mjs";
 const CAP=4096;
 const routes=Object.freeze({
+ "/api/profile":{fields:[],fn:(c,e)=>profile(c,e)},
+ "/api/catalog":{fields:[],fn:(c,e)=>catalog(c,e)},
  "/api/intent":{fields:["path","body"],issue:true},
  "/api/submit":{fields:null,fn:(c,e,p)=>submit(c,e,p),mutation:true},
  "/api/receipts":{fields:["after"],fn:(c,e,p)=>receipts(c,e,p.after)},

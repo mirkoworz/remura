@@ -1,10 +1,12 @@
-// REMURA Contributors v0.20 LAB — 16/11/2026 07:02 CET
+// REMURA Contributors v0.25 LAB — 16/11/2026 07:19 CET
 // Offline candidate only. All calls derive identity from trusted Access context, never a client actor.
 // No HTTP export, binding configuration or automatic enrollment.
 import {accessBinding} from "./access_binding_candidate.mjs";
 import {SQL as intake,normalize} from "./d1_lab_adapter.mjs";
 import {SQL as reviews} from "./d1_lab_review.mjs";
 const SQL=Object.freeze({
+ profile:"SELECT 'OWNER' AS role,'owner' AS slot,s.write_enabled,s.read_enabled,s.recovery_enabled FROM lab_owner i CROSS JOIN lab_state s WHERE i.id=1 AND i.subject=? AND i.email_tag=? AND i.revoked=0 AND s.id=1 AND (s.write_enabled=1 OR s.read_enabled=1 OR s.recovery_enabled=1) UNION ALL SELECT 'CONTRIBUTOR',i.slot,s.write_enabled,s.read_enabled,0 FROM lab_identities i CROSS JOIN lab_state s WHERE i.subject=? AND i.email_tag=? AND i.revoked=0 AND s.id=1 AND (s.write_enabled=1 OR s.read_enabled=1)",
+ catalog:"SELECT m.market,m.provider,m.ticker,m.product,m.contract FROM lab_catalog m WHERE m.active=1 AND EXISTS(SELECT 1 FROM lab_identities i CROSS JOIN lab_state s WHERE i.subject=? AND i.email_tag=? AND i.revoked=0 AND s.id=1 AND s.write_enabled=1) ORDER BY m.market,m.provider,m.ticker,m.product,m.contract LIMIT 257",
  contributor:"SELECT slot FROM lab_identities WHERE subject=? AND email_tag=? AND revoked=0 AND EXISTS(SELECT 1 FROM lab_state WHERE id=1 AND CASE ? WHEN 'READ' THEN read_enabled WHEN 'WRITE' THEN write_enabled ELSE 0 END=1)",
  owner:"SELECT id FROM lab_owner WHERE id=1 AND subject=? AND email_tag=? AND revoked=0 AND EXISTS(SELECT 1 FROM lab_state WHERE id=1 AND CASE ? WHEN 'READ' THEN read_enabled WHEN 'WRITE' THEN write_enabled WHEN 'RECOVERY' THEN recovery_enabled ELSE 0 END=1)",
  existing:"SELECT e.id,e.request_id,e.market,e.provider,e.ticker,e.product,e.contract,e.period,e.kind,e.price,e.anchor_utc,e.observed_utc,e.note FROM lab_entries e JOIN lab_identities i ON i.subject=e.subject AND i.revoked=0 WHERE e.subject=? AND i.email_tag=? AND e.request_id=? AND EXISTS(SELECT 1 FROM lab_state WHERE id=1 AND write_enabled=1)",
@@ -80,4 +82,24 @@ async function revokeContributor(ctx,env,slot){
  if(x.meta.changes!==1)throw Error("write_unknown_or_denied");
  return {slot,status:"REVOKED",at_utc:now};
 }
-export {SQL,submit,receipts,queue,history,review,revokeContributor};
+async function profile(ctx,env){
+ const a=await accessBinding(ctx,env),db=env.CONTRIBUTORS_DB;
+ const x=await rows(db,SQL.profile,[a.subject,a.email_tag,a.subject,a.email_tag],1);
+ if(x.length!==1)throw deny();
+ const r=x[0];
+ if(!((r.role==="OWNER"&&r.slot==="owner")||(r.role==="CONTRIBUTOR"&&["friend-a","friend-b"].includes(r.slot)&&r.recovery_enabled===0))||
+   ![r.write_enabled,r.read_enabled,r.recovery_enabled].every(v=>v===0||v===1))throw deny();
+ return {role:r.role,can_write:r.write_enabled===1,can_read:r.read_enabled===1,can_recover:r.recovery_enabled===1};
+}
+async function catalog(ctx,env){
+ const {db,a}=await gate(ctx,env,false,"WRITE");
+ const list=await rows(db,SQL.catalog,[a.subject,a.email_tag],256);
+ for(const r of list){
+  if(typeof r.market!=="string"||typeof r.provider!=="string"||typeof r.ticker!=="string"||
+    !/^[A-Z0-9_]{1,24}$/.test(r.market)||!/^[A-Z0-9_]{1,16}$/.test(r.provider)||!/^[A-Z0-9_.!-]{1,24}$/.test(r.ticker)||
+    !["SPOT","CFD","INDEX","FUTURE"].includes(r.product)||typeof r.contract!=="string"||
+    (r.product==="FUTURE"?(!/^[A-Z0-9_.-]{1,24}$/.test(r.contract)||r.ticker.includes("!")):r.contract!==""))throw deny();
+ }
+ return list.map(({market,provider,ticker,product,contract})=>({market,provider,ticker,product,contract}));
+}
+export {SQL,submit,receipts,queue,history,review,revokeContributor,profile,catalog};

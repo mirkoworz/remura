@@ -1,4 +1,4 @@
-// REMURA Contributors v0.23 LAB — 16/11/2026 07:14 CET
+// REMURA Contributors v0.25 LAB — 16/11/2026 07:19 CET
 import assert from "node:assert/strict";
 import {webcrypto} from "node:crypto";
 import {candidateRequest} from "./http_access_candidate.mjs";
@@ -16,7 +16,7 @@ let limits=0,queries=[],limitResult=true,role="CONTRIBUTOR",allowed=true,prior=[
 env.CONTRIBUTORS_RATE_LIMITER={async limit(p){assert.deepEqual(p,{key:b.subject});limits++;return {success:limitResult};}};
 const payload={request_id:"00000000-0000-0000-0000-000000000001",market:"EURUSD",provider:"OANDA",ticker:"EURUSD",product:"SPOT",contract:"",period:"WEEK",kind:"DELTA_PEAK",price:"1.0854",anchor_utc:"2026-11-15T00:00:00Z",observed_utc:"2026-11-15T00:00:00Z",note:"fixture"};
 env.CONTRIBUTORS_DB={withSession(mode){assert.equal(mode,"first-primary");return {prepare(sql){return {bind(...args){queries.push({sql,args});return {
- async all(){let results=sql===intents.generation?(generationOK?[{id:1}]:[]):sql===intents.permission?(allowed&&args[3]===role?[{allowed:1}]:[]):sql===SQL.contributor?(allowed&&role==="CONTRIBUTOR"?[{slot:"friend-a"}]:[]):sql===SQL.owner?(allowed&&role==="OWNER"?[{id:1}]:[]):sql===SQL.existing?prior:sql===SQL.receipts?[{id:7}]:[];return {success:true,meta:{served_by_primary:true},results};},
+ async all(){let results=sql===SQL.profile?(allowed?[{role,slot:role==="OWNER"?"owner":"friend-a",write_enabled:1,read_enabled:1,recovery_enabled:role==="OWNER"?1:0}]:[]):sql===SQL.catalog?[{market:"EURUSD",provider:"OANDA",ticker:"EURUSD",product:"SPOT",contract:""}]:sql===intents.generation?(generationOK?[{id:1}]:[]):sql===intents.permission?(allowed&&args[3]===role?[{allowed:1}]:[]):sql===SQL.contributor?(allowed&&role==="CONTRIBUTOR"?[{slot:"friend-a"}]:[]):sql===SQL.owner?(allowed&&role==="OWNER"?[{id:1}]:[]):sql===SQL.existing?prior:sql===SQL.receipts?[{id:7}]:[];return {success:true,meta:{served_by_primary:true},results};},
  async run(){if(sql===intents.burn){if(burned.has(args[0])||!allowed||args[3]!==role)throw Error("denied");burned.add(args[0]);return {success:true,meta:{served_by_primary:true,changes:1}};}if(failWrite)throw Error("secret database detail");if(sql===intake.insert)prior=[{id:7,...payload}];return {success:true,meta:{served_by_primary:true,changes:1}};}
  };}}}};}};
 const defaults={"Origin":origin,"Sec-Fetch-Site":"same-origin","X-Remura-CSRF":"1","Content-Type":"application/json"};
@@ -61,4 +61,8 @@ assert.equal((await call(req("/owner/revoke",'{"slot":"friend-a"}'))).status,403
 assert.equal(queries.length,beforeRevoke);
 assert.equal((await call(req("/api/intent",'{"path":"/owner/revoke","body":{"slot":"friend-a"}}'))).status,403);
 assert.ok(queries.slice(beforeRevoke).every(q=>q.sql===intents.generation));
+const p=await call(req("/api/profile","{}"));assert.equal(p.status,200);assert.deepEqual((await p.json()).data,{role:"OWNER",can_write:true,can_read:true,can_recover:true});
+assert.equal((await call(req("/api/catalog","{}"))).status,403);
+role="CONTRIBUTOR";const cat=await call(req("/api/catalog","{}"));assert.equal(cat.status,200);assert.equal((await cat.json()).data[0].ticker,"EURUSD");
+allowed=false;assert.equal((await call(req("/api/profile","{}"))).status,403);
 console.log("HTTP candidate adversarial checks passed");
