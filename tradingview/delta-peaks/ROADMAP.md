@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.96-lab (pubblicazione congiunta)
+**Aggiornamento 16/11/2026 13:46 CET — PR #102 DRAFT**
+
+- v0.8.95 verified: 365 main tests, CI 43866131696 and Wrangler 43866131679 SUCCESS; comment 6916325880. E v0.33 181 tests verified (43865859845).
+- v0.8.96 isolated joint atomic cache+ledger file, simulated authority, exact overlap and bounds; eight regressions. See JOINT-PUBLICATION-LAB.md. CI pending. No new runtime or provider calls.
+
 # REMURA TradingView — ROADMAP v0.8.95-lab (custodia e ledger sintetici)
 **Aggiornamento 16/11/2026 13:22 CET — PR #102 DRAFT**
 
