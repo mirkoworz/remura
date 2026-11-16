@@ -11,6 +11,8 @@ from cvd_runtime_private_state_v1 import _private,digest
 from cvd_runtime_singleflight_v1 import single_flight
 
 class BackedJoint(EncryptedJoint):
+    copy_limit=MAX_COPIES
+    def inventory(self):return inventory(self.dest,limit=self.copy_limit)
     def __init__(self,source,dest,dest_guard):
         super().__init__(source.fd,source.guard,source.c,source.g,source._key)
         self.dest=dest;self.dest_guard=dest_guard
@@ -20,23 +22,23 @@ class BackedJoint(EncryptedJoint):
     def status(self,p):
         out=super().status(p)
         self.both()
-        need(self.name(p.sequence) in inventory(self.dest))
+        need(self.name(p.sequence) in self.inventory())
         need(read_exact(self.dest,self.name(p.sequence))==read_exact(self.fd,NAME))
         self.authority(p,"STABLE")
         return {**out,"matching_local_backup":True,"independent_failure_domain_verified":False}
     def bootstrap(self,core,*,expected,cutoff,windows,cycles):
         self.authority(expected,"GENESIS");self.both()
-        need(inventory(self.dest)==[])
+        need(self.inventory()==[])
         return super().bootstrap(core,expected=expected,cutoff=cutoff,windows=windows,cycles=cycles)
     def cycle(self,core,*,expected,cutoff,windows):
         self.status(expected);self.both()
-        names=inventory(self.dest)
-        need(len(names)<MAX_COPIES and self.name(expected.sequence+1) not in names)
+        names=self.inventory()
+        need(len(names)<self.copy_limit and self.name(expected.sequence+1) not in names)
         return super().cycle(core,expected=expected,cutoff=cutoff,windows=windows)
     def publish(self,pending,s):
         self.authority(pending,"PENDING");self.both()
-        names=inventory(self.dest);name=self.name(pending.sequence)
-        need(name not in names and len(names)<MAX_COPIES)
+        names=self.inventory();name=self.name(pending.sequence)
+        need(name not in names and len(names)<self.copy_limit)
         self.write(s)
         check,l=self.read();need(digest(check)==digest(s))
         raw=read_exact(self.fd,NAME)
@@ -45,7 +47,7 @@ class BackedJoint(EncryptedJoint):
         from cvd_runtime_private_state_v1 import encoded
         need(self.decode_file(raw)==encoded({"state":check,"sha256":digest(check)}))
         self.authority(pending,"PENDING");self.both()
-        need(inventory(self.dest)==names)
+        need(self.inventory()==names)
         tmp=PREFIX+secrets.token_hex(16)
         f=os.open(tmp,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600,dir_fd=self.dest)
         with os.fdopen(f,"wb") as stream:
@@ -53,7 +55,7 @@ class BackedJoint(EncryptedJoint):
         self.dest_guard();self.guard();self.authority(pending,"PENDING")
         os.link(tmp,name,src_dir_fd=self.dest,dst_dir_fd=self.dest,follow_symlinks=False)
         os.fsync(self.dest);os.unlink(tmp,dir_fd=self.dest);os.fsync(self.dest)
-        self.both();need(inventory(self.dest)==sorted(names+[name]))
+        self.both();need(self.inventory()==sorted(names+[name]))
         need(read_exact(self.dest,name)==raw and read_exact(self.fd,NAME)==raw)
         # Only now acknowledge the new stable state. Failed copy leaves
         # PENDING and no status can be published. Never auto-finalize.

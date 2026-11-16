@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.103-lab (rotazione sintetica protetta)
+**Aggiornamento 16/11/2026 15:02 CET — PR #102 DRAFT**
+
+- v0.8.102 verified: 401 tests, all six backed-publication regressions, CI 43881388001 and Wrangler 43881387985 SUCCESS.
+- v0.8.103 isolated three-slot staging with explicit synthetic oldest-copy pruning after current stable verification, six candidate regressions. See BACKUP-ROTATION-LAB.md. CI pending. No real deletion, independent custody, scheduler, provider calls or deploy.
+
 # REMURA TradingView — ROADMAP v0.8.102-lab (backup prima della conferma)
 **Aggiornamento 16/11/2026 14:59 CET — PR #102 DRAFT**
 

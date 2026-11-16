@@ -22,9 +22,10 @@ def read_exact(fd,name):
         return raw
     finally:os.close(f)
 
-def inventory(fd):
+def inventory(fd,*,limit=MAX_COPIES):
+    need(type(limit) is int and limit in (2,3))
     names=os.listdir(fd)
-    need(LOCK in names and len(names)<=MAX_COPIES+1)
+    need(LOCK in names and len(names)<=limit+1)
     copies=[]
     for name in names:
         if name==LOCK:continue
