@@ -1,8 +1,14 @@
+# REMURA TradingView — ROADMAP v0.8.107-lab (Pine local level contract)
+**Aggiornamento 16/11/2026 16:38 CET — PR #102 DRAFT**
+
+- v0.8.106 verified: CI 43898367826 and Wrangler 43898367914 SUCCESS, pinned B–D–E wire fixture PASS and 414 principal tests.
+- v0.8.107 separate Pine v0.9.2 log-only candidate, original calculation body preserved. Actual TradingView period anchors, origin, snapshot, sender clock, exact FX identity/settings; no attested product/contract/receipt, no E admission. New diagnostic local parser and seven static/structural tests. See [PINE-LEVEL-LOCAL-PROBE-LAB.md](PINE-LEVEL-LOCAL-PROBE-LAB.md). No active Pine or webhook change. CI pending; Pine compilation remains manual.
+
 # REMURA TradingView — ROADMAP v0.8.106-lab (wire B–D–E)
 **Aggiornamento 16/11/2026 16:34 CET — PR #102 DRAFT**
 
 - v0.8.105 verified: 414 main tests, real pinned B–D–E synthetic original-cutoff fixture PASS, CI 43897680123 and Wrangler 43897680013 SUCCESS.
-- v0.8.106 extends existing E context opt-in with actual E v0.36 handoff, pin 9b4145e7b815dc04986eee5569bf009fc18fe535 (CI 43897229956, 204 tests). Exact envelopes + external receipt; no real Pine input or source equivalence. Nonexclusive coverage counts preserve simultaneous near/distant, late and incompatible evidence. Pinned fixture checks positive, late receipt/review, mixed and rejected wrong feed/config. Updated existing dossier panel only on E context. CI pending. No deploy or provider calls. Next real Pine candidate must keep peak origin, snapshot, anchor and receiver clocks separate; no real source attestation yet.
+- v0.8.106 extends existing E context opt-in with actual E v0.36 handoff, pin 9b4145e7b815dc04986eee5569bf009fc18fe535 (CI 43897229956, 204 tests). Exact envelopes + external receipt; no real Pine input or source equivalence. Nonexclusive coverage counts preserve simultaneous near/distant, late and incompatible evidence. Pinned fixture checks positive, late receipt/review, mixed and rejected wrong feed/config. Updated existing dossier panel only on E context. CI 43898367826 SUCCESS (414 principal tests and wire fixture), Wrangler 43898367914 SUCCESS. No deploy or provider calls. Next real Pine candidate must keep peak origin, snapshot, anchor and receiver clocks separate; no real source attestation yet.
 
 # REMURA TradingView — ROADMAP v0.8.105-lab (B–D–E dossier)
 **Aggiornamento 16/11/2026 16:27 CET — PR #102 DRAFT**
