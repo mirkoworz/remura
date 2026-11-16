@@ -1,0 +1,52 @@
+{
+  "run_id": 43839770016,
+  "start_ms": 1794819900000,
+  "end_ms": 1794820800000,
+  "observed_ms": 1794821207703,
+  "report": {
+    "collection": {
+      "account_quota_utilization": null,
+      "inventory_requests": 1,
+      "query_meta_scope": "THIS_COLLECTION_ONLY_NOT_ACCOUNT_USAGE",
+      "query_rows_read": 9,
+      "query_rows_written": 0,
+      "raw_logged": false,
+      "raw_persisted": false,
+      "select_requests": 1,
+      "snapshot_atomic_across_pages": false,
+      "target": "EU_D1_TEST_ONLY"
+    },
+    "conflict_ledger_available": false,
+    "duplicate_rows": 0,
+    "independent_provenance": false,
+    "max_lag_ms": 7092,
+    "missing_requested_slots": 0,
+    "notifications_enabled": false,
+    "orders_enabled": false,
+    "outcomes_computed": false,
+    "protocol_sha256": "4565c06dfa4fa20f45e8e885143553ddb2af04c5a0f3db4563ab48ec7de6e084",
+    "radar": {
+      "candidate_cooccurrences": {},
+      "counts": {
+        "ER_NONE": 4,
+        "FP_ALIGNED": 1,
+        "FP_DISAGREE": 3,
+        "OBSERVATION_ONLY": 4
+      },
+      "notifications_enabled": false,
+      "orders_enabled": false,
+      "schema": "remura.tv.cvd.radar.aggregate.preview.v1",
+      "scientific_admission": false,
+      "verdict": "NO_OPERATIONAL_SIGNAL"
+    },
+    "requested_slots": 4,
+    "schema": "remura.tv.cvd.first.receipt.preview.v1",
+    "scientific_admission": false,
+    "scope": "REQUESTED_SLOTS_NOT_MARKET_CALENDAR",
+    "sender_version": "0.9.1-cvd-lab",
+    "status": "COMPLETE_REQUESTED_WINDOW",
+    "symbol": "FX:EURUSD",
+    "valid_unique_bars": 4,
+    "version": "0.8.88-lab"
+  }
+}
