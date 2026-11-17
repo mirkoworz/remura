@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.132-lab (ABC overlay rollback)
+**Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
+
+- v0.8.131 verified 575 main + 31 ABC tests, CI 44071223506, Wrangler 44071223469 SUCCESS.
+- v0.8.132 pins 79 Python overlay paths and rehearses 80 synthetic rollback boundaries in memory; five separate groups; CI pending. No actual release or disk/service rollback.
+
 # REMURA TradingView — ROADMAP v0.8.131-lab (ABC isolated candidate)
 **Aggiornamento 17/11/2026 12:05 CET — PR #102 DRAFT**
 

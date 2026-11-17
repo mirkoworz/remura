@@ -150,3 +150,6 @@ jobs:
 
       - name: Actual ABC collector candidate isolated compile and localhost regressions
         run: python3 tradingview/delta-peaks/abc_integration_runner_lab_v1.py
+
+      - name: ABC pinned Python overlay and every rollback boundary (memory only)
+        run: python3 tradingview/delta-peaks/abc_overlay_transaction_fixture_v1.py
