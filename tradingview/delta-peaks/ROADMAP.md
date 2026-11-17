@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.127-lab (atomic custody publication fixture)
+**Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
+
+- v0.8.126 confirmed 561 main tests and seven new groups; CI 44039262055 and Wrangler 44039262059 SUCCESS.
+- v0.8.127 separate memory-only bounded custody journal with atomic CAS, full chain checks and unique generations/pins. Seven groups; CI pending. No persistent independent custody or restore grant.
+
 # REMURA TradingView — ROADMAP v0.8.126-lab (synthetic custody witness)
 **Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
 
