@@ -1,3 +1,7 @@
+# REMURA Contributors v0.40 LAB — 17/11/2026 07:04 CET (inizio sessione)
+
+v0.39 CI 44026379240 SUCCESS (226). Closed synthetic disposition of contributions and reviews using actual candidate schema; eight new tests pending. See [CLOSED-GENERATION-DISPOSITION-LAB.md](CLOSED-GENERATION-DISPOSITION-LAB.md). No runtime or UI change, no erasure, migration or enrollment.
+
 # REMURA Contributors v0.39 LAB — 17/11/2026 06:44 CET
 
 Closed-generation identity exclusion rehearsal, eight candidate regressions CI pending. See [CLOSED-GENERATION-EXCLUSION-LAB.md](CLOSED-GENERATION-EXCLUSION-LAB.md). No actual erasure, migration, enrollment, live or comparison admission. v0.38 CI 43907298298 SUCCESS (218).
