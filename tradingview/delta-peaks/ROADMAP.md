@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.118-lab (immutable receipt candidate)
+**Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
+
+- v0.8.117 verified 502 main tests, CI 44027532065 and Wrangler 44027532056 SUCCESS.
+- v0.8.118 separate receipt schema and conditional insertion candidate; nine SQL + three Node tests, CI pending. See LEVEL-D1-RECEIPT-LAB.md. No Worker wiring, actual D1, live receipt or deployment.
+
 # REMURA TradingView — ROADMAP v0.8.117-lab (explicit configuration pin)
 **Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
 

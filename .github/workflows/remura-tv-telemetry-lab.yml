@@ -107,3 +107,6 @@ jobs:
 
       - name: Native Request boundary fixture tests (offline no Cloudflare)
         run: node --test tradingview/delta-peaks/gateway-lab/level_worker_boundary_candidate.test.mjs
+
+      - name: Isolated D1 receipt adapter fixture tests (offline)
+        run: node --test tradingview/delta-peaks/gateway-lab/level_receipt_candidate.test.mjs
