@@ -171,3 +171,6 @@ jobs:
 
       - name: ABC public-key encrypted synthetic SQLite recovery (GnuPG offline)
         run: python3 tradingview/delta-peaks/abc_encrypted_handoff_fixture_v1.py
+
+      - name: ABC installed baseline read-only census synthetic fixtures
+        run: python3 tradingview/delta-peaks/abc_installed_baseline_fixture_v1.py

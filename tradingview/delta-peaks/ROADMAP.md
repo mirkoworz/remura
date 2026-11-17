@@ -1,3 +1,10 @@
+# REMURA TradingView — ROADMAP v0.8.140-lab (installed baseline read-only census)
+**Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
+
+- v0.8.139 GREEN: CI 44126333640 job 134191026364, Wrangler 44126333467 SUCCESS. Synthetic GnuPG handoff verified; no real custody.
+- Reused existing private diagnostic 44125353198 job 134187511981: installed c964bcb85b85, target 30de2987fe28, 38/38 prices, RAM 30.8%, disk 8.7%, H1 stale 8. Compared 74 commits; no app/scripts/deploy differences.
+- v0.8.140 prepares explicit read-only installed baseline census of 107 known paths and aggregate private metadata. CI pending. No live execution, deploy or extra broker calls. See ABC-INSTALLED-BASELINE-READONLY.md.
+
 # REMURA TradingView — ROADMAP v0.8.139-lab (public-key encrypted recovery handoff)
 **Aggiornamento 17/11/2026 17:27 CET — PR #102 DRAFT**
 
