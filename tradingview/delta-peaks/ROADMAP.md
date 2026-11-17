@@ -1,3 +1,10 @@
+# REMURA TradingView — ROADMAP v0.8.136-lab (isolated runtime imports and v165 updater reconciliation)
+**Aggiornamento 17/11/2026, sessione 14:22 CET — PR #102 DRAFT**
+
+- v0.8.135 CI 44082059295 and Wrangler 44082059571 SUCCESS per validated checkpoint; no repeated manual checks.
+- v0.8.136 observes actual import-time paths for seven entrypoints in isolated stdlib-only processes; four new fixture groups pending CI. No service functions, live package attestation or module deletion.
+- Read actual base installer, systemd, autoupdater, v164 release and v156 backup; manual-only script path confirmed. Full distribution manifest, installed baseline, encrypted independent backup and restore remain open. See ABC-RUNTIME-IMPORT-LAB.md.
+
 # REMURA TradingView — ROADMAP v0.8.135-lab (static Python dependency inventory)
 **Aggiornamento 17/11/2026 13:17 CET — PR #102 DRAFT**
 

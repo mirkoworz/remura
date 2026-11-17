@@ -159,3 +159,6 @@ jobs:
 
       - name: ABC static service dependency inventory (offline)
         run: python3 tradingview/delta-peaks/abc_dependency_inventory_fixture_v1.py
+
+      - name: ABC isolated actual import-time entrypoints (no DB or network)
+        run: python3 tradingview/delta-peaks/abc_runtime_import_fixture_v1.py
