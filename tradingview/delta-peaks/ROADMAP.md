@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.130-lab (B/D/E original cutoff diagnostic)
+**Aggiornamento 17/11/2026 10:56 CET — PR #102 DRAFT**
+
+- v0.8.129 validated 575 main and six D/E integration groups; CI 44048611435, Wrangler 44048611337 SUCCESS.
+- v0.8.130 actual pinned B audit with D/E custody diagnostic at original cutoff, five additional cross-track groups. No predictive features or real attestation; CI pending.
+
 # REMURA TradingView — ROADMAP v0.8.129-lab (D/E closed custody diagnostic)
 **Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
 

@@ -121,3 +121,8 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}/_remura_e_custody_reference/research/contributors
         run: python3 tradingview/delta-peaks/crosstrack_closed_custody_fixture_v1.py
+
+      - name: B D E original decision closed custody diagnostics (synthetic)
+        env:
+          PYTHONPATH: ${{ github.workspace }}/_remura_b_reference:${{ github.workspace }}/_remura_b_reference/tests:${{ github.workspace }}/_remura_e_custody_reference/research/contributors
+        run: python3 tradingview/delta-peaks/crosstrack_bde_original_cutoff_fixture_v1.py
