@@ -1,3 +1,8 @@
+# REMURA Contributors v0.41 LAB — 17/11/2026 09:32 CET
+
+- v0.40 verified 234 tests (CI 44028994740).
+- v0.41 exact closed source digest and source-bound disposition, eight additional synthetic groups. See CLOSED-SOURCE-CUSTODY-LAB.md. No independent custody or migration authority; CI pending.
+
 # REMURA Contributors v0.40 LAB — 17/11/2026 07:04 CET (inizio sessione)
 
 v0.39 CI 44026379240 SUCCESS (226). Closed synthetic disposition of contributions and reviews using actual candidate schema; eight new tests pending. See [CLOSED-GENERATION-DISPOSITION-LAB.md](CLOSED-GENERATION-DISPOSITION-LAB.md). No runtime or UI change, no erasure, migration or enrollment.
