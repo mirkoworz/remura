@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.116-lab (strict structural parser candidate)
+**Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
+
+- v0.8.115 verified 487 Python tests + 9 Node boundary tests, CI 44027015984 and Wrangler 44027015818 SUCCESS.
+- v0.8.116 isolated JavaScript structure candidate, seven differential test groups, CI pending. See LEVEL-STRUCTURE-PARITY-LAB.md. Canonical configuration pin and normalized size parity pending; not wired to Worker; default OFF.
+
 # REMURA TradingView — ROADMAP v0.8.115-lab (D1 and native Request candidate)
 **Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
 
