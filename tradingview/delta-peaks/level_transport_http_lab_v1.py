@@ -1,4 +1,4 @@
-# REMURA v0.8.113 LAB — 17/11/2026 06:44 CET
+# REMURA v0.8.114 LAB — 17/11/2026 CET
 """Pure HTTP-shaped synthetic adapter, NOT a web server or deployed Worker.
 The caller supplies already bounded request bytes and a fixture peer identity.
 No network binding, real IP trust, live capability, or authenticated clock.
@@ -57,31 +57,38 @@ class Adapter:
             if not self._enabled:return response("OFF")
             status=self._admit()
             if status is not None:return response(status)
-            if method!="POST":return response("METHOD")
-            if type(path) is not str or not path.startswith(ROUTE):return response("NOT_FOUND")
-            key=path[len(ROUTE):]
-            if peer!=PEER or re.fullmatch(r"[0-9a-f]{64}",key) is None or not hmac.compare_digest(digest(key),self._hash):
-                return response("DENIED")
-            # Exact fixture header pairs, case-insensitive duplicate detection.
-            if type(headers) is not list or len(headers)>16:return response("BAD_REQUEST")
-            clean={}
-            for pair in headers:
-                if type(pair) is not tuple or len(pair)!=2:return response("BAD_REQUEST")
-                name,value=pair
-                if type(name) is not str or type(value) is not str or len(name)>80 or len(value)>256:return response("BAD_REQUEST")
-                if not re.fullmatch(r"[A-Za-z0-9-]+",name) or any(ord(c)<32 or ord(c)>126 for c in value):return response("BAD_REQUEST")
-                name=name.lower()
-                if name in clean:return response("BAD_REQUEST")
-                clean[name]=value
-            if "transfer-encoding" in clean or "content-encoding" in clean:return response("BAD_REQUEST")
-            if clean.get("content-type","").lower()!="application/json":return response("MEDIA_TYPE")
-            length=clean.get("content-length","")
-            if not re.fullmatch(r"[0-9]{1,6}",length):return response("BAD_REQUEST")
-            if int(length)>MAX_BYTES or (type(body) is bytes and len(body)>MAX_BYTES):return response("SIZE")
-            if type(body) is not bytes or len(body)!=int(length) or not body:return response("BAD_REQUEST")
-            try:raw=body.decode("utf-8",errors="strict")
-            except UnicodeDecodeError:return response("BAD_REQUEST")
-            result=self._receiver.receive(raw,capability=key)
-            # First receipt, path, token, raw body, internal error never exposed.
-            status=result.get("status")
-            return response(status if status in MAPPING else "STORAGE_UNAVAILABLE")
+            status,key,length=self._preflight(method,path,headers,peer)
+            if status is not None:return response(status)
+            return self._finish(key,length,body)
+    def _preflight(self,method,path,headers,peer):
+        if method!="POST":return "METHOD",None,None
+        if type(path) is not str or not path.startswith(ROUTE):return "NOT_FOUND",None,None
+        key=path[len(ROUTE):]
+        if peer!=PEER or re.fullmatch(r"[0-9a-f]{64}",key) is None or not hmac.compare_digest(digest(key),self._hash):
+            return "DENIED",None,None
+        # Exact fixture header pairs, case-insensitive duplicate detection.
+        if type(headers) is not list or len(headers)>16:return "BAD_REQUEST",None,None
+        clean={}
+        for pair in headers:
+            if type(pair) is not tuple or len(pair)!=2:return "BAD_REQUEST",None,None
+            name,value=pair
+            if type(name) is not str or type(value) is not str or len(name)>80 or len(value)>256:return "BAD_REQUEST",None,None
+            if not re.fullmatch(r"[A-Za-z0-9-]+",name) or any(ord(c)<32 or ord(c)>126 for c in value):return "BAD_REQUEST",None,None
+            name=name.lower()
+            if name in clean:return "BAD_REQUEST",None,None
+            clean[name]=value
+        if "transfer-encoding" in clean or "content-encoding" in clean:return "BAD_REQUEST",None,None
+        if clean.get("content-type","").lower()!="application/json":return "MEDIA_TYPE",None,None
+        length=clean.get("content-length","")
+        if not re.fullmatch(r"[0-9]{1,6}",length):return "BAD_REQUEST",None,None
+        if int(length)>MAX_BYTES:return "SIZE",None,None
+        return None,key,int(length)
+    def _finish(self,key,length,body):
+        if int(length)>MAX_BYTES or (type(body) is bytes and len(body)>MAX_BYTES):return response("SIZE")
+        if type(body) is not bytes or len(body)!=int(length) or not body:return response("BAD_REQUEST")
+        try:raw=body.decode("utf-8",errors="strict")
+        except UnicodeDecodeError:return response("BAD_REQUEST")
+        result=self._receiver.receive(raw,capability=key)
+        # First receipt, path, token, raw body, internal error never exposed.
+        status=result.get("status")
+        return response(status if status in MAPPING else "STORAGE_UNAVAILABLE")

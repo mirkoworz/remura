@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.114-lab (bounded fixture streaming)
+**Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
+
+- v0.8.113 verified 470 main tests, CI 44026279386 and Wrangler 44026279394 SUCCESS.
+- v0.8.114 bounded pull-stream rehearsal on shared budget; nine candidate tests, CI pending. See LEVEL-TRANSPORT-STREAM-LAB.md. No real edge, deployment or signal admission; compiler gate v0.9.3 still pending.
+
 # REMURA TradingView — ROADMAP v0.8.113-lab (shared synthetic admission)
 **Aggiornamento 17/11/2026 06:44 CET — PR #102 DRAFT**
 
