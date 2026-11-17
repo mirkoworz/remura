@@ -1,3 +1,8 @@
+# REMURA TradingView — ROADMAP v0.8.134-lab (combined ABC/UI overlay preview)
+**Aggiornamento 17/11/2026 CET — no release**
+
+- Proposed 90-path integrated overlay and nine-page version/cache preview; four fixture groups pending. v0.8.133 extended CI must finish before advancing branch.
+
 # REMURA TradingView — ROADMAP v0.8.133-lab (ABC expanded runtime regressions)
 **Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
 

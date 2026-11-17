@@ -153,3 +153,6 @@ jobs:
 
       - name: ABC pinned Python overlay and every rollback boundary (memory only)
         run: python3 tradingview/delta-peaks/abc_overlay_transaction_fixture_v1.py
+
+      - name: ABC and v165 nine-page overlay manifest preview (offline)
+        run: python3 tradingview/delta-peaks/abc_v165_overlay_manifest_fixture_v1.py
