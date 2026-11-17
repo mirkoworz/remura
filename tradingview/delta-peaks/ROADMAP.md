@@ -1,3 +1,8 @@
+# REMURA TradingView — ROADMAP v0.8.126-lab (synthetic custody witness)
+**Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
+
+- v0.8.126 seven additional groups: HMAC witness, external latest anchor/generation/sequence and actual synthetic closed snapshot verification. See LEVEL-RECEIPT-WITNESS-LAB.md. No independent real custody, atomic publication or restore authority. CI pending.
+
 # REMURA TradingView — ROADMAP v0.8.125-lab (custody repeated verification fix)
 **Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
 
