@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.120-lab (durable permit ledger)
+**Aggiornamento 17/11/2026 07:04 CET (inizio sessione) — PR #102 DRAFT**
+
+- v0.8.119 verified 518 main tests, seven new E2E groups, CI 44028387910 and Wrangler 44028387798 SUCCESS.
+- v0.8.120 separate durable permit ledger + atomic finalization candidate, nine SQL regression groups, CI pending. See LEVEL-PERMIT-LEDGER-LAB.md. Next exact JS-to-SQL fixture path, Worker wiring hard OFF, real sender/clock and quota gates. No deployment.
+
 # REMURA TradingView — ROADMAP v0.8.119-lab (actual JS-to-SQL fixture path)
 **Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
 
