@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.135-lab (static Python dependency inventory)
+**Aggiornamento 17/11/2026 13:17 CET — PR #102 DRAFT**
+
+- v0.8.134 CI 44078396592 / Wrangler 44078396601 SUCCESS; 90-path preview and 142 ABC runtime tests verified.
+- v0.8.135 five fixture groups classify pinned Python dependency reachability and external/dynamic review sites. CI pending; no pruning, installer or release authorization.
+
 # REMURA TradingView — ROADMAP v0.8.134-lab (combined ABC/UI overlay preview)
 **Aggiornamento 17/11/2026 CET — no release**
 

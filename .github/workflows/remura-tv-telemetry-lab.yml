@@ -156,3 +156,6 @@ jobs:
 
       - name: ABC and v165 nine-page overlay manifest preview (offline)
         run: python3 tradingview/delta-peaks/abc_v165_overlay_manifest_fixture_v1.py
+
+      - name: ABC static service dependency inventory (offline)
+        run: python3 tradingview/delta-peaks/abc_dependency_inventory_fixture_v1.py
