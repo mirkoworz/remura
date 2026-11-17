@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.119-lab (actual JS-to-SQL fixture path)
+**Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
+
+- v0.8.118 verified 511 main tests and 3 Node tests, CI 44027947555 and Wrangler 44027947558 SUCCESS.
+- v0.8.119 seven end-to-end synthetic groups through actual JS adapter and SQLite SQL, CI pending. See LEVEL-RECEIPT-E2E-LAB.md. Latest-only reservation limitation intentionally retained; next durable attempt ledger, Worker wiring, actual quota/custody gates and compile-only Pine.
+
 # REMURA TradingView — ROADMAP v0.8.118-lab (immutable receipt candidate)
 **Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
 
