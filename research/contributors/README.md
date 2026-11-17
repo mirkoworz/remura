@@ -1,3 +1,7 @@
+# REMURA Contributors v0.39 LAB — 17/11/2026 06:44 CET
+
+Closed-generation identity exclusion rehearsal, eight candidate regressions CI pending. See [CLOSED-GENERATION-EXCLUSION-LAB.md](CLOSED-GENERATION-EXCLUSION-LAB.md). No actual erasure, migration, enrollment, live or comparison admission. v0.38 CI 43907298298 SUCCESS (218).
+
 # REMURA Contributors v0.38 LAB — 16/11/2026 17:23 CET
 
 Declared metadata readiness against pinned D v0.8.109 local probe, seven new cross-track synthetic tests, no price comparison or source attestation. Existing manual review cutoff and explicit non-alias checks. See [LOCAL-LEVEL-READINESS-LAB.md](LOCAL-LEVEL-READINESS-LAB.md). CI pending. v0.37 verified 43898229500 SUCCESS (211). No enrollment or deployment.
