@@ -1,3 +1,10 @@
+# REMURA TradingView — ROADMAP v0.8.139-lab (public-key encrypted recovery handoff)
+**Aggiornamento 17/11/2026 17:27 CET — PR #102 DRAFT**
+
+- v0.8.138 GREEN: run 44093298521, job 134073805158; Wrangler 44093298308 SUCCESS; synthetic WAL restore step succeeded.
+- v0.8.139 actual GnuPG synthetic encrypted handoff, public-only sender and isolated recovery, four groups pending CI. No production keys, live backup, independent custody or authorization. See ABC-ENCRYPTED-HANDOFF-LAB.md.
+- Next: installed read-only census with no secrets, source authentication and independent witness/storage preflight. Avoid new live calls, purchases or deploy.
+
 # REMURA TradingView — ROADMAP v0.8.138-lab (SQLite WAL snapshot and restore rehearsal)
 **Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
 

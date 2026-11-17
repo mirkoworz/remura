@@ -168,3 +168,6 @@ jobs:
 
       - name: ABC SQLite WAL snapshot and isolated restore rehearsal
         run: python3 tradingview/delta-peaks/abc_sqlite_backup_fixture_v1.py
+
+      - name: ABC public-key encrypted synthetic SQLite recovery (GnuPG offline)
+        run: python3 tradingview/delta-peaks/abc_encrypted_handoff_fixture_v1.py
