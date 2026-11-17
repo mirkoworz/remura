@@ -1,4 +1,4 @@
-# REMURA v0.8.131 LAB — 17/11/2026 12:05 CET
+# REMURA v0.8.133 LAB — 17/11/2026 CET
 """Isolated actual A/B/C candidate compile, structural checks and offline regressions.
 Never run private_server.main, installer, collector, real credentials or remote services.
 """
@@ -22,6 +22,13 @@ def run():
     with tempfile.TemporaryDirectory(prefix="remura-abc-lab-") as tmp:
         dest=Path(tmp);shutil.copytree(roots["main"]/"scripts",dest/"scripts")
         (dest/"tests").mkdir();(dest/"home").mkdir()
+        # Copy only published root assets from the pinned base.
+        assets=subprocess.check_output(["git","-C",str(roots["main"]),"ls-tree","--name-only",SOURCES["main"]],text=True).splitlines()
+        for name in assets:
+            if Path(name).name==name and Path(name).suffix in {".html",".js",".css",".svg",".webp",".webmanifest"}:
+                p=roots["main"]/name
+                need(p.is_file() and not p.is_symlink())
+                shutil.copyfile(p,dest/name)
         for k in ("B","A","C"):
             for item in OVERLAYS[k]:
                 path=item["path"];target=dest/path
@@ -44,5 +51,22 @@ def run():
         shutil.copyfile(HERE/"abc_runtime_regression_fixture_v1.py",dest/"tests"/"test_abc_runtime_fixture.py")
         env={"PATH":os.environ["PATH"],"HOME":str(dest/"home"),"PYTHONPATH":str(dest),"PYTHONDONTWRITEBYTECODE":"1","PYTHONNOUSERSITE":"1","LANG":"C.UTF-8"}
         subprocess.run([sys.executable,"-m","unittest","discover","-s","tests","-p","test_*.py","-v"],cwd=dest,env=env,check=True,timeout=90)
+        # Broader regressions in a fresh interpreter after the original suite.
+        targets={"main":("test_private_server",),
+                 "C":("test_storage_v165_draft",),
+                 "B":("test_shark_ctrader_parent_receipt","test_shark_retail_parent_receipt","test_shark_first_invocation")}
+        helpers=("test_shark_ctrader_ingest_handoff","test_shark_retail_first_seen","test_shark_staging_scan",
+                 "test_shark_price_only_compact","test_shark_signal_ingest_decision_link",
+                 "test_shark_original_decision_atomic_gate","test_shark_signal_evidence")
+        for k,names in targets.items():
+            for name in (*names,*(helpers if k=="B" else ())):
+                path="tests/"+name+".py"
+                raw=subprocess.check_output(["git","-C",str(roots[k]),"show",SOURCES[k]+":"+path])
+                need((roots[k]/path).read_bytes()==raw)
+                (dest/path).write_bytes(raw)
+        extended=[name for names in targets.values() for name in names]
+        env["PYTHONPATH"]=os.pathsep.join((str(dest),str(dest/"scripts"),str(dest/"tests")))
+        subprocess.run([sys.executable,"-m","unittest","-v",*extended],cwd=dest,env=env,check=True,timeout=120)
+        print(json.dumps({"status":"ABC_EXTENDED_RUNTIME_CHECKED","test_modules":extended,"release_authorized":False}))
         print(json.dumps({"status":"ABC_OFFLINE_CANDIDATE_CHECKED","sha256":sha,"static_contracts":True,"cadence_guard":True,"release_authorized":False,"real_installation_tested":False,"main_executed":False}))
 if __name__=="__main__":run()

@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.133-lab (ABC expanded runtime regressions)
+**Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
+
+- v0.8.132 CI 44076477914 and Wrangler 44076477813 SUCCESS; 79-file overlay and all 80 synthetic rollback boundaries verified.
+- v0.8.133 five existing base/B/C test modules selected for the isolated ABC candidate, 111 expected additional tests. CI pending, no deployment.
+
 # REMURA TradingView — ROADMAP v0.8.132-lab (ABC overlay rollback)
 **Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
 
