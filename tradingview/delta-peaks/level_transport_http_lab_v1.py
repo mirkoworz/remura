@@ -1,4 +1,4 @@
-# REMURA v0.8.112 LAB — 16/11/2026 17:43 CET
+# REMURA v0.8.113 LAB — 17/11/2026 06:44 CET
 """Pure HTTP-shaped synthetic adapter, NOT a web server or deployed Worker.
 The caller supplies already bounded request bytes and a fixture peer identity.
 No network binding, real IP trust, live capability, or authenticated clock.
@@ -38,21 +38,25 @@ class Adapter:
         with self._lock:
             self._enabled=False
             self._receiver.stop()
+    def _admit(self):
+        # The fixed global limiter precedes path, credentials, body and storage.
+        # All attempts count, no unbounded key/IP map; in-memory only.
+        try:now=clock(self._now(),whole_second=False)
+        except (ValueError,TypeError,OverflowError):return "CLOCK_UNAVAILABLE"
+        if self._previous is not None and now<self._previous:return "CLOCK_UNAVAILABLE"
+        self._previous=now
+        window=now//WINDOW_MS
+        if window!=self._window:self._window=window;self._window_count=0
+        if self._attempts>=MAX_ATTEMPTS:return "RATE_LIMIT"
+        self._attempts+=1
+        if self._window_count>=WINDOW_LIMIT:return "RATE_LIMIT"
+        self._window_count+=1
+        return None
     def handle(self,*,method,path,headers,body,peer):
         with self._lock:
             if not self._enabled:return response("OFF")
-            # The fixed global limiter precedes path, credentials, body and storage.
-            # All attempts count, no unbounded key/IP map; in-memory only.
-            try:now=clock(self._now(),whole_second=False)
-            except (ValueError,TypeError,OverflowError):return response("CLOCK_UNAVAILABLE")
-            if self._previous is not None and now<self._previous:return response("CLOCK_UNAVAILABLE")
-            self._previous=now
-            window=now//WINDOW_MS
-            if window!=self._window:self._window=window;self._window_count=0
-            if self._attempts>=MAX_ATTEMPTS:return response("RATE_LIMIT")
-            self._attempts+=1
-            if self._window_count>=WINDOW_LIMIT:return response("RATE_LIMIT")
-            self._window_count+=1
+            status=self._admit()
+            if status is not None:return response(status)
             if method!="POST":return response("METHOD")
             if type(path) is not str or not path.startswith(ROUTE):return response("NOT_FOUND")
             key=path[len(ROUTE):]

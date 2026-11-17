@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.113-lab (shared synthetic admission)
+**Aggiornamento 17/11/2026 06:44 CET — PR #102 DRAFT**
+
+- v0.8.112 verified 459 principal tests, CI 43911226668 SUCCESS, Wrangler 43911226683 SUCCESS.
+- v0.8.113 shared SQLite budget and HTTP-shaped adapter, 11 candidate regressions, CI pending. See LEVEL-TRANSPORT-BUDGET-LAB.md. No real network, deployment or authenticated receipt. Pine v0.9.3 compile-only pending; no changes to active CVD.
+
 # REMURA TradingView — ROADMAP v0.8.112-lab (offline HTTP boundary)
 **Aggiornamento 16/11/2026 17:43 CET — PR #102 DRAFT**
 
