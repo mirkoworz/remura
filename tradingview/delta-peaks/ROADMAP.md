@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.129-lab (D/E closed custody diagnostic)
+**Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
+
+- D v0.8.128 verified 575 main tests, CI 44042733565 and Wrangler 44042733563 SUCCESS. E v0.41 verified 242 tests, CI 44047765294 SUCCESS.
+- v0.8.129 actual D/E synthetic custody cross-track boundary at supplied cutoff, six separate integration groups; no price comparison, no historical unbiased population, no scientific admission. CI pending.
+
 # REMURA TradingView — ROADMAP v0.8.128-lab (authenticated encrypted backup fixture)
 **Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
 

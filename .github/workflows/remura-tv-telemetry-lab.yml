@@ -110,3 +110,14 @@ jobs:
 
       - name: Isolated D1 receipt adapter fixture tests (offline)
         run: node --test tradingview/delta-peaks/gateway-lab/level_receipt_candidate.test.mjs
+
+      - name: Checkout pinned E v0.41 closed custody dependency
+        uses: actions/checkout@v4
+        with:
+          ref: 7c00be6b496fa9e38f2f42e987a772d83a2a095c
+          path: _remura_e_custody_reference
+          persist-credentials: false
+      - name: D E closed custody coverage at original cutoff (synthetic)
+        env:
+          PYTHONPATH: ${{ github.workspace }}/_remura_e_custody_reference/research/contributors
+        run: python3 tradingview/delta-peaks/crosstrack_closed_custody_fixture_v1.py
