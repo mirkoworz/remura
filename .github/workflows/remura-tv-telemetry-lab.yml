@@ -165,3 +165,6 @@ jobs:
 
       - name: ABC v165 pinned repository application manifest (offline)
         run: python3 tradingview/delta-peaks/abc_v165_repository_manifest_fixture_v1.py
+
+      - name: ABC SQLite WAL snapshot and isolated restore rehearsal
+        run: python3 tradingview/delta-peaks/abc_sqlite_backup_fixture_v1.py

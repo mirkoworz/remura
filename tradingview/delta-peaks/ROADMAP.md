@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.138-lab (SQLite WAL snapshot and restore rehearsal)
+**Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
+
+- v0.8.137 GREEN: run 44092907469 job 134072413134, Wrangler 44092907527 SUCCESS; 155 application files, 28 deployment references, 1610764 bytes, manifest SHA256 73635db92dd9f709ae078119a161ab12b7c9a63ca18782b99e7e1f6357c3c2c1.
+- v0.8.138 four groups of synthetic WAL backup/restore tests pending; no actual backup, encryption, cross-DB atomicity or external custody. See ABC-SQLITE-BACKUP-LAB.md. Real mutable state inventory and independent custody remain gates.
+
 # REMURA TradingView — ROADMAP v0.8.137-lab (repository application manifest)
 **Aggiornamento 17/11/2026, sessione successiva alle 14:22 CET — PR #102 DRAFT**
 
