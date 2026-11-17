@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.124-lab (closed receipt custody fingerprint)
+**Aggiornamento 17/11/2026 08:24 CET — PR #102 DRAFT**
+
+- v0.8.123 verified 544 main tests, five new groups, CI 44029877953 and Wrangler 44029877970 SUCCESS.
+- v0.8.124 closed synthetic receipt/permit/counter/schema snapshot pin, eight additional test groups. See LEVEL-RECEIPT-CUSTODY-LAB.md. No independent real custody or restore authorization. CI pending.
+
 # REMURA TradingView — ROADMAP v0.8.123-lab (synthetic pre-DB gate)
 **Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
 
