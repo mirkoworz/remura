@@ -1,3 +1,10 @@
+# REMURA TradingView — ROADMAP v0.8.137-lab (repository application manifest)
+**Aggiornamento 17/11/2026, sessione successiva alle 14:22 CET — PR #102 DRAFT**
+
+- v0.8.136 GREEN: run 44092419701, job 134070695936; Wrangler 44092419724 SUCCESS. Seven isolated imports, 26 distinct modules observed, 23 static-only, 52 unclassified, no observed paths outside graph. SDK/live closure unverified.
+- v0.8.137 candidate inventory: expected 155 application paths, 28 deployment references, 90 changes. Scope is pinned repository, not installed VPS; no removal or installer. CI pending.
+- Next: reconcile real installed hashes, permissions, updater and external entrypoints; enumerate mutable DB/state and independent encrypted backup/restore. See ABC-V165-REPOSITORY-MANIFEST-LAB.md.
+
 # REMURA TradingView — ROADMAP v0.8.136-lab (isolated runtime imports and v165 updater reconciliation)
 **Aggiornamento 17/11/2026, sessione 14:22 CET — PR #102 DRAFT**
 

@@ -1,0 +1,8 @@
+# REMURA v0.8.137 LAB — inventario candidato v1.65
+17/11/2026, sessione successiva alle 14:22 CET. Solo laboratorio.
+
+Inventario atteso: 155 file applicativi (101 Python e 54 risorse UI), 90 modifiche (14 sostituzioni, 76 nuove), 65 invariati. I 28 file base deploy/oracle sono riferimenti separati, non istruzioni di installazione. Il manifesto include impronte dei byte sorgente e candidato, dimensioni, categorie conservative e operazioni. Confronta SAFE_ASSETS e cache PWA, usa le sorgenti ABC/C già ancorate. Conserva tutti i 52 script non raggiunti staticamente: non implica che vadano installati, rimossi o attivati. Esclude dati, .venv, credenziali, workflow, tests e documentazione dal payload applicativo.
+
+Non è un manifesto completo di distribuzione: manca inventario effettivo VPS, proprietari e permessi, differenze timestamp nav.js, dipendenze SDK e Python reali, file invocati fuori servizio, eventuali aggiornamenti successivi della base, script di migrazione/rollback e backup con custodia indipendente. Nessuna installazione o prunatura autorizzata.
+
+Backup: v156 usa SQLite backup API e copia ripristinata sullo stesso host; preservare questo meccanismo, enumerare DB e stato mutabile effettivi (compresi Myfxbook/IG/Capital, eventuali DB separati), non copiare WAL a caldo come file singoli. Uno snapshot coerente per DB non prova atomicità fra DB e JSON: eventuale finestra di quiete va autorizzata. Cifratura autenticata e custodia fuori VPS, verifica integrità e ripristino su percorso isolato prima del rilascio. Chiavi non nel repository né nelle copie dati. Nessun backup reale eseguito.
