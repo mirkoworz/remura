@@ -104,3 +104,6 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}/_remura_b_reference:${{ github.workspace }}/_remura_b_reference/tests:${{ github.workspace }}/_remura_e_reference/research/contributors
         run: python3 tradingview/delta-peaks/crosstrack_level_context_fixture_v1.py
+
+      - name: Native Request boundary fixture tests (offline no Cloudflare)
+        run: node --test tradingview/delta-peaks/gateway-lab/level_worker_boundary_candidate.test.mjs

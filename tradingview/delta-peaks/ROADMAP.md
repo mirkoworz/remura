@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.115-lab (D1 and native Request candidate)
+**Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
+
+- v0.8.114 verified 479 main tests, CI 44026603041 and Wrangler 44026603040 SUCCESS.
+- v0.8.115 separate SQL admission candidate and native Request boundary hard OFF; 8 SQL + 9 Node candidate tests, CI pending. See LEVEL-WORKER-BOUNDARY-LAB.md. No real cloud or receipt acceptance, full parser port still required.
+
 # REMURA TradingView — ROADMAP v0.8.114-lab (bounded fixture streaming)
 **Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
 
