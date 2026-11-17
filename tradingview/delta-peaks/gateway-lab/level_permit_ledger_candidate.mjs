@@ -1,4 +1,4 @@
-// REMURA v0.8.120 LAB — 17/11/2026 07:04 CET (session start)
+// REMURA v0.8.122 LAB — 17/11/2026 CET
 // Only for a NEW disposable fixture, no Worker binding.
 import {reserveFixture} from "./level_receipt_candidate.mjs";
 import {validatePinnedLevel} from "./level_structure_candidate.mjs";
@@ -23,8 +23,8 @@ export const FINALIZE_SQL = `WITH eligible AS (
 const hex=x=>typeof x==="string"&&/^[a-f0-9]{64}$/.test(x);
 const time=x=>Number.isSafeInteger(x)&&x>0&&x<4102444800000;
 const result=status=>({status,synthetic:true,receipt_authenticated:false,scientific_admission:false,operational_signal:false});
-export async function finalizeFixture(db,raw,{synthetic=false,pin,attempt,expected,receivedMs,afterCloseMs,completedMs}={}){
- if(synthetic!==true||!hex(pin)||!Number.isInteger(attempt)||attempt<1||attempt>48||!time(receivedMs)||!time(completedMs)||completedMs<receivedMs||completedMs-receivedMs>5000)return result("DENIED");
+export async function finalizeFixture(db,raw,{synthetic=false,pin,attempt,expected,receivedMs,afterCloseMs,now}={}){
+ if(synthetic!==true||!hex(pin)||!Number.isInteger(attempt)||attempt<1||attempt>48||!time(receivedMs)||typeof now!=="function")return result("DENIED");
  let report,p,digest;
  try{
   report=await validatePinnedLevel(raw,expected,{receivedMs,afterCloseMs,synthetic:true});
@@ -32,6 +32,10 @@ export async function finalizeFixture(db,raw,{synthetic=false,pin,attempt,expect
   const bytes=new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(raw)));
   digest=Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join("");
  }catch{return result("INVALID");}
+ // Sample only after strict validation and hashing, immediately before SQL submission.
+ // This is NOT the DB commit time or end-to-end response deadline.
+ let completedMs;try{completedMs=now();}catch{return result("UNAVAILABLE");}
+ if(!time(completedMs)||completedMs<receivedMs||completedMs-receivedMs>5000)return result("DENIED");
  try{
   const row=await db.prepare(FINALIZE_SQL).bind(pin,p.snapshot_close_ms,receivedMs,p.sender_clock_ms,attempt,digest,raw,report.present_levels,expected.configuration_digest,expected.chart_type,expected.timezone,expected.session,afterCloseMs,completedMs).first();
   if(row===null)return result("CLOSED_USED_OR_EXPIRED");

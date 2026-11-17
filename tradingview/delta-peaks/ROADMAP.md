@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.122-lab (sender gate and late clock sample)
+**Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
+
+- v0.8.121 verified 535 main tests, eight E2E groups, CI 44029152149 and Wrangler 44029152235 SUCCESS.
+- v0.8.122 post-validator/pre-SQL clock sample, explicit JSON UTF-8 media type, four regression groups; sender/free-tier design gate in LEVEL-SENDER-TRUST-GATE.md. CI pending. Actual sender and commitment timing unverified; ingress hard OFF.
+
 # REMURA TradingView — ROADMAP v0.8.121-lab (native Request to v2 durable receipt)
 **Aggiornamento 17/11/2026 07:04 CET (inizio sessione) — PR #102 DRAFT**
 

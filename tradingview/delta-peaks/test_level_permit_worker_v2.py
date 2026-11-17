@@ -1,4 +1,4 @@
-# REMURA v0.8.121 LAB — 17/11/2026 07:04 CET (session start)
+# REMURA v0.8.122 LAB — 17/11/2026 CET
 import json,sqlite3,subprocess,tempfile,unittest
 from contextlib import closing
 from pathlib import Path
@@ -66,4 +66,22 @@ class PermitWorkerTests(unittest.TestCase):
         self.arm();actions=[self.a(payload(n),T+n*300000+1500) for n in range(13)]
         self.assertEqual(self.run_actions(*actions),[[201,"STORED_SYNTHETIC"]]*12+[[409,"CAPACITY_OR_ORDER"]])
         self.assertEqual(len(self.rows()),12)
+    def test_charset_official_json_variant(self):
+        self.arm()
+        self.assertEqual(self.run_actions(self.a(headers={"content-type":"application/json; charset=utf-8"})),[[201,"STORED_SYNTHETIC"]])
+        self.assertEqual(len(self.rows()),1)
+    def test_unsupported_charset_and_extra_parameter(self):
+        self.arm()
+        self.assertEqual(self.run_actions(self.a(headers={"content-type":"application/json; charset=iso-8859-1"}),self.a(now=T+1600,headers={"content-type":"application/json; charset=utf-8; extra=1"})),[[415,"MEDIA_TYPE"],[415,"MEDIA_TYPE"]])
+        self.assertEqual(self.rows(),[])
+    def test_post_validation_lease_and_bad_clock(self):
+        self.arm()
+        self.assertEqual(self.run_actions(self.a(done=T+1499),self.a(now=T+1600,clockThrows=True),self.a(now=T+1700,done=T+6701)),[[503,"DENIED"],[503,"UNAVAILABLE"],[503,"DENIED"]])
+        self.assertEqual(self.rows(),[])
+        self.assertEqual(self.q("SELECT count(*) FROM level_permits_v2"),[(3,)])
+        self.assertEqual(self.run_actions(self.a(now=T+1800,done=T+6800)),[[201,"STORED_SYNTHETIC"]])
+    def test_invalid_payload_does_not_sample_completion_clock(self):
+        self.arm()
+        self.assertEqual(self.run_actions(self.a("{}",clockThrows=True)),[[400,"INVALID"]])
+        self.assertEqual(self.rows(),[])
 if __name__=="__main__":unittest.main()

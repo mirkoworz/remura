@@ -1,4 +1,4 @@
-// REMURA v0.8.121 LAB — 17/11/2026 07:04 CET (session start)
+// REMURA v0.8.122 LAB — 17/11/2026 CET
 import {spawnSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
 import worker,{fixtureFetch} from "./level_permit_worker_candidate.mjs";
@@ -23,7 +23,7 @@ function req(a,stream){
  return new Request("https://example.invalid/lab/levels/v2/"+(a.key??key),{method,headers,...(method==="GET"||method==="HEAD"?{}:{body:stream??bytes,duplex:"half"})});
 }
 async function call(a,stream){
- let calls=0;const config={synthetic:true,enabled:a.enabled!==false,db,pin:spec.pin,keyHash:hash,expected:a.expected??spec.expected,afterCloseMs:spec.cutoff,now:()=>calls++===0?a.now:a.done??a.now+100};
+ let calls=0;const config={synthetic:true,enabled:a.enabled!==false,db,pin:spec.pin,keyHash:hash,expected:a.expected??spec.expected,afterCloseMs:spec.cutoff,now:()=>{if(calls++===0)return a.now;if(a.clockThrows===true)throw Error("fixture clock");return a.done??a.now+100;}};
  const r=a.kind==="hardoff"?await worker.fetch(req(a,stream)):await fixtureFetch(req(a,stream),config);
  const body=await r.json();if(body.synthetic!==true||body.receipt_authenticated!==false||body.scientific_admission!==false||body.operational_signal!==false)throw Error("unsafe result");
  return [r.status,body.status];

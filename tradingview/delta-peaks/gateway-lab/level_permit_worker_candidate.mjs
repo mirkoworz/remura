@@ -1,4 +1,4 @@
-// REMURA v0.8.121 LAB — 17/11/2026 07:04 CET (session start)
+// REMURA v0.8.122 LAB — 17/11/2026 CET
 // Native Request fixture only. No deployment manifest, binding or real peer attestation.
 import {reserveFixture,finalizeFixture} from "./level_permit_ledger_candidate.mjs";
 const MAX=15000, LIMIT=32, DEADLINE=1500;
@@ -22,7 +22,7 @@ export async function fixtureFetch(request,{synthetic=false,enabled=false,db,pin
   const hash=new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(m[1])));
   let mismatch=0;for(let i=0;i<32;i++)mismatch|=hash[i]^parseInt(keyHash.slice(i*2,i*2+2),16);
   if(mismatch)return reply(403,"DENIED");
-  if(request.headers.get("content-type")?.toLowerCase()!=="application/json")return reply(415,"MEDIA_TYPE");
+  if(!/^application\/json(?:;[ \t]*charset=utf-8)?$/i.test(request.headers.get("content-type")??""))return reply(415,"MEDIA_TYPE");
   if(request.headers.has("content-encoding")||request.headers.has("transfer-encoding"))return reply(400,"BAD_REQUEST");
   const length=request.headers.get("content-length");
   if(!length||!/^[0-9]{1,6}$/.test(length)||Number(length)===0||!request.body)return reply(400,"BAD_REQUEST");
@@ -41,7 +41,7 @@ export async function fixtureFetch(request,{synthetic=false,enabled=false,db,pin
   if(!finished||count!==bytes.length)return reply(400,"BAD_REQUEST");
   const raw=new TextDecoder("utf-8",{fatal:true,ignoreBOM:true}).decode(bytes);
   clearTimeout(timer);
-  const r=await finalizeFixture(db,raw,{synthetic:true,pin,attempt:permit.attempt,expected,receivedMs,afterCloseMs,completedMs:now()});
+  const r=await finalizeFixture(db,raw,{synthetic:true,pin,attempt:permit.attempt,expected,receivedMs,afterCloseMs,now});
   const codes={STORED_SYNTHETIC:201,DUPLICATE:200,CONFLICT:409,CAPACITY_OR_ORDER:409,INVALID:400,CLOSED_USED_OR_EXPIRED:503,DENIED:503,UNAVAILABLE:503};
   return reply(codes[r.status]??503,Object.hasOwn(codes,r.status)?r.status:"UNAVAILABLE");
  }catch{return reply(400,"BAD_REQUEST");}
