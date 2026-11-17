@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.125-lab (custody repeated verification fix)
+**Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
+
+- v0.8.124 CI 44038634249 FAILURE (552 tests, one error); Wrangler 44038634144 SUCCESS. SQLite internal temp schema appears after integrity checks, so repeated verification denied a valid copy. Reproduced on SQLite 3.46.1 locally.
+- v0.8.125 permits only empty built-in temp schema, rejects all temp objects and attachments, qualifies protected reads to main, two new regression groups. CI pending; no real custody or restore authorization.
+
 # REMURA TradingView — ROADMAP v0.8.124-lab (closed receipt custody fingerprint)
 **Aggiornamento 17/11/2026 08:24 CET — PR #102 DRAFT**
 

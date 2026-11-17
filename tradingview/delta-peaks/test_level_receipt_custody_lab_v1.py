@@ -1,4 +1,4 @@
-# REMURA v0.8.124 LAB — 17/11/2026 08:24 CET
+# REMURA v0.8.125 LAB — 17/11/2026 08:24 CET
 import sqlite3,unittest,tempfile
 from pathlib import Path
 from contextlib import closing
@@ -85,4 +85,15 @@ class ReceiptCustodyTests(unittest.TestCase):
         self.db.execute("INSERT INTO level_receipts_v1 VALUES(?,?,?,?,?,?,?)",(T,T+1500,T,1,digest(payload()),payload(),4))
         d=self.copy()
         with self.assertRaises(ValueError):self.seal(d)
+    def test_repeated_checks_same_connection(self):
+        d=self.copy();m,p=self.seal(d)
+        self.assertEqual(self.seal(d),(m,p))
+        self.assertEqual(self.verify(d,p)["receipts"],1)
+        self.assertEqual(self.verify(d,p)["receipts"],1)
+        self.assertFalse(d.in_transaction)
+    def test_temp_shadow_and_unrelated_objects_denied(self):
+        for ddl in ("CREATE TEMP TABLE level_admission_v1(id)", "CREATE TEMP TABLE unrelated(id)"):
+            d=self.copy();d.execute("PRAGMA query_only=OFF")
+            d.execute(ddl);d.commit();d.execute("PRAGMA query_only=ON")
+            with self.assertRaises(ValueError):self.seal(d)
 if __name__=="__main__":unittest.main()
