@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.121-lab (native Request to v2 durable receipt)
+**Aggiornamento 17/11/2026 07:04 CET (inizio sessione) — PR #102 DRAFT**
+
+- v0.8.120 verified 527 main tests, all nine new groups, CI 44028783153 and Wrangler 44028783168 SUCCESS.
+- v0.8.121 separate native Request hard-OFF synthetic Worker, eight new E2E test groups through v2 ledger and strict native JS validator into actual temporary SQLite. CI pending. See LEVEL-PERMIT-WORKER-E2E-LAB.md. Real sender/clock/edge, quota, custody and compile-only Pine remain gates. No deployment.
+
 # REMURA TradingView — ROADMAP v0.8.120-lab (durable permit ledger)
 **Aggiornamento 17/11/2026 07:04 CET (inizio sessione) — PR #102 DRAFT**
 
