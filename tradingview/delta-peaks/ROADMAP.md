@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.117-lab (explicit configuration pin)
+**Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
+
+- v0.8.116 CI 44027270691 SUCCESS, 494 main tests, Wrangler 44027270663 SUCCESS.
+- v0.8.117 restricted canonical config pin plus fixture cutoff/clock/size checks; eight new differential groups, CI pending. See LEVEL-CONFIG-PIN-LAB.md. No claim of general Python parity or actual Pine session, no Worker wiring or deployment.
+
 # REMURA TradingView — ROADMAP v0.8.116-lab (strict structural parser candidate)
 **Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
 

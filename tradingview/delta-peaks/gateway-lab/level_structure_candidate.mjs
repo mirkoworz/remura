@@ -1,4 +1,4 @@
-// REMURA v0.8.116 LAB — 17/11/2026 CET
+// REMURA v0.8.117 LAB — 17/11/2026 CET
 // Structural port only. No configuration digest equivalence or source attestation.
 const MAX=15000;
 const fields=s=>s.split(" ");
@@ -79,4 +79,53 @@ export function validateLevelStructure(raw){
   }
  }
  return {present_levels:present,missing_levels:6-present,configuration_equivalence:false,receipt_authenticated:false,scientific_admission:false,operational_signal:false};
+}
+
+
+// v0.8.117: intentionally conservative Python JSON serialization subset.
+// Never round, coerce integer vs float types, or guess Python's exponent format.
+function canonicalNumber(x){
+ const t=x.token;
+ if(/^-?(?:0|[1-9][0-9]*)$/.test(t)){
+  need(Number.isSafeInteger(x.val));
+  return String(x.val);
+ }
+ need(/^-?(?:0|[1-9][0-9]*)\.[0-9]{1,6}$/.test(t));
+ need(Math.abs(x.val)<=1000000&&(x.val===0||Math.abs(x.val)>=0.0001));
+ const [whole,fraction]=t.split(".");
+ return whole+"."+(fraction.replace(/0+$/,"")||"0");
+}
+function canonicalASCII(x,sort=false){
+ if(x instanceof Num)return canonicalNumber(x);
+ if(x===null||typeof x==="boolean")return JSON.stringify(x);
+ if(typeof x==="string"){
+  need(/^[\x20-\x7e]*$/.test(x));return JSON.stringify(x);
+ }
+ if(Array.isArray(x))return "["+x.map(v=>canonicalASCII(v,sort)).join(",")+"]";
+ need(x!==null&&typeof x==="object"&&Object.getPrototypeOf(x)===null);
+ const keys=Object.keys(x);if(sort)keys.sort();
+ return "{"+keys.map(k=>canonicalASCII(k)+":"+canonicalASCII(x[k],sort)).join(",")+"}";
+}
+async function shaASCII(s){
+ const bytes=new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s)));
+ return Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join("");
+}
+export async function validatePinnedLevel(raw,expected,{receivedMs,afterCloseMs,synthetic=false}={}){
+ need(synthetic===true);
+ const report=validateLevelStructure(raw);
+ const p=strictJSON(raw).snapshot;
+ need(expected!==null&&typeof expected==="object"&&Object.keys(expected).length===4&&
+ ["chart_type","timezone","session","configuration_digest"].every(k=>Object.hasOwn(expected,k)));
+ need(typeof expected.configuration_digest==="string"&&/^[0-9a-f]{64}$/.test(expected.configuration_digest));
+ for(const k of ["chart_type","timezone","session"])need(shortString(expected[k])&&p[k]===expected[k]);
+ const digest=await shaASCII(canonicalASCII(p.configuration,true));
+ need(digest===expected.configuration_digest);
+ // Mirror the Python transport decoder's normalized inner snapshot size.
+ const normalized=Object.assign(Object.create(null),p,{mode:"REALTIME_LOCAL_LOG",version:"0.9.2-level-lab"});
+ need(canonicalASCII(normalized).length<=12000);
+ const close=clock(p.snapshot_close_ms),sent=clock(p.sender_clock_ms,false);
+ need(Number.isSafeInteger(receivedMs)&&receivedMs>0&&receivedMs<4102444800000);
+ need(Number.isSafeInteger(afterCloseMs)&&afterCloseMs>0&&afterCloseMs<4102444800000&&afterCloseMs%300000===0);
+ need(afterCloseMs<close&&close<=sent&&sent<=receivedMs&&receivedMs-close<=120000);
+ return {...report,configuration_pin_matched:true,normalized_size_checked:true,fixture_cutoff_checked:true};
 }
