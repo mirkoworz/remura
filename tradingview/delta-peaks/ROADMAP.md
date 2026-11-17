@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.128-lab (authenticated encrypted backup fixture)
+**Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
+
+- v0.8.127 verified 568 tests; CI 44039547259 and Wrangler 44039547261 SUCCESS.
+- v0.8.128 Node native AES-256-GCM synthetic SQLite backup, context binding and separate witness verification; seven test groups pending. No actual keys, storage or restore authority.
+
 # REMURA TradingView — ROADMAP v0.8.127-lab (atomic custody publication fixture)
 **Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
 
