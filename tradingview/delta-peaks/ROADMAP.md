@@ -1,3 +1,8 @@
+# REMURA TradingView — ROADMAP v0.8.123-lab (synthetic pre-DB gate)
+**Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
+
+- v0.8.123 candidate rejects unauthorized fixture metadata before database access, five new E2E groups. See LEVEL-PRE-DB-GATE-LAB.md. No real edge/peer attestation; admission clock is not network arrival. CI pending; no deployment.
+
 # REMURA TradingView — ROADMAP v0.8.122-lab (sender gate and late clock sample)
 **Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
 

@@ -1,4 +1,4 @@
-# REMURA v0.8.122 LAB — 17/11/2026 CET
+# REMURA v0.8.123 LAB — 17/11/2026 CET
 import json,sqlite3,subprocess,tempfile,unittest
 from contextlib import closing
 from pathlib import Path
@@ -84,4 +84,41 @@ class PermitWorkerTests(unittest.TestCase):
         self.arm()
         self.assertEqual(self.run_actions(self.a("{}",clockThrows=True)),[[400,"INVALID"]])
         self.assertEqual(self.rows(),[])
+    def test_unauthorized_metadata_never_reaches_db(self):
+        self.arm()
+        a=[self.a(method="GET",noDb=True),self.a(key="2"*64,noDb=True),
+           self.a(headers={"content-type":"text/plain"},noDb=True),
+           self.a(headers={"content-length":"15001"},noDb=True),
+           self.a(headers={"content-encoding":"gzip"},noDb=True),
+           self.a(headers={"content-length":"0"},noDb=True)]
+        self.assertEqual(self.run_actions(*a),[[405,"METHOD"],[403,"DENIED"],[415,"MEDIA_TYPE"],[413,"SIZE"],[400,"BAD_REQUEST"],[400,"BAD_REQUEST"]])
+        self.assertEqual(self.q("SELECT attempts FROM level_admission_v1"),[(0,)])
+    def test_untrusted_headers_cannot_supply_peer(self):
+        self.arm()
+        h={"cf-connecting-ip":"192.0.2.42","x-real-ip":"192.0.2.42","x-forwarded-for":"192.0.2.42"}
+        peers=[None,{"synthetic":True,"origin":"WORKER_SUBREQUEST","ip":"192.0.2.42"},
+               {"synthetic":True,"origin":"DIRECT_FIXTURE","ip":"192.0.2.43"},
+               {"synthetic":False,"origin":"DIRECT_FIXTURE","ip":"192.0.2.42"}]
+        self.assertEqual(self.run_actions(*(self.a(peer=p,headers=h,noDb=True) for p in peers)),[[403,"DENIED"]]*4)
+        self.assertEqual(self.run_actions(self.a(headers={"x-remura-fixture-peer":"SYNTHETIC_FIXTURE_PEER"},noDb=True)),[[403,"DENIED"]])
+        self.assertEqual(self.q("SELECT count(*) FROM level_permits_v2"),[(0,)])
+    def test_alternate_host_and_query_never_reach_db(self):
+        self.arm();k="1"*64
+        urls=["https://alternate.invalid/lab/levels/v2/"+k,
+              "https://example.invalid:8443/lab/levels/v2/"+k,
+              "https://example.invalid/lab/levels/v2/"+k+"?x=1",
+              "http://example.invalid/lab/levels/v2/"+k]
+        self.assertEqual(self.run_actions(*(self.a(url=u,noDb=True) for u in urls)),[[404,"NOT_FOUND"]]*4)
+        self.assertEqual(self.q("SELECT attempts FROM level_admission_v1"),[(0,)])
+    def test_malformed_admitted_body_still_consumes_attempt(self):
+        self.arm()
+        self.assertEqual(self.run_actions(self.a("{}"),self.a(now=T+1600)),[[400,"INVALID"],[201,"STORED_SYNTHETIC"]])
+        self.assertEqual(self.q("SELECT attempts FROM level_admission_v1"),[(2,)])
+        self.assertEqual(self.rows()[0][2],2)
+    def test_preflight_abuse_does_not_exhaust_shared_session(self):
+        self.arm()
+        actions=[self.a(now=T+1500+n,key="2"*64,noDb=True) for n in range(24)]
+        self.assertEqual(self.run_actions(*actions),[[403,"DENIED"]]*24)
+        self.assertEqual(self.run_actions(self.a(now=T+1600)),[[201,"STORED_SYNTHETIC"]])
+        self.assertEqual(self.q("SELECT attempts FROM level_admission_v1"),[(1,)])
 if __name__=="__main__":unittest.main()

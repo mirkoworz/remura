@@ -1,4 +1,4 @@
-// REMURA v0.8.122 LAB — 17/11/2026 CET
+// REMURA v0.8.123 LAB — 17/11/2026 CET
 import {spawnSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
 import worker,{fixtureFetch} from "./level_permit_worker_candidate.mjs";
@@ -18,13 +18,17 @@ const db={prepare(sql){return {bind(...args){return {async first(){
 }};}};}};
 function req(a,stream){
  const bytes=Array.isArray(a.bytes)?Uint8Array.from(a.bytes):new TextEncoder().encode(a.raw??"{}");
- const headers={"content-type":"application/json","content-length":String(bytes.length),"x-remura-fixture-peer":"SYNTHETIC_FIXTURE_PEER",...a.headers};
+ const headers={"content-type":"application/json","content-length":String(bytes.length),...a.headers};
  const method=a.method??"POST";
- return new Request("https://example.invalid/lab/levels/v2/"+(a.key??key),{method,headers,...(method==="GET"||method==="HEAD"?{}:{body:stream??bytes,duplex:"half"})});
+ return new Request((a.url??("https://example.invalid/lab/levels/v2/"+(a.key??key))),{method,headers,...(method==="GET"||method==="HEAD"?{}:{body:stream??bytes,duplex:"half"})});
 }
 async function call(a,stream){
- let calls=0;const config={synthetic:true,enabled:a.enabled!==false,db,pin:spec.pin,keyHash:hash,expected:a.expected??spec.expected,afterCloseMs:spec.cutoff,now:()=>{if(calls++===0)return a.now;if(a.clockThrows===true)throw Error("fixture clock");return a.done??a.now+100;}};
+ let calls=0,dbCalls=0;
+ const trap={prepare(){dbCalls++;throw Error("database must not be reached");}};
+ const peer=Object.hasOwn(a,"peer")?a.peer:{synthetic:true,origin:"DIRECT_FIXTURE",ip:"192.0.2.42"};
+ const config={synthetic:true,enabled:a.enabled!==false,db:a.noDb===true?trap:db,peer,pin:spec.pin,keyHash:hash,expected:a.expected??spec.expected,afterCloseMs:spec.cutoff,now:()=>{if(calls++===0)return a.now;if(a.clockThrows===true)throw Error("fixture clock");return a.done??a.now+100;}};
  const r=a.kind==="hardoff"?await worker.fetch(req(a,stream)):await fixtureFetch(req(a,stream),config);
+ if(dbCalls!==0)throw Error("preflight contacted database");
  const body=await r.json();if(body.synthetic!==true||body.receipt_authenticated!==false||body.scientific_admission!==false||body.operational_signal!==false)throw Error("unsafe result");
  return [r.status,body.status];
 }
