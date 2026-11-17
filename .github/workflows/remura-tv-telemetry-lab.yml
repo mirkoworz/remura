@@ -126,3 +126,27 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}/_remura_b_reference:${{ github.workspace }}/_remura_b_reference/tests:${{ github.workspace }}/_remura_e_custody_reference/research/contributors
         run: python3 tradingview/delta-peaks/crosstrack_bde_original_cutoff_fixture_v1.py
+
+      - name: Checkout pinned ABC main fixture dependency
+        uses: actions/checkout@v4
+        with:
+          ref: 30de2987fe28ee73044448817e66ac60391e3357
+          path: _remura_abc_main
+          persist-credentials: false
+
+      - name: Checkout pinned ABC A fixture dependency
+        uses: actions/checkout@v4
+        with:
+          ref: 2288bcc12e8548ec52b437ff4a14c621be307fd5
+          path: _remura_abc_a
+          persist-credentials: false
+
+      - name: Checkout pinned ABC C fixture dependency
+        uses: actions/checkout@v4
+        with:
+          ref: 69886bc1d1db0ad0bd74918e5146f79b223f4fe4
+          path: _remura_abc_c
+          persist-credentials: false
+
+      - name: Actual ABC collector candidate isolated compile and localhost regressions
+        run: python3 tradingview/delta-peaks/abc_integration_runner_lab_v1.py

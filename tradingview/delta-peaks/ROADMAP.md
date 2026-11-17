@@ -1,3 +1,9 @@
+# REMURA TradingView — ROADMAP v0.8.131-lab (ABC isolated candidate)
+**Aggiornamento 17/11/2026 12:05 CET — PR #102 DRAFT**
+
+- v0.8.130 CI 44060417634 / Wrangler 44060417615 SUCCESS.
+- v0.8.131 actual ABC candidate text, pinned overlays, compile/structural/cadence and selected offline tests pending. No distribution or live release.
+
 # REMURA TradingView — ROADMAP v0.8.130-lab (B/D/E original cutoff diagnostic)
 **Aggiornamento 17/11/2026 10:56 CET — PR #102 DRAFT**
 
