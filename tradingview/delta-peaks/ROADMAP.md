@@ -1,3 +1,10 @@
+# REMURA TradingView — ROADMAP v0.8.176-lab (existing aggregate receipt fold attribution)
+**Aggiornamento 18/11/2026, sessione successiva alle 18:16 CET — PR #102 DRAFT**
+
+- v0.8.175 exact head 34d33a876d52014232d0802fa86cba8169c9333b; Telemetry 44356758089 and Wrangler 44356757856 completed/success. Radar 44356740341 successful 18:16 CET; capacity not attested.
+- Attribute existing three public aggregate receipt records to immutable V2 fold boundaries using original receipt-window audit; 28/28 requested slots in development, 59 historic D1 rows read and zero writes, max reported lag 21660 ms. No new D1 queries, no radar direction output, no market calendar completeness or individual receipt causality inferred. Cross-fold aggregates cannot be split and remain unallocated. Future audit evidence and duplicate windows fail closed. Four new tests (including existing real aggregates and synthetic boundary), CI pending.
+- Mac preflight deferred; no new private archive access, deployment, service changes, protocol changes, interim results or spending. Owner action needed for any future live reader dispatch. Keep historical pins, original signed candidate and old updater inhibition unchanged.
+
 # REMURA TradingView — ROADMAP v0.8.175-lab (fixed calendar source coverage)
 **Aggiornamento 18/11/2026, sessione successiva alle 18:08 CET — PR #102 DRAFT**
 
