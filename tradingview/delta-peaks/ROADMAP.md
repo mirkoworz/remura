@@ -1,3 +1,10 @@
+# REMURA TradingView — ROADMAP v0.8.142-lab (durable disk rollback journal)
+**Aggiornamento 18/11/2026, sessione successiva alle 09:24 CET — PR #102 DRAFT**
+
+- v0.8.141 GREEN verified logs: Telemetry 44266424125 job 134671973270, 579 main tests (4 residual), 142 ABC; Wrangler 44266424148 SUCCESS.
+- v0.8.142 disposable disk rollback journal with atomic replace/fsync, cooperative lock, before/after exact bytes and mode, crash/reopen and idempotent rollback. Eight test methods pending. See ABC-ROLLBACK-DISK-LAB.md.
+- Not installer-ready: actual residual probe, staged pinned overlay integration, effective config/SDK, current quota, iCloud, authenticated journal, ownership/updater interlock and real maintenance authorization remain open. No live operation, no broker change.
+
 # REMURA TradingView — ROADMAP v0.8.141-lab (targeted recovery residual coverage)
 **Aggiornamento 18/11/2026, sessione 09:19 CET — PR #102 DRAFT**
 
