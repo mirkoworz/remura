@@ -1,3 +1,11 @@
+# REMURA TradingView — ROADMAP v0.8.145-lab (persistent updater inhibition candidate)
+**Aggiornamento 18/11/2026, sessione successiva alle 09:44 CET — PR #102 DRAFT**
+
+- v0.8.144 GREEN: Telemetry 44269352020 job 134681759437, Wrangler 44269352324. Bundle 1,771,520 bytes, 155 paths, deterministic verification and negative checks successful.
+- Real Oracle checkpoint 6973547597: updater exact pinned Git blob, lock root:root mode 0600, timer enabled/active. No changes; preserve earlier backup and SDK gates.
+- v0.8.145 exact pinned updater candidate checks durable inhibit marker under existing lock before state/network, including direct initialization. Disposable persistent marker creation with fsync, five test methods pending CI. No live marker, deployment or service command.
+- Current updater is still original and does not honor this marker. Need explicit maintenance authorization, safe persistent guard for updater AND collector startup, exact journal reconciliation and controlled release. Old privileged/manual installers remain outside guard. Shark evidence, iCloud, quotas and exact configuration paths open. See ABC-MAINTENANCE-INHIBIT-LAB.md.
+
 # REMURA TradingView — ROADMAP v0.8.144-lab (reproducible pinned stage bundle)
 **Aggiornamento 18/11/2026, sessione successiva alle 09:41 CET — PR #102 DRAFT**
 

@@ -191,3 +191,6 @@ jobs:
           if python3 "$p" --build "$d/a.tar"; then exit 1; fi
           printf x >> "$d/b.tar"
           if python3 "$p" --verify "$d/b.tar"; then exit 1; fi
+
+      - name: ABC exact updater persistent maintenance guard (offline)
+        run: python3 tradingview/delta-peaks/abc_v165_maintenance_gate_fixture_v1.py
