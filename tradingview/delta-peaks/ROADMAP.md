@@ -1,3 +1,11 @@
+# REMURA TradingView — ROADMAP v0.8.173-lab (descriptor-bound baseline for candidate transaction)
+**Aggiornamento 18/11/2026, sessione successiva alle 17:48 CET — PR #102 DRAFT**
+
+- v0.8.172 Telemetry 44352735970/job 134972494396 and Wrangler 44352735933 completed/success. Contributors v0.45 head 8260035ff10e805c5eb856152ddb91f3c6bd54cc CI 44352993172 completed/success: exact period/anchor/kind readiness detail, no historical pin change.
+- New descriptor-bound read-only baseline on existing disposable candidate transaction fixture, under historical LAB outer lock and dual inhibits: verify 79 expected predecessors, explicit absence of 76 additions, same device, owned non-writable regular single-link files, bounded bytes and pinned base contents. Recheck all named entries and directory identities; three injected refusal cases (unexpected predecessor, writable file, symlink) within existing pinned fixture. No real baseline recheck or production access. This is not full mount/ACL attestation, atomic snapshot, or safe live mutation. Existing 90-change rollback fixture retained.
+- A PR #99 prior head 2288bcc12e8548ec52b437ff4a14c621be307fd5 all three historic workflows GREEN. No change to collector candidate or actual updater. Radar 17:46 capacity step GREEN; logs inspected without a capacity classification. Do not infer capacity.
+- User iPhone only; Mac preflight deferred. No new backups, private archive reads, outcome evaluation, deployment, service modification or spending. CI for v0.8.173 pending.
+
 # REMURA TradingView — ROADMAP v0.8.172-lab (original decision exclusions and mobile coverage report)
 **Aggiornamento 18/11/2026, sessione successiva alle 17:48 CET — PR #102 DRAFT**
 

@@ -1,4 +1,4 @@
-# REMURA v0.8.168 LAB — 18/11/2026, sessione successiva alle 16:21 CET
+# REMURA v0.8.173 LAB — 18/11/2026, sessione successiva alle 17:48 CET
 """Existing actual pinned CI bundle, one outer maintenance lock, disposable disk only.
 No new bundle build, artifact, live data, root execution or service commands.
 """
@@ -11,6 +11,7 @@ from abc_v165_bootstrap_source_gate_v1 import PINS
 from abc_v165_verified_parser_lab_v1 import verified_parser
 from abc_v165_stage_bundle_v1 import PIN
 from abc_v165_transaction_plan_v1 import prepare_plan
+from abc_v165_baseline_fd_lab_v1 import read_baseline
 from abc_rollback_disk_lab_v1 import Journal
 from abc_v165_repository_manifest_fixture_v1 import Tests as Repository
 
@@ -86,7 +87,36 @@ def check(source):
                     except ValueError:pass
                     else:raise AssertionError("altered candidate accepted")
                 assert all(hashlib.sha256(app[r["path"]]).hexdigest()==r["candidate_sha256"] for r in manifest["application"])
-                baseline=observed(journal,manifest)
+                appfd=os.open(jr/"app",os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+                try:
+                    baseline=read_baseline(appfd,manifest,os.getuid(),synthetic=True)
+                    # Attack cases on actual pinned candidate paths, LAB only.
+                    added=next(row["path"] for row in manifest["application"] if row["operation"]=="add")
+                    target=jr/"app"/added
+                    target.write_bytes(b"unexpected predecessor")
+                    try:
+                        try:read_baseline(appfd,manifest,os.getuid(),synthetic=True)
+                        except ValueError:pass
+                        else:raise AssertionError("unexpected predecessor accepted")
+                    finally:target.unlink()
+                    existing=next(iter(baseline))
+                    target=jr/"app"/existing
+                    target.chmod(0o666)
+                    try:
+                        try:read_baseline(appfd,manifest,os.getuid(),synthetic=True)
+                        except ValueError:pass
+                        else:raise AssertionError("writable predecessor accepted")
+                    finally:target.chmod(0o640)
+                    target.unlink()
+                    target.symlink_to(jr/"app"/next(p for p in baseline if p!=existing))
+                    try:
+                        try:read_baseline(appfd,manifest,os.getuid(),synthetic=True)
+                        except (ValueError,OSError):pass
+                        else:raise AssertionError("symlink predecessor accepted")
+                    finally:
+                        target.unlink();target.write_bytes(baseline[existing]);target.chmod(0o640)
+                    assert read_baseline(appfd,manifest,os.getuid(),synthetic=True)==baseline
+                finally:os.close(appfd)
                 assert baseline==Repository.base
                 original,new=prepare_plan(manifest,app,baseline)
                 must_be_locked(lock)
