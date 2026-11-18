@@ -1,3 +1,11 @@
+# REMURA TradingView — ROADMAP v0.8.141-lab (targeted recovery residual coverage)
+**Aggiornamento 18/11/2026, sessione 09:19 CET — PR #102 DRAFT**
+
+- v0.8.140 GREEN per checkpoint: CI 44135401817 job 134223435356, Wrangler 44135401778. Owner handoff: five real recovered encrypted archives and five signed receipts, Witness 005 GREEN at 09:17:44; 609 file occurrences including overlaps, 24 SQLite copies. No repeat or public private archive hashes.
+- Reconcile previous checkpoints: 6956223472, 6957474628, 6962020316, 6962145578, 6962793844, 6963061130, 6970365103, 6970444287, 6970579710, 6970611695, 6970903211; 6972203236, 6972228955, 6972250809, 6972352534, 6972670438, 6972697311, 6972730522, 6972760809, 6972815060, 6972849055, 6972876248, 6973017346.
+- Actual pinned source: COT tables in prices DB, Capital persistent budget and cTrader token paths; targeted closed-copy SQL and Oracle unit/fixed-candidate metadata probe added. Four fixture methods pending CI; no real residual report yet. No secret outputs, no broker call.
+- Dedicated installer gate documented, not executable yet. No installedSha rewrite, deploy or collector stop. Remaining: actual selected config coverage, Shark evidence, SDK imports, current quotas, iCloud and installer journal/staging/rollback. See ABC-RECOVERY-RESIDUALS-READONLY.md.
+
 # REMURA TradingView — ROADMAP v0.8.140-lab (installed baseline read-only census)
 **Aggiornamento 17/11/2026 CET — PR #102 DRAFT**
 
