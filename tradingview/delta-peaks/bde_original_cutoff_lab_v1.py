@@ -1,4 +1,4 @@
-# REMURA v0.8.130 LAB — 17/11/2026 10:56 CET
+# REMURA v0.8.154 LAB — 18/11/2026, sessione successiva alle 11:13 CET
 """Actual B audit -> D/E coverage at original decision. Synthetic diagnostics only."""
 from collections import Counter
 from datetime import timedelta
@@ -6,7 +6,7 @@ import sqlite3
 from fx_m15_decision_preview_v1 import utc,ms,HEX
 from closed_de_custody_coverage_lab_v1 import coverage,E_PIN
 from level_receipt_custody_lab_v1 import need
-B_PIN="8dc51e8a199dc1cfd45e4cd2e7b339510af2eb2b"
+B_PIN="daaaa8f6c265d1501a0518940b3e9c9c68e6e3a3"
 SCHEMA="remura-track-b-causal-local-cot-price-join-v1"
 def summarize(b_db,d_db,*,as_of_utc,days=1,custody,synthetic=False,ingress_closed=False):
     need(synthetic is True and ingress_closed is True and type(days) is int and 1<=days<=7)

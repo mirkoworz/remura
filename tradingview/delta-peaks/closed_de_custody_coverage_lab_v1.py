@@ -1,4 +1,4 @@
-# REMURA v0.8.129 LAB — 17/11/2026 CET
+# REMURA v0.8.154 LAB — 18/11/2026, sessione successiva alle 11:13 CET
 """Closed D/E custody boundary: coverage only, no price/source equivalence."""
 import sqlite3
 from collections import Counter
@@ -6,7 +6,7 @@ from datetime import datetime,timezone,timedelta
 from level_receipt_custody_lab_v1 import need,integer,hashobj
 from level_receipt_witness_lab_v1 import verify_recovery
 from level_transport_receiver_lab_v1 import decode
-E_PIN="7c00be6b496fa9e38f2f42e987a772d83a2a095c"
+E_PIN="0612fe18265791d774845f5b83bde2e696495489"
 MAX_MS=4102444800000
 EPOCH=datetime(1970,1,1,tzinfo=timezone.utc)
 def utc_ms(s):

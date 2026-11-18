@@ -1,3 +1,10 @@
+# REMURA TradingView — ROADMAP v0.8.154-lab (repin verified B/E dependencies)
+**Aggiornamento 18/11/2026, sessione successiva alle 11:13 CET — PR #102 DRAFT**
+
+- B custody inventory independently GREEN in CI 44283343273 (both new tests observed), E v0.42 GREEN in CI 44283965819 job 134731689570 (231+7+7 tests). Update B and closed custody E exact commit pins and add CI checkout equality guard. Keep older E fixture pin 9b4145e7b815dc04986eee5569bf009fc18fe535 for reproducibility. No new scientific population, sources, thresholds, or live admission.
+- v0.8.153 Wrangler GREEN; telemetry status at preparation still running. New integrated CI pending. No claim of integrated GREEN until checked.
+- The active Pine v0.9.1 remains unchanged. The isolated Pine v0.9.3 compile and private archive examination are the next actual evidence gates; no new alerts, no Worker activation, no real D1, no changes to Oracle, no new backup or repeated census. Actual v1.65 release remains inhibited; timer confirmed disabled, manual activation risk unresolved.
+
 # REMURA TradingView — ROADMAP v0.8.153-lab (anchored guard and B/E coordination)
 **Aggiornamento 18/11/2026, sessione successiva alle 11:13 CET — PR #102 DRAFT**
 

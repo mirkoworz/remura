@@ -1,4 +1,4 @@
-# REMURA TradingView Telemetry LAB v0.8.37 — aggiornamento 13/11/2026 CET.
+# REMURA TradingView Telemetry LAB v0.8.154 — 18/11/2026, sessione successiva alle 11:13 CET.
 # SOLO CI OFFLINE. Nessun deploy, webhook, credenziale o trade automatico.
 name: REMURA TradingView Telemetry LAB
 on:
@@ -83,9 +83,11 @@ jobs:
       - name: Checkout pinned Track B offline research dependency
         uses: actions/checkout@v4
         with:
-          ref: 8dc51e8a199dc1cfd45e4cd2e7b339510af2eb2b
+          ref: daaaa8f6c265d1501a0518940b3e9c9c68e6e3a3
           path: _remura_b_reference
           persist-credentials: false
+      - name: Assert immutable cross-track dependency B
+        run: test "$(git -C _remura_b_reference rev-parse HEAD)" = "daaaa8f6c265d1501a0518940b3e9c9c68e6e3a3"
       - name: Cross-track synthetic COT-price-TV end-to-end (no credentials)
         env:
           PYTHONPATH: ${{ github.workspace }}/_remura_b_reference:${{ github.workspace }}/_remura_b_reference/tests
@@ -111,12 +113,14 @@ jobs:
       - name: Isolated D1 receipt adapter fixture tests (offline)
         run: node --test tradingview/delta-peaks/gateway-lab/level_receipt_candidate.test.mjs
 
-      - name: Checkout pinned E v0.41 closed custody dependency
+      - name: Checkout pinned E v0.42 closed custody dependency
         uses: actions/checkout@v4
         with:
-          ref: 7c00be6b496fa9e38f2f42e987a772d83a2a095c
+          ref: 0612fe18265791d774845f5b83bde2e696495489
           path: _remura_e_custody_reference
           persist-credentials: false
+      - name: Assert immutable cross-track dependency E closed custody
+        run: test "$(git -C _remura_e_custody_reference rev-parse HEAD)" = "0612fe18265791d774845f5b83bde2e696495489"
       - name: D E closed custody coverage at original cutoff (synthetic)
         env:
           PYTHONPATH: ${{ github.workspace }}/_remura_e_custody_reference/research/contributors
