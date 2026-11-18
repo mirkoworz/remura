@@ -1,3 +1,10 @@
+# REMURA TradingView — ROADMAP v0.8.160-lab (portable source parity and containment authorization)
+**Aggiornamento 18/11/2026, sessione successiva alle 13:29 CET — PR #102 DRAFT**
+
+- v0.8.159 Wrangler 44305120528 GREEN; Telemetry 44305120522/job 134804566209 FAILED: 618 tests, one exact portable source parity failure. Restore immutable historic stage parser source without changing its portable witness; independent byte-only adapter reuses historical helpers and checks original public TAR pin. CI pending; no weakened tests or new artifact.
+- Owner separately authorized persistent blocking of idle old updater only. Guarded manual non-force systemd mask supplied; no target result yet. Timer and collector unchanged by this commit. No installation approval. Bootstrap constraints documented; actual root provisioning, anti-replay witness and same-lock live journal remain open. See ABC-BOOTSTRAP-CONTAINMENT-V160.md.
+- Preserve B/E and ABC historical refs, frozen research, existing Ampere automation and real recovery receipts. No private data scans performed or new quota evidence.
+
 # REMURA TradingView — ROADMAP v0.8.159-lab (actual locked bundle and authenticated rollback)
 **Aggiornamento 18/11/2026, sessione successiva alle 13:29 CET — PR #102 DRAFT**
 
