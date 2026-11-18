@@ -1,0 +1,196 @@
+# REFERENCE TEMPLATE — NOT INSTALLED AS A GITHUB ACTION.
+#
+# Store under deploy/oracle/templates, NEVER .github/workflows in remura.
+# Future owner must separately review and explicitly authorize any installation
+# in the *private* mirkoworz/remura-collector repo, including SSH/Tailscale
+# configuration, dedicated unprivileged account and explicit one-shot consent.
+#
+# IMPORTANT: GitHub Free/Pro/Team required environment reviewers are NOT
+# offered for PRIVATE repositories. A named environment alone is NOT an
+# approval. This offline-only template uses a free/manual fail-closed gate:
+# owner account ID + repository ID + single-run checkbox + default-OFF
+# repository variable. This is NOT independent second-person approval.
+# The operator MUST still approve installation and each actual connection.
+# Any copied workflow in a private repo must be reviewed before activation.
+#
+# CAUTION: a forced SSH command that runs `python3 -` directly accepts
+# arbitrary code from the SSH client over stdin. It is NOT enough to claim
+# a read-only SSH key. Before activation, provision and independently review
+# a forced-command gate that validates the EXACT approved verifier bytes
+# before executing them, or use a preinstalled immutable restricted verifier.
+# Read-only filesystem permissions and no-sudo are required as well.
+#
+# Existing tag:remura-ci-read is HTTPS:443 ONLY and MUST NOT be expanded to
+# SSH. Use a different narrowly-scoped, manual-workflow OIDC identity/tag.
+#
+# CRITICAL PROTOCOL DISTINCTION: this future workflow expects traditional
+# OpenSSH, using known_hosts, private key and server authorized_keys forced
+# command, transported privately over Tailscale. Tailscale SSH is a separate
+# service that can intercept tailnet TCP/22 and does NOT enforce OpenSSH
+# authorized_keys forced commands. DO NOT deploy this design against a VPS
+# with Tailscale SSH enabled; independently verify the host mode first.
+# The visible Tailscale SSH default member->self check/root policy does
+# NOT grant the tagged remura-ci-read identity an SSH permission.
+## A green run would mean 15 pinned file contents matched the v1.64 source at
+# the scan instant. It would NOT verify updater SHA, backups, ACL, billing,
+# or authorize v1.65 release / prospective C5.
+name: REMURA v1.65 - one-shot v1.64 code evidence (REVIEW TEMPLATE)
+
+on:
+  workflow_dispatch:
+    inputs:
+      operator_consents_to_one_shot_readonly_scan:
+        description: 'I approve ONE code-only v1.64 audit; no release, deployment or C5'
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: remura-v165-independent-v164-code-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    # OIDC token needed only by the explicitly gated Tailscale job.
+    permissions:
+      contents: read
+      id-token: write
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.repository == 'mirkoworz/remura-collector' &&
+      github.repository_id == '1424422834' &&
+      github.actor_id == '316473246' &&
+      github.event.repository.private == true &&
+      github.ref == 'refs/heads/main' &&
+      github.run_attempt == 1 &&
+      inputs.operator_consents_to_one_shot_readonly_scan == true &&
+      vars.REMURA_V165_SSH_AUDIT_ENABLED == '1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout fixed public verifier and sanitizing receiver only
+        # Immutable action commit verified against upstream v5.0.1.
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        with:
+          repository: mirkoworz/remura
+          ref: 77eb7ec4dfd98176c8146651489a382126647048
+          persist-credentials: false
+          sparse-checkout: |
+            deploy/oracle/v165_v164_live_code_readonly.py
+            deploy/oracle/v165_ssh_stdout_receipt.py
+          sparse-checkout-cone-mode: false
+
+      - name: Fail closed on pinned source and receiver before credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected_code_blob=98b0a28190647e9d321690097aae30395bc9f900
+          actual_code_blob="$(git hash-object deploy/oracle/v165_v164_live_code_readonly.py)"
+          if [[ "$actual_code_blob" != "$expected_code_blob" ]]; then
+            echo 'REMURA_AUDIT=PINNED_CODE_DRIFT'
+            exit 1
+          fi
+          expected_receiver_blob=96a3fd628baff65e677d4594bb8e6c65205bc596
+          actual_receiver_blob="$(git hash-object deploy/oracle/v165_ssh_stdout_receipt.py)"
+          if [[ "$actual_receiver_blob" != "$expected_receiver_blob" ]]; then
+            echo 'REMURA_AUDIT=PINNED_RECEIVER_DRIFT'
+            exit 1
+          fi
+          python3 -m py_compile deploy/oracle/v165_v164_live_code_readonly.py deploy/oracle/v165_ssh_stdout_receipt.py
+
+      - name: Require independently reviewed pinned Tailscale archive checksum
+        # Reference archive: tailscale_1.104.4_amd64.tgz (official stable).
+        # SHA256 recorded on 2026-11-08 from the official HTTPS .sha256 endpoint
+        # via one-shot PR-only CI run #42515538956; reviewed against official
+        # distribution origin. This is NOT a signed vendor provenance proof.
+        # Never fetch a fresh digest at runtime and treat it as immutable.
+        # This check runs BEFORE OIDC credentials are requested.
+        shell: bash
+        env:
+          TS_V165_ARCHIVE_SHA256: '624ea093d47d62cf56f17b8332d74b8decda4a1faa610ebc60a1de334b2b3dc9'
+        run: |
+          set -euo pipefail
+          if [[ "${RUNNER_OS:-}" != Linux || "${RUNNER_ARCH:-}" != X64 ]] ||
+             [[ ! "$TS_V165_ARCHIVE_SHA256" =~ ^[0-9a-f]{64}$ ]] ||
+             [[ "$TS_V165_ARCHIVE_SHA256" == "$(printf '0%.0s' {1..64})" ]]; then
+            echo 'REMURA_AUDIT=TAILSCALE_ARCHIVE_PIN_NOT_ATTESTED'
+            exit 1
+          fi
+      - name: Connect dedicated ephemeral audit identity through Tailscale
+        # Immutable action commit verified against upstream v4.4.0.
+        uses: tailscale/github-action@064b10558093f38325e838ddea35486bdc6b1d5c # v4.4.0
+        with:
+          oauth-client-id: ${{ secrets.TS_V165_AUDIT_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:remura-ci-v165-audit
+          version: 1.104.4
+          sha256sum: '624ea093d47d62cf56f17b8332d74b8decda4a1faa610ebc60a1de334b2b3dc9'
+          use-cache: 'false'
+
+      - name: One pinned read-only 15-file scan over SSH stdin (no server-side script)
+        shell: bash
+        env:
+          REMURA_V165_SSH_HOST: ${{ secrets.REMURA_V165_SSH_HOST }}
+          REMURA_V165_SSH_USER: ${{ secrets.REMURA_V165_SSH_USER }}
+          REMURA_V165_SSH_KEY: ${{ secrets.REMURA_V165_SSH_KEY }}
+          REMURA_V165_SSH_KNOWN_HOSTS: ${{ secrets.REMURA_V165_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          umask 077
+          if [[ ! "$REMURA_V165_SSH_HOST" =~ ^[a-z0-9][a-z0-9-]*(\.[a-z0-9][a-z0-9-]*)+\.ts\.net$ ]] ||
+             [[ ! "$REMURA_V165_SSH_USER" =~ ^[a-z_][a-z0-9_-]{0,30}$ ]] ||
+             [[ "$REMURA_V165_SSH_USER" == root ]] ||
+             [[ -z "$REMURA_V165_SSH_KEY" ]] ||
+             [[ -z "$REMURA_V165_SSH_KNOWN_HOSTS" ]]; then
+            echo 'REMURA_AUDIT=PRIVATE_CONFIGURATION_NOT_ATTESTED'
+            exit 1
+          fi
+          keyfile="$RUNNER_TEMP/remura-v165-ssh-key"
+          khfile="$RUNNER_TEMP/remura-v165-known-hosts"
+          # Bound remote stdout before buffering it; temporary file on runner only.
+          outfile="$(mktemp "$RUNNER_TEMP/remura-v165-stdout.XXXXXXXX")"
+          cleanup() { rm -f "$keyfile" "$khfile" "$outfile"; }
+          trap cleanup EXIT
+          printf '%s\n' "$REMURA_V165_SSH_KEY" > "$keyfile"
+          printf '%s\n' "$REMURA_V165_SSH_KNOWN_HOSTS" > "$khfile"
+          chmod 600 "$keyfile" "$khfile"
+          # A pre-registered, independently reviewed host key is mandatory;
+          # never use automatic first-use trust or disable host-key verification.
+          if ! ssh-keygen -F "$REMURA_V165_SSH_HOST" -f "$khfile" >/dev/null; then
+            echo 'REMURA_AUDIT=HOST_KEY_NOT_PINNED'
+            exit 1
+          fi
+          # No unbounded shell variable or raw remote output in job logs.
+          # Limit stdout to 2049 bytes (receiver refuses >2048). pipefail
+          # prevents an SSH failure from being reported as a successful scan.
+          if ! (set -o pipefail; timeout 40s ssh -F /dev/null \
+                -o BatchMode=yes \
+                -o IdentitiesOnly=yes \
+                -o PasswordAuthentication=no \
+                -o KbdInteractiveAuthentication=no \
+                -o StrictHostKeyChecking=yes \
+                -o UserKnownHostsFile="$khfile" \
+                -o LogLevel=ERROR \
+                -o ConnectTimeout=8 \
+                -o ServerAliveInterval=5 \
+                -o ServerAliveCountMax=1 \
+                -o ClearAllForwardings=yes \
+                -o ForwardAgent=no \
+                -o ForwardX11=no \
+                -o PermitLocalCommand=no \
+                -o ProxyCommand=none \
+                -o ProxyJump=none \
+                -o ControlMaster=no \
+                -o ControlPath=none \
+                -i "$keyfile" -p 22 -T \
+                "${REMURA_V165_SSH_USER}@${REMURA_V165_SSH_HOST}" \
+                'python3 -I - --audit-live-readonly --operator-approved' \
+                < deploy/oracle/v165_v164_live_code_readonly.py 2>/dev/null |
+              head -c 2049 > "$outfile"); then
+            echo 'REMURA_AUDIT=REMOTE_CODE_NOT_ATTESTED'
+            exit 1
+          fi
+          python3 deploy/oracle/v165_ssh_stdout_receipt.py < "$outfile"
