@@ -1,3 +1,10 @@
+# REMURA TradingView — ROADMAP v0.8.175-lab (fixed calendar source coverage)
+**Aggiornamento 18/11/2026, sessione successiva alle 18:08 CET — PR #102 DRAFT**
+
+- v0.8.174 exact head a0250416ae428a8d8f2da535f07c2c523c39a6d9; Telemetry 44355175285 and Wrangler 44355175237 completed/success. E v0.45 unchanged GREEN. No repeat of prior owner tests.
+- New synthetic fixed V2 fold coverage-only audit reuses unchanged calendar and strict explicit-window validator. Distinguishes elapsed calendar slots, requested slots, valid unique bars, missing requested slots and unrequested slots; receipt clocks assessed without outcomes. Future fold denominator is N/D; calendar scope is not market-open coverage. Four tests (one accounting-only mocked boundary); CI pending. No protocol edits, interim benchmark or real exports. Holdout independence not attested.
+- Current operational blockers unchanged: Mac preflight deferred; actual external custody, privileged safe installer and owner release authority not implemented/attested. No new resources, collector change, service actions, activation or deployment.
+
 # REMURA TradingView — ROADMAP v0.8.174-lab (read-only phase diagnostics and full source matrix)
 **Aggiornamento 18/11/2026, sessione successiva alle 17:48 CET — PR #102 DRAFT**
 
