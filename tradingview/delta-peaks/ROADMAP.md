@@ -1,3 +1,11 @@
+# REMURA TradingView — ROADMAP v0.8.164-lab (Oracle receipt and integrated maintenance lock)
+**Aggiornamento 18/11/2026, sessione successiva alle 15:29 CET — PR #102 DRAFT**
+
+- v0.8.163 Telemetry 44312099911/job 134828574509 and Wrangler 44312099872 verified GREEN.
+- Owner Oracle screenshot 15:29: Python 3.12.3, six metadata/effective drop-in content checks TRUE (resolved interpreter/sys.path permissions, exact drop-in bytes, resolved permissions, last reported drop-in, no pending reload). No installation. Receipt PR #102 comment 6981536454. Not a full OS integrity, ACL, mount or loader attestation; prior collector state is last observed 13:37, not rechecked here.
+- Extend existing locked actual TAR fixture to derive plan from observed disposable baseline, create authenticated journal and phase witness, apply and roll back all 90 changes while one outer maintenance lock is held. Verify all 155 candidate bytes and restoration of 79 historical files including modes and 76 absent additions. Contention checked at each phase. No new artifact or bundle build beyond existing workflow. CI pending.
+- Still LAB only: actual target quiescence, safe target mutation, root-owned provisioning, owner-independent witness and fresh backup remain unresolved. No merge, install, collector change, new timer action, upgrade or scientific protocol change. B/E and historical ABC pins unchanged.
+
 # REMURA TradingView — ROADMAP v0.8.163-lab (exact manifest transaction plan)
 **Aggiornamento 18/11/2026, sessione successiva alle 13:37 CET — PR #102 DRAFT**
 

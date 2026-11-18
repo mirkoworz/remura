@@ -1,40 +1,92 @@
-# REMURA v0.8.160 LAB — 18/11/2026, sessione successiva alle 13:29 CET
-"""Use the existing actual pinned CI bundle; no new build, artifact or live write."""
-import hashlib,os,shutil,sys,tempfile
+# REMURA v0.8.164 LAB — 18/11/2026, sessione successiva alle 15:29 CET
+"""Existing actual pinned CI bundle, one outer maintenance lock, disposable disk only.
+No new bundle build, artifact, live data, root execution or service commands.
+"""
+import fcntl,hashlib,os,shutil,sys,tempfile
 from pathlib import Path
 from abc_v165_locked_snapshot_v1 import locked_candidate_bytes, MARKER
 from abc_v165_stage_bundle_v1 import PIN
 from abc_v165_locked_bundle_parser_v1 import inspect_bundle_bytes
+from abc_v165_transaction_plan_v1 import prepare_plan
+from abc_rollback_disk_lab_v1 import Journal
+from abc_v165_repository_manifest_fixture_v1 import Tests as Repository
+
+def must_be_locked(path):
+    with path.open("rb") as contender:
+        try:
+            fcntl.flock(contender,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        except BlockingIOError:
+            return
+        raise AssertionError("maintenance lock not held")
+
+def observed(journal,manifest):
+    # Disposable, quiescent fixture: read actual scoped file bytes and absences.
+    # Journal.current is LAB-only and NOT a safe live path traversal.
+    from abc_rollback_disk_lab_v1 import unpack
+    base={}
+    for row in manifest["application"]:
+        p=row["path"]
+        value=journal.current(p)
+        if value is not None:base[p]=unpack(value)[0]
+    return base
 
 def check(source):
-    with tempfile.TemporaryDirectory(prefix="remura-boundary-lab-") as root:
+    Repository.setUpClass()
+    with tempfile.TemporaryDirectory(prefix="remura-boundary-lab-") as root, \
+         tempfile.TemporaryDirectory(prefix="remura-journal-lab-") as journal_dir, \
+         tempfile.TemporaryDirectory(prefix="remura-witness-lab-") as witness_dir:
         root=Path(root)
+        jr=Path(journal_dir).resolve()
+        (jr/"app"/"scripts").mkdir(parents=True)
+        for name,data in Repository.base.items():
+            target=jr/"app"/name
+            target.write_bytes(data)
+            target.chmod(0o640)
+        journal=Journal(jr,synthetic=True,auth_key=os.urandom(32),
+                        transaction_id=os.urandom(32).hex(),
+                        witness_root=Path(witness_dir).resolve())
         for name in ("work","stage"):
             (root/name).mkdir(mode=0o700)
         for name in ("lock",MARKER):
             (root/"work"/name).touch(mode=0o600)
+        lock=root/"work"/"lock"
         dest=root/"stage"/"remura-v165-candidate.tar"
         shutil.copyfile(source,dest)
         dest.chmod(0o600)
         fd=os.open(root,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
         try:
             with locked_candidate_bytes(fd,["work"],["stage"],os.getuid()) as data:
-                # Remove the disposable pathname to demonstrate no reopen.
+                must_be_locked(lock)
                 dest.unlink()
                 report,manifest,app=inspect_bundle_bytes(data)
                 assert report["release_authorized"] is False and report["installable"] is False
                 assert manifest["manifest_sha256"]==PIN and len(app)==155
                 for bad in (data+b"x", bytes([data[0]^1])+data[1:]):
-                    try:
-                        inspect_bundle_bytes(bad)
-                    except ValueError:
-                        pass
-                    else:
-                        raise AssertionError("altered candidate accepted")
+                    try:inspect_bundle_bytes(bad)
+                    except ValueError:pass
+                    else:raise AssertionError("altered candidate accepted")
                 assert all(hashlib.sha256(app[r["path"]]).hexdigest()==r["candidate_sha256"] for r in manifest["application"])
+                baseline=observed(journal,manifest)
+                assert baseline==Repository.base
+                original,new=prepare_plan(manifest,app,baseline)
+                must_be_locked(lock)
+                journal.prepare(original,new)
+                must_be_locked(lock)
+                journal.apply()
+                must_be_locked(lock)
+                assert observed(journal,manifest)==app
+                assert journal.rollback()=="rolled_back"
+                must_be_locked(lock)
+                assert observed(journal,manifest)==baseline
+                for name in baseline:
+                    assert (jr/"app"/name).stat().st_mode&0o777==0o640
+                assert all(not (jr/"app"/name).exists() for name in set(app)-set(baseline))
+                assert (root/"work"/MARKER).is_file()
+            with lock.open("rb") as contender:
+                fcntl.flock(contender,fcntl.LOCK_EX|fcntl.LOCK_NB)
         finally:
             os.close(fd)
-    print("LOCKED_CANDIDATE_BYTES: 155/155 verified; no pathname reopen; install authorized NO")
+    print("LOCKED_CANDIDATE_BYTES: 155/155 verified; 90 changes applied and rolled back under outer LAB lock; install authorized NO")
 
 if __name__=="__main__":
     if len(sys.argv)!=2:raise SystemExit(2)
