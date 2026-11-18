@@ -1,13 +1,15 @@
-# REMURA v0.8.166 LAB — 18/11/2026, sessione successiva alle 15:29 CET
+# REMURA v0.8.168 LAB — 18/11/2026, sessione successiva alle 16:21 CET
 """Existing actual pinned CI bundle, one outer maintenance lock, disposable disk only.
 No new bundle build, artifact, live data, root execution or service commands.
 """
 import fcntl,hashlib,io,os,sys,tempfile,zipfile
 from abc_v165_candidate_zip_gate_v1 import _decode,verified_tar
 from pathlib import Path
-from abc_v165_locked_snapshot_v1 import locked_candidate_bytes, MARKER
+from abc_v165_locked_snapshot_v1 import MARKER
+from abc_v165_dual_inhibit_boundary_v1 import locked_dual_inhibit_bytes, MARKERS
+from abc_v165_bootstrap_source_gate_v1 import PINS
+from abc_v165_verified_parser_lab_v1 import verified_parser
 from abc_v165_stage_bundle_v1 import PIN
-from abc_v165_locked_bundle_parser_v1 import inspect_bundle_bytes
 from abc_v165_transaction_plan_v1 import prepare_plan
 from abc_rollback_disk_lab_v1 import Journal
 from abc_v165_repository_manifest_fixture_v1 import Tests as Repository
@@ -46,10 +48,14 @@ def check(source):
         journal=Journal(jr,synthetic=True,auth_key=os.urandom(32),
                         transaction_id=os.urandom(32).hex(),
                         witness_root=Path(witness_dir).resolve())
-        for name in ("work","stage"):
+        for name in ("work","stage","sources"):
             (root/name).mkdir(mode=0o700)
-        for name in ("lock",MARKER):
+        for name in ("lock",*MARKERS):
             (root/"work"/name).touch(mode=0o600)
+        for name in PINS:
+            target=root/"sources"/name
+            target.write_bytes(Path(__file__).with_name(name).read_bytes())
+            target.chmod(0o400)
         lock=root/"work"/"lock"
         dest=root/"stage"/"remura-v165-candidate.tar"
         # Reuse actual deterministic TAR; fixture ZIP is not the historical delivery.
@@ -68,7 +74,8 @@ def check(source):
         dest.chmod(0o600)
         fd=os.open(root,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
         try:
-            with locked_candidate_bytes(fd,["work"],["stage"],os.getuid()) as data:
+            with locked_dual_inhibit_bytes(fd,["work"],["stage"],os.getuid()) as data:
+                inspect_bundle_bytes=verified_parser(fd,("sources",),os.getuid(),synthetic=True)
                 must_be_locked(lock)
                 dest.unlink()
                 report,manifest,app=inspect_bundle_bytes(data)
@@ -94,7 +101,7 @@ def check(source):
                 for name in baseline:
                     assert (jr/"app"/name).stat().st_mode&0o777==0o640
                 assert all(not (jr/"app"/name).exists() for name in set(app)-set(baseline))
-                assert (root/"work"/MARKER).is_file()
+                assert all((root/"work"/name).is_file() for name in MARKERS)
             with lock.open("rb") as contender:
                 fcntl.flock(contender,fcntl.LOCK_EX|fcntl.LOCK_NB)
         finally:

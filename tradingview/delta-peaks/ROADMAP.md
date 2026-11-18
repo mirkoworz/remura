@@ -1,3 +1,11 @@
+# REMURA TradingView — ROADMAP v0.8.168-lab (verified source execution boundary and source availability)
+**Aggiornamento 18/11/2026, sessione successiva alle 16:21 CET — PR #102 DRAFT**
+
+- v0.8.167 Telemetry 44335078723 and Wrangler 44335078749 verified completed/success. Contributors v0.43 PR #104 head de31be7d91821138e02d4b4f07693b1d2f7a15fb, CI 44335249706 completed/success. B custody v0.2 all three workflows verified GREEN; do not change historical B/E integration pins prematurely.
+- Add LAB-only exact verified four-source parser loader: execute previously checked bytes in isolated module namespaces without candidate disk imports or sys.path mutation. The existing actual TAR fixture now uses both inhibits and the verified parser under the same outer lock. No root launcher, systemd changes, marker install or live mutation. Standard library, interpreter and verifier trust remain external; this is not a Python sandbox. Four targeted tests and existing integrated CI pending.
+- Source availability-only adapter on existing private CVD windows: unique received bars, missing explicit slots, duplicate rows and usable receipt clocks; CVD, delta, footprint, prior-level availability only. No outcome, directional score or prospective evaluation; three tests pending. No new real D1 query or data read; existing MAIN reader remains owner-operated.
+- Real 16:18 staging receipt preserved, no repeated provisioning or copy. Actual backup swap gate, independent witness and safe live mutation unresolved. Mac owner-local archive access not available through GitHub. No new resources, deploy, collector stop, timer changes or outcomes.
+
 # REMURA TradingView — ROADMAP v0.8.167-lab (dual-inhibit boundary and owner staging receipt)
 **Aggiornamento 18/11/2026, sessione successiva alle 16:21 CET — PR #102 DRAFT**
 
