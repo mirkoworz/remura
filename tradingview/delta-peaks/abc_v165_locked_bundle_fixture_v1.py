@@ -1,4 +1,4 @@
-# REMURA v0.8.173 LAB — 18/11/2026, sessione successiva alle 17:48 CET
+# REMURA v0.8.174 LAB — 18/11/2026, sessione successiva alle 17:48 CET
 """Existing actual pinned CI bundle, one outer maintenance lock, disposable disk only.
 No new bundle build, artifact, live data, root execution or service commands.
 """
@@ -12,6 +12,7 @@ from abc_v165_verified_parser_lab_v1 import verified_parser
 from abc_v165_stage_bundle_v1 import PIN
 from abc_v165_transaction_plan_v1 import prepare_plan
 from abc_v165_baseline_fd_lab_v1 import read_baseline
+from abc_v165_phase_state_lab_v1 import inspect as inspect_phase
 from abc_rollback_disk_lab_v1 import Journal
 from abc_v165_repository_manifest_fixture_v1 import Tests as Repository
 
@@ -122,12 +123,18 @@ def check(source):
                 must_be_locked(lock)
                 journal.prepare(original,new)
                 must_be_locked(lock)
+                with journal.lock():
+                    assert inspect_phase(journal,synthetic=True)["counts"]==dict(before=90,after=0,unknown=0)
                 journal.apply()
                 must_be_locked(lock)
                 assert observed(journal,manifest)==app
+                with journal.lock():
+                    assert inspect_phase(journal,synthetic=True)["counts"]==dict(before=0,after=90,unknown=0)
                 assert journal.rollback()=="rolled_back"
                 must_be_locked(lock)
                 assert observed(journal,manifest)==baseline
+                with journal.lock():
+                    assert inspect_phase(journal,synthetic=True)["counts"]==dict(before=90,after=0,unknown=0)
                 for name in baseline:
                     assert (jr/"app"/name).stat().st_mode&0o777==0o640
                 assert all(not (jr/"app"/name).exists() for name in set(app)-set(baseline))

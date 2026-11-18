@@ -1,3 +1,11 @@
+# REMURA TradingView — ROADMAP v0.8.174-lab (read-only phase diagnostics and full source matrix)
+**Aggiornamento 18/11/2026, sessione successiva alle 17:48 CET — PR #102 DRAFT**
+
+- v0.8.173 Telemetry 44353224820 and Wrangler 44353224668 verified completed/success, exact head dab6d73f71fc6ec81bf855baad27f5cf6ebbca05.
+- Read-only local authenticated journal phase diagnosis in disposable LAB, explicit caller locks; before/after/unknown counts and mismatch/interrupted status, no automated rollback or restart. Existing actual 90-change fixture checks all three settled states. Three new targeted tests. Joint local rollback/replay not excluded; independent latest anchor remains necessary.
+- Mobile SQUALINCOME report displays all six joint source combinations, partial FXCM distinct from full, N/D for no eligible population; one new test. No actual market data, outcome, threshold or live dashboard changes.
+- Existing A/B/E pins and v1.65 signed bytes frozen. Owner iPhone only; no real Mac preflight, archive access, activation, service mutation or spending. CI pending.
+
 # REMURA TradingView — ROADMAP v0.8.173-lab (descriptor-bound baseline for candidate transaction)
 **Aggiornamento 18/11/2026, sessione successiva alle 17:48 CET — PR #102 DRAFT**
 

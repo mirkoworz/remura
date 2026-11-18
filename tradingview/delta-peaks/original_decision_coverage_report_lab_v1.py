@@ -1,4 +1,4 @@
-"""REMURA v0.8.172 LAB — 18/11/2026, sessione successiva alle 17:48 CET.
+"""REMURA v0.8.174 LAB — 18/11/2026, sessione successiva alle 17:48 CET.
 Standalone offline aggregate-only mobile report; no real exports or outcome access.
 """
 from html import escape
@@ -39,20 +39,29 @@ def render(r,*,synthetic=False):
     need(sum(c.get("FXCM_"+a+"|FX_PRESENT",0) for a in ("PRESENT","PARTIAL","UNKNOWN"))==f.get("DESCRIPTIVE_MATCH",0))
     both=c.get("FXCM_PRESENT|FX_PRESENT",0)
     need(type(r["both_descriptive_present"]) is int and r["both_descriptive_present"]==both)
+    matrix_labels={
+        "FXCM_PRESENT|FX_PRESENT":"Entrambe disponibili",
+        "FXCM_PRESENT|FX_UNKNOWN":"Solo FXCM completo",
+        "FXCM_PARTIAL|FX_PRESENT":"FXCM parziale e CVD disponibile",
+        "FXCM_PARTIAL|FX_UNKNOWN":"Solo FXCM parziale",
+        "FXCM_UNKNOWN|FX_PRESENT":"Solo CVD disponibile",
+        "FXCM_UNKNOWN|FX_UNKNOWN":"Nessuna fonte ammessa"}
+    matrix_view={key:c.get(key,0) for key in matrix_labels} if e else {}
     def table(d,labels):
         return "".join("<tr><td>"+escape(labels[k])+"</td><td>"+str(v)+"</td></tr>"
                        for k,v in sorted(d.items())) or "<tr><td>N/D</td><td>—</td></tr>"
     return ('<!doctype html><html lang="it"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
         '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\'; base-uri \'none\'">'
-        '<title>REMURA SQUALINCOME v0.8.172 LAB</title><style>'
+        '<title>REMURA SQUALINCOME v0.8.174 LAB</title><style>'
         'body{background:#07121a;color:#e8f4f3;font:16px system-ui;margin:0}main{max-width:720px;margin:auto;padding:18px}'
         'section{background:#10222e;border:1px solid #203642;border-radius:16px;padding:16px;margin:12px 0}'
         'small{color:#8ba7ae}strong{color:#69edca}table{width:100%;border-collapse:collapse}td{padding:8px 0;border-bottom:1px solid #203642}td:last-child{text-align:right}</style></head><body><main>'
-        '<small>REMURA v0.8.172 LAB · 18/11/2026, dopo le 17:48 CET</small>'
+        '<small>REMURA v0.8.174 LAB · 18/11/2026, dopo le 17:48 CET</small>'
         '<h1>SQUALINCOME — Copertura fonti</h1><p>SOLO DATI SINTETICI. Nessun segnale operativo.</p>'
         '<section><strong>Entrambe disponibili: '+(str(both)+" / "+str(e) if e else "N/D")+'</strong>'
         '<p>Decisioni totali: '+str(n)+' · Compatibili per orario: '+str(e)+'</p></section>'
+        '<section><h2>Copertura congiunta</h2><table>'+table(matrix_view,matrix_labels)+'</table></section>'
         '<section><h2>FXCM:EURUSD</h2><table>'+table(l,LEGACY)+'</table></section>'
         '<section><h2>FX:EURUSD CVD</h2><table>'+table(f,CVD)+'</table></section>'
         '<p>Fonti separate; nessuna equivalenza o indipendenza attestata. N/D non significa opposizione.'

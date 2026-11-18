@@ -1,4 +1,4 @@
-# REMURA v0.8.172 LAB — 18/11/2026
+# REMURA v0.8.174 LAB — 18/11/2026
 import unittest
 from original_decision_coverage_report_lab_v1 import render
 from original_decision_coverage_lab_v1 import coverage
@@ -12,10 +12,18 @@ class ReportTests(unittest.TestCase):
     def test_mobile_report_aggregates_only(self):
         r=self.audit([good()],[coherent()])
         page=render(r,synthetic=True)
-        for label in ("v0.8.172 LAB","Entrambe disponibili: 1 / 1","FXCM:EURUSD","FX:EURUSD CVD","SOLO DATI SINTETICI"):
+        for label in ("v0.8.174 LAB","Entrambe disponibili: 1 / 1","FXCM:EURUSD","FX:EURUSD CVD","SOLO DATI SINTETICI"):
             self.assertIn(label,page)
         for forbidden in ("raw_json","1.111","<script"):
             self.assertNotIn(forbidden,page)
+    def test_joint_matrix_visible(self):
+        r=self.audit([good()],[])
+        html=render(r,synthetic=True)
+        self.assertIn("Copertura congiunta",html)
+        self.assertIn("Solo FXCM completo</td><td>1",html)
+        self.assertIn("Nessuna fonte ammessa</td><td>0",html)
+        empty=render(self.audit([],[],pairs=[]),synthetic=True)
+        self.assertNotIn("Solo FXCM completo",empty)
     def test_empty_and_reject_mismatched_counts(self):
         r=self.audit([],[],pairs=[])
         self.assertIn("Entrambe disponibili: N/D",render(r,synthetic=True))
