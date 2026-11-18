@@ -1,3 +1,10 @@
+# REMURA TradingView — ROADMAP v0.8.150-lab (v2 owner recovery and local receipt)
+**Aggiornamento 18/11/2026, sessione delle 10:25 CET — PR #102 DRAFT**
+
+- v0.8.149 prior CI GREEN per checkpoint: Telemetry 44272065621 job 134690864001; Wrangler 44272065605; 601 main tests.
+- v0.8.150 extends existing prices/COT v2 with opt-in independent SQLite memory integrity verification and locally signed receipt plus public-key receipt verifier. Synthetic GPG end-to-end test pending CI; no actual archive, private hash, real key or live change.
+- Portable preflight pinned at v0.8.149, owner invocation pending. Actual installed metadata, signed release, journal/protection installation, B shard custody, iSH compatibility and quotas remain open. See ABC-OWNER-RECOVERY-RECEIPT.md. No repeated backups or tests requested from owner; no LIVE.
+
 # REMURA TradingView — ROADMAP v0.8.149-lab (portable Oracle preflight and future recovery tools)
 **Aggiornamento 18/11/2026, sessione successiva alle 09:59 CET — PR #102 DRAFT**
 

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# REMURA v0.8.149 LAB — 18/11/2026, sessione successiva alle 09:59 CET
+# REMURA v0.8.150 LAB — 18/11/2026, sessione delle 10:25 CET
 """Future owner-invoked price/COT recovery package. Never scheduled or automatic.
-No broker calls, source checkpoint, live restore, receipt signature or deletion.
+No broker calls, source checkpoint, live restore or deletion.
+Owner-only opt-in memory recovery and a local signed receipt.
 """
-import argparse,datetime as dt,getpass,hashlib,io,json,os,re,sqlite3,stat,subprocess,tarfile,tempfile,time
+import argparse,base64,datetime as dt,getpass,hashlib,io,json,os,re,sqlite3,stat,subprocess,tarfile,tempfile,time
 from pathlib import Path
 SOURCE=Path("/opt/remura/private/remura-prices.sqlite3")
 MAX=64*1024*1024
@@ -132,7 +133,78 @@ def capture(outdir,home,primary,sub,generation):
     return {"status":"CIPHERTEXT_CREATED_PENDING_OWNER_RECOVERY","generation":generation,
             "archive":out.name,"cipher_bytes":out.stat().st_size,"cipher_sha256":hash_file(out),
             "scope":m["scope"],"independent_restore_verified":False,"witness_signed":False}
-def verify_plain(raw,generation):
+def recover_memory(image,expected_schema):
+    # Independent SQLite connection to authenticated bytes; no plaintext file.
+    need(16<=len(image)<=MAX)
+    db=sqlite3.connect(":memory:")
+    try:
+        need(hasattr(db,"deserialize"))
+        db.deserialize(image)
+        db.execute("PRAGMA trusted_schema=OFF")
+        db.execute("PRAGMA query_only=ON")
+        deadline=time.monotonic()+60
+        db.set_progress_handler(lambda:int(time.monotonic()>deadline),10000)
+        need(db.execute("PRAGMA integrity_check").fetchall()==[("ok",)])
+        summary=schema_summary(db)
+        need(summary==expected_schema and summary["prices_present"] and summary["status_present"])
+    finally:db.close()
+
+RECEIPT_SCHEMA="remura.prices.recovery.receipt.v1"
+def receipt_body(result,expected,signer):
+    need(result["status"]=="DECRYPTION_AND_MEMBER_HASH_VERIFIED" and result["sqlite_restore_tested"] is True)
+    need(HEX.fullmatch(expected) and FPR.fullmatch(signer))
+    return {"schema":RECEIPT_SCHEMA,"generation":result["generation"],"cipher_sha256":expected,
+            "scope":result["scope"],"sqlite_restore_tested":True,"recovery_method":"sqlite_deserialize_integrity_check",
+            "signer":signer,"owner_clock_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
+            "trusted_timestamp":False,"restore_authorized":False}
+
+def verify_signature(home,body,sig,signer):
+    private_dir(home)
+    need(FPR.fullmatch(signer) and 0<len(sig)<=16384)
+    with tempfile.TemporaryDirectory(prefix="remura-receipt-") as d:
+        root=Path(d); payload=root/"payload"; signature=root/"sig"
+        payload.write_bytes(body);signature.write_bytes(sig)
+        r=gpg(home,"--status-fd","2","--verify",str(signature),str(payload),stdout=subprocess.PIPE)
+    valid=[line.split()[2].decode() for line in r.stderr.splitlines() if line.startswith(b"[GNUPG:] VALIDSIG ")]
+    need(valid==[signer])
+    need(not any(line.startswith(tuple(b"[GNUPG:] "+x for x in (b"REVKEYSIG",b"EXPKEYSIG",b"EXPSIG",b"BADSIG",b"ERRSIG"))) for line in r.stderr.splitlines()))
+
+def verify_receipt(path,home,expected,generation,signer):
+    regular(path,65536)
+    raw=path.read_bytes()
+    env=json.loads(raw)
+    need(raw==canon(env) and set(env)=={"payload","signature_b64"})
+    p=env["payload"]
+    need(p["schema"]==RECEIPT_SCHEMA and p["generation"]==generation and p["cipher_sha256"]==expected and HEX.fullmatch(expected))
+    need(p["scope"]=="prices_and_embedded_cot_only" and p["signer"]==signer and p["sqlite_restore_tested"] is True)
+    need(p["recovery_method"]=="sqlite_deserialize_integrity_check" and p["trusted_timestamp"] is False and p["restore_authorized"] is False)
+    verify_signature(home,canon(p),base64.b64decode(env["signature_b64"],validate=True),signer)
+    return {"status":"OWNER_RECEIPT_SIGNATURE_VERIFIED","generation":generation,"trusted_timestamp":False,"restore_authorized":False}
+
+def sign_receipt(result,expected,home,outdir,signer):
+    outdir=private_dir(outdir);private_dir(home)
+    payload=receipt_body(result,expected,signer)
+    path=outdir/("prices-%06d.receipt.json"%result["generation"])
+    need(not os.path.lexists(path))
+    raw=canon(payload)
+    with tempfile.TemporaryDirectory(prefix=".remura-receipt-",dir=outdir) as d:
+        root=Path(d); p=root/"payload"; p.write_bytes(raw)
+        pw=getpass.getpass("Local signing passphrase: ")
+        try:r=gpg(home,"--pinentry-mode","loopback","--passphrase-fd","0","--local-user",signer+"!",
+                  "--detach-sign","--output","-",str(p),input=(pw+"\n").encode(),stdout=subprocess.PIPE)
+        finally:del pw
+        verify_signature(home,raw,r.stdout,signer)
+        candidate=root/"receipt.json"
+        with candidate.open("xb") as f:
+            f.write(canon({"payload":payload,"signature_b64":base64.b64encode(r.stdout).decode()}))
+            f.flush();os.fsync(f.fileno())
+        os.chmod(candidate,0o600)
+        verify_receipt(candidate,home,expected,result["generation"],signer)
+        os.link(candidate,path);syncdir(outdir)
+    return {"status":"OWNER_RECEIPT_SIGNED_LOCAL","generation":result["generation"],"sqlite_restore_tested":True,
+            "witness_signed":True,"trusted_timestamp":False,"restore_authorized":False}
+
+def verify_plain(raw,generation,recover=False):
     need(0<len(raw)<=MAX+MARGIN)
     with tarfile.open(fileobj=io.BytesIO(raw),mode="r:gz") as t:
         ms=t.getmembers()
@@ -142,13 +214,20 @@ def verify_plain(raw,generation):
         need(body==canon(m) and m["schema"]==SCHEMA and m["generation"]==generation and m["scope"]=="prices_and_embedded_cot_only")
         need(m["file"]==NAME and m["bytes"]==ms[1].size and HEX.fullmatch(m["sha256"]))
         stream=t.extractfile(ms[1]);h=hashlib.sha256()
+        recovered=bytearray() if recover else None
         need(stream.read(16)==b"SQLite format 3\x00")
         h.update(b"SQLite format 3\x00")
-        for b in iter(lambda:stream.read(1024*1024),b""):h.update(b)
+        if recovered is not None:recovered.extend(b"SQLite format 3\x00")
+        for b in iter(lambda:stream.read(1024*1024),b""):
+            h.update(b)
+            if recovered is not None:recovered.extend(b)
         need(h.hexdigest()==m["sha256"])
+        if recovered is not None:
+            need(len(recovered)==m["bytes"])
+            recover_memory(bytes(recovered),m["schema_summary"])
     return {"status":"DECRYPTION_AND_MEMBER_HASH_VERIFIED","generation":generation,
-            "sqlite_restore_tested":False,"witness_signed":False,"scope":m["scope"]}
-def verify_owner(cipher,home,expected,generation):
+            "sqlite_restore_tested":bool(recover),"witness_signed":False,"scope":m["scope"]}
+def verify_owner(cipher,home,expected,generation,recover=False):
     regular(cipher,MAX+2*MARGIN);private_dir(home)
     need(HEX.fullmatch(expected) and hash_file(cipher)==expected)
     pw=getpass.getpass("GPG passphrase: ")
@@ -158,7 +237,7 @@ def verify_owner(cipher,home,expected,generation):
     finally:del pw
     need(b"[GNUPG:] DECRYPTION_OKAY" in r.stderr and b"[GNUPG:] GOODMDC" in r.stderr)
     need(hash_file(cipher)==expected)
-    return verify_plain(r.stdout,generation)
+    return verify_plain(r.stdout,generation,recover=recover)
 def inspect_closed(path):
     regular(path)
     need(not any(os.path.lexists(str(path)+s) for s in ("-wal","-shm","-journal")))
@@ -178,11 +257,18 @@ def main():
     c.add_argument("--confirm-future-backup",action="store_true",required=True)
     v=s.add_parser("verify");v.add_argument("--cipher",type=Path,required=True);v.add_argument("--keyring",type=Path,required=True)
     v.add_argument("--sha256",required=True);v.add_argument("--generation",type=int,required=True)
+    v.add_argument("--recover-memory",action="store_true");v.add_argument("--receipt-dir",type=Path);v.add_argument("--signer")
+    q=s.add_parser("verify-receipt");q.add_argument("--receipt",type=Path,required=True);q.add_argument("--keyring",type=Path,required=True)
+    q.add_argument("--sha256",required=True);q.add_argument("--generation",type=int,required=True);q.add_argument("--signer",required=True)
     i=s.add_parser("inspect-closed");i.add_argument("--db",type=Path,required=True);i.add_argument("--confirm-not-live",action="store_true",required=True)
     a=p.parse_args()
     try:
         if a.cmd=="capture":r=capture(a.outdir,a.keyring,a.primary,a.subkey,a.generation)
-        elif a.cmd=="verify":r=verify_owner(a.cipher,a.keyring,a.sha256,a.generation)
+        elif a.cmd=="verify":
+            need(bool(a.receipt_dir)==bool(a.signer) and (not a.receipt_dir or a.recover_memory))
+            r=verify_owner(a.cipher,a.keyring,a.sha256,a.generation,a.recover_memory)
+            if a.receipt_dir:r=sign_receipt(r,a.sha256,a.keyring,a.receipt_dir,a.signer)
+        elif a.cmd=="verify-receipt":r=verify_receipt(a.receipt,a.keyring,a.sha256,a.generation,a.signer)
         else:r=inspect_closed(a.db)
         print(json.dumps(r,sort_keys=True))
     except (ValueError,OSError,sqlite3.Error,subprocess.SubprocessError,tarfile.TarError,KeyError,TypeError):

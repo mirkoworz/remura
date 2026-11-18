@@ -1,5 +1,7 @@
-# REMURA v0.8.149 LAB — 18/11/2026
-import json,os,sqlite3,tempfile,unittest
+# REMURA v0.8.150 LAB — 18/11/2026, sessione delle 10:25 CET
+import json,os,sqlite3,tempfile,unittest,shutil
+from unittest.mock import patch
+import abc_prices_recovery_v2 as recovery
 from pathlib import Path
 from abc_prices_recovery_v2 import snapshot,make_tar,verify_plain,inspect_closed
 from abc_v165_preflight_portable_v1 import modules,SOURCES,MANIFEST
@@ -34,3 +36,48 @@ class Tests(unittest.TestCase):
             p=Path(d).resolve()/"x.db";p.write_bytes(b"x")
             Path(str(p)+"-wal").touch()
             with self.assertRaises(ValueError):inspect_closed(p)
+
+    def test_gpg_owner_recovery_and_signed_receipt(self):
+        self.assertIsNotNone(shutil.which("gpg"),"GPG required for end-to-end test")
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d).resolve()
+            owner=root/"owner"; public=root/"public"; out=root/"out"
+            for p in (owner,public,out):p.mkdir(mode=0o700)
+            try:
+                recovery.gpg(owner,"--pinentry-mode","loopback","--passphrase","","--quick-generate-key",
+                             "REMURA disposable CI <fixture@example.invalid>","rsa2048","sign","1d",stdout=recovery.subprocess.PIPE)
+                keys=recovery.gpg(owner,"--with-colons","--list-keys",stdout=recovery.subprocess.PIPE).stdout.decode()
+                primary=next(x.split(":")[9] for x in keys.splitlines() if x.startswith("fpr:"))
+                recovery.gpg(owner,"--pinentry-mode","loopback","--passphrase","","--quick-add-key",primary,"rsa2048","encr","1d",stdout=recovery.subprocess.PIPE)
+                keys=recovery.gpg(owner,"--with-colons","--list-keys",stdout=recovery.subprocess.PIPE).stdout.decode()
+                sub=[x.split(":")[9] for x in keys.splitlines() if x.startswith("fpr:")][1]
+                pub=recovery.gpg(owner,"--export",primary,stdout=recovery.subprocess.PIPE).stdout
+                recovery.gpg(public,"--import",input=pub,stdout=recovery.subprocess.PIPE)
+                recovery.recipient_check(public,primary,sub)
+                with self.assertRaises(ValueError):recovery.recipient_check(owner,primary,sub)
+                db=root/"source.db"; copy=root/"copy.db"; tar=root/"package"; cipher=out/"fixture.gpg"
+                a=sqlite3.connect(db)
+                try:
+                    a.executescript("CREATE TABLE prices(x);CREATE TABLE status(x);CREATE TABLE cot_reports(x);CREATE TABLE cot_first_seen(x);INSERT INTO prices VALUES(7);")
+                    a.commit()
+                finally:a.close()
+                summary=snapshot(db,copy)
+                make_tar(copy,tar,6,summary)
+                recovery.seal(public,sub,tar,cipher)
+                expected=recovery.hash_file(cipher)
+                with patch.object(recovery.getpass,"getpass",return_value=""):
+                    result=recovery.verify_owner(cipher,owner,expected,6,recover=True)
+                    self.assertTrue(result["sqlite_restore_tested"])
+                    self.assertTrue(recovery.sign_receipt(result,expected,owner,out,primary)["witness_signed"])
+                    with self.assertRaises(ValueError):recovery.sign_receipt(result,expected,owner,out,primary)
+                    with self.assertRaises(ValueError):recovery.verify_owner(cipher,owner,"0"*64,6,recover=True)
+                receipt=out/"prices-000006.receipt.json"
+                self.assertEqual(recovery.verify_receipt(receipt,public,expected,6,primary)["status"],"OWNER_RECEIPT_SIGNATURE_VERIFIED")
+                env=json.loads(receipt.read_bytes());env["payload"]["owner_clock_utc"]="tampered"
+                bad=out/"bad.json";bad.write_bytes(recovery.canon(env))
+                with self.assertRaises(recovery.subprocess.CalledProcessError):recovery.verify_receipt(bad,public,expected,6,primary)
+                with self.assertRaises(ValueError):recovery.verify_receipt(receipt,public,expected,7,primary)
+                with self.assertRaises(ValueError):recovery.seal(public,sub,tar,cipher)
+            finally:
+                for p in (owner,public):
+                    recovery.subprocess.run(["gpgconf","--homedir",str(p),"--kill","all"],check=False,stdout=recovery.subprocess.DEVNULL,stderr=recovery.subprocess.DEVNULL)
