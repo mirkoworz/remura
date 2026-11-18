@@ -1,4 +1,4 @@
-# REMURA Level Confluence v0.42 LAB — 18/11/2026, sessione successiva alle 11:13 CET
+# REMURA Level Confluence v0.43 LAB — 18/11/2026, sessione successiva alle 16:21 CET
 import unittest
 from datetime import datetime,timezone
 from pathlib import Path
@@ -42,7 +42,7 @@ class DashboardTests(unittest.TestCase):
         self.assertIn("1.08535",data["html"])
         self.assertIn("5.00000000 tick",data["html"])
         self.assertIn("SOLO DATI SINTETICI",data["html"])
-        self.assertIn("v0.42 LAB",data["html"])
+        self.assertIn("v0.43 LAB",data["html"])
         self.assertNotIn("PRIVATE NOTE",data["html"])
         self.assertNotIn(self.friend,data["html"])
         self.assertFalse(data["result"]["operational_signal"])
@@ -95,6 +95,20 @@ class DashboardTests(unittest.TestCase):
         page=self.report(automatic=[other,self.auto])["html"]
         self.assertEqual(page.count('class="instrument"'),1)
         self.assertNotIn("FXCM:EURUSD",page)
+    def test_readiness_distinguishes_unknown_from_distance(self):
+        near=self.report()["html"]
+        self.assertIn("Automatici vicini candidati: 1 · Confrontati senza vicinanza: 0 · Non confrontabili: 0",near)
+        far=self.report(automatic=[dict(self.auto,price="1.09500")])["html"]
+        self.assertIn("Automatici vicini candidati: 0 · Confrontati senza vicinanza: 1 · Non confrontabili: 0",far)
+        unknown=self.report(rules=[])["html"]
+        self.assertIn("Automatici vicini candidati: 0 · Confrontati senza vicinanza: 0 · Non confrontabili: 1",unknown)
+        self.assertIn("N/D non equivale a disaccordo",unknown)
+    def test_readiness_is_per_exact_feed(self):
+        other=dict(self.auto,id="other",provider="FXCM",price="1.09500")
+        page=self.report(automatic=[other,self.auto])["html"]
+        self.assertEqual(page.count('class="source-readiness"'),2)
+        self.assertIn("Automatici vicini candidati: 1 · Confrontati senza vicinanza: 0 · Non confrontabili: 0",page)
+        self.assertIn("Automatici vicini candidati: 0 · Confrontati senza vicinanza: 0 · Non confrontabili: 1",page)
     def test_manual_only_group(self):
         page=self.report(automatic=[])["html"]
         self.assertEqual(page.count('class="instrument"'),1)

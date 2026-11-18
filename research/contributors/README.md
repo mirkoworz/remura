@@ -1,3 +1,9 @@
+# REMURA Contributors v0.43 LAB — 18/11/2026, sessione successiva alle 16:21 CET
+
+- v0.42 CI 44283965819 verified completed/success; 245 tests reported at prior checkpoint.
+- Owner-only synthetic Level Confluence dashboard: per exact instrument/feed group, distinguish automatic candidate proximity, compared without proximity, and not comparable. N/D is explicit and never a disagreement or institutional score. Two regression tests added; CI pending. No change to comparator, threshold, original cutoff, wire report or pinned deployable candidate assets.
+- Production, Preview and staging remain closed according to prior checkpoint; no new D1, collaborator enrollment, deployment, real data or costs.
+
 # REMURA Contributors v0.42 LAB — 18/11/2026, sessione successiva alle 11:13 CET
 
 - Owner-only in-process Level Confluence dashboard: group already admitted rows by exact market/provider/ticker/product/contract. Pair first, broker/feed second, automatic and approved manual levels within the same group. Excluded or late sources cannot create a visible group. No cross-feed alias, no change to comparison engine, no real data or new HTTP path.
