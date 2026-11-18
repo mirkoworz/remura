@@ -174,3 +174,6 @@ jobs:
 
       - name: ABC installed baseline read-only census synthetic fixtures
         run: python3 tradingview/delta-peaks/abc_installed_baseline_fixture_v1.py
+
+      - name: ABC actual pinned application disk transaction and crash recovery (isolated)
+        run: python3 tradingview/delta-peaks/abc_pinned_disk_transaction_fixture_v1.py

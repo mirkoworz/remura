@@ -1,3 +1,11 @@
+# REMURA TradingView — ROADMAP v0.8.143-lab (pinned candidate disk transaction)
+**Aggiornamento 18/11/2026, sessione 09:39 CET — PR #102 DRAFT**
+
+- v0.8.142 GREEN: Telemetry 44267073225 job 134674143015, 587 Python (8 journal methods), 142 ABC, Wrangler 44267073153. Logs verified.
+- Real owner evidence: 6973237447 (Oracle metadata, available disk 43,017,580,544 bytes; Capital fixed paths absent), 6973312864 (COT recovery 840 rows, 14 codes; 42 first-seen rows, no historical backfill), 6973392624 (selected config basename membership 3/3), 6973433726 (real cTrader/Twisted imports in network isolated namespace under remura uid). No repeated backups or SDK tests.
+- v0.8.143 connects actual pinned repository manifest to disk journal: 79 base, 90 changes, 155 final paths; two new explicit CI methods, full apply/rollback and actual midpoint child exit/reopen. CI pending. Disposable files only. Never live service or private data.
+- Actual permissions, precise config path equivalence, Shark evidence custody, iCloud/quotas, updater interlock, authenticated journal, full release staging and explicit maintenance authorization remain open. Retain all unclassified modules; no installedSha rewrite.
+
 # REMURA TradingView — ROADMAP v0.8.142-lab (durable disk rollback journal)
 **Aggiornamento 18/11/2026, sessione successiva alle 09:24 CET — PR #102 DRAFT**
 

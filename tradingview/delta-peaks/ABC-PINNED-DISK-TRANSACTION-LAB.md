@@ -1,0 +1,4 @@
+# REMURA v0.8.143 LAB — actual pinned application transaction on disposable disk
+18/11/2026, sessione 09:39 CET.
+
+Reuses existing exact Git material and repository manifest builder rather than a new simulated candidate. Pins manifest SHA256 73635db92dd9f709ae078119a161ab12b7c9a63ca18782b99e7e1f6357c3c2c1. Copies all 79 base application files into a disposable owned directory, validates all 155 expected candidate hashes, then journals the 90 changes (14 replaced, 76 added). Two tests: complete apply and rollback including exact retained bytes and synthetic mode preservation, and actual abrupt process exit after 45 changes followed by journal reopen and reverse rollback. Explicit CI step after pinned checkouts; no workflow dispatch, no real installer, no real permission attestation. No service commands, network, mutable database or credential copy. Real crash/power failure, ownership, updater interlock, exact staging and operational authorization are separate gates. 
