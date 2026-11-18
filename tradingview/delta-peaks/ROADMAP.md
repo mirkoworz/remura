@@ -1,3 +1,11 @@
+# REMURA TradingView — ROADMAP v0.8.171-lab (separate feed original decision coverage)
+**Aggiornamento 18/11/2026, sessione delle 17:48 CET — PR #102 DRAFT**
+
+- v0.8.170 exact head d4edf366c8309da7d630bf291aaaf9801b270de0, Telemetry 44341348883 and Wrangler 44341348814 completed/success. Persistent external-receipt store remains disposable LAB; no actual independent custody.
+- New synthetic-only original-decision source coverage matrix across exact FXCM:EURUSD legacy and FX:EURUSD CVD feeds using existing handoff and configuration checks. Joint presence, partial legacy source, or unknown at original B cutoff. Never merge feed prices, infer independence, calculate outcome or emit signals. Five targeted tests pending. No changes to frozen historical modules or production.
+- Contributors v0.44 PR #104 new head 363026227ffaae123125cdcf6fedbeace9297214: manual-side deduplicated source-readiness dashboard; CI pending. Historical E pins unchanged.
+- Owner on iPhone only; defer Mac host preflight and real archive census. Do not redo backup, staging, signatures or provisioning. Ampere radar latest 44351028395 completed/success at 17:46 CET, capacity not attested. No live service, quota purchase or deployment changes.
+
 # REMURA TradingView — ROADMAP v0.8.170-lab (persistent owner receipt register and joint source availability)
 **Aggiornamento 18/11/2026, sessione successiva alle 16:54 CET — PR #102 DRAFT**
 
