@@ -1,3 +1,9 @@
+# REMURA Contributors v0.45 LAB — 18/11/2026, sessione successiva alle 17:48 CET
+
+- v0.44 exact head 363026227ffaae123125cdcf6fedbeace9297214 CI 44351587648 completed/success.
+- Owner-only synthetic dashboard adds collapsible readiness detail by exact period, anchor UTC and kind within the instrument/feed group. Separate automatic and manual denominators. No near comparison across origins, no future/excluded row in detail; manual-side N/D explanation also shown. Two tests pending. Comparator and historical pinned assets unchanged.
+- No real contributor enrollment, D1, staging, HTTP changes, live access or costs.
+
 # REMURA Contributors v0.44 LAB — 18/11/2026, sessione delle 17:48 CET
 
 - v0.43 CI 44335249706/job 134910055727 verified success (233+7+7 tests).

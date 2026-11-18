@@ -1,4 +1,4 @@
-# REMURA Level Confluence v0.44 LAB — 18/11/2026, sessione delle 17:48 CET
+# REMURA Level Confluence v0.45 LAB — 18/11/2026, sessione successiva alle 17:48 CET
 import unittest
 from datetime import datetime,timezone
 from pathlib import Path
@@ -42,7 +42,7 @@ class DashboardTests(unittest.TestCase):
         self.assertIn("1.08535",data["html"])
         self.assertIn("5.00000000 tick",data["html"])
         self.assertIn("SOLO DATI SINTETICI",data["html"])
-        self.assertIn("v0.44 LAB",data["html"])
+        self.assertIn("v0.45 LAB",data["html"])
         self.assertNotIn("PRIVATE NOTE",data["html"])
         self.assertNotIn(self.friend,data["html"])
         self.assertFalse(data["result"]["operational_signal"])
@@ -120,6 +120,20 @@ class DashboardTests(unittest.TestCase):
         for kwargs in (dict(rules=[]),dict(automatic=[])):
             page=self.report(**kwargs)["html"]
             self.assertIn("Manuali vicini candidati: 0 · Confrontati senza vicinanza: 0 · Non confrontabili: 1",page)
+    def test_period_origin_breakdown_never_aliases(self):
+        other=dict(self.auto,id="other-origin",anchor_utc="2026-11-02T00:00:00Z")
+        html=self.report(automatic=[other,self.auto])["html"]
+        self.assertEqual(html.count('class="instrument"'),1)
+        self.assertEqual(html.count('class="period-readiness"'),2)
+        self.assertIn("Anchor UTC 2026-11-02T00:00:00Z",html)
+        self.assertIn("Automatici: 1 · Vicini: 0 · Distanti: 0 · N/D: 1",html)
+        self.assertIn("Automatici: 1 · Vicini: 1 · Distanti: 0 · N/D: 0",html)
+    def test_late_period_never_visible(self):
+        other=dict(self.auto,id="late-origin",anchor_utc="2026-11-02T00:00:00Z",
+                   available_utc="2026-11-15T00:00:00Z")
+        html=self.report(automatic=[other,self.auto])["html"]
+        self.assertEqual(html.count('class="period-readiness"'),1)
+        self.assertNotIn("2026-11-02T00:00:00Z",html)
     def test_manual_only_group(self):
         page=self.report(automatic=[])["html"]
         self.assertEqual(page.count('class="instrument"'),1)

@@ -1,4 +1,4 @@
-# REMURA Contributors v0.44 LAB — 18/11/2026, sessione delle 17:48 CET
+# REMURA Contributors v0.45 LAB — 18/11/2026, sessione successiva alle 17:48 CET
 """Owner-only in-process diagnostic dashboard, synthetic data, no HTTP/export.
 Automatic inputs and explicit comparison rules are trusted LAB fixtures.
 No actual price feed, no prediction, no operational or scientific admission.
@@ -28,8 +28,8 @@ def _render(result,manual,auto):
     parts=['<!doctype html><html lang="it"><head><meta charset="utf-8">',
            '<meta name="viewport" content="width=device-width,initial-scale=1">',
            '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\'; form-action \'none\'; base-uri \'none\'">',
-           '<title>REMURA Level Confluence v0.44 LAB</title><style>'+STYLE+'</style></head><body>',
-           '<div class="release">REMURA · Level Confluence v0.44 LAB · 18/11/2026, sessione 17:48 CET</div><main>',
+           '<title>REMURA Level Confluence v0.45 LAB</title><style>'+STYLE+'</style></head><body>',
+           '<div class="release">REMURA · Level Confluence v0.45 LAB · 18/11/2026, dopo le 17:48 CET</div><main>',
            '<small>REMURA / VOLUMETRICA / LEVEL CONFLUENCE</small><h1>Confluenze volumetriche</h1>',
            '<p>SOLO DATI SINTETICI · Report proprietario in sola lettura. Nessun segnale operativo o prova di attività istituzionale.</p>',
            '<p>Cutoff UTC: '+_e(result["asof_utc"])+'</p>',
@@ -69,7 +69,29 @@ def _render(result,manual,auto):
         parts.append('<p class="manual-readiness">Manuali vicini candidati: '+str(manual_near)+
                      ' · Confrontati senza vicinanza: '+str(manual_far)+
                      ' · Non confrontabili: '+str(manual_unknown)+'</p>')
-        if unknown or not states:
+        # The comparator works on period, anchor and kind too, not only instrument.
+        # Distinct anchors remain visible separately; only admitted rows contribute.
+        periods={}
+        for source,items,lookup,id_key in (
+            ("automatic",bucket["automatic"],a,"automatic_id"),
+            ("manual",bucket["manual"],m,"manual_id")):
+            for item in items:
+                q=lookup[item[id_key]]
+                k=(q["period"],q["anchor_utc"],q["kind"])
+                periods.setdefault(k,{"automatic":[],"manual":[]})[source].append(item["status"])
+        parts.append('<details><summary>Dettaglio copertura per periodo e origine</summary>')
+        for (period,anchor,kind),sub in sorted(periods.items()):
+            x,y=sub["automatic"],sub["manual"]
+            xn,yn=x.count("NEAR"),y.count("NEAR")
+            xd,yd=x.count("DISTANT"),y.count("COMPARED_NO_NEAR")
+            parts.append('<div class="period-readiness"><h3>'+_e(period)+' · '+_e(kind)+'</h3>'+
+                         '<small>Anchor UTC '+_e(anchor)+'</small>'+
+                         '<p>Automatici: '+str(len(x))+' · Vicini: '+str(xn)+
+                         ' · Distanti: '+str(xd)+' · N/D: '+str(len(x)-xn-xd)+'</p>'+
+                         '<p>Manuali: '+str(len(y))+' · Vicini: '+str(yn)+
+                         ' · Distanti: '+str(yd)+' · N/D: '+str(len(y)-yn-yd)+'</p></div>')
+        parts.append('</details>')
+        if unknown or manual_unknown or not states:
             parts.append('<p class="missing">N/D non equivale a disaccordo. Nessun punteggio istituzionale.</p>')
         if not bucket["automatic"]:
             parts.append('<p class="missing">N/D — nessun automatico disponibile per questo strumento.</p>')
