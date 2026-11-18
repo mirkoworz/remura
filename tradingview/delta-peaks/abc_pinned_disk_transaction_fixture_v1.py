@@ -1,8 +1,10 @@
-# REMURA v0.8.161 LAB — 18/11/2026, sessione successiva alle 13:37 CET
+# REMURA v0.8.163 LAB — 18/11/2026, sessione successiva alle 13:37 CET
 """Actual pinned 90 path candidate on disposable disk; no service or private data."""
 import hashlib,json,os,tempfile,unittest
 from pathlib import Path
 from abc_rollback_disk_lab_v1 import Journal
+from abc_v165_stage_bundle_v1 import descriptor
+from abc_v165_transaction_plan_v1 import prepare_plan
 import abc_v165_overlay_manifest_fixture_v1 as overlay
 import abc_v165_repository_manifest_fixture_v1 as repository
 from abc_v165_repository_manifest_lab_v1 import build
@@ -17,7 +19,10 @@ class Tests(unittest.TestCase):
         cls.candidate=repository.Tests.overlay
         cls.manifest=build(cls.base,cls.candidate,repository.Tests.deploy,synthetic=True)
         assert cls.manifest["manifest_sha256"]==PIN
-        cls.old={p:cls.base[p] for p in cls.candidate if p in cls.base}
+        cls.desc=descriptor(cls.manifest)
+        cls.full={**cls.base,**cls.candidate}
+        cls.old,planned=prepare_plan(cls.desc,cls.full,cls.base)
+        assert planned==cls.candidate
         assert len(cls.candidate)==90 and len(cls.old)==14 and len(cls.base)==79
         assert all(digest({**cls.base,**cls.candidate}[r["path"]])==r["candidate_sha256"] for r in cls.manifest["application"])
     def setUp(self):
@@ -111,4 +116,28 @@ class Tests(unittest.TestCase):
         witness.write_text(json.dumps(env))
         with self.assertRaises(ValueError):self.reopen().rollback()
         self.verify(self.base)
+    def test_exact_plan_rejects_incomplete_baseline_and_drift(self):
+        for path in (next(iter(self.old)),next(p for p in self.base if p not in self.candidate)):
+            missing=dict(self.base);missing.pop(path)
+            with self.assertRaises(ValueError):prepare_plan(self.desc,self.full,missing)
+            altered=dict(self.base);altered[path]+=b"x"
+            with self.assertRaises(ValueError):prepare_plan(self.desc,self.full,altered)
+        added=next(p for p in self.candidate if p not in self.base)
+        occupied={**self.base,added:b"existing"}
+        with self.assertRaises(ValueError):prepare_plan(self.desc,self.full,occupied)
+        tampered={**self.full,added:self.full[added]+b"x"}
+        with self.assertRaises(ValueError):prepare_plan(self.desc,tampered,self.base)
+
+    def test_actual_old_stamp_is_preserved_in_rollback_bytes(self):
+        from abc_v165_transaction_plan_v1 import STAMP
+        base=dict(self.base)
+        self.assertEqual(base["nav.js"].count(STAMP),1)
+        base["nav.js"]=base["nav.js"].replace(STAMP,b"18/11/2026 13:37 (Italia)",1)
+        path=self.app/"nav.js";path.write_bytes(base["nav.js"])
+        old,new=prepare_plan(self.desc,self.full,base)
+        self.assertEqual(old["nav.js"],base["nav.js"])
+        self.j.prepare(old,new)
+        self.j.apply()
+        self.j.rollback()
+        self.verify(base)
 if __name__=="__main__":unittest.main()

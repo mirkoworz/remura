@@ -1,3 +1,11 @@
+# REMURA TradingView — ROADMAP v0.8.163-lab (exact manifest transaction plan)
+**Aggiornamento 18/11/2026, sessione successiva alle 13:37 CET — PR #102 DRAFT**
+
+- v0.8.162 Telemetry 44311570497 and Wrangler 44311570363 observed GREEN.
+- Reuse pinned exact repository bytes and manifest to derive journal inputs: 14 original replacements, 90 mutations, 65 retained byte-equal paths and 76 required absent paths. Existing real release stamp exception limited to nav.js and original observed bytes preserved for rollback. Two targeted pinned fixture tests added; CI pending, actual live baseline not newly read.
+- Review exact legacy updater blob 53ca8ec381e30d019f1cc8570e33e0150e6c233e: root rsync against application-tree paths, app-writable state, PATH lookups and direct init entrypoint remain unsafe to re-enable merely by relocating code. Keep contained; use explicit signed-release workflow independent of legacy updater. See ABC-TRANSACTION-PLAN-V163.md.
+- No service changes, install authorization, new backup, artifact or science outcomes. B/E pins and Radar retained; private archives still require owner-local access and account quotas not attested.
+
 # REMURA TradingView — ROADMAP v0.8.162-lab (pinned bootstrap source census)
 **Aggiornamento 18/11/2026, sessione successiva alle 13:37 CET — PR #102 DRAFT**
 
