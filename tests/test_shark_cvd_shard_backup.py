@@ -216,5 +216,37 @@ class ShardedSnapshotTests(unittest.TestCase):
         self.assertFalse(backup.verify_snapshot(self.snapshot)["readyForVpsDeployment"])
 
 
+
+    def test_closed_custody_inventory_reuses_shard_verifier(self):
+        from scripts import shark_closed_custody_inventory as custody
+        self.build()
+        backup.create_snapshot(self.root,self.snapshot)
+        result=custody.inventory(self.snapshot,confirmed_closed=True)
+        self.assertEqual(result["counts"]["sqlite_occurrences"],3)
+        self.assertEqual(result["counts"]["locally_verified_snapshot_occurrences"],1)
+        self.assertEqual(result["counts"]["verified_segment_occurrences"],3)
+        self.assertEqual(result["known_table_occurrences"][scan.TABLE],3)
+        self.assertFalse(result["absence_elsewhere_proven"])
+        self.assertNotIn(str(self.snapshot),json.dumps(result))
+        self.assertNotIn(KEY.decode(),json.dumps(result))
+
+    def test_closed_custody_report_partial_for_sidecars_and_symlinks(self):
+        from scripts import shark_closed_custody_inventory as custody
+        root=self.parent/"closed"
+        root.mkdir(mode=0o700)
+        p=root/"fixture.db"
+        with sqlite3.connect(p) as db:
+            db.execute("CREATE TABLE research_cvd_observations(x)")
+        (root/"other.db").symlink_to(p)
+        (root/"fixture.db-wal").touch()
+        result=custody.inventory(root,confirmed_closed=True)
+        self.assertEqual(result["status"],"PARTIAL")
+        self.assertEqual(result["counts"]["sqlite_unverified"],1)
+        self.assertEqual(result["counts"]["symlinks_skipped"],1)
+        with self.assertRaises(ValueError):
+            custody.inventory(root)
+        self.assertTrue((root/"fixture.db-wal").exists())
+
+
 if __name__=="__main__":
     unittest.main()

@@ -1,5 +1,11 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
+## 18/11/2026 — Custodia chiusa v0.1 LAB, sessione successiva alle 11:07 CET
+
+- Added owner-only `scripts/shark_closed_custody_inventory.py`: aggregate schema occurrences on already recovered private closed copies, strict no-WAL/sidecar gate and bounded traversal. Reuses existing `shark_cvd_shard_backup.verify_snapshot` for complete B snapshot candidates, no writer lock, copy, restore, decryption or broker calls.
+- Distinguish occurrence counts from distinct databases; incomplete copies or missing tables do not prove absence across archives. Complete candidate local chain does not attest source origin or independent signature. No private paths, raw records, hash, credentials or observation timestamps in report. Scope is only the explicitly provided root, not all owner custody.
+- Two targeted tests pending CI. No actual owner archive inventory yet. Existing five archives and original receipts preserved; no need to recreate them. No new activation, thresholds or protocol changes. Development 16–22/11; holdout 23–29/11; replication 30/11–06/12; primary CVD vs price-only at 60 minutes unchanged. No edge claim.
+
 ## 11/11/2026 — P0b: ottava finestra naturale, copertura descrittiva 8/8 (SOLO LETTURA VPS)
 
 **Provenienza:** screenshot Termius fornito dall'operatore nella chat REMURA in data 11/11/2026. Nuova finestra distinta `targetUtc=2026-11-11T09:31:30Z` (10:31:30 ora italiana, UTC+1). La sezione storica del 09/11 che documenta 7/8 rimane corretta per quella data; questo nuovo campionamento porta la copertura **osservazionale da screenshot a 8/8** su tre giornate UTC (06/11, 09/11, 11/11), **NON** a una certificazione di capacità o a un audit automatico completato. L'ottava è stata volontariamente acquisita dopo la decisione precedente di fermarsi alla settima.
