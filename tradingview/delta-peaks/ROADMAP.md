@@ -1,3 +1,10 @@
+# REMURA TradingView — ROADMAP v0.8.149-lab (portable Oracle preflight and future recovery tools)
+**Aggiornamento 18/11/2026, sessione successiva alle 09:59 CET — PR #102 DRAFT**
+
+- v0.8.148 GREEN: Telemetry 44271520767 job 134689044968, 598 main tests; Wrangler 44271520807. Logs checked.
+- v0.8.149 batched portable preflight, future owner-only prices/COT capture/verify CLI and targeted closed-copy Shark schema coverage. Three new fixture methods pending; no real capture, signature, or Oracle invocation. Existing five archives preserved. See ABC-PORTABLE-RECOVERY-TOOLS.md.
+- B and E exact DRAFT heads unchanged; no threshold, data window or alert changes. Next: actual preflight, v2 GPG end-to-end and receipt integration, Shark evidence, iCloud/quotas, authenticated package and operational installer. No LIVE.
+
 # REMURA TradingView — ROADMAP v0.8.148-lab (portable actual manifest handoff)
 **Aggiornamento 18/11/2026, sessione successiva alle 09:56 CET — PR #102 DRAFT**
 
