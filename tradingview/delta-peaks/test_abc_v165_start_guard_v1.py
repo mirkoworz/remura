@@ -1,7 +1,7 @@
-# REMURA v0.8.146 LAB — 18/11/2026
+# REMURA v0.8.153 LAB — 18/11/2026, sessione successiva alle 11:13 CET
 import os,tempfile,unittest
 from pathlib import Path
-from abc_v165_start_guard_v1 import evaluate,MARKERS
+from abc_v165_start_guard_v1 import evaluate,MARKERS,evaluate_anchored,open_chain,evaluate_fd,FLAGS
 class StartupTests(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory(prefix="remura-start-guard-")
@@ -46,3 +46,27 @@ class StartupTests(unittest.TestCase):
             p=here/("v165-"+role+"-maintenance.conf.txt")
             lines=[x for x in p.read_text().splitlines() if x and not x.startswith("#")]
             self.assertEqual(lines,["[Service]","ExecCondition=+/usr/bin/python3 -I -B /var/lib/remura-autoupdate/v165-start-guard.py "+role])
+
+    def test_anchored_chain_rejects_writable_parent_and_symlink(self):
+        parent=self.work/"parent";parent.mkdir(mode=0o700)
+        child=parent/"work";child.mkdir(mode=0o700)
+        root=os.open(self.work,FLAGS)
+        try:
+            fd=open_chain(root,("parent","work"),self.uid)
+            try:
+                self.assertEqual(evaluate_fd(fd,"updater",self.uid),0)
+                (child/MARKERS["updater"]).touch()
+                self.assertEqual(evaluate_fd(fd,"updater",self.uid),1)
+            finally:os.close(fd)
+            parent.chmod(0o777)
+            with self.assertRaises(ValueError):open_chain(root,("parent","work"),self.uid)
+            parent.chmod(0o700)
+            (self.work/"alias").symlink_to(parent,target_is_directory=True)
+            with self.assertRaises(OSError):open_chain(root,("alias","work"),self.uid)
+            for x in ("..",".","parent/work"):
+                with self.assertRaises(ValueError):open_chain(root,(x,),self.uid)
+        finally:os.close(root)
+    def test_prod_style_path_rejects_untrusted_ancestor(self):
+        # GitHub runner /tmp is not a trusted root-only ancestor.
+        self.assertEqual(evaluate_anchored(self.work,"updater",0),255)
+        self.assertEqual(evaluate_anchored(Path("relative"),"updater",0),255)

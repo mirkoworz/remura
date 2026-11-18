@@ -1,3 +1,10 @@
+# REMURA TradingView — ROADMAP v0.8.153-lab (anchored guard and B/E coordination)
+**Aggiornamento 18/11/2026, sessione successiva alle 11:13 CET — PR #102 DRAFT**
+
+- v0.8.152 CI verified completed success: Telemetry 44283644261 job 134730554576, Wrangler 44283644178.
+- B closed-custody inventory tests actually passed in CI 44283343273; E v0.42 exact pair/feed UI candidate submitted separately. B protocol and pinned cross-track dependencies unchanged pending deliberate repin.
+- Upgrade existing start guard with fd-anchored trusted ancestor checks (two targeted regressions pending); no installation. Timer containment confirmed, manual activation risk still present. See ABC-ANCHORED-START-GUARD.md. Signed package handoff, privileged bootstrap execution and actual custody remain open. No LIVE or repeated operator checks.
+
 # REMURA TradingView — ROADMAP v0.8.152-lab (separate candidate attestation)
 **Aggiornamento 18/11/2026, sessione successiva alle 11:13 CET — PR #102 DRAFT**
 

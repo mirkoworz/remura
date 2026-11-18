@@ -1,0 +1,8 @@
+# REMURA v0.8.153 LAB — anchored startup guard and containment
+18/11/2026 — sessione successiva alle 11:13 CET.
+
+The owner authorized and applied timer suspension. Timer inactive/disabled and collector active/running observed. Manual service start remains possible; do not run the old privileged updater. A separate owner-approved service activation block may be considered, but no additional live action has been authorized or performed.
+
+Existing candidate start guard now checks every path ancestor from / using O_DIRECTORY|O_NOFOLLOW descriptor traversal, checks ownership and mode on every directory, and evaluates markers on the same final directory descriptor. Two targeted tests added. No changes to collector business logic or separate inhibit semantics. This does not prove the trustworthiness of the executable that runs before the check, guard installation, filesystem ACLs or mount policies, or root execution of the old updater. The guard is not installed; it must be provisioned from independently verified bytes in trusted storage before being invoked. The old updater must not be re-enabled until all its privileged dependencies and target mutation paths are secured. No blanket chown, no timer enable, no live changes.
+
+v0.8.152 Telemetry 44283644261/job 134730554576 and Wrangler 44283644178 completed successfully. The release candidate signature verification is LAB-only; actual owner signature and target package check have not occurred. Track B custody inventory CI success 44283343273; Track E v0.42 pair/feed display commit pending. No real archive scan, enrollment or added infrastructure.
