@@ -1,3 +1,30 @@
+# REMURA Contributors v0.47 LAB — 18/11/2026, sessione 19:25 CET
+## D1 staging gate — NO CREATE / NO MIGRATION / NO DEPLOY / NO MERGE
+
+Supersedes v0.19 instructions below (historical only). Candidate runtime and UI unchanged; this is an operational documentation checkpoint, not a deployed version. PR104 v0.46 exact tested source d941fe7640ac66b3a0c0d7e7c58c7305a41ca2b1, CI 44363018769 success per checkpoint. Dedicated candidate name: remura-contributors-lab (proposal; availability NOT verified). Never reuse the existing TEST/telemetry databases.
+
+### Exact empty-target migration candidate
+Use research/contributors/d1_access_candidate.sql from commit d941fe7640ac66b3a0c0d7e7c58c7305a41ca2b1, Git blob 9ed38b6ed83755186af05f1bf28b4608cdc5f901. The SQL header v0.24 is its own revision, not the branch version. The older d1_lab_schema.sql is NOT the target. Before any future migration check exact source bytes and current approved pin; review any schema change rather than silently follow a branch. Static inventory derived from CREATE declarations, not a remote execution:
+- 10 tables: lab_state, lab_identities, lab_catalog, lab_entries, lab_owner, lab_reviews, lab_identity_revocations, lab_generation, lab_intent_used, lab_admin_events.
+- 22 triggers: identity_no_delete, identity_no_rebind, entry_guard, entry_no_update, entry_no_delete, owner_no_delete, owner_no_rebind, review_guard, review_no_update, review_no_delete, identity_role_separation, owner_role_separation, identity_revocation_guard, identity_revocation_apply, identity_revocation_no_update, identity_revocation_no_delete, intent_budget, intent_no_update, intent_no_delete, admin_event_guard, admin_event_no_update, admin_event_no_delete.
+- 3 explicit indexes: lab_entries_day, lab_reviews_entry, lab_intent_budget. SQLite automatic uniqueness indexes and provider-managed objects are separate.
+- Expected lab_state exactly one row (1,0,0,0); ALL other nine application tables empty, including generation, owner, identities, intent, revocation and admin events. Do not seed real or fixture identities as part of migration.
+- Verify exact object names AND schema definitions/constraints against the pinned source; counts alone do not establish equivalence. Read-only table_info, foreign_key_list, index_list/index_info, sqlite_master, foreign_key_check and quick_check where supported. If provider SQL normalization prevents exact text equality use reviewed structural comparison; ambiguous difference stops the gate. No unexpected application views/tables/triggers/indexes; provider objects handled only by explicit verified allowlist.
+
+### Account gate (read-only; NO provider write)
+Official published Free limits checked 18/11: 10 databases, 500 MB per DB, 5 GB total, 5M reads/day, 100k writes/day, seven-day Time Travel. https://developers.cloudflare.com/d1/platform/limits/ and https://developers.cloudflare.com/d1/platform/pricing/ . Daily read/write counters reset at 00:00 UTC; indexes and DDL can add metered rows. No plan upgrade. Last owner budget receipt 44362104604/job 135006009025 at 18:45 CET: 2 databases, 3,670,016 bytes combined, estimated 238 reads / 852 writes / 451 Worker requests; four OK statuses. This preceded another telemetry collection and is not billing evidence or verification of the candidate name. Require fresh owner-only read-only fleet budget, actual Free plan and complete paginated inventory with candidate-name collision status, no raw account IDs or tokens in public logs. Retain 70% internal account thresholds and existing candidate bounds in OPERATIONAL-ACCEPTANCE-GATE.md; unknown metrics or plan, stale evidence, collision, unexpected bindings or insufficient headroom are STOP.
+
+### Separate authorization sequence
+1. After gate evidence and explicit owner authorization create ONLY one empty dedicated database; no schema, binding, Worker deploy, secrets, route or real identity. Verify target identity privately, fresh inventory and actual emptiness, then stop. No blind retry on ambiguous creation.
+2. Separate owner authorization for migration; exact pinned SQL only, empty verified target, no destructive repair. Verify closed flags, complete schema and foreign keys; incomplete or uncertain migration stays isolated. No automatic retry, deletion, Time Travel restore or trigger removal.
+3. Separate synthetic rehearsal authorization: demonstrate D1 transaction failure rollback, role separation and revocation, both state and nonce guards, disabled defaults, primary routing and bounded metadata; fixture-only values. Cloudflare documents atomic rollback of failed binding batches (https://developers.cloudflare.com/d1/worker-api/d1-database/) and schema inspection (https://developers.cloudflare.com/d1/sql-api/sql-statements/); documentation is not a real execution result. Do not equate REST multi-statement execution with binding batch semantics without evidence. Plan disposal of fixture records before testing; immutable triggers prevent ad hoc cleanup. No real enrollment into a contaminated generation.
+4. Real enrollment remains NO-GO until closed generation disposition, lawful retention/minimization, exclusion and independent encrypted journal/last pin recovery, real identity/revocation and ingress/restore gates pass; see PRIVACY-LIFECYCLE-GATE.md and OPERATIONAL-ACCEPTANCE-GATE.md. No export/cancellation promise not implemented. Closed staging config remains identity-only; no D1 binding or deploy authorized.
+
+This revision corrects stale v0.19 target instructions; no runtime changes, new test claims, new resources or costs. Historical section below is retained for audit only and must NOT be used for migration.
+
+---
+
+## Historical v0.19 — superseded, DO NOT EXECUTE
 # REMURA Contributors v0.19 LAB — 16/11/2026 01:16 CET
 ## D1 staging gate — preparation only, NO CREATE / NO DEPLOY / NO MERGE
 Target candidate: remura-contributors-lab (new, dedicated empty D1; name collision check required). Never target existing databases or the Oracle VPS. No real UUID/email, levels, new tokens, cron, public routes, or billing upgrade.
@@ -15,3 +42,4 @@ Sequence after separate explicit authorization, security gate and closure confir
 No need to repeat previously green synthetic CI or deploy the already tested identity Worker. No actual creation by this document.
 
 16/11/2026 01:16 CET: owner confirmed second closed state after revocation; not independent API evidence. v0.19 reviewed schema and owner adapter are offline only. No cloud resource creation authorized. Before migration verify fresh empty target and exact reviewed SHA; no records seeded except disabled lab_state. No true D1 execution or budget check performed in this code change.
+
