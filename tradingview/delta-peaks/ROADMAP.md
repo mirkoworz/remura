@@ -1,3 +1,12 @@
+# REMURA TradingView — ROADMAP v0.8.167-lab (dual-inhibit boundary and owner staging receipt)
+**Aggiornamento 18/11/2026, sessione successiva alle 16:21 CET — PR #102 DRAFT**
+
+- v0.8.166 Telemetry 44329596606/job 134890071928 and Wrangler 44329596959 verified completed/success. Owner 16:18 real root-owned staging and package protection GREEN, extraction/activation/installation NO, receipt [6982816363](https://github.com/mirkoworz/remura/pull/102#issuecomment-6982816363). Do not repeat provisioning, download, signature or copy. Collector active last observed 15:52; not rechecked by receipt.
+- Add offline dual-inhibit descriptor boundary and seven disposable tests: existing lock only, both maintenance and collector markers, exact TAR bytes, inode and marker rechecks including scope exit. No actual lock acquisition, marker installation, executable bootstrap or application mutation. CI pending. Historical pinned source bytes untouched. See ABC-DUAL-INHIBIT-V167.md.
+- B PR #89 head 3b4ff66c18e64fb3a4fc78c5464f2212505671ab and E PR #104 head 0612fe18265791d774845f5b83bde2e696495489 verified DRAFT. Custody v0.2 real owner-local run remains outstanding; no duplicate backup, no outcomes. Keep frozen protocol, historical ABC checkout and B/D/E pins intact.
+- A+ Radar six completed/success since 13:46 through 16:16 CET, latest 44333645242/job 134904351212, capacity-only step success; capacity result not exposed in inspected log. No new availability attested, no schedule changes.
+- Backup swap gate unchanged. Independent external owner witness and protected local memory handling are design candidates, not proven. No live writes, service actions, transport, purchases or quota attestation.
+
 # REMURA TradingView — ROADMAP v0.8.166-lab (existing delivery byte boundary)
 **Aggiornamento 18/11/2026, sessione successiva alle 15:52 CET — PR #102 DRAFT**
 
