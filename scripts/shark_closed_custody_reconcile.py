@@ -1,4 +1,4 @@
-"""REMURA Track B — closed custody reconciliation v0.2 LAB, 18/11/2026, after 15:49 CET.
+"""REMURA Track B — closed custody reconciliation v0.3 LAB, 18/11/2026, after 16:28 CET.
 Owner-local closed recovered copies only. No backup, extraction, network, writes,
 source rows, path/digest exports, or evaluation of prospective outcomes.
 Requires Python with SQLite deserialize; run as ordinary owner, not root.
@@ -18,6 +18,7 @@ TABLES=("research_cvd_observations","research_cvd_scan_attempts",
         "research_cvd_shard_metadata","research_squalincome_cot_links",
         "research_retail_original_first_seen","research_first_periodic_invocation",
         "research_retail_segment_metadata")
+SOURCE_TABLES=("prices","status","cot_reports","cot_first_seen")
 LIMIT=64*1024*1024
 TOTAL=256*1024*1024
 NODES=12000
@@ -60,7 +61,7 @@ def schema(data,deadline):
         db.set_progress_handler(lambda:int(time.monotonic()>=deadline),1000)
         names={r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table' LIMIT 4097")}
         need(len(names)<=4096 and time.monotonic()<deadline)
-        return frozenset(n for n in TABLES if n in names)
+        return frozenset(n for n in TABLES+SOURCE_TABLES if n in names)
 
 def reconcile(raw,*,confirmed_closed=False):
     need(confirmed_closed is True and os.geteuid()!=0 and hasattr(sqlite3.Connection,"deserialize"))
@@ -72,7 +73,8 @@ def reconcile(raw,*,confirmed_closed=False):
     need(stat.S_ISDIR(s.st_mode) and s.st_uid==os.getuid() and not s.st_mode&0o077)
     deadline=time.monotonic()+SECONDS
     counts=Counter()
-    known=Counter({n:0 for n in TABLES})
+    known=Counter({n:0 for n in TABLES+SOURCE_TABLES})
+    co=Counter({"prices_and_status":0,"cot_and_first_seen":0,"prices_cot_and_first_seen":0})
     seen={}
     used=0
     def error(_):counts["unverified"]+=1
@@ -106,6 +108,10 @@ def reconcile(raw,*,confirmed_closed=False):
                     seen[digest]=schema(data,deadline)
                     counts["distinct_verified_byte_groups"]+=1
                     for table in seen[digest]:known[table]+=1
+                    present=seen[digest]
+                    co["prices_and_status"]+=int({"prices","status"}<=present)
+                    co["cot_and_first_seen"]+=int({"cot_reports","cot_first_seen"}<=present)
+                    co["prices_cot_and_first_seen"]+=int({"prices","cot_reports","cot_first_seen"}<=present)
                 else:counts["duplicate_verified_occurrences"]+=1
                 counts["verified_occurrences"]+=1
             except (OSError,ValueError,sqlite3.Error,OverflowError):
@@ -116,7 +122,10 @@ def reconcile(raw,*,confirmed_closed=False):
     return {"schema":"remura.shark.closed.custody.reconcile.v1",
             "status":"PARTIAL" if counts["unverified"] or counts["truncated"] else "SCOPED_BYTE_RECONCILIATION_ONLY",
             "counts":{k:counts[k] for k in ("occurrences","verified_occurrences","distinct_verified_byte_groups","duplicate_verified_occurrences","unverified","truncated")},
-            "table_presence_in_distinct_byte_groups":dict(known),
+            "table_presence_in_distinct_byte_groups":{n:known[n] for n in TABLES},
+            "source_table_presence_in_distinct_byte_groups":{n:known[n] for n in SOURCE_TABLES},
+            "source_table_copresence_in_distinct_byte_groups":dict(co),
+            "source_rows_checked":False,"asof_availability_attested":False,
             "logical_database_identity_attested":False,"all_archives_attested":False,
             "external_authentication":False,"absence_elsewhere_proven":False,
             "outcomes_evaluated":False,"edge_established":False,"writes":False}

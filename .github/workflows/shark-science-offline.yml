@@ -6,6 +6,7 @@ on:
       - 'scripts/cvd_*.py'
       - 'scripts/shark_science_gate.py'
       - 'scripts/shark_closed_custody_reconcile.py'
+      - 'scripts/shark_custody_host_preflight.py'
       - 'scripts/shark_cvd_incremental_protocol.py'
       - 'scripts/shark_cvd_missingness_bounds.py'
       - 'scripts/shark_cvd_full_denominator_audit.py'
@@ -182,6 +183,8 @@ jobs:
               p=Path(d)
               with sqlite3.connect(p/"one.db") as db:
                   db.execute("CREATE TABLE research_cvd_observations (x)")
+                  for name in ("prices","status","cot_reports","cot_first_seen"):
+                      db.execute("CREATE TABLE "+name+" (x)")
               shutil.copyfile(p/"one.db",p/"two.db")
               with sqlite3.connect(p/"three.db") as db:
                   db.execute("CREATE TABLE research_cvd_scan_attempts (x)")
@@ -190,6 +193,9 @@ jobs:
               assert r["counts"]["distinct_verified_byte_groups"]==2,r
               assert r["counts"]["duplicate_verified_occurrences"]==1,r
               assert r["table_presence_in_distinct_byte_groups"]["research_cvd_observations"]==1,r
+              assert r["source_table_presence_in_distinct_byte_groups"]["cot_first_seen"]==1,r
+              assert r["source_table_copresence_in_distinct_byte_groups"]["prices_cot_and_first_seen"]==1,r
+              assert not r["source_rows_checked"] and not r["asof_availability_attested"]
               assert not r["edge_established"] and not r["logical_database_identity_attested"]
               (p/"two.db-wal").touch()
               r=reconcile(p,confirmed_closed=True)
@@ -198,6 +204,22 @@ jobs:
               try:reconcile(p)
               except ValueError:pass
               else:raise AssertionError("missing owner confirmation")
+          PY
+      - name: Owner custody host metadata preflight (no archive)
+        run: |
+          python -B - <<'PY'
+          from scripts.shark_custody_host_preflight import mac_swap,filevault,linux_swap,preflight
+          assert mac_swap("total = 1024.00M used = 0.00M free = 1024.00M (encrypted)")["swap_encryption_reported"] is True
+          assert mac_swap("total = 0.00M used = 0.00M free = 0.00M")["swap_used_reported"] is False
+          assert mac_swap("unrecognized")["swap_encryption_reported"] is None
+          assert filevault("true\n") is True and filevault("unknown") is None
+          h="Filename Type Size Used Priority\n"
+          assert linux_swap("SwapTotal: 0 kB\n",h) is False
+          assert linux_swap("SwapTotal: 512 kB\n",h+"fixture file 512 0 -2\n") is True
+          assert linux_swap("SwapTotal: 512 kB\n",h) is None
+          r=preflight()
+          assert not r["archive_opened"] and not r["plaintext_processing_authorized"]
+          assert not r["memory_non_swappable_attested"] and not r["backup_gate_bypassed"]
           PY
       - name: Test CVD JS detector
         run: node --test tests/cvd-divergence.test.js

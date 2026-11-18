@@ -1,5 +1,14 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
+## 18/11/2026 — Custodia v0.3 LAB, sessione successiva alle 16:28 CET
+
+- v0.2 reconciliation CI 44329005043, insights 44329005813 and private price engine 44329004920 verified success, exact prior head 3b4ff66c18e64fb3a4fc78c5464f2212505671ab. Deduplicate owner-local closed copies by in-memory byte digest; no exported hashes.
+- Expand schema-only reconciliation to exact source tables prices/status/cot_reports/cot_first_seen, distinct-byte-group presence and co-presence counts. No source rows, timestamps, as-of availability or predictive outcomes verified. Preserve prior research-table output keys, frozen procedure, and historical cross-track pins. Existing real archives still not accessed.
+- New owner-local host metadata preflight, no archive access: SQLite deserialize, ordinary user, core limit, reported FileVault and swap metadata where supported. A report is not attestation of archive volume encryption, non-swappable memory or permission to process plaintext. Existing Oracle backup swap gate unchanged. No extra backup or private data copy; Mac preflight only before deciding real local handling.
+- CI pending for v0.3. No new resources, activation, outcomes or costs.
+
+# REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
+
 ## 18/11/2026 — Custodia chiusa v0.1 LAB, sessione successiva alle 11:07 CET
 
 - Added owner-only `scripts/shark_closed_custody_inventory.py`: aggregate schema occurrences on already recovered private closed copies, strict no-WAL/sidecar gate and bounded traversal. Reuses existing `shark_cvd_shard_backup.verify_snapshot` for complete B snapshot candidates, no writer lock, copy, restore, decryption or broker calls.
