@@ -1,3 +1,10 @@
+# REMURA TradingView — ROADMAP v0.8.159-lab (actual locked bundle and authenticated rollback)
+**Aggiornamento 18/11/2026, sessione successiva alle 13:29 CET — PR #102 DRAFT**
+
+- v0.8.158 Telemetry 44304674966/job 134803012404 and Wrangler 44304674932 verified GREEN.
+- Reuse actual pinned CI TAR to validate all 155 application files from the immutable bytes under the candidate lock, without reopening the staged pathname. Existing artifact and historical ABC pins unchanged. Exact 90-path disk transaction fixture now uses an HMAC-authenticated journal and rejects wrong key, wrong transaction, unsigned downgrade and tamper. CI pending.
+- No live change. Real trusted bootstrap, anti-replay witness, historical lock integration with authenticated disk transaction, coherent snapshot and safe persistent legacy service containment remain open. See ABC-LOCKED-BUNDLE-AUTH-JOURNAL-LAB.md. No installation approval, no new artifact, no repeated owner operation, no change to B/D/E protocol or Ampere.
+
 # REMURA TradingView — ROADMAP v0.8.158-lab (locked candidate byte boundary)
 **Aggiornamento 18/11/2026, 13:29 CET — PR #102 DRAFT**
 

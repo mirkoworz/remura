@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# REMURA v0.8.144 LAB — 18/11/2026, sessione successiva alle 09:41 CET
+# REMURA v0.8.159 LAB — 18/11/2026, sessione successiva alle 13:29 CET
 """Build and verify an offline, non-installable pinned ABC application bundle.
 No deployment, network, credentials, live timestamp substitution or extraction.
 """
@@ -43,6 +43,13 @@ def inspect_bundle(path):
     # Hash and parse the same bounded in-memory bytes; no extraction or executable code.
     with open(path,"rb") as f:b=f.read(LIMIT+1)
     need(len(b)==s.st_size and len(b)<=LIMIT)
+    report, _, _ = inspect_bundle_bytes(b)
+    return report
+
+def inspect_bundle_bytes(b):
+    """Parse exactly the immutable supplied bytes; never reopen a path."""
+    need(type(b) is bytes and 0<len(b)<=LIMIT)
+    app={}
     with tarfile.open(fileobj=io.BytesIO(b),mode="r:") as t:
         items=t.getmembers()
         need(len(items)==156 and items[0].name=="MANIFEST.json")
@@ -53,7 +60,9 @@ def inspect_bundle(path):
         need([m.name for m in items[1:]]==["app/"+n for n in expected])
         for m in items[1:]:
             r=expected[m.name[4:]]
-            need(m.size==r["bytes"] and sha(t.extractfile(m).read())==r["candidate_sha256"])
+            data=t.extractfile(m).read()
+            need(m.size==r["bytes"] and len(data)==r["bytes"] and sha(data)==r["candidate_sha256"])
+            app[m.name[4:]]=data
         # Reject appended bytes, noncanonical headers, alternate tar encodings.
         rebuilt=io.BytesIO()
         with tarfile.open(fileobj=rebuilt,mode="w",format=tarfile.USTAR_FORMAT) as out:
@@ -61,7 +70,7 @@ def inspect_bundle(path):
         need(rebuilt.getvalue()==b)
     return {"schema":SCHEMA,"bundle_sha256":sha(b),"bundle_bytes":len(b),
             "application_paths":155,"deployment_reference_only":28,
-            "installable":False,"release_authorized":False}
+            "installable":False,"release_authorized":False},d,app
 def build_bundle(path,manifest,app):
     path=Path(path).absolute()
     need(path.parent==path.parent.resolve() and path.parent.is_dir())

@@ -1,4 +1,4 @@
-# REMURA v0.8.142 LAB — 18/11/2026, sessione successiva alle 09:24 CET
+# REMURA v0.8.159 LAB — 18/11/2026, sessione successiva alle 13:29 CET
 """Durable rollback journal on owned disposable filesystem only.
 No CLI, no service commands, no deployment or production paths.
 Use a new tempfile.mkdtemp(prefix="remura-journal-lab-") workspace.
@@ -6,6 +6,7 @@ Use a new tempfile.mkdtemp(prefix="remura-journal-lab-") workspace.
 import base64
 import fcntl
 import hashlib
+import hmac
 import json
 import os
 import re
@@ -59,7 +60,7 @@ def canonical(x):
     return json.dumps(x,sort_keys=True,separators=(",",":")).encode()
 
 class Journal:
-    def __init__(self,root,*,synthetic=False):
+    def __init__(self,root,*,synthetic=False,auth_key=None,transaction_id=None):
         require(synthetic is True)
         root=Path(root)
         require(root.is_absolute() and root==root.resolve() and root.parent==Path(tempfile.gettempdir()).resolve()
@@ -67,6 +68,13 @@ class Journal:
         require(owned(root,True).st_mode&0o077==0)
         require(owned(root/"app",True).st_mode&0o022==0)
         require(owned(root/"app"/"scripts",True).st_mode&0o022==0)
+        # Optional authenticated LAB mode, with key and transaction supplied out
+        # of band by the caller. No key is written to disk or logged.
+        require((auth_key is None and transaction_id is None) or
+                (type(auth_key) is bytes and len(auth_key)==32 and
+                 type(transaction_id) is str and re.fullmatch(r"[a-f0-9]{64}",transaction_id)))
+        self.auth_key=auth_key
+        self.transaction_id=transaction_id
         self.root=root
         self.app=root/"app"
         self.path=root/"journal.json"
@@ -97,15 +105,35 @@ class Journal:
     def write_doc(self,d):
         data=canonical(d)
         require(len(data)<=LIMIT*8)
-        atomic(self.path,canonical({"payload":d,"sha256":hashlib.sha256(data).hexdigest()}),0o600)
+        if self.auth_key is None:
+            envelope={"payload":d,"sha256":hashlib.sha256(data).hexdigest()}
+        else:
+            body={"schema":"remura.abc.authenticated.journal.lab.v1",
+                  "transaction":self.transaction_id,
+                  "release_manifest":"73635db92dd9f709ae078119a161ab12b7c9a63ca18782b99e7e1f6357c3c2c1",
+                  "payload":d}
+            envelope={"body":body,"mac":hmac.new(self.auth_key,canonical(body),hashlib.sha256).hexdigest()}
+        atomic(self.path,canonical(envelope),0o600)
 
     def read_doc(self):
         s=owned(self.path)
         require(not s.st_mode&0o077 and s.st_size<=LIMIT*10)
         envelope=json.loads(self.path.read_bytes())
-        require(set(envelope)=={"payload","sha256"})
-        d=envelope["payload"]
-        require(hashlib.sha256(canonical(d)).hexdigest()==envelope["sha256"])
+        if self.auth_key is None:
+            require(set(envelope)=={"payload","sha256"})
+            d=envelope["payload"]
+            require(hashlib.sha256(canonical(d)).hexdigest()==envelope["sha256"])
+        else:
+            require(type(envelope) is dict and set(envelope)=={"body","mac"})
+            body=envelope["body"]
+            require(type(body) is dict and set(body)=={"schema","transaction","release_manifest","payload"})
+            require(body["schema"]=="remura.abc.authenticated.journal.lab.v1" and
+                    body["transaction"]==self.transaction_id and
+                    body["release_manifest"]=="73635db92dd9f709ae078119a161ab12b7c9a63ca18782b99e7e1f6357c3c2c1")
+            mac=envelope["mac"]
+            require(type(mac) is str and re.fullmatch(r"[a-f0-9]{64}",mac))
+            require(hmac.compare_digest(hmac.new(self.auth_key,canonical(body),hashlib.sha256).hexdigest(),mac))
+            d=body["payload"]
         require(set(d)=={"schema","phase","rows"} and d["schema"]==SCHEMA and d["phase"] in {"prepared","applied","rolled_back"})
         rows=d["rows"]
         require(type(rows) is list and 0<len(rows)<=155)

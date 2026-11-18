@@ -1,4 +1,4 @@
-# REMURA TradingView Telemetry LAB v0.8.157 — 18/11/2026, sessione successiva alle 12:28 CET.
+# REMURA TradingView Telemetry LAB v0.8.159 — 18/11/2026, sessione successiva alle 13:29 CET.
 # SOLO CI OFFLINE. Nessun deploy, webhook, credenziale o trade automatico.
 name: REMURA TradingView Telemetry LAB
 on:
@@ -206,6 +206,7 @@ jobs:
           python3 "$p" --build "$d/b.tar"
           cmp "$d/a.tar" "$d/b.tar"
           python3 "$p" --verify "$d/a.tar"
+          python3 tradingview/delta-peaks/abc_v165_locked_bundle_fixture_v1.py "$d/a.tar"
           if python3 "$p" --build "$d/a.tar"; then exit 1; fi
           printf x >> "$d/b.tar"
           if python3 "$p" --verify "$d/b.tar"; then exit 1; fi

@@ -1,6 +1,6 @@
-# REMURA v0.8.143 LAB — 18/11/2026, sessione 09:39 CET
+# REMURA v0.8.159 LAB — 18/11/2026, sessione successiva alle 13:29 CET
 """Actual pinned 90 path candidate on disposable disk; no service or private data."""
-import hashlib,os,tempfile,unittest
+import hashlib,json,os,tempfile,unittest
 from pathlib import Path
 from abc_rollback_disk_lab_v1 import Journal
 import abc_v165_overlay_manifest_fixture_v1 as overlay
@@ -28,7 +28,11 @@ class Tests(unittest.TestCase):
         (self.app/"scripts").mkdir(parents=True)
         for p,b in self.base.items():
             f=self.app/p;f.write_bytes(b);f.chmod(0o640)
-        self.j=Journal(self.root,synthetic=True)
+        self.key=os.urandom(32)
+        self.transaction=os.urandom(32).hex()
+        self.j=self.reopen()
+    def reopen(self):
+        return Journal(self.root,synthetic=True,auth_key=self.key,transaction_id=self.transaction)
     def verify(self,expected):
         actual={p.relative_to(self.app).as_posix():p.read_bytes() for p in self.app.rglob("*") if p.is_file()}
         self.assertEqual(actual,expected)
@@ -43,11 +47,28 @@ class Tests(unittest.TestCase):
         self.j.prepare(self.old,self.candidate)
         pid=os.fork()
         if pid==0:
-            try:Journal(self.root,synthetic=True).apply(crash_after=45)
+            try:self.reopen().apply(crash_after=45)
             except BaseException:os._exit(76)
             os._exit(77)
         _,status=os.waitpid(pid,0)
         self.assertEqual(os.waitstatus_to_exitcode(status),75)
-        self.assertEqual(Journal(self.root,synthetic=True).rollback(),"rolled_back")
+        self.assertEqual(self.reopen().rollback(),"rolled_back")
+        self.verify(self.base)
+    def test_authentication_rejects_tamper_wrong_key_and_downgrade(self):
+        self.j.prepare(self.old,self.candidate)
+        raw=self.j.path.read_bytes()
+        with self.assertRaises(ValueError):
+            Journal(self.root,synthetic=True,auth_key=os.urandom(32),transaction_id=self.transaction).apply()
+        with self.assertRaises(ValueError):
+            Journal(self.root,synthetic=True,auth_key=self.key,transaction_id=os.urandom(32).hex()).apply()
+        with self.assertRaises(ValueError):
+            Journal(self.root,synthetic=True).apply()
+        envelope=json.loads(raw)
+        envelope["body"]["payload"]["rows"][0]["after"]["mode"]=0o777
+        self.j.path.write_text(json.dumps(envelope))
+        with self.assertRaises(ValueError): self.reopen().apply()
+        self.verify(self.base)
+        self.j.path.write_bytes(raw)
+        self.assertEqual(self.reopen().rollback(),"rolled_back")
         self.verify(self.base)
 if __name__=="__main__":unittest.main()
