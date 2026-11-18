@@ -1,3 +1,10 @@
+# REMURA TradingView — ROADMAP v0.8.146-lab (persistent collector startup barrier)
+**Aggiornamento 18/11/2026, sessione successiva alle 09:49 CET — PR #102 DRAFT**
+
+- v0.8.145 GREEN: Telemetry 44269985781 job 134683883923, 587 main, 142 ABC, five maintenance tests; Wrangler 44269985980. Logs verified.
+- v0.8.146 root-only startup condition helper and separate collector/updater systemd drop-in candidates, five test methods pending. Collector may restart after verified complete install/rollback while updater remains inhibited. No installed service changes, no reboot or actual manager test.
+- Operational sequence requires both barriers effective, stopped processes, durable journal, verified hashes/modes before any approved release; updater reconciliation before final inhibit removal. No automated clear. Actual installer still pending, remaining Shark evidence, iCloud, quotas and exact unit/config paths. See ABC-STARTUP-BARRIER-LAB.md.
+
 # REMURA TradingView — ROADMAP v0.8.145-lab (persistent updater inhibition candidate)
 **Aggiornamento 18/11/2026, sessione successiva alle 09:44 CET — PR #102 DRAFT**
 
