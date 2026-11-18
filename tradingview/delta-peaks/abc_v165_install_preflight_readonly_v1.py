@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# REMURA v0.8.147 LAB — 18/11/2026, sessione successiva alle 09:52 CET
+# REMURA v0.8.148 LAB — 18/11/2026, sessione successiva alle 09:56 CET
 """Read-only preflight. No service changes, lock acquisition, DB or network.
 Not an installer; release authorization remains external.
 """
 import argparse,hashlib,io,json,os,stat,subprocess,tarfile
 from pathlib import Path
-from abc_v165_stage_bundle_v1 import inspect_bundle,rows
+from abc_v165_stage_bundle_v1 import inspect_bundle,rows,PIN
 from abc_installed_baseline_readonly_v1 import code_status,blob
 
 BUNDLE="6804531c819ec16af972755b042394ac5c9acee23b7c03f70a09ab765369cfcc"
@@ -42,6 +42,10 @@ def load_manifest(path):
     with tarfile.open(fileobj=io.BytesIO(raw),mode="r:") as t:
         d=json.load(t.extractfile("MANIFEST.json"))
     return list(rows(d).values())
+
+def load_public_manifest(path):
+    raw,_=regular_bytes(Path(path).absolute(),1024*1024)
+    return list(rows(json.loads(raw)).values())
 
 def existing_application(root,manifest):
     counts={};findings=[]
@@ -99,9 +103,9 @@ def work_report(work,uid):
         return {"state":"metadata_only" if ok else "unsafe","markers":markers,"lock_acquired":False}
     except OSError:return {"state":"unavailable","lock_acquired":False}
 
-def oracle_report(path):
+def oracle_report(path,manifest_only=False):
     if os.geteuid()!=0:raise ValueError("ROOT_REQUIRED")
-    manifest=load_manifest(path)
+    manifest=load_public_manifest(path) if manifest_only else load_manifest(path)
     if APP.resolve()!=APP:raise ValueError("APP_UNSAFE")
     report=existing_application(APP,manifest)
     units={u:unit_report(u,properties(u)) for u in UNITS}
@@ -113,16 +117,19 @@ def oracle_report(path):
     v=os.statvfs(APP)
     return {"schema":"remura.v165.preflight.readonly.v1","application":report,"units":units,
             "updater_exact_and_root_owned":updater,"work":work_report(WORK,0),
-            "disk_available_bytes":v.f_bavail*v.f_frsize,"bundle_sha256":BUNDLE,
+            "disk_available_bytes":v.f_bavail*v.f_frsize,"bundle_sha256":None if manifest_only else BUNDLE,
+            "manifest_sha256":PIN,"package_bytes_verified_on_target":not manifest_only,
             "release_authorized":False,"installable":False,"coherent_live_snapshot":False,
             "unresolved":["backup_freshness","ownership_and_modes","actual_lock_lease","effective_guard_installation",
                           "shark_custody","external_quotas","signed_release","owner_maintenance_authorization"]}
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--bundle",required=True,type=Path)
+    g=p.add_mutually_exclusive_group(required=True)
+    g.add_argument("--bundle",type=Path)
+    g.add_argument("--manifest",type=Path)
     a=p.parse_args()
-    try:print(json.dumps(oracle_report(a.bundle),sort_keys=True))
+    try:print(json.dumps(oracle_report(a.manifest or a.bundle,manifest_only=a.manifest is not None),sort_keys=True))
     except (ValueError,OSError,subprocess.SubprocessError):
         print(json.dumps({"status":"unavailable_or_unsafe","release_authorized":False,"installable":False}))
         return 2

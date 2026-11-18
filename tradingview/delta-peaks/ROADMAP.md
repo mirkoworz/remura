@@ -1,3 +1,10 @@
+# REMURA TradingView — ROADMAP v0.8.148-lab (portable actual manifest handoff)
+**Aggiornamento 18/11/2026, sessione successiva alle 09:56 CET — PR #102 DRAFT**
+
+- v0.8.147 GREEN: Telemetry 44271119712 job 134687683321 (596 main tests including four preflight), Wrangler 44271119729. Logs verified.
+- v0.8.148 actual public manifest from green CI stored in Git, canonical pin reused; existing preflight CLI now accepts manifest-only mode, two tests pending. Package bytes not verified on target; no new artifact storage or actual Oracle invocation. See ABC-MANIFEST-HANDOFF-LAB.md.
+- Preserve previous backup/COT/SDK proof. Remaining actual installer, authentication, Shark evidence, iCloud/quotas and Pine compile. No LIVE.
+
 # REMURA TradingView — ROADMAP v0.8.147-lab (dedicated read-only preflight)
 **Aggiornamento 18/11/2026, sessione successiva alle 09:52 CET — PR #102 DRAFT**
 
