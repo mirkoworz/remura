@@ -1,3 +1,10 @@
+# REMURA TradingView — ROADMAP v0.8.158-lab (locked candidate byte boundary)
+**Aggiornamento 18/11/2026, 13:29 CET — PR #102 DRAFT**
+
+- Owner handoff: v0.8.157 CI GREEN 44295483881 / job 134771300177, Wrangler 44295483788; 607 main + ABC 31+111. Actual owner-signed v1.65 candidate verified on Oracle at 13:25; no installation approval. No repeat of signing, transfer or manual verification.
+- Add descriptor-anchored bounded pinned TAR bytes under historical cooperative lock and durable updater inhibit. Eleven targeted offline tests pending CI. Root bootstrap, independent trusted staging import, authenticated journal, coherent live snapshot and old manual activation block are outstanding; no actual installation, marker, timer or service changes. See ABC-LOCKED-CANDIDATE-BYTES-LAB.md.
+- Keep B/E research and historical ABC pins separate. No change to fixed prospective protocol, active Pine, alerts, D1 or collaborators. Ampere existing automation retained; actual new capacity and account quota not attested. Five recovered archives unchanged; actual closed B custody examination outstanding.
+
 # REMURA TradingView — ROADMAP v0.8.157-lab (one-shot unsigned candidate handoff)
 **Aggiornamento 18/11/2026, sessione successiva alle 12:28 CET — PR #102 DRAFT**
 
