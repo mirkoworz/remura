@@ -1,3 +1,11 @@
+# REMURA TradingView — ROADMAP v0.8.172-lab (original decision exclusions and mobile coverage report)
+**Aggiornamento 18/11/2026, sessione successiva alle 17:48 CET — PR #102 DRAFT**
+
+- v0.8.171 Telemetry 44351710400 and Wrangler 44351710394 completed/success. E v0.44 CI 44351587648 completed/success, exact head 363026227ffaae123125cdcf6fedbeace9297214. Both PRs remain DRAFT, no merge.
+- Extend synthetic original-decision coverage to mutually exclusive per-source reason counts: late within audit horizon, no exact close, conflict/invalid, config mismatch, quality, partial, etc. Explicitly exclude receipts beyond audit cutoff from retrospective diagnostic categories. No future receipt changes original coverage. Three tests added. No raw data or outcome calculation.
+- Standalone aggregate-only mobile HTML report in REMURA style, two tests; strict denominators, allowed labels, marginal consistency and disabled-signal gates. Not wired into any live dashboard or dossier, no public export. No changes to historical source/threshold pins.
+- Mac preflight deferred by owner (iPhone only). No Oracle, D1, Pine, backup, service or spending changes. Radar latest observed 17:46 CET success; capacity unverified. CI pending.
+
 # REMURA TradingView — ROADMAP v0.8.171-lab (separate feed original decision coverage)
 **Aggiornamento 18/11/2026, sessione delle 17:48 CET — PR #102 DRAFT**
 
