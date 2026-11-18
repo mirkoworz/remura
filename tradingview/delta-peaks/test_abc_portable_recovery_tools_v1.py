@@ -1,4 +1,4 @@
-# REMURA v0.8.150 LAB — 18/11/2026, sessione delle 10:25 CET
+# REMURA v0.8.151 LAB — 18/11/2026, sessione delle 11:07 CET
 import json,os,sqlite3,tempfile,unittest,shutil
 from unittest.mock import patch
 import abc_prices_recovery_v2 as recovery
@@ -81,3 +81,28 @@ class Tests(unittest.TestCase):
             finally:
                 for p in (owner,public):
                     recovery.subprocess.run(["gpgconf","--homedir",str(p),"--kill","all"],check=False,stdout=recovery.subprocess.DEVNULL,stderr=recovery.subprocess.DEVNULL)
+
+    def test_capture_gate_swap_and_metadata(self):
+        h="Filename Type Size Used Priority\n"
+        mem="MemAvailable: 640532 kB\nSwapTotal: 0 kB\n"
+        args=(recovery.CAPTURE_BUDGET,recovery.MAX+2*recovery.MARGIN)
+        recovery.capture_resource_gate(mem,h,*args)
+        for m,s,reason in [
+            (mem.replace("SwapTotal: 0","SwapTotal: 1048572"),h,"CAPTURE_SWAP_ACTIVE"),
+            (mem,h+"/dev/example partition 1 0 -2\n","CAPTURE_SWAP_ACTIVE"),
+            (mem.replace("SwapTotal: 0 kB\n",""),h,"CAPTURE_RESOURCE_METADATA"),
+            (mem,"","CAPTURE_RESOURCE_METADATA"),
+            (mem+"SwapTotal: 0 kB\n",h,"CAPTURE_RESOURCE_METADATA"),
+        ]:
+            with self.assertRaisesRegex(recovery.CaptureResourceError,reason):
+                recovery.capture_resource_gate(m,s,*args)
+
+    def test_capture_gate_full_cap_and_reserve(self):
+        h="Filename Type Size Used Priority\n"
+        limit=recovery.CAPTURE_BUDGET+recovery.RAM_RESERVE
+        mem="MemAvailable: %d kB\nSwapTotal: 0 kB\n"%(limit//1024)
+        a,b=recovery.CAPTURE_BUDGET,recovery.MAX+2*recovery.MARGIN
+        recovery.capture_resource_gate(mem,h,a,b)
+        for m,x,y in [(mem,a-1,b),(mem,a,b-1),(mem.replace(str(limit//1024),str(limit//1024-1)),a,b)]:
+            with self.assertRaisesRegex(recovery.CaptureResourceError,"CAPTURE_RESOURCES_LOW"):
+                recovery.capture_resource_gate(m,h,x,y)

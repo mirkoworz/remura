@@ -1,3 +1,10 @@
+# REMURA TradingView — ROADMAP v0.8.151-lab (privileged update boundary and backup resource gate)
+**Aggiornamento 18/11/2026, sessione delle 11:07 CET — PR #102 DRAFT**
+
+- v0.8.150 GREEN verified: Telemetry 44276166143 / job 134704742401, Wrangler 44276166144; 602 main and ABC 31+111 tests. GPG end-to-end fixture successful.
+- Owner portable preflight completed; baseline 79 exact, 76 expected absent, reference units match; privileged update ownership boundary unresolved. Targeted metadata check completed; do not repeat. Preserve details privately. Release still blocked.
+- v0.8.151 adds conservative capture resource gate including swap refusal and two targeted tests (CI pending). No real capture or schedule. Root trust separation and containment plan in ABC-PRIVILEGED-BOUNDARY.md; actual containment requires owner approval, no service changes here. B shard custody, signed release, iSH and quotas still open.
+
 # REMURA TradingView — ROADMAP v0.8.150-lab (v2 owner recovery and local receipt)
 **Aggiornamento 18/11/2026, sessione delle 10:25 CET — PR #102 DRAFT**
 

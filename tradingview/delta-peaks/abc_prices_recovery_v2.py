@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# REMURA v0.8.150 LAB — 18/11/2026, sessione delle 10:25 CET
+# REMURA v0.8.151 LAB — 18/11/2026, sessione delle 11:07 CET
 """Future owner-invoked price/COT recovery package. Never scheduled or automatic.
 No broker calls, source checkpoint, live restore or deletion.
 Owner-only opt-in memory recovery and a local signed receipt.
@@ -9,6 +9,8 @@ from pathlib import Path
 SOURCE=Path("/opt/remura/private/remura-prices.sqlite3")
 MAX=64*1024*1024
 MARGIN=8*1024*1024
+RAM_RESERVE=256*1024*1024
+CAPTURE_BUDGET=3*MAX+MARGIN
 SCHEMA="remura.prices.recovery.v2"
 NAME="remura-prices.sqlite3"
 FPR=re.compile(r"[A-F0-9]{40}\Z")
@@ -117,12 +119,39 @@ def seal(home,sub,package,out):
         regular(Path(n),MAX+2*MARGIN)
         os.link(n,out);syncdir(out.parent)
     finally:os.unlink(n)
+class CaptureResourceError(ValueError):
+    pass
+
+def capture_resource_gate(meminfo,swaps,tmp_free,output_free):
+    """Fail closed before creating plaintext; not a guarantee against later changes."""
+    fields={}
+    for line in meminfo.splitlines():
+        key,sep,value=line.partition(":")
+        if key in ("MemAvailable","SwapTotal"):
+            parts=value.split()
+            if not sep or key in fields or len(parts)!=2 or parts[1]!="kB" or not parts[0].isdigit():
+                raise CaptureResourceError("CAPTURE_RESOURCE_METADATA")
+            fields[key]=int(parts[0])*1024
+    if set(fields)!={"MemAvailable","SwapTotal"}:
+        raise CaptureResourceError("CAPTURE_RESOURCE_METADATA")
+    lines=[x.split() for x in swaps.splitlines() if x.strip()]
+    if not lines or lines[0]!=["Filename","Type","Size","Used","Priority"]:
+        raise CaptureResourceError("CAPTURE_RESOURCE_METADATA")
+    if fields["SwapTotal"]!=0 or len(lines)!=1:
+        raise CaptureResourceError("CAPTURE_SWAP_ACTIVE")
+    if fields["MemAvailable"]<CAPTURE_BUDGET+RAM_RESERVE or tmp_free<CAPTURE_BUDGET or output_free<MAX+2*MARGIN:
+        raise CaptureResourceError("CAPTURE_RESOURCES_LOW")
+
+def check_capture_resources(ram,outdir):
+    capture_resource_gate(Path("/proc/meminfo").read_text(),Path("/proc/swaps").read_text(),
+                          disk(ram),disk(outdir))
+
 def capture(outdir,home,primary,sub,generation):
     need(type(generation) is int and 6<=generation<=999999)
     outdir=private_dir(outdir);recipient_check(home,primary,sub)
     ram=tmpfs();size=regular(SOURCE).st_size
-    # Size is rechecked by the snapshot progress callback. Conservative capacity gate.
-    need(disk(ram)>=3*size+MARGIN and disk(outdir)>=MAX+2*MARGIN)
+    # Use the full cap rather than source size: live SQLite can grow during backup.
+    check_capture_resources(ram,outdir)
     out=outdir/("prices-%06d.tar.gpg"%generation)
     need(not os.path.lexists(out))
     with tempfile.TemporaryDirectory(prefix="remura-prices-",dir=ram) as d:
@@ -271,6 +300,9 @@ def main():
         elif a.cmd=="verify-receipt":r=verify_receipt(a.receipt,a.keyring,a.sha256,a.generation,a.signer)
         else:r=inspect_closed(a.db)
         print(json.dumps(r,sort_keys=True))
+    except CaptureResourceError as e:
+        print(json.dumps({"status":str(e),"restore_authorized":False},sort_keys=True))
+        return 2
     except (ValueError,OSError,sqlite3.Error,subprocess.SubprocessError,tarfile.TarError,KeyError,TypeError):
         print('{"status":"STOP_UNSAFE_OR_INCOMPLETE","restore_authorized":false}')
         return 2
