@@ -1,3 +1,12 @@
+# REMURA TradingView — ROADMAP v0.8.178-lab (fourth real receipt checkpoint)
+**Aggiornamento 18/11/2026, sessione successiva alle 18:47 CET — PR #102 DRAFT**
+
+- v0.8.177 exact head b08ae4747a7a3dfe54a2622a3c6e34719fa7008a; Telemetry 44358866905 and Wrangler 44358866894 completed/success. B v0.4 exact head 05e731b26bccb167ba7e0859797de01136a5c933, Shark 44359230613, Insights 44359230552, price engine 44359230574 completed/success.
+- Owner refreshed MAIN free-budget workflow 44362104604/job 135006009025 at 18:45 CET: all four statuses OK; reported 238 reads estimate, 852 writes estimate, 451 Workers requests estimate, TEST 3641344 bytes, account 2 databases/3670016 bytes. Historical snapshot, not exact billing.
+- Owner executed MAIN V4 receipt-only run 44362438343/job 135007159142 completed/success at 18:47 CET. Exact requested window 16:00–16:55 UTC, 12/12 M5 FX:EURUSD slots, 0 missing/duplicates, max reported lag 17876 ms, 25 D1 rows read, 0 writes. Archived allowlisted aggregate fields only; deliberately omit radar/directional counts. observed_ms is GitHub run completion, not per-bar receipt time. No raw data or private source rows published.
+- Four existing disjoint windows in DEVELOPMENT: 40/40 requested bars, 0 missing or duplicates, 84 cumulative rows read, 0 writes, max reported lag 21660 ms. Add new regression test only, preserve earlier three-window tests and frozen protocol. Market coverage and independent provenance not proven. CI pending. No repetition or new live dispatch.
+- No deployment, Oracle change, purchase, backup access or scientific outcome. Mac preflight remains deferred.
+
 # REMURA TradingView — ROADMAP v0.8.177-lab (receipt request planning and observed free-budget evidence)
 **Aggiornamento 18/11/2026, sessione successiva alle 18:24 CET — PR #102 DRAFT**
 

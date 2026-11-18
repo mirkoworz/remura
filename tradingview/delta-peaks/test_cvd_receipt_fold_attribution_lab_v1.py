@@ -1,4 +1,4 @@
-# REMURA v0.8.176 LAB — 18/11/2026
+# REMURA v0.8.178 LAB — 18/11/2026
 import copy,json,sys,unittest
 from pathlib import Path
 ROOT=Path(__file__).resolve().parent
@@ -26,6 +26,25 @@ class AttributionTests(unittest.TestCase):
         self.assertEqual(r["new_network_reads"],0)
         self.assertNotIn("radar",json.dumps(r))
         self.assertNotIn("run_id",json.dumps(r))
+    def test_four_actual_disjoint_receipts(self):
+        fourth=json.loads((ROOT/"evidence"/"fx_fourth_receipt_20261118.json").read_text())
+        self.assertEqual(fourth["run_id"],44362438343)
+        self.assertNotIn("radar",fourth["report"])
+        self.assertEqual(fourth["report"]["max_lag_ms"],17876)
+        rows=evidence()+[fourth]
+        r=summarize(rows,audit_ms=fourth["observed_ms"])
+        d=r["folds"]["DEVELOPMENT"]
+        self.assertEqual((d["windows"],d["requested_slots"],d["valid_unique_bars"],
+                          d["missing_requested_slots"],d["duplicate_rows"],
+                          d["collection_rows_read"],d["collection_rows_written"]),
+                         (4,40,40,0,0,84,0))
+        self.assertEqual(d["max_lag_ms"],21660)
+        self.assertFalse(d["market_coverage_attested"])
+        self.assertFalse(d["per_bar_fold_receipt_clock_attested"])
+        self.assertFalse(r["scientific_admission"])
+        self.assertFalse(r["outcomes_computed"])
+        self.assertEqual(r["new_network_reads"],0)
+        with self.assertRaises(AuditError):summarize(rows+[fourth],audit_ms=fourth["observed_ms"])
     def test_future_audit_or_duplicate_denied(self):
         rows=evidence()
         with self.assertRaises(AuditError):summarize(rows,audit_ms=rows[-1]["observed_ms"]-1)
