@@ -1,3 +1,10 @@
+# REMURA TradingView — ROADMAP v0.8.180-lab (test variable shadowing correction and handoff)
+**Aggiornamento 18/11/2026, sessione successiva alle 18:52 CET — PR #102 DRAFT**
+
+- v0.8.179 exact head 4e17e09537937dc348e7e1005b67f7c6ea88a966; Wrangler 44363347153 success; Telemetry 44363347174/job 135010392233 failed 1 error in 676 tests. The newly inserted GPG fixture shadowed the pre-existing output directory variable `out` with a dict; later output path construction raised TypeError. Rename local result only; no change to verification semantics, application bytes or signed package. v0.8.180 CI pending.
+- Latest previously fully green D head db100ca1a9308a6658e51cccfe193d6d53496035 (v0.8.178), E v0.46 d941fe7640ac66b3a0c0d7e7c58c7305a41ca2b1, B v0.4 05e731b26bccb167ba7e0859797de01136a5c933.
+- Preserve all four archived receipts, frozen protocol, approved protected staging only. No new owner commands, installation, deploy, archive access, provider calls or purchase. Next: verify exact CI, consolidate owner handoff and continue meaningful gates.
+
 # REMURA TradingView — ROADMAP v0.8.179-lab (signed external receipt and local phase binding)
 **Aggiornamento 18/11/2026, sessione successiva alle 18:50 CET — PR #102 DRAFT**
 
