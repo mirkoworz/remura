@@ -116,6 +116,42 @@ class Tests(unittest.TestCase):
                     tamper.execute("DELETE FROM receipts WHERE seq=2")
                 # An independently retained latest anchor detects a reverted register.
                 with self.assertRaises(ValueError):append(second,sig2,a2)
+                # Link real disposable signature to actual local journal contents.
+                from abc_rollback_disk_lab_v1 import Journal,canonical
+                from abc_v165_signed_local_phase_lab_v1 import check,plan_digest
+                import hashlib
+                with tempfile.TemporaryDirectory(prefix="remura-journal-lab-") as jd, tempfile.TemporaryDirectory(prefix="remura-witness-lab-") as wd:
+                    local=Path(jd).resolve()
+                    (local/"app"/"scripts").mkdir(parents=True)
+                    target=local/"app"/"nav.js"
+                    target.write_bytes(b"before");target.chmod(0o640)
+                    j=Journal(local,synthetic=True,auth_key=b"k"*32,transaction_id="1"*64,
+                              witness_root=Path(wd).resolve())
+                    j.prepare({"nav.js":b"before"},{"nav.js":b"after"})
+                    with j.lock():
+                        doc=j.read_doc()
+                        plan=plan_digest(doc)
+                        receipt=phase.statement(transaction=j.transaction_id,plan=plan,sequence=1,
+                            previous=phase.ZERO,phase="prepared",
+                            journal=hashlib.sha256(canonical(doc)).hexdigest(),challenge="2"*64)
+                        sig=sign_phase(receipt)
+                        kw=dict(keyring=public,signer=primary,latest_anchor=phase.anchor(receipt,sig),
+                                sequence=1,expected_plan=plan,challenge="2"*64,synthetic=True)
+                        out=check(j,receipt,sig,**kw)
+                        self.assertEqual(out["counts"],dict(before=1,after=0,unknown=0))
+                        self.assertFalse(out["install_authorized"])
+                        self.assertFalse(out["independent_latest_anchor_attested"])
+                        with self.assertRaises(ValueError):check(j,receipt,sig,**dict(kw,expected_plan="3"*64))
+                        target.write_bytes(b"unknown")
+                        with self.assertRaises(ValueError):check(j,receipt,sig,**kw)
+                        target.write_bytes(b"before")
+                    j.apply()
+                    with j.lock():
+                        # A valid old signature is not proof of the new local phase.
+                        with self.assertRaises(ValueError):check(j,receipt,sig,**kw)
+                        doc=j.read_doc()
+                        self.assertEqual(plan_digest(doc),plan)
+                    j.rollback()
                 with self.assertRaises(ValueError):recovery.recipient_check(owner,primary,sub)
                 db=root/"source.db"; copy=root/"copy.db"; tar=root/"package"; cipher=out/"fixture.gpg"
                 a=sqlite3.connect(db)

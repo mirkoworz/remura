@@ -1,3 +1,10 @@
+# REMURA TradingView — ROADMAP v0.8.179-lab (signed external receipt and local phase binding)
+**Aggiornamento 18/11/2026, sessione successiva alle 18:50 CET — PR #102 DRAFT**
+
+- v0.8.178 exact head db100ca1a9308a6658e51cccfe193d6d53496035; Telemetry 44362741087 and Wrangler 44362741158 completed/success. Four existing real windows 40/40 requested, 84 cumulative D1 reads, 0 writes. Contributors v0.46 exact head d941fe7640ac66b3a0c0d7e7c58c7305a41ca2b1 CI 44363018769 completed/success. B v0.4 all GREEN. Radar latest 18:46 CET successful, capacity not attested.
+- New disposable LAB binding: actual authenticated local journal rows and phase digest checked against supplied owner-signed external receipt, expected plan digest, transaction, sequence, challenge and latest anchor. Refuse unknown local bytes, mismatched plan and stale phase even with a valid signature; reread local doc and phase. Reuse existing disposable GPG key test; no production keys. Caller lock and independent latest anchor remain assumptions; a joint replay with supplied stale anchor is not excluded. No privileged launcher, installation, automated repair, real external custody or authorization. CI pending.
+- Signed staged v1.65 and existing four source pins unchanged. No real Oracle service changes, new D1 queries, backup access or spending. Mac preflight deferred.
+
 # REMURA TradingView — ROADMAP v0.8.178-lab (fourth real receipt checkpoint)
 **Aggiornamento 18/11/2026, sessione successiva alle 18:47 CET — PR #102 DRAFT**
 
