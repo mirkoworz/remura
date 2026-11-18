@@ -1,4 +1,4 @@
-# REMURA v0.8.168 LAB — 18/11/2026, after 16:21 CET.
+# REMURA v0.8.170 LAB — 18/11/2026, after 16:54 CET.
 import json
 import unittest
 from unittest.mock import patch
@@ -22,6 +22,13 @@ class SourceAvailabilityTests(unittest.TestCase):
         self.assertFalse(r["outcomes_evaluated"])
         for name in ("raw_json","candidate_cooccurrences","median_direction_adjusted_return_atr"):
             self.assertNotIn(name,json.dumps(r))
+    def test_joint_same_bar_not_sum(self):
+        r=self.run_rows([coherent()])
+        c=r["availability_counts"]
+        self.assertEqual(c["cvd_delta_footprint_prior_level_joint"],1)
+        self.assertTrue(all(c["cvd_delta_footprint_prior_level_joint"]<=c[k]
+            for k in ("cvd_eligible_declared","delta_available","footprint_available","prior_level_available")))
+        self.assertEqual(self.run_rows([])["availability_counts"]["cvd_delta_footprint_prior_level_joint"],0)
     def test_empty_unknown(self):
         r=self.run_rows([])
         self.assertEqual(r["status"],"NO_OBSERVATIONS")

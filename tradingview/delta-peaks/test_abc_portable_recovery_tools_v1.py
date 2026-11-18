@@ -99,6 +99,23 @@ class Tests(unittest.TestCase):
                 bad=dict(second,journal="f"*64)
                 with self.assertRaises(recovery.subprocess.CalledProcessError):
                     phase.verify(bad,sig2,**dict(args,journal="f"*64,latest_anchor=phase.anchor(bad,sig2)))
+                # Exercise durable compare-and-set across separate SQLite connections.
+                import abc_v165_external_phase_store_lab_v1 as store
+                register=root/"register";register.mkdir(mode=0o700)
+                store.create(register,synthetic=True)
+                with self.assertRaises(FileExistsError):store.create(register,synthetic=True)
+                def append(body,sig,expected):
+                    return store.append(register,body,sig,expected_latest=expected,
+                                        keyring=public,signer=primary,synthetic=True)
+                self.assertEqual(append(first,sig1,phase.ZERO),a1)
+                self.assertEqual(append(second,sig2,a1),a2)
+                with self.assertRaises(ValueError):append(second,sig2,a1)
+                with self.assertRaises(ValueError):append(first,sig1,a2)
+                with sqlite3.connect(register/"phase-register.sqlite3") as tamper:
+                    self.assertEqual(tamper.execute("SELECT count(*) FROM receipts").fetchone()[0],2)
+                    tamper.execute("DELETE FROM receipts WHERE seq=2")
+                # An independently retained latest anchor detects a reverted register.
+                with self.assertRaises(ValueError):append(second,sig2,a2)
                 with self.assertRaises(ValueError):recovery.recipient_check(owner,primary,sub)
                 db=root/"source.db"; copy=root/"copy.db"; tar=root/"package"; cipher=out/"fixture.gpg"
                 a=sqlite3.connect(db)

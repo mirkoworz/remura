@@ -1,3 +1,12 @@
+# REMURA TradingView — ROADMAP v0.8.170-lab (persistent owner receipt register and joint source availability)
+**Aggiornamento 18/11/2026, sessione successiva alle 16:54 CET — PR #102 DRAFT**
+
+- v0.8.169 exact head 92f80fb3bac01249d0167550abf5ed9e53eeff2a; Telemetry 44340794484 and Wrangler 44340794393 verified success. No real receipt issuance, install or service modification.
+- Disposable owner-side SQLite register for signed phase receipts: exclusive initialization, BEGIN IMMEDIATE, FULL synchronous, complete bounded chain/signature verification, compare-and-set against independently retained expected latest anchor and same-transaction successor. Reuse existing ephemeral GPG fixtures; test replay, repeated create and reverted register. CI pending. No real independent custody or anti-rollback claim if both local register and supplied latest anchor are reverted. No production installer hookup.
+- Source availability adds same-bar joint eligible CVD/delta/footprint/prior-level count, not agreement or outcome; no direction, score, threshold or prospective protocol change. Existing source schema and keys retained.
+- B custody v0.3 GREEN. Exact public Mac host-preflight source prepared and pinned; owner must execute metadata-only preflight locally before private archive processing. No real archive read. Historical integration pins unchanged. Radar capacity run 44339427343 success at 16:46 CET; availability not attested.
+- Backup swap gate remains closed; no service, timer, marker, deployment, staging or resource change.
+
 # REMURA TradingView — ROADMAP v0.8.169-lab (external owner phase receipt contract)
 **Aggiornamento 18/11/2026, sessione successiva alle 16:28 CET — PR #102 DRAFT**
 
