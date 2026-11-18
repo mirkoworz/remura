@@ -1,3 +1,10 @@
+# REMURA TradingView — ROADMAP v0.8.165-lab (code-only privileged provisioning candidate)
+**Aggiornamento 18/11/2026, sessione successiva alle 15:29 CET — PR #102 DRAFT**
+
+- v0.8.164 Telemetry 44325145695/job 134874300473 and Wrangler 44325145807 verified GREEN; integrated exact TAR and 90-change rollback under outer LAB lock succeeded.
+- Prepare standalone, offline code-only bootstrap candidate: exact four pinned embedded sources, validate before writing, anchored fixed root directory, exclusive new files, fsync, final byte recheck, no activation. Six tests pending CI; no actual privileged provisioning or new authorization yet. See ABC-CODE-ONLY-BOOTSTRAP-V165.md.
+- Need separate owner approval for proposed code-only provisioning after CI and independent source pin. No installation, no service/timer changes, no upgrade or release mutation. Existing B/E and historical pins, backup receipts and Ampere automation retained; real custody and account quotas still open.
+
 # REMURA TradingView — ROADMAP v0.8.164-lab (Oracle receipt and integrated maintenance lock)
 **Aggiornamento 18/11/2026, sessione successiva alle 15:29 CET — PR #102 DRAFT**
 

@@ -1,0 +1,8 @@
+# REMURA v0.8.165 LAB — code-only root-owned bootstrap candidate
+18/11/2026 — sessione successiva alle 15:29 CET. PR #102 DRAFT.
+
+v0.8.164 Telemetry 44325145695/job 134874300473 and Wrangler 44325145807 completed success, including exact TAR and integrated locked transaction. New standalone candidate embeds the four previously pinned reviewed source files. Verify all exact source sizes and SHA256 before writes; fixed root-owned parent chain, no-follow descriptor traversal, new directory only, exclusive file creation, read-only source modes and fsync. Recheck all copied source bytes before writing CODE_ONLY receipt. Six targeted LAB tests, CI pending. Existing artifact, historical helper files and signed release unchanged.
+
+Proposed separate owner authorization: create independent root-owned code-only directory under standard system library tree using exact independently pinned candidate bytes. Do not activate it, execute embedded modules, touch the collector, timer, old updater state or application, install release, or access private data. Candidate has no network calls. Do not run a mutable downloaded Python path as root; verify exact candidate and execute same approved bytes using independently trusted system interpreter. Incomplete directory is not automatically deleted or resumed. Root-side script provenance, OS trust and authorization required before provisioning. No actual Oracle root writes performed in this revision. Copied sources are not a complete runtime dependency closure or final privileged installer; journal, live target mutation, independent witness and backup gates remain open.
+
+No scientific outcomes, new archive capture, quota proof, new cloud resources or Radar changes.
