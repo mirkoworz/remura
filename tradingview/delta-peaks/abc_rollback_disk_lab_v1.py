@@ -1,4 +1,4 @@
-# REMURA v0.8.159 LAB — 18/11/2026, sessione successiva alle 13:29 CET
+# REMURA v0.8.161 LAB — 18/11/2026, sessione successiva alle 13:37 CET
 """Durable rollback journal on owned disposable filesystem only.
 No CLI, no service commands, no deployment or production paths.
 Use a new tempfile.mkdtemp(prefix="remura-journal-lab-") workspace.
@@ -60,7 +60,7 @@ def canonical(x):
     return json.dumps(x,sort_keys=True,separators=(",",":")).encode()
 
 class Journal:
-    def __init__(self,root,*,synthetic=False,auth_key=None,transaction_id=None):
+    def __init__(self,root,*,synthetic=False,auth_key=None,transaction_id=None,witness_root=None):
         require(synthetic is True)
         root=Path(root)
         require(root.is_absolute() and root==root.resolve() and root.parent==Path(tempfile.gettempdir()).resolve()
@@ -78,6 +78,39 @@ class Journal:
         self.root=root
         self.app=root/"app"
         self.path=root/"journal.json"
+        self.witness=None
+        if witness_root is not None:
+            w=Path(witness_root)
+            require(auth_key is not None and w.is_absolute() and w==w.resolve()
+                    and w.parent==Path(tempfile.gettempdir()).resolve()
+                    and re.fullmatch(r"remura-witness-lab-[A-Za-z0-9_]+",w.name)
+                    and owned(w,True).st_mode&0o077==0 and w!=root)
+            self.witness=w/"phase.json"
+
+    def witness_payload(self,d,phase):
+        require(phase in {"prepared","applying","applied","rolling_back","rolled_back"})
+        return {"schema":"remura.abc.phase.witness.lab.v1",
+                "transaction":self.transaction_id,"phase":phase,
+                "journal_sha256":hashlib.sha256(canonical(d)).hexdigest()}
+
+    def witness_write(self,d,phase):
+        if self.witness is None: return
+        payload=self.witness_payload(d,phase)
+        mac=hmac.new(self.auth_key,canonical(payload),hashlib.sha256).hexdigest()
+        atomic(self.witness,canonical({"payload":payload,"mac":mac}),0o600)
+
+    def witness_check(self,d,allowed):
+        if self.witness is None: return
+        s=owned(self.witness)
+        require(not s.st_mode&0o077 and 0<s.st_size<=2048)
+        raw=self.witness.read_bytes()
+        env=json.loads(raw)
+        require(type(env) is dict and set(env)=={"payload","mac"})
+        payload=env["payload"]
+        require(type(payload) is dict and payload.get("phase") in allowed)
+        require(payload==self.witness_payload(d,payload["phase"]))
+        require(type(env["mac"]) is str and re.fullmatch(r"[a-f0-9]{64}",env["mac"]))
+        require(hmac.compare_digest(env["mac"],hmac.new(self.auth_key,canonical(payload),hashlib.sha256).hexdigest()))
 
     @contextmanager
     def lock(self):
@@ -110,6 +143,7 @@ class Journal:
         else:
             body={"schema":"remura.abc.authenticated.journal.lab.v1",
                   "transaction":self.transaction_id,
+                  "witness_required":self.witness is not None,
                   "release_manifest":"73635db92dd9f709ae078119a161ab12b7c9a63ca18782b99e7e1f6357c3c2c1",
                   "payload":d}
             envelope={"body":body,"mac":hmac.new(self.auth_key,canonical(body),hashlib.sha256).hexdigest()}
@@ -126,9 +160,10 @@ class Journal:
         else:
             require(type(envelope) is dict and set(envelope)=={"body","mac"})
             body=envelope["body"]
-            require(type(body) is dict and set(body)=={"schema","transaction","release_manifest","payload"})
+            require(type(body) is dict and set(body)=={"schema","transaction","release_manifest","payload","witness_required"})
             require(body["schema"]=="remura.abc.authenticated.journal.lab.v1" and
                     body["transaction"]==self.transaction_id and
+                    body["witness_required"] is (self.witness is not None) and
                     body["release_manifest"]=="73635db92dd9f709ae078119a161ab12b7c9a63ca18782b99e7e1f6357c3c2c1")
             mac=envelope["mac"]
             require(type(mac) is str and re.fullmatch(r"[a-f0-9]{64}",mac))
@@ -150,6 +185,7 @@ class Journal:
     def prepare(self,original,candidate):
         # Caller supplies already vetted exact bytes, no manifest trust implied.
         with self.lock():
+            require(self.witness is None or not os.path.lexists(self.witness))
             require(not os.path.lexists(self.path) and type(original) is dict and type(candidate) is dict
                     and 0<len(candidate)<=155 and set(original)<=set(candidate))
             require(sum(len(b) for b in list(original.values())+list(candidate.values()))<=LIMIT)
@@ -161,14 +197,18 @@ class Journal:
                 new=pack(b,old["mode"] if old else 0o644)
                 require(new!=old)
                 rows.append({"path":p,"before":old,"after":new})
-            self.write_doc({"schema":SCHEMA,"phase":"prepared","rows":rows})
+            d={"schema":SCHEMA,"phase":"prepared","rows":rows}
+            self.write_doc(d)
+            self.witness_write(d,"prepared")
 
     def apply(self,*,crash_after=None):
         with self.lock():
             d=self.read_doc()
             require(d["phase"]=="prepared")
+            self.witness_check(d,{"prepared"})
             require(crash_after is None or type(crash_after) is int and 0<=crash_after<=len(d["rows"]))
             require(all(self.current(r["path"])==r["before"] for r in d["rows"]))
+            self.witness_write(d,"applying")
             if crash_after==0: os._exit(75)
             for i,r in enumerate(d["rows"],1):
                 b,mode=unpack(r["after"])
@@ -177,17 +217,23 @@ class Journal:
             require(all(self.current(r["path"])==r["after"] for r in d["rows"]))
             d["phase"]="applied"
             self.write_doc(d)
+            self.witness_write(d,"applied")
 
     def rollback(self,*,crash_after=None):
         with self.lock():
             d=self.read_doc()
             require(crash_after is None or type(crash_after) is int and 0<=crash_after<=len(d["rows"]))
+            allowed={"prepared":{"prepared","applying","rolling_back"},
+                     "applied":{"applied","rolling_back"},
+                     "rolled_back":{"rolled_back"}}
+            self.witness_check(d,allowed[d["phase"]])
             # Check entire transaction BEFORE any mutation; unknown bytes/mode stop.
             for r in d["rows"]:
                 current=self.current(r["path"])
                 if d["phase"]=="rolled_back": require(current==r["before"])
                 else: require(current in (r["before"],r["after"]))
             if d["phase"]=="rolled_back": return "already_rolled_back"
+            self.witness_write(d,"rolling_back")
             if crash_after==0: os._exit(75)
             for i,r in enumerate(reversed(d["rows"]),1):
                 if self.current(r["path"])!=r["before"]:
@@ -199,4 +245,5 @@ class Journal:
                 if crash_after==i: os._exit(75)
             require(all(self.current(r["path"])==r["before"] for r in d["rows"]))
             d["phase"]="rolled_back";self.write_doc(d)
+            self.witness_write(d,"rolled_back")
             return "rolled_back"

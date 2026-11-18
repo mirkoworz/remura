@@ -1,3 +1,11 @@
+# REMURA TradingView — ROADMAP v0.8.161-lab (separate authenticated phase witness)
+**Aggiornamento 18/11/2026, sessione successiva alle 13:37 CET — PR #102 DRAFT**
+
+- v0.8.160 Telemetry 44305456208/job 134805726667 and Wrangler 44305456195 verified GREEN, exact historical portable source restored; pinned bundle and authenticated rollback steps succeeded.
+- Owner Oracle screenshot 13:37: local unit prevented normal mask; authorized drop-in loaded with RefuseManualStart=yes, updater inactive, timer inactive/disabled, collector active/running. Conditions=[unprintable], no assertion of complete dependency-start blocking or real mask. No direct root execution or install authorization. Receipt PR #102 comment 6978777609.
+- Extend exact pinned disposable transaction with separate authenticated phase witness and pre-mutation applying/rolling_back barriers. Reject old authentic journal after terminal rollback, witness downgrade, missing/tampered witness and apply restart after interrupted intent. Existing historical checksum tests preserved; CI pending. Independent real witness custody, atomic cross-store reconciliation and root bootstrap remain open. See ABC-PHASE-WITNESS-LAB.md.
+- No changes to live services, existing candidate, scientific protocol, B/E pins, Ampere automation, backups or costs.
+
 # REMURA TradingView — ROADMAP v0.8.160-lab (portable source parity and containment authorization)
 **Aggiornamento 18/11/2026, sessione successiva alle 13:29 CET — PR #102 DRAFT**
 

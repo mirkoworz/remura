@@ -1,4 +1,4 @@
-# REMURA v0.8.159 LAB — 18/11/2026, sessione successiva alle 13:29 CET
+# REMURA v0.8.161 LAB — 18/11/2026, sessione successiva alle 13:37 CET
 """Actual pinned 90 path candidate on disposable disk; no service or private data."""
 import hashlib,json,os,tempfile,unittest
 from pathlib import Path
@@ -30,9 +30,12 @@ class Tests(unittest.TestCase):
             f=self.app/p;f.write_bytes(b);f.chmod(0o640)
         self.key=os.urandom(32)
         self.transaction=os.urandom(32).hex()
+        self.wtmp=tempfile.TemporaryDirectory(prefix="remura-witness-lab-")
+        self.addCleanup(self.wtmp.cleanup)
+        self.wroot=Path(self.wtmp.name).resolve()
         self.j=self.reopen()
     def reopen(self):
-        return Journal(self.root,synthetic=True,auth_key=self.key,transaction_id=self.transaction)
+        return Journal(self.root,synthetic=True,auth_key=self.key,transaction_id=self.transaction,witness_root=self.wroot)
     def verify(self,expected):
         actual={p.relative_to(self.app).as_posix():p.read_bytes() for p in self.app.rglob("*") if p.is_file()}
         self.assertEqual(actual,expected)
@@ -58,9 +61,9 @@ class Tests(unittest.TestCase):
         self.j.prepare(self.old,self.candidate)
         raw=self.j.path.read_bytes()
         with self.assertRaises(ValueError):
-            Journal(self.root,synthetic=True,auth_key=os.urandom(32),transaction_id=self.transaction).apply()
+            Journal(self.root,synthetic=True,auth_key=os.urandom(32),transaction_id=self.transaction,witness_root=self.wroot).apply()
         with self.assertRaises(ValueError):
-            Journal(self.root,synthetic=True,auth_key=self.key,transaction_id=os.urandom(32).hex()).apply()
+            Journal(self.root,synthetic=True,auth_key=self.key,transaction_id=os.urandom(32).hex(),witness_root=self.wroot).apply()
         with self.assertRaises(ValueError):
             Journal(self.root,synthetic=True).apply()
         envelope=json.loads(raw)
@@ -70,5 +73,42 @@ class Tests(unittest.TestCase):
         self.verify(self.base)
         self.j.path.write_bytes(raw)
         self.assertEqual(self.reopen().rollback(),"rolled_back")
+        self.verify(self.base)
+    def test_replay_after_terminal_rollback_and_witness_downgrade(self):
+        self.j.prepare(self.old,self.candidate)
+        old=self.j.path.read_bytes()
+        with self.assertRaises(ValueError):
+            Journal(self.root,synthetic=True,auth_key=self.key,transaction_id=self.transaction).apply()
+        self.j.apply()
+        self.j.rollback()
+        self.j.path.write_bytes(old)
+        with self.assertRaises(ValueError): self.reopen().apply()
+        with self.assertRaises(ValueError): self.reopen().rollback()
+        self.verify(self.base)
+
+    def test_interrupted_apply_cannot_be_restarted(self):
+        self.j.prepare(self.old,self.candidate)
+        pid=os.fork()
+        if pid==0:
+            try:self.reopen().apply(crash_after=0)
+            except BaseException:os._exit(76)
+            os._exit(77)
+        _,status=os.waitpid(pid,0)
+        self.assertEqual(os.waitstatus_to_exitcode(status),75)
+        with self.assertRaises(ValueError): self.reopen().apply()
+        self.assertEqual(self.reopen().rollback(),"rolled_back")
+        self.verify(self.base)
+
+    def test_witness_missing_or_changed_fails_closed(self):
+        self.j.prepare(self.old,self.candidate)
+        witness=self.wroot/"phase.json"
+        original=witness.read_bytes()
+        witness.unlink()
+        with self.assertRaises((OSError,ValueError)):self.reopen().apply()
+        witness.write_bytes(original);witness.chmod(0o600)
+        env=json.loads(original)
+        env["payload"]["phase"]="applying"
+        witness.write_text(json.dumps(env))
+        with self.assertRaises(ValueError):self.reopen().rollback()
         self.verify(self.base)
 if __name__=="__main__":unittest.main()
