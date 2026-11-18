@@ -1,4 +1,4 @@
-# REMURA Level Confluence v0.11 LAB — 14/11/2026 23:47 CET
+# REMURA Level Confluence v0.42 LAB — 18/11/2026, sessione successiva alle 11:13 CET
 import unittest
 from datetime import datetime,timezone
 from pathlib import Path
@@ -42,7 +42,7 @@ class DashboardTests(unittest.TestCase):
         self.assertIn("1.08535",data["html"])
         self.assertIn("5.00000000 tick",data["html"])
         self.assertIn("SOLO DATI SINTETICI",data["html"])
-        self.assertIn("v0.11 LAB",data["html"])
+        self.assertIn("v0.42 LAB",data["html"])
         self.assertNotIn("PRIVATE NOTE",data["html"])
         self.assertNotIn(self.friend,data["html"])
         self.assertFalse(data["result"]["operational_signal"])
@@ -78,4 +78,27 @@ class DashboardTests(unittest.TestCase):
     def test_capacity_and_explicit_mode(self):
         with self.assertRaises(ValueError):self.report(automatic=[self.auto]*21)
         with self.assertRaises(ValueError):owner_report(self.lab,self.owner,[],[])
+    def test_group_by_exact_feed_and_pair(self):
+        other=dict(self.auto,id="other-auto",provider="FXCM",price="1.09500")
+        page=self.report(automatic=[other,self.auto])["html"]
+        self.assertEqual(page.count('class="instrument"'),2)
+        self.assertIn("FXCM:EURUSD",page)
+        self.assertIn("OANDA:EURUSD",page)
+        self.assertLess(page.index("1. Pair"),page.index("2. Broker / feed"))
+        # The alternate provider is never promoted to a comparable source.
+        result=self.report(automatic=[other,self.auto])["result"]
+        by_id={x["automatic_id"]:x for x in result["automatic"]}
+        self.assertEqual(by_id["other-auto"]["near_count"],0)
+        self.assertEqual(by_id["auto-1"]["near_count"],1)
+    def test_future_source_does_not_create_group(self):
+        other=dict(self.auto,id="future-auto",provider="FXCM",available_utc="2026-11-15T00:00:00Z")
+        page=self.report(automatic=[other,self.auto])["html"]
+        self.assertEqual(page.count('class="instrument"'),1)
+        self.assertNotIn("FXCM:EURUSD",page)
+    def test_manual_only_group(self):
+        page=self.report(automatic=[])["html"]
+        self.assertEqual(page.count('class="instrument"'),1)
+        self.assertIn("OANDA:EURUSD",page)
+        self.assertIn("Manuali approvati al cutoff",page)
+        self.assertNotIn("PRIVATE NOTE",page)
 if __name__=="__main__":unittest.main()

@@ -1,4 +1,4 @@
-# REMURA Level Confluence v0.11 LAB — 14/11/2026 23:47 CET
+# REMURA Contributors v0.42 LAB — 18/11/2026, sessione successiva alle 11:13 CET
 """Owner-only in-process diagnostic dashboard, synthetic data, no HTTP/export.
 Automatic inputs and explicit comparison rules are trusted LAB fixtures.
 No actual price feed, no prediction, no operational or scientific admission.
@@ -28,37 +28,53 @@ def _render(result,manual,auto):
     parts=['<!doctype html><html lang="it"><head><meta charset="utf-8">',
            '<meta name="viewport" content="width=device-width,initial-scale=1">',
            '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\'; form-action \'none\'; base-uri \'none\'">',
-           '<title>REMURA Level Confluence v0.11 LAB</title><style>'+STYLE+'</style></head><body>',
-           '<div class="release">REMURA · Level Confluence v0.11 LAB · 14/11/2026 23:47 CET</div><main>',
+           '<title>REMURA Level Confluence v0.42 LAB</title><style>'+STYLE+'</style></head><body>',
+           '<div class="release">REMURA · Level Confluence v0.42 LAB · 18/11/2026, dopo le 11:13 CET</div><main>',
            '<small>REMURA / VOLUMETRICA / LEVEL CONFLUENCE</small><h1>Confluenze volumetriche</h1>',
            '<p>SOLO DATI SINTETICI · Report proprietario in sola lettura. Nessun segnale operativo o prova di attività istituzionale.</p>',
            '<p>Cutoff UTC: '+_e(result["asof_utc"])+'</p>',
            '<section><strong>Livelli automatici disponibili: '+str(len(result["automatic"]))+'</strong>',
            '<p>Manuali approvati al cutoff: '+str(len(result["manual"]))+'<br>Manuali esclusi: '+str(result["excluded_manual"])+'<br>Automatici esclusi: '+str(result["excluded_automatic"])+'</p>',
            '<small>Gruppi fonte dichiarati: non attestano indipendenza. Soglie e tick sperimentali, non validati.</small></section>']
+    # Group admitted rows by the complete instrument key, never by ticker alias.
+    # Late or excluded rows cannot create a visible group.
+    groups={}
     for item in result["automatic"]:
         p=a[item["automatic_id"]]
-        parts.extend(['<article'+(' class="near"' if item["status"]=="NEAR" else '')+'>',
-                      '<small>Automatico '+_e(item["automatic_id"])+'</small>',
-                      '<h2>'+_e(p["market"])+' · '+_e(p["period"])+'</h2>',
-                      '<p>'+_e(p["provider"])+':'+_e(p["ticker"])+' · '+_e(p["product"])+' '+_e(p["contract"])+'</p>',
-                      '<small>'+_e(p["kind"])+' · Anchor UTC '+_e(p["anchor_utc"])+'</small>',
-                      '<div class="price">'+_e(p["price"])+'</div><strong>'+_e(LABELS[item["status"]])+'</strong>',
-                      '<p>Manuali vicini: '+str(item["near_count"])+' · Gruppi dichiarati vicini: '+str(item["declared_source_groups"])+'</p><ul>'])
-        for pair in item["pairs"]:
-            q=m[pair["manual_id"]]
-            parts.append('<li>Manuale #'+_e(pair["manual_id"])+' · '+_e(q["price"])+
-                         ' · '+_e(pair["distance_ticks"] if pair["distance_ticks"] is not None else "N/D")+
-                         ' tick · '+_e(LABELS[pair["status"]])+'</li>')
-        parts.append('</ul></article>')
-    if not result["automatic"]:parts.append('<p>N/D — nessun automatico disponibile al cutoff.</p>')
-    parts.append('<section><h2>Riepilogo manuali approvati</h2><ul>')
+        key=tuple(p[k] for k in ("market","provider","ticker","product","contract"))
+        groups.setdefault(key,{"automatic":[],"manual":[]})["automatic"].append(item)
     for item in result["manual"]:
         p=m[item["manual_id"]]
-        parts.append('<li>#'+_e(item["manual_id"])+' · '+_e(p["market"])+' · '+_e(p["provider"])+
-                     ':'+_e(p["ticker"])+' · '+_e(p["period"])+' · '+_e(p["price"])+' · '+
-                     _e(LABELS[item["status"]])+'</li>')
-    parts.append('</ul></section></main></body></html>')
+        key=tuple(p[k] for k in ("market","provider","ticker","product","contract"))
+        groups.setdefault(key,{"automatic":[],"manual":[]})["manual"].append(item)
+    for key,bucket in sorted(groups.items()):
+        market,provider,ticker,product,contract=key
+        parts.extend(['<section class="instrument"><small>1. Pair</small><h2>'+_e(market)+'</h2>',
+                      '<small>2. Broker / feed</small><p>'+_e(provider)+':'+_e(ticker)+' · '+_e(product)+' '+_e(contract)+'</p>',
+                      '<p>Automatici: '+str(len(bucket["automatic"]))+' · Manuali approvati: '+str(len(bucket["manual"]))+'</p>'])
+        if not bucket["automatic"]:
+            parts.append('<p class="missing">N/D — nessun automatico disponibile per questo strumento.</p>')
+        for item in bucket["automatic"]:
+            p=a[item["automatic_id"]]
+            parts.extend(['<article'+(' class="near"' if item["status"]=="NEAR" else '')+'>',
+                          '<small>Automatico '+_e(item["automatic_id"])+'</small>',
+                          '<h3>'+_e(p["period"])+'</h3>',
+                          '<small>'+_e(p["kind"])+' · Anchor UTC '+_e(p["anchor_utc"])+'</small>',
+                          '<div class="price">'+_e(p["price"])+'</div><strong>'+_e(LABELS[item["status"]])+'</strong>',
+                          '<p>Manuali vicini: '+str(item["near_count"])+' · Gruppi dichiarati vicini: '+str(item["declared_source_groups"])+'</p><ul>'])
+            for pair in item["pairs"]:
+                q=m[pair["manual_id"]]
+                parts.append('<li>Manuale #'+_e(pair["manual_id"])+' · '+_e(q["price"])+
+                             ' · '+_e(pair["distance_ticks"] if pair["distance_ticks"] is not None else "N/D")+
+                             ' tick · '+_e(LABELS[pair["status"]])+'</li>')
+            parts.append('</ul></article>')
+        parts.append('<h3>Manuali approvati al cutoff</h3><ul>')
+        for item in bucket["manual"]:
+            p=m[item["manual_id"]]
+            parts.append('<li>#'+_e(item["manual_id"])+' · '+_e(p["period"])+' · '+_e(p["price"])+' · '+_e(LABELS[item["status"]])+'</li>')
+        parts.append('</ul></section>')
+    if not result["automatic"]:parts.append('<p>N/D — nessun automatico disponibile al cutoff.</p>')
+    parts.append('</main></body></html>')
     return "".join(parts)
 
 def owner_report(lab,token,automatic,rules,*,asof_utc=None,synthetic=False):

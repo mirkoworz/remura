@@ -1,3 +1,9 @@
+# REMURA Contributors v0.42 LAB — 18/11/2026, sessione successiva alle 11:13 CET
+
+- Owner-only in-process Level Confluence dashboard: group already admitted rows by exact market/provider/ticker/product/contract. Pair first, broker/feed second, automatic and approved manual levels within the same group. Excluded or late sources cannot create a visible group. No cross-feed alias, no change to comparison engine, no real data or new HTTP path.
+- Three additional targeted UI tests pending. Synthetic-only dashboard; established v0.37 aggregate wire dashboard unchanged. Production/Preview and staging remain closed per last owner evidence. No enrollment, D1 or Worker deployment.
+- Previous v0.41 reported 242 tests passed; historical checkpoint below retained.
+
 # REMURA Contributors v0.41 LAB — 17/11/2026 09:32 CET
 
 - v0.40 verified 234 tests (CI 44028994740).
