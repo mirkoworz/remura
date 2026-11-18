@@ -1,3 +1,11 @@
+# REMURA TradingView — ROADMAP v0.8.155-lab (separate immutable release and research pins)
+**Aggiornamento 18/11/2026, sessione delle 11:23 CET — PR #102 DRAFT**
+
+- Operator photo at 11:23 Italian: Pine v0.9.3 TRANSPORT LAB rendered on EURUSD M5, panel FX:EURUSD, M1 5/5 OK, continuous, daily CVD partial. Compilation/render observed; exact installed bytes, switch states and alert isolation not independently visible. Both transport switches must remain OFF; no new alert or webhook. Do not repeat compilation.
+- v0.8.154 CI 44284434694 job 134733375683: 606 main tests and new anchored startup checks passed; B/D/E cross-track checks reached completion; ABC failed at immutable checkout SHA gate before isolated collector test. Wrangler 44284437250 success. v0.8.153 telemetry cancelled by newer revision. No full GREEN claimed.
+- Root cause: B research repin reused _remura_b_reference, also consumed by ABC immutable v1.65 baseline with original B SHA. Separate checkout roots for research and exact historical ABC B. Retain original release manifest, bundle, source SHAs, guard and all tests; no weakening of the failure gate. New CI pending.
+- No live changes, no new resources, no altered alert/protocol. v1.65 remains blocked pending root trust, real custody, authenticated package and authorization.
+
 # REMURA TradingView — ROADMAP v0.8.154-lab (repin verified B/E dependencies)
 **Aggiornamento 18/11/2026, sessione successiva alle 11:13 CET — PR #102 DRAFT**
 
