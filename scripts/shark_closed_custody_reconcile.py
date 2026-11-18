@@ -1,4 +1,4 @@
-"""REMURA Track B — closed custody reconciliation v0.3 LAB, 18/11/2026, after 16:28 CET.
+"""REMURA Track B — closed custody reconciliation v0.4 LAB, 18/11/2026, after 18:27 CET.
 Owner-local closed recovered copies only. No backup, extraction, network, writes,
 source rows, path/digest exports, or evaluation of prospective outcomes.
 Requires Python with SQLite deserialize; run as ordinary owner, not root.
@@ -53,7 +53,36 @@ def closed_bytes(fd,name,deadline):
         return data
     finally:os.close(f)
 
-def schema(data,deadline):
+# Metadata requirements for the existing exact causal audit; names alone
+# are insufficient. No data row query, no proof of valid trigger semantics.
+CAUSAL_COLUMNS={
+    "squalincome_history":("symbol","report_date","price_time","observed_at","state","cot_side","price_state"),
+    "research_squalincome_cot_links":("symbol","cot_week","price_closed_at","observed_at","linked_at","cot_side","price_state","source_version_evidence","evidence_digest","algorithm"),
+    "research_squalincome_price_evidence":("symbol","report_date","price_time","observed_at","witnessed_at","source_document_sha256","m15_closed_at","h1_closed_at","h4_closed_at","last16_tick_volume_complete","algorithm"),
+    "research_cot_asof_attestations":("dataset","code","report_date","value_digest","witnessed_at","evidence_kind")
+}
+CAUSAL_TRIGGERS={
+    "research_squalincome_cot_links":("research_squalincome_links_no_update","research_squalincome_links_no_delete"),
+    "research_squalincome_price_evidence":("research_price_asof_no_update","research_price_asof_no_delete"),
+    "research_cot_asof_attestations":("research_cot_asof_no_update","research_cot_asof_no_delete")
+}
+def causal_metadata(db):
+    need(isinstance(db,sqlite3.Connection) and db.execute("PRAGMA query_only").fetchone()==(1,))
+    # table_list distinguishes ordinary tables from virtual and shadow tables.
+    catalog={r[1]:r[2] for r in db.execute("PRAGMA main.table_list") if r[0]=="main"}
+    if not catalog:return "METADATA_UNAVAILABLE"
+    if any(catalog.get(name)!="table" for name in CAUSAL_COLUMNS):
+        return "REQUIRED_ORDINARY_TABLES_MISSING"
+    for name,required in CAUSAL_COLUMNS.items():
+        columns={r[1] for r in db.execute('PRAGMA main.table_xinfo("'+name+'")') if r[6]==0}
+        if not set(required)<=columns:return "REQUIRED_COLUMNS_MISSING"
+    for name,required in CAUSAL_TRIGGERS.items():
+        names={r[0] for r in db.execute("SELECT name FROM main.sqlite_master WHERE type='trigger' AND tbl_name=? LIMIT 4097",(name,))}
+        if len(names)>4096:raise ValueError("TRIGGER_METADATA_CAP")
+        if not set(required)<=names:return "REQUIRED_TRIGGER_NAMES_MISSING"
+    return "CAUSAL_QUERY_METADATA_PRESENT"
+
+def schema(data,deadline,*,include_capability=False):
     with closing(sqlite3.connect(":memory:")) as db:
         db.deserialize(data)
         db.execute("PRAGMA trusted_schema=OFF")
@@ -61,7 +90,11 @@ def schema(data,deadline):
         db.set_progress_handler(lambda:int(time.monotonic()>=deadline),1000)
         names={r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table' LIMIT 4097")}
         need(len(names)<=4096 and time.monotonic()<deadline)
-        return frozenset(n for n in TABLES+SOURCE_TABLES if n in names)
+        present=frozenset(n for n in TABLES+SOURCE_TABLES if n in names)
+        if not include_capability:return present
+        capability=causal_metadata(db)
+        need(time.monotonic()<deadline)
+        return present,capability
 
 def reconcile(raw,*,confirmed_closed=False):
     need(confirmed_closed is True and os.geteuid()!=0 and hasattr(sqlite3.Connection,"deserialize"))
@@ -76,6 +109,7 @@ def reconcile(raw,*,confirmed_closed=False):
     known=Counter({n:0 for n in TABLES+SOURCE_TABLES})
     co=Counter({"prices_and_status":0,"cot_and_first_seen":0,"prices_cot_and_first_seen":0})
     seen={}
+    capability_counts=Counter()
     used=0
     def error(_):counts["unverified"]+=1
     for folder,dirs,files,fd in os.fwalk(root,follow_symlinks=False,onerror=error):
@@ -105,7 +139,8 @@ def reconcile(raw,*,confirmed_closed=False):
                 used+=len(data)
                 digest=hashlib.sha256(data).digest()
                 if digest not in seen:
-                    seen[digest]=schema(data,deadline)
+                    seen[digest],capability=schema(data,deadline,include_capability=True)
+                    capability_counts[capability]+=1
                     counts["distinct_verified_byte_groups"]+=1
                     for table in seen[digest]:known[table]+=1
                     present=seen[digest]
@@ -125,6 +160,8 @@ def reconcile(raw,*,confirmed_closed=False):
             "table_presence_in_distinct_byte_groups":{n:known[n] for n in TABLES},
             "source_table_presence_in_distinct_byte_groups":{n:known[n] for n in SOURCE_TABLES},
             "source_table_copresence_in_distinct_byte_groups":dict(co),
+            "causal_query_metadata_in_distinct_byte_groups":dict(sorted(capability_counts.items())),
+            "trigger_semantics_attested":False,"causal_pairs_verified":False,
             "source_rows_checked":False,"asof_availability_attested":False,
             "logical_database_identity_attested":False,"all_archives_attested":False,
             "external_authentication":False,"absence_elsewhere_proven":False,

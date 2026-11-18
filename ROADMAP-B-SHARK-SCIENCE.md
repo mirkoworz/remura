@@ -1,5 +1,13 @@
 # REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
 
+## 18/11/2026 — Custodia v0.4 LAB, sessione successiva alle 18:27 CET
+
+- Prior v0.3 exact head ea63f9121786f81c6e086c46d833bdb9db6cacbe, CI Shark 44336532237, Insights 44336533235 and private engine 44336532148 verified GREEN at earlier checkpoint.
+- Extend existing closed-copy schema-only reconciliation: per distinct byte group, distinguish missing ordinary causal-proof tables, missing columns required by the existing causal query, missing expected trigger names, and metadata present. No source rows, no trigger execution or semantic validation, no causal pairs, no as-of attestation; fake trigger names deliberately pass the metadata-only case. Five synthetic tests; CI pending. No change to historical pinned code or scientific thresholds.
+- Real archive access remains deferred pending owner Mac preflight and protected handling decision. This helper is not memory protection or authorization to decrypt. No new backup, live query, deploy, service action or costs.
+
+# REMURA — TRACK B: Shark Science, CVD e validazione istituzionale
+
 ## 18/11/2026 — Custodia v0.3 LAB, sessione successiva alle 16:28 CET
 
 - v0.2 reconciliation CI 44329005043, insights 44329005813 and private price engine 44329004920 verified success, exact prior head 3b4ff66c18e64fb3a4fc78c5464f2212505671ab. Deduplicate owner-local closed copies by in-memory byte digest; no exported hashes.

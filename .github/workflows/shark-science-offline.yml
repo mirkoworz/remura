@@ -6,6 +6,7 @@ on:
       - 'scripts/cvd_*.py'
       - 'scripts/shark_science_gate.py'
       - 'scripts/shark_closed_custody_reconcile.py'
+      - 'tests/test_shark_closed_custody_metadata.py'
       - 'scripts/shark_custody_host_preflight.py'
       - 'scripts/shark_cvd_incremental_protocol.py'
       - 'scripts/shark_cvd_missingness_bounds.py'
@@ -205,6 +206,8 @@ jobs:
               except ValueError:pass
               else:raise AssertionError("missing owner confirmation")
           PY
+      - name: Causal query metadata on synthetic closed copies only
+        run: python -m unittest discover -s tests -p 'test_shark_closed_custody_metadata.py' -v
       - name: Owner custody host metadata preflight (no archive)
         run: |
           python -B - <<'PY'
