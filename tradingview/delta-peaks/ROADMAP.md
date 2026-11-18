@@ -1,3 +1,11 @@
+# REMURA TradingView — ROADMAP v0.8.147-lab (dedicated read-only preflight)
+**Aggiornamento 18/11/2026, sessione successiva alle 09:52 CET — PR #102 DRAFT**
+
+- v0.8.146 GREEN: Telemetry 44270646476 job 134686098361, 592 main (5 startup barrier tests), Wrangler 44270646564. Logs verified.
+- v0.8.147 reusable Oracle read-only preflight links exact verified bundle and manifest to installed base, expected additions, unit fragment/effective metadata, lock/marker metadata and free bytes. Four test methods pending, no on-server execution. No release authorization or installable package. See ABC-INSTALL-PREFLIGHT-READONLY.md.
+- Pine v0.9.3 controls verified default OFF, actual separate compile remains; E PR #104 exact DRAFT. No alert changes.
+- Remaining: signed release, authenticated journal, actual ownership and units, lock-held installer, effective barriers, Shark evidence, iCloud/quotas and authorization. Preserve all previous real backup/COT/SDK evidence.
+
 # REMURA TradingView — ROADMAP v0.8.146-lab (persistent collector startup barrier)
 **Aggiornamento 18/11/2026, sessione successiva alle 09:49 CET — PR #102 DRAFT**
 
