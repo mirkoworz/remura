@@ -1,4 +1,4 @@
-# REMURA TradingView Telemetry LAB v0.8.155 — 18/11/2026, sessione successiva alle 11:13 CET.
+# REMURA TradingView Telemetry LAB v0.8.157 — 18/11/2026, sessione successiva alle 12:28 CET.
 # SOLO CI OFFLINE. Nessun deploy, webhook, credenziale o trade automatico.
 name: REMURA TradingView Telemetry LAB
 on:
@@ -24,6 +24,7 @@ jobs:
       - name: Checkout sola lettura
         uses: actions/checkout@v4
         with:
+          fetch-depth: 2
           persist-credentials: false
       - name: Esegui regressioni prospettiche e validazione (no rete)
         run: python3 -m unittest discover -s tradingview/delta-peaks -p "test_*.py" -v
@@ -192,6 +193,10 @@ jobs:
         run: python3 tradingview/delta-peaks/abc_pinned_disk_transaction_fixture_v1.py
 
       - name: ABC reproducible actual staged bundle and independent verifier (offline)
+        id: candidate
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -eu
           d="$(mktemp -d)"
@@ -204,6 +209,29 @@ jobs:
           if python3 "$p" --build "$d/a.tar"; then exit 1; fi
           printf x >> "$d/b.tar"
           if python3 "$p" --verify "$d/b.tar"; then exit 1; fi
+          # Explicit one-shot handoff; later normal commits do not publish artifacts.
+          if [[ "$PR_NUMBER" == "102" && "$PR_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]] &&
+             [[ "$(git show -s --format=%s "$PR_HEAD_SHA")" == "REMURA v0.8.157 LAB: one-shot public candidate handoff" ]]; then
+            umask 077
+            handoff="$(mktemp -d "$RUNNER_TEMP/remura-candidate.XXXXXXXX")"
+            cp "$d/a.tar" "$handoff/remura-v165-candidate.tar"
+            test "$(stat -c %s "$handoff/remura-v165-candidate.tar")" = 1771520
+            printf '%s  %s\n' '6804531c819ec16af972755b042394ac5c9acee23b7c03f70a09ab765369cfcc' "$handoff/remura-v165-candidate.tar" | sha256sum -c -
+            python3 "$p" --verify "$handoff/remura-v165-candidate.tar"
+            python3 tradingview/delta-peaks/abc_v165_release_attestation_v1.py --statement > "$handoff/candidate-attestation.json"
+            printf '%s\n' "REMURA v1.65 CANDIDATE ONLY — NOT INSTALLABLE — NO SIGNATURE OR MAINTENANCE AUTHORIZATION" > "$handoff/READ-ME.txt"
+            echo "handoff=$handoff" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: ABC exact updater persistent maintenance guard (offline)
         run: python3 tradingview/delta-peaks/abc_v165_maintenance_gate_fixture_v1.py
+
+      - name: Publish exact unsigned public candidate (one-day retention, no deploy)
+        if: steps.candidate.outputs.handoff != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: remura-v165-candidate-not-installable
+          path: ${{ steps.candidate.outputs.handoff }}
+          retention-days: 1
+          if-no-files-found: error
+          compression-level: 6

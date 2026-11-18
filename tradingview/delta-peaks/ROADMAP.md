@@ -1,3 +1,10 @@
+# REMURA TradingView — ROADMAP v0.8.157-lab (one-shot unsigned candidate handoff)
+**Aggiornamento 18/11/2026, sessione successiva alle 12:28 CET — PR #102 DRAFT**
+
+- v0.8.156 verified GREEN: Telemetry 44294858312 / job 134769131868; Wrangler 44294858305; 607 main tests, ABC 31+111. Three real receipt windows remain 28/28 requested slots only, no outcome evaluation.
+- Reuse existing deterministic CI build to hand off the exact public candidate (155 files; 1771520 bytes; same pinned public digest) and canonical unsigned attestation statement. One-shot artifact gated by exact PR number and commit subject; upload only after previous CI steps succeed, one-day retention, no new release or live deployment. No owner signing key, private archive, database, raw market observations, or credentials included. No artifact until run success and artifact listing verified; actual account quota not attested.
+- Owner must verify package, separately attest it if desired, and separately authorize any maintenance. No installation, root execution, service changes, or merge. Actual private Shark custody and resource checks remain. See ABC-CANDIDATE-HANDOFF.md.
+
 # REMURA TradingView — ROADMAP v0.8.156-lab (actual development receipt checkpoint)
 **Aggiornamento 18/11/2026, sessione successiva alle 12:26 CET — PR #102 DRAFT**
 
