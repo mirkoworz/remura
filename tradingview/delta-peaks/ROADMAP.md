@@ -1,3 +1,11 @@
+# REMURA TradingView — ROADMAP v0.8.152-lab (separate candidate attestation)
+**Aggiornamento 18/11/2026, sessione successiva alle 11:13 CET — PR #102 DRAFT**
+
+- v0.8.151 GREEN verified: Telemetry 44282643217 job 134727076032; Wrangler 44282645722; 604 main, ABC 31+111. Both new resource gates passed.
+- Owner-confirmed authorized timer suspension at 11:13 CET. Autoupdater idle, collector active/running/enabled. Do not repeat. Manual activation risk and secure root boundary remain unresolved; no other live intervention authorized.
+- v0.8.152 adds domain-separated canonical statement for exact existing v1.65 bundle, owner signature verification with independently configured signing fingerprint and public-only keyring, optional exact package inspection. Reuse GPG fixture and original bundle parser. CI pending. No owner signature, real bundle transfer or maintenance authorization yet. The trust anchor, protected execution path and under-lock installation authorization remain separate gates.
+- Track B closed custody inventory submitted in PR #89; no data export, no actual archive scan. PR #104 unchanged. Backup v2 blocked on actual active swap; don't disable swap on host. No merge, live changes or new resources.
+
 # REMURA TradingView — ROADMAP v0.8.151-lab (privileged update boundary and backup resource gate)
 **Aggiornamento 18/11/2026, sessione delle 11:07 CET — PR #102 DRAFT**
 

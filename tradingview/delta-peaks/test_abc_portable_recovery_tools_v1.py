@@ -1,4 +1,4 @@
-# REMURA v0.8.151 LAB — 18/11/2026, sessione delle 11:07 CET
+# REMURA v0.8.152 LAB — 18/11/2026, sessione successiva alle 11:13 CET
 import json,os,sqlite3,tempfile,unittest,shutil
 from unittest.mock import patch
 import abc_prices_recovery_v2 as recovery
@@ -54,6 +54,26 @@ class Tests(unittest.TestCase):
                 pub=recovery.gpg(owner,"--export",primary,stdout=recovery.subprocess.PIPE).stdout
                 recovery.gpg(public,"--import",input=pub,stdout=recovery.subprocess.PIPE)
                 recovery.recipient_check(public,primary,sub)
+                # Reuse the disposable key pair for domain-separated release authorization.
+                import abc_v165_release_attestation_v1 as release
+                payload=root/"release.json"
+                payload.write_bytes(release.statement())
+                signature=recovery.gpg(owner,"--pinentry-mode","loopback","--passphrase","","--local-user",primary+"!",
+                                      "--detach-sign","--output","-",str(payload),
+                                      stdout=recovery.subprocess.PIPE).stdout
+                with patch.object(release.os,"geteuid",return_value=1000):
+                    att=release.verify_attestation(public,primary,signature)
+                    self.assertTrue(att["owner_signature_verified"])
+                    self.assertFalse(att["install_authorized"])
+                    with self.assertRaises(ValueError):release.verify_attestation(public,sub,signature)
+                    with self.assertRaises(ValueError):release.verify_attestation(owner,primary,signature)
+                    with patch.object(release,"BUNDLE","0"*64):
+                        with self.assertRaises(recovery.subprocess.CalledProcessError):
+                            release.verify_attestation(public,primary,signature)
+                    with patch.object(release.stage,"inspect_bundle",return_value={"bundle_sha256":release.BUNDLE,"bundle_bytes":release.BUNDLE_BYTES}):
+                        self.assertTrue(release.verify_bundle_attestation(root/"fixture.tar",public,primary,signature)["bundle_on_target_verified"])
+                    with patch.object(release.stage,"inspect_bundle",return_value={"bundle_sha256":"0"*64,"bundle_bytes":release.BUNDLE_BYTES}):
+                        with self.assertRaises(ValueError):release.verify_bundle_attestation(root/"fixture.tar",public,primary,signature)
                 with self.assertRaises(ValueError):recovery.recipient_check(owner,primary,sub)
                 db=root/"source.db"; copy=root/"copy.db"; tar=root/"package"; cipher=out/"fixture.gpg"
                 a=sqlite3.connect(db)
