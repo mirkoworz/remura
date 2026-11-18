@@ -74,6 +74,31 @@ class Tests(unittest.TestCase):
                         self.assertTrue(release.verify_bundle_attestation(root/"fixture.tar",public,primary,signature)["bundle_on_target_verified"])
                     with patch.object(release.stage,"inspect_bundle",return_value={"bundle_sha256":"0"*64,"bundle_bytes":release.BUNDLE_BYTES}):
                         with self.assertRaises(ValueError):release.verify_bundle_attestation(root/"fixture.tar",public,primary,signature)
+                # Reuse existing disposable signing key, no real key or extra provisioning.
+                import abc_v165_external_phase_receipt_lab_v1 as phase
+                first=phase.statement(transaction="a"*64,plan="b"*64,sequence=1,
+                    previous=phase.ZERO,phase="prepared",journal="c"*64,challenge="d"*64)
+                def sign_phase(body):
+                    p=root/"phase.json";p.write_bytes(recovery.canon(body))
+                    return recovery.gpg(owner,"--pinentry-mode","loopback","--passphrase","",
+                        "--local-user",primary+"!","--detach-sign","--output","-",str(p),
+                        stdout=recovery.subprocess.PIPE).stdout
+                sig1=sign_phase(first);a1=phase.anchor(first,sig1)
+                second=phase.successor(first,sig1,latest_anchor=a1,phase="applying",
+                                       journal="c"*64,challenge="e"*64)
+                sig2=sign_phase(second);a2=phase.anchor(second,sig2)
+                args=dict(keyring=public,signer=primary,latest_anchor=a2,transaction="a"*64,
+                          plan="b"*64,sequence=2,phase="applying",journal="c"*64,
+                          challenge="e"*64,synthetic=True)
+                self.assertFalse(phase.verify(second,sig2,**args)["install_authorized"])
+                with self.assertRaises(ValueError):phase.verify(first,sig1,**args)
+                with self.assertRaises(ValueError):phase.verify(second,sig2,**dict(args,challenge="f"*64))
+                with self.assertRaises(ValueError):phase.verify(second,sig2,**dict(args,keyring=owner))
+                with self.assertRaises(ValueError):phase.successor(first,sig1,latest_anchor=a1,
+                    phase="applied",journal="c"*64,challenge="e"*64)
+                bad=dict(second,journal="f"*64)
+                with self.assertRaises(recovery.subprocess.CalledProcessError):
+                    phase.verify(bad,sig2,**dict(args,journal="f"*64,latest_anchor=phase.anchor(bad,sig2)))
                 with self.assertRaises(ValueError):recovery.recipient_check(owner,primary,sub)
                 db=root/"source.db"; copy=root/"copy.db"; tar=root/"package"; cipher=out/"fixture.gpg"
                 a=sqlite3.connect(db)

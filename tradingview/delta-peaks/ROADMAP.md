@@ -1,3 +1,10 @@
+# REMURA TradingView — ROADMAP v0.8.169-lab (external owner phase receipt contract)
+**Aggiornamento 18/11/2026, sessione successiva alle 16:28 CET — PR #102 DRAFT**
+
+- v0.8.168 Telemetry 44336039898/job 134912919371 and Wrangler 44336039927 verified completed/success. B custody v0.3 PR #89 head ea63f9121786f81c6e086c46d833bdb9db6cacbe: CI 44336532237, 44336532148, 44336533235 verified success. Preserve historical integration pins. Owner host preflight is ready but not executed on Mac. No archive access.
+- Add separate owner-signed phase receipt contract, binding release manifest, transaction, stable plan, journal digest, sequence, phase, preceding receipt and fresh challenge. Actual GPG verification in existing disposable-key test: valid successor, old receipt, challenge mismatch, private-keyring misuse, skipped phase and changed signed body. No real owner signature request or custody service; CI pending. An independently retained latest anchor and durable external compare-and-set still required. Never infer rollback authorization.
+- Do not repeat protected staging, provisioning or backup. Oracle swap gate stays closed. CVD source availability v0.8.168 GREEN in LAB; no prospective outcomes, new D1 reader, or production transport. No changes to collector, updater, timer, Pine, Contributors live or costs.
+
 # REMURA TradingView — ROADMAP v0.8.168-lab (verified source execution boundary and source availability)
 **Aggiornamento 18/11/2026, sessione successiva alle 16:21 CET — PR #102 DRAFT**
 
