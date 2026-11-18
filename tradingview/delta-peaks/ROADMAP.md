@@ -1,3 +1,11 @@
+# REMURA TradingView — ROADMAP v0.8.177-lab (receipt request planning and observed free-budget evidence)
+**Aggiornamento 18/11/2026, sessione successiva alle 18:24 CET — PR #102 DRAFT**
+
+- v0.8.176 exact head 7b436c91e5b687b88459e298b7afa49158d9a46d; Telemetry 44358279507 and Wrangler 44358279628 completed/success. Radar 44356740341 last observed completed/success at 18:16 CET. Capacity unverified.
+- Existing MAIN read-only free-budget workflow 44350129314/job 134963167713 verified success, all four statuses OK. Sanitized estimates and repository-size checkpoint documented in RECEIPT-REQUEST-AND-BUDGET-V177.md. Historical not a fresh operational budget gate, no actual billing claim.
+- Explicit disjoint receipt-only window preview (max 12 slots, no future evidence, no overlapping existing windows, no cross-fold scope, maturity checked), four tests. Proposed 18 Nov 16:00–16:55 UTC; owner-only V4 manual workflow remains unchanged. No dispatch, no new D1 query, no scientific outcome. CI pending.
+- No Mac, archive, Oracle, live release, service or quota purchase change. Preserve frozen protocol and signed staged package.
+
 # REMURA TradingView — ROADMAP v0.8.176-lab (existing aggregate receipt fold attribution)
 **Aggiornamento 18/11/2026, sessione successiva alle 18:16 CET — PR #102 DRAFT**
 
