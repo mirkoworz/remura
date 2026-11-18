@@ -1,3 +1,11 @@
+# REMURA TradingView — ROADMAP v0.8.144-lab (reproducible pinned stage bundle)
+**Aggiornamento 18/11/2026, sessione successiva alle 09:41 CET — PR #102 DRAFT**
+
+- v0.8.143 GREEN: Telemetry 44269005125 job 134680583840, 587 main, 142 ABC, 2 actual 90-path disk transaction tests; Wrangler 44269005092. Logs verified.
+- v0.8.144 reusable offline build/verify CLI creates canonical non-installable 155-file application tar from actual pinned checkouts; 28 deployment references inventory only. Exact manifest and bytes checked, deterministic duplicate builds, tampering and overwrite rejection in CI pending.
+- Actual base autoupdate and v164 installer both use /var/lib/remura-autoupdate/lock via flock; future dedicated installer must share existing lock and verify actual identity. No changes to live updater/collector. See ABC-STAGE-BUNDLE-LAB.md.
+- Remaining: actual lock/config path reconciliation, Shark evidence and storage, account quotas/iCloud, authenticated package and journal, real maintenance approval and installer/rollback. No live deployment.
+
 # REMURA TradingView — ROADMAP v0.8.143-lab (pinned candidate disk transaction)
 **Aggiornamento 18/11/2026, sessione 09:39 CET — PR #102 DRAFT**
 

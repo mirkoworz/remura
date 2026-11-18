@@ -177,3 +177,17 @@ jobs:
 
       - name: ABC actual pinned application disk transaction and crash recovery (isolated)
         run: python3 tradingview/delta-peaks/abc_pinned_disk_transaction_fixture_v1.py
+
+      - name: ABC reproducible actual staged bundle and independent verifier (offline)
+        run: |
+          set -eu
+          d="$(mktemp -d)"
+          trap 'rm -rf "$d"' EXIT
+          p=tradingview/delta-peaks/abc_v165_stage_bundle_v1.py
+          python3 "$p" --build "$d/a.tar"
+          python3 "$p" --build "$d/b.tar"
+          cmp "$d/a.tar" "$d/b.tar"
+          python3 "$p" --verify "$d/a.tar"
+          if python3 "$p" --build "$d/a.tar"; then exit 1; fi
+          printf x >> "$d/b.tar"
+          if python3 "$p" --verify "$d/b.tar"; then exit 1; fi
