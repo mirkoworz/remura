@@ -1,3 +1,9 @@
+# REMURA Contributors v0.44 LAB — 18/11/2026, sessione delle 17:48 CET
+
+- v0.43 CI 44335249706/job 134910055727 verified success (233+7+7 tests).
+- Owner-only synthetic dashboard adds manual-side readiness per exact instrument, broker, ticker, product and contract. A manual contribution is counted once even if near multiple automatic levels. Distinguish near, compared without proximity and not comparable. Two new regression tests pending. No change to thresholds, comparison engine, private identities, frozen pins or legacy wire report.
+- No production, preview, staging, D1, enrollment, external calls or paid infrastructure changes. Existing closed deployment status not re-attested.
+
 # REMURA Contributors v0.43 LAB — 18/11/2026, sessione successiva alle 16:21 CET
 
 - v0.42 CI 44283965819 verified completed/success; 245 tests reported at prior checkpoint.

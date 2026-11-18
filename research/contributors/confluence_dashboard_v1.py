@@ -1,4 +1,4 @@
-# REMURA Contributors v0.43 LAB — 18/11/2026, sessione successiva alle 16:21 CET
+# REMURA Contributors v0.44 LAB — 18/11/2026, sessione delle 17:48 CET
 """Owner-only in-process diagnostic dashboard, synthetic data, no HTTP/export.
 Automatic inputs and explicit comparison rules are trusted LAB fixtures.
 No actual price feed, no prediction, no operational or scientific admission.
@@ -28,8 +28,8 @@ def _render(result,manual,auto):
     parts=['<!doctype html><html lang="it"><head><meta charset="utf-8">',
            '<meta name="viewport" content="width=device-width,initial-scale=1">',
            '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\'; form-action \'none\'; base-uri \'none\'">',
-           '<title>REMURA Level Confluence v0.43 LAB</title><style>'+STYLE+'</style></head><body>',
-           '<div class="release">REMURA · Level Confluence v0.43 LAB · 18/11/2026, dopo le 16:21 CET</div><main>',
+           '<title>REMURA Level Confluence v0.44 LAB</title><style>'+STYLE+'</style></head><body>',
+           '<div class="release">REMURA · Level Confluence v0.44 LAB · 18/11/2026, sessione 17:48 CET</div><main>',
            '<small>REMURA / VOLUMETRICA / LEVEL CONFLUENCE</small><h1>Confluenze volumetriche</h1>',
            '<p>SOLO DATI SINTETICI · Report proprietario in sola lettura. Nessun segnale operativo o prova di attività istituzionale.</p>',
            '<p>Cutoff UTC: '+_e(result["asof_utc"])+'</p>',
@@ -60,6 +60,15 @@ def _render(result,manual,auto):
         parts.append('<p class="source-readiness">Automatici vicini candidati: '+str(near)+
                      ' · Confrontati senza vicinanza: '+str(distant)+
                      ' · Non confrontabili: '+str(unknown)+'</p>')
+        # Separate manual-side coverage: a manual is counted once even if
+        # several automatic levels are close. No implied independent vote.
+        manual_states=[item["status"] for item in bucket["manual"]]
+        manual_near=manual_states.count("NEAR")
+        manual_far=manual_states.count("COMPARED_NO_NEAR")
+        manual_unknown=len(manual_states)-manual_near-manual_far
+        parts.append('<p class="manual-readiness">Manuali vicini candidati: '+str(manual_near)+
+                     ' · Confrontati senza vicinanza: '+str(manual_far)+
+                     ' · Non confrontabili: '+str(manual_unknown)+'</p>')
         if unknown or not states:
             parts.append('<p class="missing">N/D non equivale a disaccordo. Nessun punteggio istituzionale.</p>')
         if not bucket["automatic"]:

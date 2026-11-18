@@ -1,4 +1,4 @@
-# REMURA Level Confluence v0.43 LAB — 18/11/2026, sessione successiva alle 16:21 CET
+# REMURA Level Confluence v0.44 LAB — 18/11/2026, sessione delle 17:48 CET
 import unittest
 from datetime import datetime,timezone
 from pathlib import Path
@@ -42,7 +42,7 @@ class DashboardTests(unittest.TestCase):
         self.assertIn("1.08535",data["html"])
         self.assertIn("5.00000000 tick",data["html"])
         self.assertIn("SOLO DATI SINTETICI",data["html"])
-        self.assertIn("v0.43 LAB",data["html"])
+        self.assertIn("v0.44 LAB",data["html"])
         self.assertNotIn("PRIVATE NOTE",data["html"])
         self.assertNotIn(self.friend,data["html"])
         self.assertFalse(data["result"]["operational_signal"])
@@ -109,6 +109,17 @@ class DashboardTests(unittest.TestCase):
         self.assertEqual(page.count('class="source-readiness"'),2)
         self.assertIn("Automatici vicini candidati: 1 · Confrontati senza vicinanza: 0 · Non confrontabili: 0",page)
         self.assertIn("Automatici vicini candidati: 0 · Confrontati senza vicinanza: 0 · Non confrontabili: 1",page)
+    def test_manual_readiness_deduplicates_multiple_automatic_matches(self):
+        other=dict(self.auto,id="auto-2")
+        page=self.report(automatic=[other,self.auto])["html"]
+        self.assertIn("Automatici vicini candidati: 2",page)
+        self.assertIn("Manuali vicini candidati: 1 · Confrontati senza vicinanza: 0 · Non confrontabili: 0",page)
+    def test_manual_readiness_far_and_unknown(self):
+        page=self.report(automatic=[dict(self.auto,price="1.09500")])["html"]
+        self.assertIn("Manuali vicini candidati: 0 · Confrontati senza vicinanza: 1 · Non confrontabili: 0",page)
+        for kwargs in (dict(rules=[]),dict(automatic=[])):
+            page=self.report(**kwargs)["html"]
+            self.assertIn("Manuali vicini candidati: 0 · Confrontati senza vicinanza: 0 · Non confrontabili: 1",page)
     def test_manual_only_group(self):
         page=self.report(automatic=[])["html"]
         self.assertEqual(page.count('class="instrument"'),1)
