@@ -1,3 +1,10 @@
+# REMURA TradingView — ROADMAP v0.8.162-lab (pinned bootstrap source census)
+**Aggiornamento 18/11/2026, sessione successiva alle 13:37 CET — PR #102 DRAFT**
+
+- v0.8.161 Telemetry 44305971176 and Wrangler 44305971293 verified GREEN.
+- Pin four exact existing source files by SHA256 and byte size; descriptor-relative read-only verification refuses extra files, links, untrusted directory or changed data. Ten actual-source tests pending CI. No code execution, root provisioning or runtime dependency attestation. Historical package, portable kit, phase witness and candidate signature unchanged. See ABC-BOOTSTRAP-SOURCE-CENSUS-LAB.md.
+- Collector and timer last observed unchanged 13:37; no new live actions. Separate privileged launcher, independent witness custody and actual maintenance-lock transaction remain open. B/E research and Ampere unchanged, no new private archive evidence.
+
 # REMURA TradingView — ROADMAP v0.8.161-lab (separate authenticated phase witness)
 **Aggiornamento 18/11/2026, sessione successiva alle 13:37 CET — PR #102 DRAFT**
 
