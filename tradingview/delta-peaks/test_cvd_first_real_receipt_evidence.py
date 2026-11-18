@@ -1,4 +1,4 @@
-# REMURA v0.8.89 LAB — 16/11/2026 10:55 CET
+# REMURA v0.8.156 LAB — 18/11/2026, sessione successiva alle 12:26 CET
 # Offline regression with actual public aggregate evidence, no raw candles.
 import json,sys,unittest
 from pathlib import Path
@@ -32,3 +32,19 @@ class FirstReceiptEvidence(unittest.TestCase):
         self.assertEqual((o["max_lag_ms"],o["collection_rows_read"],o["collection_rows_written"]),(21660,34,0))
         self.assertFalse(o["scientific_admission"])
         with self.assertRaises(AuditError):aggregate_receipts([first,second,second])
+
+    def test_three_actual_disjoint_receipts_through_nov18(self):
+        names=("fx_first_receipt_20261116.json","fx_second_receipt_20261116.json","fx_third_receipt_20261118.json")
+        records=[json.loads((ROOT/"evidence"/name).read_text()) for name in names]
+        latest=records[-1]
+        self.assertEqual(latest["run_id"],44294693651)
+        one=aggregate_receipts([latest])
+        self.assertEqual((one["requested_slots"],one["valid_unique_bars"],one["missing_requested_slots"],one["duplicate_rows"]),(12,12,0,0))
+        self.assertEqual((one["max_lag_ms"],one["collection_rows_read"],one["collection_rows_written"]),(16884,25,0))
+        o=aggregate_receipts(records)
+        self.assertEqual((o["windows"],o["requested_slots"],o["valid_unique_bars"],o["missing_requested_slots"],o["duplicate_rows"]),(3,28,28,0,0))
+        self.assertEqual((o["max_lag_ms"],o["collection_rows_read"],o["collection_rows_written"]),(21660,59,0))
+        for k in ("scientific_admission","independent_provenance","outcomes_computed","orders_enabled","notifications_enabled"):
+            self.assertFalse(o[k])
+        self.assertIsNone(o["account_quota_utilization"])
+        with self.assertRaises(AuditError):aggregate_receipts(records+[latest])

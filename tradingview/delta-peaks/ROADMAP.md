@@ -1,3 +1,10 @@
+# REMURA TradingView — ROADMAP v0.8.156-lab (actual development receipt checkpoint)
+**Aggiornamento 18/11/2026, sessione successiva alle 12:26 CET — PR #102 DRAFT**
+
+- v0.8.155 verified GREEN: Telemetry 44285109444 job 134735644637; Wrangler 44285109450. 606 main tests, ABC 31+111. Original package 155 files / 1771520 bytes and SHA256 unchanged. No installation approval.
+- Owner manual main workflow 44294693651, job 134768547492: actual FX:EURUSD M5 sender 0.9.1-cvd-lab receipt-only report for 18/11 10:00–10:55 UTC. 12/12 requested bars, zero missing or duplicate, max lag 16884 ms, 25 query rows read, zero written. Preserve only the already public aggregate report and workflow timestamp, no raw rows. Three disjoint sampled windows 28/28 requested slots, 59 rows read, zero written, max lag 21660 ms; NOT continuous market coverage or account quota. Add one targeted regression; CI pending. No outcome unveiling, no scientific admission, no change of registered dates, thresholds or active alert.
+- Ampere scheduled job 44287376564 succeeded; no new capacity attested. Collector last observed active and updater timer disabled 11:13 CET; no new live changes. Remaining real gates: owner-closed archive inventory, aggregate quota checks, root-safe privileged release handoff, later fixed-fold outcomes only after prescribed closure. Pine v0.9.3 compile already observed, switches remain intended OFF.
+
 # REMURA TradingView — ROADMAP v0.8.155-lab (separate immutable release and research pins)
 **Aggiornamento 18/11/2026, sessione delle 11:23 CET — PR #102 DRAFT**
 
