@@ -1,3 +1,9 @@
+# REMURA Contributors v0.46 LAB — 18/11/2026 18:48 CET
+
+- v0.45 CI 44352993172 completed/success, exact head 8260035ff10e805c5eb856152ddb91f3c6bd54cc.
+- New owner-only bounded synthetic coverage module, separate automatic/manual status denominators and exclusion counts, no prices, identities, notes, instrument labels or IDs returned. Same original comparator and cutoff; no mutation. Aggregate small-group disclosure remains possible, explicitly not anonymization or publicly authorized export. Four tests pending. Existing v0.45 dashboard and historical wire/deployable assets unchanged.
+- No D1, real contributors, HTTP, enrollment, preview, deployment or cost change.
+
 # REMURA Contributors v0.45 LAB — 18/11/2026, sessione successiva alle 17:48 CET
 
 - v0.44 exact head 363026227ffaae123125cdcf6fedbeace9297214 CI 44351587648 completed/success.
