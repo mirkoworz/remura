@@ -1,3 +1,12 @@
+# REMURA TradingView — ROADMAP v0.8.166-lab (existing delivery byte boundary)
+**Aggiornamento 18/11/2026, sessione successiva alle 15:52 CET — PR #102 DRAFT**
+
+- v0.8.165 Telemetry 44328175790/job 134885020673 and Wrangler 44328175786 verified GREEN. Owner Oracle 15:49 successful code-only copy of four pinned root-owned sources, activation NO, installation NO (receipt 6982043322). Do not repeat provisioning.
+- Oracle 15:52 receipt 6982133492: no additional POSIX ACLs or unknown checks on scoped paths, ext4, 41023 MiB available on application filesystem, 654220 KiB MemAvailable, swap 1048572 KiB total / 1011748 free, collector active and updater/timer inactive. Not full mount/OS/billing attestation. Existing backup v2 swap gate remains closed; never swapoff.
+- B custody-only PR #89 head 3b4ff66c18e64fb3a4fc78c5464f2212505671ab records bounded deduplication of owner-local closed SQLite copies, CI pending at observation. Keep main science and historical ABC pins unchanged pending review. No actual archive access or outcomes.
+- Add pure ZIP-to-TAR byte gate for already delivered public candidate with exact historical outer ZIP and inner TAR pins. Existing actual TAR locked fixture exercises synthetic wrapper and rejects it as real delivery. No new artifact, no import into Oracle, no repeated owner signature/delivery verification, CI pending. See ABC-DELIVERY-BYTE-GATE-V166.md.
+- Remaining actual privileged launcher/mutation, stage import authorization, independent witness, fresh backup and owner maintenance consent. No changes to services, Radar, E or frozen science.
+
 # REMURA TradingView — ROADMAP v0.8.165-lab (code-only privileged provisioning candidate)
 **Aggiornamento 18/11/2026, sessione successiva alle 15:29 CET — PR #102 DRAFT**
 

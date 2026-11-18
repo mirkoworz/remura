@@ -1,8 +1,9 @@
-# REMURA v0.8.164 LAB — 18/11/2026, sessione successiva alle 15:29 CET
+# REMURA v0.8.166 LAB — 18/11/2026, sessione successiva alle 15:29 CET
 """Existing actual pinned CI bundle, one outer maintenance lock, disposable disk only.
 No new bundle build, artifact, live data, root execution or service commands.
 """
-import fcntl,hashlib,os,shutil,sys,tempfile
+import fcntl,hashlib,io,os,sys,tempfile,zipfile
+from abc_v165_candidate_zip_gate_v1 import _decode,verified_tar
 from pathlib import Path
 from abc_v165_locked_snapshot_v1 import locked_candidate_bytes, MARKER
 from abc_v165_stage_bundle_v1 import PIN
@@ -51,7 +52,19 @@ def check(source):
             (root/"work"/name).touch(mode=0o600)
         lock=root/"work"/"lock"
         dest=root/"stage"/"remura-v165-candidate.tar"
-        shutil.copyfile(source,dest)
+        # Reuse actual deterministic TAR; fixture ZIP is not the historical delivery.
+        tar=Path(source).read_bytes()
+        wrapped=io.BytesIO()
+        with zipfile.ZipFile(wrapped,"w",compression=zipfile.ZIP_DEFLATED) as z:
+            z.writestr("remura-v165-candidate.tar",tar)
+            z.writestr("candidate-attestation.json","fixture only")
+            z.writestr("READ-ME.txt","not authorized")
+        data=wrapped.getvalue()
+        assert _decode(data)==tar
+        try:verified_tar(data)
+        except ValueError:pass
+        else:raise AssertionError("fixture accepted as historical delivery")
+        dest.write_bytes(_decode(data))
         dest.chmod(0o600)
         fd=os.open(root,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
         try:
