@@ -49,6 +49,7 @@ from batch_timing import record as record_batch_timing, summary as batch_timing_
 from h1_batch_comparison import compare_paired_h1
 from h1_paired_store import (load_full_scan as load_h1_full_scan,
     record as record_h1_pair, summary as h1_pair_summary)
+from collector_watchdog import CycleProgress, snapshot as collector_watchdog_snapshot
 
 ROOT=Path(__file__).resolve().parents[1]
 STORE=ROOT/"private"/"remura-prices.sqlite3"
@@ -282,7 +283,7 @@ def ig_document(db_path):
             "updatedAt":data.get("updatedAt"),"symbols":checked}
 
 
-def http_handler(db_path):
+def http_handler(db_path, collector_thread=None, collector_progress=None):
     request_counts={"allGet":0,"privateGet":0}
     request_lock=threading.Lock()
     class Handler(BaseHTTPRequestHandler):
@@ -393,6 +394,12 @@ def http_handler(db_path):
                         self.response(200,{
                             "name":"REMURA Private",
                             "collector":status.get("collector","disabled"),
+                            "collectorWatchdog":collector_watchdog_snapshot(
+                                enabled=os.environ.get("REMURA_COLLECTOR_ENABLED","0")=="1",
+                                thread=collector_thread,
+                                progress=collector_progress,
+                                last_success=status.get("last_success"),
+                                now=utcnow()),
                             "ctraderPreflight":ctrader_preflight(db_path),
                             "ctraderBackup":backup_ctrader_status(db_path),
                             "collectorSource":status.get("collector_source","none"),
@@ -923,7 +930,7 @@ def batch_timing_enabled(env=None):
     return values.get("REMURA_BATCH_TIMING_ENABLED","0")=="1"
 
 
-def collector_loop(db_path,stop,env=None):
+def collector_loop(db_path,stop,env=None,*,progress=None):
     symbols_text=os.environ.get("REMURA_SYMBOLS","all").strip().upper()
     symbols=sorted(MARKETS) if symbols_text in ("ALL","") else list(dict.fromkeys(
         value for value in re.split(r"[,\s]+",symbols_text) if value in MARKETS
@@ -1007,6 +1014,13 @@ def collector_loop(db_path,stop,env=None):
             except (OSError,ValueError,RuntimeError,sqlite3.Error):
                 # A metrics failure must NEVER stop the broker collector.
                 pass
+        if progress is not None:
+            # Completion witness only after the existing full iteration.
+            # No additional IO, broker request, timer or automatic restart.
+            try:
+                progress.mark_completed()
+            except Exception:
+                pass
         stop.wait(seconds_to_next_quarter())
 
 
@@ -1080,8 +1094,12 @@ def main():
     finally:
         db.close()
     stop=threading.Event()
+    thread=None
+    collector_progress=None
     if os.environ.get("REMURA_COLLECTOR_ENABLED","0")=="1":
-        thread=threading.Thread(target=collector_loop,args=(db_path,stop),daemon=True)
+        collector_progress=CycleProgress()
+        thread=threading.Thread(target=collector_loop,args=(db_path,stop),
+                                kwargs={"progress":collector_progress},daemon=True)
         thread.start()
     if cot_sync_enabled():
         thread_cot=threading.Thread(target=cot_loop,args=(db_path,stop),daemon=True)
@@ -1098,7 +1116,8 @@ def main():
     if os.environ.get("REMURA_IG_ENABLED","0")=="1":
         thread_ig=threading.Thread(target=ig_loop,args=(db_path,stop),daemon=True)
         thread_ig.start()
-    server=ThreadingHTTPServer((SERVER_HOST,args.port),http_handler(db_path))
+    server=ThreadingHTTPServer((SERVER_HOST,args.port),http_handler(
+        db_path,collector_thread=thread,collector_progress=collector_progress))
     print("REMURA Private listening ONLY on http://127.0.0.1:"+str(args.port))
     print("Do NOT expose without authentication. Use Cloudflare Tunnel with a validated Access policy for the iPhone.")
     try:

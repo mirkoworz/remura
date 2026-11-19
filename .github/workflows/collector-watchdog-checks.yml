@@ -1,0 +1,55 @@
+# Filone A — watchdog passivo: test soltanto offline.
+# Nessun avvio manuale, deploy, SSH, broker, Oracle, segreto o scrittura.
+name: REMURA collector watchdog offline checks
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/private_server.py'
+      - 'scripts/collector_watchdog.py'
+      - 'tests/test_collector_watchdog.py'
+      - 'tests/test_collector_watchdog_http.py'
+      - 'scripts/watchdog_release_gate.py'
+      - 'tests/test_watchdog_release_gate.py'
+      - 'scripts/watchdog_staging_rehearsal.py'
+      - 'tests/test_watchdog_staging_rehearsal.py'
+      - 'scripts/watchdog_crosspr_contract.py'
+      - 'tests/test_watchdog_crosspr_contract.py'
+      - 'scripts/watchdog_release_blueprint.py'
+      - 'tests/test_watchdog_release_blueprint.py'
+      - 'scripts/watchdog_cadence_guard.py'
+      - 'tests/test_watchdog_cadence_guard.py'
+      - '.github/workflows/collector-watchdog-checks.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile offline, no external APIs
+        run: python -m py_compile scripts/private_server.py scripts/collector_watchdog.py tests/test_collector_watchdog.py tests/test_collector_watchdog_http.py
+      - name: Watchdog unit tests (no HTTP)
+        run: python -m unittest discover -s tests -p 'test_collector_watchdog.py' -v
+      - name: Watchdog HTTP tests (localhost only, temporary SQLite)
+        run: python -m unittest discover -s tests -p 'test_collector_watchdog_http.py' -v
+      - name: Verify staged module dependency and v1.64 no-go (offline)
+        run: python -m unittest discover -s tests -p 'test_watchdog_release_gate.py' -v
+      - name: Shared-file conflict, SHA-pinned bundle and synthetic rollback (offline)
+        run: python -m unittest discover -s tests -p 'test_watchdog_staging_rehearsal.py' -v
+      - name: Future B/v165/watchdog integration structural safety (offline)
+        run: python -m unittest discover -s tests -p 'test_watchdog_crosspr_contract.py' -v
+      - name: Sixteen-file candidate blueprint and full-bundle rollback (offline)
+        run: python -m unittest discover -s tests -p 'test_watchdog_release_blueprint.py' -v
+      - name: Enforce original collector cadence and broker API call sites (offline)
+        run: python -m unittest discover -s tests -p 'test_watchdog_cadence_guard.py' -v
+      - name: Existing private server regressions (offline)
+        run: python -m unittest discover -s tests -p 'test_private_server.py' -v
