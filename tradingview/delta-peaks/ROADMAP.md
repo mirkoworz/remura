@@ -1,3 +1,7 @@
+# REMURA TradingView v0.8.181 LAB — 19/11/2026, sessione 06:46 CET
+
+- [x] Candidate bounded encrypted capture adapter: fixed TEST SELECT, max 288 M5 slots in one frozen fold, explicit receipt cutoff, original rows encrypted including semantic quarantines, no outcome evaluation, GnuPG public-only exact encryption fingerprint, no CLI/sink/scheduler. Six offline regression methods including real synthetic GPG roundtrip; CI pending. No real archive, host gate, independent custody or actual retention verification. No protocol change. Late receipts after capture need explicit reconciliation before fold completeness claims; no replacement or cross-fold matching. Next: choose owner-approved protected host/recipient and independent ciphertext sink, verify retention and quota, integrate host/budget guards and recovery before live export. Contributors real fixture isolation remains separate authorization. No main/deploy changes.
+
 # REMURA TradingView — ROADMAP v0.8.180-lab (test variable shadowing correction and handoff)
 **Aggiornamento 18/11/2026, sessione successiva alle 18:52 CET — PR #102 DRAFT**
 
