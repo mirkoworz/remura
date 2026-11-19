@@ -1,5 +1,21 @@
 # REMURA — Roadmap operativa unica
 
+## 07/11/2026 — TRE FILONI STRATEGICI COORDINATI (NUOVO STATO DI ROTTA)
+
+**Questa sezione sostituisce come quadro di coordinamento la vecchia intestazione "due binari A/B" del 04/11, che rimane sotto come storico.** Nessun cambiamento a LIVE, collector o API discende dalla sola roadmap. La versione LIVE **documentata** nelle verifiche recenti è v1.64; non riletta direttamente dalla VPS in questa modifica.
+
+| Filone strategico | Scopo | Fonte unica / blocchi |
+| --- | --- | --- |
+| **1. Oracle/infrastruttura** | Conservare REMURA privata sulla VPS E2; dopo il trial verificare **fattura, idoneità reale Always Free e disponibilità host** prima di valutare ARM isolata | `mirkoworz/remura-collector` privato: `COORDINAMENTO-OCI-SHARK-SCIENCE.md`; nessuna nuova VM ora, nessuna spesa autorizzata |
+| **2. Track B / Shark Science** | Motore scientifico COT/prezzo/retail/CVD proxy; **testare** il possibile vantaggio fuori campione con costi e falsi positivi, poi notifiche validate | [ROADMAP-B-SHARK-SCIENCE.md sul branch B](https://github.com/mirkoworz/remura/blob/research/track-b-shark-science-20261104/ROADMAP-B-SHARK-SCIENCE.md), [PR #89 DRAFT](https://github.com/mirkoworz/remura/pull/89); nessun edge/profitto reale ancora dimostrato |
+| **3. Track C / Beta prospettica EURUSD+XAUUSD** | Far partire il **primo registratore ombra FIRST-SEEN autorizzato** di dati già disponibili, con due mercati, alimentando B mentre prosegue la ricerca | **[ROADMAP-C-BETA-PROSPETTICA.md](ROADMAP-C-BETA-PROSPETTICA.md)**; non ancora collegato alla produzione o avviato |
+
+**Correzione concettuale:** l'app attuale costituisce una **base beta già funzionante**, ma la **nuova beta scientifica prospettica del Track C è da preparare e collaudare**. Il Track A H1 è un filone tecnico già diagnosticato ([ROADMAP-A-H1.md](ROADMAP-A-H1.md), [PR #88 DRAFT](https://github.com/mirkoworz/remura/pull/88)) e resta in monitoraggio senza contare come quarto filone attivo.
+
+**Percorso critico per andare più veloci:** lavorare **subito offline** su C1 mappa fonti/as-of, C2 recorder shadow, C3 test; poi C4 prova risorse/gratuità e C5 **autorizzazione esplicita** a eventuale rilascio seriale. La cattura prospettica non si può retrodatare. CVD LIVE resta separato fino ai gate Oracle/prove. Il protocollo retail B è già preregistrato come regole (12/8/8 settimane) ma **non autorizzato, non partito**; il 09/11 UTC del protocollo CVD **non è** un avvio automatico. Nessun merge della PR B, trading o notifiche.
+
+**Regole comuni:** tre branch/PR distinti, **una sola produzione**, nessuna nuova API o task ricorrente senza verifica, nessuna spesa senza consenso, niente falsi successi se mancano prove; il limite budget/allerta Oracle non è una garanzia anti-addebito. Per un futuro update dell'app: **versione incrementata e data/ora Europe/Rome effettiva in alto sulle 9 pagine**, backup SQLite/restore-test/rollback. Documenti e dati GitHub non equivalgono a deploy.
+
 ## 04/11/2026 — DUE BINARI PARALLELI A/B, ROADMAP ATTIVA
 
 **Questo blocco è la fonte di stato corrente, mentre le sezioni datate 03/11 e precedenti sotto rimangono lo storico.** Il progetto non è bloccato da costi accertati: nessuna fattura aggiuntiva è stata verificata, ma i consumi reali su GitHub Actions/Oracle/Firestore/cTrader vanno periodicamente controllati. Si procede gratis ove possibile e si interrompe qualsiasi cambiamento che richieda pagamento senza consenso.

@@ -75,6 +75,35 @@ on:
       - 'tests/test_cot_monitor.py'
       - 'tests/test_signals_monitor.py'
       - 'scripts/private_server.py'
+      - 'scripts/track_c_shadow_rehearsal.py'
+      - 'tests/test_track_c_shadow_rehearsal.py'
+      - 'scripts/track_c_b_original_contract.py'
+      - 'tests/test_track_c_b_original_contract.py'
+      - 'scripts/track_c_cot_arrival_contract.py'
+      - 'tests/test_track_c_cot_arrival_contract.py'
+      - 'tests/test_track_c_cot_fetch_seam.py'
+      - 'scripts/track_c_cot_atomic_b_witness.py'
+      - 'tests/test_track_c_cot_atomic_b_witness.py'
+      - 'scripts/track_c_cross_process_asof_audit.py'
+      - 'tests/test_track_c_cross_process_asof_audit.py'
+      - 'scripts/track_c_c3_safety_mailbox.py'
+      - 'tests/test_track_c_c3_safety_mailbox.py'
+      - 'tests/test_track_c_c3_live_activation_guard.py'
+      - 'scripts/track_c_c3b_durable_shadow.py'
+      - 'tests/test_track_c_c3b_durable_shadow.py'
+      - 'scripts/track_c_c3b_postcommit_handoff.py'
+      - 'tests/test_track_c_c3b_postcommit_handoff.py'
+      - 'scripts/track_c_c3bc_attempt_denominator.py'
+      - 'tests/test_track_c_c3bc_attempt_denominator.py'
+      - 'scripts/track_c_c3bc_expected_slots.py'
+      - 'tests/test_track_c_c3bc_expected_slots.py'
+      - 'scripts/track_c_c3bc_frozen_plan.py'
+      - 'tests/test_track_c_c3bc_frozen_plan.py'
+      - 'scripts/track_c_c3c_scheduler_source_contract.py'
+      - 'tests/test_track_c_c3c_scheduler_source_contract.py'
+      - 'scripts/track_c_c3c_execution_evidence.py'
+      - 'tests/test_track_c_c3c_execution_evidence.py'
+      - '.github/workflows/myfxbook.yml'
       - 'scripts/resource_monitor.py'
       - 'resource-health.js'
       - 'resource-health.css'
@@ -202,6 +231,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_reconcile_v159.py' -v
       - run: python -m unittest discover -s tests -p 'test_resource_monitor.py' -v
       - run: python -m unittest discover -s tests -p 'test_cot_monitor.py' -v
+      - name: Track C - verify default-off true post-fetch COT clock seam (offline)
+        run: python -m unittest discover -s tests -p 'test_track_c_cot_fetch_seam.py' -v
       - name: Test v1.62 research-only paired H1 common UTC snapshot, offline
         run: python -m unittest discover -s tests -p 'test_h1_batch_comparison.py' -v
       - name: Test v1.62 private opt-in H1 pairing and bounded aggregate store, offline
@@ -219,6 +250,82 @@ jobs:
       - name: Test v1.64 exact 15-file SHA state reconciliation, offline
         run: python -m unittest discover -s tests -p 'test_reconcile_v164.py' -v
       - run: python -m unittest discover -s tests -p 'test_signals_monitor.py' -v
+      - name: Track C4b(j) - install pinned PyCA AES-GCM lab dependency on CI runner only
+        run: |
+          python -m pip install --disable-pip-version-check --only-binary=:all: cryptography==50.0.2
+      - name: Track C4b(j) - synthetic SQLite WAL backup encrypted loss-and-restore tests (OFFLINE)
+        run: PYTHONWARNINGS=error python -m unittest discover -s tests -p 'test_track_c_c4bj_synthetic_recovery.py' -v
+      - name: Track C4b(i) - free-tier offhost backup quota planning and unverified recovery NO-GO
+        run: python -m unittest discover -s tests -p 'test_track_c_c4bi_offhost_recovery_plan.py' -v
+      - name: Track C4b(h) - default-off legacy resource API compatibility in pure LAB
+        run: python -m unittest discover -s tests -p 'test_track_c_c4bh_resource_compat_preview.py' -v
+      - name: Track C4b(g) - future private resource-extension contract and no-live-wiring guard
+        run: python -m unittest discover -s tests -p 'test_track_c_c4bg_resource_transport_contract.py' -v
+      - name: Track C4b(f) - metadata-only SQLite/WAL and local backups (temp LAB)
+        run: python -m unittest discover -s tests -p 'test_track_c_c4bf_metadata_inventory.py' -v
+      - name: Track C4b(e) - bounded private historic runs trend and rolling-cap offline
+        run: python -m unittest discover -s tests -p 'test_track_c_c4be_historic_trend.py' -v
+      - name: Track C4b(d) - read pre-redacted historic diagnostic lines offline
+        run: python -m unittest discover -s tests -p 'test_track_c_c4bd_history_adapter.py' -v
+      - name: Track C4b(c) - offline redacted provenance coverage and no-go safeguards
+        run: python -m unittest discover -s tests -p 'test_track_c_c4bc_evidence_coverage.py' -v
+      - name: Track C4b(b) - synthetic SQLite WAL backup, restore and default-off kill gate
+        run: python -m unittest discover -s tests -p 'test_track_c_c4bb_recovery_gate.py' -v
+      - name: Track C4b(a) - pure offline resource/SQLite evidence fail-closed gate
+        run: python -m unittest discover -s tests -p 'test_track_c_c4b_capacity_evidence.py' -v
+      - name: Track C3c-c - separate worker process crash, timeout, saturation and core survival (offline)
+        run: python -m unittest discover -s tests -p 'test_track_c_c3cc_isolated_worker.py' -v
+      - name: Track C3c-b - reconcile observed schedule runs and bounded batch timing receipts offline
+        run: python -m unittest discover -s tests -p 'test_track_c_c3c_execution_evidence.py' -v
+      - name: Track C3c - audit real repository scheduler source contract and drift, no execution
+        run: python -m unittest discover -s tests -p 'test_track_c_c3c_scheduler_source_contract.py' -v
+      - name: Track C3b-c - frozen reproducible synthetic source-specific plan detects missing scheduled slots
+        run: python -m unittest discover -s tests -p 'test_track_c_c3bc_frozen_plan.py' -v
+      - name: Track C3b-c - preregister future synthetic scan slots and expose pre-attempt crashes
+        run: python -m unittest discover -s tests -p 'test_track_c_c3bc_expected_slots.py' -v
+      - name: Track C3b-c - core transaction attempt denominator and missed research deliveries (synthetic)
+        run: python -m unittest discover -s tests -p 'test_track_c_c3bc_attempt_denominator.py' -v
+      - name: Track C3b - verify postcommit COT and cTrader source across shadow WAL (synthetic)
+        run: python -m unittest discover -s tests -p 'test_track_c_c3b_postcommit_handoff.py' -v
+      - name: Track C3b - durable temp-only SQLite WAL restart and fail-closed isolation
+        run: python -m unittest discover -s tests -p 'test_track_c_c3b_durable_shadow.py' -v
+      - name: Track C3 - guard all LIVE code paths against accidental research wiring
+        run: python -m unittest discover -s tests -p 'test_track_c_c3_live_activation_guard.py' -v
+      - name: Track C3 - test isolated core survival and bounded shadow research (offline)
+        run: python -m unittest discover -s tests -p 'test_track_c_c3_safety_mailbox.py' -v
+      - name: Test Track C synthetic in-memory handoff; never collect market data
+        run: python -m unittest discover -s tests -p 'test_track_c_shadow_rehearsal.py' -v
+      - name: Track C only - checkout exact Track B research commit (no merge)
+        if: github.event_name == 'pull_request' && github.head_ref == 'research/track-c-beta-prospective-20261107'
+        uses: actions/checkout@v4
+        with:
+          repository: mirkoworz/remura
+          ref: 35b06da71da8cad75cc573ec8cde252f72d5a339
+          path: track-b-pinned
+          persist-credentials: false
+      - name: Track C only - verify immutable original Track B reference
+        if: github.event_name == 'pull_request' && github.head_ref == 'research/track-c-beta-prospective-20261107'
+        run: test "$(git -C track-b-pinned rev-parse HEAD)" = "35b06da71da8cad75cc573ec8cde252f72d5a339"
+      - name: Track C only - verify CFTC post-HTTP first-seen with pinned B (synthetic)
+        if: github.event_name == 'pull_request' && github.head_ref == 'research/track-c-beta-prospective-20261107'
+        env:
+          PYTHONPATH: ${{ github.workspace }}/track-b-pinned:${{ github.workspace }}
+        run: python -m unittest discover -s tests -p 'test_track_c_cot_arrival_contract.py' -v
+      - name: Track C only - test true collector COT UPSERT plus original B witness atomicity
+        if: github.event_name == 'pull_request' && github.head_ref == 'research/track-c-beta-prospective-20261107'
+        env:
+          PYTHONPATH: ${{ github.workspace }}/track-b-pinned:${{ github.workspace }}
+        run: python -m unittest discover -s tests -p 'test_track_c_cot_atomic_b_witness.py' -v
+      - name: Track C only - audit COT HTTP + original B cTrader retail Squalincome for both markets (synthetic)
+        if: github.event_name == 'pull_request' && github.head_ref == 'research/track-c-beta-prospective-20261107'
+        env:
+          PYTHONPATH: ${{ github.workspace }}/track-b-pinned:${{ github.workspace }}
+        run: python -m unittest discover -s tests -p 'test_track_c_cross_process_asof_audit.py' -v
+      - name: Track C only - exercise original Track B retail/COT/price/decision (synthetic)
+        if: github.event_name == 'pull_request' && github.head_ref == 'research/track-c-beta-prospective-20261107'
+        env:
+          PYTHONPATH: ${{ github.workspace }}/track-b-pinned:${{ github.workspace }}
+        run: python -m unittest discover -s tests -p 'test_track_c_b_original_contract.py' -v
       - run: python -m unittest discover -s tests -p 'test_statistical_validation.py' -v
       - run: python -m unittest discover -s tests -p 'test_dual24_validation.py' -v
       - run: python -m unittest discover -s tests -p 'test_market_validation.py' -v
