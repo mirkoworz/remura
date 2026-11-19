@@ -1,113 +1,177 @@
-# REMURA runner custody preflight v0.3 LAB — 19/11/2026, dopo 13:44 CET
-# Synthetic-only diagnostic in disposable hosted runner. No checkout, credentials, acquisition, artifacts or global swap changes.
+# REMURA runner custody v0.4 LAB — 19/11/2026 15:53 CET
+# New integrated fixture only; no real D1, no archive upload, no global swap changes.
 name: REMURA isolated runner custody probe
 on:
   push:
     branches: [research/runner-custody-probe-20261119]
     paths:
       - '.github/workflows/remura-runner-custody-probe.yml'
-permissions: {}
+permissions:
+  contents: read
 jobs:
   probe:
     if: github.repository == 'mirkoworz/remura' && github.ref == 'refs/heads/research/runner-custody-probe-20261119'
     runs-on: ubuntu-24.04
-    timeout-minutes: 3
+    timeout-minutes: 5
     steps:
-      - name: Fresh service cgroup and synthetic GPG roundtrip
+      - name: Checkout immutable public research candidate
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: bf24eab0e9f833b6a8b7b3b6d04d28a2927829c5
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Integrated synthetic capture in isolated service
         shell: bash
         run: |
           set -eu
-          script="$(mktemp /tmp/remura-synthetic-probe.XXXXXX)"
+          test "$(git rev-parse HEAD)" = bf24eab0e9f833b6a8b7b3b6d04d28a2927829c5
           host_before="$(awk '/^SwapTotal:/ {print $2}' /proc/meminfo)"
+          script="$(mktemp /tmp/remura-capture-probe.XXXXXX)"
           cat >"$script" <<'PY'
-          import os, resource, subprocess, tempfile
+          import hashlib, json, os, resource, subprocess, sys, tempfile
           from pathlib import Path
+          from types import SimpleNamespace
+          from unittest.mock import patch
 
           def need(ok, code):
               if not ok:
                   raise RuntimeError(code)
 
           def group(pid):
-              lines=Path('/proc/'+str(pid)+'/cgroup').read_text().splitlines()
-              need(len(lines)==1 and lines[0].startswith('0::/'), 'cgroup_v2_required')
-              return lines[0][3:]
+              rows=Path('/proc/'+str(pid)+'/cgroup').read_text().splitlines()
+              need(len(rows)==1 and rows[0].startswith('0::/'),'cgroup_v2_required')
+              return rows[0][3:]
 
-          def value(p):
+          def read(p):
               return p.read_text().strip()
 
-          def check():
-              need(value(cg/'memory.swap.max')=='0','swap_limit')
-              need(value(cg/'memory.swap.current')=='0','swap_current')
-              need(value(cg/'memory.max')=='536870912','memory_limit')
+          def guard():
+              need(group('self')==rel,'cgroup_changed')
+              need(read(cg/'memory.swap.max')=='0','swap_limit')
+              need(read(cg/'memory.swap.current')=='0','swap_current')
+              need(read(cg/'memory.max')=='536870912','memory_limit')
               need(resource.getrlimit(resource.RLIMIT_CORE)==(0,0),'core_limit')
-              need(os.geteuid()!=0,'nonroot_required')
-              need(not os.access(cg/'memory.swap.max',os.W_OK),'writable_cgroup')
+              need(os.geteuid()!=0 and not os.access(cg/'memory.swap.max',os.W_OK),'privilege_guard')
               need('NoNewPrivs:\t1' in Path('/proc/self/status').read_text(),'no_new_privileges')
+              need('GITHUB_TOKEN' not in os.environ and 'REMURA_CF_D1_READ_TOKEN' not in os.environ,'unexpected_token')
 
-          def run_gpg(args, input_data):
-              check()
-              with subprocess.Popen(base+args,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL) as p:
+          def agent(home):
+              p=subprocess.run(['/usr/bin/gpg-connect-agent','--homedir',str(home),'GETINFO pid','/bye'],
+                               capture_output=True,text=True,timeout=15,check=True)
+              ids=[s[2:] for s in p.stdout.splitlines() if s.startswith('D ') and s[2:].isdigit()]
+              need(len(ids)==1 and group(ids[0])==rel,'agent_cgroup')
+              return ids[0]
+
+          child_count=0
+          def checked_run(args,*,input,stdout,stderr,timeout,check):
+              global child_count
+              guard()
+              need(args[0]=='/usr/bin/gpg','unexpected_subprocess')
+              with subprocess.Popen(args,stdin=subprocess.PIPE,stdout=stdout,stderr=stderr) as proc:
                   try:
-                      need(group(p.pid)==rel,'gpg_cgroup')
-                      out,_=p.communicate(input_data,timeout=20)
-                      need(p.returncode==0,'gpg_exit')
+                      need(group(proc.pid)==rel,'child_cgroup')
+                      out,_=proc.communicate(input,timeout=timeout)
+                      if check and proc.returncode:
+                          raise subprocess.CalledProcessError(proc.returncode,args)
                   finally:
-                      if p.poll() is None:
-                          p.kill()
-                          p.communicate()
-              check()
-              return out
+                      if proc.poll() is None:
+                          proc.kill()
+                          proc.communicate()
+              child_count+=1
+              guard()
+              return SimpleNamespace(stdout=out)
 
+          stage='startup'
           try:
               rel=group('self')
-              need(rel.endswith('/remura-synthetic-swap-probe.service'),'unexpected_unit')
+              need(rel.endswith('/remura-synthetic-capture-probe.service'),'unexpected_unit')
               cg=Path('/sys/fs/cgroup')/rel.lstrip('/')
-              check()
-              print('CGROUP_SWAP_MAX=0',flush=True)
-              print('UNPRIVILEGED_CORE_AND_CGROUP_GUARDS=PASS',flush=True)
-              with tempfile.TemporaryDirectory(dir='/dev/shm',prefix='remura-synthetic-') as home:
-                  base=['/usr/bin/gpg','--no-options','--homedir',home,'--batch','--no-tty',
-                        '--no-autostart','--pinentry-mode','loopback','--no-symkey-cache',
-                        '--passphrase','PUBLIC-SYNTHETIC-ONLY','--output','-']
-                  def agent_pid():
-                      result=subprocess.run(['/usr/bin/gpg-connect-agent','--homedir',home,'GETINFO pid','/bye'],capture_output=True,text=True,timeout=15,check=True)
-                      pids=[s[2:] for s in result.stdout.splitlines() if s.startswith('D ') and s[2:].isdigit()]
-                      need(len(pids)==1 and group(pids[0])==rel,'agent_cgroup')
-                      return pids[0]
-                  try:
-                      pid=agent_pid()
-                      check()
-                      data=b'REMURA_SYNTHETIC_ONLY\n'*50000
-                      cipher=run_gpg(['--symmetric','--cipher-algo','AES256','--compress-algo','none'],data)
-                      need(bool(cipher) and cipher!=data,'cipher_invalid')
-                      plain=run_gpg(['--decrypt'],cipher)
-                      need(plain==data,'roundtrip_mismatch')
-                      need(agent_pid()==pid,'agent_changed')
-                      print('GPG_AGENT_CGROUP=PASS')
-                  finally:
-                      subprocess.run(['/usr/bin/gpgconf','--homedir',home,'--kill','gpg-agent'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=10,check=True)
-              check()
-              print('GPG_CHILD_CGROUP=PASS')
-              print('SYNTHETIC_ROUNDTRIP=PASS')
-              print('CGROUP_SWAP_CURRENT_BYTES=0')
+              guard()
+              root=Path(sys.argv[1])/'tradingview'/'delta-peaks'
+              sys.path[:0]=[str(root/'gateway-lab'),str(root)]
+              import cvd_encrypted_capture_v1 as m
+              from abc_encrypted_handoff_lab_v1 import gpg, identity
+              stage='key_setup'
+              with tempfile.TemporaryDirectory(dir='/dev/shm',prefix='remura-fixture-') as t:
+                  t=Path(t); owner=t/'owner'; sender=t/'sender'
+                  owner.mkdir(mode=0o700); sender.mkdir(mode=0o700)
+                  recipient=identity(owner,'recovery')
+                  gpg(sender,'--import',data=gpg(owner,'--export',recipient).stdout)
+                  owner_pid=agent(owner); sender_pid=agent(sender)
+                  stage='mock_capture'
+                  start=m.clock('2026-11-19'); end=start+287*m.M5; now=end+120000
+                  pages=m.scope(start,end,now)[2]
+                  expected=[]
+                  def page(account,uid,token,a,b,cutoff):
+                      guard()
+                      need((account,uid,token)==('fixture','test','fixture-token'),'wrong_target')
+                      need((a,b)==pages[len(expected)] and cutoff==now,'wrong_scope')
+                      rows=[dict(event_key='synthetic-'+str(x),received_at_ms=x+1,bar_close_ms=x,
+                                 symbol=m.SYMBOL,timeframe='5',event_type='BAR_EVENT',version=m.VERSION,
+                                 is_timely=0,raw_json='SYNTHETIC INVALID JSON') for x in range(a,b+1,m.M5)]
+                      expected.append({'start_ms':a,'end_ms':b,'rows':rows})
+                      return {'success':True,'result':[{'success':True,'results':rows,
+                              'meta':{'rows_read':len(rows),'rows_written':0}}]}
+                  proxy=SimpleNamespace(run=checked_run,PIPE=subprocess.PIPE,DEVNULL=subprocess.DEVNULL,
+                                        SubprocessError=subprocess.SubprocessError)
+                  with patch.object(m,'require_account_id',return_value='fixture'), \
+                       patch.object(m,'require_account_token',return_value='fixture-token'), \
+                       patch.object(m,'api_request',return_value={}) as inv, \
+                       patch.object(m,'inspect_verified_inventory',return_value={m.MAIN_DB:'main',m.TEST_DB:'test'}), \
+                       patch.object(m,'fetch_page',side_effect=page) as fetch, \
+                       patch.object(m,'subprocess',proxy):
+                      cipher,receipt=m.capture('fixture','fixture-token',start=start,end=end,now=now,
+                                               home=sender,recipient=recipient,approved=True,guard=guard)
+                      need(inv.call_count==1 and fetch.call_count==len(pages),'query_count')
+                  need(child_count==2 and agent(owner)==owner_pid and agent(sender)==sender_pid,'crypto_membership')
+                  need(receipt['query_rows_read']==288 and receipt['query_rows_written']==0 and
+                       not receipt['custody_verified'] and not receipt['outcomes_computed'],'receipt_scope')
+                  print('ACTUAL_CAPTURE_SYNTHETIC_288_SLOTS=PASS',flush=True)
+                  stage='cipher_sink'
+                  # Persist only ciphertext, outside the temporary GPG keyrings; refuse overwrite.
+                  with tempfile.TemporaryDirectory(prefix='remura-cipher-fixture-') as out:
+                      dest=Path(out)/'fixture.gpg'
+                      with dest.open('xb') as f:
+                          f.write(cipher); f.flush(); os.fsync(f.fileno())
+                      need(dest.stat().st_mode & 0o777==0o600,'file_mode')
+                      stored=dest.read_bytes()
+                      need(stored==cipher and hashlib.sha256(stored).hexdigest()==receipt['cipher_sha256'],'cipher_readback')
+                      try:
+                          with dest.open('xb'):
+                              pass
+                      except FileExistsError:
+                          pass
+                      else:
+                          raise RuntimeError('overwrite_allowed')
+                      print('LOCAL_CIPHERTEXT_EXCLUSIVE_READBACK=PASS',flush=True)
+                      stage='decrypt_fixture'
+                      recovered=gpg(owner,'--status-fd','2','--decrypt','--output','-',data=stored)
+                      need(b'[GNUPG:] GOODMDC' in recovered.stderr and b'[GNUPG:] DECRYPTION_OKAY' in recovered.stderr,'integrity')
+                      p=json.loads(recovered.stdout)
+                      need(p['windows']==expected and sum(len(w['rows']) for w in p['windows'])==288 and
+                           p['quality']=='QUARANTINED_VALIDATION_FAILURE' and not p['scientific_admission'] and
+                           not p['outcomes_computed'],'quarantine_or_content')
+                      print('PUBLIC_KEY_ROUNDTRIP_QUARANTINE=PASS',flush=True)
+                  for home in (owner,sender):
+                      subprocess.run(['/usr/bin/gpgconf','--homedir',str(home),'--kill','gpg-agent'],
+                                     stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,check=True,timeout=10)
+              stage='final_guard'
+              guard()
               peak=cg/'memory.swap.peak'
-              if peak.exists():
-                  need(value(peak)=='0','swap_peak')
-                  print('CGROUP_SWAP_PEAK_BYTES=0')
-              else:
-                  print('CGROUP_SWAP_PEAK=NOT_AVAILABLE')
+              need(peak.exists() and read(peak)=='0','swap_peak_unknown_or_nonzero')
+              print('CGROUP_SWAP_CURRENT_AND_PEAK=0')
+              print('GPG_CHILD_AND_AGENT_CGROUP=PASS')
               print('REAL_DATA_READ=NO')
-              print('ACQUISITION_AUTHORIZED=NO')
-              print('PROVIDER_MEMORY_SAFETY_ATTESTED=NO')
-              print('REMURA_CGROUP_PROBE=PASS')
-          except Exception as e:
-              print('REMURA_CGROUP_PROBE=BLOCKED')
-              if isinstance(e,RuntimeError):
-                  print('REASON='+str(e))
+              print('INDEPENDENT_CUSTODY_VERIFIED=NO')
+              print('REAL_ACQUISITION_AUTHORIZED=NO')
+              print('REMURA_INTEGRATED_FIXTURE=PASS')
+          except Exception:
+              print('REMURA_INTEGRATED_FIXTURE=BLOCKED')
+              print('STAGE='+stage)
               raise SystemExit(2)
           PY
           sudo -n systemd-run --quiet --wait --pipe --collect \
-            --unit=remura-synthetic-swap-probe \
+            --unit=remura-synthetic-capture-probe \
             --property="User=$(id -un)" \
             --property=MemoryAccounting=yes \
             --property=MemoryMax=512M \
@@ -117,10 +181,9 @@ jobs:
             --property=ProtectControlGroups=yes \
             --property=PrivateNetwork=yes \
             --property=KillMode=control-group \
-            --property=RuntimeMaxSec=60 \
+            --property=RuntimeMaxSec=150 \
             --property=UMask=0077 \
-            /usr/bin/python3 -I "$script"
-          host_after="$(awk '/^SwapTotal:/ {print $2}' /proc/meminfo)"
+            /usr/bin/python3 -I -B "$script" "$GITHUB_WORKSPACE"
           test -n "$host_before"
-          test "$host_before" = "$host_after"
+          test "$host_before" = "$(awk '/^SwapTotal:/ {print $2}' /proc/meminfo)"
           echo "HOST_SWAP_TOTAL_UNCHANGED=YES"
