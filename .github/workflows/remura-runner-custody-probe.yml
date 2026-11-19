@@ -1,5 +1,5 @@
-# REMURA runner custody preflight v0.1 LAB — 19/11/2026, sessione dopo 13:44 CET
-# Diagnostic only. No checkout, secrets, external requests, artifacts, swap changes or acquisition.
+# REMURA runner custody preflight v0.2 LAB — 19/11/2026, dopo 13:44 CET
+# Synthetic-only diagnostic in disposable hosted runner. No checkout, credentials, acquisition, artifacts or global swap changes.
 name: REMURA isolated runner custody probe
 on:
   push:
@@ -13,37 +13,102 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:
-      - name: Read-only host observation
+      - name: Fresh service cgroup and synthetic GPG roundtrip
         shell: bash
         run: |
-          python3 -I - <<'PY'
-          import os, re, resource, shutil
+          set -eu
+          script="$(mktemp /tmp/remura-synthetic-probe.XXXXXX)"
+          host_before="$(awk '/^SwapTotal:/ {print $2}' /proc/meminfo)"
+          cat >"$script" <<'PY'
+          import os, resource, subprocess, tempfile
           from pathlib import Path
-          def metric(text, name):
-              vals = re.findall(r'^'+name+r':\s*(\d+)\s+kB\s*$', text, re.M)
-              if len(vals) != 1:
-                  raise ValueError("metric_unavailable")
-              return int(vals[0])
+
+          def need(ok, code):
+              if not ok:
+                  raise RuntimeError(code)
+
+          def group(pid):
+              lines=Path('/proc/'+str(pid)+'/cgroup').read_text().splitlines()
+              need(len(lines)==1 and lines[0].startswith('0::/'), 'cgroup_v2_required')
+              return lines[0][3:]
+
+          def value(p):
+              return p.read_text().strip()
+
+          def check():
+              need(value(cg/'memory.swap.max')=='0','swap_limit')
+              need(value(cg/'memory.swap.current')=='0','swap_current')
+              need(value(cg/'memory.max')=='536870912','memory_limit')
+              need(resource.getrlimit(resource.RLIMIT_CORE)==(0,0),'core_limit')
+              need(os.geteuid()!=0,'nonroot_required')
+              need(not os.access(cg/'memory.swap.max',os.W_OK),'writable_cgroup')
+              need('NoNewPrivs:\t1' in Path('/proc/self/status').read_text(),'no_new_privileges')
+
+          def run_gpg(args, input_data):
+              check()
+              with subprocess.Popen(base+args,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL) as p:
+                  try:
+                      need(group(p.pid)==rel,'gpg_cgroup')
+                      out,_=p.communicate(input_data,timeout=20)
+                      need(p.returncode==0,'gpg_exit')
+                  finally:
+                      if p.poll() is None:
+                          p.kill()
+                          p.communicate()
+              check()
+              return out
+
           try:
-              mem = Path('/proc/meminfo').read_text()
-              rows = Path('/proc/swaps').read_text().splitlines()
-              if not rows or rows[0].split() != ['Filename','Type','Size','Used','Priority']:
-                  raise ValueError("swap_table_unknown")
-              swap = metric(mem, 'SwapTotal')
-              active = len(rows) > 1
-              if (swap > 0) != active:
-                  raise ValueError("swap_inconsistent")
-              print('REMURA_RUNNER_PROBE=OBSERVED')
-              print('MEM_AVAILABLE_KIB='+str(metric(mem,'MemAvailable')))
-              print('SWAP_TOTAL_KIB='+str(swap))
-              print('SWAP_ACTIVE='+('YES' if active else 'NO'))
-              print('CORE_LIMIT_ZERO='+('YES' if resource.getrlimit(resource.RLIMIT_CORE)[0]==0 else 'NO'))
-              print('GPG_PRESENT='+('YES' if shutil.which('gpg') else 'NO'))
-              print('VISIBLE_CPUS='+str(len(os.sched_getaffinity(0))))
-              print('ACQUISITION_AUTHORIZED=NO')
-              print('MEMORY_NON_SWAPPABLE_ATTESTED=NO')
+              rel=group('self')
+              need(rel.endswith('/remura-synthetic-swap-probe.service'),'unexpected_unit')
+              cg=Path('/sys/fs/cgroup')/rel.lstrip('/')
+              check()
+              print('CGROUP_SWAP_MAX=0',flush=True)
+              print('UNPRIVILEGED_CORE_AND_CGROUP_GUARDS=PASS',flush=True)
+              with tempfile.TemporaryDirectory(dir='/dev/shm',prefix='remura-synthetic-') as home:
+                  base=['/usr/bin/gpg','--no-options','--homedir',home,'--batch','--no-tty',
+                        '--no-autostart','--pinentry-mode','loopback','--no-symkey-cache',
+                        '--passphrase','PUBLIC-SYNTHETIC-ONLY','--output','-']
+                  data=b'REMURA_SYNTHETIC_ONLY\n'*50000
+                  cipher=run_gpg(['--symmetric','--cipher-algo','AES256','--compress-algo','none'],data)
+                  need(bool(cipher) and cipher!=data,'cipher_invalid')
+                  plain=run_gpg(['--decrypt'],cipher)
+                  need(plain==data,'roundtrip_mismatch')
+              check()
+              print('GPG_CHILD_CGROUP=PASS')
+              print('SYNTHETIC_ROUNDTRIP=PASS')
+              print('CGROUP_SWAP_CURRENT_BYTES=0')
+              peak=cg/'memory.swap.peak'
+              if peak.exists():
+                  need(value(peak)=='0','swap_peak')
+                  print('CGROUP_SWAP_PEAK_BYTES=0')
+              else:
+                  print('CGROUP_SWAP_PEAK=NOT_AVAILABLE')
               print('REAL_DATA_READ=NO')
-          except Exception:
-              print('REMURA_RUNNER_PROBE=UNKNOWN_FAIL_CLOSED')
+              print('ACQUISITION_AUTHORIZED=NO')
+              print('PROVIDER_MEMORY_SAFETY_ATTESTED=NO')
+              print('REMURA_CGROUP_PROBE=PASS')
+          except Exception as e:
+              print('REMURA_CGROUP_PROBE=BLOCKED')
+              if isinstance(e,RuntimeError):
+                  print('REASON='+str(e))
               raise SystemExit(2)
           PY
+          sudo -n systemd-run --quiet --wait --pipe --collect \
+            --unit=remura-synthetic-swap-probe \
+            --property="User=$(id -un)" \
+            --property=MemoryAccounting=yes \
+            --property=MemoryMax=512M \
+            --property=MemorySwapMax=0 \
+            --property=LimitCORE=0 \
+            --property=NoNewPrivileges=yes \
+            --property=ProtectControlGroups=yes \
+            --property=PrivateNetwork=yes \
+            --property=KillMode=control-group \
+            --property=RuntimeMaxSec=60 \
+            --property=UMask=0077 \
+            /usr/bin/python3 -I "$script"
+          host_after="$(awk '/^SwapTotal:/ {print $2}' /proc/meminfo)"
+          test -n "$host_before"
+          test "$host_before" = "$host_after"
+          echo "HOST_SWAP_TOTAL_UNCHANGED=YES"
