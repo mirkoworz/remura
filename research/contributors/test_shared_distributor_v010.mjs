@@ -35,6 +35,10 @@ async function suite(build,projectPrices,projectForex){
  }
  h=harness();const first=await h.handler(req,{}),second=await h.handler(req,{});ok(first.body===second.body&&h.counts().join()==="4,2");
  h=harness({snapshot:()=>JSON.stringify({...snap(),prices:[],forex_rows:[]})});r=await h.handler(req,{});ok(r.status===200&&JSON.parse(r.body).cot.every(x=>x.status==="UNAVAILABLE"));
+ for(const delivery of [now-1,now+16*60000,NaN]){
+  let reads=0;h=harness({time:()=>++reads===1?now:delivery});r=await h.handler(req,{});ok(r.status===503&&h.counts().join()==="2,1");
+ }
+ let ticks=0;h=harness({time:()=>++ticks===1?now:now+9*60000});r=await h.handler(req,{});ok(r.status===200&&JSON.parse(r.body).prices[0].freshness==="STALE");
  let badOrigin=false;try{build({origin:"https://production.invalid",clock:()=>now,authorize:async()=>profile,readSnapshot:async()=>"",projectPrices,projectForex})}catch{badOrigin=true}ok(badOrigin);
  return n;
 }
