@@ -56,13 +56,19 @@ async function start(){
  controller=createReadiness({
   shell:async signal=>{await Promise.all(images.map(img=>img.decode().catch(()=>{if(id===generation&&!signal.aborted)plain()})));await wait(900,signal)},
   authorize:async signal=>{await wait(900,signal);return scenario==='DENIED'?{authorized:false}:{authorized:true,role:scenario==='ERROR'?'CONTRIBUTOR':scenario}},
-  loadApproved:async(role,signal)=>{await wait(1300,signal);if(scenario==='ERROR')throw Error('synthetic_error');return {ready:true}},
+  loadApproved:async(role,signal)=>{await wait(1300,signal);if(scenario==='ERROR')throw Error('synthetic_error');
+   if(role!=='CONTRIBUTOR')return {ready:true};
+   const session=createFixtureSession();const close=()=>session.close();
+   signal.addEventListener('abort',close,{once:true});
+   try{if(signal.aborted||!await session.seed()||signal.aborted){session.close();throw Error('snapshot_unavailable')}return {ready:true,session}}
+   catch(e){session.close();throw e}finally{signal.removeEventListener('abort',close)}
+  },
   onStep:step
  });
- const promise=controller.start();if(!skipped)animate(id);const outcome=await promise;if(id!==generation)return;cancelAnimationFrame(raf);
+ const promise=controller.start();if(!skipped)animate(id);const outcome=await promise;if(id!==generation){outcome.view?.session?.close();return}cancelAnimationFrame(raf);
  if(outcome.state!=='READY'){result(outcome.state==='DENIED'?'Accesso negato: nessuna Home aperta.':'Caricamento interrotto: nessuna Home aperta.');return}
  renderHome(outcome.role);
- if(outcome.role==='CONTRIBUTOR'){const session=createFixtureSession();sharedSession=session;const ready=await session.seed();if(id!==generation||session!==sharedSession)return;sharedStatus=ready?'':'Snapshot non disponibile · N/D';$('shared-refresh').disabled=false;syncShared();}
+ if(outcome.role==='CONTRIBUTOR'){sharedSession=outcome.view.session;sharedStatus='';$('shared-refresh').disabled=false;syncShared();}
  $('splash').hidden=true;$('home').hidden=false;$('replay').focus();controller=null;
 }
 // Experience v0.12 LAB — role-specific offline views, not a security boundary.
