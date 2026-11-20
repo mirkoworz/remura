@@ -3,6 +3,7 @@
 // Injected adapters are trusted synthetic dependencies, not a production security boundary.
 export function buildDistributor({authorize,readSnapshot,projectPrices,projectForex,origin,clock}){
  const PATH="/api/approved-snapshot";
+ const utf8Bytes=s=>{let n=0;for(const c of s){const cp=c.codePointAt(0);n+=cp<=0x7f?1:cp<=0x7ff?2:cp<=0xffff?3:4;}return n;};
  if(origin!=="https://contributors.fixture.invalid"||![authorize,readSnapshot,projectPrices,projectForex,clock].every(f=>typeof f==="function"))throw Error("FIXTURE_ONLY");
  const keys=(o,ks)=>o!==null&&typeof o==="object"&&Object.getPrototypeOf(o)===Object.prototype&&Object.keys(o).length===ks.length&&ks.every(k=>Object.hasOwn(o,k));
  const stamp=s=>typeof s==="string"&&/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/.test(s)&&Number.isFinite(Date.parse(s))&&new Date(Date.parse(s)).toISOString().replace(".000Z","Z")===s;
@@ -22,7 +23,7 @@ export function buildDistributor({authorize,readSnapshot,projectPrices,projectFo
    const p={...raw};
    const now=clock();if(!Number.isSafeInteger(now)||now<0)return unavailable();
    const rawSnapshot=await readSnapshot();
-   if(typeof rawSnapshot!=="string"||rawSnapshot.length>8192||new TextEncoder().encode(rawSnapshot).length>8192)return unavailable();
+   if(typeof rawSnapshot!=="string"||rawSnapshot.length>8192||utf8Bytes(rawSnapshot)>8192)return unavailable();
    const s=JSON.parse(rawSnapshot);
    if(!keys(s,["schema","revision","as_of","prices","forex_rows"])||s.schema!=="REMURA_SHARED_FIXTURE_V1"||!Number.isSafeInteger(s.revision)||s.revision<1||!stamp(s.as_of)||Date.parse(s.as_of)>now||now-Date.parse(s.as_of)>15*60000||!Array.isArray(s.forex_rows)||s.forex_rows.length>7)return unavailable();
    const seen=new Set();
@@ -42,7 +43,7 @@ export function buildDistributor({authorize,readSnapshot,projectPrices,projectFo
    if(!allowed(final)||final.subject!==p.subject||final.generation!==p.generation||final.role!==p.role)return deny();
    const body={schema:"REMURA_SHARED_VIEW_FIXTURE_V1",revision:s.revision,as_of:s.as_of,synthetic:true,scientific_admission:false,prices:pview.prices,cot,sentiment:{myfxbook:"UNAVAILABLE",capital:"UNAVAILABLE"},delta:"UNAVAILABLE"};
    const response=reply(200,body);
-   return new TextEncoder().encode(response.body).length<=16384?response:unavailable();
+   return utf8Bytes(response.body)<=16384?response:unavailable();
   }catch{return unavailable();}
  };
 }
