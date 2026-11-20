@@ -5,7 +5,7 @@ export function forexCotFixture(pair, rows, asOf){
  const code={EUR:"099741",GBP:"096742",JPY:"097741",AUD:"232741",CAD:"090741",CHF:"092741",NZD:"112741"};
  const date=x=>typeof x==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(x)&&Number.isFinite(Date.parse(x))&&new Date(Date.parse(x)).toISOString().slice(0,10)===x;
  const stamp=x=>typeof x==="string"&&/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/.test(x)&&Number.isFinite(Date.parse(x))&&new Date(Date.parse(x)).toISOString().replace(".000Z","Z")===x;
- if(typeof pair!=="string"||!/^[A-Z]{6}$/.test(pair)||!stamp(asOf)||!Array.isArray(rows))fail();
+ if(!["EURUSD","GBPUSD","AUDUSD","NZDUSD","USDJPY","USDCAD","USDCHF","EURGBP","EURJPY","EURCHF","EURCAD","EURAUD","EURNZD","GBPJPY","GBPCHF","GBPCAD","GBPAUD","GBPNZD","AUDJPY","AUDCHF","AUDCAD","AUDNZD","NZDJPY","NZDCAD","NZDCHF","CADJPY","CADCHF","CHFJPY"].includes(pair)||!stamp(asOf)||!Array.isArray(rows))fail();
  const base=pair.slice(0,3),quote=pair.slice(3),legs=[base,quote].filter(x=>x!=="USD");
  if(base===quote||!legs.length||legs.some(x=>!Object.hasOwn(code,x))||rows.length>2)fail();
  const fields=["dataset","code","report_date","first_seen_at","oi","asset_long","asset_short","leveraged_long","leveraged_short"];
