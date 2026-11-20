@@ -1,4 +1,4 @@
-# REMURA Contributors v0.54 LAB — 20/11/2026 CET
+# REMURA Contributors v0.55 LAB — 20/11/2026 CET
 name: REMURA Contributors LAB
 on:
   pull_request:
@@ -35,6 +35,9 @@ jobs:
 
       - name: Synthetic fixture session orchestration
         run: node research/contributors/test_fixture_session_orchestration_lab.mjs
+
+      - name: Durable synthetic fixture session integration
+        run: node research/contributors/test_fixture_durable_session_lab.mjs
 
       - name: Checkout exact D LAB reference
         uses: actions/checkout@v4
