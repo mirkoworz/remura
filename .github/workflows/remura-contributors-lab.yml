@@ -1,4 +1,4 @@
-# REMURA Contributors v0.51 LAB — 20/11/2026 CET
+# REMURA Contributors v0.52 LAB — 20/11/2026 CET
 name: REMURA Contributors LAB
 on:
   pull_request:
@@ -29,6 +29,9 @@ jobs:
 
       - name: Direct Worker perimeter synthetic checks
         run: node research/contributors/test_worker_perimeter_candidate.mjs
+
+      - name: Fixture proxy static isolation gate
+        run: node research/contributors/test_fixture_proxy_config_gate.mjs
 
       - name: Checkout exact D LAB reference
         uses: actions/checkout@v4

@@ -1,3 +1,8 @@
+# REMURA Contributors v0.52 LAB — 20/11/2026 CET
+New pure static config comparison gate: accepts exactly one remote D1 binding for the dedicated fixture with owner supplied independently verified account/fixture/LAB IDs; rejects other IDs, extra bindings, routes, preview, deployment entrypoint and override environments. No live UUID, config file, Wrangler call, runtime or provider access. 24 synthetic JavaScript cases executed against the authored function before commit; includes false-attestation protection. Local code-mode function execution is not provider evidence; PR-only Node CI added, result pending. Configuration shape intentionally strict; no claim about remote proxy exposure/lifecycle or actual database identity. Remaining gate: private independent UUID/evidence review, exact Wrangler version and actual session authorization. No deploy, merge or SQL repetition.
+
+---
+
 # REMURA Contributors v0.51 LAB — 20/11/2026, sessione 10:16 CET
 ## Direct HTTP perimeter and fixture execution gate
 New direct Worker perimeter test, explicitly wired into the existing public PR-only offline workflow: forged identity headers/cookies, wrong Access account/audience, service identities, disabled flags and limiter failures. Both HTML GET and API POST must deny before D1 access; generic no-store responses, no CORS, no cookie. No runtime change. New execution pending; mock context is not real Access/browser evidence.
