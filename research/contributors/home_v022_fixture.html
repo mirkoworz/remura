@@ -1,0 +1,16 @@
+<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>REMURA Experience v0.22 LAB</title></head><body>
+<header>REMURA Experience v0.22 LAB · 20/11/2026 CET · fixture browser</header>
+<button id="prices">Stato prezzi</button><button id="cot">COT &amp; Sentiment</button><button id="draft">Nuovo livello</button><button id="refresh">Aggiorna</button><button id="logout">Esci</button><div id="status"></div><section id="panel"></section>
+<script type="module">
+import {createHomeV2} from './home_v022.mjs';
+import {makeConsumerV2} from './consumer_v021.mjs';
+const $=id=>document.getElementById(id);
+let clock=0,active='CONTRIBUTOR',current='Stato prezzi',reply=null,ctrl=null,session=null,requests=0,delay=0;
+function status(v,busy){$('status').textContent=busy?'Aggiornamento':v?'Revisione '+v.revision:'N/D';$('refresh').disabled=busy;}
+function info(name,v){$('panel').replaceChildren();const h=document.createElement('h2');h.textContent=name;$('panel').append(h);const p=document.createElement('p');p.textContent=!v?'N/D':name==='Stato prezzi'?v.prices.map(r=>r.instrument+' '+(r.price===null?'N/D':r.price)).join(', '):v.cot.length+' coppie';$('panel').append(p);}
+function clear(){ctrl?.close();active=null;$('panel').replaceChildren();$('status').textContent='Sessione chiusa';$('refresh').disabled=true;}
+function select(name){if(!active)return;current=name;if(name==='Nuovo livello'){$('panel').innerHTML='<label>Livello<input id="level"></label>';return;}ctrl.sync();}
+$('prices').onclick=()=>select('Stato prezzi');$('cot').onclick=()=>select('COT & Sentiment');$('draft').onclick=()=>select('Nuovo livello');$('refresh').onclick=()=>ctrl.refresh();$('logout').onclick=clear;
+window.addEventListener('focus',()=>ctrl?.sync());document.addEventListener('visibilitychange',()=>{if(!document.hidden)ctrl?.sync()});window.addEventListener('pagehide',clear);
+window.fixture={async start(f){clock=f.now;reply=f.fresh;session=makeConsumerV2({request:async()=>{requests++;const r=reply;if(delay)await new Promise(resolve=>setTimeout(resolve,delay));return r;},clock:()=>clock});ctrl=createHomeV2({session,clock:()=>clock,role:()=>active,panel:()=>current,renderInfo:info,renderStatus:status,onDenied:clear,schedule:setTimeout,cancel:clearTimeout});return ctrl.refresh();},time(t){clock=t;},reply(r){reply=r;},delay(n){delay=n;},requests(){return requests;},role(r){active=r;},sync(){return ctrl.sync();}};
+</script></body></html>
