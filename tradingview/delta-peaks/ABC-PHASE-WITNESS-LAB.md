@@ -1,0 +1,8 @@
+# REMURA v0.8.161 LAB — authenticated separate phase witness
+18/11/2026 — sessione successiva alle 13:37 CET. PR #102 DRAFT.
+
+The existing exact 90-path disposable transaction now tests a second authenticated record in a separate owned private temporary directory. Domain-separated HMAC binds transaction, phase and exact journal payload digest. Journal authentication also binds witness-required mode. Prepare publishes journal then witness. Apply requires matching prepared witness and durably writes applying intent BEFORE first mutation; crash during apply permits rollback only. Rollback records rolling_back before mutation; interrupted rollback can be retried if journal and witness still agree. Completion updates journal then witness. Missing, mismatched or tampered witness stops rather than guessing or recreating it. With independently preserved witness, an old valid prepared journal restored after terminal rollback is rejected.
+
+Separate directories in LAB are NOT independent failure domains. Simultaneous replay of journal and witness remains possible; actual independent durable custody, anti-replay service or owner-held witness, recovery for crash between publications, same historical lock integration and root provisioning are unimplemented. This design deliberately fails closed on cross-store mismatch. It never auto-clears inhibits. No real secrets or production paths. Three targeted exact-pinned-fixture regressions added, previous signed candidate and portable kit untouched. CI pending.
+
+Owner Oracle containment receipt 6978777609 and successful v0.8.160 runs recorded in roadmap. No repeated tests on Oracle, no actual service changes, no installations, no new resources.

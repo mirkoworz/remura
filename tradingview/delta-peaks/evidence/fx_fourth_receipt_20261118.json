@@ -1,0 +1,43 @@
+{
+  "run_id": 44362438343,
+  "start_ms": 1795017600000,
+  "end_ms": 1795020900000,
+  "observed_ms": 1795024020000,
+  "report": {
+    "collection": {
+      "account_quota_utilization": null,
+      "inventory_requests": 1,
+      "query_meta_scope": "THIS_COLLECTION_ONLY_NOT_ACCOUNT_USAGE",
+      "query_rows_read": 25,
+      "query_rows_written": 0,
+      "raw_logged": false,
+      "raw_persisted": false,
+      "select_requests": 1,
+      "snapshot_atomic_across_pages": false,
+      "target": "EU_D1_TEST_ONLY"
+    },
+    "conflict_ledger_available": false,
+    "duplicate_rows": 0,
+    "independent_provenance": false,
+    "max_lag_ms": 17876,
+    "missing_requested_slots": 0,
+    "notifications_enabled": false,
+    "orders_enabled": false,
+    "outcomes_computed": false,
+    "protocol_sha256": "4565c06dfa4fa20f45e8e885143553ddb2af04c5a0f3db4563ab48ec7de6e084",
+    "requested_slots": 12,
+    "schema": "remura.tv.cvd.first.receipt.preview.v2",
+    "scientific_admission": false,
+    "scope": "REQUESTED_SLOTS_NOT_MARKET_CALENDAR",
+    "sender_version": "0.9.1-cvd-lab",
+    "status": "COMPLETE_REQUESTED_WINDOW",
+    "symbol": "FX:EURUSD",
+    "valid_unique_bars": 12,
+    "version": "0.8.89-lab",
+    "window": {
+      "as_of_ms": 1795024017911,
+      "end_close_ms": 1795020900000,
+      "start_close_ms": 1795017600000
+    }
+  }
+}

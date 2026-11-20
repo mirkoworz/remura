@@ -1,0 +1,34 @@
+# REMURA Public Worker Fail-Closed v0.2 — aggiornamento 13/11/2026 ore 06:51 CET
+# Solo 2 GET /health e / al gateway esistente, NO webhook, POST, secret, deploy.
+name: REMURA TV Public Fail-Closed LAB
+
+on:
+  push:
+    branches:
+      - research/tradingview-delta-peaks-20261111
+    paths:
+      - ".github/workflows/remura-tv-public-failclosed.yml"
+      - "tradingview/delta-peaks/gateway-lab/worker_public_failclosed_audit.py"
+      - "tradingview/delta-peaks/gateway-lab/test_worker_public_failclosed_audit.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: remura-tv-public-failclosed-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  public-failclosed:
+    if: github.repository == 'mirkoworz/remura' && github.ref == 'refs/heads/research/tradingview-delta-peaks-20261111'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: 'Test offline - no POST, no token, strict fail-closed'
+        run: python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_worker_public_failclosed_audit.py' -v
+      - name: 'Public read-only probe - two GET, abort if ingest enabled'
+        run: python3 tradingview/delta-peaks/gateway-lab/worker_public_failclosed_audit.py

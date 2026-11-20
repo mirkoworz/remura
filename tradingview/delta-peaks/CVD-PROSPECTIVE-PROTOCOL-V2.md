@@ -1,0 +1,16 @@
+# REMURA v0.8.79 LAB — 14/11/2026 18:22 CET
+## Protocollo prospettico V2 — correzione preregistrata prima del pilot
+V1 resta immutata come riferimento storico, non usare per inferenza V2.
+- Development: 16–22 novembre UTC; primo holdout: 23–29 novembre; replica: 30 novembre–6 dicembre. Estremi esclusivi a mezzanotte UTC. Il weekend iniziale è solo diagnostica.
+- Primario: CVD vs price-only a 60 minuti; secondari 4h/24h e filtri ER, retest, concordanza segno footprint/delta. Nessuna scelta di vincitore a posteriori, nessun peso.
+- Ingresso proxy alla successiva chiusura M5, costi round-trip ipotetici 0/1/2 pip. Nessun PnL eseguibile o spread misurato.
+- Niente matching tra fold, niente outcome oltre fine fold, niente report fold anticipato. Controlli senza riutilizzo dentro confronto; confronti tra filtri dipendenti.
+- Finestra completa riferita a slot richiesti, NON calendario di mercato. Le barre mancanti non sono imputate. Per i fold servono più export privati validati; il reader batch 48h non basta. Il report descrittivo precedente resta visibile: non è un sistema di blindaggio indipendente, l'operatore deve evitare tuning dopo averlo osservato.
+- Il risultato storico D0.8 primario (-0.6680 pip) non mostrava miglioramento. Non cambiare ipotesi se holdout negativo. Nessuna soglia di successo, significatività o promessa introdotta senza piano di potenza e dati reali.
+## Correzione metodologica V2
+- Prima di qualsiasi valutazione degli esiti: riserva cronologica delle finestre, FIFO per strato e filtro sui candidati tempestivi (ricezione entro close + 120 s, prima della prossima chiusura M5). I candidati tardivi sono conteggiati separatamente e non possono riservare retroattivamente; nessuna scelta basata su qualità futura.
+- Le coppie assegnate sono tuple immutabili durante il calcolo. Un controllo/positivo mancante, immaturo o bloccato rimane assegnato; mai rimpiazzato. Conteggi assegnati, completi, incompleti, pendenti (sottoinsieme) e non abbinati. Motivi incompleti non esclusivi. Medie soltanto sulle coppie complete, con possibile bias di missingness residuo; nessuna inferenza statistica.
+- Hash deterministico delle assegnazioni per orizzonte/filtro, non prova di timestamp esterno, non attestazione di ledger conflitti. Duplicazione/conflitto timestamp osservato blocca tutto. Un candidato mai ricevuto non è ricostruibile; nessun registro live indipendente ancora disponibile. Nessuna pubblicazione di identificativi grezzi.
+- Date, ipotesi, orizzonti, costi ipotetici e stratificazione V1 invariati. Reader e pin V1 non vengono modificati prima di CI V2 verde. Nessuna attivazione o deploy.
+## Fonti ausiliarie
+Il pin B 8dc51e8a199dc1cfd45e4cd2e7b339510af2eb2b, script shark_cvd_cot_price_triage.py, espone conteggi aggregati con proof HMAC della stessa decisione B o prefisso precedente. NON espone un sink per singola decisione CVD verificata. Unire questi conteggi ai conteggi TradingView sarebbe errore ecologico. Serve un'interfaccia privata per identità decisione, clock e tier attestato dal filone B; nessuna modifica B in questo lavoro. Per sentiment servono osservazione originaria e timestamp di disponibilità, provenienza e immutabilità; non usare valore corrente o assenza come negativo. Fino ad allora entrambi UNKNOWN rispetto alla stessa decisione TV.
