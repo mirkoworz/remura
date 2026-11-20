@@ -1,4 +1,4 @@
-# REMURA Contributors v0.50 LAB — 20/11/2026 CET
+# REMURA Contributors v0.51 LAB — 20/11/2026 CET
 name: REMURA Contributors LAB
 on:
   pull_request:
@@ -26,6 +26,9 @@ jobs:
 
       - name: Offline D1 primary and failed batch mock checks
         run: node research/contributors/test_d1_fixture_batch_probe.mjs
+
+      - name: Direct Worker perimeter synthetic checks
+        run: node research/contributors/test_worker_perimeter_candidate.mjs
 
       - name: Checkout exact D LAB reference
         uses: actions/checkout@v4

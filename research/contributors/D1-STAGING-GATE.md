@@ -1,3 +1,10 @@
+# REMURA Contributors v0.51 LAB — 20/11/2026, sessione 10:16 CET
+## Direct HTTP perimeter and fixture execution gate
+New direct Worker perimeter test, explicitly wired into the existing public PR-only offline workflow: forged identity headers/cookies, wrong Access account/audience, service identities, disabled flags and limiter failures. Both HTML GET and API POST must deny before D1 access; generic no-store responses, no CORS, no cookie. No runtime change. New execution pending; mock context is not real Access/browser evidence.
+For real binding rollback, keep the existing v0.49 probe unchanged. Require independent exact fixture database UUID and config inspection against the separately named LAB DB, no other DB binding, explicit one-shot dispatch path and closure after execution, current Free headroom and separate approval before any remote runtime. A fixture receipt never attests the actual binding UUID. No deploy, real user or repeated migration/SQL phases. The deployed HTTP/Safari and independently recoverable identity journal remain blockers.
+ 
+---
+ 
 # REMURA Contributors v0.50 LAB — 20/11/2026 CET
 The v0.49 PR CI succeeded (run 44689443909); detailed steps show it did not explicitly execute the new Node fixture. Add this precise synthetic mock command to the existing PR-only CI, no new workflow or provider activation. Receipt no longer asserts actual LAB database was untouched from a name/flag alone: binding_identity_attested=false until independently verified. No real D1 access, users, migration or deployment. New CI result pending.
 
