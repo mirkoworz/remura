@@ -1,3 +1,8 @@
+# REMURA Contributors v0.56 LAB — 20/11/2026 CET
+Offline private configuration preparation helper and runbook added. v0.55 CI verified GREEN, both jurisdictions/Free metrics attested by owner screenshots, full UUID comparison pending on owner device. No live IDs or credentials, no remote adapter activation, no new deployment. Helper not yet executed. Refer to FIXTURE-PRIVATE-CONFIG-RUNBOOK.md. Preserve v0.55 integration and existing SQL phases.
+
+---
+
 # REMURA Contributors v0.55 LAB — 20/11/2026 CET
 v0.54 CI 44717371534 GREEN: all 10 actual POSIX claim tests and 251 Python tests passed, plus 13 session mock cases. New synthetic bridge invokes the fixed local Python helper in isolated mode with a minimal environment and five-second timeout, consuming the durable claim BEFORE injected mock open; invalid static config/no approval never consumes. Same-directory fresh closures and concurrent helper subprocesses are blocked after first claim. Seven new integration scenarios prepared, CI pending. No real provider SDK, credentials or remote invocation. Requires reviewed local code, trusted path and non-rollback filesystem; no defense against owner reset, stale filesystem restoration or using another directory. Failures leave claim consumed if created; no automatic retries. An actual remote session still needs explicit owner authorization, externally pinned operation identity, independent target/usage evidence and closure verification. No real D1, identities, deployment or merge.
 
