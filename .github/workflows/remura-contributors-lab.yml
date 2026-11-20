@@ -1,0 +1,57 @@
+# REMURA Contributors v0.55 LAB — 20/11/2026 CET
+name: REMURA Contributors LAB
+on:
+  pull_request:
+    paths:
+      - 'research/contributors/**'
+      - '.github/workflows/remura-contributors-lab.yml'
+permissions:
+  contents: read
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Synthetic intake only
+        run: python3 -m unittest discover -s research/contributors -p 'test_*.py' -v
+
+      - name: Offline mobile demo checks
+        run: node research/contributors/test_demo.cjs
+
+      - name: Closed staging identity checks
+        run: node research/contributors/test_staging_identity.mjs
+
+      - name: Offline D1 primary and failed batch mock checks
+        run: node research/contributors/test_d1_fixture_batch_probe.mjs
+
+      - name: Direct Worker perimeter synthetic checks
+        run: node research/contributors/test_worker_perimeter_candidate.mjs
+
+      - name: Fixture proxy static isolation gate
+        run: node research/contributors/test_fixture_proxy_config_gate.mjs
+
+      - name: Synthetic fixture session orchestration
+        run: node research/contributors/test_fixture_session_orchestration_lab.mjs
+
+      - name: Durable synthetic fixture session integration
+        run: node research/contributors/test_fixture_durable_session_lab.mjs
+
+      - name: Checkout exact D LAB reference
+        uses: actions/checkout@v4
+        with:
+          ref: a44644f653e3f6d423f2120b678dda7eeaecc83e
+          path: _remura_d_reference
+          persist-credentials: false
+
+      - name: D–E synthetic compatibility gate
+        env:
+          PYTHONPATH: _remura_d_reference/tradingview/delta-peaks
+        run: python3 research/contributors/crosstrack_tv_confluence_fixture_v1.py -v
+
+      - name: D–E local-level declared metadata readiness
+        env:
+          PYTHONPATH: _remura_d_reference/tradingview/delta-peaks
+        run: python3 research/contributors/crosstrack_local_level_readiness_v1.py -v

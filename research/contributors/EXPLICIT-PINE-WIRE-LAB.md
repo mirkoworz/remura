@@ -1,0 +1,7 @@
+# REMURA Contributors v0.36 LAB — 16/11/2026 16:27 CET
+
+Future Pine transport fixture: `explicit_pine_wire_lab_v1.py`. Uses the existing v0.35 evaluator and exact Decimal comparator; does not copy their logic. CI v0.35 43895337919: 189 ordinary + 7 cross-track tests passed.
+
+Wire schema `remura.tv.level.explicit.synthetic.v1`, separate fictitious LABFX cohort only. Exact instrument, symbol, timeframe, product/contract, period and anchor, delta method, separate synthetic effort/result context, config ID (SHA-256 of canonical fixture configuration), observation/bar close/externally supplied receiver clock. Price is a decimal string, timestamps Unix milliseconds with whole-second precision. Exact M5 close; no sender-supplied receipt. Manual fixture explicitly carries matching config ID. Late receipt excluded at original cutoff; incompatible wire is rejected, not relabeled. Output is v0.35 aggregate plus config ID and explicit synthetic/unattested flags.
+
+This is NOT executable Pine, live feed metadata, a verified method fingerprint, calendar for actual sessions, authenticated clock, provenance or a scientific parameter. No actual FX:EURUSD relabel, no trading orders, no external calls or resource creation. Eight new tests expected. Next: pinned D producer fixture and original B decision-time dossier integration; then owner-facing diagnostic display. Do not deploy or enroll contributors.

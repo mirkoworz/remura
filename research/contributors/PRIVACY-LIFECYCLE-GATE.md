@@ -1,0 +1,28 @@
+# REMURA Contributors v0.32 LAB — 16/11/2026 13:08 CET
+## Privacy lifecycle contract — design only / enrollment NO-GO
+No real data, provider calls, schema migrations, deletion, keys or D1 resources. Existing v0.31 code and runtime package unchanged. This document defines technical preconditions, not a legal retention determination.
+
+### Concrete conflict in current candidate
+`d1_access_candidate.sql` holds linked subject/email tags in lab_identities and lab_owner; lab_entries links subject to request_id, instrument, price, three clocks and free-text note; lab_reviews links entry and owner with free-text reason. lab_identity_revocations, lab_intent_used and lab_admin_events also retain subject tags. Immutable triggers prohibit deletion or rewriting. Independent encrypted journal retains subject/email_tag/role/slot in each ENROLL/REVOKE event. `recovery_journal_candidate.py` requires exact set equality between backup identities and journal and rejects absent tombstones. Therefore current revocation is NOT erasure; disabling Access or destroying one local key is NOT evidence that all copies are gone. Pseudonymous hashes of identifiable subjects are not anonymous by assumption.
+
+### Minimum retention matrix (proposed, not approved)
+| Data | Purpose | proposed action after pilot or verified request |
+|---|---|---|
+| Current Access identity and subject/email tags | authentication, role, deny re-enrollment | revoke immediately under approved closed workflow; review whether minimal deny record is necessary and permitted; no reuse/rebind |
+| Contribution data + optional note + request IDs | receipt and level review | exclude from new analysis on withdrawal; review export/erasure scope; avoid personal free text, consider disabling note before enrollment |
+| Reviews and reasons | provenance | exclude linked records from new cohort; no silent rewriting of earlier decisions; review permissible retention |
+| Used intent nonces and linked subject | replay defense | future expiry/compaction only under reviewed generation protocol; current immutable table cannot purge |
+| Encrypted journal, copies, backup and pin | recovery, rollback defense | independently catalogue copies, retention, access and deletion limits; no indiscriminate key discard or pin reset |
+| Scientific aggregates | study audit | retain only if approved and appropriately de-identified; two contributors/small groups may be identifiable, so aggregation alone insufficient |
+No assumed indefinite retention; earlier 30-day review and 200 entries/8MiB proposal remain review triggers, not automatic deletion or legal periods.
+
+### Proposed owner workflow
+1. Receive private request; authenticate via already bound subject using approved process, never solicit password or token, no raw email in logs. Record only minimal private case ID, scope, decision and review date. For revoked accounts use a separately verified owner channel, not reactivation.
+2. Close contributor writes, reads and recovery ingress; preserve existing state and independent pin; owner verifies target and current generation. If request is export only, use an offline allowlist scoped to exact subject, include only their own contributions/reviews as allowed, exclude owner/other identity, hashes, journal and secrets; private delivery, no public GitHub or shared links. No export endpoint exists or is proposed for first pilot.
+3. For withdrawal/revocation use existing explicitly authorized closed procedure; ensure pending intents invalidated and Access policy/session revoked, source excluded from future Squalincome inputs. Do not promise deletion.
+4. For erasure/retention decision inventory primary, backups, journals, operational logs, exports and derivatives. Current schema cannot fulfill selective erasure safely. Stop before real pilot; no DROP TRIGGER, SQL DELETE, reset or redaction of chain events. Design a new closed generation migration only after approval of retention purposes and scope. If a minimal deny record may be retained, isolate it from trading data and protect independently. If no subject-linked deny record may be retained, retire that slot and deny new enrollment by default rather than rebind it; this alone does not establish that a former person cannot present a new account. Never weaken authentication or restore gates to solve this conflict.
+5. Proposed future migration: explicit source/target manifest and sequence boundary, provenance-preserving disposition outcome, approved limited retention or exclusion, fresh independent latest pin, revalidate every permitted new-generation record; revoke-and-erase is a new contract, NOT reinterpretation of existing restore_plan. Keep old snapshots unavailable to runtime and prohibit old generation restore; verify backup disposition incl. any provider-controlled retention before claiming completion.
+6. Reopen only under existing resource/identity/operational gates and separate owner approval. A failed/ambiguous action leaves all flags closed and pending, no repeated destructive write.
+
+### Pre-enrollment acceptance
+Synthetic rehearsal only after contract review: two subjects with notes/receipts/reviews; export contains one subject only; stale backup cannot restore deleted/excluded contributor; invalid or missing identity fails closed; old-generation intents rejected; retained minimal records match approved scope; no raw records in logs; restore cannot resurrect revoked/deleted data; current UI shows no promise of deletion not implemented. Verify actual account privacy, backup retention, source sharing permission, notices and applicable obligations before enrollment. No workflow, legal notice or live schema implemented by this document.
