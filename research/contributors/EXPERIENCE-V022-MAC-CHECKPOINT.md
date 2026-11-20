@@ -23,3 +23,9 @@ Stato Experience v0.22 LAB e asset invariati. Questo addendum resta sul ramo di 
 **PASS, 10/10 verifiche su v0.12 e 11/11 su v0.22.** I due HTML completi sono stati caricati dal disco con una piccola app di test Swift e il framework WKWebView di macOS 13.7.8. Viewport 390 px, archivio browser non persistente e regola che blocca le richieste HTTP e HTTPS. Entrambi hanno decodificato i nove fotogrammi e il logo, raggiunto il 100%, aperto la Home Contributor, mostrato prezzi e COT sintetici e chiuso la sessione con logout. Col layout stretto non è stato osservato overflow. Il candidato ha superato anche lo scenario di accesso negato.
 
 Il risultato è un collaudo del motore WebKit della piattaforma Mac. Safari come applicazione resta rinviato. Safari iPhone reale e playback temporale dei fotogrammi in questa app di test restano fuori da questa attestazione. Asset, codice HTML e ramo iPhone invariati.
+
+## Safari Mac 18.6 — 20/11/2026 22:54 CET
+
+**PASS 7/7 scenari, 40 verifiche nel browser Safari reale sul Mac.** Gli HTML v0.12 e v0.22 sono stati serviti senza modifiche da un server temporaneo in loopback. Impronte Git dei due documenti verificate prima del test. Nove frame e logo decodificati su entrambe le versioni. Progresso, flash, dissolvenza, scritta REMURA, credito SMF e sequenza completa osservati. Sul candidato v0.22 superati anche ruoli Owner e Viewer, accesso negato, errore di caricamento, riduzione simulata delle animazioni, prezzi e COT sintetici, preservazione della bozza, scadenza simulata e risposta tardiva dopo logout.
+
+Sessione WebDriver e server locale chiusi dopo il collaudo. Le simulazioni di movimento ridotto, tempo e latenza valgono per queste prove. Stato Safari iPhone fisico ancora non attestato. Nessuna rigenerazione o modifica dell'HTML e degli asset.
