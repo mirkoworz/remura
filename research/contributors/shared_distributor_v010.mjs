@@ -34,13 +34,17 @@ export function buildDistributor({authorize,readSnapshot,projectPrices,projectFo
     const checkPair=({JPY:"USDJPY",CAD:"USDCAD",CHF:"USDCHF"})[currency]||currency+"USD";
     projectForex(checkPair,[row],s.as_of);
    }
-   const pview=projectPrices({schema:"REMURA_APPROVED_FIXTURE_V1",as_of:s.as_of,prices:s.prices,cot:[]},now);
+   const priceInput={schema:"REMURA_APPROVED_FIXTURE_V1",as_of:s.as_of,prices:s.prices,cot:[]};
+   projectPrices(priceInput,now);
    const cot=pairs.map(pair=>{
     const selected=[pair.slice(0,3),pair.slice(3)].filter(c=>c!=="USD").map(c=>codes[c]);
     return projectForex(pair,s.forex_rows.filter(r=>selected.includes(r.code)),s.as_of);
    });
    const final=await authorize(ctx);
    if(!allowed(final)||final.subject!==p.subject||final.generation!==p.generation||final.role!==p.role)return deny();
+   const delivery=clock();
+   if(!Number.isSafeInteger(delivery)||delivery<now||delivery-Date.parse(s.as_of)>15*60000)return unavailable();
+   const pview=projectPrices(priceInput,delivery);
    const body={schema:"REMURA_SHARED_VIEW_FIXTURE_V1",revision:s.revision,as_of:s.as_of,synthetic:true,scientific_admission:false,prices:pview.prices,cot,sentiment:{myfxbook:"UNAVAILABLE",capital:"UNAVAILABLE"},delta:"UNAVAILABLE"};
    const response=reply(200,body);
    return utf8Bytes(response.body)<=16384?response:unavailable();
