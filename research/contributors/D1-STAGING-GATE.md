@@ -1,3 +1,8 @@
+# REMURA Contributors v0.50 LAB — 20/11/2026 CET
+The v0.49 PR CI succeeded (run 44689443909); detailed steps show it did not explicitly execute the new Node fixture. Add this precise synthetic mock command to the existing PR-only CI, no new workflow or provider activation. Receipt no longer asserts actual LAB database was untouched from a name/flag alone: binding_identity_attested=false until independently verified. No real D1 access, users, migration or deployment. New CI result pending.
+
+---
+
 # REMURA Contributors v0.49 LAB — 20/11/2026 CET
 A dedicated inert D1 binding probe is prepared, with no route or deployment config. It uses only a separately verified fixture binding. It requires closed state and absent fixed inactive synthetic catalog marker, then attempts two identical INSERTs in a single batch, expects the unique constraint error, and verifies primary readback of closed flags and marker absence. No retries or cleanup writes; unknown result is a blocker. Binding name and env flag do not attest the actual database UUID, which must be verified independently before separately authorized execution. An error prior to the first insert cannot demonstrate rollback; expected diagnostic and schema/marker preconditions support the intended case but provider execution is still required. Read metadata checks include primary, rows_read and zero rows_written. Existing LAB untouched; no repeating SQL migration or seven completed phases. No deployment, real test, or runtime/UI change. Mock fixture provided, not provider evidence.
 

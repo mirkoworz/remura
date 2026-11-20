@@ -50,6 +50,6 @@ async function fixtureBatchProbe(env,explicit=false){
  need(failed && expected);
  return Object.freeze({status:"FIXTURE_BATCH_ROLLBACK_OBSERVED",primary_reads:4,
   batch_attempts:1,expected_unique_error:true,marker_absent_after:true,
-  lab_database_touched:false,real_users:false,provider_cost_verified:false});
+  binding_identity_attested:false,real_users:false,provider_cost_verified:false});
 }
 export {fixtureBatchProbe,SQL,MARK};
