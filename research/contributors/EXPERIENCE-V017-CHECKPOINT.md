@@ -1,0 +1,13 @@
+# REMURA Experience v0.17 LAB — 20/11/2026, 17:54 CET
+
+Local synthetic integration, no network. Exact dependency Git blob hashes: journal v0.15 5748fa1fee0a9afd2be39100fdec9f2d9a54c48b; archive schema v0.14 c008dcd4ac5e74f7fe9ebf93d40bd8eab6bdcde6; witness v0.16 b9671ac05edfa21d41c30a13607a2dab926a6861. All matched locally.
+
+Executed python -m unittest -v test_integration_v017: 22/22 OK (0.621 s). Real local SQLite files and synthetic content/identity. New code blob f68ab553f1ff13185366431503b5b75cd350d318; tests blob 706546531b880e9c9b1407f378f948778e842fff. Previous cumulative 245 expected outcomes + 22 = 267 across 11 phases, NOT production validation.
+
+## Behavior
+Explicit initialization only. Canonical revision/time/value payload; full archive history digest linkage to authenticated journal records; three-stage publication (archive, journal, witness CAS), exact revision comparison, local nonblocking flock, repeat authorization under lock. Reads of contributor fixture only, not restriction of real OWNER access. Restored copies of archive and journal together rejected when witness intact; single-file rollback rejected, archive and journal tamper rejected. Simulated early return after archive/journal commit blocks all reads and future writes until independent recovery. Lost ack after witness commit remains valid and stale retry rejected. 32 revision fixture cap; no automatic recovery or generation reset.
+
+## Boundaries and next
+Interruption tests are simulated exits, not power loss or process SIGKILL. Lock contention tested with a second file descriptor, not distributed concurrency. All three stores and keys in same local trust domain; full rollback unresolved. No actual protected distributor/HTTP integration, identity, cloud, Safari, authorization/session binding or real market payload. Adapter exception hardening, crash matrix and independent recovery protocol next, followed by exact approved schema and distributor binding. Need independent monotonic authenticated anchor outside restore domain; Mac encrypted volume proposed but not activated. Do not create new resources. Browser v0.12 exact HTML still unavailable in local browser (direct DNS blocked); no browser PASS. Preserve nine images/logo and frozen levels contract. No repeat of completed tests unless dependent changes.
+
+Contributors v0.56, TradingView v0.8.181, Shark Science v0.4, Private Capture v0.15 hosted STOP, Oracle v1.65 not installed, Ampere Radar v0.36 retained at prior checkpoints. Holdout windows unchanged. Mac private gates outstanding. No merge, deployment, real credential, acquisition, Oracle changes, private workflow or new cloud resources/cost. Budget historical, not remeasured.
