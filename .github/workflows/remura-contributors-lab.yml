@@ -33,6 +33,9 @@ jobs:
       - name: Fixture proxy static isolation gate
         run: node research/contributors/test_fixture_proxy_config_gate.mjs
 
+      - name: Synthetic fixture session orchestration
+        run: node research/contributors/test_fixture_session_orchestration_lab.mjs
+
       - name: Checkout exact D LAB reference
         uses: actions/checkout@v4
         with:
