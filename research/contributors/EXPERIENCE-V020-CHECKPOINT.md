@@ -1,0 +1,13 @@
+# REMURA Experience v0.20 LAB — 20/11/2026 18:59 CET
+
+Local Python 3.13.5 + Node 22.16.0, 21/21 new unittest cases passed in 2.378 s. Code blob 0105c65b50904e911f1a54c7df9a8d3eac90ecd7, tests 3ad9bd85a62eca881f307c8c022572446eafb4af. Prior cumulative 308 + 21 = 329 expected outcomes across 14 LAB phases, not production certification. Existing modules unchanged; exact local dependency hashes matched prior checkpoints. No real market data, provider calls, new infrastructure or expense.
+
+## Behavior
+Snapshot recovery uses actual local SQLite archive, journal and witness, expected prior pin and exact digest, canonical history, chain linkage, projection validation before explicit approval, repeated owner checks, and witness CAS. Recovery after archive or journal interruption works, repeated current recovery returns ALREADY_COMMITTED without duplicate; interruption during recovery remains closed. Expired pending snapshots fail closed. No automatic discard, expiry recovery, reset or adoption.
+
+Public fixture view version bumped to REMURA_SHARED_VIEW_FIXTURE_V2; stale prices have price:null, freshness:STALE. Fresh price preserved. Snapshot freshness 15 minutes and local measured wall-clock delta bound 0..5000 ms checked after projection, identity and pin recheck, before final response assembly. Clock regression or expiry crossing blocks whole delivery; stale-price crossing redacted. 28-pair catalog unchanged. V2 is not yet compatible with old UI/consumer; do not substitute for frozen V1 without explicit version integration. Archive retains numeric values for custody. This change concerns prices, not a new COT freshness methodology.
+
+## Remaining
+No actual HTTP send, physical clock-trust or monotonic elapsed clock proof, real authorization, durable independent intent, full witness rollback, distributed lock, actual process kill or power-loss test. 5-second bound is LAB policy chosen for testing, not measured SLA. Expired pending candidate remains blocked until separately approved safe abandonment/supersession protocol; no automatic repair. Next: V2 consumer validation, expiry redaction in cached views, stable revision fingerprint, UI contract compatibility without regenerating approved artwork, explicit expired-intent recovery policy and independent custody. Exact HTML original browser import and Safari still blocked. Mac gates unchanged.
+
+Contributors v0.56 frozen, TradingView v0.8.181 windows unchanged, Shark Science v0.4, Private Capture v0.15 hosted STOP, Oracle v1.65 not installed, Ampere Radar v0.36 checkpoint unchanged. No merge/deploy/private workflows/real credentials/acquisition/Oracle modification or spending; current budget not remeasured.
