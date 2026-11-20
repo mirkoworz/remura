@@ -17,3 +17,9 @@ Ispezione visiva dei nove fotogrammi decodificati e del logo originale. Riconosc
 Esito finale **10/10 scenari**, di cui uno passato in riprova isolata. Nessun errore JavaScript di pagina o richiesta HTTP osservati nei casi passati. Il profilo mobile usa viewport 390×664, DPR 3 e input touch in Chrome, con schermo simulato 390×844. Le 366 verifiche storiche restano il loro checkpoint separato. Le prove qui riportate usano fixture sintetiche e orologio controllato nel caso di scadenza. Safari Mac rinviato su richiesta dopo che WebDriver ha segnalato l'automazione remota disattivata. Safari su iPhone reale non eseguito. L'autorizzazione server, il dispositivo reale e la produzione restano fuori da questa attestazione.
 
 Stato Experience v0.22 LAB e asset invariati. Questo addendum resta sul ramo di checkpoint Mac. Lo sviluppo Experience su iPhone continua sul suo ramo.
+
+## WebKit nativo sul Mac — 20/11/2026 22:04 CET
+
+**PASS, 10/10 verifiche su v0.12 e 11/11 su v0.22.** I due HTML completi sono stati caricati dal disco con una piccola app di test Swift e il framework WKWebView di macOS 13.7.8. Viewport 390 px, archivio browser non persistente e regola che blocca le richieste HTTP e HTTPS. Entrambi hanno decodificato i nove fotogrammi e il logo, raggiunto il 100%, aperto la Home Contributor, mostrato prezzi e COT sintetici e chiuso la sessione con logout. Col layout stretto non è stato osservato overflow. Il candidato ha superato anche lo scenario di accesso negato.
+
+Il risultato è un collaudo del motore WebKit della piattaforma Mac. Safari come applicazione resta rinviato. Safari iPhone reale e playback temporale dei fotogrammi in questa app di test restano fuori da questa attestazione. Asset, codice HTML e ramo iPhone invariati.
