@@ -1,3 +1,15 @@
+# REMURA Contributors v0.48 LAB — 20/11/2026 CET
+## Remaining execution gates — NO DEPLOY / NO MERGE / NO REAL USERS
+This operational checkpoint supersedes the creation and migration steps below. Owner handoff records two separate EU databases: remura-contributors-lab (closed, intended for real participants, no fixture writes) and remura-contributors-fixture (synthetic only). Both migrated and inspected: 10 tables, 22 triggers, 3 indexes; 35 definitions, integrity and foreign keys checked. Synthetic SQL phases 1/2/3/4A/4B/5/6 complete per owner handoff and PR104 receipts 7007253944, 7007298633, 7007313351, 7007442281, 7007457598. No new independent provider check in this revision. Do not recreate, remigrate, reseed or repurpose either database.
+Next distinct tests, not a repetition of SQL phases:
+- Offline first: use the existing direct Worker candidate and simulated ctx.access with local Wrangler only if compatible installed tooling is available. Test native runtime identity shape, absent Access, wrong account/audience, service token, mismatched identity between checks, origin/CSRF, forbidden paths and explicit disabled defaults. No cloud binding, deployment or real identities. Mock or local metadata is not actual D1 primary evidence.
+- For actual Cloudflare binding semantics: propose one controlled synthetic-only fixture exercise, using remura-contributors-fixture exclusively. Require separate owner approval for a closed fixture runtime/binding and exact approved test code, fresh Free/quota evidence, no route or preview exposure, no real secrets/identities, bounded operations, verify provider primary metadata on required statements and atomic rollback of a failed binding batch with a readback. Do not mutate the LAB database, do not rerun the seven SQL phases, do not equate REST console SQL with binding batch semantics.
+- Independent encrypted identity journal: use the existing encrypted journal rehearsal and recovery tools; require external latest-pin custody, key recovery and explicit enrollment/revocation procedure before real ingress. Do not regenerate unrelated owner GPG or reuse scientific capture credentials for contributor authentication.
+- Only after these gates: separately authorized closed staging deployment and owner-only authenticated browser check; real participant enrollment remains separate and blocked pending recovery/privacy and quota evidence.
+Official current direct Worker Access documentation: https://developers.cloudflare.com/workers/configuration/cloudflare-access/ (local simulation available; no propagated ctx.access via service bindings or Static Assets router). No runtime implementation change, user-facing page change, provider action, test execution or cost claim in this documentation revision.
+
+---
+
 # REMURA Contributors v0.47 LAB — 18/11/2026, sessione 19:25 CET
 ## D1 staging gate — NO CREATE / NO MIGRATION / NO DEPLOY / NO MERGE
 
