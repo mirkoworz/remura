@@ -14,23 +14,23 @@ export const durableLevelHandlerV078=createDurableLevelApiV076({
  authenticate:accessBinding,profileRead:profile,originalHandler:candidateRequest
 });
 const originalLevelGate=createLevelApiGateV074({
- authenticate:accessBinding,profileRead:profile,handler:durableLevelHandlerV077
+ authenticate:accessBinding,profileRead:profile,handler:durableLevelHandlerV078
 });
 export const protectedLevelApiV078=(req,env,ctx)=>{
  let url;try{url=new URL(req.url)}catch{
   return new Response('{"error":"denied"}',{status:403,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
  }
  return url.pathname==='/api/level-attempt/status'
-  ? durableLevelHandlerV077(req,env,ctx)
+  ? durableLevelHandlerV078(req,env,ctx)
   : originalLevelGate(req,env,ctx);
 };
-export const ownerLevelAuditHandlerV078=createOwnerLevelAuditHttpV077({
+export const ownerLevelAuditHandlerV078=createOwnerLevelAuditHttpV078({
  authenticate:accessBinding,profileRead:profile
 });
-export const privateWorkerCandidateV078=createPrivateWorkerRouterV077({
+export const privateWorkerCandidateV078=createPrivateWorkerRouterV078({
  authenticate:accessBinding,profileRead:profile,
  protectedRead:protectedReadCandidateV069,
- levelApi:protectedLevelApiV077,
- ownerAudit:ownerLevelAuditHandlerV077,
- assetFiles:privateAssetFilesV077
+ levelApi:protectedLevelApiV078,
+ ownerAudit:ownerLevelAuditHandlerV078,
+ assetFiles:privateAssetFilesV078
 });
