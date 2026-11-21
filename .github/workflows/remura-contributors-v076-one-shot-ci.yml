@@ -17,7 +17,7 @@ jobs:
     if: >-
       github.repository == 'mirkoworz/remura' &&
       github.ref == 'refs/heads/research/contributors-durable-level-v076-20261121' &&
-      github.event.head_commit.message == 'test(contributors): run only v0.76 new 64 offline checks'
+      github.event.head_commit.message == 'test(contributors): verify corrected v0.76 64 offline cases'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
