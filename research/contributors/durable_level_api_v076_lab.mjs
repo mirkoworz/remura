@@ -3,6 +3,7 @@
 // reservation. On any uncertainty, NO automatic retry and NO release of the slot.
 // NO default fetch, no real Worker binding or Cloudflare environment.
 import {normalizeNewLevelV076,newLevelFingerprintV076,claimNewLevelV076,confirmNewLevelV076,inspectNewLevelV076} from './level_attempt_journal_v076_lab.mjs';
+import {verifyLevelIntentBeforeClaimV076} from './level_intent_precheck_v076_lab.mjs';
 const RESP_HEADERS=Object.freeze({'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store, max-age=0','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Cross-Origin-Resource-Policy':'same-origin'});
 const deny=()=>new Response('{"error":"denied"}',{status:403,headers:RESP_HEADERS});
 const uncertain=()=>new Response('{"error":"not_confirmed","retry":false}',{status:409,headers:RESP_HEADERS});
@@ -68,6 +69,7 @@ export function createDurableLevelApiV076({authenticate,profileRead,originalHand
    const raw=await boundedBody(req),now=stamp(),level=normalizeNewLevelV076(raw,now);
    const actor=await readProfile(ctx,env,authenticate,profileRead,'can_write');
    await applyLimit(env,actor.subject); // Before acquiring the durable lock.
+   await verifyLevelIntentBeforeClaimV076(env,actor,raw,req.headers.get('X-Remura-Intent'));
    const fingerprint=await newLevelFingerprintV076(level);
    // Cross-tab, cross-device and restart barrier: DB UNIQUE(subject WHERE RESERVED).
    // NO automatic retries if this INSERT is ambiguous, fails or conflicts.
