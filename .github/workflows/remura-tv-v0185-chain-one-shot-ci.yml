@@ -1,0 +1,36 @@
+# REMURA v0.8.185 LAB — 21/11/2026 CET; no real market data
+name: REMURA TradingView v0.8.185 local evidence chain ONE-SHOT
+on:
+  push:
+    branches: [research/tradingview-evidence-ledger-v0185-20261121]
+    paths:
+      - tradingview/delta-peaks/local_capture_ledger_v0185_lab.py
+      - tradingview/delta-peaks/test_local_capture_ledger_v0185_lab.py
+      - .github/workflows/remura-tv-v0185-chain-one-shot-ci.yml
+permissions:
+  contents: read
+jobs:
+  new-v0185-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout no persisted credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile only new modules
+        run: python3 -m py_compile tradingview/delta-peaks/local_capture_ledger_v0185_lab.py tradingview/delta-peaks/test_local_capture_ledger_v0185_lab.py
+      - name: Verify no activation or edge claims
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/local_capture_ledger_v0185_lab.py --synthetic-self-check | tee /tmp/v0185.json
+          grep -q '"decision":"NO_GO_LIVE"' /tmp/v0185.json
+          grep -q '"independent_timestamp_anchor":false' /tmp/v0185.json
+      - name: Run ONLY 22 NEW chain tests
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tradingview/delta-peaks -p 'test_local_capture_ledger_v0185_lab.py' -q 2>&1 | tee /tmp/v0185-tests.log
+          grep -q 'Ran 22 tests in ' /tmp/v0185-tests.log
+          grep -q '^OK$' /tmp/v0185-tests.log
+          echo 'REMURA_TV_V0185_CHAIN=22_22_PASS'
