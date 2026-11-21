@@ -157,5 +157,41 @@ class NewRevisionLineageTests(unittest.TestCase):
         self.assertFalse(proof["institutional_edge_established"])
         self.assertEqual(proof["oracle_or_cloudflare_calls"],0)
 
+
+    def test_17_asof_reconstructs_original_numbers_after_later_correction(self):
+        self.ledger.capture({KEY:VALUES},at_utc=T1)
+        self.ledger.capture({KEY:REVISED},at_utc=T2)
+        old=self.ledger.as_of(dataset=KEY[0],code=KEY[1],
+                              report_date=KEY[2],decision_utc="2026-11-20T14:00:00Z")
+        self.assertEqual(old["positions"],list(VALUES))
+        self.assertEqual(old["version"],1)
+        self.assertFalse(old["external_first_seen_verified"])
+
+    def test_18_post_revision_replay_uses_changed_numbers_not_original(self):
+        self.ledger.capture({KEY:VALUES},at_utc=T1)
+        self.ledger.capture({KEY:REVISED},at_utc=T2)
+        new=self.ledger.as_of(dataset=KEY[0],code=KEY[1],
+                              report_date=KEY[2],decision_utc=T3)
+        self.assertEqual(new["positions"],list(REVISED))
+        self.assertNotEqual(new["positions"],list(VALUES))
+
+    def test_19_original_payload_hash_matches_archived_version_bytes(self):
+        import hashlib
+        self.ledger.capture({KEY:VALUES},at_utc=T1)
+        packed,stored=self.ledger._db.execute(
+            "SELECT content_payload_json,content_sha256 FROM captured_versions"
+        ).fetchone()
+        self.assertEqual(hashlib.sha256(packed.encode("ascii")).hexdigest(),stored)
+        self.assertEqual(self.ledger.as_of(dataset=KEY[0],code=KEY[1],
+                                          report_date=KEY[2],decision_utc=T1)["positions"],list(VALUES))
+
+    def test_20_pre_capture_or_legacy_missing_positions_stay_null_not_zero(self):
+        self.ledger.capture({KEY:VALUES},at_utc=T1)
+        r=self.ledger.as_of(dataset=KEY[0],code=KEY[1],
+                            report_date=KEY[2],decision_utc="2026-11-20T11:59:59Z")
+        self.assertEqual(r["status"],"UNKNOWN_NO_VERSION_AT_DECISION")
+        self.assertIsNone(r["positions"])
+        self.assertIsNone(r["content_sha256"])
+
 if __name__=="__main__":
     unittest.main()
