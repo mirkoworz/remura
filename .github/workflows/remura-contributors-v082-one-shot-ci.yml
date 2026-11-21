@@ -1,0 +1,44 @@
+# REMURA Contributors v0.82 LAB · 21/11/2026 Europe/Rome · ONE SHOT
+name: REMURA Contributors v0.82 offline D1 boundary and gates ONE-SHOT
+on:
+  push:
+    branches: [research/contributors-offline-d1-boundary-v082-20261121]
+    paths:
+      - research/contributors/d1_evidence_boundary_v082_lab.py
+      - research/contributors/test_d1_evidence_boundary_v082_lab.py
+      - research/contributors/staging_gate_matrix_v082_lab.py
+      - research/contributors/test_staging_gate_matrix_v082_lab.py
+      - .github/workflows/remura-contributors-v082-one-shot-ci.yml
+permissions:
+  contents: read
+jobs:
+  new-v082-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout no persisted credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Compile only the four new files
+        run: |
+          python3 -m py_compile research/contributors/d1_evidence_boundary_v082_lab.py research/contributors/test_d1_evidence_boundary_v082_lab.py research/contributors/staging_gate_matrix_v082_lab.py research/contributors/test_staging_gate_matrix_v082_lab.py
+      - name: Ensure self-checks cannot authorize staging
+        run: |
+          set -euo pipefail
+          python3 research/contributors/d1_evidence_boundary_v082_lab.py --synthetic-self-check | tee /tmp/d1-v082.json
+          python3 research/contributors/staging_gate_matrix_v082_lab.py --offline-review | tee /tmp/matrix-v082.json
+          grep -q '"decision":"NO_GO"' /tmp/d1-v082.json
+          grep -q '"decision": "NO_GO"' /tmp/matrix-v082.json
+      - name: Run ONLY 38 NEW v0.82 tests
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s research/contributors -p 'test_d1_evidence_boundary_v082_lab.py' -q 2>&1 | tee /tmp/d1-v082-tests.log
+          python3 -m unittest discover -s research/contributors -p 'test_staging_gate_matrix_v082_lab.py' -q 2>&1 | tee /tmp/gates-v082-tests.log
+          grep -q 'Ran 24 tests in ' /tmp/d1-v082-tests.log
+          grep -q '^OK$' /tmp/d1-v082-tests.log
+          grep -q 'Ran 14 tests in ' /tmp/gates-v082-tests.log
+          grep -q '^OK$' /tmp/gates-v082-tests.log
+          echo 'REMURA_V082_OFFLINE_BOUNDARY=38_38_PASS'
