@@ -64,7 +64,7 @@ class PilotPreviewNewTests(unittest.TestCase):
         self.assertIn("propri livelli",self.source)
     def test_09_read_all_write_own(self):
         self.assertIn("consultare REMURA",self.source)
-        self.assertIn("soltanto i propri livelli",self.source)
+        self.assertIn("esclusivamente i propri livelli",self.source)
     def test_10_d1_unknown_not_zero(self):
         self.assertIn("SCONOSCIUTO",self.source)
         self.assertIn("Non è zero",self.source)
