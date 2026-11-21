@@ -1,0 +1,33 @@
+# REMURA TradingView v0.8.186 LAB — 21/11/2026 Europe/Rome
+# Runs ONLY the 14 new offline decision-evidence tests, no older suites.
+name: REMURA TV v0186 one-decision evidence ONE-SHOT
+on:
+  push:
+    branches:
+      - research/tv-decision-evidence-contract-v0186-20261121
+    paths:
+      - tradingview/delta-peaks/decision_evidence_contract_v0186_lab.mjs
+      - tradingview/delta-peaks/test_decision_evidence_contract_v0186_lab.mjs
+      - .github/workflows/remura-tv-v0186-evidence-one-shot.yml
+permissions:
+  contents: read
+jobs:
+  tv-asof-new-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout with no persisted GitHub credential
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Run 14 new structural-contract checks only
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test --test-reporter=tap tradingview/delta-peaks/test_decision_evidence_contract_v0186_lab.mjs 2>&1 | tee /tmp/remura-v0186-decision-evidence.log
+          grep -q '^1..14$' /tmp/remura-v0186-decision-evidence.log
+          grep -q '^# pass 14$' /tmp/remura-v0186-decision-evidence.log
+          grep -q '^# fail 0$' /tmp/remura-v0186-decision-evidence.log
+          echo 'REMURA_TV_V0186_DECISION_EVIDENCE=14_14_PASS'
