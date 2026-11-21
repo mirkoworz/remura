@@ -1,0 +1,30 @@
+# REMURA Contributors v0.88 LAB · 21/11/2026 18:56 CET
+name: REMURA Contributors v0.88 offline Free calculator ONE-SHOT
+on:
+  push:
+    branches: [research/contributors-free-local-panel-v088-20261121]
+    paths:
+      - research/contributors/contributors_free_local_v088_lab.html
+      - research/contributors/test_free_local_v088_lab.mjs
+      - .github/workflows/remura-contributors-v088-one-shot-ci.yml
+permissions:
+  contents: read
+jobs:
+  new-v088-local-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout with no persisted credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: ONLY new v0.88 iPhone panel checks
+        run: |
+          set -euo pipefail
+          node --test research/contributors/test_free_local_v088_lab.mjs 2>&1 | tee /tmp/v088.log
+          grep -q '# tests 22' /tmp/v088.log
+          grep -q '# pass 22' /tmp/v088.log
+          grep -q '# fail 0' /tmp/v088.log
+          echo 'REMURA_V088_FREE_OFFLINE=22_22_PASS'
