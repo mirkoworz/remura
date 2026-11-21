@@ -1,0 +1,44 @@
+# REMURA Contributors v0.92 LAB — 21 Nov 2026 Europe/Rome
+# Only new integration tests: no secrets, Cloudflare, Oracle, deployment or old suites.
+name: REMURA Contributors v0.92 private composition ONE-SHOT
+on:
+  push:
+    branches: [research/contributors-private-composition-v092-20261121]
+    paths:
+      - research/contributors/private_worker_composition_v092_lab.mjs
+      - research/contributors/test_private_worker_composition_v092_lab.mjs
+      - .github/workflows/remura-contributors-v092-one-shot-ci.yml
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [research/contributors-d1-diagnostic-v091-20261121]
+    paths:
+      - research/contributors/private_worker_composition_v092_lab.mjs
+      - research/contributors/test_private_worker_composition_v092_lab.mjs
+      - .github/workflows/remura-contributors-v092-one-shot-ci.yml
+permissions:
+  contents: read
+jobs:
+  v092-new-integration-only:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      (github.event_name == 'push' ||
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.head.ref == 'research/contributors-private-composition-v092-20261121' &&
+       github.event.pull_request.base.ref == 'research/contributors-d1-diagnostic-v091-20261121'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout without persisted credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Run only new composition tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test --test-reporter=tap research/contributors/test_private_worker_composition_v092_lab.mjs 2>&1 | tee /tmp/v092.log
+          grep -q '^1..15$' /tmp/v092.log
+          grep -q '^# pass 15$' /tmp/v092.log
+          grep -q '^# fail 0$' /tmp/v092.log
+          echo 'REMURA_CONTRIBUTORS_V092_REAL_COMPOSITION=15_15_PASS'
