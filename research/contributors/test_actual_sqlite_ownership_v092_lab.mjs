@@ -186,3 +186,44 @@ test('14 full schema and real SQL never equal Cloudflare D1 provider proof',asyn
  assert.equal(x.counters.writes,0);
  assert.equal((await x.get('a','/contributors/')).headers.get('Cache-Control'),'no-store, max-age=0');
 }));
+
+async function http(x,who,path,body){
+ const req=new Request(ORIGIN+path,{method:'POST',body:JSON.stringify(body),headers:{
+  'Content-Type':'application/json','Origin':ORIGIN,
+  'Sec-Fetch-Site':'same-origin','X-Remura-CSRF':'1'
+ }});
+ return worker(req,x.env,x.ctx(who));
+}
+test('15 composed HTTP /api/receipts returns only A own stored SQL rows',async()=>within(async x=>{
+ const a=await submit(x.ctx('a'),x.env,PAYLOAD(RID,'1.0854'));
+ await submit(x.ctx('b'),x.env,PAYLOAD(RID,'1.1001'));
+ const res=await http(x,'a','/api/receipts',{after:0});
+ assert.equal(res.status,200);
+ const data=(await res.json()).data;
+ assert.deepEqual(data.map(v=>v.id),[a.id]);
+ assert.ok(!JSON.stringify(data).includes(x.tags.b.subject));
+ assert.equal(res.headers.get('Cache-Control'),'no-store, max-age=0');
+}));
+test('16 composed HTTP /api/receipts B cannot use cursor to see A older row',async()=>within(async x=>{
+ const a=await submit(x.ctx('a'),x.env,PAYLOAD(RID,'1.0854'));
+ const b=await submit(x.ctx('b'),x.env,PAYLOAD(RID,'1.1001'));
+ const res=await http(x,'b','/api/receipts',{after:0});
+ assert.equal(res.status,200);assert.deepEqual((await res.json()).data.map(v=>v.id),[b.id]);
+ const next=await http(x,'b','/api/receipts',{after:a.id});
+ assert.equal(next.status,200);
+ assert.deepEqual((await next.json()).data.map(v=>v.id),[b.id]);
+}));
+test('17 HTTP caller-supplied actor identifier never widens its own-receipt query',async()=>within(async x=>{
+ await submit(x.ctx('a'),x.env,PAYLOAD(RID,'1.0854'));
+ const res=await http(x,'b','/api/receipts',{after:0,subject:x.tags.a.subject});
+ assert.notEqual(res.status,200);
+ assert.equal((await receipts(x.ctx('b'),x.env)).length,0);
+}));
+test('18 composed HTTP revocation closes A receipts while B profile/receipts still work',async()=>within(async x=>{
+ await submit(x.ctx('a'),x.env,PAYLOAD(RID,'1.0854'));
+ await submit(x.ctx('b'),x.env,PAYLOAD(RID,'1.1001'));
+ assert.equal((await http(x,'a','/api/receipts',{after:0})).status,200);
+ await revokeContributor(x.ctx('owner'),x.env,'friend-a');
+ assert.equal((await http(x,'a','/api/receipts',{after:0})).status,403);
+ assert.equal((await http(x,'b','/api/receipts',{after:0})).status,200);
+}));
