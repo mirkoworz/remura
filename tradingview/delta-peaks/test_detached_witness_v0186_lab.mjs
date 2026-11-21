@@ -66,7 +66,7 @@ test('07 incorrect public-key fingerprint never verifies signature',()=>{
  assert.equal(r.status,'INVALID_OR_UNVERIFIED');assert.equal(r.key_fingerprint_matched,false);
 });
 test('08 malformed or noncanonical base64 signature rejected',()=>{
- const receipt=signFields();receipt.signature_b64=receipt.signature_b64.slice(0,-2)+'==';
+ const receipt=signFields();receipt.signature_b64=receipt.signature_b64.slice(0,-1); // remove required Base64 padding, same bytes but NON-canonical
  const r=check({receipt});assert.equal(r.signature_verified_with_supplied_key,false);
 });
 test('09 missing receipt stays unknown, never interpreted as no market activity',()=>{
