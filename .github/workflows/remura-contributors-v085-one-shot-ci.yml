@@ -1,0 +1,36 @@
+# REMURA v0.85 LAB — 21/11/2026 CET, no real services
+name: REMURA Contributors v0.85 staging drill ONE-SHOT
+on:
+  push:
+    branches: [research/contributors-staging-drill-v085-20261121]
+    paths:
+      - research/contributors/staging_drill_v085_lab.py
+      - research/contributors/test_staging_drill_v085_lab.py
+      - .github/workflows/remura-contributors-v085-one-shot-ci.yml
+permissions:
+  contents: read
+jobs:
+  new-v085-drill:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout no persisted credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile new modules only
+        run: python3 -m py_compile research/contributors/staging_drill_v085_lab.py research/contributors/test_staging_drill_v085_lab.py
+      - name: Verify staging and rollback never authorized
+        run: |
+          set -euo pipefail
+          python3 research/contributors/staging_drill_v085_lab.py --synthetic-rehearsal | tee /tmp/remura-v085.json
+          grep -q '"stage":"NO_GO"' /tmp/remura-v085.json
+          grep -q '"automatic_rollback_allowed":false' /tmp/remura-v085.json
+      - name: Run ONLY 22 new staging drill tests
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s research/contributors -p 'test_staging_drill_v085_lab.py' -q 2>&1 | tee /tmp/remura-v085-tests.log
+          grep -q 'Ran 22 tests in ' /tmp/remura-v085-tests.log
+          grep -q '^OK$' /tmp/remura-v085-tests.log
+          echo 'REMURA_V085_STAGING_DRILL=22_22_PASS'
