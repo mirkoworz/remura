@@ -25,7 +25,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 -m unittest -v research/contributors/test_manual_free_gate_v092_lab.py 2>&1 | tee /tmp/remura-free-manual.log
+          python3 -m unittest discover -s research/contributors -p 'test_manual_free_gate_v092_lab.py' -v 2>&1 | tee /tmp/remura-free-manual.log
           grep -q '^Ran 18 tests' /tmp/remura-free-manual.log
           grep -q '^OK$' /tmp/remura-free-manual.log
           echo 'REMURA_CONTRIBUTORS_V092_MANUAL_FREE_GATE=18_18_PASS'
