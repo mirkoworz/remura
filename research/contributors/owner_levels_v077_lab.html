@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07121a"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; form-action 'none'; base-uri 'none'; object-src 'none'">
+<title>REMURA Contributors v0.77 LAB</title><link rel="stylesheet" href="./contributors_private_levels_v076_lab.css"></head>
+<body data-role="OWNER" data-level-feature="OFFLINE_CANDIDATE" data-access-logout="CANDIDATE"><div class="release">REMURA · Contributors v0.77 LAB · 21/11/2026 16:44 CET</div><main>
+<header><div class="brand"><span class="brand-mark"><svg viewBox="0 0 32 32" fill="none" stroke="#7cf4d4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.15"><path d="M3 17c7-9 15-10 25-4-9 1-12 7-16 11-2-4-5-6-9-7Z"/><path d="M12 24c5-10 10-13 16-11"/><circle cx="21" cy="13" r="1" fill="#7cf4d4"/></svg></span>REMURA / VOLUMETRICA</div><h1>Verifica livelli · OWNER</h1><p>Coda contributi e decisioni · accesso OWNER verificato dal server</p></header>
+<nav class="private-nav" aria-label="Navigazione OWNER"><a href="../" id="backToPrivateHome">Torna alla coda correzioni OWNER</a><span class="nav-note">Le revisioni dei nuovi livelli e le correzioni sono due registri separati.</span></nav>
+<section class="panel"><strong class="notice">CANDIDATO LAB — NON DISTRIBUITO</strong><p>Non inserire dati reali. Questa pagina NON è pubblicata. Ruoli e autorizzazioni verificati dal server. Prima di ogni nuovo invio REMURA controlla il registro persistente dei tentativi. Nessun ritentativo automatico dopo esiti incerti.</p><button id="connect" type="button">Verifica autorizzazione</button><p id="status" role="status" aria-live="polite"></p></section>
+<section id="contributor" hidden>
+<form class="panel" id="intake" autocomplete="off"><h2>Nuovo livello</h2>
+<label for="market">1. Pair / strumento</label><select id="market" required></select>
+<label for="provider">2. Broker / fonte</label><select id="provider" required></select>
+<label for="mapping">Ticker esatto · prodotto · contratto</label><select id="mapping" required></select><small>Solo mapping attivi del registro candidato. Nessuna conversione fra feed.</small>
+<label for="period">Periodo</label><select id="period"><option>DAY</option><option>WEEK</option><option>CURRENT_MONTH</option><option>PREVIOUS_MONTH</option></select>
+<label for="kind">Metodologia</label><select id="kind"><option>DELTA_PEAK</option><option>EFFORT_RESULT</option><option>OTHER_VOLUME_LEVEL</option></select>
+<label for="price">Prezzo</label><input id="price" required maxlength="17" inputmode="decimal">
+<label for="anchor">Anchor UTC</label><input id="anchor" required maxlength="20" placeholder="2026-11-16T00:00:00Z">
+<label for="observed">Osservato UTC</label><input id="observed" required maxlength="20" placeholder="2026-11-16T06:00:00Z">
+<label for="note">Osservazioni tecniche</label><textarea id="note" maxlength="280" rows="2"></textarea>
+<button id="send" type="submit">Conferma proposta di livello</button></form>
+<section class="panel" id="myRead" hidden><h2>Le tue ricevute</h2><button id="myLoad" class="secondary" type="button">Aggiorna ricevute</button><div id="myRows"></div><button id="myNext" class="secondary" type="button" hidden>Pagina successiva</button></section>
+</section>
+<section id="owner" hidden><section class="panel" id="ownerRead" hidden><h2>Registro contributi</h2><button id="queueLoad" class="secondary" type="button">Aggiorna registro</button><div id="queueRows"></div><button id="queueNext" type="button" class="secondary" hidden>Pagina successiva</button></section>
+<form class="panel" id="review" autocomplete="off"><h2>Decisione proprietario</h2><label for="entry">ID contributo</label><input id="entry" required type="number" min="1" step="1">
+<label for="decision">Azione</label><select id="decision" required></select><label for="reason">Motivazione privata</label><textarea id="reason" required maxlength="280"></textarea><button id="reviewSend" type="submit">Conferma decisione</button></form>
+<section class="panel" id="historyPanel" hidden><h2>Cronologia privata</h2><label for="historyId">ID contributo</label><input id="historyId" type="number" min="1" step="1"><button id="historyLoad" class="secondary" type="button">Verifica cronologia</button><div id="historyRows"></div></section>
+<p class="muted">Revoca delle identità: solo procedura amministrativa separata.</p></section>
+<button type="button" class="secondary" id="clear" hidden>Chiudi e cancella la vista locale</button><p class="muted">Chiusura della vista non equivale al logout Cloudflare Access. Staging reale non attivo.</p>
+<section class="panel" id="ownerLevelAudit" aria-label="Verifica OWNER dei tentativi sospesi">
+ <h2>Controllo livelli in sospeso · OWNER</h2>
+ <p>Questa verifica osserva il registro primario. Non approva livelli, non cancella tentativi e non riabilita nuovi invii.</p>
+ <div class="private-nav">
+  <button type="button" id="ownerLevelLoad">Controlla tentativi sospesi</button>
+  <button type="button" id="ownerLevelAuditLoad">Mostra storico verifiche</button>
+ </div>
+ <p id="ownerLevelAuditStatus" role="status" aria-live="polite">Nessun controllo eseguito.</p>
+ <ul id="ownerLevelPending" aria-label="Tentativi sospesi"></ul>
+ <ul id="ownerLevelAuditHistory" aria-label="Storico verifiche OWNER"></ul>
+ <label for="ownerLevelAttemptSelect">Tentativo da attestare</label>
+ <select id="ownerLevelAttemptSelect"></select>
+ <label for="ownerLevelReason">Motivazione di verifica</label>
+ <textarea id="ownerLevelReason" rows="2" maxlength="280" placeholder="Riporta soltanto l'evidenza verificata."></textarea>
+ <button type="button" id="ownerLevelAttest">Registra osservazione OWNER (irreversibile)</button>
+ <p class="muted">«Ricevuta non osservata» non prova l'assenza definitiva del livello. Nessuna osservazione sblocca la prenotazione.</p>
+</section>
+<button type="button" class="secondary" id="leaveLevels">Esci dall'area privata</button><p class="muted">Logout Cloudflare richiesto solo su HTTPS staging autorizzato; non equivale a revoca confermata.</p></main><script type="module" src="./contributors_levels_ui_v076_lab.mjs"></script><script type="module" src="./owner_level_audit_ui_v077_lab.mjs"></script></body></html>
