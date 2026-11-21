@@ -28,7 +28,7 @@ function harness(role='CONTRIBUTOR',flags={}){
      state.genReads++;return {success:true,meta:{served_by_primary:true},results:[{id:1}]};
     }
     return {success:true,meta:{served_by_primary:true},results:[]};
-   }}}}};
+   }}}}}};
   }
  };
  const env={STAGING_ORIGIN:ORIGIN,STAGING_ENABLED:'D1_CANDIDATE',
