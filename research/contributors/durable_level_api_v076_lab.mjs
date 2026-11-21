@@ -40,7 +40,7 @@ async function boundedBody(req){
 }
 async function readProfile(ctx,env,authenticate,profileRead,mode){
  const actor=await authenticate(ctx,env),p=await profileRead(ctx,env,actor);
- if(!p||p.role!=='CONTRIBUTOR'||p[mode]!=='boolean'||p[mode]!==true)bad();
+ if(!p||p.role!=='CONTRIBUTOR'||typeof p[mode]!=='boolean'||p[mode]!==true)bad();
  return actor;
 }
 async function applyLimit(env,subject){
