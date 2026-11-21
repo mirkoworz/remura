@@ -82,7 +82,7 @@ test('17 D1 non-primary metadata makes private level page fail closed',async t=>
  assert.equal((await call(x,'/api/catalog')).status,403);
 });
 test('18 rate limiter denial blocks level HTTP API',async t=>{
- const x=await fixture(t);x.setRate(false);assert.equal((await call(x,'/api/catalog')).status,403);
+ const x=await fixture(t);x.setRate(false);assert.equal((await call(x,'/api/catalog')).status,429); // Original server sends explicit non-success rate_limited; never performs writes.
 });
 test('19 absent v0.74 switches prevent all staging and writes',async t=>{
  const x=await fixture(t);assert.equal((await worker(new Request(origin+'/contributors/levels/'),x.env,x.ctx)).status,403);
