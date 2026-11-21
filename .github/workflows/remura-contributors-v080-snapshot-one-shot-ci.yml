@@ -1,0 +1,36 @@
+# REMURA Contributors v0.80 LAB — 21/11/2026 17:25 CET
+# 20 new static iPhone snapshot checks only; no re-run of previous 60 cases.
+name: REMURA Contributors v0.80 — iPhone snapshot ONE-SHOT
+on:
+  push:
+    branches:
+      - research/contributors-readiness-v080-20261121
+    paths:
+      - .github/workflows/remura-contributors-v080-snapshot-one-shot-ci.yml
+permissions:
+  contents: read
+concurrency:
+  group: remura-v080-snapshot-one-shot-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  fresh-v080-snapshot-only:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/research/contributors-readiness-v080-20261121' &&
+      github.event.head_commit.message == 'test(contributors): run 20 fresh v0.80 iPhone snapshot checks'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout without persisting credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run exactly 20 NEW static HTML checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s research/contributors \
+            -p 'test_readiness_snapshot_v080_lab.py' -q 2>&1 | tee /tmp/remura-v080-snapshot.log
+          grep -qE '^Ran 20 tests in ' /tmp/remura-v080-snapshot.log
+          grep -qE '^OK$' /tmp/remura-v080-snapshot.log
+          echo 'REMURA_V080_IPHONE_SNAPSHOT=20_20_PASS'
