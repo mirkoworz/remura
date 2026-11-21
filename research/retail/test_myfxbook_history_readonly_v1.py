@@ -44,7 +44,9 @@ class RetailReadOnlyAudit(TestCase):
         now=(datetime.fromisoformat(latest["updatedAt"].replace("Z","+00:00"))+
              timedelta(minutes=30)).strftime("%Y-%m-%dT%H:%M:%SZ")
         result=audit(root,now_utc=now)
-        self.assertEqual(result["status"], "REPOSITORY_HISTORY_STRUCTURALLY_CONSISTENT_UNATTESTED",result)
+        self.assertEqual(result["status"], "REPOSITORY_HISTORY_PARTIAL_LEGACY_UNATTESTED",result)
+        self.assertEqual(result["historical_only_legacy_series"],4)
+        self.assertEqual(result["current_series"],30)
         self.assertGreaterEqual(result["symbols_in_latest"],1)
         self.assertGreaterEqual(result["series_checked"],1)
         self.assertGreaterEqual(result["records_checked"],result["series_checked"])
@@ -109,6 +111,20 @@ class RetailReadOnlyAudit(TestCase):
             target.unlink()
             target.symlink_to(root/"latest.json")
             self.assertEqual(audit(root,now_utc=NOW)["status"],"UNVERIFIED_OR_INCOMPLETE")
+        self.in_dir(run)
+
+    def test_11_legacy_only_series_does_not_count_as_current(self):
+        def run(root,latest,hist):
+            legacy_row=dict(SAMPLE,t="2026-10-22T01:38:06Z")
+            legacy={"symbol":"US500","source":SOURCE,
+                    "sampling":"observed approximately every 20 minutes",
+                    "records":[legacy_row]}
+            (root/"history"/"US500.json").write_text(json.dumps(legacy),encoding="utf-8")
+            r=audit(root,now_utc=NOW)
+            self.assertEqual(r["status"],"REPOSITORY_HISTORY_PARTIAL_LEGACY_UNATTESTED")
+            self.assertEqual(r["historical_only_legacy_series"],1)
+            self.assertEqual(r["current_series"],1)
+            self.assertFalse(r["holdout_causal_admission"])
         self.in_dir(run)
 
     def test_10_staleness_is_reported_separately_from_a_valid_file(self):
