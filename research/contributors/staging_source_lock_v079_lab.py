@@ -52,7 +52,7 @@ def checked_path(name: str) -> PurePosixPath:
 def git_blob_sha(content: bytes) -> str:
     if not isinstance(content, bytes):
         raise SourceLockError("non_byte_content")
-    return sha1(b"blob " + str(len(content)).encode("ascii") + b"\\0" + content).hexdigest()
+    return sha1(b"blob " + str(len(content)).encode("ascii") + b"\0" + content).hexdigest()
 
 
 def verify_blob(name: str, expected: str, *, root: Path = ROOT) -> bool:
