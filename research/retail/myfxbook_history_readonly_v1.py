@@ -155,7 +155,7 @@ def audit(root, *, now_utc):
     return out
 
 if __name__ == "__main__":
-    if sys.argv != ["--repo-read-only"]:
+    if sys.argv[1:] != ["--repo-read-only"]:
         print("REMURA_RETAIL_HISTORY=NO_GO_ARGUMENTS")
         raise SystemExit(2)
     root = Path(__file__).resolve().parents[2] / "data" / "myfxbook"
