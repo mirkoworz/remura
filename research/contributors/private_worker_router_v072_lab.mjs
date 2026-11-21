@@ -45,7 +45,7 @@ export function createPrivateWorkerRouterV072({authenticate,profileRead,protecte
  const files=validateFiles(assetFiles);
  return async function privateWorkerRouterV071(request,env,ctx){
   try{
-   if(env?.PRIVATE_WORKER_V071!=='OFFLINE_FIXTURE_ONLY'||env?.STAGING_ENABLED!=='D1_CANDIDATE')fail();
+   if(env?.PRIVATE_WORKER_V072!=='OFFLINE_FIXTURE_ONLY'||env?.STAGING_ENABLED!=='D1_CANDIDATE')fail();
    const origin=verifiedOrigin(env.STAGING_ORIGIN);
    if(!ctx?.access||ctx.access.aud!==env.ACCESS_AUD||typeof ctx.access.getIdentity!=='function')fail();
    if(!(request instanceof Request)||!['GET','POST'].includes(request.method))fail();
