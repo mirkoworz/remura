@@ -46,7 +46,7 @@ load.addEventListener('click',()=>action(async current=>{
  select.replaceChildren();
  for(let i=0;i<items.length;i++){const option=document.createElement('option');option.value=String(i);option.textContent=label(items[i]);select.append(option);}
  put(pending,items.map(label));
- locked=false;controls();
+ controls(); // Never clear an uncertain signed action lock by refreshing queue.
  tell(items.length?'Stati letti dal database primario. Nessun tentativo viene sbloccato.':'Nessun tentativo in sospeso.');
 }));
 reloadHistory.addEventListener('click',()=>action(async current=>{
