@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="it">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+ <meta name="color-scheme" content="dark">
+ <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; script-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-ancestors 'none'">
+ <title>REMURA · Coda OWNER · v0.77 LAB</title>
+ <link rel="stylesheet" href="./contributors_private_recovery_v076_lab.css">
+</head>
+<body data-role="OWNER" data-read-bridge="STAGING_CANDIDATE" data-access-logout="CANDIDATE">
+ <div class="version">REMURA Contributors v0.77 LAB · 21/11/2026 16:44 CET · STAGING PRIVATO NON ATTIVO</div>
+ <div class="shell">
+  <header class="masthead"><div class="brand"><span class="fin" aria-hidden="true">◈</span> REMURA <span class="subbrand">/ OWNER DESK</span></div><span class="laboratory">ACCESSO OWNER · LAB</span></header>
+  <main>
+   <p class="eyebrow">RECONCILIATION DESK <span class="line"></span> OWNER ONLY</p>
+   <h1>Coda di verifica.<br><em>Zero automatismi.</em></h1>
+   <p class="lead">Solo lettura delle prenotazioni non chiuse. Approvazioni, annullamenti e chiusure richiedono una procedura separata e autorizzata.</p>
+   <nav class="private-nav" aria-label="Funzioni riservate al proprietario"><a href="./levels/" id="openLevels">Verifica i livelli proposti</a><span class="nav-note">La revisione dei nuovi livelli ha un registro tentativi separato dalle correzioni.</span></nav>
+   <div class="cards">
+    <section class="panel hero" aria-labelledby="recoveryTitle">
+     <div class="heading"><span class="number">01</span><h2 id="recoveryTitle">Controllo OWNER</h2><span class="dot" aria-hidden="true"></span></div>
+     <p class="kicker">CODA RISERVATA · VERIFICA MANUALE</p>
+     <p id="recoveryCode" class="state-code" role="status" aria-live="polite">STAGING · LAB</p>
+     <h3 id="recoveryHeadline">Coda di verifica OWNER</h3>
+     <p id="recoverySummary">Nessuna sessione OWNER reale attivata: accesso reale ancora bloccato.</p>
+     <div id="sendGate" class="lock">NUOVI INVII BLOCCATI · Nessuno stato abilita un nuovo invio.</div>
+     <div class="actions"><button id="refreshRecovery" disabled>Verifica richieste</button></div>
+     <p id="recoveryExtra" class="helper">Il ruolo è autorizzato solo dal backend, mai da questa schermata.</p>
+    </section>
+    <section class="panel results" aria-labelledby="receiptsTitle">
+     <div class="heading"><span class="number">02</span><h2 id="receiptsTitle">Prenotazioni aperte</h2></div>
+     <ul id="recoveryList" class="entries" aria-label="Richieste in coda OWNER"></ul>
+     <div class="empty-note">Solo la risposta verificata dal backend OWNER può mostrare le richieste. Le identità sono rappresentate in modo abbreviato.</div>
+     <button id="moreRecovery" class="outline" disabled>Carica altre richieste</button>
+    </section>
+   </div>
+   <section class="flow" aria-label="Procedura OWNER"><div><b>01</b><span>Accertare prenotazione</span></div><div><b>02</b><span>Verificare inserimento</span></div><div><b>03</b><span>Controllare audit</span></div><div><b>04</b><span>Chiudere fuori dalla UI</span></div></section>
+   <button id="leaveRecovery" class="quiet">Esci dall’area privata</button>
+   <p class="privacy">Questa è una vista candidata di staging privato, non pubblicata. Il pulsante d’uscita richiederà il logout Access solo dopo attivazione HTTPS autorizzata. Non concede privilegi OWNER, non modifica il database, non chiude prenotazioni e non realizza un logout del provider.</p>
+  </main>
+  <footer>REMURA Contributors v0.77 LAB · OWNER READ ONLY · Nessun deploy · Nessuna modifica D1</footer>
+ </div>
+ <script type="module" src="./recovery_portal_v072_lab.mjs"></script>
+</body>
+</html>
