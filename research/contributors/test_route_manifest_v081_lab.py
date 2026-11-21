@@ -1,5 +1,6 @@
 # REMURA Contributors v0.81 LAB — NEW route/role/asset tests only.
 import sys
+import re
 from pathlib import Path
 import unittest
 from unittest.mock import patch
@@ -32,7 +33,12 @@ class NewRouteManifestTests(unittest.TestCase):
             m.parse_routes(bad)
 
     def test_04_fail_closed_extra_route(self):
-        bad = ROUTER.replace("Object.freeze({\n '/contributors/':", "Object.freeze({\n '/public/': {file:'fake.html',role:'OWNER'},\n '/contributors/':")
+        bad = re.sub(
+            r"(const ROUTE_CANDIDATES\s*=\s*Object\.freeze\(\{)",
+            r"\1'/public/': {file:'fake.html',role:'OWNER'},",
+            ROUTER, count=1,
+        )
+        self.assertNotEqual(bad, ROUTER)
         with self.assertRaises(m.ManifestError):
             m.parse_routes(bad)
 
