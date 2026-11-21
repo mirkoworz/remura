@@ -48,9 +48,38 @@ test('11 both contributors keep distinct pending attempts in OWNER view',async t
 test('12 paging after first attempt yields only second distinct attempt',async t=>{const x=await init(t);await reserve(x,'alice',3);await reserve(x,'bob',4);x.setWho('owner');const first=await integrity(x);assert.equal(first.data.rows.length,2);const next=await integrity(x,first.data.rows[0].attempt_id);assert.equal(next.data.rows.length,1);assert.equal(next.data.rows[0].attempt_id,first.data.rows[1].attempt_id);});
 test('13 contributor identity cannot access new diagnostic endpoint',async t=>{const x=await init(t);await reserve(x);assert.equal((await integrity(x)).http,403);});
 test('14 revoked OWNER cannot access read-only integrity',async t=>{const x=await init(t);await reserve(x);x.db.prepare('UPDATE lab_owner SET revoked=1 WHERE subject=?').run(x.actors.owner.subject);x.setWho('owner');assert.equal((await integrity(x)).http,403);});
-test('15 revocation after SQL diagnostic read is blocked by second permission verification',async t=>{const x=await init(t);await reserve(x);x.setWho('owner');const db=x.env.CONTRIBUTORS_DB;let tripped=false;
- x.env.CONTRIBUTORS_DB={withSession(mode){const obj=db.withSession(mode);return {prepare(sql){const inner=obj.prepare(sql);if(!sql.includes('AS audit_classification'))return inner;return {bind(...args){const bound=inner.bind(...args);return {async all(){const r=await bound.all();if(!tripped){tripped=true;x.db.prepare('UPDATE lab_owner SET revoked=1 WHERE subject=?').run(x.actors.owner.subject);}return r;}}};}}};}};
- assert.equal((await integrity(x)).http,403);assert.equal(tripped,true);
+test('15 revocation after SQL diagnostic read is blocked by second permission verification',async t=>{
+ const x=await init(t);await reserve(x);x.setWho('owner');
+ const originalDB=x.env.CONTRIBUTORS_DB;
+ let tripped=false;
+ x.env.CONTRIBUTORS_DB={
+  withSession(mode){
+   const session=originalDB.withSession(mode);
+   return {
+    prepare(sql){
+     const statement=session.prepare(sql);
+     if(!sql.includes('AS audit_classification'))return statement;
+     return {
+      bind(...args){
+       const bound=statement.bind(...args);
+       return {
+        async all(){
+         const result=await bound.all();
+         if(!tripped){
+          tripped=true;
+          x.db.prepare('UPDATE lab_owner SET revoked=1 WHERE subject=?').run(x.actors.owner.subject);
+         }
+         return result;
+        }
+       };
+      }
+     };
+    }
+   };
+  }
+ };
+ assert.equal((await integrity(x)).http,403);
+ assert.equal(tripped,true);
 });
 test('16 disabled read permission denies integrity report',async t=>{const x=await init(t);await reserve(x);x.setWho('owner');x.db.exec('UPDATE lab_state SET read_enabled=0');assert.equal((await integrity(x)).http,403);});
 test('17 disabled recovery permission denies integrity report',async t=>{const x=await init(t);await reserve(x);x.setWho('owner');x.db.exec('UPDATE lab_state SET recovery_enabled=0');assert.equal((await integrity(x)).http,403);});
