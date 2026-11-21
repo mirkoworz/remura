@@ -1,0 +1,40 @@
+# REMURA Contributors v0.91 LAB — 21/11/2026 Europe/Rome
+# FUTURE manual-only diagnostic. Branch is NOT main; no automated trigger.
+# Do NOT run without separate owner authorization and Free-headroom confirmation.
+name: REMURA v0.91 D1 read-only manual diagnostic (NOT APPROVED)
+on:
+  workflow_dispatch:
+    inputs:
+      authorization:
+        description: "One-time read-only D1, max two POST and zero retry"
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: remura-v091-manual-d1-one-time
+  cancel-in-progress: false
+jobs:
+  manually-authorized-only:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/research/contributors-d1-diagnostic-v091-20261121' &&
+      inputs.authorization == 'AUTORIZZO_DIAGNOSI_D1_MAX_2_POST_SOLO_LETTURA'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Checkout no persisted credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: One-time read-only Cloudflare D1 GraphQL
+        env:
+          REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+          REMURA_CF_ANALYTICS_READ_TOKEN: ${{ secrets.REMURA_CF_ANALYTICS_READ_TOKEN }}
+          REMURA_CF_PROBE_ACK: ${{ inputs.authorization }}
+          REMURA_V091_ACTIVATE: USER_APPROVED_READ_ONLY_ONCE
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 research/contributors/cloudflare_d1_diagnostic_v091_lab.py --execute-one-time
