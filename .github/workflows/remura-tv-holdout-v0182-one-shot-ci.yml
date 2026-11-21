@@ -1,0 +1,36 @@
+# REMURA TradingView v0.8.182 LAB — ONE SHOT, 21/11/2026 Europe/Rome
+name: REMURA TradingView v0.8.182 holdout freeze ONE-SHOT
+on:
+  push:
+    branches: [research/tradingview-holdout-readiness-v0182-20261121]
+    paths:
+      - tradingview/delta-peaks/holdout_freeze_v0182_lab.py
+      - tradingview/delta-peaks/test_holdout_freeze_v0182_lab.py
+      - .github/workflows/remura-tv-holdout-v0182-one-shot-ci.yml
+permissions:
+  contents: read
+jobs:
+  frozen-holdout:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout without persistent credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile only new preflight
+        run: python3 -m py_compile tradingview/delta-peaks/holdout_freeze_v0182_lab.py tradingview/delta-peaks/test_holdout_freeze_v0182_lab.py
+      - name: Ensure calendar only, no real data
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/holdout_freeze_v0182_lab.py --check | tee /tmp/holdout-v0182.json
+          grep -q '"outcomes_measured":false' /tmp/holdout-v0182.json
+          grep -q '"release_deploy_allowed":false' /tmp/holdout-v0182.json
+      - name: Run ONLY 18 new v0.8.182 tests
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tradingview/delta-peaks -p test_holdout_freeze_v0182_lab.py -q 2>&1 | tee /tmp/holdout-v0182-tests.log
+          grep -q 'Ran 18 tests in ' /tmp/holdout-v0182-tests.log
+          grep -q '^OK$' /tmp/holdout-v0182-tests.log
+          echo 'REMURA_TV_V0182_HOLDOUT=18_18_PASS'
