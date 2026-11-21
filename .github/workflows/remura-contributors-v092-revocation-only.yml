@@ -1,0 +1,32 @@
+# REMURA Contributors v0.92 LAB — 21/11/2026 Europe/Rome
+# Only NEW revocation lifecycle cases. No cloud, credentials, deploy, or old tests.
+name: REMURA Contributors v092 revocation transitions ONE-SHOT
+on:
+  push:
+    branches:
+      - research/contributors-revocation-lifecycle-v092-20261121
+    paths:
+      - research/contributors/test_revocation_lifecycle_v092_lab.mjs
+      - .github/workflows/remura-contributors-v092-revocation-only.yml
+permissions:
+  contents: read
+jobs:
+  revocation-transitions-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout without persisted credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Execute only 12 new revocation transition tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test --test-reporter=tap research/contributors/test_revocation_lifecycle_v092_lab.mjs 2>&1 | tee /tmp/remura-revoke.log
+          grep -q '^1..12$' /tmp/remura-revoke.log
+          grep -q '^# pass 12$' /tmp/remura-revoke.log
+          grep -q '^# fail 0$' /tmp/remura-revoke.log
+          echo 'REMURA_CONTRIBUTORS_REVOCATION_V092=12_12_PASS'
