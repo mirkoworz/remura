@@ -1,0 +1,39 @@
+# REMURA Contributors v0.73 LAB — 21/11/2026 13:18 CET
+# ONE-TIME synthetic-only test; no secrets, deploy, migration, PR or merge.
+name: REMURA Contributors v0.70 — 24 integrated checks ONE-SHOT
+on:
+  push:
+    branches:
+      - research/contributors-v070-one-shot-ci-20261121
+    paths:
+      - .github/workflows/remura-contributors-v070-one-shot-ci.yml
+permissions:
+  contents: read
+concurrency:
+  group: remura-v070-one-shot-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  integrated-v070:
+    if: github.repository == 'mirkoworz/remura' && github.ref == 'refs/heads/research/contributors-v070-one-shot-ci-20261121' && github.event.head_commit.message == 'test(contributors): run v0.70 integration ONE-SHOT on free public runner'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact isolated commit without keeping credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Pin Node.js with built-in experimental SQLite
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - name: Execute ONLY unfinished v0.70 integrated suite, assert exact 24 PASS
+        shell: bash
+        env:
+          CI: 'true'
+        run: |
+          set -euo pipefail
+          node --experimental-sqlite --test --test-reporter=tap research/contributors/test_protected_read_integrated_v070_lab.mjs | tee /tmp/remura-v070-24-checks.log
+          grep -qE '^# tests 24$' /tmp/remura-v070-24-checks.log
+          grep -qE '^# pass 24$' /tmp/remura-v070-24-checks.log
+          grep -qE '^# fail 0$' /tmp/remura-v070-24-checks.log
+          echo 'REMURA_V070_INTEGRATED=24_24_PASS'
