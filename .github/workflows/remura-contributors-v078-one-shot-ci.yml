@@ -17,7 +17,7 @@ jobs:
     if: >-
       github.repository == 'mirkoworz/remura' &&
       github.ref == 'refs/heads/research/contributors-owner-integrity-v078-20261121' &&
-      github.event.head_commit.message == 'test(contributors): run v0.78 50 fresh integrity fault checks'
+      github.event.head_commit.message == 'test(contributors): verify v0.78 corrected 50 new integrity cases'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
