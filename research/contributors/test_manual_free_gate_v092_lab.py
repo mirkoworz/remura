@@ -84,7 +84,7 @@ class ManualFreeGateTests(unittest.TestCase):
         s = deepcopy(EXAMPLE);s["rows_read_today"] = 3_499_999
         self.assertIn("rows_read_today_internal_70_percent_ceiling",run(s)["reasons"])
 
-    def test_11_internal_worker_request_budget crossed(self):
+    def test_11_internal_worker_request_budget_crossed(self):
         s = deepcopy(EXAMPLE);s["requests_today"] = 70_000
         self.assertIn("requests_today_internal_70_percent_ceiling",run(s)["reasons"])
 
