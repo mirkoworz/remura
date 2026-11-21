@@ -1,0 +1,54 @@
+# REMURA Contributors v0.78 LAB — 21/11/2026 16:56 CET
+# Only NEW synthetic read-only OWNER integrity/fault tests. No cloud credentials/deploy.
+name: REMURA Contributors v0.78 OWNER integrity ONE-SHOT
+on:
+  push:
+    branches:
+      - research/contributors-owner-integrity-v078-20261121
+    paths:
+      - .github/workflows/remura-contributors-v078-one-shot-ci.yml
+permissions:
+  contents: read
+concurrency:
+  group: remura-owner-integrity-v078-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  v078-new-only:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/research/contributors-owner-integrity-v078-20261121' &&
+      github.event.head_commit.message == 'test(contributors): run v0.78 50 fresh integrity fault checks'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Isolated read-only checkout, no retained credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22.16 for built-in in-memory SQLite only
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - name: Validate byte-fixed 15 files and Worker-friendly module syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          node research/contributors/build_private_assets_v078_lab.mjs --check
+          node --check research/contributors/owner_level_integrity_v078_lab.mjs
+          node --check research/contributors/owner_level_audit_http_v078_lab.mjs
+          node --check research/contributors/private_levels_composition_v078_lab.mjs
+          node --check research/contributors/private_worker_router_v078_lab.mjs
+      - name: Run 30 new fault tests + 20 new assets tests, nothing historical
+        shell: bash
+        env:
+          CI: 'true'
+        run: |
+          set -euo pipefail
+          node --experimental-sqlite --test --test-reporter=tap \
+            research/contributors/test_owner_integrity_v078_lab.mjs \
+            research/contributors/test_owner_integrity_assets_v078_lab.mjs | tee /tmp/remura-v078-only.log
+          grep -qE '^# tests 50$' /tmp/remura-v078-only.log
+          grep -qE '^# pass 50$' /tmp/remura-v078-only.log
+          grep -qE '^# fail 0$' /tmp/remura-v078-only.log
+          grep -qE '^# cancelled 0$' /tmp/remura-v078-only.log
+          echo 'REMURA_V078_OWNER_INTEGRITY=50_50_PASS'
