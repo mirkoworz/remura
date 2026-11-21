@@ -26,6 +26,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          python3 research/retail/myfxbook_history_readonly_v1.py --repo-read-only
           python3 -m unittest discover -s research/retail -p 'test_myfxbook_history_readonly_v1.py' -v 2>&1 | tee /tmp/remura-retail-history-tests.log
           grep -q '^Ran 10 tests' /tmp/remura-retail-history-tests.log
           grep -q '^OK$' /tmp/remura-retail-history-tests.log
