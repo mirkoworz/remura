@@ -14,7 +14,10 @@ concurrency:
   cancel-in-progress: false
 jobs:
   integrated-v070:
-    if: github.repository == 'mirkoworz/remura' && github.ref == 'refs/heads/research/contributors-v070-one-shot-ci-20261121' && github.event.head_commit.message == 'test(contributors): run v0.70 integration ONE-SHOT on free public runner'
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/research/contributors-v070-one-shot-ci-20261121' &&
+      github.event.head_commit.message == 'test(contributors): validate isolated v0.70 integration one-shot'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
