@@ -25,12 +25,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Run 14 new SQL isolation tests only
+      - name: Run 18 new SQL isolation tests only
         shell: bash
         run: |
           set -euo pipefail
           node --test --test-reporter=tap research/contributors/test_actual_sqlite_ownership_v092_lab.mjs 2>&1 | tee /tmp/remura-v092-sqlite.log
-          grep -q '^1..14$' /tmp/remura-v092-sqlite.log
-          grep -q '^# pass 14$' /tmp/remura-v092-sqlite.log
+          grep -q '^1..18$' /tmp/remura-v092-sqlite.log
+          grep -q '^# pass 18$' /tmp/remura-v092-sqlite.log
           grep -q '^# fail 0$' /tmp/remura-v092-sqlite.log
-          echo 'REMURA_CONTRIBUTORS_V092_SQLITE_OWNERSHIP=14_14_PASS'
+          echo 'REMURA_CONTRIBUTORS_V092_SQLITE_OWNERSHIP=18_18_PASS'
