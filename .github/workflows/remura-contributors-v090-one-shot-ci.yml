@@ -1,0 +1,30 @@
+# REMURA Contributors v0.90 LAB — 21 Nov 2026 Europe/Rome
+name: REMURA Contributors v0.90 central POST defense ONE-SHOT
+on:
+  push:
+    branches: [research/contributors-post-defense-v090-20261121]
+    paths:
+      - research/contributors/private_post_guard_v090_lab.mjs
+      - research/contributors/test_private_post_guard_v090_lab.mjs
+      - .github/workflows/remura-contributors-v090-one-shot-ci.yml
+permissions:
+  contents: read
+jobs:
+  only-v090-new-checks:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout without saved credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Only new Node v0.90 checks
+        run: |
+          set -euo pipefail
+          node --test --test-reporter=tap research/contributors/test_private_post_guard_v090_lab.mjs 2>&1 | tee /tmp/v090.log
+          grep -q '^1..34$' /tmp/v090.log
+          grep -q '^# pass 34$' /tmp/v090.log
+          grep -q '^# fail 0$' /tmp/v090.log
+          echo 'REMURA_CONTRIBUTORS_V090_POST_GUARD=34_34_PASS'
