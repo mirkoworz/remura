@@ -1,0 +1,52 @@
+# REMURA Contributors v0.79 LAB — 21/11/2026 17:15 CET
+# One-time, fresh offline proof only. No user secrets, Cloudflare requests or deploy.
+name: REMURA Contributors v0.79 — Free visibility and source lock ONE-SHOT
+on:
+  push:
+    branches:
+      - research/contributors-free-visibility-v079-20261121
+    paths:
+      - .github/workflows/remura-contributors-v079-one-shot-ci.yml
+permissions:
+  contents: read
+concurrency:
+  group: remura-v079-evidence-one-shot-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  fresh-v079-only:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/research/contributors-free-visibility-v079-20261121' &&
+      github.event.head_commit.message == 'test(contributors): run 89 new v0.79 Free and source integrity cases'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout isolated code without persisting credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile ONLY new Python modules
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile \
+            research/contributors/free_quota_evidence_v079_lab.py \
+            research/contributors/staging_source_lock_v079_lab.py \
+            research/contributors/test_free_quota_evidence_v079_lab.py \
+            research/contributors/test_staging_source_lock_v079_lab.py
+      - name: Verify 14 immutable security sources without network or secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 research/contributors/staging_source_lock_v079_lab.py --check
+      - name: Run only 53 new quota and 36 new source-lock tests
+        shell: bash
+        env:
+          CI: 'true'
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s research/contributors \
+            -p 'test_*_v079_lab.py' -q 2>&1 | tee /tmp/remura-v079-new.log
+          grep -qE '^Ran 89 tests in ' /tmp/remura-v079-new.log
+          grep -qE '^OK$' /tmp/remura-v079-new.log
+          echo 'REMURA_V079_FREE_VISIBILITY=89_89_PASS'
