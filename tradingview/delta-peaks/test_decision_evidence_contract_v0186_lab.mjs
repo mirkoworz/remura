@@ -1,6 +1,7 @@
 // REMURA v0.8.186 LAB: NEW synthetic tests for one-decision source admission.
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import * as evidenceModule from './decision_evidence_contract_v0186_lab.mjs';
 import {reviewDecisionEvidenceV0186 as review,V0186_EVIDENCE_CONTRACT as contract} from './decision_evidence_contract_v0186_lab.mjs';
 const instrument=Object.freeze({market:'EURUSD',provider:'TV',ticker:'EURUSD',product:'SPOT',contract:''});
 const decision=Object.freeze({at:'2026-11-21T10:05:00Z',instrument});
@@ -66,6 +67,7 @@ test('13 review is pure, never mutates user evidence and does not output identif
 });
 test('14 no default entrypoint, automatic live activation, provider or cloud calls',()=>{
  assert.equal(contract.noDefaultExport,true);assert.equal(contract.liveAllowed,false);
+ assert.equal(Object.hasOwn(evidenceModule,'default'),false);
  const r=review(sample());assert.equal(r.oracle_or_cloudflare_calls,0);
  assert.equal(r.live_activation_allowed,false);assert.equal(r.protocol_modified,false);
 });
