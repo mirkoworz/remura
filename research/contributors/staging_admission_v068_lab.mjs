@@ -6,7 +6,7 @@ const roles=new Set(['CONTRIBUTOR','OWNER']);
 const methods=new Set(['POST']);
 const UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
 const paths=Object.freeze({
- '/api/amendment/reconcile':Object.freeze({role:'CONTRIBUTOR',kind:'READ',body:['request_id']}),
+ '/api/amendment/reconcile':Object.freeze({role:'CONTRIBUTOR',kind:'READ',body:[]}),
  '/api/amendment/mine':Object.freeze({role:'CONTRIBUTOR',kind:'READ',body:['after']}),
  '/owner/amendment/reconcile-queue':Object.freeze({role:'OWNER',kind:'READ',body:['after']})
 });
@@ -21,7 +21,7 @@ export function inspectStagingRequestV068(request,session,policy){
  const route=paths[u.pathname];if(!route||route.role!==session.role)fail();
  if(!keys(request.body,route.body))fail();
  if(route.body[0]==='after'&&(!Number.isSafeInteger(request.body.after)||request.body.after<0))fail();
- if(route.body[0]==='request_id'&&(typeof request.body.request_id!=='string'||!UUID.test(request.body.request_id)))fail();
+ 
  return Object.freeze({path:u.pathname,role:session.role,kind:route.kind,readOnly:true,requiresServerAuthorization:true,cacheControl:'no-store'});
 }
 export function stagingBrowserPolicyV068(originValue){
