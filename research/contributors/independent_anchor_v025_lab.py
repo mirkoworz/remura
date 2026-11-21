@@ -83,7 +83,7 @@ class WitnessFixture:
         return rows
 
     def rows(self):
-        with closing(sqlite3.connect(self.path)) as db:
+        with closing(sqlite3.connect(self.path.as_uri() + '?mode=ro', uri=True)) as db:
             return self._verified(db)
 
     def head(self):
@@ -145,7 +145,7 @@ class PrimaryFixture:
 
     def _state(self):
         anchors = self.witness.rows()  # unavailable witness => fail closed
-        with closing(sqlite3.connect(self.path)) as db:
+        with closing(sqlite3.connect(self.path.as_uri() + '?mode=ro', uri=True)) as db:
             intents = db.execute('SELECT seq,digest,disposition,expiry,accepted_at,owner,previous_tag,permit FROM intents ORDER BY seq').fetchall()
             receipts = db.execute('SELECT seq,witness_tag FROM receipts ORDER BY seq').fetchall()
         if len(intents) > 64 or len(receipts) > len(intents) or len(anchors) > len(intents):
@@ -194,7 +194,7 @@ class PrimaryFixture:
 
     def finalize(self):
         anchors, intents, receipts = self._state()
-        if len(intents) != len(anchors):
+        if not anchors or len(intents) != len(anchors):
             raise Denied('witness not committed')
         if len(receipts) == len(anchors):
             return 'ALREADY_ACKNOWLEDGED'
