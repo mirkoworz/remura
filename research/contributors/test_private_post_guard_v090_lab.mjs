@@ -27,7 +27,7 @@ function harness(profile=c(),authActor=ACTOR){
 function req(path='/api/submit',{body='{"sample":1}',headers={},method='POST',url}={}){
  const h={'Origin':ORIGIN,'Sec-Fetch-Site':'same-origin','X-Remura-CSRF':'1',
   'Content-Type':'application/json',...headers};
- return new Request(url??ORIGIN+path,{method,headers,...(method==='GET'?{}:{body})});
+ return new Request(url??ORIGIN+path,{method,headers:h,...(method==='GET'?{}:{body})});
 }
 async function denied(h,r,ee=env(),cc=ctx()){
  const v=await h.router(r,ee,cc);
@@ -36,8 +36,7 @@ async function denied(h,r,ee=env(),cc=ctx()){
  assert.equal(h.calls(),0);
 }
 test('01 contributor can submit within server gate',async()=>{
- const h=harness();const response=await h.router(req(),env(),ctx());
- assert.equal(response.status,200,'auth_calls='+h.auth()+' delegate_calls='+h.calls()+' headers='+JSON.stringify(Object.fromEntries(req().headers)));
+ const h=harness();assert.equal((await h.router(req(),env(),ctx())).status,200);
  assert.equal(h.calls(),1);
 });
 test('02 contributor can obtain intent',async()=>{
