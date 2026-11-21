@@ -1,0 +1,53 @@
+# REMURA Contributors v0.75 LAB — 21/11/2026 15:48 CET
+# One-time new synthetic navigation + embedded asset verification.
+# Public runner, no secrets, no npm, no Cloudflare, no deploy or main merge.
+name: REMURA Contributors v0.75 — new private navigation checks ONE-SHOT
+on:
+  push:
+    branches:
+      - research/contributors-private-navigation-v075-20261121
+    paths:
+      - .github/workflows/remura-contributors-v075-one-shot-ci.yml
+permissions:
+  contents: read
+concurrency:
+  group: remura-v075-one-shot-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  only-new-v075:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/research/contributors-private-navigation-v075-20261121' &&
+      github.event.head_commit.message == 'test(contributors): run v0.75 50 new isolated checks once'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout isolated branch without preserved credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Pin Node.js without installing dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - name: Check immutable asset generator and Worker-compatible composition
+        shell: bash
+        run: |
+          set -euo pipefail
+          node research/contributors/build_private_assets_v075_lab.mjs --check
+          node --check research/contributors/private_levels_composition_v075_lab.mjs
+          node --check research/contributors/private_worker_router_v075_lab.mjs
+      - name: Run ONLY two NEW v0.75 suites (30 navigation + 20 assets)
+        shell: bash
+        env:
+          CI: 'true'
+        run: |
+          set -euo pipefail
+          node --experimental-sqlite --test --test-reporter=tap \
+            research/contributors/test_private_navigation_v075_lab.mjs \
+            research/contributors/test_private_assets_v075_lab.mjs | tee /tmp/remura-v075-new.log
+          grep -qE '^# tests 50$' /tmp/remura-v075-new.log
+          grep -qE '^# pass 50$' /tmp/remura-v075-new.log
+          grep -qE '^# fail 0$' /tmp/remura-v075-new.log
+          grep -qE '^# cancelled 0$' /tmp/remura-v075-new.log
+          echo 'REMURA_V075_PRIVATE_NAVIGATION=50_50_PASS'
