@@ -116,8 +116,8 @@ export function mountRecoveryPortalV067({doc,role='CONTRIBUTOR',fetcher=null}={}
  leave.addEventListener('click',exit);
  const receiptsButton=el('refreshReceipts');if(role==='CONTRIBUTOR'){if(!receiptsButton)bad();receiptsButton.addEventListener('click',()=>{void readReceipts();});receiptsButton.disabled=!receipts;}
  else if(receiptsButton)receiptsButton.disabled=true;
- show('OFFLINE · LAB',role==='OWNER'?'Coda di verifica OWNER':'Recupero correzioni','Anteprima isolata, nessun account reale collegato.');
- put(extra,'Solo le prove con trasporto sintetico iniettato possono consultare dati fixture.');buttons();
+ show(fetcher?'STAGING CANDIDATO · LAB':'OFFLINE · LAB',role==='OWNER'?'Coda di verifica OWNER':'Recupero correzioni',fetcher?'Trasporto di sola lettura predisposto. Nessuna autenticazione o dato reale è confermato finché il server privato non viene attivato.':'Anteprima isolata, nessun account reale collegato.');
+ put(extra,fetcher?'Il server dovrà validare Access, ruolo D1 e revoca a ogni richiesta; nessun invio abilitato.':'Solo le prove con trasporto sintetico iniettato possono consultare dati fixture.');buttons();
  return Object.freeze({refresh:()=>next(),receipts:()=>readReceipts(),more:()=>next({append:true}),leave:exit,get closed(){return ended;},get busy(){return busy;}});
 }
 
