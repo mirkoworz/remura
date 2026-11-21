@@ -1,0 +1,64 @@
+# REMURA Contributors v0.80 LAB — 21/11/2026 17:22 CET
+# Explicit isolated one-shot on PUBLIC GitHub runner only.
+# No Cloudflare credentials, network calls, deploy, main merge or billing actions.
+name: REMURA Contributors v0.80 — Access + D1 no-GO preflight ONE-SHOT
+on:
+  push:
+    branches:
+      - research/contributors-access-d1-preflight-v080-20261121
+    paths:
+      - .github/workflows/remura-contributors-v080-one-shot-ci.yml
+permissions:
+  contents: read
+concurrency:
+  group: remura-v080-offline-preflight-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  fresh-v080:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/research/contributors-access-d1-preflight-v080-20261121' &&
+      github.event.head_commit.message == 'test(contributors): run 92 new v0.80 Access D1 preflight checks'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout without persistent credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile only new offline preflight code
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile \
+            research/contributors/access_seat_inventory_v080_lab.py \
+            research/contributors/d1_two_day_visibility_v080_lab.py \
+            research/contributors/staging_preflight_v080_lab.py \
+            research/contributors/test_access_seat_inventory_v080_lab.py \
+            research/contributors/test_d1_two_day_visibility_v080_lab.py \
+            research/contributors/test_staging_preflight_v080_lab.py
+      - name: Verify synthetic self-check does not return deploy GO
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 research/contributors/access_seat_inventory_v080_lab.py --synthetic-self-check > /tmp/remura-access-check.json
+          python3 research/contributors/d1_two_day_visibility_v080_lab.py --synthetic-self-check > /tmp/remura-d1-check.json
+          python3 - <<'PY'
+          import json
+          for p in ("/tmp/remura-access-check.json", "/tmp/remura-d1-check.json"):
+              x=json.load(open(p,encoding='utf-8'))
+              assert x["automatic_deploy_allowed"] is False
+              assert x["mode"] == "OFFLINE_FIXTURE_ONLY"
+          print("REMURA_V080_SELF_CHECK=NO_LIVE_ACTIONS")
+          PY
+      - name: Run ONLY 41 Access 32 D1 and 19 new integrated tests
+        shell: bash
+        env:
+          CI: 'true'
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s research/contributors \
+            -p 'test_*_v080_lab.py' -q 2>&1 | tee /tmp/remura-v080-fresh.log
+          grep -qE '^Ran 92 tests in ' /tmp/remura-v080-fresh.log
+          grep -qE '^OK$' /tmp/remura-v080-fresh.log
+          echo 'REMURA_V080_ACCESS_D1_PREFLIGHT=92_92_PASS'
