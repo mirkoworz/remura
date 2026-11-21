@@ -1,0 +1,35 @@
+# REMURA Shark Science · COT revision lineage v0.1 LAB — 21/11/2026 Europe/Rome
+# Only NEW tests: existing real collector with injected fake public CFTC responses,
+# SQLite temporary fixture, and in-memory append-only proposal. NO network/Secrets/Oracle.
+name: REMURA COT revision lineage v01 ONE-SHOT
+on:
+  push:
+    branches:
+      - research/cot-revision-lineage-lab-20261121
+    paths:
+      - research/cot/cot_revision_lineage_v01_lab.py
+      - research/cot/test_cot_revision_lineage_v01_lab.py
+      - .github/workflows/remura-cot-revision-lineage-v01-only.yml
+permissions:
+  contents: read
+jobs:
+  cot-revision-new-tests-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout without persisted credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Compile new revision lineage only
+        run: python3 -m py_compile research/cot/cot_revision_lineage_v01_lab.py research/cot/test_cot_revision_lineage_v01_lab.py
+      - name: 16 new COT amendment as-of checks, offline only
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s research/cot -p 'test_cot_revision_lineage_v01_lab.py' -v 2>&1 | tee /tmp/remura-cot-revisions-v01.log
+          grep -q '^Ran 16 tests' /tmp/remura-cot-revisions-v01.log
+          grep -q '^OK$' /tmp/remura-cot-revisions-v01.log
+          echo 'REMURA_SHARK_COT_REVISION_LINEAGE=16_16_PASS'
