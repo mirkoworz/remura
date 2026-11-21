@@ -8,11 +8,23 @@ on:
       - research/contributors/private_worker_composition_v092_lab.mjs
       - research/contributors/test_private_worker_composition_v092_lab.mjs
       - .github/workflows/remura-contributors-v092-one-shot-ci.yml
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [research/contributors-d1-diagnostic-v091-20261121]
+    paths:
+      - research/contributors/private_worker_composition_v092_lab.mjs
+      - research/contributors/test_private_worker_composition_v092_lab.mjs
+      - .github/workflows/remura-contributors-v092-one-shot-ci.yml
 permissions:
   contents: read
 jobs:
   v092-new-integration-only:
-    if: github.repository == 'mirkoworz/remura'
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      (github.event_name == 'push' ||
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.head.ref == 'research/contributors-private-composition-v092-20261121' &&
+       github.event.pull_request.base.ref == 'research/contributors-d1-diagnostic-v091-20261121'))
     runs-on: ubuntu-latest
     timeout-minutes: 4
     steps:
