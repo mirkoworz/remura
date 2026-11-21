@@ -1,0 +1,54 @@
+# REMURA Contributors v0.77 LAB — 21/11/2026 16:44 CET
+# Synthetic-only, pinned one-shot public GitHub runner. No secrets, no deploy or merge.
+name: REMURA Contributors v0.77 OWNER evidence audit ONE-SHOT
+on:
+  push:
+    branches:
+      - research/contributors-owner-audit-v077-20261121
+    paths:
+      - .github/workflows/remura-contributors-v077-one-shot-ci.yml
+permissions:
+  contents: read
+concurrency:
+  group: remura-owner-audit-v077-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  only-v077:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/research/contributors-owner-audit-v077-20261121' &&
+      github.event.head_commit.message == 'test(contributors): execute v0.77 56 new OWNER evidence checks'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout isolated branch without retained credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Pin Node 22.16 for SQLite built-in fixture
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - name: Verify immutable assets and new server module syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          node research/contributors/build_private_assets_v077_lab.mjs --check
+          node --check research/contributors/owner_level_audit_v077_lab.mjs
+          node --check research/contributors/owner_level_audit_http_v077_lab.mjs
+          node --check research/contributors/owner_level_audit_ui_v077_lab.mjs
+          node --check research/contributors/private_levels_composition_v077_lab.mjs
+      - name: Run ONLY NEW v0.77 OWNER reconciliation tests
+        shell: bash
+        env:
+          CI: 'true'
+        run: |
+          set -euo pipefail
+          node --experimental-sqlite --test --test-reporter=tap \
+            research/contributors/test_owner_level_audit_v077_lab.mjs \
+            research/contributors/test_owner_audit_assets_v077_lab.mjs | tee /tmp/remura-v077-fresh.log
+          grep -qE '^# tests 56$' /tmp/remura-v077-fresh.log
+          grep -qE '^# pass 56$' /tmp/remura-v077-fresh.log
+          grep -qE '^# fail 0$' /tmp/remura-v077-fresh.log
+          grep -qE '^# cancelled 0$' /tmp/remura-v077-fresh.log
+          echo 'REMURA_V077_OWNER_AUDIT=56_56_PASS'
