@@ -1,0 +1,44 @@
+# REMURA Contributors v0.74 LAB — 21/11/2026 15:36 CET
+# Single branch / single commit gated synthetic-only CI; no secret, deploy or production.
+name: REMURA Contributors v0.74 — NEW level entry checks (one-shot)
+on:
+  push:
+    branches:
+      - research/contributors-level-intake-v074-20261121
+    paths:
+      - .github/workflows/remura-contributors-v074-one-shot-ci.yml
+permissions:
+  contents: read
+concurrency:
+  group: remura-v074-one-shot-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  level-v074:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/research/contributors-level-intake-v074-20261121' &&
+      github.event.head_commit.message == 'test(contributors): execute NEW v0.74 level end-to-end 55 checks'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout immutable isolated branch commit without credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install pinned Node.js with built-in SQLite only
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - name: Run ONLY two new v0.74 test files
+        shell: bash
+        env:
+          CI: 'true'
+        run: |
+          set -euo pipefail
+          node --experimental-sqlite --test --test-reporter=tap \
+            research/contributors/test_level_api_gate_v074_lab.mjs \
+            research/contributors/test_level_fullstack_v074_lab.mjs | tee /tmp/remura-v074-lab.log
+          grep -qE '^# tests 55$' /tmp/remura-v074-lab.log
+          grep -qE '^# pass 55$' /tmp/remura-v074-lab.log
+          grep -qE '^# fail 0$' /tmp/remura-v074-lab.log
+          echo 'REMURA_V074_LEVEL_ENTRY=55_55_PASS'
