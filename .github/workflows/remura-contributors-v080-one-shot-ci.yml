@@ -1,0 +1,45 @@
+# REMURA Contributors v0.80 LAB — 21/11/2026 17:24 CET
+# Offline synthetic only, zero credentials/Cloudflare API/SQL/deploy.
+name: REMURA Contributors v0.80 — Readiness dossier ONE-SHOT
+on:
+  push:
+    branches:
+      - research/contributors-readiness-v080-20261121
+    paths:
+      - .github/workflows/remura-contributors-v080-one-shot-ci.yml
+permissions:
+  contents: read
+concurrency:
+  group: remura-v080-readiness-one-shot-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  fresh-v080-only:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/research/contributors-readiness-v080-20261121' &&
+      github.event.head_commit.message == 'test(contributors): run 60 fresh v0.80 readiness cases'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout isolated code without persisting credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile only new v0.80 code and tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile \
+            research/contributors/readiness_dossier_v080_lab.py \
+            research/contributors/test_readiness_dossier_v080_lab.py
+      - name: Run exactly 60 NEW offline synthetic tests
+        shell: bash
+        env:
+          CI: 'true'
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s research/contributors \
+            -p 'test_readiness_dossier_v080_lab.py' -q 2>&1 | tee /tmp/remura-v080-new.log
+          grep -qE '^Ran 60 tests in ' /tmp/remura-v080-new.log
+          grep -qE '^OK$' /tmp/remura-v080-new.log
+          echo 'REMURA_V080_READINESS=60_60_PASS'
