@@ -32,7 +32,7 @@ class NewRouteManifestTests(unittest.TestCase):
             m.parse_routes(bad)
 
     def test_04_fail_closed_extra_route(self):
-        bad = ROUTER.replace("const ROUTE_CANDIDATES=Object.freeze({", "const ROUTE_CANDIDATES=Object.freeze({'/public/':{file:'fake.html',role:'OWNER'},")
+        bad = ROUTER.replace("Object.freeze({\n '/contributors/':", "Object.freeze({\n '/public/': {file:'fake.html',role:'OWNER'},\n '/contributors/':")
         with self.assertRaises(m.ManifestError):
             m.parse_routes(bad)
 
