@@ -1,4 +1,4 @@
-// REMURA Contributors v0.71 LAB — 21/11/2026, 15:00 CET.
+// REMURA Contributors v0.71 LAB — 21/11/2026, 12:42 CET.
 // Private direct-Worker asset/API router candidate. No default Worker export, no deploy.
 const DENIAL = JSON.stringify({error:'denied'});
 const ROUTE_CANDIDATES = Object.freeze({
