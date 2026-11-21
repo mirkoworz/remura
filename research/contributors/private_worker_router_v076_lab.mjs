@@ -8,8 +8,8 @@ const ROUTE_CANDIDATES = Object.freeze({
  '/owner/levels/': {file:'owner_levels_v076_lab.html',role:'OWNER'}
 });
 const AREA_ASSETS=Object.freeze({
- RECOVERY:Object.freeze(['contributors_private_recovery_v075_lab.css','recovery_portal_v072_lab.mjs','secure_exit_v072_lab.mjs','recovery_transport_v070_lab.mjs','reconciliation_client_v065_lab.mjs','amendment_client_v063_lab.mjs']),
- LEVELS:Object.freeze(['contributors_private_levels_v075_lab.css','contributors_levels_ui_v076_lab.mjs','contributors_candidate_client_v076_lab.mjs','secure_exit_v072_lab.mjs'])
+ RECOVERY:Object.freeze(['contributors_private_recovery_v076_lab.css','recovery_portal_v072_lab.mjs','secure_exit_v072_lab.mjs','recovery_transport_v070_lab.mjs','reconciliation_client_v065_lab.mjs','amendment_client_v063_lab.mjs']),
+ LEVELS:Object.freeze(['contributors_private_levels_v076_lab.css','contributors_levels_ui_v076_lab.mjs','contributors_candidate_client_v076_lab.mjs','secure_exit_v072_lab.mjs'])
 });
 const ASSET_FILES=Object.freeze([...new Set([...AREA_ASSETS.RECOVERY,...AREA_ASSETS.LEVELS])]);
 const LEVEL_PATHS=new Set(['/api/level-attempt/status','/api/profile','/api/catalog','/api/receipts','/owner/queue','/owner/history','/api/intent','/api/submit','/owner/review']);
