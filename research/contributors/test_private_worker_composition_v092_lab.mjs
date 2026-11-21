@@ -65,7 +65,7 @@ test('03 real dependencies deny OWNER access to Contributor HTML',async()=>{
 test('04 OWNER can read its private HTML only with recovery permission',async()=>{
  const h=harness('OWNER');const r=await send(h,'/owner/');
  assert.equal(r.status,200);assert.match(await r.text(),/OWNER DESK/);
- assert.equal(h.state.profileReads,2);
+ assert.equal(h.state.profileReads,1); // one primary profile read on OWNER GET
 });
 test('05 OWNER recovery revocation closes privileged GET even with read enabled',async()=>{
  const h=harness('OWNER',{recover:false});
@@ -112,4 +112,21 @@ test('13 no provider availability or pilot claim from offline composition',()=>{
  assert.equal(V092_COMPOSITION.realD1Tested,false);
  assert.equal(V092_COMPOSITION.liveAccessJwtVerified,false);
  assert.equal(V092_COMPOSITION.freeQuotaAttested,false);
+});
+
+test('14 OWNER recovery-disabled cannot even query generic own profile',async()=>{
+ const h=harness('OWNER',{recover:false});
+ const r=await send(h,'/api/profile','POST');
+ assert.equal(r.status,403);
+ assert.equal(h.state.profileReads,1);
+ assert.equal(h.state.genReads,0);
+});
+test('15 OWNER with recovery can query profile through existing backend',async()=>{
+ const h=harness('OWNER');const r=await send(h,'/api/profile','POST');
+ assert.equal(r.status,200);
+ const body=await r.json();
+ assert.equal(body.data.role,'OWNER');
+ assert.equal(body.data.can_recover,true);
+ assert.equal(h.state.genReads,1);
+ assert.ok(h.state.profileReads>=2);
 });
