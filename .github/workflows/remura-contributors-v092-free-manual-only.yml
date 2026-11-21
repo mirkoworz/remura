@@ -1,0 +1,31 @@
+# REMURA Contributors v0.92 LAB — 21/11/2026 Europe/Rome
+# New-only manual Free planning contract; no provider calls or Secrets.
+name: REMURA Contributors v092 Free manual gate ONE-SHOT
+on:
+  push:
+    branches: [research/contributors-manual-free-gate-v092-20261121]
+    paths:
+      - research/contributors/manual_free_gate_v092_lab.py
+      - research/contributors/test_manual_free_gate_v092_lab.py
+      - .github/workflows/remura-contributors-v092-free-manual-only.yml
+permissions:
+  contents: read
+jobs:
+  free-manual-gate-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Checkout with no persisted credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Run only 18 new manual aggregate safety cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest -v research/contributors/test_manual_free_gate_v092_lab.py 2>&1 | tee /tmp/remura-free-manual.log
+          grep -q '^Ran 18 tests' /tmp/remura-free-manual.log
+          grep -q '^OK$' /tmp/remura-free-manual.log
+          echo 'REMURA_CONTRIBUTORS_V092_MANUAL_FREE_GATE=18_18_PASS'
