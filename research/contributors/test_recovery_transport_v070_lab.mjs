@@ -1,0 +1,28 @@
+// REMURA Contributors v0.70 LAB — new local transport tests; no real browser/network.
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createReadOnlyTransportV070,REMURA_V070_READ_ENDPOINTS} from './recovery_transport_v070_lab.mjs';
+const origin='https://private.remura.example';
+const opt=(body={})=>({method:'POST',headers:{'Content-Type':'application/json','X-Remura-CSRF':'1'},body:JSON.stringify(body),credentials:'same-origin',mode:'same-origin',redirect:'error',cache:'no-store',referrerPolicy:'no-referrer'});
+const create=()=>{const calls=[];return {calls,fetcher:createReadOnlyTransportV070({origin,fetcher:async(...args)=>{calls.push(args);return new Response('{"data":[]}',{status:200,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}})}})};};
+const denied=(f)=>assert.rejects(f,/REMURA_V070_READ_ONLY/);
+test('01 only three explicit read routes are exported',()=>assert.deepEqual([...REMURA_V070_READ_ENDPOINTS],['/api/amendment/reconcile','/api/amendment/mine','/owner/amendment/reconcile-queue']));
+test('02 personal recovery is forwarded untouched to same-origin fetcher',async()=>{const c=create();const r=await c.fetcher('/api/amendment/reconcile',opt());assert.equal(r.status,200);assert.equal(c.calls.length,1);assert.equal(c.calls[0][0],'/api/amendment/reconcile');});
+test('03 own receipts with cursor are forwarded',async()=>{const c=create();await c.fetcher('/api/amendment/mine',opt({after:0}));assert.equal(c.calls.length,1);});
+test('04 OWNER read-only queue with cursor is forwarded',async()=>{const c=create();await c.fetcher('/owner/amendment/reconcile-queue',opt({after:5}));assert.equal(c.calls.length,1);});
+test('05 no mutation route can be called',async()=>{const c=create();for(const route of ['/api/amendment/submit','/api/amendment/intent','/owner/amendment/review','/owner/amendment/close'])await denied(()=>c.fetcher(route,opt()));assert.equal(c.calls.length,0);});
+test('06 complete URL to another origin forbidden',async()=>await denied(()=>create().fetcher('https://evil.invalid/api/amendment/reconcile',opt())));
+test('07 query string route extension forbidden',async()=>await denied(()=>create().fetcher('/api/amendment/mine?owner=1',opt({after:0}))));
+test('08 only POST is allowed',async()=>await denied(()=>create().fetcher('/api/amendment/reconcile',{...opt(),method:'GET'})));
+test('09 no added user role or token headers',async()=>await denied(()=>create().fetcher('/api/amendment/reconcile',{...opt(),headers:{...opt().headers,'X-Remura-Role':'OWNER'}})));
+test('10 no added body fields to select someone else',async()=>await denied(()=>create().fetcher('/api/amendment/mine',opt({after:0,subject:'bob'}))));
+test('11 receipt cursor must be safe integer',async()=>{for(const after of [-1,'0',1.5,Number.MAX_SAFE_INTEGER+1])await denied(()=>create().fetcher('/api/amendment/mine',opt({after})));});
+test('12 recovery request must have empty body object',async()=>await denied(()=>create().fetcher('/api/amendment/reconcile',opt({after:0}))));
+test('13 same-origin credentials are mandatory',async()=>await denied(()=>create().fetcher('/api/amendment/reconcile',{...opt(),credentials:'include'})));
+test('14 redirect must be rejected',async()=>await denied(()=>create().fetcher('/api/amendment/reconcile',{...opt(),redirect:'follow'})));
+test('15 cache disabled',async()=>await denied(()=>create().fetcher('/api/amendment/reconcile',{...opt(),cache:'default'})));
+test('16 JSON content type and CSRF are mandatory',async()=>{const c=create();await denied(()=>c.fetcher('/api/amendment/reconcile',{...opt(),headers:{'Content-Type':'text/plain','X-Remura-CSRF':'1'}}));await denied(()=>c.fetcher('/api/amendment/reconcile',{...opt(),headers:{'Content-Type':'application/json','X-Remura-CSRF':'0'}}));});
+test('17 only valid HTTPS origin accepted',()=>{for(const value of ['http://private.remura.example','https://private.remura.example/','https://evil.invalid/path','invalid'])assert.throws(()=>createReadOnlyTransportV070({fetcher:async()=>{},origin:value}),/REMURA_V070_READ_ONLY/);});
+test('18 malformed JSON blocked',async()=>await denied(()=>create().fetcher('/api/amendment/reconcile',{...opt(),body:'{'})));
+test('19 oversize request blocked',async()=>await denied(()=>create().fetcher('/api/amendment/reconcile',{...opt(),body:JSON.stringify({value:'x'.repeat(5000)})})));
+test('20 untrusted response still delegated to downstream strict response validators',async()=>{const c=create();const r=await c.fetcher('/api/amendment/reconcile',opt());assert.equal(typeof r.text,'function');});
