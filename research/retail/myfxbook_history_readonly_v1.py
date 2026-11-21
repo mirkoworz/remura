@@ -95,7 +95,7 @@ def audit(root, *, now_utc):
     out = blank()
     try:
         now = parse_utc(now_utc)
-        if type(root) is not Path or root.is_symlink() or not root.is_dir():
+        if not isinstance(root, Path) or root.is_symlink() or not root.is_dir():
             raise InvalidHistory("root_invalid")
         folder = root / "history"
         if folder.is_symlink() or not folder.is_dir():
