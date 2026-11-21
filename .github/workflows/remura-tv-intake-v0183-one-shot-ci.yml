@@ -1,0 +1,36 @@
+# REMURA TradingView v0.8.183 LAB — 21/11/2026 Europe/Rome
+name: REMURA TradingView v0.8.183 M5 intake timing ONE-SHOT
+on:
+  push:
+    branches: [research/tradingview-intake-quality-v0183-20261121]
+    paths:
+      - tradingview/delta-peaks/m5_intake_gate_v0183_lab.py
+      - tradingview/delta-peaks/test_m5_intake_gate_v0183_lab.py
+      - .github/workflows/remura-tv-intake-v0183-one-shot-ci.yml
+permissions:
+  contents: read
+jobs:
+  new-v0183-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout without persistent credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile ONLY new scripts
+        run: python3 -m py_compile tradingview/delta-peaks/m5_intake_gate_v0183_lab.py tradingview/delta-peaks/test_m5_intake_gate_v0183_lab.py
+      - name: Synthetic input no outcome
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/m5_intake_gate_v0183_lab.py --synthetic-self-check | tee /tmp/qa.json
+          grep -q '"edge_claim_allowed":false' /tmp/qa.json
+          grep -q '"capture_activated":false' /tmp/qa.json
+      - name: Run ONLY 18 NEW tests
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tradingview/delta-peaks -p 'test_m5_intake_gate_v0183_lab.py' -q 2>&1 | tee /tmp/qa-tests.log
+          grep -q 'Ran 18 tests in ' /tmp/qa-tests.log
+          grep -q '^OK$' /tmp/qa-tests.log
+          echo 'REMURA_TV_V0183_INTAKE=18_18_PASS'
