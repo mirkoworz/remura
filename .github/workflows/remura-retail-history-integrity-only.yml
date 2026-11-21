@@ -22,15 +22,15 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 1
-      - name: Ten new checks including actual repository JSON
+      - name: Eleven scoped checks including actual repository JSON
         shell: bash
         run: |
           set -euo pipefail
           python3 research/retail/myfxbook_history_readonly_v1.py --repo-read-only
           python3 -m unittest discover -s research/retail -p 'test_myfxbook_history_readonly_v1.py' -v 2>&1 | tee /tmp/remura-retail-history-tests.log
-          grep -q '^Ran 10 tests' /tmp/remura-retail-history-tests.log
+          grep -q '^Ran 11 tests' /tmp/remura-retail-history-tests.log
           grep -q '^OK$' /tmp/remura-retail-history-tests.log
           python3 research/retail/myfxbook_history_readonly_v1.py --repo-read-only | tee /tmp/remura-retail-aggregate.log
-          grep -q '"status":"REPOSITORY_HISTORY_STRUCTURALLY_CONSISTENT_UNATTESTED"' /tmp/remura-retail-aggregate.log
+          grep -q '"status":"REPOSITORY_HISTORY_PARTIAL_LEGACY_UNATTESTED"' /tmp/remura-retail-aggregate.log
           grep -q '"external_source_first_seen_verified":false' /tmp/remura-retail-aggregate.log
-          echo 'REMURA_RETAIL_REAL_HISTORY_AUDIT=10_10_PASS_REPOSITORY_ONLY'
+          echo 'REMURA_RETAIL_REAL_HISTORY_AUDIT=11_11_PASS_PARTIAL_LEGACY'
