@@ -5,7 +5,7 @@ import {createPrivateWorkerRouterV072,REMURA_V072_ALLOWED_STATIC} from './privat
 const file=name=>readFileSync(new URL('./'+name,import.meta.url),'utf8');
 const origin='https://contributors.example.invalid',aud='a'.repeat(64),tag='b'.repeat(64);
 const manifest=Object.fromEntries([...['contributors_recovery_v072_private_lab.html','contributors_owner_recovery_v072_private_lab.html'],...REMURA_V072_ALLOWED_STATIC.files].map(name=>[name,file(name)]));
-const env={PRIVATE_WORKER_V071:'OFFLINE_FIXTURE_ONLY',STAGING_ENABLED:'D1_CANDIDATE',STAGING_ORIGIN:origin,ACCESS_AUD:aud};
+const env={PRIVATE_WORKER_V072:'OFFLINE_FIXTURE_ONLY',STAGING_ENABLED:'D1_CANDIDATE',STAGING_ORIGIN:origin,ACCESS_AUD:aud};
 let role='CONTRIBUTOR',reads=0,roles=0;
 const gate=createPrivateWorkerRouterV072({authenticate:async()=>({subject:tag,email_tag:tag}),profileRead:async()=>{roles++;return {role,can_read:true}},protectedRead:async()=>{reads++;return new Response('ok')},assetFiles:manifest});
 const request=path=>new Request(origin+path);
