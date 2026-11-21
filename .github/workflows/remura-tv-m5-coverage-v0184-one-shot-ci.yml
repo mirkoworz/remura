@@ -1,0 +1,37 @@
+# REMURA TV v0.8.184 LAB — 21/11/2026 Europe/Rome; new tests ONLY
+name: REMURA TradingView v0.8.184 explicit M5 coverage ONE-SHOT
+on:
+  push:
+    branches: [research/tradingview-m5-coverage-v0184-20261121]
+    paths:
+      - tradingview/delta-peaks/explicit_m5_coverage_v0184_lab.py
+      - tradingview/delta-peaks/test_explicit_m5_coverage_v0184_lab.py
+      - .github/workflows/remura-tv-m5-coverage-v0184-one-shot-ci.yml
+permissions:
+  contents: read
+jobs:
+  new-v0184-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout without persisted credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Compile only new v0.8.184 code
+        run: python3 -m py_compile tradingview/delta-peaks/explicit_m5_coverage_v0184_lab.py tradingview/delta-peaks/test_explicit_m5_coverage_v0184_lab.py
+      - name: Verify offline coverage cannot publish signals
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/explicit_m5_coverage_v0184_lab.py --synthetic-self-check | tee /tmp/m5-v0184.json
+          grep -q '"decision":"NO_GO_LIVE"' /tmp/m5-v0184.json
+          grep -q '"edge_claim_allowed":false' /tmp/m5-v0184.json
+      - name: Run ONLY 25 NEW coverage checks
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tradingview/delta-peaks -p 'test_explicit_m5_coverage_v0184_lab.py' -q 2>&1 | tee /tmp/m5-v0184-tests.log
+          grep -q 'Ran 25 tests in ' /tmp/m5-v0184-tests.log
+          grep -q '^OK$' /tmp/m5-v0184-tests.log
+          echo 'REMURA_TV_V0184_M5_COVERAGE=25_25_PASS'
