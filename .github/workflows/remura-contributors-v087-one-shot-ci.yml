@@ -1,0 +1,31 @@
+# REMURA Contributors v0.87 LAB — 21/11/2026 18:26 CET
+name: REMURA Contributors v0.87 iPhone pilot preview ONE-SHOT
+on:
+  push:
+    branches: [research/contributors-pilot-mobile-v087-20261121]
+    paths:
+      - research/contributors/contributors_pilot_preview_v087_lab.html
+      - research/contributors/test_contributors_pilot_preview_v087_lab.py
+      - .github/workflows/remura-contributors-v087-one-shot-ci.yml
+permissions:
+  contents: read
+jobs:
+  mobile-preview-new:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout no persisted credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Compile ONLY new preview tests
+        run: python3 -m py_compile research/contributors/test_contributors_pilot_preview_v087_lab.py
+      - name: Run ONLY 22 new pilot-preview tests
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s research/contributors -p test_contributors_pilot_preview_v087_lab.py -q 2>&1 | tee /tmp/v087.log
+          grep -q 'Ran 22 tests in ' /tmp/v087.log
+          grep -q '^OK$' /tmp/v087.log
+          echo 'REMURA_V087_IPHONE_PREVIEW=22_22_PASS'
