@@ -41,7 +41,7 @@ async function bodyJson(req){
   const o=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes.subarray(0,total)));
   if(!o||Object.getPrototypeOf(o)!==Object.prototype)throw Error('json');
   return o;
- }finally{if(reader){if(!complete)try{await reader.cancel()}catch{}reader.releaseLock()}
+ }finally{if(reader){if(!complete)try{await reader.cancel()}catch{}reader.releaseLock()}}
 }
 export async function amendmentHttpCandidateV062(req,env,ctx){
  const path=authorizeRequest(req,env);if(!path)return fail();
