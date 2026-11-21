@@ -73,9 +73,9 @@ def normalized_rows(rows, at):
         if oi<=0 or any(x>oi*2 for x in values[1:]):
             raise RevisionError("invalid_open_interest")
         payload=[dataset,code,report_date,[float(v) for v in values]]
-        digest=sha256(json.dumps(payload,separators=(",",":"),allow_nan=False)
-                     .encode("ascii")).hexdigest()
-        clean.append((dataset,code,report_date,digest))
+        packed=json.dumps(payload,separators=(",",":"),allow_nan=False)
+        digest=sha256(packed.encode("ascii")).hexdigest()
+        clean.append((dataset,code,report_date,digest,packed))
     return sorted(clean)
 
 class OfflineRevisionLedger:
@@ -89,6 +89,7 @@ class OfflineRevisionLedger:
             dataset TEXT NOT NULL, code TEXT NOT NULL, report_date TEXT NOT NULL,
             version INTEGER NOT NULL, captured_at TEXT NOT NULL,
             content_sha256 TEXT NOT NULL,
+            content_payload_json TEXT NOT NULL,
             PRIMARY KEY(dataset,code,report_date,version),
             UNIQUE(dataset,code,report_date,content_sha256,captured_at)
           );
@@ -107,7 +108,7 @@ class OfflineRevisionLedger:
         fresh=revisions=unchanged=0
         # All checks and inserts in a single local SQLite transaction.
         with self._db:
-            for dataset,code,report,digest in valid:
+            for dataset,code,report,digest,packed in valid:
                 previous=self._db.execute("""
                     SELECT version,captured_at,content_sha256
                     FROM captured_versions WHERE dataset=? AND code=? AND report_date=?
@@ -128,8 +129,8 @@ class OfflineRevisionLedger:
                     revisions+=1
                 self._db.execute("""
                     INSERT INTO captured_versions(dataset,code,report_date,version,
-                        captured_at,content_sha256) VALUES(?,?,?,?,?,?)
-                """,(dataset,code,report,version,at_utc,digest))
+                        captured_at,content_sha256,content_payload_json) VALUES(?,?,?,?,?,?,?)
+                """,(dataset,code,report,version,at_utc,digest,packed))
         return {
             "schema":SCHEMA,"status":"LOCAL_VERSION_LOG_ONLY",
             "fresh_versions":fresh,"revisions":revisions,"unchanged":unchanged,
@@ -142,16 +143,31 @@ class OfflineRevisionLedger:
         if identify(dataset,code,report_date)>decision.date():
             raise RevisionError("decision_before_report_reference")
         row=self._db.execute("""
-          SELECT version,captured_at,content_sha256 FROM captured_versions
+          SELECT version,captured_at,content_sha256,content_payload_json FROM captured_versions
           WHERE dataset=? AND code=? AND report_date=? AND captured_at<=?
           ORDER BY version DESC LIMIT 1
         """,(dataset,code,report_date,decision_utc)).fetchone()
+        # A true as-of replay needs the original values, not merely a version hash.
+        values=None
+        if row:
+            try:
+                if sha256(row[3].encode("ascii")).hexdigest()!=row[2]:
+                    raise RevisionError("stored_version_hash_mismatch")
+                data=json.loads(row[3])
+                if (type(data) is not list or len(data)!=4 or
+                        data[:3]!=[dataset,code,report_date] or
+                        type(data[3]) is not list or len(data[3])!=5):
+                    raise RevisionError("stored_version_shape_mismatch")
+                values=data[3]
+            except (UnicodeError,ValueError,TypeError,KeyError) as exc:
+                raise RevisionError("stored_version_invalid") from exc
         return {
             "schema":SCHEMA,
             "status":"LOCAL_VERSION_AVAILABLE_UNATTESTED" if row else "UNKNOWN_NO_VERSION_AT_DECISION",
             "version":row[0] if row else None,
             "captured_at":row[1] if row else None,
             "content_sha256":row[2] if row else None,
+            "positions":values,  # five public CFTC fields, never account/trade data
             "external_first_seen_verified":False,
             "report_publication_verified":False,
             "cross_product_mapping_verified":False,
