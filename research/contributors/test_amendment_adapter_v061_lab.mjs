@@ -25,7 +25,7 @@ function fakeDb(db,hooks={}) {
   return {prepare(sql){return {bind(...args){return {
    async all(){hooks.read?.(sql,args);const results=db.prepare(sql).all(...args);return {success:true,meta:{served_by_primary:hooks.badReadPrimary!==true},results};},
    async run(){hooks.beforeWrite?.(sql,args);const out=db.prepare(sql).run(...args);hooks.afterWrite?.(sql,args);if(hooks.unknownWrite)throw Error('unknown_commit');return {success:true,meta:{served_by_primary:hooks.badWritePrimary!==true,changes:out.changes}};}
-  };}};}}};
+  };}};}};
  }};
 }
 async function fixture(t){
