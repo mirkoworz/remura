@@ -14,7 +14,12 @@ test('01 original fixture Access+HMAC+D1 profile admits Alice recovery via new b
  const x=await fixture(t);const v=await result(await call(x));assert.equal(v.status,200);assert.equal(v.body.data.status,'NO_ATTEMPT');
 });
 test('02 original fixture receipts endpoint is served through new bridge',async t=>{
- const x=await fixture(t);const v=await result(await call(x,'/api/amendment/mine',{after:0}));assert.equal(v.status,200);assert.equal(v.body.data.length,1);assert.equal(v.body.data[0].id,1);
+ const x=await fixture(t);
+ const before=await result(await call(x,'/api/amendment/mine',{after:0}));
+ assert.equal(before.status,200);assert.equal(before.body.data.length,0); // Only original levels seeded.
+ assert.equal((await x.submitWith(x.payload())).status,200); // A real amendment receipt now exists.
+ const v=await result(await call(x,'/api/amendment/mine',{after:0}));
+ assert.equal(v.status,200);assert.equal(v.body.data.length,1);assert.equal(v.body.data[0].id,1);
 });
 test('03 OWNER can inspect reservation queue through new bridge',async t=>{
  const x=await fixture(t);assert.equal((await x.submitWith(x.payload())).status,200);x.setWho('owner');
@@ -31,8 +36,14 @@ test('06 Bob never receives Alice reservation through the new bridge',async t=>{
  const v=await result(await call(x));assert.equal(v.status,200);assert.equal(v.body.data.status,'NO_ATTEMPT');
 });
 test('07 personal receipts remain partitioned by D1 subject',async t=>{
- const x=await fixture(t);x.setWho('bob');const v=await result(await call(x,'/api/amendment/mine',{after:0}));
- assert.equal(v.status,200);assert.equal(v.body.data.length,1);assert.equal(v.body.data[0].id,2);
+ const x=await fixture(t);
+ assert.equal((await x.submitWith(x.payload(3,1))).status,200); // Alice amendment id=1
+ x.setWho('bob');assert.equal((await x.submitWith(x.payload(4,2))).status,200); // Bob amendment id=2
+ const bob=await result(await call(x,'/api/amendment/mine',{after:0}));
+ assert.equal(bob.status,200);assert.equal(bob.body.data.length,1);assert.equal(bob.body.data[0].id,2);
+ x.setWho('alice');
+ const alice=await result(await call(x,'/api/amendment/mine',{after:0}));
+ assert.equal(alice.status,200);assert.equal(alice.body.data.length,1);assert.equal(alice.body.data[0].id,1);
 });
 test('08 read bridge cannot write D1',async t=>{
  const x=await fixture(t),before=x.counts.write;await call(x);await call(x,'/api/amendment/mine',{after:0});
