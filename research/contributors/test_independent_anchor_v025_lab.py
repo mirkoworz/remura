@@ -199,6 +199,21 @@ class WitnessTests(unittest.TestCase):
             db.execute('UPDATE receipts SET witness_tag=?',(D2,))
         self.assertIsNone(self.p.read_status(200))
 
+    def test_empty_finalize_must_not_acknowledge_nonexistent_generation(self):
+        with self.assertRaises(Denied): self.p.finalize()
+
+    def test_missing_witness_read_does_not_recreate_database(self):
+        self.commit()
+        self.w.path.unlink()
+        self.assertIsNone(self.p.read_status(200))
+        self.assertFalse(self.w.path.exists())
+
+    def test_missing_primary_read_does_not_recreate_database(self):
+        self.commit()
+        self.p.path.unlink()
+        self.assertIsNone(self.p.read_status(200))
+        self.assertFalse(self.p.path.exists())
+
     def test_no_automatic_repair_of_pending_intent(self):
         self.p.prepare(D1,'PUBLISHED',1000,100,'owner-test')
         self.assertIsNone(self.p.read_status(100))
