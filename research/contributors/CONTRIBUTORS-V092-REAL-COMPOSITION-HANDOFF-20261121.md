@@ -35,4 +35,11 @@ Se una qualunque cifra manca, annotare **UNKNOWN** e mantenere NO-GO. Una verifi
 - Experience v0.30: futuro splash toro/orso 3D, collisione, esplosione, REMURA/pinna + SMF; test Safari più avanti. Ogni **nuova pagina** avrà banner versione e data/ora Europe/Rome in cima.
 - Private Capture v0.15 soltanto sintetico; Oracle collector e autoupdater protetti, v1.65 depositata non installata; Ampere Radar v0.36, backup e Squalincome invariati.
 
+## Aggiornamento 21/11/2026 — PR draft di certificazione CI
+- Aggiunto al workflow il trigger **pull_request** limitato a base `research/contributors-d1-diagnostic-v091-20261121` e head `research/contributors-private-composition-v092-20261121`, solo file della v0.92; commit workflow `2f080961b61b3742c99088d402a41555f37c0d73`.
+- Aperta **PR DRAFT #105** [GitHub](https://github.com/mirkoworz/remura/pull/105) da v0.92 a v0.91 LAB, **non verso main**, senza merge e senza deploy. Diff soltanto 4 file v0.92 al confronto verificato.
+- Il connettore `fetch_commit_workflow_runs` restituisce attualmente un elenco vuoto e `get_commit_combined_status` non offre check; **run CI non attestato** e non equivale a esito SUCCESS o a prova che il job non sia partito. Potrebbe richiedere approvazione della PR generata dal connettore; non rilanciare test storici.
+- GitHub ufficiale dichiara runner standard gratuiti per repository pubblici (https://docs.github.com/en/actions/how-tos/write-workflows/choose-where-workflows-run/choose-the-runner-for-a-job). Non usiamo runner maggiorati né repository privati per questa CI.
+- Documentazione aggiornata Cloudflare `ctx.access` conferma invocazione diretta Worker, ma non propagazione su Service Binding e router di Static Assets: https://developers.cloudflare.com/workers/configuration/cloudflare-access/ . Nulla di ciò attesta un vero login o misura quota D1.
+
 **Verdetto v0.92:** integrazione LAB codificata con 15 nuovi test e workflow preparato, ma **CI green non ancora attestata** e **pilot reale NO-GO**. Nessuna chiamata Cloudflare, deploy, modifica Oracle, utente nuovo, merge o spesa.
