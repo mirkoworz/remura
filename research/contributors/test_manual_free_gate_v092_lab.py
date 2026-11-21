@@ -118,5 +118,41 @@ class ManualFreeGateTests(unittest.TestCase):
         self.assertIn("invalid_audit_clock",run(now="yesterday")["reasons"])
 
 
+    def test_19_reported_unlimited_access_seats_cannot_bypass_free_50_limit(self):
+        s = deepcopy(EXAMPLE)
+        s["access_seats_limit"] = 500
+        r = run(s)
+        self.assertEqual(r["status"], "UNKNOWN_OR_INCOMPLETE")
+        self.assertIn("access_seat_limit_conflicts_with_free_plan", r["reasons"])
+        self.assertFalse(r["pilot_allowed"])
+
+    def test_20_account_near_free_limit_blocks_second_friend(self):
+        s = deepcopy(EXAMPLE)
+        s["access_seats_limit"] = 50
+        s["access_seats_in_use"] = 49
+        r = run(s)
+        self.assertEqual(r["status"], "NO_GO_INTERNAL_BUDGET")
+        self.assertIn("free_access_50_user_limit", r["reasons"])
+
+    def test_21_exact_free_ceiling_is_valid_for_headroom_screen_only(self):
+        s = deepcopy(EXAMPLE)
+        s["access_seats_limit"] = 50
+        s["access_seats_in_use"] = 48
+        r = run(s)
+        self.assertEqual(r["status"], "MANUAL_SHAPE_AND_PLANNING_HEADROOM_ONLY_NO_GO")
+        self.assertFalse(r["pilot_allowed"])
+        self.assertFalse(r["staging_allowed"])
+
+    def test_22_49_seats_plus_one_friend_remains_no_go_for_live_use(self):
+        s = deepcopy(EXAMPLE)
+        s["access_seats_limit"] = 50
+        s["access_seats_in_use"] = 49
+        p = deepcopy(PROPOSED)
+        p["pilot_users"] = 1
+        r = run(s, p)
+        self.assertEqual(r["status"], "MANUAL_SHAPE_AND_PLANNING_HEADROOM_ONLY_NO_GO")
+        self.assertFalse(r["pilot_allowed"])
+
+
 if __name__ == "__main__":
     unittest.main()
