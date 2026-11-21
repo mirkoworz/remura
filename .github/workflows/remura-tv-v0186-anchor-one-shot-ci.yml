@@ -1,0 +1,37 @@
+# REMURA TradingView v0.8.186 LAB · 21/11/2026 Europe/Rome
+name: REMURA TradingView v0.8.186 anchor request ONE-SHOT
+on:
+  push:
+    branches: [research/tradingview-anchor-request-v0186-20261121]
+    paths:
+      - tradingview/delta-peaks/anchor_request_v0186_lab.py
+      - tradingview/delta-peaks/test_anchor_request_v0186_lab.py
+      - .github/workflows/remura-tv-v0186-anchor-one-shot-ci.yml
+permissions:
+  contents: read
+jobs:
+  new-v0186-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout without persisted credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Compile only new Python
+        run: python3 -m py_compile tradingview/delta-peaks/anchor_request_v0186_lab.py tradingview/delta-peaks/test_anchor_request_v0186_lab.py
+      - name: Confirm no external anchor
+        run: |
+          set -euo pipefail
+          python3 tradingview/delta-peaks/anchor_request_v0186_lab.py --synthetic-self-check | tee /tmp/v0186.json
+          grep -q '"request_submitted_to_tsa":false' /tmp/v0186.json
+          grep -q '"independent_timestamp_token_verified":false' /tmp/v0186.json
+      - name: Run ONLY 16 new anchor request tests
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tradingview/delta-peaks -p 'test_anchor_request_v0186_lab.py' -q 2>&1 | tee /tmp/v0186-tests.log
+          grep -q 'Ran 16 tests in ' /tmp/v0186-tests.log
+          grep -q '^OK$' /tmp/v0186-tests.log
+          echo 'REMURA_TV_V0186_ANCHOR_REQUEST=16_16_PASS'
