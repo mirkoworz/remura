@@ -147,7 +147,10 @@ def audit(root, *, now_utc):
             history_gaps_over_2h=gaps,
             latest_snapshot_is_fresh_2h=(now-stamp).total_seconds()<=7200,
         )
-    except (InvalidHistory, ValueError, OSError, UnicodeError, OverflowError, TypeError, KeyError):
+    except InvalidHistory as exc:
+        # Only a static enum-like label, never a row value, path or account identifier.
+        out["reason"] = str(exc)
+    except (ValueError, OSError, UnicodeError, OverflowError, TypeError, KeyError):
         pass
     return out
 
