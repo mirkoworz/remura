@@ -24,7 +24,7 @@ jobs:
         run: |
           set -euo pipefail
           node --test research/contributors/test_free_local_v088_lab.mjs 2>&1 | tee /tmp/v088.log
-          grep -q '# tests 22' /tmp/v088.log
-          grep -q '# pass 22' /tmp/v088.log
-          grep -q '# fail 0' /tmp/v088.log
+          grep -q 'tests 22' /tmp/v088.log
+          grep -q 'pass 22' /tmp/v088.log
+          grep -q 'fail 0' /tmp/v088.log
           echo 'REMURA_V088_FREE_OFFLINE=22_22_PASS'
