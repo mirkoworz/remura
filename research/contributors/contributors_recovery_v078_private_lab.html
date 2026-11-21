@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="it">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+ <meta name="color-scheme" content="dark">
+ <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; script-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-ancestors 'none'">
+ <title>REMURA · Recupero personale · v0.78 LAB</title>
+ <link rel="stylesheet" href="./contributors_private_recovery_v076_lab.css">
+</head>
+<body data-role="CONTRIBUTOR" data-read-bridge="STAGING_CANDIDATE" data-access-logout="CANDIDATE">
+ <div class="version">REMURA Contributors v0.78 LAB · 21/11/2026 16:56 CET · STAGING PRIVATO NON ATTIVO</div>
+ <div class="shell">
+  <header class="masthead"><div class="brand"><span class="fin" aria-hidden="true">◈</span> REMURA <span class="subbrand">/ CONTRIBUTORS</span></div><span class="laboratory">PROTOTIPO PRIVATO · LAB</span></header>
+  <main>
+   <p class="eyebrow">RECOVERY INTELLIGENCE <span class="line"></span> 01 / 02</p>
+   <h1>La tua correzione.<br><em>Sotto controllo.</em></h1>
+   <p class="lead">Se una risposta si perde, REMURA non permette di inviare alla cieca. Prima si verifica la ricevuta, poi decide l’OWNER.</p>
+   <nav class="private-nav" aria-label="Funzioni autorizzate del collaboratore"><a href="./levels/" id="openLevels">Proponi un nuovo livello</a><span class="nav-note">Le nuove proposte hanno un registro persistente indipendente da quello delle correzioni. Nessun invio è autorizzato da questa pagina.</span></nav>
+   <div class="cards">
+    <section class="panel hero" aria-labelledby="recoveryTitle">
+     <div class="heading"><span class="number">01</span><h2 id="recoveryTitle">Stato della richiesta</h2><span class="dot" aria-hidden="true"></span></div>
+     <p class="kicker">RISULTATO DEL CONTROLLO</p>
+     <p id="recoveryCode" class="state-code" role="status" aria-live="polite">STAGING · LAB</p>
+     <h3 id="recoveryHeadline">Recupero correzioni</h3>
+     <p id="recoverySummary">Portale privato predisposto, backend reale non attivato: nessun accesso ai dati finché non autorizzato.</p>
+     <div id="sendGate" class="lock">NUOVI INVII BLOCCATI · Nessuno stato abilita un nuovo invio.</div>
+     <div class="actions"><button id="refreshRecovery" disabled>Verifica stato</button><button id="refreshReceipts" class="outline" disabled>Le mie ricevute</button></div>
+     <p id="recoveryExtra" class="helper">Nessun account reale collegato.</p>
+    </section>
+    <section class="panel results" aria-labelledby="receiptsTitle">
+     <div class="heading"><span class="number">02</span><h2 id="receiptsTitle">Evidenze personali</h2></div>
+     <ul id="recoveryList" class="entries" aria-label="Ricevute e richieste personali"></ul>
+     <div class="empty-note">Qui compaiono soltanto le ricevute restituite dal server per l’identità verificata. Non è possibile cercare quelle di altri collaboratori.</div>
+     <button id="moreRecovery" class="outline hidden-control" disabled aria-hidden="true" tabindex="-1">Altre richieste</button>
+    </section>
+   </div>
+   <section class="flow" aria-label="Come funziona il recupero"><div><b>01</b><span>Invio riservato</span></div><div><b>02</b><span>Verifica della conferma</span></div><div><b>03</b><span>Decisione OWNER</span></div><div><b>04</b><span>Chiusura manuale</span></div></section>
+   <button id="leaveRecovery" class="quiet">Esci dall’area privata</button>
+   <p class="privacy">Nello staging HTTPS autorizzato il pulsante richiederà il logout Cloudflare Access. In questa anteprima offline chiude soltanto la vista; la revoca del provider non è attestata. Nessun dato reale o modifica ai livelli è presente in questa demo; per usare il portale serviranno Access, D1 e autorizzazione.</p>
+  </main>
+  <footer>REMURA Contributors v0.78 LAB · Sola lettura · Nessun deploy · Nessuna acquisizione reale</footer>
+ </div>
+ <script type="module" src="./recovery_portal_v072_lab.mjs"></script>
+</body>
+</html>
