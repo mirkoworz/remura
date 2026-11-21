@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="color-scheme" content="dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; base-uri 'none'">
+<title>REMURA · Contributors v0.89 LAB — Simulatore pilot</title>
+<style>
+:root{color-scheme:dark;font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;--bg:#061521;--panel:#102936;--border:#284756;--aqua:#79f0d1;--ink:#ebf9fa;--muted:#a5c2cb;--amber:#ffd39b}
+*{box-sizing:border-box}
+body{margin:0;min-width:300px;background:radial-gradient(ellipse at 80% 0,#15515b 0,transparent 41%),radial-gradient(ellipse at -10% 75%,#163247 0,transparent 33%),var(--bg);color:var(--ink);line-height:1.5}
+.release{position:sticky;top:0;z-index:3;background:#071a24ed;border-bottom:1px solid #32666a;color:#baf7e6;text-align:center;padding:10px max(10px,env(safe-area-inset-left));font-size:11px;font-weight:850;letter-spacing:.035em;backdrop-filter:blur(12px)}
+.shell{max-width:1040px;margin:auto;padding:30px 18px max(70px,env(safe-area-inset-bottom))}
+.brand{font-weight:850;letter-spacing:.14em;color:var(--aqua);font-size:12px;display:flex;align-items:center;gap:12px}
+.fin{display:grid;place-items:center;width:43px;height:43px;border-radius:14px;border:1px solid #4b8f8a;background:linear-gradient(145deg,#226270,#0b2f3b)}
+.fin svg{width:31px;height:31px}
+h1{font-size:clamp(37px,6vw,65px);letter-spacing:-.059em;line-height:1.06;max-width:750px;margin:22px 0 12px}
+h1 em{font-style:normal;color:var(--aqua)}
+.lead{font-size:clamp(15px,2vw,18px);max-width:735px;color:#b7cfd5;margin:0 0 23px}
+.flag{display:inline-block;background:#4a322c5c;border:1px solid #866143;border-radius:999px;color:#ffd29a;font-size:11px;font-weight:850;letter-spacing:.04em;padding:7px 12px}
+.columns{display:grid;grid-template-columns:1.18fr .82fr;gap:15px;margin:28px 0}
+.card{border-radius:20px;border:1px solid var(--border);background:linear-gradient(160deg,#123040,#0c2130);padding:22px;min-width:0;box-shadow:0 15px 38px #0003}
+.card h2{font-size:22px;letter-spacing:-.033em;margin:0 0 8px}
+.card p{font-size:13px;color:var(--muted);margin:0 0 15px}
+.kicker{color:#9ec8ce;font-size:11px;letter-spacing:.13em;text-transform:uppercase;font-weight:830;margin:24px 0 12px}
+.switch{display:flex;flex-wrap:wrap;gap:9px;margin:13px 0 19px}
+button{font:inherit;font-weight:810;font-size:13px;border-radius:11px;border:1px solid #4c7778;padding:12px 15px;min-height:46px;cursor:pointer;background:#184551;color:#e5faf6}
+button.primary{background:var(--aqua);color:#06302f;border:0}
+button.warn{background:#4f3b32;color:#ffdbb2;border-color:#80624a}
+button:disabled{opacity:.38;cursor:not-allowed}
+button:focus-visible{outline:3px solid #a4ffe8;outline-offset:3px}
+.switch button[aria-pressed=true]{background:var(--aqua);color:#06302f;border-color:var(--aqua)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.emphasis{color:#e7faf7;font-weight:700}
+.notice{padding:14px;border:1px solid #866446;background:#4c342d4c;color:#ffe2bd;border-radius:13px;font-size:12px;margin:13px 0}
+.panel{background:#0a202c;border:1px solid #335161;border-radius:13px;padding:14px;min-height:100px}
+.panel-title{margin:20px 0 7px;font-size:12px;letter-spacing:.09em;color:#9fc6cd;text-transform:uppercase;font-weight:820}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace;color:#c7e6e7;margin:0}
+#liveStatus{font-size:13px;color:#c6ece3;min-height:20px}
+.data{display:grid;gap:11px}
+.data article{border:1px solid #3b5965;border-radius:12px;padding:13px;background:#09202d}
+.data strong{font-size:13px;display:block}
+.data small{color:#a9c8cd;font-size:12px;display:block;margin-top:4px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.counter{border:1px solid #34596a;padding:14px;border-radius:13px;background:#102735}
+.counter b{font-size:25px;font-variant-numeric:tabular-nums;display:block}
+.counter small{color:#aec9ce;font-size:11px}
+footer{margin-top:35px;border-top:1px solid #294655;padding-top:19px;color:#9eb8c2;font-size:12px}
+[hidden]{display:none!important}
+@media(max-width:760px){.columns{grid-template-columns:1fr}.shell{padding-top:22px}.card{padding:19px}}
+@media(max-width:390px){.row{grid-template-columns:1fr}.release{font-size:10px}h1{font-size:39px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div id="version" class="release">REMURA · Contributors v0.89 LAB · 21/11/2026 19:03 CET (Europe/Rome) · SOLO DEMO LOCALE</div>
+<main class="shell">
+<header>
+<div class="brand"><span class="fin" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none" stroke="#92f9de" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 23C13 10 29 12 36 16c-10 2-15 9-19 16-4-7-9-9-13-9Z"/><path d="M17 32c5-10 11-15 19-16"/></svg></span> REMURA / CONTRIBUTORS</div>
+<h1>Prova il portale.<br><em>Senza rischi.</em></h1>
+<p class="lead">Simula un collaboratore che propone un livello e l’OWNER che lo approva. Puoi provare anche una correzione e una risposta incerta: niente verrà salvato o inviato.</p>
+<span class="flag">SIMULAZIONE DEI RUOLI · NON È UN LOGIN O UNA PROVA DI SICUREZZA</span>
+</header>
+<div class="columns">
+<section class="card" aria-labelledby="simTitle">
+<h2 id="simTitle">Pilot simulato</h2>
+<p>Passa da un ruolo all'altro per provare il flusso. Questo cambio è soltanto grafico: in produzione servono autorizzazioni Access e ruoli verificati dal server.</p>
+<div class="switch" role="group" aria-label="Ruolo simulato">
+<button id="roleContributor" aria-pressed="true" type="button">Collaboratore</button>
+<button id="roleOwner" aria-pressed="false" type="button">OWNER</button>
+</div>
+<div class="notice"><span class="emphasis">Ruolo corrente:</span> <span id="currentRole">CONTRIBUTOR (DEMO)</span>. Nessuna identità personale, autenticazione o dati finanziari reali.</div>
+<section id="contributorActions" aria-label="Operazioni simulate del collaboratore">
+<p class="emphasis">Puoi proporre un livello demo, poi richiedere la correzione di un livello già approvato.</p>
+<div class="actions">
+<button class="primary" id="submitDemo" type="button">+ Proponi livello demo</button>
+<button id="amendDemo" type="button">Chiedi correzione</button>
+<button class="warn" id="uncertainDemo" type="button">Simula risposta persa</button>
+</div>
+</section>
+<section id="ownerActions" hidden aria-label="Operazioni simulate proprietario">
+<p class="emphasis">Solo in modalità OWNER puoi simulare una decisione. Le correzioni sono una coda separata.</p>
+<div class="actions">
+<button class="primary" id="approveDemo" type="button">Approva nuovo livello</button>
+<button id="rejectDemo" type="button">Rifiuta nuovo livello</button>
+<button id="approveAmendDemo" type="button">Approva correzione</button>
+<button id="rejectAmendDemo" type="button">Rifiuta correzione</button>
+<button class="warn" id="observeReservedDemo" type="button">Osserva RESERVED</button>
+</div>
+</section>
+<div class="actions"><button id="resetDemo" type="button">Azzera solo questa demo</button></div>
+<p id="liveStatus" role="status" aria-live="polite">Nessuna proposta. Premi «Proponi livello demo».</p>
+<div class="panel-title">Proposte originali · registro separato</div><div class="panel"><pre id="originalsList" aria-live="polite">Nessuna proposta originale.</pre></div>
+<div class="panel-title">Correzioni · registro separato</div><div class="panel"><pre id="amendmentsList" aria-live="polite">Nessuna correzione.</pre></div>
+<div class="panel-title">Audit simulato · aggiunta in ordine</div><div class="panel"><pre id="auditList" aria-live="polite">Nessun evento.</pre></div>
+</section>
+<aside class="card" aria-labelledby="insightTitle">
+<h2 id="insightTitle">Consultazione REMURA</h2>
+<p>Entrambi i ruoli possono consultare dati di mercato autorizzati. Qui le tre schede sono solo indicatori descrittivi, non quotazioni o segnali veri.</p>
+<div class="data">
+<article><strong>COT · Posizionamento</strong><small>SEGNAPOSTO LAB — nessun report settimanale scaricato in questa pagina.</small></article>
+<article><strong>Sentiment retail</strong><small>SEGNAPOSTO LAB — nessuna misura live, nessun confronto con un broker reale.</small></article>
+<article><strong>Delta / CVD</strong><small>SEGNAPOSTO LAB — nessuna prova di flusso aggressore istituzionale.</small></article>
+</div>
+<p class="kicker">Stato della demo</p>
+<div class="row">
+<div class="counter"><b id="originalCount">0</b><small>Proposte originali</small></div>
+<div class="counter"><b id="amendCount">0</b><small>Richieste di correzione</small></div>
+</div>
+<p class="kicker">Confini irrinunciabili</p>
+<div class="notice"><strong>RESERVED resta bloccato.</strong> Una risposta non confermata non autorizza reinvio, sblocco o nuova approvazione. L'osservazione OWNER aggiunge soltanto audit nella demo.</div>
+<div class="notice"><strong>STAGING REALE NO-GO.</strong> Le quote D1 giornaliere e i posti Cloudflare Access non sono ancora attestati. Nessuna scrittura viene effettuata verso un database.</div>
+<p>Questo file è autosufficiente e non richiede Mac, Cloudflare, token o registrazioni. Ricaricando la pagina si azzera tutto.</p>
+</aside>
+</div>
+<footer>REMURA Contributors v0.89 LAB · 21/11/2026 19:03 CET (Europe/Rome). Nessun servizio, prezzo, quota, rapporto COT, livello o identità reale viene creato. Versione interattiva offline; le quattro pagine private v0.78 rimangono byte-per-byte immutate. Nessun deploy, costo, Oracle o modifica a main.</footer>
+</main>
+<script id="pilot-simulator">
+"use strict";
+// DEMO ONLY: changing role is NOT authentication and cannot grant any server permission.
+// No fetch, DOM HTML injection, storage, cookies, network or provider calls.
+const sampleInstruments=Object.freeze(["DEMO:EURUSD","DEMO:GBPUSD","DEMO:XAUUSD"]);
+const createMemory=()=>({
+  role:"CONTRIBUTOR",originals:[],amendments:[],audit:[],
+  nextOriginal:1,nextAmendment:1,nextAudit:1,uncertain:false
+});
+let memory=createMemory();
+const byId=id=>document.getElementById(id);
+function audit(action,ref){
+ memory.audit.push({number:memory.nextAudit++,action,ref});
+}
+function setRole(role){
+ if(role!=="CONTRIBUTOR"&&role!=="OWNER")return false;
+ memory.role=role;render();return true;
+}
+function submitDemo(){
+ if(memory.role!=="CONTRIBUTOR"||memory.uncertain||memory.originals.length>=12)return false;
+ const id=memory.nextOriginal++;
+ const instrument=sampleInstruments[(id-1)%sampleInstruments.length];
+ memory.originals.push({id,instrument,status:"UNREVIEWED",origin:"SYNTHETIC_DEMO"});
+ audit("ORIGINAL_SUBMITTED",id);render();return true;
+}
+function uncertainDemo(){
+ if(memory.role!=="CONTRIBUTOR"||memory.uncertain||memory.originals.length>=12)return false;
+ const id=memory.nextOriginal++;
+ memory.originals.push({id,instrument:sampleInstruments[(id-1)%sampleInstruments.length],status:"RESERVED",origin:"SYNTHETIC_DEMO"});
+ memory.uncertain=true;audit("RESPONSE_UNCERTAIN_RESERVED",id);render();return true;
+}
+function amendDemo(){
+ if(memory.role!=="CONTRIBUTOR"||memory.uncertain||memory.amendments.length>=12)return false;
+ const original=memory.originals.find(x=>x.status==="APPROVED");
+ if(!original)return false;
+ const id=memory.nextAmendment++;
+ memory.amendments.push({id,originalId:original.id,status:"UNREVIEWED",origin:"SYNTHETIC_DEMO"});
+ audit("AMENDMENT_REQUESTED",id);render();return true;
+}
+function reviewOriginal(action){
+ if(memory.role!=="OWNER"||!["APPROVED","REJECTED"].includes(action))return false;
+ const item=memory.originals.find(x=>x.status==="UNREVIEWED");
+ if(!item)return false;
+ item.status=action;audit("ORIGINAL_"+action,item.id);render();return true;
+}
+function reviewAmendment(action){
+ if(memory.role!=="OWNER"||!["APPROVED","REJECTED"].includes(action))return false;
+ const item=memory.amendments.find(x=>x.status==="UNREVIEWED");
+ if(!item)return false;
+ item.status=action;audit("AMENDMENT_"+action,item.id);render();return true;
+}
+function observeReserved(){
+ if(memory.role!=="OWNER")return false;
+ const item=memory.originals.find(x=>x.status==="RESERVED");
+ if(!item)return false;
+ // Append-only observation does not modify ORIGINAL status or clear uncertain.
+ audit("OWNER_OBSERVED_STILL_RESERVED",item.id);render();return true;
+}
+function resetDemo(){memory=createMemory();render();return true;}
+function render(){
+ const owner=memory.role==="OWNER";
+ byId("currentRole").textContent=(owner?"OWNER":"CONTRIBUTOR")+" (DEMO)";
+ byId("contributorActions").hidden=owner;
+ byId("ownerActions").hidden=!owner;
+ byId("roleContributor").setAttribute("aria-pressed",String(!owner));
+ byId("roleOwner").setAttribute("aria-pressed",String(owner));
+ byId("submitDemo").disabled=owner||memory.uncertain||memory.originals.length>=12;
+ byId("uncertainDemo").disabled=owner||memory.uncertain||memory.originals.length>=12;
+ byId("amendDemo").disabled=owner||memory.uncertain||memory.amendments.length>=12||!memory.originals.some(x=>x.status==="APPROVED");
+ byId("approveDemo").disabled=!owner||!memory.originals.some(x=>x.status==="UNREVIEWED");
+ byId("rejectDemo").disabled=!owner||!memory.originals.some(x=>x.status==="UNREVIEWED");
+ byId("approveAmendDemo").disabled=!owner||!memory.amendments.some(x=>x.status==="UNREVIEWED");
+ byId("rejectAmendDemo").disabled=!owner||!memory.amendments.some(x=>x.status==="UNREVIEWED");
+ byId("observeReservedDemo").disabled=!owner||!memory.originals.some(x=>x.status==="RESERVED");
+ byId("originalsList").textContent=memory.originals.map(x=>"ORIG #"+x.id+" · "+x.instrument+" · "+x.status).join("\n")||"Nessuna proposta originale.";
+ byId("amendmentsList").textContent=memory.amendments.map(x=>"AMEND #"+x.id+" → ORIG #"+x.originalId+" · "+x.status).join("\n")||"Nessuna correzione.";
+ byId("auditList").textContent=memory.audit.map(x=>String(x.number).padStart(2,"0")+" · "+x.action+" · #"+x.ref).join("\n")||"Nessun evento.";
+ byId("originalCount").textContent=String(memory.originals.length);
+ byId("amendCount").textContent=String(memory.amendments.length);
+ byId("liveStatus").textContent=memory.uncertain?
+    "RISPOSTA INCERTA: nuovi invii bloccati. Anche dopo osservazione OWNER, RESERVED resta sospeso.":
+    "Modalità "+(owner?"OWNER":"CONTRIBUTOR")+" · dati sintetici, nessuna richiesta reale.";
+}
+const bindings=[
+ ["roleContributor",()=>setRole("CONTRIBUTOR")],
+ ["roleOwner",()=>setRole("OWNER")],
+ ["submitDemo",submitDemo],
+ ["uncertainDemo",uncertainDemo],
+ ["amendDemo",amendDemo],
+ ["approveDemo",()=>reviewOriginal("APPROVED")],
+ ["rejectDemo",()=>reviewOriginal("REJECTED")],
+ ["approveAmendDemo",()=>reviewAmendment("APPROVED")],
+ ["rejectAmendDemo",()=>reviewAmendment("REJECTED")],
+ ["observeReservedDemo",observeReserved],
+ ["resetDemo",resetDemo]
+];
+for(const [id,fn] of bindings)byId(id).addEventListener("click",fn);
+render();
+</script>
+</body>
+</html>
