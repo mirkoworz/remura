@@ -1,0 +1,37 @@
+# REMURA Contributors v0.84 LAB · 21 Nov 2026 Europe/Rome
+name: REMURA Contributors v0.84 public evidence ONE-SHOT
+on:
+  push:
+    branches: [research/contributors-public-evidence-v084-20261121]
+    paths:
+      - research/contributors/public_evidence_v084_lab.py
+      - research/contributors/test_public_evidence_v084_lab.py
+      - .github/workflows/remura-contributors-v084-one-shot-ci.yml
+permissions:
+  contents: read
+jobs:
+  new-v084-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout without persistent credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Compile only new modules
+        run: python3 -m py_compile research/contributors/public_evidence_v084_lab.py research/contributors/test_public_evidence_v084_lab.py
+      - name: Synthetic classification stays NO-GO
+        run: |
+          set -euo pipefail
+          python3 research/contributors/public_evidence_v084_lab.py --synthetic-self-check | tee /tmp/v084-public.json
+          grep -q '"decision":"NO_GO"' /tmp/v084-public.json
+          grep -q '"d1_daily":"UNKNOWN_NOT_ZERO"' /tmp/v084-public.json
+      - name: Run ONLY 25 NEW v0.84 tests
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s research/contributors -p 'test_public_evidence_v084_lab.py' -q 2>&1 | tee /tmp/v084-new.log
+          grep -q 'Ran 25 tests in ' /tmp/v084-new.log
+          grep -q '^OK$' /tmp/v084-new.log
+          echo 'REMURA_V084_PUBLIC_EVIDENCE=25_25_PASS'
