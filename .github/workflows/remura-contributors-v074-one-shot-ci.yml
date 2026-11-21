@@ -17,7 +17,7 @@ jobs:
     if: >-
       github.repository == 'mirkoworz/remura' &&
       github.ref == 'refs/heads/research/contributors-level-intake-v074-20261121' &&
-      github.event.head_commit.message == 'test(contributors): execute NEW v0.74 level end-to-end 55 checks'
+      github.event.head_commit.message == 'test(contributors): verify corrected v0.74 NEW 55 checks'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
