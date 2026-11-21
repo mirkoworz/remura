@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; script-src 'self'; base-uri 'none'; form-action 'none'; connect-src 'none'; object-src 'none'; frame-ancestors 'none'">
+  <title>REMURA • Correggi il tuo livello • v0.62 LAB</title>
+  <link rel="stylesheet" href="./contributors_amendment_v062_lab.css">
+</head>
+<body>
+  <div class="version">REMURA Contributors v0.62 LAB · 21/11/2026 09:29 CET · OFFLINE</div>
+  <div class="shell">
+    <header class="masthead">
+      <div class="brand"><span class="mark" aria-hidden="true">◈</span> REMURA <span class="brand-note">/ CONTRIBUTORS</span></div>
+      <span class="lab">DEMO NON DISTRIBUITA</span>
+    </header>
+    <main>
+      <div class="intro"><p class="eyebrow">LIVELLI VOLUMETRICI · LAB</p><h1>Correggi il tuo <em>livello.</em></h1><p class="sub">Una correzione non cancella l'originale. Rimane in attesa finché il proprietario di REMURA non la verifica.</p></div>
+      <div class="layout">
+        <section class="panel" aria-labelledby="formTitle">
+          <div class="section-head"><span class="step">01</span><h2 id="formTitle">Nuova correzione</h2></div>
+          <div class="original" aria-label="Livello precedente sintetico"><span>Livello originale fittizio · EURUSD</span><strong>1,12300</strong><small>DELTA_PEAK · DAY · ID LAB 1</small></div>
+          <form id="amendmentForm" autocomplete="off">
+            <label for="sourceId">ID del livello originale</label>
+            <input id="sourceId" name="sourceId" type="number" value="1" min="1" step="1" required readonly>
+            <label for="price">Nuovo prezzo *</label>
+            <input id="price" name="price" type="text" inputmode="decimal" placeholder="Es. 1,12450" maxlength="17" required aria-describedby="priceHint">
+            <small id="priceHint">Punto o virgola, massimo 8 cifre decimali. Non inserire prezzi reali.</small>
+            <label for="observed">Osservazione UTC *</label>
+            <input id="observed" name="observed" type="text" placeholder="2026-11-21T08:00:00Z" maxlength="20" required>
+            <label for="note">Nota tecnica facoltativa</label>
+            <textarea id="note" name="note" rows="3" maxlength="280" placeholder="Motivo della correzione (dati fittizi)"></textarea>
+            <div class="actions"><button id="preview" type="submit">Simula richiesta di correzione</button><button id="clear" type="reset" class="secondary">Svuota</button></div>
+            <p class="privacy">Questa demo funziona soltanto nel browser: nessun invio, accesso al database, salvataggio locale, prezzo reale o notifica Telegram.</p>
+          </form>
+        </section>
+        <aside class="panel outcome" aria-labelledby="stateTitle">
+          <div class="section-head"><span class="step">02</span><h2 id="stateTitle">Anteprima e stato</h2></div>
+          <div class="status"><span class="status-led" aria-hidden="true"></span><strong id="state">NESSUNA RICHIESTA</strong></div>
+          <p id="feedback" role="status" aria-live="polite">Compila la correzione: vedrai qui soltanto un'anteprima locale.</p>
+          <dl class="receipt"><div><dt>Prezzo proposto</dt><dd id="proposed">—</dd></div><div><dt>Osservazione UTC</dt><dd id="when">—</dd></div><div><dt>Livello pubblicato</dt><dd id="published">1,12300 <small>originale fittizio</small></dd></div></dl>
+          <div class="path"><span class="point">1</span><div><strong>Collaboratore</strong><p>Propone la correzione del proprio livello.</p></div></div>
+          <div class="path"><span class="point">2</span><div><strong>OWNER</strong><p>Approva o respinge con registro delle decisioni.</p></div></div>
+          <div class="path"><span class="point">3</span><div><strong>REMURA</strong><p>Solo dopo APPROVED può mostrare il livello aggiornato.</p></div></div>
+          <p class="boundary"><strong>Attenzione:</strong> nessuna identità è verificata in questa pagina. La sicurezza reale è nel backend, non nell'interfaccia.</p>
+        </aside>
+      </div>
+    </main>
+    <footer>REMURA · Contributors v0.62 LAB · Schermata iPhone di prova, non collegata a servizi.</footer>
+  </div>
+  <script type="module" src="./contributors_amendment_v062_lab.mjs"></script>
+</body>
+</html>
