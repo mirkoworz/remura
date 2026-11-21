@@ -1,4 +1,4 @@
-# REMURA Contributors v0.80 LAB — 21/11/2026 17:30 CET (Europe/Rome)
+# REMURA Contributors v0.80 LAB — 21/11/2026 17:24 CET (Europe/Rome)
 # Evidence dossier: OFFLINE only, no network/Cloudflare credentials/deploy.
 """Cross-check D1 GraphQL presence, monitor provenance, Access seats and pinned sources.
 
