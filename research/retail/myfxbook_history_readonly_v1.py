@@ -75,6 +75,8 @@ def blank(status="UNVERIFIED_OR_INCOMPLETE", reason="UNKNOWN"):
         "latest_utc": None, "symbols_in_latest": None,
         "series_checked": None, "records_checked": None,
         "history_gaps_over_2h": None,
+        "current_series": None,
+        "historical_only_legacy_series": None,
         "latest_snapshot_is_fresh_2h": None,
         "source": "REPOSITORY_JSON_ONLY",
         "collector_was_proven_online": False,
@@ -117,34 +119,50 @@ def audit(root, *, now_utc):
             raise InvalidHistory("history_series_count_invalid")
         total = 0
         gaps = 0
+        current_series = 0
+        historical_only = 0
         for file in files:
             if not file.name.endswith(".json") or not SYMBOL.fullmatch(file.stem):
                 raise InvalidHistory("unexpected_file_name")
             history = read_json(file, MAX_HISTORY_BYTES)
             if type(history) is not dict or set(history) != {"symbol", "source", "sampling", "records"} or (
                 history["symbol"] != file.stem or history["source"] != SOURCE or
-                history["sampling"] != "observed at recorded timestamps (not guaranteed 20m)" or
+                history["sampling"] not in {
+                    "observed at recorded timestamps (not guaranteed 20m)",
+                    "observed approximately every 20 minutes"
+                } or
                 type(history["records"]) is not list or not 1 <= len(history["records"]) <= MAX_RECORDS
             ):
                 raise InvalidHistory("history_document_invalid")
-            if file.stem not in latest["symbols"]:
-                raise InvalidHistory("tracked_symbol_missing_from_latest")
             times = [valid_row(row) for row in history["records"]]
             if any(a >= b for a, b in zip(times, times[1:])):
                 raise InvalidHistory("history_duplicate_or_regressive_time")
-            if times[-1] != stamp or history["records"][-1] != latest["symbols"][file.stem]:
-                raise InvalidHistory("latest_history_not_synchronized")
             if any(ts > now for ts in times):
                 raise InvalidHistory("future_history")
+            if history["sampling"] == "observed approximately every 20 minutes":
+                # Legacy sampling claim is NOT a verified cadence or current feed.
+                if file.stem in latest["symbols"] or times[-1] > stamp:
+                    raise InvalidHistory("legacy_current_scope_ambiguous")
+                historical_only += 1
+            else:
+                if file.stem not in latest["symbols"]:
+                    raise InvalidHistory("current_symbol_missing_from_latest")
+                if times[-1] != stamp or history["records"][-1] != latest["symbols"][file.stem]:
+                    raise InvalidHistory("latest_history_not_synchronized")
+                current_series += 1
             gaps += sum((b-a).total_seconds()>7200 for a,b in zip(times, times[1:]))
             total += len(times)
         out.update(
-            status="REPOSITORY_HISTORY_STRUCTURALLY_CONSISTENT_UNATTESTED",
-            reason="SOURCE_PROVENANCE_NOT_INDEPENDENTLY_VERIFIED",
+            status=("REPOSITORY_HISTORY_PARTIAL_LEGACY_UNATTESTED"
+                    if historical_only else "REPOSITORY_HISTORY_STRUCTURALLY_CONSISTENT_UNATTESTED"),
+            reason=("LEGACY_HISTORIES_NOT_CURRENT_PROVENANCE_UNVERIFIED"
+                    if historical_only else "SOURCE_PROVENANCE_NOT_INDEPENDENTLY_VERIFIED"),
             latest_utc=latest["updatedAt"],
             symbols_in_latest=len(latest["symbols"]),
             series_checked=len(files), records_checked=total,
             history_gaps_over_2h=gaps,
+            current_series=current_series,
+            historical_only_legacy_series=historical_only,
             latest_snapshot_is_fresh_2h=(now-stamp).total_seconds()<=7200,
         )
     except InvalidHistory as exc:
