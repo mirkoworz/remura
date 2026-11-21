@@ -1,0 +1,55 @@
+# REMURA Contributors v0.76 LAB — 21/11/2026 15:57 CET
+# One isolated synthetic-only CI; no secrets, npm, Cloudflare, Oracle or deploy.
+name: REMURA Contributors v0.76 — durable original levels ONE-SHOT
+on:
+  push:
+    branches:
+      - research/contributors-durable-level-v076-20261121
+    paths:
+      - .github/workflows/remura-contributors-v076-one-shot-ci.yml
+permissions:
+  contents: read
+concurrency:
+  group: remura-v076-one-shot-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  only-v076-new:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/research/contributors-durable-level-v076-20261121' &&
+      github.event.head_commit.message == 'test(contributors): run only v0.76 new 64 offline checks'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout isolated repo without preserved credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install pinned Node without npm dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - name: Verify Worker-friendly syntax and 13 exact assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check research/contributors/private_levels_composition_v076_lab.mjs
+          node --check research/contributors/durable_level_api_v076_lab.mjs
+          node --check research/contributors/level_attempt_journal_v076_lab.mjs
+          node --check research/contributors/level_intent_precheck_v076_lab.mjs
+          node research/contributors/build_private_assets_v076_lab.mjs --check
+      - name: Run ONLY fresh v0.76 SQLite and iPhone safety tests
+        shell: bash
+        env:
+          CI: 'true'
+        run: |
+          set -euo pipefail
+          node --experimental-sqlite --test --test-reporter=tap \
+            research/contributors/test_new_level_attempts_v076_lab.mjs \
+            research/contributors/test_durable_level_fullstack_v076_lab.mjs \
+            research/contributors/test_durable_assets_v076_lab.mjs | tee /tmp/remura-v076-new.log
+          grep -qE '^# tests 64$' /tmp/remura-v076-new.log
+          grep -qE '^# pass 64$' /tmp/remura-v076-new.log
+          grep -qE '^# fail 0$' /tmp/remura-v076-new.log
+          grep -qE '^# cancelled 0$' /tmp/remura-v076-new.log
+          echo 'REMURA_V076_DURABLE_ORIGINAL_LEVELS=64_64_PASS'
