@@ -120,12 +120,14 @@ def review(aggregates: object, proposed: object, *, now_utc: str) -> dict[str, o
         return result("UNKNOWN_OR_INCOMPLETE", ["future_usage_not_planned"])
     if aggregates["access_seats_limit"] > MAX_FREE_ACCESS_SEATS:
         return result("UNKNOWN_OR_INCOMPLETE", ["access_seat_limit_conflicts_with_free_plan"])
-    if aggregates["access_seats_in_use"] + proposed["pilot_users"] > MAX_FREE_ACCESS_SEATS:
-        return result("NO_GO_INTERNAL_BUDGET", ["free_access_50_user_limit"])
     if aggregates["access_seats_limit"] == 0 or aggregates["access_seats_in_use"] > aggregates["access_seats_limit"]:
         return result("NO_GO_INTERNAL_BUDGET", ["access_seat_limit_invalid_or_exceeded"])
-    if aggregates["access_seats_in_use"] + proposed["pilot_users"] > aggregates["access_seats_limit"]:
-        return result("NO_GO_INTERNAL_BUDGET", ["insufficient_access_seats"])
+    planned_access_seats = aggregates["access_seats_in_use"] + proposed["pilot_users"]
+    if planned_access_seats > aggregates["access_seats_limit"]:
+        reasons = ["insufficient_access_seats"]
+        if planned_access_seats > MAX_FREE_ACCESS_SEATS:
+            reasons.append("free_access_50_user_limit")
+        return result("NO_GO_INTERNAL_BUDGET", reasons)
     for name, cap in NOMINAL_LIMITS.items():
         planned = aggregates[name] + proposed[DELTA[name]]
         if name == "d1_database_count":
