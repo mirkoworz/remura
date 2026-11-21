@@ -1,0 +1,13 @@
+query RemuraD1AccountUsage($accountTag: string!, $day: Date!) {
+  viewer {
+    accounts(filter: { accountTag: $accountTag }) {
+      d1AnalyticsAdaptiveGroups(
+        limit: 100
+        filter: { date_geq: $day, date_leq: $day }
+      ) {
+        dimensions { date databaseId }
+        sum { rowsRead rowsWritten }
+      }
+    }
+  }
+}

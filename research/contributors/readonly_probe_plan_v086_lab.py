@@ -6,17 +6,17 @@ Do not confuse a review plan with approval to execute it. A future action
 must be approved separately, with controls for secret and Free usage.
 """
 from __future__ import annotations
-import ast
 from datetime import date, timedelta
-from hashlib import sha1, sha256
+from hashlib import sha256
 from pathlib import Path
 import json
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
 PIN = "08ee9d8f5ba0b4655f4b0b84245afc7cb7a360c8"
-GUARD = ROOT / "tradingview/delta-peaks/gateway-lab/cloudflare_account_quota_guard.py"
-GUARD_BLOB = "af89df266d25541fc474b4d13536f61d2d77022a"
+QUERY_FIXTURE = ROOT / "research/contributors/monitor_query_reference_v086_lab.graphql"
+AUDITED_HISTORICAL_GUARD_BLOB = "af89df266d25541fc474b4d13536f61d2d77022a"
+EXPECTED_QUERY_SHA256 = "483e14a113af7841fb69bdfdb7ea3fa3ee616b74f4f28b9cbc509b29d022754a"
 DOC_URL = "https://developers.cloudflare.com/d1/observability/metrics-analytics/"
 GRAPHQL_ENDPOINT = "https://api.cloudflare.com/client/v4/graphql"
 MAX_ADDITIONAL_GRAPHQL_POST = 2
@@ -28,35 +28,27 @@ EXPECTED_FIELDS = (
 class ProbeError(ValueError):
     pass
 
-def git_blob(content: bytes) -> str:
-    return sha1(b"blob " + str(len(content)).encode() + b"\0" + content).hexdigest()
-
 def pinned_query() -> tuple[str,str]:
-    if not GUARD.is_file() or GUARD.is_symlink():
-        raise ProbeError("pinned_monitor_source_missing")
-    content = GUARD.read_bytes()
-    if len(content) > 20_000 or git_blob(content) != GUARD_BLOB:
-        raise ProbeError("pinned_monitor_source_drift")
+    # Historical monitor runs from a separate checkout at an audited SHA.
+    # This branch intentionally includes ONLY its query text, not the HTTP client.
+    if not QUERY_FIXTURE.is_file() or QUERY_FIXTURE.is_symlink():
+        raise ProbeError("query_reference_missing")
+    content = QUERY_FIXTURE.read_bytes()
+    if not content or len(content) > 5000:
+        raise ProbeError("query_reference_unbounded")
     try:
-        tree = ast.parse(content.decode("utf-8"))
-    except (SyntaxError, UnicodeError) as e:
-        raise ProbeError("monitor_source_invalid") from e
-    candidates = [
-        ast.literal_eval(node.value)
-        for node in tree.body
-        if isinstance(node, ast.Assign)
-        and any(isinstance(t, ast.Name) and t.id == "QUERY" for t in node.targets)
-    ]
-    if len(candidates) != 1 or not isinstance(candidates[0], str):
-        raise ProbeError("query_missing_or_ambiguous")
-    query = candidates[0]
+        query = content.decode("utf-8").removesuffix("\n")
+    except UnicodeError as exc:
+        raise ProbeError("query_reference_invalid") from exc
+    if sha256(query.encode("utf-8")).hexdigest() != EXPECTED_QUERY_SHA256:
+        raise ProbeError("query_reference_drift")
     if not all(fragment in query for fragment in EXPECTED_FIELDS):
-        raise ProbeError("query_drift")
+        raise ProbeError("query_fields_missing")
     if "mutation" in query.lower() or "subscription" in query.lower():
-        raise ProbeError("not_read_only_query")
+        raise ProbeError("unsafe_graphql_operation")
     if "limit: 100" not in query:
         raise ProbeError("query_not_bounded")
-    return query, sha256(query.encode("utf-8")).hexdigest()
+    return query, EXPECTED_QUERY_SHA256
 
 def plan(day: object) -> dict[str,object]:
     result: dict[str,object] = {

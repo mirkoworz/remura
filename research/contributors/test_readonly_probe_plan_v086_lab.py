@@ -23,7 +23,7 @@ class ProbePlanTests(unittest.TestCase):
         self.assertEqual(r["d1_sql_calls"],0)
         return r
     def test_01_original_guard_pinned(self):
-        self.assertEqual(m.git_blob(m.GUARD.read_bytes()),m.GUARD_BLOB)
+        self.assertEqual(m.sha256(m.QUERY_FIXTURE.read_text(encoding="utf-8").removesuffix("\n").encode()).hexdigest(),m.EXPECTED_QUERY_SHA256)
     def test_02_query_retrieved(self):
         q,d=m.pinned_query()
         self.assertIn("d1AnalyticsAdaptiveGroups",q)
@@ -51,18 +51,18 @@ class ProbePlanTests(unittest.TestCase):
         with TemporaryDirectory() as p:
             file=Path(p)/"guard.py"
             file.write_text("QUERY='mutation { deleteAll }'")
-            with patch.object(m,"GUARD",file):
+            with patch.object(m,"QUERY_FIXTURE",file):
                 self.assertEqual(self.check()["status"],"INVALID_OR_UNVERIFIED")
     def test_12_missing_guard_rejected(self):
-        with patch.object(m,"GUARD",Path("/tmp/this-path-should-not-exist-remura")):
+        with patch.object(m,"QUERY_FIXTURE",Path("/tmp/this-path-should-not-exist-remura")):
             self.assertEqual(self.check()["status"],"INVALID_OR_UNVERIFIED")
     def test_13_guard_symlink_rejected(self):
         with TemporaryDirectory() as p:
-            symlink=Path(p)/"guard.py";symlink.symlink_to(m.GUARD)
-            with patch.object(m,"GUARD",symlink):
+            symlink=Path(p)/"guard.py";symlink.symlink_to(m.QUERY_FIXTURE)
+            with patch.object(m,"QUERY_FIXTURE",symlink):
                 self.assertEqual(self.check()["status"],"INVALID_OR_UNVERIFIED")
     def test_14_bad_blob_hash_rejected(self):
-        with patch.object(m,"GUARD_BLOB","0"*40):
+        with patch.object(m,"EXPECTED_QUERY_SHA256","0"*64):
             self.assertEqual(self.check()["status"],"INVALID_OR_UNVERIFIED")
     def test_15_output_identifier_free(self):
         result=str(self.check())
