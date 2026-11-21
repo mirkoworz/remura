@@ -25,11 +25,11 @@ jobs:
           fetch-depth: 1
       - name: Compile new revision lineage only
         run: python3 -m py_compile research/cot/cot_revision_lineage_v01_lab.py research/cot/test_cot_revision_lineage_v01_lab.py
-      - name: 16 new COT amendment as-of checks, offline only
+      - name: 20 new COT amendment as-of checks, offline only
         shell: bash
         run: |
           set -euo pipefail
           python3 -m unittest discover -s research/cot -p 'test_cot_revision_lineage_v01_lab.py' -v 2>&1 | tee /tmp/remura-cot-revisions-v01.log
-          grep -q '^Ran 16 tests' /tmp/remura-cot-revisions-v01.log
+          grep -q '^Ran 20 tests' /tmp/remura-cot-revisions-v01.log
           grep -q '^OK$' /tmp/remura-cot-revisions-v01.log
-          echo 'REMURA_SHARK_COT_REVISION_LINEAGE=16_16_PASS'
+          echo 'REMURA_SHARK_COT_REVISION_LINEAGE=20_20_PASS'
