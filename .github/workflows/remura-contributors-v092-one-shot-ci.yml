@@ -26,7 +26,7 @@ jobs:
         run: |
           set -euo pipefail
           node --test --test-reporter=tap research/contributors/test_private_worker_composition_v092_lab.mjs 2>&1 | tee /tmp/v092.log
-          grep -q '^1..13$' /tmp/v092.log
-          grep -q '^# pass 13$' /tmp/v092.log
+          grep -q '^1..15$' /tmp/v092.log
+          grep -q '^# pass 15$' /tmp/v092.log
           grep -q '^# fail 0$' /tmp/v092.log
-          echo 'REMURA_CONTRIBUTORS_V092_REAL_COMPOSITION=13_13_PASS'
+          echo 'REMURA_CONTRIBUTORS_V092_REAL_COMPOSITION=15_15_PASS'
