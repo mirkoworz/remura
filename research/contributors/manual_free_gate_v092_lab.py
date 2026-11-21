@@ -21,6 +21,8 @@ NOMINAL_LIMITS = {
     "d1_database_count": 10,
 }
 INTERNAL_BUDGET_PERCENT = 70
+# Account-reported seat capacity cannot override the documented Access Free ceiling.
+MAX_FREE_ACCESS_SEATS = 50
 MAX_AGE_SECONDS = 3600
 REQUIRED = frozenset({
     "source", "observed_utc", "daily_utc",
@@ -116,6 +118,10 @@ def review(aggregates: object, proposed: object, *, now_utc: str) -> dict[str, o
         return result("NO_GO_INTERNAL_BUDGET", ["pilot_size_not_1_or_2"])
     if proposed["extra_requests"] == 0 or proposed["extra_rows_read"] == 0:
         return result("UNKNOWN_OR_INCOMPLETE", ["future_usage_not_planned"])
+    if aggregates["access_seats_limit"] > MAX_FREE_ACCESS_SEATS:
+        return result("UNKNOWN_OR_INCOMPLETE", ["access_seat_limit_conflicts_with_free_plan"])
+    if aggregates["access_seats_in_use"] + proposed["pilot_users"] > MAX_FREE_ACCESS_SEATS:
+        return result("NO_GO_INTERNAL_BUDGET", ["free_access_50_user_limit"])
     if aggregates["access_seats_limit"] == 0 or aggregates["access_seats_in_use"] > aggregates["access_seats_limit"]:
         return result("NO_GO_INTERNAL_BUDGET", ["access_seat_limit_invalid_or_exceeded"])
     if aggregates["access_seats_in_use"] + proposed["pilot_users"] > aggregates["access_seats_limit"]:
