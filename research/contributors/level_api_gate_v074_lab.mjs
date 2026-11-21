@@ -26,7 +26,7 @@ async function targetFromIntent(req){
  if(!EXACT(b,['path','body'])||typeof b.path!=='string'||!EXACT(b.body,b.path==='/api/submit'?['request_id','market','provider','ticker','product','contract','period','kind','price','anchor_utc','observed_utc','note']:['id','action','reason']))BAD();
  if(!['/api/submit','/owner/review'].includes(b.path))BAD();
  return b.path;
- }finally{if(!done)try{await r.cancel()}catch{}r.releaseLock();}
+ }finally{if(!done){try{const cancelled=r.cancel();if(cancelled&&typeof cancelled.catch==='function')void cancelled.catch(()=>{});}catch{}}r.releaseLock();}
 }
 export function createLevelApiGateV074({authenticate,profileRead,handler}){
  if([authenticate,profileRead,handler].some(x=>typeof x!=='function'))BAD();
