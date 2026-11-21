@@ -1,0 +1,33 @@
+# REMURA Contributors v0.92 LAB — 21/11/2026 Europe/Rome.
+# Regression is warranted because the Free-seat admission logic changed.
+# NO real provider calls, user registration, Secret, merge or deploy.
+name: REMURA Contributors v092 Access Free hardcap ONE-SHOT
+on:
+  push:
+    branches:
+      - research/contributors-access-free-hardcap-v092-20261121
+    paths:
+      - research/contributors/manual_free_gate_v092_lab.py
+      - research/contributors/test_manual_free_gate_v092_lab.py
+      - .github/workflows/remura-contributors-v092-access-50seat-only.yml
+permissions:
+  contents: read
+jobs:
+  access-free-hardcap-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Checkout without persisted credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Check only changed manual budget module and 22 small cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s research/contributors -p 'test_manual_free_gate_v092_lab.py' -v 2>&1 | tee /tmp/remura-free-access50.log
+          grep -q '^Ran 22 tests' /tmp/remura-free-access50.log
+          grep -q '^OK$' /tmp/remura-free-access50.log
+          echo 'REMURA_CONTRIBUTORS_FREE_ACCESS_HARDCAP=22_22_PASS'
