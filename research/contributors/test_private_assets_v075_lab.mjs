@@ -20,7 +20,7 @@ test('16 all pages first visible version and date 21/11/2026',()=>{
  const files=names.filter(n=>n.endsWith('.html'));assert.equal(files.length,4);
  for(const n of files){
   const s=load(n);
-  assert.match(s,/REMURA (?:Contributors )?v0\.75 LAB · 21\/11\/2026 15:48 CET/);
+  assert.match(s,/REMURA(?: ·)? Contributors v0\.75 LAB · 21\/11\/2026 15:48 CET/);
   const pos=s.indexOf('v0.75 LAB · 21/11/2026 15:48 CET');
   assert.ok(pos>0 && pos<s.indexOf('<main'));
  }
