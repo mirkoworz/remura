@@ -1,0 +1,59 @@
+# REMURA Contributors v0.91 LAB — 21/11/2026 Europe/Rome
+# SAFE BY DEFAULT: no schedule, no workflow_dispatch, no run without NEW consent file.
+# Not a provider run until owner separately authorizes in chat. Do not create
+# research/contributors/V091-ONE-TIME-OWNER-CONSENT.txt before explicit approval.
+name: REMURA v0.91 D1 one-time OWNER-CONSENT trigger (NOT APPROVED)
+on:
+  push:
+    branches: [research/contributors-d1-diagnostic-v091-20261121]
+    paths:
+      - research/contributors/V091-ONE-TIME-OWNER-CONSENT.txt
+permissions:
+  contents: read
+concurrency:
+  group: remura-v091-authorized-d1-once
+  cancel-in-progress: false
+jobs:
+  no-automatic-activation:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/research/contributors-d1-diagnostic-v091-20261121' &&
+      github.event.head_commit.message == 'chore(remura): OWNER_APPROVES_D1_ONE_TIME_V091' &&
+      contains(github.event.head_commit.added, 'research/contributors/V091-ONE-TIME-OWNER-CONSENT.txt')
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Read-only checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Verify byte-pinned sources and same-UTC-day explicit consent
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object research/contributors/cloudflare_d1_diagnostic_v091_lab.py)" = "f5568f365232a943d6b53b6c8581cd158f21188e"
+          test "$(git hash-object research/contributors/readonly_probe_plan_v086_lab.py)" = "bfc0315067c2adb5436e6166a6af88761adfd615"
+          test "$(git hash-object research/contributors/monitor_query_reference_v086_lab.graphql)" = "cf804bf39721fcd2f791722d07bcb1e07a1391ae"
+          python3 - <<'PY'
+          from pathlib import Path
+          from datetime import datetime, timezone
+          allowed=(
+              "REMURA_V091_OWNER_CONSENT_FOR_D1_ONLY:"
+              +datetime.now(timezone.utc).date().isoformat()+"\n"
+          ).encode("ascii")
+          actual=Path("research/contributors/V091-ONE-TIME-OWNER-CONSENT.txt").read_bytes()
+          if actual!=allowed:
+              raise SystemExit("OWNER_CONSENT_MISSING_STALE_OR_INVALID")
+          print("REMURA_V091_OWNER_CONSENT=EXACT_TODAY")
+          PY
+      - name: Run max 2 HTTPS analytics POST, no retry, no raw account data
+        env:
+          REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+          REMURA_CF_ANALYTICS_READ_TOKEN: ${{ secrets.REMURA_CF_ANALYTICS_READ_TOKEN }}
+          REMURA_CF_PROBE_ACK: AUTORIZZO_DIAGNOSI_D1_MAX_2_POST_SOLO_LETTURA
+          REMURA_V091_ACTIVATE: USER_APPROVED_READ_ONLY_ONCE
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 research/contributors/cloudflare_d1_diagnostic_v091_lab.py --execute-one-time
