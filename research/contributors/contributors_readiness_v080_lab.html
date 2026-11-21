@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>REMURA · Staging Readiness v0.80 LAB</title>
+<style>
+:root{font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#e6f1f7;background:#071019;font-synthesis:none}
+*{box-sizing:border-box}
+body{margin:0;min-width:280px;background:radial-gradient(ellipse at 90% -20%,#173650 0,transparent 49%),radial-gradient(ellipse at -25% 40%,#132935 0,transparent 35%),#071019}
+header{border-bottom:1px solid #233442;background:rgba(4,15,24,.92);padding:12px max(18px,calc((100vw - 1050px)/2));font-size:12px;letter-spacing:.05em;color:#b7cad5;font-weight:700}
+main{max-width:1050px;margin:auto;padding:clamp(22px,5vw,58px) 18px 72px}
+.kicker{color:#8bbdd6;text-transform:uppercase;letter-spacing:.2em;font-size:11px;font-weight:800}
+h1{font-size:clamp(32px,6vw,58px);line-height:1.04;letter-spacing:-.055em;margin:14px 0 16px;max-width:850px}
+.lead{font-size:clamp(15px,2vw,18px);line-height:1.6;color:#bacbd6;max-width:760px;margin:0 0 32px}
+.status{display:inline-flex;align-items:center;gap:8px;border:1px solid #7b533b;background:rgba(150,79,41,.13);color:#ffc69b;border-radius:30px;padding:9px 14px;font-size:12px;font-weight:800;letter-spacing:.04em}
+.status::before{content:"";width:7px;height:7px;border-radius:50%;background:#ff9b64}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:32px 0 42px}
+.metric{border:1px solid #2a3b49;background:rgba(13,29,41,.78);border-radius:16px;padding:19px;min-height:166px}
+.metric .eyebrow{font-size:11px;line-height:1.4;color:#9ab0bf;letter-spacing:.07em;text-transform:uppercase}
+.metric strong{display:block;margin:15px 0 9px;font-size:clamp(20px,3vw,30px);line-height:1.1;letter-spacing:-.035em}
+.metric small{display:block;font-size:12px;line-height:1.5;color:#a9bdc9}
+.metric .unknown{color:#ffbc90}
+.metric .safe{color:#a5d9cd}
+section{margin:38px 0}
+h2{font-size:20px;letter-spacing:-.025em;margin:0 0 18px}
+.steps{border-top:1px solid #2b3a45}
+.step{display:grid;grid-template-columns:34px 1fr auto;align-items:start;gap:14px;padding:18px 0;border-bottom:1px solid #233540}
+.num{font-variant-numeric:tabular-nums;color:#78a7bd;font-size:13px;font-weight:800;padding-top:3px}
+.step h3{font-size:14px;margin:0 0 6px}
+.step p{font-size:13px;line-height:1.55;color:#aebfca;margin:0;max-width:670px}
+.step .pill{font-size:11px;white-space:nowrap;color:#ffc69b;border:1px solid #77503b;border-radius:30px;padding:5px 9px}
+.step .pill.done{color:#a5d9cd;border-color:#386b66}
+.note{padding:18px 20px;border-left:2px solid #59809b;background:rgba(30,55,70,.25);color:#b7cbd7;font-size:13px;line-height:1.65;border-radius:0 10px 10px 0}
+.links{display:flex;gap:10px;flex-wrap:wrap;margin-top:25px}
+a{display:inline-flex;align-items:center;border:1px solid #3c5d72;border-radius:9px;padding:11px 14px;color:#c5e8f8;text-decoration:none;font-size:13px;font-weight:650}
+a:focus-visible{outline:3px solid #95d6f0;outline-offset:3px}
+a:hover{background:#153044}
+footer{border-top:1px solid #2a3a47;padding-top:19px;color:#829eaf;font-size:12px;line-height:1.65}
+@media(max-width:780px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.step{grid-template-columns:25px 1fr}.step .pill{grid-column:2;justify-self:start}}
+@media(max-width:410px){.grid{grid-template-columns:1fr}.metric{min-height:115px}.metric strong{margin:8px 0 6px}.step{gap:9px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<header id="version">REMURA · STAGING READINESS v0.80 LAB · 21/11/2026 17:24 CET (Europe/Rome) · SNAPSHOT NON LIVE</header>
+<main>
+<div class="kicker">Institutional intelligence / Custodia privata</div>
+<h1>Prima la sicurezza.<br> Poi i collaboratori.</h1>
+<p class="lead">Fotografia statica del 21 novembre 2026. I nuovi controlli di laboratorio sono superati, ma mancano due prove fondamentali per attivare il portale privato senza rischi di quota o accesso.</p>
+<div class="status" role="status">STAGING REALE · NO-GO</div>
+<div class="grid" aria-label="Stato del controllo gratuito">
+<article class="metric"><div class="eyebrow">D1 · letture e scritture</div><strong class="unknown">Non misurate</strong><small>GraphQL senza dati del giorno. Non equivale a zero.</small></article>
+<article class="metric"><div class="eyebrow">Workers · richieste stimate</div><strong class="safe">199</strong><small>Su 100.000 al giorno; dato adattivo del 21/11, non fatturazione.</small></article>
+<article class="metric"><div class="eyebrow">D1 · spazio account</div><strong class="safe">6,56 MB</strong><small>4 database su 10; limite nominale 5 GB complessivi.</small></article>
+<article class="metric"><div class="eyebrow">Cloudflare Access · posti</div><strong class="unknown">Da verificare</strong><small>Non conosciamo i posti realmente disponibili nel piano dell'account.</small></article>
+</div>
+<section aria-labelledby="readiness">
+<h2 id="readiness">Cosa è pronto, cosa manca</h2>
+<div class="steps">
+<div class="step"><span class="num">01</span><div><h3>Nuovo dossier di sicurezza v0.80</h3><p>60 nuovi test sintetici PASS su D1 oggi/ieri, Access, provenienza dei monitor e file immutabili. Non sono test su account Cloudflare reale.</p></div><span class="pill done">60/60 PASS</span></div>
+<div class="step"><span class="num">02</span><div><h3>Codice sensibile congelato</h3><p>14 file fondamentali verificati byte per byte rispetto alla baseline v0.78, senza deploy né modifica a main.</p></div><span class="pill done">14/14 MATCH</span></div>
+<div class="step"><span class="num">03</span><div><h3>Contatori D1 del giorno</h3><p>Servono letture e scritture correnti verificabili. Non riempiamo i vuoti con i dati di ieri o con lo spazio su disco.</p></div><span class="pill">IN ATTESA</span></div>
+<div class="step"><span class="num">04</span><div><h3>Posti Access e login privato</h3><p>Serve verificare piano, disponibilità, revoca e permessi prima di ammettere anche un solo collaboratore reale.</p></div><span class="pill">IN ATTESA</span></div>
+</div>
+</section>
+<section aria-labelledby="boundary">
+<h2 id="boundary">Confine di sicurezza</h2>
+<div class="note">Questa pagina è un report statico di laboratorio: non accede a Cloudflare, non contiene token, non esegue JavaScript e non può attivare nulla. Anche un dossier con tutti i dati sintetici coerenti non autorizza il deploy. Il portale reale richiederà un consenso separato e un collaudo sul provider.</div>
+<div class="links">
+<a href="https://github.com/mirkoworz/remura/actions/runs/44924395473">Test GitHub v0.80</a>
+<a href="https://github.com/mirkoworz/remura/actions/runs/44919682812">Monitor D1 incompleto</a>
+<a href="https://github.com/mirkoworz/remura/blob/research/contributors-readiness-v080-20261121/research/contributors/CONTRIBUTORS-V080-READINESS-CHECKPOINT-20261121.md">Roadmap e checkpoint</a>
+</div>
+</section>
+<footer>REMURA v0.80 LAB · 21 novembre 2026 · nessun Mac richiesto · nessun deploy, modifica Oracle, merge o nuova spesa. Versione del report e dati congelati alla data indicata.</footer>
+</main>
+</body>
+</html>
