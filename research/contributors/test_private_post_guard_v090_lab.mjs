@@ -36,7 +36,8 @@ async function denied(h,r,ee=env(),cc=ctx()){
  assert.equal(h.calls(),0);
 }
 test('01 contributor can submit within server gate',async()=>{
- const h=harness();assert.equal((await h.router(req(),env(),ctx())).status,200);
+ const h=harness();const response=await h.router(req(),env(),ctx());
+ assert.equal(response.status,200,'auth_calls='+h.auth()+' delegate_calls='+h.calls()+' headers='+JSON.stringify(Object.fromEntries(req().headers)));
  assert.equal(h.calls(),1);
 });
 test('02 contributor can obtain intent',async()=>{
