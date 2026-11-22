@@ -38,7 +38,7 @@
       const primary=Math.abs(x.deltas.first)>=Math.abs(x.deltas.second)?"first":"second";
       const value=x.deltas[primary];
       return {code:x.code,id:x.id,name:x.name,dataset:x.dataset,
-        category:x.labels[primary],
+        category:x.labels[primary==="first"?0:1],
         netChangePp:value,absChangePp:Math.abs(value),
         direction:value>0?"NET_INCREASE":value<0?"NET_DECREASE":"UNCHANGED",
         reportDate,source:x.source,
