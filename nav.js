@@ -1,4 +1,4 @@
-/* REMURA v1.64: menu responsive ad albero + configurazione condivisa dei mercati. */
+/* REMURA v1.65 LAB — 22/11/2026 17:32 CET. Nuovo Shark Cockpit CFTC, senza modificare gli altri moduli. */
 (() => {
   "use strict";
   const FX_CODES={EUR:"099741",GBP:"096742",JPY:"097741",AUD:"232741",CAD:"090741",CHF:"092741",NZD:"112741"};
@@ -34,7 +34,7 @@
     // Visible on every REMURA page, including the installed iPhone web app.
     const release=document.createElement("div");
     release.id="rm-release";
-    release.textContent="REMURA · Aggiornamento v1.64 · 05/11/2026 18:03 (Italia, preparazione)";
+    release.textContent="REMURA · Aggiornamento v1.65 LAB · 22/11/2026 17:32 CET (anteprima, non pubblicata)";
     document.body.prepend(release);
 
     const page=location.pathname.split("/").pop()||"index.html";
@@ -51,14 +51,14 @@
     const shade=document.createElement("div");shade.id="rm-menu-shade";shade.hidden=true;
     const drawer=document.createElement("aside");drawer.id="rm-menu";
     drawer.setAttribute("aria-label","Navigazione principale Remura");drawer.setAttribute("aria-hidden","true");drawer.inert=true;
-    drawer.innerHTML='<div class="rm-header"><a href="./index.html" class="rm-brand">REMURA<span>Segui le tracce istituzionali</span></a><button id="rm-close" type="button" aria-label="Chiudi menu">×</button></div><nav aria-label="Menu Remura" class="rm-nav"><div class="rm-shortcuts"><a href="./index.html" data-main="home">⌂ <span>Home</span></a><a href="./mercati.html#institutional-scanner" data-main="scanner">🦈 <span>Radar Squali · Squalincome</span></a><a href="./statistica-squali.html" data-main="validation">◉ <span>Verifica Squali · Statistica</span></a><a href="./fonti.html?v=8" data-main="fonti">◈ <span>Fonti sentiment</span></a><a href="./stato-prezzi.html" data-main="prices">▤ <span>Stato prezzi · 38 mercati</span></a><a href="./stato-prezzi.html#macro" data-main="macro">◈ <span>Radar Macro · DXY + VIX</span></a><a href="./impostazioni.html#centro-controllo" data-main="monitor">▤ <span>Centro di Controllo · VPS e feed</span></a><a href="./impostazioni.html" data-main="settings">⚙ <span>Impostazioni · Capital Google</span></a></div><label class="rm-search-label" for="rm-search">Cerca tra 38 strumenti</label><input id="rm-search" type="search" autocomplete="off" placeholder="Gold, CADJPY, Nasdaq..." aria-label="Filtra strumenti e sottomenu"><div id="rm-menu-tree" class="rm-menu-tree"></div><div class="rm-menu-bottom"><a href="./forex.html?v=8">⌁ Radar Forex classico →</a></div></nav><div class="rm-footer">COT: posizioni istituzionali settimanali. Myfxbook e Capital.com: sentiment retail separato.</div>';
+    drawer.innerHTML='<div class="rm-header"><a href="./index.html" class="rm-brand">REMURA<span>Segui le tracce istituzionali</span></a><button id="rm-close" type="button" aria-label="Chiudi menu">×</button></div><nav aria-label="Menu Remura" class="rm-nav"><div class="rm-shortcuts"><a href="./index.html" data-main="home">⌂ <span>Home</span></a><a href="./shark-cockpit.html" data-main="cockpit">🦈 <span>Shark Cockpit · Fondi CFTC</span></a><a href="./mercati.html#institutional-scanner" data-main="scanner">🦈 <span>Radar Squali · Squalincome</span></a><a href="./statistica-squali.html" data-main="validation">◉ <span>Verifica Squali · Statistica</span></a><a href="./fonti.html?v=8" data-main="fonti">◈ <span>Fonti sentiment</span></a><a href="./stato-prezzi.html" data-main="prices">▤ <span>Stato prezzi · 38 mercati</span></a><a href="./stato-prezzi.html#macro" data-main="macro">◈ <span>Radar Macro · DXY + VIX</span></a><a href="./impostazioni.html#centro-controllo" data-main="monitor">▤ <span>Centro di Controllo · VPS e feed</span></a><a href="./impostazioni.html" data-main="settings">⚙ <span>Impostazioni · Capital Google</span></a></div><label class="rm-search-label" for="rm-search">Cerca tra 38 strumenti</label><input id="rm-search" type="search" autocomplete="off" placeholder="Gold, CADJPY, Nasdaq..." aria-label="Filtra strumenti e sottomenu"><div id="rm-menu-tree" class="rm-menu-tree"></div><div class="rm-menu-bottom"><a href="./forex.html?v=8">⌁ Radar Forex classico →</a></div></nav><div class="rm-footer">COT: posizioni istituzionali settimanali. Myfxbook e Capital.com: sentiment retail separato.</div>';
     document.body.append(shade,drawer,trigger);
     document.body.classList.add("rm-has-nav");
     const tree=drawer.querySelector("#rm-menu-tree");
     const search=drawer.querySelector("#rm-search");
-    const isHome=page==="index.html",isScanner=page==="mercati.html",isSources=page==="fonti.html",isSettings=page==="impostazioni.html",isPrices=page==="stato-prezzi.html",isValidation=page==="statistica-squali.html";
-    const highlight=drawer.querySelector(isHome?'[data-main="home"]':isScanner?'[data-main="scanner"]':isSources?'[data-main="fonti"]':isSettings?'[data-main="settings"]':isPrices?'[data-main="prices"]':isValidation?'[data-main="validation"]':'[data-main="home"]');
-    if(highlight&&(isHome||isScanner||isSources||isSettings||isPrices||isValidation))highlight.classList.add("rm-active");
+    const isHome=page==="index.html",isCockpit=page==="shark-cockpit.html",isScanner=page==="mercati.html",isSources=page==="fonti.html",isSettings=page==="impostazioni.html",isPrices=page==="stato-prezzi.html",isValidation=page==="statistica-squali.html";
+    const highlight=drawer.querySelector(isHome?'[data-main="home"]':isCockpit?'[data-main="cockpit"]':isScanner?'[data-main="scanner"]':isSources?'[data-main="fonti"]':isSettings?'[data-main="settings"]':isPrices?'[data-main="prices"]':isValidation?'[data-main="validation"]':'[data-main="home"]');
+    if(highlight&&(isHome||isCockpit||isScanner||isSources||isSettings||isPrices||isValidation))highlight.classList.add("rm-active");
     function render(){
       const v=search.value.trim().toUpperCase();
       tree.replaceChildren();
@@ -107,7 +107,7 @@
     }
     // iPhone: keep the hamburger off market cards while scrolling down,
     // and bring it back when scrolling up. Preserve keyboard access.
-    if(["stato-prezzi.html","mercati.html","asset.html","statistica-squali.html"].includes(page)){
+    if(["stato-prezzi.html","mercati.html","asset.html","statistica-squali.html","shark-cockpit.html"].includes(page)){
       let lastY=window.scrollY;
       const setTriggerVisible=on=>{
         trigger.classList.toggle("rm-scrolled-away",!on);
