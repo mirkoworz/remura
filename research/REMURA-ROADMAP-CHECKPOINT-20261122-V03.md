@@ -53,3 +53,43 @@ PR DRAFT o file Experience/Private Capture/Codex Mac.
    Europe/Rome in cima a ogni pagina; questo checkpoint non modifica UI.
 
 **Stato generale: LAB GREEN su nuovi fixture, pilot e alpha reali NO-GO.**
+
+
+## Appendice operativa — avanzamento successivo del 22 novembre 2026
+Questa sezione integra, senza annullare, i gate e le evidenze sopra.
+Non sono state ripetute suite storiche.
+
+| Nuovo filone LAB | Branch / commit checkpoint | Esecuzione nuova |
+| --- | --- | --- |
+| Retail vero, archivio puntuale EURUSD | `research/retail-replay-real-file-v02-20261122`, docs HEAD `6fd325906f1014f29d40cf01077f6b28687b25b6` | GitHub Actions `44999524905`, **12/12 GREEN** (log letto) |
+| TradingView ledger v0.8.187 | `research/tv-prospective-admission-gate-v0187-20261122`, docs HEAD `af3448b114cc0a181d8b8a3d03686a37d293220d` | GitHub Actions `44999527898`, **20/20 GREEN** (log letto) |
+
+**Retail osservato:** per la prima volta in questo sottotrack viene eseguito un
+replay puntuale su **due file JSON reali del repository**, bloccati agli hash
+Git blob del `main` `7c70bb9`. File `data/myfxbook/history/EURUSD.json`
+e `data/myfxbook/latest.json`: esempio decisione
+`2026-11-20T12:00:00Z` seleziona il campione locale precedente
+`2026-11-20T11:18:32Z`, invece del valore del 22 novembre.
+L'identità dei byte è verificata sul commit, NON il tempo di prima
+pubblicazione o quello di ricezione osservato da un testimone indipendente.
+Non è stato rifatto l'audit di tutti i 34 file, né effettuato un fetch Myfxbook.
+
+**TradingView v0.8.187:** nuovo registro esclusivamente sintetico che controlla
+gli ID di singole decisioni, il prezzo di confronto, la barra M5, la ricezione
+dichiarata entro 120 secondi, la fascia holdout V2, la deduplicazione e il
+riferimento witness **non verificato**. Ritorna sempre
+`NO_GO_REAL_HOLDOUT_ADMISSION`: classificare record non significa autorizzare
+i dati di mercato. Il denominatore è il numero di record forniti, **non** le
+barre di mercato previste. Protocollo V2 e precedenti suite immutati.
+
+Documenti:
+- `research/retail/MYFXBOOK-PINNED-REAL-REPLAY-V02-CHECKPOINT-20261122.md`
+  sul branch Retail reale.
+- `tradingview/delta-peaks/TV-V0187-PROSPECTIVE-LEDGER-CHECKPOINT-20261122.md`
+  sul branch TradingView v0.8.187.
+
+**Stato:** 32 nuovi test GREEN; nessun deploy, merge, Secret, chiamata
+Cloudflare, scraping provider, modifica Oracle o intervento al filone Mac.
+Margini Free Cloudflare/Actions ancora UNKNOWN finché non attestati da fonte
+idonea. Il primo holdout inizia il 23/11 alle 00:00 UTC ma resta scientificamente
+NO-GO senza originale, timestamp indipendente, disponibilità e copertura reale.
