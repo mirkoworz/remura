@@ -1,0 +1,32 @@
+# REMURA TradingView v0.8.188 — 18 NEW tests, offline.
+# No market API, no deployment, no CVD acquisition, no old suites.
+name: REMURA TradingView v0188 scientific abstention new tests only
+on:
+  push:
+    branches: [research/tv-no-signal-without-proof-v0188-20261122]
+    paths:
+      - tradingview/delta-peaks/scientific_admission_firewall_v0188_lab.py
+      - tradingview/delta-peaks/test_scientific_admission_firewall_v0188_lab.py
+      - .github/workflows/remura-tv-science-firewall-v0188-only.yml
+permissions:
+  contents: read
+jobs:
+  cross-source-abstention-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Compile only v0188
+        run: python3 -m py_compile tradingview/delta-peaks/scientific_admission_firewall_v0188_lab.py tradingview/delta-peaks/test_scientific_admission_firewall_v0188_lab.py
+      - name: Evaluate scientific blockers and reject synthetic alpha
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tradingview/delta-peaks -p 'test_scientific_admission_firewall_v0188_lab.py' -v 2>&1 | tee /tmp/tv-v0188.log
+          grep -q '^Ran 18 tests' /tmp/tv-v0188.log
+          grep -q '^OK$' /tmp/tv-v0188.log
+          echo REMURA_TV_V0188_FIREWALL=18_18_PASS
