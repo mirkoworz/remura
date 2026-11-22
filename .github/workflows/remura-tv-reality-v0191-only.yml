@@ -1,0 +1,31 @@
+# REMURA v0.8.191 LAB; inspect checked-in sanitized TEST metadata only.
+name: REMURA TV v0191 real TEST receipt inventory NEW tests only
+on:
+  push:
+    branches: [research/tv-receipt-reality-audit-v0191-lab-20261122]
+    paths:
+      - tradingview/delta-peaks/checked_in_receipt_reality_v0191_lab.py
+      - tradingview/delta-peaks/test_checked_in_receipt_reality_v0191_lab.py
+      - .github/workflows/remura-tv-reality-v0191-only.yml
+permissions:
+  contents: read
+jobs:
+  pinned-checkout-audit:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Compile audit and its 14 new tests
+        run: python3 -m py_compile tradingview/delta-peaks/checked_in_receipt_reality_v0191_lab.py tradingview/delta-peaks/test_checked_in_receipt_reality_v0191_lab.py
+      - name: Audit four real checked-in TEST summaries and workflow source names only
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tradingview/delta-peaks -p 'test_checked_in_receipt_reality_v0191_lab.py' -v 2>&1 | tee /tmp/tv-v0191.log
+          grep -q '^Ran 14 tests' /tmp/tv-v0191.log
+          grep -q '^OK$' /tmp/tv-v0191.log
+          echo REMURA_TV_REALITY_V0191=14_14_PASS
