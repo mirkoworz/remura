@@ -1,0 +1,36 @@
+# REMURA Contributors v0.95 LAB — single-file iPhone draft, no live access.
+name: REMURA Contributors v095 iPhone Draft
+on:
+  push:
+    branches: [feature/contributors-iphone-draft-v095-20261122]
+    paths:
+      - preview/REMURA-Contributors-v095-iPhone-LOCAL-DRAFT.html
+      - preview/contributors-draft-v095-core.js
+      - tests/contributors-draft-v095.test.js
+      - .github/workflows/remura-contributors-v095-iphone-draft.yml
+permissions:
+  contents: read
+jobs:
+  local-only-draft:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check local validation script syntax
+        run: |
+          node --check preview/contributors-draft-v095-core.js
+      - name: Run only the new mobile intake functional and network-isolation tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test tests/contributors-draft-v095.test.js 2>&1 | tee /tmp/contributors-v095.log
+          grep -q '# tests 15' /tmp/contributors-v095.log
+          grep -q '# pass 15' /tmp/contributors-v095.log
+          grep -q '# fail 0' /tmp/contributors-v095.log
+          echo REMURA_CONTRIBUTORS_V095_LOCAL_DRAFT=15_15_PASS
