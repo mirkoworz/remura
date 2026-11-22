@@ -2,7 +2,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const pages=['index.html','forex.html','mercati.html','asset.html','catalogo.html','fonti.html','impostazioni.html','stato-prezzi.html','statistica-squali.html','shark-cockpit.html'];
 test('all pages use shared v1.67 LAB menu with legacy query compatibility and no old labels',()=>{
  for(const p of pages){const html=fs.readFileSync(p,'utf8');assert.ok(html.includes('nav.js?v=167'),p);assert.ok(!html.includes('REMURA v0.8')&&!html.includes('REMURA v1.5 ·')&&!html.includes('VERSIONE 0.5'),p);}
- const nav=fs.readFileSync('nav.js','utf8');assert.match(nav,/Aggiornamento v1\.66 LAB · \d{2}\/\d{2}\/2026/);
+ const nav=fs.readFileSync('nav.js','utf8');assert.match(nav,/Aggiornamento v1\.67 LAB · \d{2}\/\d{2}\/2026/);
 });
 test('Forex has no generated market samples',()=>{
  const code=fs.readFileSync('forex.html','utf8');
