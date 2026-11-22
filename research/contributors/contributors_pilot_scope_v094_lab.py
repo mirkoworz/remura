@@ -86,6 +86,16 @@ def model_action(plan, *, claimed_actor, action, target_subject=None,
     # Never infer role from headers, cookies, body or user-controlled profile.
     # This function operates on an explicitly synthetic preview roster.
     roster=plan["roster"]
+    try:
+        expected=compile_pilot(
+            owner_subject="fixture-owner",
+            contributor_subjects=sorted(x for x in roster if x != "fixture-owner"))
+    except (PilotScopeError, TypeError, ValueError):
+        expected=None
+    if (expected is None or plan.get("scope_sha256")!=expected["scope_sha256"]
+            or roster!=expected["roster"]):
+        return {"planned_allow":False,"reason":"SCOPE_MANIFEST_CHANGED",
+                "runtime_authorization":False}
     if (type(claimed_actor) is not str or claimed_actor not in roster or
             type(roster[claimed_actor]) is not list
             or set(roster[claimed_actor]) !=
@@ -121,7 +131,8 @@ def review_claimed_ui(plan, *, actor, requested_actions):
         raise PilotScopeError("duplicate_ui_action_claim")
     claims = set(requested_actions)
     allowed = {action for action in claims
-               if model_action(plan,claimed_actor=actor,action=action)["planned_allow"]}
+               if model_action(plan,claimed_actor=actor,action=action,
+                               target_subject=actor)["planned_allow"]}
     extras = sorted(claims-allowed)
     return {
         "status":"UI_SCOPE_MATCH_CLAIM_ONLY" if not extras else
