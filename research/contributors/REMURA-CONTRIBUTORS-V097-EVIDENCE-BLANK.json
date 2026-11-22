@@ -30,7 +30,8 @@
     "dailyD1RowsRead": null,
     "dailyD1RowsWritten": null,
     "newStorageBytes": null,
-    "cpuP95MsEstimate": null
+    "cpuP95MsEstimate": null,
+    "existingDatabaseIndex": null
   },
   "billing": {
     "extraPaidServicesConfirmedAbsent": false,
