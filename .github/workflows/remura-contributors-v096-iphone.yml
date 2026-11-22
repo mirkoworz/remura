@@ -1,0 +1,35 @@
+# REMURA v1.70 / Contributors v0.96 LAB — new local draft parity only.
+name: REMURA Contributors v096 iPhone Server Contract
+on:
+  push:
+    branches: [feature/contributors-v096-server-contract-iphone-20261122]
+    paths:
+      - preview/contributors-draft-v096-core.js
+      - preview/REMURA-Contributors-v096-iPhone-SERVER-CONTRACT-LAB.html
+      - tests/contributors-draft-v096.test.js
+      - .github/workflows/remura-contributors-v096-iphone.yml
+permissions:
+  contents: read
+jobs:
+  iphone-validated:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax local-only browser core
+        run: node --check preview/contributors-draft-v096-core.js
+      - name: Test 11 new changed fields in standalone iPhone intake
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test tests/contributors-draft-v096.test.js 2>&1 | tee /tmp/contributors-v096-iphone.log
+          grep -q '# tests 11' /tmp/contributors-v096-iphone.log
+          grep -q '# pass 11' /tmp/contributors-v096-iphone.log
+          grep -q '# fail 0' /tmp/contributors-v096-iphone.log
+          echo REMURA_CONTRIBUTORS_V096_IPHONE=11_11_PASS
