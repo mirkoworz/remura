@@ -18,7 +18,10 @@ from holdout_freeze_v0182_lab import ROOT, guard, git_blob_hash, H1_START
 SCHEMA="remura.tv.checked_in_test_reality.v0191.lab"
 M5=300_000
 EVIDENCE=ROOT/"tradingview/delta-peaks/evidence"
-WORKFLOWS=ROOT/".github/workflows"
+WORKFLOWS=ROOT/"tradingview/delta-peaks/evidence"
+WORKFLOW_SNAPSHOT="main_tv_workflow_snapshot_20261122_v0191.json"
+SNAPSHOT_BLOB="9b0f5986b961e07e50334a06ba6f32708f5ab170"
+MAIN_SHA="bd19918f457809f0568aee5c674b1b36a254971e"
 MAX_BYTES=100_000
 
 PINNED={
@@ -124,18 +127,42 @@ def audit_checked_in(*, evidence_dir=EVIDENCE, workflow_dir=WORKFLOWS):
             issues.append(name+":"+type(exc).__name__)
     if any(a[1]>=b[0] for a,b in zip(sorted(windows),sorted(windows)[1:])):
         issues.append("overlapping_pinned_test_windows")
+    # The research branch does not contain the 16 legacy main workflows.
+    # Evaluate a byte-pinned JSON inventory captured by read-only GitHub
+    # API against the exact main SHA. Never copy/enable those workflows.
     manual=scheduled=unknown=0
-    for name in TV_WORKFLOWS:
-        try:
-            text=_read(workflow_dir/name,workflow_dir).decode("utf-8")
-            if not ON.search(text):
-                raise InventoryError("workflow_missing_on")
-            has_schedule=bool(SCHEDULE.search(text))
-            scheduled+=int(has_schedule)
-            manual+=int(bool(DISPATCH.search(text)) and not has_schedule)
-        except (InventoryError,OSError,UnicodeError):
-            issues.append(name+":workflow_unverified")
-            unknown+=1
+    try:
+        raw=_read(workflow_dir/WORKFLOW_SNAPSHOT,workflow_dir)
+        if git_blob_hash(raw)!=SNAPSHOT_BLOB:
+            issues.append("workflow_snapshot_git_blob_drift")
+        manifest=json.loads(raw,object_pairs_hook=_strict_pairs)
+        if (type(manifest) is not dict or
+                manifest.get("schema")!="remura.tv.main_workflow_inventory.snapshot.v0191.lab" or
+                manifest.get("main_commit_sha")!=MAIN_SHA or
+                manifest.get("workflow_count")!=len(TV_WORKFLOWS) or
+                manifest.get("cloudflare_runtime_status")!="UNKNOWN_NOT_QUERIED" or
+                manifest.get("source_clock_proven") is not False or
+                type(manifest.get("entries")) is not list):
+            raise InventoryError("main_workflow_snapshot_schema_invalid")
+        entries=manifest["entries"]
+        if [x.get("name") for x in entries]!=list(TV_WORKFLOWS):
+            raise InventoryError("unexpected_main_tv_workflow_set")
+        for entry in entries:
+            if (type(entry) is not dict or
+                    set(entry)!={"name","git_blob_sha","workflow_dispatch","schedule","push"} or
+                    type(entry["workflow_dispatch"]) is not bool or
+                    type(entry["schedule"]) is not bool or
+                    type(entry["push"]) is not bool or
+                    type(entry["git_blob_sha"]) is not str or
+                    re.fullmatch("[0-9a-f]{40}",entry["git_blob_sha"]) is None):
+                raise InventoryError("invalid_workflow_metadata")
+            scheduled+=int(entry["schedule"])
+            manual+=int(entry["workflow_dispatch"] and not entry["schedule"])
+    except (InventoryError,KeyError,TypeError,ValueError,UnicodeError,
+            OSError,AttributeError) as exc:
+        issues.append("pinned_main_workflow_snapshot:"+type(exc).__name__)
+        unknown=len(TV_WORKFLOWS)
+        manual=scheduled=0
     if len(records)!=len(PINNED):
         issues.append("checked_in_evidence_inventory_incomplete")
     if scheduled:
@@ -155,6 +182,7 @@ def audit_checked_in(*, evidence_dir=EVIDENCE, workflow_dir=WORKFLOWS):
         "last_pinned_test_window_close_utc":last,
         "pinned_test_windows":sorted(records,key=lambda x:x["window_start_utc"]),
         "github_main_tv_workflow_names_checked":len(TV_WORKFLOWS),
+        "main_workflow_inspection_snapshot_sha":MAIN_SHA,
         "workflow_dispatch_without_schedule_in_checkout":manual,
         "workflows_with_schedule_in_checkout":scheduled,
         "workflows_unknown_in_checkout":unknown,
