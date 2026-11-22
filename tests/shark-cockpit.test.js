@@ -133,7 +133,7 @@ test("actual browser page wires CFTC and existing static retail with no new back
   const js=fs.readFileSync("shark-cockpit.js","utf8");
   const nav=fs.readFileSync("nav.js","utf8");
   const sw=fs.readFileSync("sw.js","utf8");
-  for(const name of ["shark-cockpit-core.js?v=167","shark-cockpit.js?v=167","nav.js?v=167","shark-cockpit.css?v=167"])assert.ok(html.includes(name));
+  for(const name of ["shark-cockpit-core.js?v=168","shark-cockpit.js?v=168","nav.js?v=168","shark-cockpit.css?v=168"])assert.ok(html.includes(name));
   for(const name of ["id=\"cards\"","id=\"refresh\"","id=\"family\"","id=\"sort\"","id=\"retail-list\""])assert.ok(html.includes(name));
   for(const path of ["./shark-cockpit.html","./shark-cockpit.js","./shark-cockpit.css","./shark-cockpit-core.js"])assert.ok(sw.includes(path));
   assert.ok(nav.includes('data-main="cockpit"'));
@@ -199,16 +199,16 @@ test("unknown data returns empty history and no imaginary plotting points",()=>{
   assert.equal(h.status,"UNKNOWN_NO_REPORT");
   assert.equal(h.rows.length,0);
 });
-test("v1.67 mobile product page includes favorites and real historical table, no new backend",()=>{
+test("v1.68 mobile product page includes favorites and real historical table, no new backend",()=>{
   const html=fs.readFileSync("shark-cockpit.html","utf8");
   const ui=fs.readFileSync("shark-cockpit.js","utf8");
   const css=fs.readFileSync("shark-cockpit.css","utf8");
   const nav=fs.readFileSync("nav.js","utf8");
-  for(const marker of ['id="only-favorites"','id="watchlist-note"',"v1.67 LAB","shark-cockpit.js?v=167"])
+  for(const marker of ['id="only-favorites"','id="watchlist-note"',"v1.68 LAB","shark-cockpit.js?v=168"])
     assert.ok(html.includes(marker),marker);
   for(const marker of ["historyPanel(item)","toggleFavorite","historyFor","localStorage.setItem","favoritesOnly"])
     assert.ok(ui.includes(marker),marker);
   assert.ok(css.includes("history-scroll")&&css.includes("watch-toggle"));
-  assert.ok(nav.includes("Aggiornamento v1.67 LAB"));
+  assert.ok(nav.includes("Aggiornamento v1.68 LAB"));
   assert.ok(!ui.includes("private-api/")&&!ui.includes("cloudflare.com"));
 });
