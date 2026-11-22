@@ -1,0 +1,31 @@
+# REMURA COT v0.5 synthetic additive cutover only — 13 NEW tests.
+name: REMURA COT v05 sidecar cutover NEW tests only
+on:
+  push:
+    branches: [research/cot-sidecar-cutover-v05-lab-20261122]
+    paths:
+      - research/cot/cot_sidecar_cutover_v05_lab.py
+      - research/cot/test_cot_sidecar_cutover_v05_lab.py
+      - .github/workflows/remura-cot-sidecar-v05-only.yml
+permissions:
+  contents: read
+jobs:
+  synthetic-sidecar-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Compile new v05 code only
+        run: python3 -m py_compile research/cot/cot_sidecar_cutover_v05_lab.py research/cot/test_cot_sidecar_cutover_v05_lab.py
+      - name: Run new additive and rollback rehearsal only
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s research/cot -p 'test_cot_sidecar_cutover_v05_lab.py' -v 2>&1 | tee /tmp/cot-sidecar-v05.log
+          grep -q '^Ran 13 tests' /tmp/cot-sidecar-v05.log
+          grep -q '^OK$' /tmp/cot-sidecar-v05.log
+          echo REMURA_COT_SIDECAR_V05=13_13_PASS
