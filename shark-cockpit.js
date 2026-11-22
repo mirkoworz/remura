@@ -1,4 +1,4 @@
-/* REMURA Shark Cockpit v1.66 LAB — 22/11/2026 18:13 CET.
+/* REMURA Shark Cockpit v1.67 LAB — 22/11/2026 21:41 CET.
  * Browser-only CFTC direct reads and already published same-origin Myfxbook.
  * No auto-polling, Cloudflare writes, authentication, trading or alerts.
  */
@@ -115,6 +115,8 @@
   }
   function contractCard(item){
     const r=create("article","contract-card");
+    r.id="shark-contract-"+item.code;
+    r.tabIndex=-1;
     r.dataset.grade=item.status==="CURRENT_REPORT_DATE"?"ready":
       item.status==="STALE_REPORT"?"stale":"unknown";
     const head=create("div","card-head"),title=create("div","");
@@ -170,6 +172,7 @@
     byId("valid-moves").textContent=String(cards.filter(c=>c.status==="CURRENT_REPORT_DATE"&&c.deltas).length);
     byId("divergent-count").textContent=String(cards.filter(c=>c.status==="CURRENT_REPORT_DATE"&&c.comparison==="DIVERGENT").length);
     updateWatchNote();
+    window.REMURA_SHARK_MOVERS_UI?.render(sorted,{favorites,favoritesOnly:els.favoritesOnly?.checked===true});
   }
   async function fetchCftc(dataset){
     const codes=core.CONTRACTS.filter(c=>c.dataset===dataset).map(c=>c.code);
