@@ -1,0 +1,31 @@
+# REMURA COT v0.7; TFF cohort calculations purely synthetic, no collector.
+name: REMURA COT v07 institutional cohort NEW tests only
+on:
+  push:
+    branches: [research/cot-institutional-flow-v07-lab-20261122]
+    paths:
+      - research/cot/cot_institutional_cohort_flow_v07_lab.py
+      - research/cot/test_cot_institutional_cohort_flow_v07_lab.py
+      - .github/workflows/remura-cot-cohort-v07-only.yml
+permissions:
+  contents: read
+jobs:
+  synthetic-tff-flow:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Compile cohort module and 17 new tests
+        run: python3 -m py_compile research/cot/cot_institutional_cohort_flow_v07_lab.py research/cot/test_cot_institutional_cohort_flow_v07_lab.py
+      - name: Exercise 17 new forward-only TFF category comparisons
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s research/cot -p 'test_cot_institutional_cohort_flow_v07_lab.py' -v 2>&1 | tee /tmp/cot-v07.log
+          grep -q '^Ran 17 tests' /tmp/cot-v07.log
+          grep -q '^OK$' /tmp/cot-v07.log
+          echo REMURA_COT_FLOW_V07=17_17_PASS
