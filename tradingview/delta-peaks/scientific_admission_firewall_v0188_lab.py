@@ -51,8 +51,15 @@ def review_decision(*, decision_id, decision_utc, cvd_candidate=None,
         cvd_class=classify(cvd_candidate)
         if cvd_candidate.get("decision_id")!=decision_id:
             blocks.add("DECISION_LINK_NOT_EXACT")
-        if cvd_candidate.get("bar_close_utc")!=decision_utc:
-            blocks.add("DECISION_BAR_CLOSE_NOT_EXACT")
+        try:
+            closed=instant(cvd_candidate.get("bar_close_utc"))
+            received=instant(cvd_candidate.get("receipt_utc"))
+        except AdmissionError:
+            closed=received=None
+        if closed is None or closed>at:
+            blocks.add("CVD_BAR_NOT_CLOSED_BY_DECISION")
+        if received is None or received>at:
+            blocks.add("CVD_RECEIPT_NOT_AVAILABLE_BY_DECISION")
         if cvd_class!="ON_TIME_CLAIM_NOT_INDEPENDENTLY_VERIFIED":
             blocks.add("M5_CVD_NOT_ON_TIME_COMPARABLE")
         else:
