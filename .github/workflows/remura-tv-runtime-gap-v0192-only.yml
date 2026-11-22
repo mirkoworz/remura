@@ -1,0 +1,31 @@
+# REMURA TV v0.8.192 LAB — new static TEST receiver gaps only.
+name: REMURA TV v0192 live-state GAP NEW tests only
+on:
+  push:
+    branches: [research/tv-cvd-live-gap-gate-v0192-lab-20261122]
+    paths:
+      - tradingview/delta-peaks/cvd_test_runtime_gap_v0192_lab.py
+      - tradingview/delta-peaks/test_cvd_test_runtime_gap_v0192_lab.py
+      - .github/workflows/remura-tv-runtime-gap-v0192-only.yml
+permissions:
+  contents: read
+jobs:
+  offline-current-state-gaps:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Compile two new modules only
+        run: python3 -m py_compile tradingview/delta-peaks/cvd_test_runtime_gap_v0192_lab.py tradingview/delta-peaks/test_cvd_test_runtime_gap_v0192_lab.py
+      - name: Verify 15 new source-lock and live-evidence gap cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tradingview/delta-peaks -p 'test_cvd_test_runtime_gap_v0192_lab.py' -v 2>&1 | tee /tmp/tv-v0192.log
+          grep -q '^Ran 15 tests' /tmp/tv-v0192.log
+          grep -q '^OK$' /tmp/tv-v0192.log
+          echo REMURA_TV_CVD_RUNTIME_GAP_V0192=15_15_PASS
