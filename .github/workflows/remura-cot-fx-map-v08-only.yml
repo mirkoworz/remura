@@ -1,0 +1,31 @@
+# REMURA COT v0.8 LAB — synthetic Forex quote mapping only.
+name: REMURA COT v08 FX mapping NEW tests only
+on:
+  push:
+    branches: [research/cot-spot-futures-mapping-v08-lab-20261122]
+    paths:
+      - research/cot/cot_spot_futures_mapping_v08_lab.py
+      - research/cot/test_cot_spot_futures_mapping_v08_lab.py
+      - .github/workflows/remura-cot-fx-map-v08-only.yml
+permissions:
+  contents: read
+jobs:
+  synthetic-fx-mapping:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Compile mapping and 15 new tests only
+        run: python3 -m py_compile research/cot/cot_spot_futures_mapping_v08_lab.py research/cot/test_cot_spot_futures_mapping_v08_lab.py
+      - name: Run 15 new synthetic TFF-to-FX orientation cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s research/cot -p 'test_cot_spot_futures_mapping_v08_lab.py' -v 2>&1 | tee /tmp/cot-map-v08.log
+          grep -q '^Ran 15 tests' /tmp/cot-map-v08.log
+          grep -q '^OK$' /tmp/cot-map-v08.log
+          echo REMURA_COT_FX_MAPPING_V08=15_15_PASS
