@@ -1,0 +1,32 @@
+# REMURA Contributors v0.93 - no provider calls, no real seats,
+# no Cloudflare GraphQL, no users, no deploy, no prior-suite rerun.
+name: REMURA Contributors v093 Free evidence NEW tests only
+on:
+  push:
+    branches: [research/contributors-free-evidence-gate-v093-20261122]
+    paths:
+      - research/contributors/contributors_free_proof_gate_v093_lab.py
+      - research/contributors/test_contributors_free_proof_gate_v093_lab.py
+      - .github/workflows/remura-contributors-free-proof-v093-only.yml
+permissions:
+  contents: read
+jobs:
+  local-free-evidence-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Compile only v093
+        run: python3 -m py_compile research/contributors/contributors_free_proof_gate_v093_lab.py research/contributors/test_contributors_free_proof_gate_v093_lab.py
+      - name: Check 21 Nov sanitized incomplete budget never enables pilot
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s research/contributors -p 'test_contributors_free_proof_gate_v093_lab.py' -v 2>&1 | tee /tmp/contributors-v093.log
+          grep -q '^Ran 16 tests' /tmp/contributors-v093.log
+          grep -q '^OK$' /tmp/contributors-v093.log
+          echo REMURA_CONTRIBUTORS_FREE_V093=16_16_PASS
