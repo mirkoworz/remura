@@ -1,0 +1,33 @@
+# REMURA Retail Git-object provenance v0.3 — only 12 NEW tests.
+# Four pinned public repository commits; no provider/Cloudflare requests, no secrets.
+name: REMURA Retail Git provenance v03 NEW checks only
+on:
+  push:
+    branches: [research/retail-git-commit-witness-boundary-v03-20261122]
+    paths:
+      - research/retail/myfxbook_git_commit_boundary_v03_lab.py
+      - research/retail/test_myfxbook_git_commit_boundary_v03_lab.py
+      - .github/workflows/remura-retail-git-boundary-v03-only.yml
+permissions:
+  contents: read
+jobs:
+  four-pinned-commits-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout bounded git history, no persisted credentials
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 60
+          persist-credentials: false
+      - name: Compile only new Git provenance audit and tests
+        run: python3 -m py_compile research/retail/myfxbook_git_commit_boundary_v03_lab.py research/retail/test_myfxbook_git_commit_boundary_v03_lab.py
+      - name: Four real commit snapshots - timestamps remain unverified
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s research/retail -p 'test_myfxbook_git_commit_boundary_v03_lab.py' -v 2>&1 | tee /tmp/retail-git-v03.log
+          grep -q '^Ran 12 tests' /tmp/retail-git-v03.log
+          grep -q '^OK$' /tmp/retail-git-v03.log
+          echo REMURA_RETAIL_GIT_BOUNDARY_V03=12_12_PASS
