@@ -1,4 +1,4 @@
-/* REMURA Shark Cockpit v1.67 LAB — 22/11/2026 21:41 CET */
+/* REMURA Shark Cockpit v1.68 LAB — 22/11/2026 22:10 CET */
 :root{color-scheme:dark;--bg:#06121b;--ink:#ecf9f6;--muted:#9ebdc4;--mint:#76f2cd;--blue:#8bb6ff;--amber:#f6d496;--red:#ff919e;--line:#35535f;--panel:#102733}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -125,3 +125,21 @@ details.method p,details.method li{color:#bed3d4;font-size:12px;line-height:1.7}
 .contract-card:focus-visible{outline:3px solid var(--mint);outline-offset:4px}
 @media(max-width:850px){.movers-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:570px){.movers-grid{grid-template-columns:1fr}.movers-panel{padding:15px}.mover-card{min-height:0;padding:14px}.mover-value{font-size:25px}}
+
+/* REMURA v1.68 LAB — institutional long/short gross-position anatomy */
+.anatomy-details{border:1px solid #3f6770;border-radius:13px;background:#0b2732;padding:10px 12px}
+.anatomy-details summary{font-size:12px;font-weight:850;color:#a2f2d7;cursor:pointer;min-height:42px;display:flex;align-items:center}
+.anatomy-details[open] summary{margin-bottom:12px;border-bottom:1px solid #365c63}
+.anatomy-date{font-size:11px;color:#b7d7d5;margin-bottom:12px;line-height:1.6}
+.anatomy-groups{display:grid;gap:11px}
+.anatomy-group{border:1px solid #345761;border-radius:13px;padding:13px;background:#0d2b38;min-width:0}
+.anatomy-group h4{color:#bceee0;font-size:12px;letter-spacing:.015em;margin:0 0 10px}
+.anatomy-positions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.anatomy-stat{background:#122e3c;padding:10px 8px;border-radius:9px;display:flex;flex-direction:column;min-width:0}
+.anatomy-stat-label{color:#a8c4cb;font-size:10px;font-weight:650}
+.anatomy-stat strong{font-variant-numeric:tabular-nums;font-size:clamp(13px,2.6vw,17px);color:#f2fff9;margin:5px 0 4px;overflow-wrap:anywhere}
+.anatomy-stat-delta{font-variant-numeric:tabular-nums;font-size:10px;font-weight:800}
+.anatomy-stat-delta.plus{color:#83f0bd}.anatomy-stat-delta.minus{color:#ffadb2}.anatomy-stat-delta.neutral{color:#b4c8c8}
+.anatomy-net{font-size:11px;color:#c5e3df;margin:9px 0 0}
+.anatomy-caveat,.anatomy-warning{font-size:11px;color:#e8d5ad;line-height:1.6;margin:13px 0 0}
+@media(max-width:540px){.anatomy-details{padding:9px}.anatomy-group{padding:10px}.anatomy-positions{grid-template-columns:repeat(2,minmax(0,1fr))}.anatomy-stat:last-child{grid-column:1/-1}}
