@@ -1,0 +1,32 @@
+# REMURA COT v0.3: only new WAL reopen checks, synthetic + temp SQLite.
+# v0.1 20/20 and v0.2 16/16 already GREEN; do not rerun them.
+name: REMURA COT v03 WAL reopen NEW checks only
+on:
+  push:
+    branches: [research/cot-wal-reopen-v03-lab-20261122]
+    paths:
+      - research/cot/cot_wal_reopen_v03_lab.py
+      - research/cot/test_cot_wal_reopen_v03_lab.py
+      - .github/workflows/remura-cot-wal-reopen-v03-only.yml
+permissions:
+  contents: read
+jobs:
+  ephemeral-wal-reopen-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Compile only v03 new code and tests
+        run: python3 -m py_compile research/cot/cot_wal_reopen_v03_lab.py research/cot/test_cot_wal_reopen_v03_lab.py
+      - name: Run 15 new local WAL fixture checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s research/cot -p 'test_cot_wal_reopen_v03_lab.py' -v 2>&1 | tee /tmp/cot-v03.log
+          grep -q '^Ran 15 tests' /tmp/cot-v03.log
+          grep -q '^OK$' /tmp/cot-v03.log
+          echo REMURA_COT_WAL_V03=15_15_PASS
