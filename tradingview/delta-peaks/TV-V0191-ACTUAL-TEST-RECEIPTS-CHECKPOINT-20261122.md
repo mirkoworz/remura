@@ -21,3 +21,8 @@ Verifica realmente i byte dei quattro metadata JSON tramite blob SHA del Git che
 
 ## Per il 23 novembre
 Il protocollo immutabile V2 prevede il primo holdout alle 00:00 UTC / 01:00 CET. Da questo inventario non si puo' dichiarare CVD disponibile nel holdout; occorre registrare davvero future barre/prove prospettiche e validare autenticamente clock, identita' per decisione, origine, comparatore e market coverage. Nessun invio di segnali, attivazione automatica, tuning o claim di vantaggio.
+
+## Precisazione importante: manifest main e branch di ricerca
+Il branch LAB non contiene fisicamente tutti i 16 workflow TradingView del main. Per evitare di copiarli o, peggio, di renderli eseguibili sul branch di ricerca, la loro ispezione GitHub e' stata archiviata in un nuovo file DI METADATI INERTE: tradingview/delta-peaks/evidence/main_tv_workflow_snapshot_20261122_v0191.json.
+La snapshot dichiara main bd19918f457809f0568aee5c674b1b36a254971e, i nomi e i Git blob SHA di 16 workflow, workflow_dispatch presente in 16/16, schedule 0/16, push 1/16. La sua impronta Git e' verificata dal lettore LAB: 9b0f5986b961e07e50334a06ba6f32708f5ab170. La snapshot non e' un workflow GitHub Actions, non e' prova di scheduling esterno, non esegue il codice dei 16 workflow e non rappresenta lo stato GitHub post-checkpoint.
+L'audit protegge da falsificazioni nel repository controllato, ma non attesta autenticita' degli orari originali dei feed.
