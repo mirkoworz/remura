@@ -1,0 +1,31 @@
+# TradingView v0.8.190 — NEW fold/horizon cases ONLY. No live CVD.
+name: REMURA TradingView v0190 fold maturity NEW tests only
+on:
+  push:
+    branches: [research/tv-fold-boundary-v0190-lab-20261122]
+    paths:
+      - tradingview/delta-peaks/frozen_fold_maturity_v0190_lab.py
+      - tradingview/delta-peaks/test_frozen_fold_maturity_v0190_lab.py
+      - .github/workflows/remura-tv-fold-v0190-only.yml
+permissions:
+  contents: read
+jobs:
+  fold-maturity-offline:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Compile v0190 only
+        run: python3 -m py_compile tradingview/delta-peaks/frozen_fold_maturity_v0190_lab.py tradingview/delta-peaks/test_frozen_fold_maturity_v0190_lab.py
+      - name: Run exactly 16 new fold-exclusive scenarios
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tradingview/delta-peaks -p 'test_frozen_fold_maturity_v0190_lab.py' -v 2>&1 | tee /tmp/tv-v0190.log
+          grep -q '^Ran 16 tests' /tmp/tv-v0190.log
+          grep -q '^OK$' /tmp/tv-v0190.log
+          echo REMURA_TV_FOLD_MATURITY_V0190=16_16_PASS
