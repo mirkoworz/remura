@@ -121,11 +121,22 @@ function report(evidence,now=Date.now()){
   if(d1?.databaseSizesBytes?.some(x=>nonnegative(x)&&x>LIMITS.d1DatabaseStorageBytes*B))
     fail("EXISTING_D1_DATABASE_TOO_LARGE_FOR_REMURA_RESERVE");
   if(d1&&nonnegative(proposed.newDatabases)&&nonnegative(proposed.newStorageBytes)){
-    if(proposed.newDatabases===0&&proposed.newStorageBytes>0)
-      fail("STAGING_EXISTING_DATABASE_CAPACITY_NOT_ATTESTED");
-    if(proposed.newDatabases>0&&proposed.newStorageBytes>proposed.newDatabases*
-       LIMITS.d1DatabaseStorageBytes*B)
-      fail("NEW_D1_DATABASE_SIZE_HEADROOM_TOO_SMALL");
+    if(proposed.newDatabases===0&&proposed.newStorageBytes>0){
+      const target=proposed.existingDatabaseIndex;
+      if(!nonnegative(target)||target>=d1.databases||!Array.isArray(d1.databaseSizesBytes)||
+         !nonnegative(d1.databaseSizesBytes[target]))
+        fail("D1_EXISTING_TARGET_DATABASE_NOT_ATTESTED");
+      else if(d1.databaseSizesBytes[target]+proposed.newStorageBytes>
+          LIMITS.d1DatabaseStorageBytes*B)
+        fail("D1_EXISTING_TARGET_DATABASE_HEADROOM_TOO_SMALL");
+    }
+    if(proposed.newDatabases>0){
+      if(proposed.existingDatabaseIndex!==null)
+        fail("D1_NEW_AND_EXISTING_TARGETS_AMBIGUOUS");
+      if(proposed.newStorageBytes>proposed.newDatabases*
+         LIMITS.d1DatabaseStorageBytes*B)
+        fail("NEW_D1_DATABASE_SIZE_HEADROOM_TOO_SMALL");
+    }
   }
   if(evidence.billing?.extraPaidServicesConfirmedAbsent!==true||
      evidence.billing?.planPriceZeroConfirmed!==true||
