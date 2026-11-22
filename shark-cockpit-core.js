@@ -1,4 +1,4 @@
-/* REMURA Shark Cockpit v1.67 LAB — 22/11/2026 21:41 CET.
+/* REMURA Shark Cockpit v1.68 LAB — 22/11/2026 22:10 CET.
  * Official public weekly CFTC futures, with retail archived separately.
  * No new backend, no chart scraping, no institution identities, no signals.
  */
@@ -119,6 +119,46 @@
       realTimeMarketFlow:false,spotPairMappingVerified:false,tradingSignal:false
     };
   }
+  /*
+   * Weekly anatomy: changes in reported LONG/SHORT positions in contracts,
+   * NOT proof of new buy/sell orders. CFTC first-publication time unknown.
+   * Derivation uses exactly the two Tuesday snapshots already admitted by card().
+   */
+  function anatomyFor(contract,parsed,now=Date.now()){
+    if(!contract||!CONTRACTS.some(c=>c.code===contract.code&&c.dataset===contract.dataset))
+      return {status:"UNKNOWN_CONTRACT",categories:[],orderFlowVerified:false};
+    const status=card(contract,parsed,now);
+    if(status.status!=="CURRENT_REPORT_DATE"||status.deltas===null)
+      return {status:status.status,categories:[],orderFlowVerified:false};
+    const item=parsed?.byCode instanceof Map?parsed.byCode.get(contract.code):null;
+    if(!item||item.conflict||!Array.isArray(item.rows)||item.rows.length<2)
+      return {status:"UNKNOWN_SOURCE_HISTORY",categories:[],orderFlowVerified:false};
+    const [cur,prev]=item.rows;
+    if(!cur||!prev||cur.at-prev.at!==WEEK||cur.date!==status.reportDate)
+      return {status:"UNKNOWN_WEEK_BOUNDARY",categories:[],orderFlowVerified:false};
+    const groups=["first","second"].map((key,index)=>{
+      const a=cur[key],b=prev[key];
+      if(!a||!b||![a.long,a.short,b.long,b.short].every(Number.isFinite))return null;
+      const longDelta=a.long-b.long,shortDelta=a.short-b.short;
+      const netCurrent=a.long-a.short,netPrevious=b.long-b.short;
+      return {label:status.labels[index],key,
+        currentLong:a.long,currentShort:a.short,
+        previousLong:b.long,previousShort:b.short,
+        longDelta,shortDelta,
+        netContracts:netCurrent,netDeltaContracts:netCurrent-netPrevious,
+        netPpChange:status.deltas[key],
+        /* Not possible to infer actual orders/openings/closings from two reports. */
+        opensVerified:false,closesVerified:false,actorIdentityVerified:false};
+    });
+    if(groups.some(x=>x===null))return {status:"UNKNOWN_GROUP_COUNTS",categories:[],orderFlowVerified:false};
+    return {status:"WEEKLY_GROSS_POSITIONS_COMPARABLE",
+      reportDate:cur.date,previousDate:prev.date,
+      currentOpenInterest:cur.oi,openInterestDelta:cur.oi-prev.oi,
+      categories:groups,
+      source:SOURCES[contract.dataset],sourceType:contract.dataset,
+      firstSeenVerified:false,orderFlowVerified:false,causalTradeAttribution:false,
+      tradingSignal:false};
+  }
   function prepare(tff,disagg,now=Date.now()){
     const reports={tff,disagg};
     return CONTRACTS.map(c=>card(c,reports[c.dataset],now));
@@ -195,5 +235,5 @@
     });
   }
   return Object.freeze({CONTRACTS,FIELDS,DATASETS,SOURCES,FX_RETAIL,DAY,WEEK,
-                        parseRows,card,prepare,filterCards,parseFavorites,toggleFavorite,historyFor,summarizeRetail,round});
+                        parseRows,card,anatomyFor,prepare,filterCards,parseFavorites,toggleFavorite,historyFor,summarizeRetail,round});
 });
