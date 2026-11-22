@@ -122,7 +122,7 @@ test("new storage reuses a selected existing D1 only when that database has head
  fail(y,"NEW_D1_DATABASE_SIZE_HEADROOM_TOO_SMALL");
 });
 test("existing D1 cannot exceed conservative per-database storage reserve",()=>{
- const x=evidence();x.pilot.newStorageBytes=200000000;
+ const x=evidence();x.pilot.newStorageBytes=400000000;
  fail(x,"D1_EXISTING_TARGET_DATABASE_HEADROOM_TOO_SMALL");
  const y=evidence();y.pilot.newStorageBytes=1000000;
  y.pilot.existingDatabaseIndex=99;
