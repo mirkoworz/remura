@@ -133,11 +133,82 @@ test("actual browser page wires CFTC and existing static retail with no new back
   const js=fs.readFileSync("shark-cockpit.js","utf8");
   const nav=fs.readFileSync("nav.js","utf8");
   const sw=fs.readFileSync("sw.js","utf8");
-  for(const name of ["shark-cockpit-core.js?v=165","shark-cockpit.js?v=165","nav.js?v=165","shark-cockpit.css?v=165"])assert.ok(html.includes(name));
+  for(const name of ["shark-cockpit-core.js?v=166","shark-cockpit.js?v=166","nav.js?v=166","shark-cockpit.css?v=166"])assert.ok(html.includes(name));
   for(const name of ["id=\"cards\"","id=\"refresh\"","id=\"family\"","id=\"sort\"","id=\"retail-list\""])assert.ok(html.includes(name));
   for(const path of ["./shark-cockpit.html","./shark-cockpit.js","./shark-cockpit.css","./shark-cockpit-core.js"])assert.ok(sw.includes(path));
   assert.ok(nav.includes('data-main="cockpit"'));
   assert.ok(js.includes("./data/myfxbook/latest.json"));
   assert.ok(js.includes("publicreporting.cftc.gov"));
   assert.ok(!js.includes("private-api/")&&!js.includes("localStorage.setItem"));
+});
+
+test("favorite list accepts only whitelisted CFTC codes and drops duplicate values",()=>{
+  assert.deepEqual(core.parseFavorites('["099741","099741","097741","FAKE"]'),["099741","097741"]);
+  assert.deepEqual(core.parseFavorites("not-json"),[]);
+  assert.deepEqual(core.parseFavorites('{"code":"099741"}'),[]);
+});
+test("oversized favorites payload and unexpected elements fail closed",()=>{
+  assert.deepEqual(core.parseFavorites(JSON.stringify(Array(15).fill("099741"))),[]);
+  assert.deepEqual(core.parseFavorites(" ".repeat(513)),[]);
+  assert.deepEqual(core.parseFavorites(JSON.stringify([{"code":"099741"},42])),[]);
+});
+test("favorites may be added and removed without altering CFTC observations",()=>{
+  let selected=core.toggleFavorite([],"099741");
+  assert.deepEqual(selected,["099741"]);
+  selected=core.toggleFavorite(selected,"097741");
+  assert.deepEqual(selected,["099741","097741"]);
+  assert.deepEqual(core.toggleFavorite(selected,"099741"),["097741"]);
+  assert.deepEqual(core.toggleFavorite(selected,"UNKNOWN"),selected);
+});
+test("watchlist-only filters contract cards using exact public codes",()=>{
+  const tff=parsed([row(),row("2026-11-10",{asset_mgr_positions_long:"100"})]);
+  const all=core.prepare(tff,null,NOW);
+  const only=core.filterCards(all,{favoritesOnly:true,favorites:["099741","FAKE"]});
+  assert.equal(only.length,1);
+  assert.equal(only[0].id,"EUR");
+  assert.equal(core.filterCards(all,{favoritesOnly:true,favorites:[]}).length,0);
+});
+test("expanded history lists real CFTC Tuesdays chronologically and consecutive changes",()=>{
+  const p=parsed([row(),row("2026-11-10",{asset_mgr_positions_long:"100",lev_money_positions_long:"90"})]);
+  const c=core.CONTRACTS.find(v=>v.code==="099741");
+  const h=core.historyFor(c,p);
+  assert.equal(h.status,"UNATTESTED_PUBLIC_REPORT_HISTORY");
+  assert.deepEqual(h.rows.map(x=>x.date),["2026-11-10","2026-11-17"]);
+  assert.equal(h.rows[0].firstChange,null);
+  assert.equal(h.rows[1].firstChange,2);
+  assert.equal(h.rows[1].secondChange,-3);
+  assert.equal(h.firstSeenVerified,false);
+  assert.equal(h.tradingSignal,false);
+});
+test("missing Tuesday creates a gap instead of invented weekly history delta",()=>{
+  const p=parsed([row(),row("2026-11-03",{asset_mgr_positions_long:"100"})]);
+  const h=core.historyFor(core.CONTRACTS[0],p);
+  assert.equal(h.rows.length,2);
+  assert.equal(h.rows[1].firstChange,null);
+  assert.equal(h.rows[1].secondChange,null);
+  assert.equal(h.rows[1].priorWeekMissing,true);
+});
+test("discordant revisions hide history rather than select convenient values",()=>{
+  const p=parsed([row(),row("2026-11-17",{asset_mgr_positions_long:"190"})]);
+  const h=core.historyFor(core.CONTRACTS[0],p);
+  assert.equal(h.status,"QUARANTINE_CONFLICT");
+  assert.deepEqual(h.rows,[]);
+});
+test("unknown data returns empty history and no imaginary plotting points",()=>{
+  const h=core.historyFor(core.CONTRACTS[0],null);
+  assert.equal(h.status,"UNKNOWN_NO_REPORT");
+  assert.equal(h.rows.length,0);
+});
+test("v1.66 mobile product page includes favorites and real historical table, no new backend",()=>{
+  const html=fs.readFileSync("shark-cockpit.html","utf8");
+  const ui=fs.readFileSync("shark-cockpit.js","utf8");
+  const css=fs.readFileSync("shark-cockpit.css","utf8");
+  const nav=fs.readFileSync("nav.js","utf8");
+  for(const marker of ['id="only-favorites"','id="watchlist-note"',"v1.66 LAB","shark-cockpit.js?v=166"])
+    assert.ok(html.includes(marker),marker);
+  for(const marker of ["historyPanel(item)","toggleFavorite","historyFor","localStorage.setItem","favoritesOnly"])
+    assert.ok(ui.includes(marker),marker);
+  assert.ok(css.includes("history-scroll")&&css.includes("watch-toggle"));
+  assert.ok(nav.includes("Aggiornamento v1.66 LAB"));
+  assert.ok(!ui.includes("private-api/")&&!ui.includes("cloudflare.com"));
 });
