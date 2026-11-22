@@ -1,4 +1,4 @@
-/* REMURA Shark Cockpit v1.66 LAB — 22/11/2026 18:13 CET.
+/* REMURA Shark Cockpit v1.67 LAB — 22/11/2026 21:41 CET.
  * Official public weekly CFTC futures, with retail archived separately.
  * No new backend, no chart scraping, no institution identities, no signals.
  */
