@@ -1,4 +1,4 @@
-/* REMURA Shark Cockpit v1.66 LAB — 22/11/2026 18:13 CET */
+/* REMURA Shark Cockpit v1.67 LAB — 22/11/2026 21:41 CET */
 :root{color-scheme:dark;--bg:#06121b;--ink:#ecf9f6;--muted:#9ebdc4;--mint:#76f2cd;--blue:#8bb6ff;--amber:#f6d496;--red:#ff919e;--line:#35535f;--panel:#102733}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -84,7 +84,7 @@ details.method p,details.method li{color:#bed3d4;font-size:12px;line-height:1.7}
 @media(max-width:540px){.shell{padding:18px 12px 85px}.site-top{padding-left:55px;margin-bottom:17px}.brand{font-size:21px}.site-top a{font-size:10px}.hero{padding:23px}.hero h1{font-size:42px}.pulse{gap:8px}.metric{padding:13px}.metric strong{font-size:25px}.contract-card{padding:14px}.card-head h3{font-size:17px}.toolbar input,.toolbar select,#refresh{flex-basis:100%;width:100%}.retail-panel{padding:14px}}
 @media(prefers-reduced-motion:reduce){.contract-card{transition:none}}
 
-/* v1.66 — watchlist and expandable actual CFTC history; Safari-first. */
+/* v1.67 — watchlist and expandable actual CFTC history; Safari-first. */
 .watch-toggle{display:inline-flex;gap:9px;align-items:center;justify-content:center;min-height:46px;padding:10px 14px;background:#103c41;color:#d3f8e7;border:1px solid #58a58a;border-radius:12px;font-weight:800;font-size:12px;cursor:pointer;white-space:nowrap}
 .watch-toggle input{accent-color:#77eec3;width:19px;height:19px;margin:0}
 .watchlist-note{font-size:12px;line-height:1.6;color:#b2d7d1;background:#102d34;border-left:3px solid #6fd9b6;padding:8px 12px;margin:0 0 14px}
@@ -108,3 +108,20 @@ details.method p,details.method li{color:#bed3d4;font-size:12px;line-height:1.7}
   .card-head{display:grid;grid-template-columns:minmax(0,1fr) 43px;align-items:start}
   .card-head .grade{grid-column:1/-1;max-width:none;text-align:left}
 }
+
+/* v1.67 LAB: aligned-Tuesday institutional movers, no additional provider calls */
+.movers-panel{background:linear-gradient(145deg,#153d41,#0a212f 75%);border:1px solid #3e8578;border-radius:20px;padding:22px;margin:19px 0 23px}
+.movers-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:15px 0}
+.mover-card{display:grid;text-align:left;gap:7px;min-height:164px;min-width:0;background:#0e2935;color:var(--ink);border:1px solid #4a756e;border-radius:15px;padding:16px;cursor:pointer}
+.mover-card:hover{background:#163f44;border-color:#86d9b7}
+.mover-heading{font-size:14px;font-weight:850;line-height:1.25}
+.mover-value{font-size:26px;font-weight:900;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.mover-up{color:var(--mint)}.mover-down{color:var(--red)}
+.mover-category{font-size:11px;font-weight:800;color:#bde5df}
+.mover-sub{font-size:10px;color:#afc8ce;line-height:1.4}
+.mover-open{color:var(--mint);font-size:11px;font-weight:800;margin-top:3px}
+.movers-placeholder{grid-column:1/-1;border:1px dashed #607d75;border-radius:12px;padding:18px;color:#c8d8d7;font-size:13px}
+.movers-status,.movers-caveat{font-size:12px;color:#b8d6d5;line-height:1.6;margin:12px 0}
+.contract-card:focus-visible{outline:3px solid var(--mint);outline-offset:4px}
+@media(max-width:850px){.movers-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:570px){.movers-grid{grid-template-columns:1fr}.movers-panel{padding:15px}.mover-card{min-height:0;padding:14px}.mover-value{font-size:25px}}
