@@ -139,7 +139,7 @@ test("actual browser page wires CFTC and existing static retail with no new back
   assert.ok(nav.includes('data-main="cockpit"'));
   assert.ok(js.includes("./data/myfxbook/latest.json"));
   assert.ok(js.includes("publicreporting.cftc.gov"));
-  assert.ok(!js.includes("private-api/")&&!js.includes("localStorage.setItem"));
+  assert.ok(!js.includes("private-api/")&&js.includes("localStorage.setItem"));
 });
 
 test("favorite list accepts only whitelisted CFTC codes and drops duplicate values",()=>{
