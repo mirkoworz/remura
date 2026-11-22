@@ -62,7 +62,7 @@ def inspect_checked_in_sources(*, source_dir=BASE):
             "INSERT OR IGNORE INTO tv_flow_events",
             "SELECT raw_json FROM tv_flow_events WHERE event_key = ?",
             'reply(409, "conflicting_retry")',
-            "/ingest/",
+            "url.pathname.match(",
             "WEBHOOK_TOKEN_SHA256",
             "INGEST_RATE_LIMITER",
             "TELEMETRY_DB",
