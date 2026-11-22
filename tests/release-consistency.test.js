@@ -19,7 +19,7 @@ test('v1.66 LAB includes explicit Italian build timestamp and new PWA cache',()=
  const nav=fs.readFileSync('nav.js','utf8');
  assert.ok(nav.includes('Aggiornamento v1.66 LAB · 22/11/2026 18:13 CET (anteprima, non pubblicata)'));
  const sw=fs.readFileSync('sw.js','utf8');
- assert.ok(sw.includes('remura-shell-v79-v1.66-shark-cockpit-preview'));
+ assert.ok(sw.includes('remura-shell-v80-v1.66-shark-cockpit-watchlist-preview'));
  for(const p of pages){const html=fs.readFileSync(p,'utf8');assert.ok(!html.includes('REMURA v1.51'),p);}
 });
 
