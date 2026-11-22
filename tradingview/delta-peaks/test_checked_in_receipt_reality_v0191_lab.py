@@ -6,7 +6,7 @@ import shutil
 import unittest
 
 from checked_in_receipt_reality_v0191_lab import (
-    EVIDENCE,WORKFLOWS,PINNED,TV_WORKFLOWS,
+    EVIDENCE,WORKFLOWS,PINNED,TV_WORKFLOWS,WORKFLOW_SNAPSHOT,
     audit_checked_in,InventoryError,
 )
 
@@ -17,7 +17,7 @@ class RealityTests(unittest.TestCase):
         e=root/"evidence";w=root/"workflows"
         e.mkdir();w.mkdir()
         for name in PINNED:shutil.copyfile(EVIDENCE/name,e/name)
-        for name in TV_WORKFLOWS:shutil.copyfile(WORKFLOWS/name,w/name)
+        shutil.copyfile(WORKFLOWS/WORKFLOW_SNAPSHOT,w/WORKFLOW_SNAPSHOT)
         return temp,e,w
 
     def test_01_four_actual_checked_in_test_receipts(self):
@@ -75,8 +75,10 @@ class RealityTests(unittest.TestCase):
     def test_08_workflow_schedule_change_stays_unverified_not_auto_enabled(self):
         t,e,w=self.local()
         try:
-            f=w/TV_WORKFLOWS[0]
-            f.write_text(f.read_text()+"\n  schedule:\n    - cron: '5 * * * *'\n")
+            f=w/WORKFLOW_SNAPSHOT
+            data=json.loads(f.read_text())
+            data["entries"][0]["schedule"]=True
+            f.write_text(json.dumps(data))
             z=audit_checked_in(evidence_dir=e,workflow_dir=w)
             self.assertEqual(z["workflows_with_schedule_in_checkout"],1)
             self.assertFalse(z["live_alpha_go"])
@@ -86,7 +88,7 @@ class RealityTests(unittest.TestCase):
     def test_09_workflow_removed_is_unknown_not_assumed_manual(self):
         t,e,w=self.local()
         try:
-            (w/TV_WORKFLOWS[0]).unlink()
+            (w/WORKFLOW_SNAPSHOT).unlink()
             z=audit_checked_in(evidence_dir=e,workflow_dir=w)
             self.assertEqual(z["workflows_unknown_in_checkout"],1)
             self.assertEqual(z["status"],"QUARANTINE_SOURCE_OR_WORKFLOW_DRIFT")
