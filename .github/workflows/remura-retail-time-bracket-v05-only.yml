@@ -1,0 +1,32 @@
+# REMURA Retail temporal bracket v0.5, offline-only and NO Secret.
+# Distinct from prior full Myfxbook history, Git boundary, and Pages audits.
+name: REMURA Retail temporal bracket v05 NEW tests only
+on:
+  push:
+    branches: [research/retail-gh-actions-time-bracket-v05-20261122]
+    paths:
+      - research/retail/github_actions_time_bracket_v05_lab.py
+      - research/retail/test_github_actions_time_bracket_v05_lab.py
+      - .github/workflows/remura-retail-time-bracket-v05-only.yml
+permissions:
+  contents: read
+jobs:
+  bounded-real-commits-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 100
+      - name: Compile new v05 only
+        run: python3 -m py_compile research/retail/github_actions_time_bracket_v05_lab.py research/retail/test_github_actions_time_bracket_v05_lab.py
+      - name: Offline 3 real commit chain and cached GitHub server run metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s research/retail -p 'test_github_actions_time_bracket_v05_lab.py' -v 2>&1 | tee /tmp/retail-v05.log
+          grep -q '^Ran 16 tests' /tmp/retail-v05.log
+          grep -q '^OK$' /tmp/retail-v05.log
+          echo REMURA_RETAIL_GH_TIME_BRACKET_V05=16_16_PASS
