@@ -8,26 +8,26 @@
   <meta name="description" content="REMURA Shark Cockpit: report CFTC reali per contratto, variazioni settimanali delle categorie istituzionali e retail separato.">
   <link rel="icon" type="image/svg+xml" href="./icon.svg">
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="stylesheet" href="./nav.css?v=165">
-  <link rel="stylesheet" href="./shark-cockpit.css?v=165">
-  <title>REMURA v1.65 LAB · Shark Cockpit istituzionale</title>
+  <link rel="stylesheet" href="./nav.css?v=166">
+  <link rel="stylesheet" href="./shark-cockpit.css?v=166">
+  <title>REMURA v1.66 LAB · Shark Cockpit istituzionale</title>
 </head>
 <body>
   <main class="shell">
     <div class="site-top">
-      <div class="brand">REMURA <span>SHARK COCKPIT · v1.65 LAB</span></div>
+      <div class="brand">REMURA <span>SHARK COCKPIT · v1.66 LAB</span></div>
       <a href="./mercati.html#institutional-scanner">← Scanner classico</a>
     </div>
 
     <section class="hero" aria-labelledby="hero-title">
       <div class="eyebrow">01 / Posizionamento istituzionale · CFTC</div>
       <h1 id="hero-title">Guarda le tracce.<br><span>Non inseguire le ombre.</span></h1>
-      <p>Le posizioni nette dei principali gruppi di operatori nei futures CFTC, contratto per contratto. Vedi chi aumenta o riduce l'esposizione, quando è avvenuto il report e se i gruppi divergono. Non sono operazioni in tempo reale né previsioni del prezzo.</p>
+      <p>Le posizioni nette dei principali gruppi di operatori nei futures CFTC, contratto per contratto. Segui i contratti che ti interessano e apri lo storico settimanale. Vedi chi aumenta o riduce l'esposizione, quando è avvenuto il report e se i gruppi divergono. Non sono operazioni in tempo reale né previsioni del prezzo.</p>
       <div class="hero-chips">
         <span class="chip">◉ Dati pubblici CFTC</span>
         <span class="chip">↗ Variazione settimanale in punti percentuali</span>
         <span class="chip">⌁ Nessun segnale operativo</span>
-        <span class="chip">⎘ iPhone e PWA</span>
+        <span class="chip">★ Contratti seguiti su iPhone</span>
       </div>
     </section>
 
@@ -63,8 +63,10 @@
           <option value="Divergenze">Divergenze prima</option>
           <option value="Data">Data del report</option>
         </select>
+        <label class="watch-toggle" for="only-favorites"><input id="only-favorites" type="checkbox"> ★ Solo seguiti</label>
         <button id="refresh" type="button" aria-label="Ricarica i report CFTC">↻ Aggiorna CFTC</button>
       </div>
+      <p class="watchlist-note" id="watchlist-note" role="status">Preferiti disponibili su questo dispositivo, senza notifiche.</p>
       <div id="message" role="status" aria-live="polite" data-status="waiting">Caricamento dei report pubblici CFTC…</div>
       <div id="cards" aria-live="polite" aria-label="Contratti CFTC"><div class="metric">Attendo il feed ufficiale. Nessun dato inventato.</div></div>
       <details class="method">
@@ -92,11 +94,11 @@
 
     <footer class="tail">
       <p>Fonti originali: <a href="https://publicreporting.cftc.gov/Commitments-of-Traders/TFF-Futures-Only/gpe5-46if" rel="noopener noreferrer" target="_blank">CFTC TFF</a> · <a href="https://publicreporting.cftc.gov/Commitments-of-Traders/Disaggregated-Futures-Only/72hh-3qpy" rel="noopener noreferrer" target="_blank">CFTC Disaggregated</a> · <a href="https://www.myfxbook.com/community/outlook" rel="noopener noreferrer" target="_blank">Myfxbook Community Outlook</a>.</p>
-      <p>SHARK COCKPIT v1.65 LAB · 22/11/2026 17:32 CET · Anteprima di sviluppo, non pubblicata su REMURA produzione. Nessun costo cloud aggiuntivo, ordine, Telegram o nuova raccolta privata.</p>
+      <p>SHARK COCKPIT v1.66 LAB · 22/11/2026 18:15 CET · Anteprima di sviluppo, non pubblicata su REMURA produzione. Nessun costo cloud aggiuntivo, ordine, Telegram o nuova raccolta privata.</p>
     </footer>
   </main>
-  <script src="./shark-cockpit-core.js?v=165"></script>
-  <script src="./shark-cockpit.js?v=165"></script>
-  <script src="./nav.js?v=165"></script>
+  <script src="./shark-cockpit-core.js?v=166"></script>
+  <script src="./shark-cockpit.js?v=166"></script>
+  <script src="./nav.js?v=166"></script>
 </body>
 </html>
