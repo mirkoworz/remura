@@ -1,0 +1,55 @@
+{
+  "schema": "remura.contributors.cloudflare-free-readiness.v097",
+  "evidenceSource": null,
+  "observedAtUtc": null,
+  "operatorCheckedReadOnly": false,
+  "account": {
+    "access": {
+      "plan": null,
+      "activeSeatsUsed": null,
+      "seatsAllocated": null
+    },
+    "workers": {
+      "plan": null,
+      "requestsTodayUtc": null,
+      "cpuP95Ms": null
+    },
+    "d1": {
+      "databases": null,
+      "storageBytes": null,
+      "rowsReadTodayUtc": null,
+      "rowsWrittenTodayUtc": null,
+      "databaseSizesBytes": []
+    }
+  },
+  "pilot": {
+    "contributors": 2,
+    "additionalSeats": 2,
+    "newDatabases": 0,
+    "dailyWorkerRequests": null,
+    "dailyD1RowsRead": null,
+    "dailyD1RowsWritten": null,
+    "newStorageBytes": null,
+    "cpuP95MsEstimate": null
+  },
+  "billing": {
+    "extraPaidServicesConfirmedAbsent": false,
+    "planPriceZeroConfirmed": false,
+    "noPaidUpgradeAuthorized": true
+  },
+  "attestations": {
+    "private_staging_isolated_from_prod": false,
+    "server_verifies_access_jwt": false,
+    "access_allowlist_denies_nonmembers": false,
+    "roles_bound_server_side": false,
+    "catalog_binding_server_authoritative": false,
+    "owner_must_approve_other_peoples_levels": false,
+    "contributor_cannot_modify_other_levels": false,
+    "d1_identity_revocation_enforced": false,
+    "access_sessions_revoked_and_login_blocked": false,
+    "durable_receipt_and_no_blind_retry_verified": false,
+    "owner_session_tested_on_safari": false,
+    "contributor_session_tested_on_safari": false,
+    "no_live_secrets_in_public_repo": false
+  }
+}
