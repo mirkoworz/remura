@@ -1,0 +1,32 @@
+# REMURA retail/COT decision pairing v0.1 research only.
+# Do not rerun completed Myfxbook real-file history audit or call providers.
+name: REMURA Retail COT asof v01 NEW checks only
+on:
+  push:
+    branches: [research/retail-cot-asof-pair-v01-lab-20261122]
+    paths:
+      - research/retail/retail_cot_asof_pair_v01_lab.py
+      - research/retail/test_retail_cot_asof_pair_v01_lab.py
+      - .github/workflows/remura-retail-cot-pair-v01-only.yml
+permissions:
+  contents: read
+jobs:
+  synthetic-source-pairing-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Compile only new pairing module and tests
+        run: python3 -m py_compile research/retail/retail_cot_asof_pair_v01_lab.py research/retail/test_retail_cot_asof_pair_v01_lab.py
+      - name: Run new time-boundary and non-comparability gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s research/retail -p 'test_retail_cot_asof_pair_v01_lab.py' -v 2>&1 | tee /tmp/retail-cot-v01.log
+          grep -q '^Ran 20 tests' /tmp/retail-cot-v01.log
+          grep -q '^OK$' /tmp/retail-cot-v01.log
+          echo REMURA_RETAIL_COT_ASOF_V01=20_20_PASS
