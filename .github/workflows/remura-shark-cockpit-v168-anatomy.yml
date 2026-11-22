@@ -1,0 +1,52 @@
+# REMURA v1.68 LAB — new product-only CFTC long/short anatomy checks.
+name: REMURA Shark Cockpit v168 Anatomy Product
+on:
+  push:
+    branches: [feature/shark-cockpit-v168-flow-anatomy-20261122]
+    paths:
+      - shark-cockpit.html
+      - shark-cockpit.js
+      - shark-cockpit-core.js
+      - shark-cockpit.css
+      - shark-movers-core.js
+      - shark-movers-ui.js
+      - nav.js
+      - sw.js
+      - tests/shark-anatomy.test.js
+      - tests/shark-movers.test.js
+      - tests/shark-cockpit.test.js
+      - tests/release-consistency.test.js
+      - .github/workflows/remura-shark-cockpit-v168-anatomy.yml
+permissions:
+  contents: read
+jobs:
+  anatomy-product:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate touched browser modules only
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check shark-cockpit.js
+          node --check shark-cockpit-core.js
+          node --check shark-movers-core.js
+          node --check shark-movers-ui.js
+          node --check nav.js
+          node --check sw.js
+      - name: Run 12 new anatomy cases plus 45 affected cockpit/navigation cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test tests/shark-anatomy.test.js tests/shark-movers.test.js tests/shark-cockpit.test.js tests/release-consistency.test.js 2>&1 | tee /tmp/shark-v168.log
+          grep -q '# tests 57' /tmp/shark-v168.log
+          grep -q '# pass 57' /tmp/shark-v168.log
+          grep -q '# fail 0' /tmp/shark-v168.log
+          echo REMURA_SHARK_COCKPIT_V168=57_57_PASS
