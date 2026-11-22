@@ -99,41 +99,45 @@ class SyntheticCutover:
             raise RevisionError("preexisting_sidecar_objects_not_owned_by_fixture")
         self._db.execute("SAVEPOINT cot_v05_schema")
         try:
-            self._db.executescript(""" 
-                CREATE TABLE cot_v05_capture_events(
+            # sqlite3.executescript() commits open transactions: NEVER use it
+            # inside an atomic cutover/savepoint. Execute DDL individually.
+            for sql in (
+                """CREATE TABLE cot_v05_capture_events(
                     event_id INTEGER PRIMARY KEY, received_utc TEXT NOT NULL,
                     source_claim TEXT NOT NULL, envelope_sha256 TEXT NOT NULL UNIQUE,
-                    payload_json TEXT NOT NULL);
-                CREATE TABLE cot_v05_versions(
+                    payload_json TEXT NOT NULL)""",
+                """CREATE TABLE cot_v05_versions(
                     dataset TEXT NOT NULL, code TEXT NOT NULL,
                     report_date TEXT NOT NULL, version INTEGER NOT NULL,
                     event_id INTEGER NOT NULL, received_utc TEXT NOT NULL,
                     content_sha256 TEXT NOT NULL, payload_json TEXT NOT NULL,
                     PRIMARY KEY(dataset,code,report_date,version),
-                    FOREIGN KEY(event_id) REFERENCES cot_v05_capture_events(event_id));
-                CREATE TABLE cot_v05_current_head(
+                    FOREIGN KEY(event_id) REFERENCES cot_v05_capture_events(event_id))""",
+                """CREATE TABLE cot_v05_current_head(
                     dataset TEXT NOT NULL, code TEXT NOT NULL,
                     report_date TEXT NOT NULL, version INTEGER NOT NULL,
                     PRIMARY KEY(dataset,code,report_date),
                     FOREIGN KEY(dataset,code,report_date,version)
-                      REFERENCES cot_v05_versions(dataset,code,report_date,version));
-            """)
+                      REFERENCES cot_v05_versions(dataset,code,report_date,version))""",
+            ):
+                self._db.execute(sql)
             if fail_after == "tables":
                 raise RuntimeError("synthetic_fault_after_tables")
-            self._db.executescript("""
-                CREATE TRIGGER cot_v05_events_immutable_update
+            for sql in (
+                """CREATE TRIGGER cot_v05_events_immutable_update
                 BEFORE UPDATE ON cot_v05_capture_events
-                BEGIN SELECT RAISE(ABORT,'immutable_capture'); END;
-                CREATE TRIGGER cot_v05_events_immutable_delete
+                BEGIN SELECT RAISE(ABORT,'immutable_capture'); END""",
+                """CREATE TRIGGER cot_v05_events_immutable_delete
                 BEFORE DELETE ON cot_v05_capture_events
-                BEGIN SELECT RAISE(ABORT,'immutable_capture'); END;
-                CREATE TRIGGER cot_v05_versions_immutable_update
+                BEGIN SELECT RAISE(ABORT,'immutable_capture'); END""",
+                """CREATE TRIGGER cot_v05_versions_immutable_update
                 BEFORE UPDATE ON cot_v05_versions
-                BEGIN SELECT RAISE(ABORT,'immutable_version'); END;
-                CREATE TRIGGER cot_v05_versions_immutable_delete
+                BEGIN SELECT RAISE(ABORT,'immutable_version'); END""",
+                """CREATE TRIGGER cot_v05_versions_immutable_delete
                 BEFORE DELETE ON cot_v05_versions
-                BEGIN SELECT RAISE(ABORT,'immutable_version'); END;
-            """)
+                BEGIN SELECT RAISE(ABORT,'immutable_version'); END""",
+            ):
+                self._db.execute(sql)
             if fail_after == "triggers":
                 raise RuntimeError("synthetic_fault_after_triggers")
             if self._legacy_hash() != old:
