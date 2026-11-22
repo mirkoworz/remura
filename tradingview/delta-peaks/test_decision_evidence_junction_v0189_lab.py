@@ -67,6 +67,7 @@ class DecisionJunctionTests(unittest.TestCase):
     def test_05_swapped_pointer_does_not_allow_positional_guess(self):
         d = decision()
         d["evidence_ids"]["CVD_M5"] = "PRICE1"
+        d["evidence_ids"]["PRICE_ONLY_M5"] = "CVD1"
         self.assertIn("CVD_M5_WRONG_EVIDENCE_KIND", reasons(inspect(d)))
 
     def test_06_cross_decision_evidence_rejected(self):
