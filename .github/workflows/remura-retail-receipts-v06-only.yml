@@ -1,0 +1,32 @@
+# REMURA Retail v0.6 — ONLY new offline receipt ledger tests.
+# No API/Secret/provider call and no historical v0.5 suite.
+name: REMURA Retail v06 prospective receipts NEW tests only
+on:
+  push:
+    branches: [research/retail-provenance-receipts-v06-lab-20261122]
+    paths:
+      - research/retail/provenance_receipt_ledger_v06_lab.py
+      - research/retail/test_provenance_receipt_ledger_v06_lab.py
+      - .github/workflows/remura-retail-receipts-v06-only.yml
+permissions:
+  contents: read
+jobs:
+  offline-receipts-v06-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Compile only v06
+        run: python3 -m py_compile research/retail/provenance_receipt_ledger_v06_lab.py research/retail/test_provenance_receipt_ledger_v06_lab.py
+      - name: New future receipts, integrity and no fake witness cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s research/retail -p 'test_provenance_receipt_ledger_v06_lab.py' -v 2>&1 | tee /tmp/remura-retail-v06.log
+          grep -q '^Ran 14 tests' /tmp/remura-retail-v06.log
+          grep -q '^OK$' /tmp/remura-retail-v06.log
+          echo REMURA_RETAIL_RECEIPTS_V06=14_14_PASS
