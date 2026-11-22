@@ -1,4 +1,4 @@
-# REMURA V20 — MISURAZIONI REALI | aggiornamento 22/11/2026, 23:37:38 Europe/Rome
+# REMURA V20 — MISURAZIONI REALI | aggiornamento 22/11/2026, 23:38:21 Europe/Rome
 
 **Stato:** RESEARCH / NON DISTRIBUITO · **Main invariato** · **Nessuna attivazione né accesso ai Secret**.
 
@@ -73,6 +73,15 @@ La run giornaliera **45039172579** del 22/11 alle 15:35 UTC ha **FAILED** nello 
 - v0.95 Safari verificata, v0.96 contratto server e portale protetto LAB, v0.97 Free gate no-network 21/21 GREEN; non ripetere suite precedenti senza modifiche.
 - **Access seats effettivi, Billing e consumi D1 giornalieri: UNKNOWN**; il monitor budget risulta incompleto. Servono policy Access corretta, JWT server-side, ownership D1, owner review, ricevuta durevole, prove Safari e blocco con revoca identità D1 + policy Access + sessioni.
 - NON attivare utenti o Worker senza approvazione esplicita. L'interfaccia pronta in LAB **non** equivale a login reale disponibile.
+
+## COT istituzionale — ultimo report ufficiale reperibile
+
+Il portale ufficiale CFTC (verifica pubblica al 22/11/2026) mostra il report **Traders in Financial Futures (TFF), posizioni alla chiusura di martedì 17 novembre 2026**, aggiornato/pubblicato **venerdì 20 novembre 2026**. La pagina CFTC "Commitments of Traders" mostra anche i Disaggregated dated **17/11/2026**. Per eventuali join tra TFF/Disaggregated usare la **stessa data as-of 17/11**, per regola `available_at` non prima della pubblicazione 20/11 e controllo per ciascun contratto; il dato pubblicato venerdì non poteva essere noto martedì. Non presentare il COT come real-time.
+
+Fonti ufficiali:
+- https://www.cftc.gov/dea/futures/financial_lf.htm
+- https://www.cftc.gov/MarketReports/CommitmentsofTraders/index.htm
+- https://publicreporting.cftc.gov/Commitments-of-Traders/TFF-Futures-Only/gpe5-46if
 
 ## Ordine successivo — misurazione prima dei prototipi
 1. Congelare e osservare esclusivamente eventi forward-only dal 23/11 00:00 UTC; attestare alert, ricevitore, timestamp e qualità. Non ricostruire orari da log storici.
