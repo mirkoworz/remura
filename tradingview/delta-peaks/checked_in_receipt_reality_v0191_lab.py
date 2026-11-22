@@ -136,7 +136,7 @@ def audit_checked_in(*, evidence_dir=EVIDENCE, workflow_dir=WORKFLOWS):
         except (InventoryError,OSError,UnicodeError):
             issues.append(name+":workflow_unverified")
             unknown+=1
-    if len(records)!=len(PINN):
+    if len(records)!=len(PINNED):
         issues.append("checked_in_evidence_inventory_incomplete")
     if scheduled:
         issues.append("schedule_present_in_snapshot_requires_external_review")
@@ -149,7 +149,7 @@ def audit_checked_in(*, evidence_dir=EVIDENCE, workflow_dir=WORKFLOWS):
         "status":("QUARANTINE_SOURCE_OR_WORKFLOW_DRIFT" if issues
                   else "VERIFIED_PINNED_HISTORICAL_TEST_METADATA_ONLY"),
         "issues":sorted(set(issues)),
-        "pinned_test_receipts_expected":len(PINN),
+        "pinned_test_receipts_expected":len(PINNED),
         "pinned_test_receipts_read":len(records),
         "pinned_test_window_bars":total,
         "last_pinned_test_window_close_utc":last,
