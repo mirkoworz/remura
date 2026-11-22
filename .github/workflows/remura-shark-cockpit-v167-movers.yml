@@ -1,0 +1,49 @@
+# REMURA v1.67 LAB — actual new mobile movers product checks only.
+name: REMURA Shark Cockpit v167 Movers Product
+on:
+  push:
+    branches: [feature/shark-cockpit-v167-movers-lab-20261122]
+    paths:
+      - shark-cockpit.html
+      - shark-cockpit.js
+      - shark-cockpit-core.js
+      - shark-cockpit.css
+      - shark-movers-core.js
+      - shark-movers-ui.js
+      - nav.js
+      - sw.js
+      - tests/shark-cockpit.test.js
+      - tests/shark-movers.test.js
+      - tests/release-consistency.test.js
+      - .github/workflows/remura-shark-cockpit-v167-movers.yml
+permissions:
+  contents: read
+jobs:
+  compare-cot-tuesdays:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax of changed browser modules
+        run: |
+          node --check shark-cockpit.js
+          node --check shark-cockpit-core.js
+          node --check shark-movers-core.js
+          node --check shark-movers-ui.js
+          node --check nav.js
+          node --check sw.js
+      - name: Product check new movers and changed cockpit/release wiring only
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test tests/shark-movers.test.js tests/shark-cockpit.test.js tests/release-consistency.test.js 2>&1 | tee /tmp/shark-v167.log
+          grep -q '# tests 45' /tmp/shark-v167.log
+          grep -q '# pass 45' /tmp/shark-v167.log
+          grep -q '# fail 0' /tmp/shark-v167.log
+          echo REMURA_SHARK_COCKPIT_V167=45_45_PASS
