@@ -56,7 +56,7 @@
     const stamp=strictDate(row.report_date_as_yyyy_mm_dd);
     const code=String(row.cftc_contract_market_code||"").toUpperCase().padStart(6,"0");
     const contract=CONTRACTS.find(c=>c.code===code&&c.dataset===dataset);
-    if(!contract||!stamp||stamp.ms>now||((now-stamp.ms)>180*DAY))return null;
+    if(!contract||!stamp||stamp.ms>now||new Date(stamp.ms).getUTCDay()!==2||((now-stamp.ms)>180*DAY))return null;
     const fields=dataset==="tff"?
       ["asset_mgr_positions_long","asset_mgr_positions_short","lev_money_positions_long","lev_money_positions_short"]:
       ["m_money_positions_long_all","m_money_positions_short_all","prod_merc_positions_long","prod_merc_positions_short"];
