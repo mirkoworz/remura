@@ -1,0 +1,46 @@
+# REMURA v1.66 LAB — iPhone favorites and real historic COT tables only.
+name: REMURA Shark Cockpit v166 Watchlist product checks
+on:
+  push:
+    branches: [feature/shark-cockpit-v166-watchlist-lab-20261122]
+    paths:
+      - shark-cockpit.html
+      - shark-cockpit.js
+      - shark-cockpit-core.js
+      - shark-cockpit.css
+      - nav.js
+      - sw.js
+      - tests/shark-cockpit.test.js
+      - tests/release-consistency.test.js
+      - .github/workflows/remura-shark-cockpit-v166-watchlist.yml
+permissions:
+  contents: read
+jobs:
+  iphone-watchlist-product:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check modified browser scripts only
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check shark-cockpit-core.js
+          node --check shark-cockpit.js
+          node --check nav.js
+          node --check sw.js
+      - name: Run product cases, favorites, history, release banner and no regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test tests/shark-cockpit.test.js tests/release-consistency.test.js 2>&1 | tee /tmp/shark-v166.log
+          grep -q '# tests 33' /tmp/shark-v166.log
+          grep -q '# pass 33' /tmp/shark-v166.log
+          grep -q '# fail 0' /tmp/shark-v166.log
+          echo REMURA_SHARK_COCKPIT_V166=33_33_PRODUCT_PASS
