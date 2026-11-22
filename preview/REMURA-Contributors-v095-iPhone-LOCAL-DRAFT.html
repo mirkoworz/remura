@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07121a">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; form-action 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; upgrade-insecure-requests">
+<title>REMURA v1.69 LAB · Contributors · Bozza iPhone</title>
+<style>
+
+:root{color-scheme:dark;--bg:#07121a;--panel:#101f2a;--panel2:#132531;--outline:#203642;--ink:#e8f4f3;--muted:#8ba7ae;--aqua:#69edca;--orange:#e2b97c;--radius:19px}*{box-sizing:border-box}body{margin:0;font:16px/1.45 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg)}main{max-width:600px;margin:auto;padding:22px 14px calc(44px + env(safe-area-inset-bottom))}.release{background:#102c35;border-bottom:1px solid #39655d;color:#b9f8df;font-size:11px;font-weight:700;text-align:center;padding:6px 10px;padding-top:max(6px,env(safe-area-inset-top))}.brand{display:flex;align-items:center;gap:12px;color:var(--aqua);font-size:13px;font-weight:850;letter-spacing:.12em}.brand-mark{width:43px;height:43px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(140deg,#163e45,#10303a);border:1px solid #2e6970}.brand-mark svg{width:28px;height:28px}small{color:var(--muted)}h1{font-size:32px;letter-spacing:-.045em;margin:18px 0 4px}h2{font-size:19px;letter-spacing:-.02em}p{line-height:1.5}.panel{background:linear-gradient(180deg,#10222e,#101e29);border:1px solid var(--outline);border-radius:var(--radius);padding:18px;margin:18px 0;box-shadow:0 12px 34px #00000016}label{display:block;font-weight:650;margin:15px 0 7px}input,select,textarea,button{font:inherit;width:100%;border:1px solid #37606a;border-radius:12px;padding:12px;min-height:46px;color:var(--ink);background:#102b35}textarea{resize:vertical;min-height:80px}button{background:var(--aqua);color:#052c28;font-weight:800;cursor:pointer;margin-top:16px;border:0}button.secondary{background:#18313a;border:1px solid #2b4b55;color:#d6eff0}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--aqua);outline-offset:3px}.notice,.tag{color:var(--orange)}.status{min-height:28px;margin-top:12px}.receipt{overflow-wrap:anywhere;border-top:1px solid var(--outline);padding:12px 0;line-height:1.6}.tag{font-size:13px}[hidden]{display:none!important}
+
+button:disabled{opacity:.5;cursor:not-allowed}.muted{color:var(--muted)}.receipt strong{color:var(--aqua)}.receipt pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}.release{position:sticky;top:0;z-index:1}
+
+:root{--bg:#061622;--aqua:#72f1d2;--outline:#385664}
+body{background:radial-gradient(ellipse at 90% 3%,#1d5d6033,transparent 50%),var(--bg)}
+main{max-width:760px}
+.hero{background:radial-gradient(circle at 100% 0%,#265e6077,transparent 50%),linear-gradient(140deg,#143843,#0b2332);border:1px solid #386b6d;border-radius:22px;padding:clamp(20px,5vw,30px);margin-top:20px}
+.hero h1{font-size:clamp(36px,6.5vw,56px);line-height:1.07;letter-spacing:-.06em;margin:18px 0 12px}
+.hero h1 em{color:var(--aqua);font-style:normal}
+.hero p{color:#b8d5d5;margin:0}
+.release{position:sticky;z-index:10;top:0;padding-top:max(9px,env(safe-area-inset-top))}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.pill{border:1px solid #53857c;border-radius:100px;padding:6px 10px;font-size:11px;color:#d0e8e5;background:#08252f}
+.pill.warn{border-color:#96714e;color:#ffdcab}
+.notice-panel{border-left:3px solid #f4bb7e;padding:14px;background:#41332866;border-radius:10px;color:#ffe0ba;margin:19px 0;font-size:12px}
+.field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 13px}
+.hint{display:block;font-size:11px;color:#a6c5cd;margin:4px 0 8px}
+[hidden]{display:none!important}
+#output{border:1px solid #449e82;background:#10352e;border-radius:17px;padding:18px;margin-top:18px}
+#output h2{margin:0 0 6px}
+#json-preview{resize:vertical;min-height:265px;background:#091c26;font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;user-select:text}
+#status{color:#a8ead4;padding:10px 0;min-height:44px}
+#status[data-invalid=true]{color:#ffd5a2}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button.secondary{margin-top:16px}
+.guide{margin:20px 0 50px;border:1px solid #2f535d;padding:16px;border-radius:14px}
+.guide h2{margin:0 0 8px}
+.guide p{color:#b6d2d5;font-size:13px}
+.guide a{color:#8ceecf}
+.guide small{display:block;margin-top:8px;line-height:1.6}
+@media(max-width:550px){.field-grid{grid-template-columns:1fr}.hero{padding:20px}.actions{grid-template-columns:1fr}main{padding:16px 12px 70px}}
+</style>
+</head>
+<body>
+<div class="release">REMURA · Aggiornamento v1.69 LAB · 22/11/2026 22:20 CET · CONTRIBUTORS v0.95 · SOLO ANTEPRIMA LOCALE</div>
+<main>
+<header class="hero">
+<div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="#7cf4d4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.15"><path d="M3 17c7-9 15-10 25-4-9 1-12 7-16 11-2-4-5-6-9-7Z"/><path d="M12 24c5-10 10-13 16-11"/></svg></span>REMURA / CONTRIBUTORS</div>
+<h1>Un livello preciso.<br><em>Una traccia verificabile.</em></h1>
+<p>Prima schermata iPhone per comporre una proposta volumetrica. Riprende i campi del portale Contributors esistente, ma la verifica delle fonti e i permessi reali arriveranno dal server protetto.</p>
+<div class="pills"><span class="pill">Livelli volumetrici</span><span class="pill">Form iPhone</span><span class="pill warn">Nessun invio attivo</span></div>
+</header>
+<div class="notice-panel"><strong>ANTEPRIMA NON AUTORIZZATA A SCRIVERE:</strong> usa soltanto valori di prova, mai dati privati. Questa pagina non possiede login, non interroga Cloudflare e non comunica con il database. Il risultato è una bozza locale da copiare, non un contributo ricevuto o approvato.</div>
+
+<form id="level-form" class="panel" autocomplete="off" novalidate>
+<h2>Nuova proposta di livello</h2>
+<p class="muted">Il catalogo reale dei broker e ticker verrà fornito dal server dopo l'autenticazione. Qui inserisci manualmente una combinazione <strong>non verificata</strong> per provare il percorso.</p>
+<div class="field-grid">
+<div><label for="market">Strumento / coppia</label><input id="market" maxlength="24" autocapitalize="characters" spellcheck="false" placeholder="es. XAUUSD" required><small class="hint">Ticker del mercato osservato</small></div>
+<div><label for="provider">Broker / fonte</label><input id="provider" maxlength="60" placeholder="Nome della tua piattaforma" required><small class="hint">La fonte sarà verificata successivamente</small></div>
+<div><label for="ticker">Ticker esatto della fonte</label><input id="ticker" maxlength="24" autocapitalize="characters" spellcheck="false" placeholder="es. GOLD" required><small class="hint">Nessuna conversione automatica</small></div>
+<div><label for="product">Prodotto</label><select id="product" required><option value="SPOT_CFD">Spot / CFD</option><option value="FUTURE">Future</option><option value="OTHER">Altro</option></select></div>
+<div id="contract-line" hidden><label for="contract">Contratto del future</label><input id="contract" maxlength="24" autocapitalize="characters" spellcheck="false" placeholder="Identificativo esatto"><small class="hint">Obbligatorio per future</small></div>
+<div><label for="period">Periodo del livello</label><select id="period"><option value="DAY">Giornaliero</option><option value="WEEK">Settimanale</option><option value="CURRENT_MONTH">Mese corrente</option><option value="PREVIOUS_MONTH">Mese precedente</option></select></div>
+<div><label for="kind">Metodologia</label><select id="kind"><option value="DELTA_PEAK">Delta Peak</option><option value="EFFORT_RESULT">Effort vs Result</option><option value="OTHER_VOLUME_LEVEL">Altro livello volumetrico</option></select></div>
+<div><label for="price">Prezzo del livello</label><input id="price" maxlength="19" inputmode="decimal" spellcheck="false" placeholder="es. 1,12345" required><small class="hint">Positivo, fino a 8 decimali</small></div>
+<div><label for="anchor_utc">Anchor UTC</label><input id="anchor_utc" maxlength="20" spellcheck="false" placeholder="AAAA-MM-GGT00:00:00Z" required><small class="hint">Inizio del periodo di osservazione</small></div>
+<div><label for="observed_utc">Osservato UTC</label><input id="observed_utc" maxlength="20" spellcheck="false" placeholder="AAAA-MM-GGT12:00:00Z" required><small class="hint">Orario effettivo della tua rilevazione</small></div>
+</div>
+<button type="button" id="set-time" class="secondary">Inserisci ora UTC nel campo osservazione</button>
+<label for="note">Note tecniche facoltative</label>
+<textarea id="note" rows="3" maxlength="280" placeholder="Metodologia, fonte, contesto della misurazione (senza dati personali)"></textarea>
+<button id="check" type="submit">Controlla bozza sul mio iPhone</button>
+<p id="status" role="status" aria-live="polite">Nessun dato inviato.</p>
+</form>
+
+<section id="output" hidden aria-labelledby="output-title">
+<h2 id="output-title">Bozza pronta da copiare</h2>
+<p class="muted">Stato <strong>LOCAL_ONLY_UNVERIFIED</strong>. Nessun ID di ricevuta, nessun invio, nessuna approvazione.</p>
+<label for="json-preview">Proposta strutturata</label>
+<textarea id="json-preview" readonly spellcheck="false" aria-label="JSON proposta solo locale"></textarea>
+<div class="actions"><button type="button" id="copy-json">Copia bozza</button><button type="button" id="clear-all" class="secondary">Cancella tutto</button></div>
+</section>
+<div class="guide">
+<h2>Come funzionerà il portale vero</h2>
+<p>Il collaboratore accede con una propria identità verificata, consulta REMURA in lettura e propone soltanto i livelli di sua competenza. Una ricevuta tracciata segnala che il server ha acquisito il livello; l'approvazione è riservata al proprietario. Questo schermo non sostituisce quei controlli.</p>
+<p><a href="https://mirkoworz.github.io/remura/" rel="noopener noreferrer" target="_blank">Apri REMURA pubblica in sola lettura</a></p>
+<small>Anteprima di sviluppo indipendente. Non inviare credenziali o proposte di clienti. La copia negli appunti è una scelta esplicita dell'utente; il contenuto può restare negli appunti del dispositivo finché non viene sostituito.</small>
+</div>
+</main>
+<script id="contributor-core">
+/* REMURA Contributors Draft v0.95 LAB — 22/11/2026 22:20 CET
+ * Reuses candidate intake field contract: LOCAL DRAFT ONLY.
+ * No authentication, server trust, network, write, or role attestation.
+ */
+(function(root,factory){
+  "use strict";
+  const api=factory();
+  if(typeof module==="object"&&module.exports)module.exports=api;
+  root.REMURA_CONTRIBUTORS_DRAFT=api;
+})(typeof window!=="undefined"?window:globalThis,function(){
+  "use strict";
+  const PERIODS=Object.freeze(["DAY","WEEK","CURRENT_MONTH","PREVIOUS_MONTH"]);
+  const KINDS=Object.freeze(["DELTA_PEAK","EFFORT_RESULT","OTHER_VOLUME_LEVEL"]);
+  const PRODUCTS=Object.freeze(["SPOT_CFD","FUTURE","OTHER"]);
+  const TICKER=/^[A-Z0-9][A-Z0-9._\/-]{1,23}$/;
+  const SOURCE=/^[\p{L}\p{N}][\p{L}\p{N} ._\/-]{1,59}$/u;
+  function utc(v){
+    if(typeof v!=="string"||! /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(v))return null;
+    const n=Date.parse(v);
+    return Number.isFinite(n)&&new Date(n).toISOString().replace(".000Z","Z")===v?n:null;
+  }
+  function clean(v){
+    return typeof v==="string"?v.trim():"";
+  }
+  function price(v){
+    if(typeof v!=="string")return null;
+    const raw=v.trim().replace(",",".");
+    if(!/^\d{1,9}(?:\.\d{1,8})?$/.test(raw))return null;
+    const n=Number(raw);
+    if(!Number.isFinite(n)||n<=0)return null;
+    return raw;
+  }
+  function validate(input,now=Date.now()){
+    const errors=[];
+    if(!input||typeof input!=="object"||Array.isArray(input)||!Number.isFinite(now))
+      return {ok:false,errors:["Dati non validi"],draft:null};
+    const market=clean(input.market).toUpperCase(),provider=clean(input.provider),
+      ticker=clean(input.ticker).toUpperCase(),product=clean(input.product),
+      contract=clean(input.contract).toUpperCase(),period=clean(input.period),
+      kind=clean(input.kind),value=price(input.price),
+      anchor=clean(input.anchor_utc),observed=clean(input.observed_utc),
+      note=clean(input.note);
+    if(!TICKER.test(market))errors.push("Strumento non valido");
+    if(!SOURCE.test(provider))errors.push("Fonte/broker non valido");
+    if(!TICKER.test(ticker))errors.push("Ticker non valido");
+    if(!PRODUCTS.includes(product))errors.push("Tipo prodotto non valido");
+    if(contract&&!TICKER.test(contract))errors.push("Contratto non valido");
+    if(product==="FUTURE"&&!contract)errors.push("Indica il contratto del future");
+    if(!PERIODS.includes(period))errors.push("Periodo non valido");
+    if(!KINDS.includes(kind))errors.push("Metodologia non valida");
+    if(value===null)errors.push("Prezzo non valido (positivo, massimo 8 decimali)");
+    const a=utc(anchor),b=utc(observed);
+    if(a===null)errors.push("Anchor UTC non valido");
+    if(b===null)errors.push("Osservazione UTC non valida");
+    if(a!==null&&b!==null){
+      if(a>b)errors.push("Anchor successivo all'osservazione");
+      if(b>now+120000)errors.push("Osservazione futura");
+      if(b<now-180*86400000)errors.push("Osservazione più vecchia di 180 giorni");
+    }
+    if(note.length>280||/[\x00-\x08\x0b\x0c\x0e-\x1f]/.test(note))
+      errors.push("Note troppo lunghe o con caratteri non validi");
+    if(errors.length)return {ok:false,errors,draft:null};
+    return {ok:true,errors:[],draft:{
+      schema:"remura.contributors.local_draft.v095",
+      status:"LOCAL_ONLY_UNVERIFIED",
+      market,provider,ticker,product,contract,
+      period,kind,price:value,anchor_utc:anchor,observed_utc:observed,note,
+      identity_verified:false,mapping_verified:false,
+      sent_to_server:false,received_by_owner:false,approved:false
+    }};
+  }
+  function exportJSON(input,now=Date.now()){
+    const result=validate(input,now);
+    return result.ok?{...result,json:JSON.stringify(result.draft,null,2)}:{...result,json:null};
+  }
+  return Object.freeze({PERIODS,KINDS,PRODUCTS,validate,exportJSON});
+});
+</script>
+<script id="contributor-form">
+/* REMURA Contributors v0.95 — ONLY A LOCAL DRAFT.
+ * All data stays in browser memory unless user copies it.
+ * No requests, credentials, role changes, server writes or autoload.
+ */
+(()=>{
+  "use strict";
+  const core=window.REMURA_CONTRIBUTORS_DRAFT;
+  const el=id=>document.getElementById(id);
+  const form=el("level-form"),status=el("status"),json=el("json-preview");
+  const output=el("output"),copy=el("copy-json"),clear=el("clear-all"),now=el("set-time");
+  let validJSON=null;
+  const names=["market","provider","ticker","product","contract","period","kind","price","anchor_utc","observed_utc","note"];
+  const say=(t,bad=false)=>{status.textContent=t;status.dataset.invalid=bad?"true":"false";};
+  const invalidate=()=>{
+    validJSON=null;output.hidden=true;json.value="";copy.disabled=true;
+    say("Bozza locale non inviata. Completa i campi e premi «Controlla bozza».");};
+  function values(){
+    const x={};for(const key of names)x[key]=el(key).value;
+    return x;
+  }
+  function reset(){
+    form.reset();invalidate();
+    el("contract-line").hidden=true;
+    say("Campi cancellati dall'anteprima. Nessun invio eseguito.");
+  }
+  el("product").addEventListener("change",()=>{
+    el("contract-line").hidden=el("product").value!=="FUTURE";invalidate();
+  });
+  for(const name of names){
+    if(name==="product")continue;
+    el(name).addEventListener("input",invalidate);
+    el(name).addEventListener("change",invalidate);
+  }
+  now.addEventListener("click",()=>{
+    const iso=new Date().toISOString().slice(0,19)+"Z";
+    el("observed_utc").value=iso;
+    if(!el("anchor_utc").value)el("anchor_utc").value=iso.slice(0,10)+"T00:00:00Z";
+    invalidate();
+  });
+  form.addEventListener("submit",event=>{
+    event.preventDefault();invalidate();
+    const response=core.exportJSON(values(),Date.now());
+    if(!response.ok){
+      say("Bozza da correggere: "+response.errors.join(" · "),true);
+      return;
+    }
+    validJSON=response.json;json.value=validJSON;output.hidden=false;copy.disabled=false;
+    say("Bozza verificata SOLO in locale. Non è stata inviata a REMURA né approvata.");
+    output.scrollIntoView({behavior:"smooth",block:"start"});
+  });
+  copy.addEventListener("click",async()=>{
+    if(!validJSON)return;
+    try{
+      if(!navigator.clipboard?.writeText)throw Error("clipboard_unavailable");
+      await navigator.clipboard.writeText(validJSON);
+      say("Copiato negli appunti dell'iPhone. Non è stato inviato a REMURA.");
+    }catch{
+      json.focus();json.select();
+      say("Copia automatica non disponibile. Il testo è selezionato: usa «Copia» su iPhone.",true);
+    }
+  });
+  clear.addEventListener("click",reset);
+  window.addEventListener("pagehide",()=>{validJSON=null;json.value="";});
+  invalidate();
+})();
+</script>
+</body>
+</html>
