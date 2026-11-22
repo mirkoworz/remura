@@ -1,7 +1,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
 const pages=['index.html','forex.html','mercati.html','asset.html','catalogo.html','fonti.html','impostazioni.html','stato-prezzi.html','statistica-squali.html','shark-cockpit.html'];
-test('all pages use shared v1.65 LAB menu with legacy query compatibility and no old labels',()=>{
- for(const p of pages){const html=fs.readFileSync(p,'utf8');assert.ok(html.includes('nav.js?v=165'),p);assert.ok(!html.includes('REMURA v0.8')&&!html.includes('REMURA v1.5 ·')&&!html.includes('VERSIONE 0.5'),p);}
+test('all pages use shared v1.66 LAB menu with legacy query compatibility and no old labels',()=>{
+ for(const p of pages){const html=fs.readFileSync(p,'utf8');assert.ok(html.includes('nav.js?v=166'),p);assert.ok(!html.includes('REMURA v0.8')&&!html.includes('REMURA v1.5 ·')&&!html.includes('VERSIONE 0.5'),p);}
  const nav=fs.readFileSync('nav.js','utf8');assert.match(nav,/Aggiornamento v1\.65 LAB · \d{2}\/\d{2}\/2026/);
 });
 test('Forex has no generated market samples',()=>{
@@ -15,11 +15,11 @@ test('Settings displays public and private feed freshness',()=>{
  assert.ok(html.includes('feed-health-core.js')&&html.includes('public-status'));
  assert.ok(js.includes('feedHealth.inspect(cleaned,symbols)')&&js.includes('checkPublic()'));
 });
-test('v1.65 LAB includes explicit Italian build timestamp and new PWA cache',()=>{
+test('v1.66 LAB includes explicit Italian build timestamp and new PWA cache',()=>{
  const nav=fs.readFileSync('nav.js','utf8');
- assert.ok(nav.includes('Aggiornamento v1.65 LAB · 22/11/2026 17:32 CET (anteprima, non pubblicata)'));
+ assert.ok(nav.includes('Aggiornamento v1.66 LAB · 22/11/2026 18:13 CET (anteprima, non pubblicata)'));
  const sw=fs.readFileSync('sw.js','utf8');
- assert.ok(sw.includes('remura-shell-v79-v1.65-shark-cockpit-preview'));
+ assert.ok(sw.includes('remura-shell-v79-v1.66-shark-cockpit-preview'));
  for(const p of pages){const html=fs.readFileSync(p,'utf8');assert.ok(!html.includes('REMURA v1.51'),p);}
 });
 

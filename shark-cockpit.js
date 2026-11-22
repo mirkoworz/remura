@@ -1,4 +1,4 @@
-/* REMURA Shark Cockpit v1.66 LAB — 22/11/2026 18:15 CET.
+/* REMURA Shark Cockpit v1.66 LAB — 22/11/2026 18:13 CET.
  * Browser-only CFTC direct reads and already published same-origin Myfxbook.
  * No auto-polling, Cloudflare writes, authentication, trading or alerts.
  */
