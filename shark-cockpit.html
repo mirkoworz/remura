@@ -8,14 +8,14 @@
   <meta name="description" content="REMURA Shark Cockpit: report CFTC reali per contratto, variazioni settimanali delle categorie istituzionali e retail separato.">
   <link rel="icon" type="image/svg+xml" href="./icon.svg">
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="stylesheet" href="./nav.css?v=167">
-  <link rel="stylesheet" href="./shark-cockpit.css?v=167">
-  <title>REMURA v1.67 LAB · Shark Cockpit istituzionale</title>
+  <link rel="stylesheet" href="./nav.css?v=168">
+  <link rel="stylesheet" href="./shark-cockpit.css?v=168">
+  <title>REMURA v1.68 LAB · Shark Cockpit istituzionale</title>
 </head>
 <body>
   <main class="shell">
     <div class="site-top">
-      <div class="brand">REMURA <span>SHARK COCKPIT · v1.67 LAB</span></div>
+      <div class="brand">REMURA <span>SHARK COCKPIT · v1.68 LAB</span></div>
       <a href="./mercati.html#institutional-scanner">← Scanner classico</a>
     </div>
 
@@ -84,6 +84,7 @@
       <div id="cards" aria-live="polite" aria-label="Contratti CFTC"><div class="metric">Attendo il feed ufficiale. Nessun dato inventato.</div></div>
       <details class="method">
         <summary>Come leggere le variazioni senza confonderle con i trade?</summary>
+        <p><strong>Radiografia settimanale:</strong> apri una scheda e scegli «Radiografia del movimento» per distinguere la variazione del numero di contratti LONG e SHORT di ciascuna categoria. Non implica acquisti, vendite o chiusure individuali.</p>
         <p><strong>Netto % OI</strong> = (long - short) / open interest × 100. <strong>Δ settimanale</strong> = variazione del netto in punti percentuali rispetto al report di sette giorni prima. Non è un rendimento, una percentuale di trader né la probabilità di una salita.</p>
         <p>Il COT rileva posizioni aggregate di martedì e viene pubblicato successivamente. Il browser consulta la fonte pubblica solo mentre questa schermata è aperta; non verifica il primo istante in cui il dato era disponibile.</p>
         <p>Le due categorie non hanno lo stesso significato: sui futures finanziari sono Asset Manager e Leveraged Funds; su metalli e WTI sono Managed Money e Producer / Merchant. Divergente significa che le <em>variazioni</em> delle due categorie hanno segno opposto, non che il prezzo debba invertire.</p>
@@ -107,13 +108,13 @@
 
     <footer class="tail">
       <p>Fonti originali: <a href="https://publicreporting.cftc.gov/Commitments-of-Traders/TFF-Futures-Only/gpe5-46if" rel="noopener noreferrer" target="_blank">CFTC TFF</a> · <a href="https://publicreporting.cftc.gov/Commitments-of-Traders/Disaggregated-Futures-Only/72hh-3qpy" rel="noopener noreferrer" target="_blank">CFTC Disaggregated</a> · <a href="https://www.myfxbook.com/community/outlook" rel="noopener noreferrer" target="_blank">Myfxbook Community Outlook</a>.</p>
-      <p>SHARK COCKPIT v1.67 LAB · 22/11/2026 21:41 CET · Anteprima di sviluppo, non pubblicata su REMURA produzione. Nessun costo cloud aggiuntivo, ordine, Telegram o nuova raccolta privata.</p>
+      <p>SHARK COCKPIT v1.68 LAB · 22/11/2026 22:10 CET · Anteprima di sviluppo, non pubblicata su REMURA produzione. Nessun costo cloud aggiuntivo, ordine, Telegram o nuova raccolta privata.</p>
     </footer>
   </main>
-  <script src="./shark-cockpit-core.js?v=167"></script>
-  <script src="./shark-movers-core.js?v=167"></script>
-  <script src="./shark-movers-ui.js?v=167"></script>
-  <script src="./shark-cockpit.js?v=167"></script>
-  <script src="./nav.js?v=167"></script>
+  <script src="./shark-cockpit-core.js?v=168"></script>
+  <script src="./shark-movers-core.js?v=168"></script>
+  <script src="./shark-movers-ui.js?v=168"></script>
+  <script src="./shark-cockpit.js?v=168"></script>
+  <script src="./nav.js?v=168"></script>
 </body>
 </html>
