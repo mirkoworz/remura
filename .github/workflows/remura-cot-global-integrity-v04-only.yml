@@ -1,0 +1,32 @@
+# REMURA COT global integrity v0.4 — only NEW tests, no Oracle or provider access.
+name: REMURA COT global integrity v04 NEW tests only
+on:
+  push:
+    branches: [research/cot-integrity-global-v04-lab-20261122]
+    paths:
+      - research/cot/cot_global_integrity_v04_lab.py
+      - research/cot/test_cot_global_integrity_v04_lab.py
+      - .github/workflows/remura-cot-global-integrity-v04-only.yml
+permissions:
+  contents: read
+jobs:
+  integrity-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout no persisted credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Compile only new integrity module and tests
+        run: python3 -m py_compile research/cot/cot_global_integrity_v04_lab.py research/cot/test_cot_global_integrity_v04_lab.py
+      - name: Audit fixture ledger corruption and orphan heads
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s research/cot -p 'test_cot_global_integrity_v04_lab.py' -v 2>&1 | tee /tmp/cot-global-v04.log
+          grep -q '^Ran 12 tests' /tmp/cot-global-v04.log
+          grep -q '^OK$' /tmp/cot-global-v04.log
+          echo REMURA_COT_GLOBAL_INTEGRITY_V04=12_12_PASS
