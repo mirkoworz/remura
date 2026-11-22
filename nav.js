@@ -1,4 +1,4 @@
-/* REMURA v1.66 LAB — 22/11/2026 18:13 CET. Nuovo Shark Cockpit CFTC, senza modificare gli altri moduli. */
+/* REMURA v1.67 LAB — 22/11/2026 21:41 CET. Nuovo Shark Cockpit CFTC, senza modificare gli altri moduli. */
 (() => {
   "use strict";
   const FX_CODES={EUR:"099741",GBP:"096742",JPY:"097741",AUD:"232741",CAD:"090741",CHF:"092741",NZD:"112741"};
@@ -34,7 +34,7 @@
     // Visible on every REMURA page, including the installed iPhone web app.
     const release=document.createElement("div");
     release.id="rm-release";
-    release.textContent="REMURA · Aggiornamento v1.66 LAB · 22/11/2026 18:13 CET (anteprima, non pubblicata)";
+    release.textContent="REMURA · Aggiornamento v1.67 LAB · 22/11/2026 21:41 CET (anteprima, non pubblicata)";
     document.body.prepend(release);
 
     const page=location.pathname.split("/").pop()||"index.html";
