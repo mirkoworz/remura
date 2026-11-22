@@ -36,7 +36,7 @@ class RuntimeGapTests(unittest.TestCase):
         a=inspect_checked_in_sources()
         self.assertEqual(a["source_status"],"PINNED_TEST_GATEWAY_SOURCES_CONSISTENT")
         self.assertEqual(a["checked_in_test_receiver_files"],2)
-        self.assertEqual(a["historical_test_deploy_verification_run"],"43595646049")
+        self.assertEqual(a["historical_deploy_verification_run"],"43595646049")
     def test_02_historical_receipts_are_not_current_live_status(self):
         a=inspect_checked_in_sources()
         self.assertEqual(a["historical_test_receipt_bars"],40)
