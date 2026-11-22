@@ -1,0 +1,33 @@
+# REMURA TV holdout evidence v0.8.187 — only new synthetic classification tests.
+# Existing v0.8.182 freeze and v0.8.186 decision contracts remain untouched.
+name: REMURA TV v0187 holdout evidence NEW tests only
+on:
+  push:
+    branches: [research/tv-prospective-admission-gate-v0187-20261122]
+    paths:
+      - tradingview/delta-peaks/holdout_evidence_ledger_v0187_lab.py
+      - tradingview/delta-peaks/test_holdout_evidence_ledger_v0187_lab.py
+      - .github/workflows/remura-tv-holdout-evidence-v0187-only.yml
+permissions:
+  contents: read
+jobs:
+  tv-v0187-evidence-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout fixed V2 protocol and new synthetic code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Compile new V2 admission inventory only
+        run: python3 -m py_compile tradingview/delta-peaks/holdout_evidence_ledger_v0187_lab.py tradingview/delta-peaks/test_holdout_evidence_ledger_v0187_lab.py
+      - name: Classify prospective fixtures without provider calls
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tradingview/delta-peaks -p 'test_holdout_evidence_ledger_v0187_lab.py' -v 2>&1 | tee /tmp/tv-v0187.log
+          grep -q '^Ran 20 tests' /tmp/tv-v0187.log
+          grep -q '^OK$' /tmp/tv-v0187.log
+          echo REMURA_TV_V0187_HOLDOUT=20_20_PASS
