@@ -1,0 +1,32 @@
+# REMURA LAB: existing public Pages runs, no dispatch/calls/tokens.
+# Only 12 NEW tests. Existing broad/4-commit audits not rerun.
+name: REMURA Retail GitHub Pages witness v04 new tests only
+on:
+  push:
+    branches: [research/retail-gh-pages-receipt-v04-20261122]
+    paths:
+      - research/retail/github_pages_receipt_association_v04_lab.py
+      - research/retail/test_github_pages_receipt_association_v04_lab.py
+      - .github/workflows/remura-retail-gh-pages-receipt-v04-only.yml
+permissions:
+  contents: read
+jobs:
+  existing-pages-association-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 60
+          persist-credentials: false
+      - name: Compile only v04
+        run: python3 -m py_compile research/retail/github_pages_receipt_association_v04_lab.py research/retail/test_github_pages_receipt_association_v04_lab.py
+      - name: Reconcile real SHA and server-run time claims without network
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s research/retail -p 'test_github_pages_receipt_association_v04_lab.py' -v 2>&1 | tee /tmp/retail-v04.log
+          grep -q '^Ran 12 tests' /tmp/retail-v04.log
+          grep -q '^OK$' /tmp/retail-v04.log
+          echo REMURA_RETAIL_GH_PAGES_V04=12_12_PASS
