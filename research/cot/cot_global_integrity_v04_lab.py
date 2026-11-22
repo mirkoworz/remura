@@ -104,8 +104,9 @@ def audit_fixture(db, *, synthetic=False):
             reasons.add("CURRENT_HEAD_NOT_LATEST")
     return {
         "schema":"remura.cot.global_integrity.v04.lab",
-        "status":"LOCAL_FIXTURE_CONSISTENT_UNATTESTED" if not reasons
-                 else "QUARANTINE_FIXTURE_INTEGRITY_FAILURE",
+        "status":("QUARANTINE_FIXTURE_INTEGRITY_FAILURE" if reasons else
+                  "UNKNOWN_EMPTY_FIXTURE" if not events else
+                  "LOCAL_FIXTURE_CONSISTENT_UNATTESTED"),
         "issues":sorted(reasons),
         "counts":{"capture_events":len(events),
                   "versions":len(versions),"heads":len(heads)},
