@@ -1,4 +1,4 @@
-/* REMURA Shark Cockpit v1.65 LAB — 22/11/2026 17:32 CET.
+/* REMURA Shark Cockpit v1.66 LAB — 22/11/2026 18:15 CET.
  * Official public weekly CFTC futures, with retail archived separately.
  * No new backend, no chart scraping, no institution identities, no signals.
  */
@@ -123,10 +123,44 @@
     const reports={tff,disagg};
     return CONTRACTS.map(c=>card(c,reports[c.dataset],now));
   }
-  function filterCards(cards,{family="Tutte",search="",mode="Movimento"}={}){
+  /* Watchlist stores only public CFTC contract codes on this iPhone. */
+  function parseFavorites(raw){
+    if(typeof raw!=="string"||raw.length>512)return [];
+    let arr;
+    try{arr=JSON.parse(raw);}catch{return [];}
+    if(!Array.isArray(arr)||arr.length>CONTRACTS.length)return [];
+    const valid=new Set(CONTRACTS.map(c=>c.code));
+    return [...new Set(arr.filter(v=>typeof v==="string"&&valid.has(v)))];
+  }
+  function toggleFavorite(values,code){
+    const allowed=new Set(CONTRACTS.map(c=>c.code));
+    if(typeof code!=="string"||!allowed.has(code))return [...parseFavorites(JSON.stringify(values))];
+    const clean=parseFavorites(JSON.stringify(values));
+    return clean.includes(code)?clean.filter(x=>x!==code):[...clean,code];
+  }
+  function historyFor(c,parsed){
+    const item=parsed&&parsed.byCode instanceof Map?parsed.byCode.get(c.code):null;
+    if(!item||!Array.isArray(item.rows)||!item.rows.length)
+      return {status:"UNKNOWN_NO_REPORT",rows:[],firstSeenVerified:false};
+    if(item.conflict)
+      return {status:"QUARANTINE_CONFLICT",rows:[],firstSeenVerified:false};
+    const ordered=item.rows.slice(0,12).reverse();
+    const rows=ordered.map((r,i)=>{
+      const prev=i>0?ordered[i-1]:null,consecutive=!!prev&&r.at-prev.at===WEEK;
+      return {date:r.date,first:round(r.first.net),second:round(r.second.net),
+        firstChange:consecutive?round(r.first.net-prev.first.net):null,
+        secondChange:consecutive?round(r.second.net-prev.second.net):null,
+        openInterest:r.oi,priorWeekMissing:!!prev&&!consecutive};
+    });
+    return {status:"UNATTESTED_PUBLIC_REPORT_HISTORY",rows,firstSeenVerified:false,
+      cftcTuesdayOnly:true,spotMappingVerified:false,tradingSignal:false};
+  }
+  function filterCards(cards,{family="Tutte",search="",mode="Movimento",favoritesOnly=false,favorites=[]}={}){
     if(!Array.isArray(cards))return [];
     const s=String(search).trim().toUpperCase();
+    const fav=new Set(parseFavorites(JSON.stringify(favorites)));
     const out=cards.filter(x=>(family==="Tutte"||x.family===family)&&
+      (!favoritesOnly||fav.has(x.code))&&
       (!s||(x.id+" "+x.name+" "+x.code).toUpperCase().includes(s)));
     const ready=x=>x.status==="CURRENT_REPORT_DATE"&&x.deltas!==null;
     const weight=x=>ready(x)?Math.max(Math.abs(x.deltas.first),Math.abs(x.deltas.second)):-1;
@@ -161,5 +195,5 @@
     });
   }
   return Object.freeze({CONTRACTS,FIELDS,DATASETS,SOURCES,FX_RETAIL,DAY,WEEK,
-                        parseRows,card,prepare,filterCards,summarizeRetail,round});
+                        parseRows,card,prepare,filterCards,parseFavorites,toggleFavorite,historyFor,summarizeRetail,round});
 });
