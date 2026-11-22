@@ -1,4 +1,4 @@
-// REMURA Shark Movers v1.67 LAB — new product behavior only.
+// REMURA Shark Movers v1.68 LAB — new product behavior only.
 const test=require("node:test"),assert=require("node:assert/strict"),fs=require("node:fs");
 const {scan}=require("../shark-movers-core.js");
 function c(code,net1,net2,opt={}){
@@ -79,7 +79,7 @@ test("browser page and UI render movers from existing cards without new fetch",(
  const js=fs.readFileSync("shark-cockpit.js","utf8");
  const ui=fs.readFileSync("shark-movers-ui.js","utf8");
  const sw=fs.readFileSync("sw.js","utf8");
- for(const marker of ['id="movers-list"','id="movers-status"',"shark-movers-core.js?v=167","shark-movers-ui.js?v=167"])
+ for(const marker of ['id="movers-list"','id="movers-status"',"shark-movers-core.js?v=168","shark-movers-ui.js?v=168"])
    assert.ok(html.includes(marker),marker);
  assert.ok(js.includes("window.REMURA_SHARK_MOVERS_UI?.render(sorted"));
  assert.ok(js.includes('r.id="shark-contract-"+item.code'));
