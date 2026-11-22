@@ -1,4 +1,4 @@
-/* REMURA Shark Cockpit v1.65 LAB — 22/11/2026 17:32 CET */
+/* REMURA Shark Cockpit v1.66 LAB — 22/11/2026 18:15 CET */
 :root{color-scheme:dark;--bg:#06121b;--ink:#ecf9f6;--muted:#9ebdc4;--mint:#76f2cd;--blue:#8bb6ff;--amber:#f6d496;--red:#ff919e;--line:#35535f;--panel:#102733}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -83,3 +83,28 @@ details.method p,details.method li{color:#bed3d4;font-size:12px;line-height:1.7}
 @media(max-width:850px){#cards{grid-template-columns:1fr}.pulse{grid-template-columns:repeat(2,minmax(0,1fr))}.retail-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:540px){.shell{padding:18px 12px 85px}.site-top{padding-left:55px;margin-bottom:17px}.brand{font-size:21px}.site-top a{font-size:10px}.hero{padding:23px}.hero h1{font-size:42px}.pulse{gap:8px}.metric{padding:13px}.metric strong{font-size:25px}.contract-card{padding:14px}.card-head h3{font-size:17px}.toolbar input,.toolbar select,#refresh{flex-basis:100%;width:100%}.retail-panel{padding:14px}}
 @media(prefers-reduced-motion:reduce){.contract-card{transition:none}}
+
+/* v1.66 — watchlist and expandable actual CFTC history; Safari-first. */
+.watch-toggle{display:inline-flex;gap:9px;align-items:center;justify-content:center;min-height:46px;padding:10px 14px;background:#103c41;color:#d3f8e7;border:1px solid #58a58a;border-radius:12px;font-weight:800;font-size:12px;cursor:pointer;white-space:nowrap}
+.watch-toggle input{accent-color:#77eec3;width:19px;height:19px;margin:0}
+.watchlist-note{font-size:12px;line-height:1.6;color:#b2d7d1;background:#102d34;border-left:3px solid #6fd9b6;padding:8px 12px;margin:0 0 14px}
+.favorite-toggle{flex:0 0 43px;min-height:43px;min-width:43px;display:grid;place-items:center;border-radius:12px;color:#ffe19f;background:#26434a;border:1px solid #617b78;font-size:24px;padding:0;touch-action:manipulation}
+.favorite-toggle[aria-pressed=true]{background:#665032;border-color:#e7c57e;color:#ffedbb}
+.favorite-toggle:hover{border-color:#f2d497}
+.card-head{align-items:flex-start}
+.history-details{margin:0;border-top:1px solid #32515c;padding-top:8px;min-width:0}
+.history-details summary{font-weight:800;color:#96edcf;font-size:12px;min-height:42px;cursor:pointer;display:flex;align-items:center}
+.history-details[open] summary{margin-bottom:8px}
+.history-scroll{overflow-x:auto;max-width:100%;border:1px solid #355a61;border-radius:10px;overscroll-behavior-inline:contain}
+.history-table{border-collapse:collapse;width:100%;min-width:470px;table-layout:auto;font-size:11px;color:#d4e9e5;font-variant-numeric:tabular-nums}
+.history-table th,.history-table td{text-align:left;padding:9px 8px;border-bottom:1px solid #284a55;white-space:nowrap}
+.history-table th{font-size:10px;color:#b3e5db;background:#143743;position:sticky;top:0}
+.history-table td:last-child{color:#dbf2e8}
+.history-table tr:last-child td{border-bottom:0}
+.history-warning{color:#ffdbb4;font-size:12px}
+.history-caption{color:#a9c4c5;font-size:10px;line-height:1.5}
+@media(max-width:540px){
+  .watch-toggle{width:100%;justify-content:flex-start}
+  .card-head{display:grid;grid-template-columns:minmax(0,1fr) 43px;align-items:start}
+  .card-head .grade{grid-column:1/-1;max-width:none;text-align:left}
+}
