@@ -1,0 +1,31 @@
+# REMURA Contributors v0.94 pilot scope only — 16 NEW tests.
+name: REMURA Contributors v094 pilot scope NEW tests only
+on:
+  push:
+    branches: [research/contributors-pilot-scope-v094-lab-20261122]
+    paths:
+      - research/contributors/contributors_pilot_scope_v094_lab.py
+      - research/contributors/test_contributors_pilot_scope_v094_lab.py
+      - .github/workflows/remura-contributors-scope-v094-only.yml
+permissions:
+  contents: read
+jobs:
+  synthetic-scope-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Compile v094 only
+        run: python3 -m py_compile research/contributors/contributors_pilot_scope_v094_lab.py research/contributors/test_contributors_pilot_scope_v094_lab.py
+      - name: Run new least-privilege pilot scope scenarios only
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s research/contributors -p 'test_contributors_pilot_scope_v094_lab.py' -v 2>&1 | tee /tmp/contrib-scope-v094.log
+          grep -q '^Ran 16 tests' /tmp/contrib-scope-v094.log
+          grep -q '^OK$' /tmp/contrib-scope-v094.log
+          echo REMURA_CONTRIBUTORS_SCOPE_V094=16_16_PASS
