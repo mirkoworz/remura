@@ -1,0 +1,40 @@
+# REMURA Contributors v0.96 LAB — protected pre-submit preview, zero deploy.
+name: REMURA Contributors v096 Protected Preflight Parity
+on:
+  push:
+    branches: [research/contributors-v096-protected-preflight-20261122]
+    paths:
+      - research/contributors/contributors_levels_preflight_v096_lab.mjs
+      - research/contributors/contributors_levels_ui_v096_lab.mjs
+      - research/contributors/contributors_levels_v096_lab.html
+      - research/contributors/test_contributors_preflight_v096_lab.mjs
+      - .github/workflows/remura-contributors-v096-protected-preflight.yml
+permissions:
+  contents: read
+jobs:
+  server-parity:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax of new candidate-only modules
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check research/contributors/contributors_levels_preflight_v096_lab.mjs
+          node --check research/contributors/contributors_levels_ui_v096_lab.mjs
+      - name: Compare local preflight to existing server D1 normalization only
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test research/contributors/test_contributors_preflight_v096_lab.mjs 2>&1 | tee /tmp/preflight-v096.log
+          grep -q '# tests 12' /tmp/preflight-v096.log
+          grep -q '# pass 12' /tmp/preflight-v096.log
+          grep -q '# fail 0' /tmp/preflight-v096.log
+          echo REMURA_CONTRIBUTORS_V096=12_12_SERVER_PARITY
