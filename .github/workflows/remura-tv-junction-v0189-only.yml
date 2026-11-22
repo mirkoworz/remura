@@ -1,0 +1,32 @@
+# REMURA TradingView v0.8.189 — ONLY new offline per-decision junction tests.
+# Frozen V2 is checked but previous suites are not rerun.
+name: REMURA TradingView v0189 junction NEW tests only
+on:
+  push:
+    branches: [research/tv-per-decision-junction-v0189-lab-20261122]
+    paths:
+      - tradingview/delta-peaks/decision_evidence_junction_v0189_lab.py
+      - tradingview/delta-peaks/test_decision_evidence_junction_v0189_lab.py
+      - .github/workflows/remura-tv-junction-v0189-only.yml
+permissions:
+  contents: read
+jobs:
+  offline-junction-v0189-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Compile new v0189 only
+        run: python3 -m py_compile tradingview/delta-peaks/decision_evidence_junction_v0189_lab.py tradingview/delta-peaks/test_decision_evidence_junction_v0189_lab.py
+      - name: Exact identity join, M5 timestamps and no phantom alpha
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tradingview/delta-peaks -p 'test_decision_evidence_junction_v0189_lab.py' -v 2>&1 | tee /tmp/remura-tv-v0189.log
+          grep -q '^Ran 18 tests' /tmp/remura-tv-v0189.log
+          grep -q '^OK$' /tmp/remura-tv-v0189.log
+          echo REMURA_TV_JUNCTION_V0189=18_18_PASS
