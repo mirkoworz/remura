@@ -15,7 +15,7 @@ function evidence(){
    d1:{databases:4,storageBytes:4000000,rowsReadTodayUtc:100000,
        rowsWrittenTodayUtc:1000,databaseSizesBytes:[1000000,1000000,1000000,1000000]}
   },
-  pilot:{contributors:2,additionalSeats:2,newDatabases:0,dailyWorkerRequests:200,
+  pilot:{contributors:2,additionalSeats:2,newDatabases:0,existingDatabaseIndex:1,dailyWorkerRequests:200,
     dailyD1RowsRead:10000,dailyD1RowsWritten:100,newStorageBytes:0,cpuP95MsEstimate:3},
   billing:{extraPaidServicesConfirmedAbsent:true,planPriceZeroConfirmed:true,noPaidUpgradeAuthorized:true},
   attestations:Object.fromEntries(REQUIRED_ATTESTATIONS.map(k=>[k,true]))
@@ -111,11 +111,27 @@ test("D1 individual 500MB Free database storage must leave reserve",()=>{
  x.account.d1.storageBytes=403000000;
  fail(x,"EXISTING_D1_DATABASE_TOO_LARGE_FOR_REMURA_RESERVE");
 });
-test("new storage cannot be falsely assigned to a noncreated DB",()=>{
+test("new storage reuses a selected existing D1 only when that database has headroom",()=>{
  const x=evidence();x.pilot.newStorageBytes=5000000;
- fail(x,"STAGING_EXISTING_DATABASE_CAPACITY_NOT_ATTESTED");
- const y=evidence();y.pilot.newDatabases=1;y.pilot.newStorageBytes=400000000;
+ assert.equal(report(x,NOW).status,"EVIDENCE_READY_FOR_INDEPENDENT_REVIEW");
+ const missing=evidence();missing.pilot.newStorageBytes=5000000;
+ missing.pilot.existingDatabaseIndex=null;
+ fail(missing,"D1_EXISTING_TARGET_DATABASE_NOT_ATTESTED");
+ const y=evidence();y.pilot.newDatabases=1;y.pilot.existingDatabaseIndex=null;
+ y.pilot.newStorageBytes=400000000;
  fail(y,"NEW_D1_DATABASE_SIZE_HEADROOM_TOO_SMALL");
+});
+test("existing D1 cannot exceed conservative per-database storage reserve",()=>{
+ const x=evidence();x.pilot.newStorageBytes=200000000;
+ fail(x,"D1_EXISTING_TARGET_DATABASE_HEADROOM_TOO_SMALL");
+ const y=evidence();y.pilot.newStorageBytes=1000000;
+ y.pilot.existingDatabaseIndex=99;
+ fail(y,"D1_EXISTING_TARGET_DATABASE_NOT_ATTESTED");
+});
+test("new database and existing-target selection cannot both be requested",()=>{
+ const x=evidence();x.pilot.newDatabases=1;
+ x.pilot.newStorageBytes=1000000;
+ fail(x,"D1_NEW_AND_EXISTING_TARGETS_AMBIGUOUS");
 });
 test("each independent security proof is required, including Access and D1 revocation",()=>{
  for(const key of REQUIRED_ATTESTATIONS){
