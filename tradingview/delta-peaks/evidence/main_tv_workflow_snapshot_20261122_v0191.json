@@ -1,0 +1,122 @@
+{
+  "schema": "remura.tv.main_workflow_inventory.snapshot.v0191.lab",
+  "source": "GITHUB_MAIN_READONLY_REPOSITORY_INSPECTION",
+  "main_commit_sha": "bd19918f457809f0568aee5c674b1b36a254971e",
+  "workflow_count": 16,
+  "entries": [
+    {
+      "name": "remura-tv-bootstrap-test-only-manual.yml",
+      "git_blob_sha": "3178de6949d2e6a06cbf28d66827a0855d2f657c",
+      "workflow_dispatch": true,
+      "schedule": false,
+      "push": false
+    },
+    {
+      "name": "remura-tv-btc-analytic-readonly-manual.yml",
+      "git_blob_sha": "ba79692bfc4e80e796367d52ab29b200e8f09e8e",
+      "workflow_dispatch": true,
+      "schedule": false,
+      "push": false
+    },
+    {
+      "name": "remura-tv-btc-weekend-test-manual.yml",
+      "git_blob_sha": "6512ccb868dee064854d1f20ddaf6865fb6c0163",
+      "workflow_dispatch": true,
+      "schedule": false,
+      "push": false
+    },
+    {
+      "name": "remura-tv-cvd-analytic-readonly-manual.yml",
+      "git_blob_sha": "53ecb13640b8f2beedc60b7f892bba749c0ddc2b",
+      "workflow_dispatch": true,
+      "schedule": false,
+      "push": false
+    },
+    {
+      "name": "remura-tv-cvd-batch-readonly-manual.yml",
+      "git_blob_sha": "e5c53b5e7e57da96ee2862600d8aceed60d8f472",
+      "workflow_dispatch": true,
+      "schedule": false,
+      "push": false
+    },
+    {
+      "name": "remura-tv-cvd-fold-readonly-manual.yml",
+      "git_blob_sha": "b7396a854392c92e12df6c1015227bb007af06e4",
+      "workflow_dispatch": true,
+      "schedule": false,
+      "push": false
+    },
+    {
+      "name": "remura-tv-cvd-transition-manual.yml",
+      "git_blob_sha": "d6d51596e8a48030f4bb7a0b397986cded68dc21",
+      "workflow_dispatch": true,
+      "schedule": false,
+      "push": false
+    },
+    {
+      "name": "remura-tv-emergency-stop-test-manual.yml",
+      "git_blob_sha": "9d56461f81553ae3d53850d079a467379230dfbd",
+      "workflow_dispatch": true,
+      "schedule": false,
+      "push": false
+    },
+    {
+      "name": "remura-tv-fx-analytic-readonly-manual.yml",
+      "git_blob_sha": "229dd29547cae742428ac19f8e6d9e2657bf8655",
+      "workflow_dispatch": true,
+      "schedule": false,
+      "push": false
+    },
+    {
+      "name": "remura-tv-gateway-test-off-manual.yml",
+      "git_blob_sha": "4be2d48407e60ab9a0b088c8995541053a928680",
+      "workflow_dispatch": true,
+      "schedule": false,
+      "push": false
+    },
+    {
+      "name": "remura-tv-rollback-test-manual.yml",
+      "git_blob_sha": "07c933f02eeeadfd26d168329a3474a714166e92",
+      "workflow_dispatch": true,
+      "schedule": false,
+      "push": false
+    },
+    {
+      "name": "remura-tv-test-first-receipt-readonly.yml",
+      "git_blob_sha": "2376b526c2b4863842b110992b272c29975b947d",
+      "workflow_dispatch": true,
+      "schedule": false,
+      "push": false
+    },
+    {
+      "name": "remura-tv-test-hash-secret-manual.yml",
+      "git_blob_sha": "38a5248b4701b76970359dc0f93b988491b70ade",
+      "workflow_dispatch": true,
+      "schedule": false,
+      "push": false
+    },
+    {
+      "name": "remura-tv-test-ingest-on-manual.yml",
+      "git_blob_sha": "d9d56d09a4e29b67b5c71295f83cc2b8d66c6070",
+      "workflow_dispatch": true,
+      "schedule": false,
+      "push": false
+    },
+    {
+      "name": "remura-tv-test-rotate-hash-manual.yml",
+      "git_blob_sha": "9dae8c64f44d7b9e48eb7423ba4ec42185a8210a",
+      "workflow_dispatch": true,
+      "schedule": false,
+      "push": false
+    },
+    {
+      "name": "remura-tv-test-worker-editor-readonly.yml",
+      "git_blob_sha": "aa8386a233a2d2f29b7bc6525cf404cd2fdb2ca0",
+      "workflow_dispatch": true,
+      "schedule": false,
+      "push": true
+    }
+  ],
+  "source_clock_proven": false,
+  "cloudflare_runtime_status": "UNKNOWN_NOT_QUERIED"
+}
