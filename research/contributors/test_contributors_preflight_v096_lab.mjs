@@ -89,7 +89,7 @@ test("protected candidate UI preserves read server, durable state, no retry and 
  assert.ok(js.indexOf("request_id:crypto.randomUUID()")<js.indexOf('client.mutate("/api/submit",p,current)'));
  assert.ok(js.includes("client.uncertain"));
  assert.ok(html.includes('src="./contributors_levels_ui_v096_lab.mjs"'));
- assert.ok(html.includes("STAGING PRIVATO NON ATTIVO"));
+ assert.ok(html.includes("CANDIDATO LAB")&&html.includes("NON DISTRIBUITO"));
 });
 test("new UI variant does not change current backend assets, API security or production",()=>{
  const js=fs.readFileSync(new URL("./contributors_levels_ui_v096_lab.mjs",import.meta.url),"utf8");
