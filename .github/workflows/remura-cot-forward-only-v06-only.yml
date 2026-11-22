@@ -1,0 +1,31 @@
+# COT v0.6 — NEW forward-only tests ONLY. No database/Oracle/Secrets.
+name: REMURA COT v06 forward-only NEW tests only
+on:
+  push:
+    branches: [research/cot-forward-only-v06-lab-20261122]
+    paths:
+      - research/cot/cot_forward_only_v06_lab.py
+      - research/cot/test_cot_forward_only_v06_lab.py
+      - .github/workflows/remura-cot-forward-only-v06-only.yml
+permissions:
+  contents: read
+jobs:
+  synthetic-forward-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Compile v06 only
+        run: python3 -m py_compile research/cot/cot_forward_only_v06_lab.py research/cot/test_cot_forward_only_v06_lab.py
+      - name: Run exactly 17 new atomic capture scenarios
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s research/cot -p 'test_cot_forward_only_v06_lab.py' -v 2>&1 | tee /tmp/cot-v06.log
+          grep -q '^Ran 17 tests' /tmp/cot-v06.log
+          grep -q '^OK$' /tmp/cot-v06.log
+          echo REMURA_COT_FORWARD_ONLY_V06=17_17_PASS
