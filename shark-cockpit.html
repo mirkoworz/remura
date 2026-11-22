@@ -8,14 +8,14 @@
   <meta name="description" content="REMURA Shark Cockpit: report CFTC reali per contratto, variazioni settimanali delle categorie istituzionali e retail separato.">
   <link rel="icon" type="image/svg+xml" href="./icon.svg">
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="stylesheet" href="./nav.css?v=166">
-  <link rel="stylesheet" href="./shark-cockpit.css?v=166">
-  <title>REMURA v1.66 LAB · Shark Cockpit istituzionale</title>
+  <link rel="stylesheet" href="./nav.css?v=167">
+  <link rel="stylesheet" href="./shark-cockpit.css?v=167">
+  <title>REMURA v1.67 LAB · Shark Cockpit istituzionale</title>
 </head>
 <body>
   <main class="shell">
     <div class="site-top">
-      <div class="brand">REMURA <span>SHARK COCKPIT · v1.66 LAB</span></div>
+      <div class="brand">REMURA <span>SHARK COCKPIT · v1.67 LAB</span></div>
       <a href="./mercati.html#institutional-scanner">← Scanner classico</a>
     </div>
 
@@ -40,6 +40,19 @@
       <div class="metric"><small>Report leggibili</small><strong id="available-contracts">—</strong><span>Tra i contratti richiesti</span></div>
       <div class="metric"><small>Movimenti WoW misurabili</small><strong id="valid-moves">—</strong><span>Solo settimane consecutive e recenti</span></div>
       <div class="metric"><small>Divergenze tra categorie</small><strong id="divergent-count">—</strong><span>Descrittive, non indicazioni trade</span></div>
+    </section>
+
+    <section class="movers-panel" id="institutional-movers" aria-labelledby="movers-title">
+      <div class="section-head"><div>
+        <div class="eyebrow">00 / Ultimo report CFTC confrontabile</div>
+        <h2 id="movers-title">Le mosse più grandi dei fondi</h2>
+        <p>Fino a sei variazioni nette per contratto, soltanto con report dello stesso martedì. Non sono ordini in tempo reale.</p>
+      </div></div>
+      <p class="movers-status" id="movers-status" role="status" aria-live="polite">Attendo i dati settimanali CFTC.</p>
+      <div id="movers-list" class="movers-grid" aria-label="Variazioni istituzionali per future">
+        <div class="movers-placeholder">Nessun movimento mostrato finché i report non sono disponibili.</div>
+      </div>
+      <p class="movers-caveat">Misura: cambiamento del netto futures in punti percentuali di open interest; categorie TFF e Disaggregated non equivalenti. Non indica acquisti/vendite in tempo reale, un prezzo Forex o un segnale.</p>
     </section>
 
     <section aria-labelledby="contract-title">
@@ -94,11 +107,13 @@
 
     <footer class="tail">
       <p>Fonti originali: <a href="https://publicreporting.cftc.gov/Commitments-of-Traders/TFF-Futures-Only/gpe5-46if" rel="noopener noreferrer" target="_blank">CFTC TFF</a> · <a href="https://publicreporting.cftc.gov/Commitments-of-Traders/Disaggregated-Futures-Only/72hh-3qpy" rel="noopener noreferrer" target="_blank">CFTC Disaggregated</a> · <a href="https://www.myfxbook.com/community/outlook" rel="noopener noreferrer" target="_blank">Myfxbook Community Outlook</a>.</p>
-      <p>SHARK COCKPIT v1.66 LAB · 22/11/2026 18:13 CET · Anteprima di sviluppo, non pubblicata su REMURA produzione. Nessun costo cloud aggiuntivo, ordine, Telegram o nuova raccolta privata.</p>
+      <p>SHARK COCKPIT v1.67 LAB · 22/11/2026 21:41 CET · Anteprima di sviluppo, non pubblicata su REMURA produzione. Nessun costo cloud aggiuntivo, ordine, Telegram o nuova raccolta privata.</p>
     </footer>
   </main>
-  <script src="./shark-cockpit-core.js?v=166"></script>
-  <script src="./shark-cockpit.js?v=166"></script>
-  <script src="./nav.js?v=166"></script>
+  <script src="./shark-cockpit-core.js?v=167"></script>
+  <script src="./shark-movers-core.js?v=167"></script>
+  <script src="./shark-movers-ui.js?v=167"></script>
+  <script src="./shark-cockpit.js?v=167"></script>
+  <script src="./nav.js?v=167"></script>
 </body>
 </html>
