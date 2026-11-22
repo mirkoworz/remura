@@ -1,35 +1,35 @@
-# REMURA Shark Science · COT revision lineage v0.1 LAB — 21/11/2026 Europe/Rome
-# Only NEW tests: existing real collector with injected fake public CFTC responses,
-# SQLite temporary fixture, and in-memory append-only proposal. NO network/Secrets/Oracle.
-name: REMURA COT revision lineage v01 ONE-SHOT
+# REMURA COT v0.2 LAB - NEW tests only, 22 Nov 2026 Europe/Rome.
+# v0.1 lineage's 20 tests already passed on run 44959558919: do not repeat.
+# Current job uses only fixtures, SQLite :memory:, stdlib; no network/secrets.
+name: REMURA COT v02 atomic capture NEW tests only
 on:
   push:
     branches:
       - research/cot-revision-lineage-lab-20261121
     paths:
-      - research/cot/cot_revision_lineage_v01_lab.py
-      - research/cot/test_cot_revision_lineage_v01_lab.py
+      - research/cot/cot_atomic_ingest_v02_lab.py
+      - research/cot/test_cot_atomic_ingest_v02_lab.py
       - .github/workflows/remura-cot-revision-lineage-v01-only.yml
 permissions:
   contents: read
 jobs:
-  cot-revision-new-tests-only:
+  atomic-cot-new-tests-only:
     if: github.repository == 'mirkoworz/remura'
     runs-on: ubuntu-latest
     timeout-minutes: 4
     steps:
-      - name: Checkout without persisted credentials
+      - name: Checkout source without persisted credentials
         uses: actions/checkout@v4
         with:
           persist-credentials: false
           fetch-depth: 1
-      - name: Compile new revision lineage only
-        run: python3 -m py_compile research/cot/cot_revision_lineage_v01_lab.py research/cot/test_cot_revision_lineage_v01_lab.py
-      - name: 20 new COT amendment as-of checks, offline only
+      - name: Compile v02 module and only new fixture tests
+        run: python3 -m py_compile research/cot/cot_atomic_ingest_v02_lab.py research/cot/test_cot_atomic_ingest_v02_lab.py
+      - name: Atomicity, crash and as-of time-boundary tests only
         shell: bash
         run: |
           set -euo pipefail
-          python3 -m unittest discover -s research/cot -p 'test_cot_revision_lineage_v01_lab.py' -v 2>&1 | tee /tmp/remura-cot-revisions-v01.log
-          grep -q '^Ran 20 tests' /tmp/remura-cot-revisions-v01.log
-          grep -q '^OK$' /tmp/remura-cot-revisions-v01.log
-          echo 'REMURA_SHARK_COT_REVISION_LINEAGE=20_20_PASS'
+          python3 -m unittest discover -s research/cot -p 'test_cot_atomic_ingest_v02_lab.py' -v 2>&1 | tee /tmp/remura-cot-atomic-v02.log
+          grep -q '^Ran 16 tests' /tmp/remura-cot-atomic-v02.log
+          grep -q '^OK$' /tmp/remura-cot-atomic-v02.log
+          echo 'REMURA_SHARK_COT_ATOMIC_V02=16_16_PASS'
