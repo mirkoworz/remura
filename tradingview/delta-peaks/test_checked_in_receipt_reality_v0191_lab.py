@@ -90,7 +90,7 @@ class RealityTests(unittest.TestCase):
         try:
             (w/WORKFLOW_SNAPSHOT).unlink()
             z=audit_checked_in(evidence_dir=e,workflow_dir=w)
-            self.assertEqual(z["workflows_unknown_in_checkout"],1)
+            self.assertEqual(z["workflows_unknown_in_checkout"],len(TV_WORKFLOWS))
             self.assertEqual(z["status"],"QUARANTINE_SOURCE_OR_WORKFLOW_DRIFT")
         finally:t.cleanup()
 
