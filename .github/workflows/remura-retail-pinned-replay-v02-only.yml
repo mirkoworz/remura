@@ -1,0 +1,33 @@
+# REMURA real-file read-only pin replay v0.2 - only 12 new tests.
+# No provider requests, no rerun of 34-file audit, no secrets.
+name: REMURA Retail real-file pinned asof v02 only
+on:
+  push:
+    branches: [research/retail-replay-real-file-v02-20261122]
+    paths:
+      - research/retail/myfxbook_pinned_real_replay_v02_lab.py
+      - research/retail/test_myfxbook_pinned_real_replay_v02_lab.py
+      - .github/workflows/remura-retail-pinned-replay-v02-only.yml
+permissions:
+  contents: read
+jobs:
+  pinned-real-retail-only:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout only repo snapshot, no persisted credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Compile only new replay and tests
+        run: python3 -m py_compile research/retail/myfxbook_pinned_real_replay_v02_lab.py research/retail/test_myfxbook_pinned_real_replay_v02_lab.py
+      - name: Replay real pinned local EURUSD archive without network
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s research/retail -p 'test_myfxbook_pinned_real_replay_v02_lab.py' -v 2>&1 | tee /tmp/retail-real-v02.log
+          grep -q '^Ran 12 tests' /tmp/retail-real-v02.log
+          grep -q '^OK$' /tmp/retail-real-v02.log
+          echo REMURA_RETAIL_PINNED_REAL_V02=12_12_PASS
