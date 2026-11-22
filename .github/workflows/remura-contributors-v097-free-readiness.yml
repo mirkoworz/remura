@@ -1,0 +1,35 @@
+# REMURA Contributors v0.97 LAB — no secrets, no Cloudflare calls, no deployment
+name: REMURA Contributors v097 Free Pilot Gate
+on:
+  push:
+    branches: [research/contributors-v097-free-pilot-readiness-20261122]
+    paths:
+      - research/contributors/contributors_free_readiness_v097_lab.mjs
+      - research/contributors/REMURA-CONTRIBUTORS-V097-EVIDENCE-BLANK.json
+      - research/contributors/test_contributors_free_readiness_v097_lab.mjs
+      - .github/workflows/remura-contributors-v097-free-readiness.yml
+permissions:
+  contents: read
+jobs:
+  manual-evidence-gate:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate offline gate syntax
+        run: node --check research/contributors/contributors_free_readiness_v097_lab.mjs
+      - name: Only new Free-plan and revocation safety cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test research/contributors/test_contributors_free_readiness_v097_lab.mjs 2>&1 | tee /tmp/contributors-v097-free.log
+          grep -q '# tests 19' /tmp/contributors-v097-free.log
+          grep -q '# pass 19' /tmp/contributors-v097-free.log
+          grep -q '# fail 0' /tmp/contributors-v097-free.log
+          echo REMURA_CONTRIBUTORS_V097=19_19_FREE_GATE_PASS
