@@ -42,7 +42,7 @@ class RuntimeGapTests(unittest.TestCase):
         self.assertEqual(a["historical_test_receipt_bars"],40)
         self.assertEqual(a["current_ingest_state"],"UNKNOWN_NOT_QUERIED")
         self.assertEqual(a["real_tv_alert_running"],"UNKNOWN_NOT_QUERIED")
-        self.assertIsNone(a.get("current_d1_test_rows") if isinstance(a.get("current_d1_test_rows"),type(None)) else None)
+        self.assertEqual(a["current_d1_test_rows"],"UNKNOWN_NOT_QUERIED")
         self.assertFalse(a["live_alpha_go"])
     def test_03_no_checkpoint_is_explicitly_unknown(self):
         z=review_manual_claims(evaluated_utc=NOW)
