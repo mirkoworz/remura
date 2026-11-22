@@ -1,0 +1,33 @@
+# REMURA V20 — new code only; public standard runner Free.
+# No secrets, Cloudflare, Firestore, API calls, deploy, merge or market capture.
+name: REMURA V20 Real Measurements OFFLINE
+on:
+  push:
+    branches:
+      - research/remura-v20-real-measurements-20261122
+    paths:
+      - "research/v20_real_measurements.py"
+      - "research/test_v20_real_measurements.py"
+      - ".github/workflows/remura-v20-real-measurements.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: remura-v20-measurements-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  offline-new-tests:
+    if: github.repository == 'mirkoworz/remura' && github.ref == 'refs/heads/research/remura-v20-real-measurements-20261122'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Only six NEW offline tests
+        run: python3 -m unittest -v research/test_v20_real_measurements.py
+      - name: Syntax check only new engine
+        run: python3 -m py_compile research/v20_real_measurements.py
