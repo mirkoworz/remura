@@ -1,4 +1,4 @@
-/* REMURA Shark Cockpit v1.67 LAB — 22/11/2026 21:41 CET.
+/* REMURA Shark Cockpit v1.68 LAB — 22/11/2026 22:10 CET.
  * Browser-only CFTC direct reads and already published same-origin Myfxbook.
  * No auto-polling, Cloudflare writes, authentication, trading or alerts.
  */
@@ -23,6 +23,7 @@
   };
   const fmt=(v,kind="pct")=>Number.isFinite(v)?(v>0?"+":"")+nf.format(v)+(kind==="pp"?" pp":"%"):"N/D";
   const date=v=>v?stamp.format(new Date(v+"T12:00:00Z")):"N/D";
+  const signedContracts=n=>Number.isFinite(n)?(n>0?"+":"")+whole.format(n):"N/D";
   const sortStatus=s=>s==="CURRENT_REPORT_DATE"?"Report recente":
     s==="STALE_REPORT"?"COT datato":
     s==="QUARANTINE_CONFLICT"?"Date in conflitto":
@@ -35,7 +36,7 @@
       errors={tff:"",disagg:""},retrievedAt=null;
 
   const WATCH_KEY="remura:shark:favorite-cftc:v166";
-  let favorites=[],storageAvailable=true,expandedCodes=new Set(),
+  let favorites=[],storageAvailable=true,expandedCodes=new Set(),expandedAnatomyCodes=new Set(),
       snapshots={tff:null,disagg:null};
   try{favorites=core.parseFavorites(localStorage.getItem(WATCH_KEY)||"[]");}
   catch{storageAvailable=false;}
@@ -113,6 +114,53 @@
     root.append(bottom);
     return root;
   }
+  function anatomyPanel(item){
+    const details=create("details","anatomy-details");
+    details.open=expandedAnatomyCodes.has(item.code);
+    details.addEventListener("toggle",()=>{
+      if(details.open)expandedAnatomyCodes.add(item.code);
+      else expandedAnatomyCodes.delete(item.code);
+    });
+    details.append(create("summary","","Radiografia del movimento · long e short reali"));
+    const contract=core.CONTRACTS.find(c=>c.code===item.code);
+    const raw=core.anatomyFor(contract,snapshots[item.dataset],Date.now());
+    if(raw.status!=="WEEKLY_GROSS_POSITIONS_COMPARABLE"){
+      details.append(create("p","anatomy-warning",
+        "Radiografia N/D: servono due report CFTC recenti, validi e di martedì consecutivi. Nessun movimento ricostruito."));
+      return details;
+    }
+    const intro=create("div","anatomy-date",
+      "Confronto CFTC "+date(raw.previousDate)+" → "+date(raw.reportDate)+
+      " · OI "+whole.format(raw.currentOpenInterest)+" ("+signedContracts(raw.openInterestDelta)+" vs settimana prima)");
+    details.append(intro);
+    const sections=create("div","anatomy-groups");
+    for(const grp of raw.categories){
+      const group=create("section","anatomy-group");
+      group.append(create("h4","",grp.label));
+      const positions=create("div","anatomy-positions");
+      const items=[
+        ["Contratti LONG",grp.currentLong,grp.longDelta],
+        ["Contratti SHORT",grp.currentShort,grp.shortDelta],
+        ["Netto (long − short)",grp.netContracts,grp.netDeltaContracts]
+      ];
+      for(const [label,value,delta] of items){
+        const cell=create("div","anatomy-stat");
+        cell.append(create("span","anatomy-stat-label",label));
+        cell.append(create("strong","",whole.format(value)));
+        cell.append(create("span","anatomy-stat-delta "+(delta>0?"plus":delta<0?"minus":"neutral"),
+          signedContracts(delta)+" contratti WoW"));
+        positions.append(cell);
+      }
+      group.append(positions);
+      group.append(create("p","anatomy-net","Variazione netto normalizzata: "+fmt(grp.netPpChange,"pp")));
+      sections.append(group);
+    }
+    details.append(sections);
+    details.append(create("p","anatomy-caveat",
+      "Sono posizioni aggregate nei due report settimanali. LONG in crescita non prova nuovi acquisti; SHORT in calo non prova singole chiusure. Open interest e categorie non identificano i singoli operatori né l'ora delle operazioni. Nessun segnale di trading."));
+    return details;
+  }
+
   function contractCard(item){
     const r=create("article","contract-card");
     r.id="shark-contract-"+item.code;
@@ -157,6 +205,7 @@
     }
     if(item.family==="Valute")foot.append(create("div","card-code","Future sulla valuta: non indica da solo il verso di una coppia spot USD."));
     r.append(foot);
+    r.append(anatomyPanel(item));
     r.append(historyPanel(item));
     return r;
   }
