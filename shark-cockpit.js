@@ -1,4 +1,4 @@
-/* REMURA Shark Cockpit v1.65 LAB — 22/11/2026 17:32 CET.
+/* REMURA Shark Cockpit v1.66 LAB — 22/11/2026 18:15 CET.
  * Browser-only CFTC direct reads and already published same-origin Myfxbook.
  * No auto-polling, Cloudflare writes, authentication, trading or alerts.
  */
@@ -13,7 +13,8 @@
   const rome=new Intl.DateTimeFormat("it-IT",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",timeZone:"Europe/Rome"});
   const els={cards:byId("cards"),message:byId("message"),refresh:byId("refresh"),
     family:byId("family"),sort:byId("sort"),search:byId("search"),
-    retailList:byId("retail-list"),retailStatus:byId("retail-status")};
+    retailList:byId("retail-list"),retailStatus:byId("retail-status"),
+    favoritesOnly:byId("only-favorites"),watchlistNote:byId("watchlist-note")};
   const create=(tag,cls,text)=>{
     const e=document.createElement(tag);
     if(cls)e.className=cls;
@@ -32,6 +33,62 @@
     "Divergenza non valutabile";
   let busy=false,cards=core.CONTRACTS.map(c=>core.card(c,null)),loaded={tff:false,disagg:false},
       errors={tff:"",disagg:""},retrievedAt=null;
+
+  const WATCH_KEY="remura:shark:favorite-cftc:v166";
+  let favorites=[],storageAvailable=true,expandedCodes=new Set(),
+      snapshots={tff:null,disagg:null};
+  try{favorites=core.parseFavorites(localStorage.getItem(WATCH_KEY)||"[]");}
+  catch{storageAvailable=false;}
+  function keepFavorites(){
+    if(!storageAvailable)return;
+    try{localStorage.setItem(WATCH_KEY,JSON.stringify(favorites));}
+    catch{storageAvailable=false;}
+  }
+  function updateWatchNote(){
+    if(!els.watchlistNote)return;
+    const count=favorites.length;
+    els.watchlistNote.textContent=count+" contratti seguiti · "+
+      (storageAvailable?"Preferiti salvati solo su questo iPhone.":"Salvataggio Safari non disponibile: preferiti validi solo finché la pagina resta aperta.")+
+      " Nessuna notifica o monitoraggio in background.";
+  }
+  function historyPanel(item){
+    const details=create("details","history-details");
+    details.open=expandedCodes.has(item.code);
+    details.addEventListener("toggle",()=>{
+      if(details.open)expandedCodes.add(item.code);
+      else expandedCodes.delete(item.code);
+    });
+    const title=create("summary","","Storico per categorie · fino a 12 report CFTC");
+    details.append(title);
+    const h=core.historyFor(core.CONTRACTS.find(c=>c.code===item.code),snapshots[item.dataset]);
+    if(h.status==="QUARANTINE_CONFLICT"){
+      details.append(create("p","history-warning","Revisione discordante: storico sospeso. Non scegliere arbitrariamente una delle righe."));
+      return details;
+    }
+    if(!h.rows.length){
+      details.append(create("p","history-warning","Nessun report disponibile per questo contratto. Non sono stati costruiti esempi."));
+      return details;
+    }
+    const scroll=create("div","history-scroll");
+    const table=create("table","history-table"),header=create("thead",""),tr=create("tr","");
+    for(const h of ["Martedì CFTC",item.labels[0]+" · netto %OI",item.labels[1]+" · netto %OI","Δ da settimana precedente"]){
+      tr.append(create("th","",h));
+    }
+    header.append(tr);table.append(header);
+    const tb=create("tbody","");
+    for(const x of h.rows.slice().reverse()){
+      const row=create("tr","");
+      row.append(create("td","",date(x.date)));
+      row.append(create("td","",fmt(x.first)));
+      row.append(create("td","",fmt(x.second)));
+      row.append(create("td","",x.priorWeekMissing?"Settimana non consecutiva · N/D":
+        "A "+fmt(x.firstChange,"pp")+" · L "+fmt(x.secondChange,"pp")));
+      tb.append(row);
+    }
+    table.append(tb);scroll.append(table);details.append(scroll);
+    details.append(create("p","history-caption","Fonte CFTC pubblica · posizioni settimanali aggregate · nessun timestamp originario verificato. I vuoti non vengono riempiti."));
+    return details;
+  }
 
   function cohort(item,index){
     const key=index===0?"first":"second",v=item[key],delta=item.deltas?.[key]??null;
@@ -65,7 +122,16 @@
     title.append(create("h3","",item.name));
     title.append(create("div","card-code","Contratto CFTC "+item.code));
     const grade=create("span","grade "+(item.status==="CURRENT_REPORT_DATE"?"":item.status==="STALE_REPORT"?"warn":"unknown"),sortStatus(item.status));
-    head.append(title,grade);r.append(head);
+    const favButton=create("button","favorite-toggle",favorites.includes(item.code)?"★":"☆");
+    favButton.type="button";
+    favButton.setAttribute("aria-label",favorites.includes(item.code)?
+      "Rimuovi "+item.name+" dai preferiti":"Segui "+item.name+" nei preferiti");
+    favButton.setAttribute("aria-pressed",String(favorites.includes(item.code)));
+    favButton.addEventListener("click",()=>{
+      favorites=core.toggleFavorite(favorites,item.code);
+      keepFavorites();draw();
+    });
+    head.append(title,favButton,grade);r.append(head);
 
     const body=create("div","cohorts");
     body.append(cohort(item,0),cohort(item,1));r.append(body);
@@ -89,11 +155,13 @@
     }
     if(item.family==="Valute")foot.append(create("div","card-code","Future sulla valuta: non indica da solo il verso di una coppia spot USD."));
     r.append(foot);
+    r.append(historyPanel(item));
     return r;
   }
   function draw(){
     const sorted=core.filterCards(cards,{family:els.family.value,
-      search:els.search.value,mode:els.sort.value});
+      search:els.search.value,mode:els.sort.value,
+      favoritesOnly:els.favoritesOnly?.checked===true,favorites});
     els.cards.replaceChildren();
     if(!sorted.length)els.cards.append(create("div","metric","Nessun contratto corrisponde ai filtri."));
     else for(const item of sorted)els.cards.append(contractCard(item));
@@ -101,6 +169,7 @@
     byId("available-contracts").textContent=String(cards.filter(c=>c.reportDate).length);
     byId("valid-moves").textContent=String(cards.filter(c=>c.status==="CURRENT_REPORT_DATE"&&c.deltas).length);
     byId("divergent-count").textContent=String(cards.filter(c=>c.status==="CURRENT_REPORT_DATE"&&c.comparison==="DIVERGENT").length);
+    updateWatchNote();
   }
   async function fetchCftc(dataset){
     const codes=core.CONTRACTS.filter(c=>c.dataset===dataset).map(c=>c.code);
@@ -180,6 +249,7 @@
         loaded[x.kind]=!!x.data;
         errors[x.kind]=x.error||"";
       }
+      snapshots=parsed;
       cards=core.prepare(parsed.tff,parsed.disagg,Date.now());
       retrievedAt=Date.now();
       draw();drawRetail(retail);
@@ -194,6 +264,7 @@
   for(const node of [els.family,els.sort,els.search]){
     node.addEventListener(node===els.search?"input":"change",draw);
   }
+  els.favoritesOnly?.addEventListener("change",draw);
   els.refresh.addEventListener("click",reload);
   draw();reload();
 })();
