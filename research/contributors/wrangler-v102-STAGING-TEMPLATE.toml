@@ -1,0 +1,21 @@
+# REMURA Contributors v1.02 STAGING TEMPLATE ONLY (23/11/2026).
+# NOT a deploy command. Do not run wrangler deploy with this template.
+# No live route or preview URL. No Access policy/identities configured here.
+name = "remura-contributors-v102-NOT-ACTIVATED"
+main = "./staging_readonly_entry_v102_lab.mjs"
+compatibility_date = "2026-11-23"
+workers_dev = false
+preview_urls = false
+
+# Critical: do NOT add [assets] or Service Bindings. Real direct Worker Access
+# must be configured and tested on the target host before activating any route.
+# No [vars], HMAC key, audience, Cloudflare account ID or real D1 database UUID
+# appear in this public template.
+
+# The binding below intentionally uses an invalid PLACEHOLDER database ID.
+# Replace ONLY after OWNER authorizes an isolated staging database and verifies
+# that it is neither production nor the synthetic fixture DB.
+[[d1_databases]]
+binding = "CONTRIBUTORS_DB"
+database_name = "NOT_CONFIGURED_STAGING_DB"
+database_id = "REPLACE_ONLY_AFTER_SEPARATE_APPROVAL"
