@@ -34,6 +34,12 @@ python3 research/v207_forward_cvd_evaluation.py \
 ```
 Gli ultimi due valori sono obbligatori per simulazioni nette; non abbiamo ancora misure storiche di spread/slippage: **non impostare valori inventati come fossero reali**. Lo SQLite viene aperto in `mode=ro` e `query_only=ON` dal lettore V20.4. Il report esclude prezzi, ticker broker, SHA/ID evento individuali, file privati e credenziali.
 
+## Verifica nuova CI realmente conclusa
+- Workflow dedicato: https://github.com/mirkoworz/remura/actions/runs/45175591389 — SUCCESS, HEAD testato `50bfa407dac8fad627e62e86834c5b4bf62b5c25`.
+- Log ufficiale del job `causal-validation`: **Ran 12 tests in 0.053s — OK**; inoltre `REMURA_V207_NO_REAL_PRICE_OR_DIRECTIONAL_ALPHA=PASS`.
+- Nessuna vecchia suite V20/V20.4/V20.6 rieseguita. Tutti i 12 test sono SINTETICI, e la seconda asserzione della CI verifica che senza ledger e prezzo il motore NON produce rendimento.
+- Il commit successivo di questo documento non altera il codice gia' testato. Nessun test di outcome REALE, spread effettivo o identificazione istituzionale e' incluso.
+
 ## Risultato scientifico verificabile AL CHECKPOINT
 - Trasporto CVD TEST: 12/12 ricevute vere gia' certificate, nessuna nuova richiesta o ri-esecuzione.
 - Segnali direzionali forward realmente congelati: **0 attestati**.
