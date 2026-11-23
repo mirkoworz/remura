@@ -1,8 +1,6 @@
 name: REMURA A V21.2 CVD origin custody isolated checks
 on:
-  push:
-    branches:
-      - research/remura-v211-source-derived-cvd-20261123
+  pull_request:
     paths:
       - 'research/v211_raw_cvd_direction_admission.py'
       - 'research/test_v211_raw_cvd_direction_admission.py'
@@ -19,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Run only 21 novel offline synthetic CVD-source tests
+      - name: Run 21 impacted offline V21.1 source regression tests
         run: python3 -m unittest discover -s research -p 'test_v211_raw_cvd_direction_admission.py' -v
       - name: Test ONLY five new RAW private-custody safety cases
         run: python3 -m unittest discover -s research -p 'test_v212_private_raw_custody.py' -v
