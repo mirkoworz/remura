@@ -1,0 +1,60 @@
+# REMURA V20.2 · 23 November 2026. Research branch only.
+# One-shot independent public ECB price anchor; no Keys, Cloudflare, D1,
+# TradingView, Firestore, Oracle, broker calls, deploy, schedules, or pushes.
+name: REMURA V20.2 FREE ECB REAL Price Witness
+on:
+  push:
+    branches:
+      - research/remura-v202-ecb-independent-price-witness-20261123
+    paths:
+      - .github/workflows/remura-v202-ecb-real-price-witness.yml
+permissions:
+  contents: read
+concurrency:
+  group: remura-v202-ecb-one-shot
+  cancel-in-progress: false
+jobs:
+  ecb-independent-daily-price:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/research/remura-v202-ecb-independent-price-witness-20261123'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout isolated audit code only
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Exactly 11 NEW offline tests for ECB parser and availability
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd research
+          python3 -m unittest -v test_ecb_daily_reference_witness_v202.py
+          python3 -m py_compile ecb_daily_reference_witness_v202.py
+          echo REMURA_V202_ECB_NEW_TESTS=11_PASS
+      - name: Read official ECB daily XML exactly once (one public unauthenticated GET)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 research/ecb_daily_reference_witness_v202.py --live-official > "$RUNNER_TEMP/official-ecb-witness.json"
+          python3 - "$RUNNER_TEMP/official-ecb-witness.json" <<'PY'
+          import json,sys
+          j=json.load(open(sys.argv[1],encoding="utf-8"))
+          assert len(j["derived_pairs"]) == 28
+          assert j["independent_daily_fx_context_only"]
+          assert not j["first_seen_independently_attested"]
+          assert not j["intraday_candles_or_tradeable_price"]
+          assert not j["forward_60m_h4_24h_alpha_calculated"]
+          print("REMURA_V202_ECB_REAL_PUBLIC=28_FX_PAIRS_REFERENCE_ONLY_PASS")
+          print(json.dumps(j,sort_keys=True,ensure_ascii=False))
+          with open(__import__("os").environ["GITHUB_STEP_SUMMARY"],"a",encoding="utf-8") as f:
+              f.write("### REMURA V20.2 · Official ECB reference rate witness\n\n")
+              f.write(f"- Reference **date**: {j['reference_date']} (NOT proof of publication hour)\n")
+              f.write(f"- Actual captured observation: {j['observed_at_utc']} UTC / {j['observed_at_rome']} Rome\n")
+              f.write(f"- Source fingerprint SHA256: {j['raw_xml_sha256']}\n")
+              f.write(f"- EURUSD: {j['derived_pairs']['EURUSD']}; USDJPY: {j['derived_pairs']['USDJPY']}; CADJPY: {j['derived_pairs']['CADJPY']}\n")
+              f.write(f"- New 23 Nov price reference observed? **{j['new_23_nov_reference_observed']}**\n")
+              f.write("- Strictly daily indicative reference prices; no M5/M15, CVD, tradable OHLC, first-seen proof, PnL or alpha.\n")
+              f.write("- Zero Secrets, no broker/Cloudflare/Firestore operations, no deploy, no scheduled ongoing activity.\n")
+          PY
