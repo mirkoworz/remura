@@ -1,0 +1,35 @@
+# REMURA Shark Cockpit PWA safety patch v1.71.1 LAB — 23 Nov 2026.
+# Only offline cache boundaries and changed release-stamp assertions.
+name: REMURA Shark Cockpit v171 PWA safety
+on:
+  push:
+    branches: [feature/shark-cockpit-v171-my-sharks-iphone-20261123]
+    paths:
+      - sw.js
+      - tests/shark-offline-policy.test.js
+      - tests/release-consistency.test.js
+      - .github/workflows/remura-shark-cockpit-v171-pwa-safety.yml
+permissions:
+  contents: read
+jobs:
+  offline-public-cache:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax checks for changed files
+        run: |
+          node --check sw.js
+          node --check tests/shark-offline-policy.test.js
+      - name: Five new offline fallback tests plus affected release assertions
+        run: |
+          set -euo pipefail
+          node --test tests/shark-offline-policy.test.js tests/release-consistency.test.js 2>&1 | tee /tmp/remura-v171-pwa.txt
+          grep -q '# fail 0' /tmp/remura-v171-pwa.txt
+          echo REMURA_SHARK_PWA=OFFLINE_BOUNDARY_PASS
