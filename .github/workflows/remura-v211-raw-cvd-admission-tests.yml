@@ -1,0 +1,35 @@
+name: REMURA V21.1 Raw CVD pair deterministic direction (new-only)
+on:
+  push:
+    branches:
+      - research/remura-v211-source-derived-cvd-20261123
+    paths:
+      - 'research/v211_raw_cvd_direction_admission.py'
+      - 'research/test_v211_raw_cvd_direction_admission.py'
+      - '.github/workflows/remura-v211-raw-cvd-admission-tests.yml'
+permissions:
+  contents: read
+jobs:
+  strict-new-source-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout static lab code without publishing raw events
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run only 21 novel offline synthetic CVD-source tests
+        run: python3 -m unittest discover -s research -p 'test_v211_raw_cvd_direction_admission.py' -v
+      - name: Verify no genuine raw source means no signal or API request
+        run: |
+          python3 research/v211_raw_cvd_direction_admission.py > /tmp/remura-v211-empty.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("/tmp/remura-v211-empty.json").read_text())
+          assert r["status"] == "NO_ORIGINAL_CVD_SOURCE_NO_DECISION"
+          assert r["signal_count"] == 0
+          assert r["network_or_market_provider_calls"] == 0
+          assert r["trades_or_alerts_activated"] is False
+          print("REMURA_V211_NO_RAW_REAL_SOURCE_NO_SIGNAL=PASS")
+          PY
