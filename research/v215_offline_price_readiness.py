@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from v204_private_cvd_price_coverage import assess, read_local_price_db, utc
@@ -22,10 +22,8 @@ PROOF=Path(__file__).resolve().parent/"real-proofs"/"REMURA-V203-CVD-TEST-RECEIP
 
 
 def probe(offline_sqlite: Path | None, *, as_of: datetime) -> dict:
-    if as_of.tzinfo is None or as_of.utcoffset() != as_of.utcoffset():
-        raise ValueError("aware_UTC_required")
-    if as_of.utcoffset() != __import__("datetime").timedelta(0):
-        raise ValueError("as_of_must_be_utc")
+    if not isinstance(as_of, datetime) or as_of.tzinfo is None or as_of.utcoffset() != timedelta(0):
+        raise ValueError("as_of_must_be_UTC")
     proof=json.loads(PROOF.read_text("utf-8"))
     prices=read_local_price_db(offline_sqlite) if offline_sqlite is not None else None
     report=assess(proof, prices, as_of=as_of)
@@ -77,7 +75,7 @@ def main() -> int:
         parser.error("offline SQLite copy path required")
     try:
         now=utc(args.as_of_utc) if args.as_of_utc else datetime.now(UTC)
-        if now > datetime.now(UTC)+__import__("datetime").timedelta(minutes=5):
+        if now > datetime.now(UTC)+timedelta(minutes=5):
             raise ValueError("future_as_of_rejected")
         report=probe(args.offline_sqlite,as_of=now)
     except (OSError,ValueError,TypeError,KeyError,json.JSONDecodeError):
