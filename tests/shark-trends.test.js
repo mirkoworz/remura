@@ -67,9 +67,9 @@ test("iPhone chart UI uses no fetch or HTML injection, standalone includes real 
   const page=fs.readFileSync(path.join(root,"shark-cockpit.js"),"utf8");
   const css=fs.readFileSync(path.join(root,"shark-cockpit.css"),"utf8");
   const preview=fs.readFileSync(path.join(root,"preview","REMURA-Shark-COT-Trends-v170-iPhone-STANDALONE-LAB.html"),"utf8");
-  assert.ok(html.includes("v1.70 LAB")&&html.includes("23/11/2026 15:01 CET"));
+  assert.ok(html.includes("v1.71 LAB")&&html.includes("23/11/2026 20:20 CET"));
   const a=html.indexOf("shark-trends-core.js?v=170"),b=html.indexOf("shark-trends-ui.js?v=170"),
-    c=html.indexOf("shark-cockpit.js?v=170");
+    c=html.indexOf("shark-cockpit.js?v=171");
   assert.ok(a>0&&a<b&&b<c);
   assert.ok(page.includes("SHARK_TRENDS_UI.render(h,item.labels)"));
   assert.ok(css.includes(".trend-svg")&&css.includes(".trend-zero"));
