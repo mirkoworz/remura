@@ -6,6 +6,9 @@ on:
       - 'cot-intelligence-core.js'
       - 'cot-intelligence-watchlist.js'
       - 'cot-intelligence-fx-factors.js'
+      - 'scripts/cot_fx_dashboard_export.js'
+      - 'tests/cot-fx-dashboard-export.test.js'
+      - 'RESEARCH-B-COT-DASHBOARD-EXPORT-V21.1.md'
       - 'scripts/cot_intelligence_parity.py'
       - 'tests/cot-intelligence-fx-factors.test.js'
       - 'tests/test_cot_intelligence_parity.py'
@@ -48,6 +51,10 @@ jobs:
           node --check scripts/cot_intelligence_watchlist.js
           node --check tests/cot-intelligence-public.test.js
           node --test tests/cot-intelligence.test.js tests/cot-intelligence-watchlist.test.js tests/cot-intelligence-public.test.js tests/cot-intelligence-fx-factors.test.js
+      - name: Validate five NEW offline FX dashboard-export gates (no HTTP)
+        run: |
+          node --check scripts/cot_fx_dashboard_export.js
+          node --test tests/cot-fx-dashboard-export.test.js
       - name: Check read-only SQLite snapshot fixtures
         run: python3 -m unittest discover -s tests -p 'test_cot_intelligence_snapshot.py' -v
       - name: Check two-request CFTC public read contract with mocks (no HTTP)
