@@ -1,0 +1,33 @@
+# REMURA Contributors v0.99 LAB — 23/11/2026 (Europe/Rome).
+# Only NEW 3-principal read-only fixture checks. No provider calls, secrets, deploy, D1 writes.
+name: REMURA Contributors v099 three-principal read-only ONE-SHOT
+on:
+  push:
+    branches: [research/contributors-safari-readonly-pilot-v099-20261123]
+    paths:
+      - research/contributors/pilot_readonly_fixture_v099_lab.mjs
+      - research/contributors/test_pilot_readonly_fixture_v099_lab.mjs
+      - .github/workflows/remura-contributors-v099-readonly-fixture-only.yml
+permissions:
+  contents: read
+jobs:
+  pilot-readonly-fixture:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Source checkout without persisted credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: New v0.99 read-only fixture tests ONLY
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check research/contributors/pilot_readonly_fixture_v099_lab.mjs
+          node --test --test-reporter=tap research/contributors/test_pilot_readonly_fixture_v099_lab.mjs 2>&1 | tee /tmp/remura-v099.log
+          grep -q '^1..11$' /tmp/remura-v099.log
+          grep -q '^# pass 11$' /tmp/remura-v099.log
+          grep -q '^# fail 0$' /tmp/remura-v099.log
+          echo REMURA_CONTRIBUTORS_V099_READONLY_FIXTURE=11_11_PASS
