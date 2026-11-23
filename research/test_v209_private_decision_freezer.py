@@ -95,8 +95,17 @@ class V209NewOnly(unittest.TestCase):
         )
 
     def test_price_gap_or_insufficient_history_fail_closed(self):
+        doc=market()
+        doc["timeframes"]["M15"].insert(0,{
+            "t":"2026-11-23T03:00:00Z",
+            "o":1.0999,"h":1.1001,"l":1.0997,"c":1.0999
+        })
+        doc["timeframes"]["M15"]=[
+            row for row in doc["timeframes"]["M15"]
+            if row["t"] != "2026-11-23T03:45:00Z"
+        ]
         with self.assertRaisesRegex(ValueError,"gap"):
-            freeze(m=market(gap=FIRST+timedelta(minutes=30)))
+            freeze(m=doc)
         with self.assertRaisesRegex(ValueError,"five_closed"):
             freeze(m=market([1.1,1.1002,1.1003,1.1004]))
 
