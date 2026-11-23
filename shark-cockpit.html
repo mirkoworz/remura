@@ -9,15 +9,23 @@
   <link rel="icon" type="image/svg+xml" href="./icon.svg">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="stylesheet" href="./nav.css?v=168">
-  <link rel="stylesheet" href="./shark-cockpit.css?v=168">
-  <title>REMURA v1.68 LAB · Shark Cockpit istituzionale</title>
+  <link rel="stylesheet" href="./shark-cockpit.css?v=169">
+  <title>REMURA v1.69 LAB · Shark Cockpit istituzionale</title>
 </head>
 <body>
   <main class="shell">
+    <div class="build-stamp" role="note">SHARK COCKPIT v1.69 LAB · 23/11/2026 13:30 CET (Europe/Rome) · Anteprima UI, non pubblicata</div>
     <div class="site-top">
-      <div class="brand">REMURA <span>SHARK COCKPIT · v1.68 LAB</span></div>
+      <div class="brand">REMURA <span>SHARK COCKPIT · v1.69 LAB</span></div>
       <a href="./mercati.html#institutional-scanner">← Scanner classico</a>
     </div>
+
+    <nav class="jump-nav" aria-label="Sezioni Shark Cockpit">
+      <a href="#evidence">Affidabilità dati</a>
+      <a href="#institutional-movers">Mosse CFTC</a>
+      <a href="#contracts">Contratti</a>
+      <a href="#retail">Sentiment retail</a>
+    </nav>
 
     <section class="hero" aria-labelledby="hero-title">
       <div class="eyebrow">01 / Posizionamento istituzionale · CFTC</div>
@@ -34,6 +42,19 @@
     <div class="notice">
       <strong>La regola della remora:</strong> distinguiamo sempre il futuro CFTC dalla coppia Forex spot, il sentimento retail dalle posizioni aggregate e la data del report dalla vera data di pubblicazione. I dati assenti, obsoleti o discordanti non diventano segnali.
     </div>
+
+    <section class="evidence-panel" id="evidence" aria-labelledby="evidence-title">
+      <div class="section-head"><div>
+        <div class="eyebrow">00 / Provenienza e attendibilità</div>
+        <h2 id="evidence-title">Prima la qualità. Poi i numeri.</h2>
+        <p>Controllo della leggibilità, non un punteggio di probabilità o profitto. Il COT resta settimanale; i singoli operatori non sono identificabili.</p>
+      </div></div>
+      <p id="evidence-read-at" class="evidence-read-at" role="status">Nessuna lettura ancora completata. I timestamp restano N/D.</p>
+      <div id="evidence-list" class="evidence-grid" aria-live="polite">
+        <p class="evidence-loading">Fonti da verificare nel browser. CVD: N/D finché non è integrato e validato.</p>
+      </div>
+      <p class="evidence-warning">La data del martedì CFTC indica le posizioni dichiarate, non quando REMURA le ha viste per la prima volta. Il sentiment retail non dimostra la direzione degli istituzionali. Il CVD proxy non prova ordini reali.</p>
+    </section>
 
     <section class="pulse" aria-label="Riepilogo copertura">
       <div class="metric"><small>Contratti nel radar</small><strong id="total-contracts">14</strong><span>Contratti CFTC selezionati</span></div>
@@ -55,7 +76,7 @@
       <p class="movers-caveat">Misura: cambiamento del netto futures in punti percentuali di open interest; categorie TFF e Disaggregated non equivalenti. Non indica acquisti/vendite in tempo reale, un prezzo Forex o un segnale.</p>
     </section>
 
-    <section aria-labelledby="contract-title">
+    <section id="contracts" aria-labelledby="contract-title">
       <div class="section-head">
         <div>
           <h2 id="contract-title">Flussi delle grandi categorie</h2>
@@ -92,7 +113,7 @@
       </details>
     </section>
 
-    <section class="retail-panel" aria-labelledby="retail-title">
+    <section class="retail-panel" id="retail" aria-labelledby="retail-title">
       <div class="section-head">
         <div>
           <div class="eyebrow">02 / Campione distinto · Myfxbook</div>
@@ -108,13 +129,15 @@
 
     <footer class="tail">
       <p>Fonti originali: <a href="https://publicreporting.cftc.gov/Commitments-of-Traders/TFF-Futures-Only/gpe5-46if" rel="noopener noreferrer" target="_blank">CFTC TFF</a> · <a href="https://publicreporting.cftc.gov/Commitments-of-Traders/Disaggregated-Futures-Only/72hh-3qpy" rel="noopener noreferrer" target="_blank">CFTC Disaggregated</a> · <a href="https://www.myfxbook.com/community/outlook" rel="noopener noreferrer" target="_blank">Myfxbook Community Outlook</a>.</p>
-      <p>SHARK COCKPIT v1.68 LAB · 22/11/2026 22:10 CET · Anteprima di sviluppo, non pubblicata su REMURA produzione. Nessun costo cloud aggiuntivo, ordine, Telegram o nuova raccolta privata.</p>
+      <p>SHARK COCKPIT v1.69 LAB · 23/11/2026 13:30 CET · Anteprima di sviluppo, non pubblicata su REMURA produzione. Nessun costo cloud aggiuntivo, ordine, Telegram o nuova raccolta privata.</p>
     </footer>
   </main>
   <script src="./shark-cockpit-core.js?v=168"></script>
   <script src="./shark-movers-core.js?v=168"></script>
   <script src="./shark-movers-ui.js?v=168"></script>
-  <script src="./shark-cockpit.js?v=168"></script>
+  <script src="./shark-evidence-core.js?v=169"></script>
+  <script src="./shark-evidence-ui.js?v=169"></script>
+  <script src="./shark-cockpit.js?v=169"></script>
   <script src="./nav.js?v=168"></script>
 </body>
 </html>
