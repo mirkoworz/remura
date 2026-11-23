@@ -37,3 +37,13 @@ Documentazione Cloudflare ufficiale verificata il 23/11:
 Con base main `4f8d8a707789eec29686a1568c4b8441e4c7d684`, il ramo C risulta divergente (**504 commit avanti, 31 indietro**, confronto GitHub 23/11). **NON fondere direttamente** e NON trascinare nel rilascio la storia di 504 commit. Una futura integrazione va selezionata tramite allowlist di moduli, audit dei loro import e build su ramo release creato da main SOLO previo consenso a merge/deploy. PR #105 resta Draft.
 
 **NO-GO reale confermato**. Questa nota è un checkpoint operativo, non un'autorizzazione ad attivare la rete.
+
+## Evidenza Billing UI — 23/11/2026 21:06–21:07 CET (Europe/Rome)
+Osservazione visiva dell'OWNER in **Cloudflare Billing → Subscriptions**, tab *Subscribed* e *Available*, da iPhone. Il repository registra **solo un riepilogo non personale**, non gli screenshot e non i metodi di pagamento.
+
+- **Subscribed:** `Workers Free — Active`; `Teams Free Base — Renews on Dec 15, 2026`.
+- **Available:** `Workers Paid` ($5/mese + usage) e `Workers for Platforms` ($25/mese + usage), con pulsante `Add`: **non risultano sottoscritti** nello screenshot; non sono stati attivati.
+- **Accertato:** nessun abbonamento Workers Paid/Workers for Platforms visibile fra gli abbonamenti sottoscritti. La scheda mostra che l'account utilizza i due piani Free elencati.
+- **Non accertato:** importi `Billable usage`, `Invoices`, `Spend limits`, eventuali consumi di altri prodotti e fatturazione effettiva totale. Presenza di piani Free **non prova** che tutte le possibili voci di utilizzo siano a €0.
+
+**Gate 0**: `FREE_SUBSCRIPTIONS_VISIBLE`, `BILLABLE_USAGE_UNKNOWN`, `NO_GO_REAL_PILOT`. Prossimo controllo indispensabile e **solo lettura**: aprire `Billable usage` e verificare le voci di costo/importo del periodo, senza premere `Upgrade`, `Add` o cambiare impostazioni. Il controllo non autorizza modifiche Access, Worker/D1, creazione utenti, SQL, merge o deploy.
