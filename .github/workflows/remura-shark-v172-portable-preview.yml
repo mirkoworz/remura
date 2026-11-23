@@ -1,0 +1,38 @@
+# REMURA v1.72 — portable Safari preview artifact (NO site deploy).
+name: REMURA v172 portable iPhone LAB preview
+on:
+  push:
+    branches: [feature/shark-cockpit-v172-mainline-slice-20261123]
+    paths:
+      - preview/REMURA-Shark-Cockpit-v172-iPhone-STANDALONE-LAB.html
+      - tests/shark-v172-standalone.test.js
+      - .github/workflows/remura-shark-v172-portable-preview.yml
+permissions:
+  contents: read
+jobs:
+  portable-iphone:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Exact bundled modules, clear provenance, no private API
+        run: |
+          set -euo pipefail
+          node --test tests/shark-v172-standalone.test.js 2>&1 | tee /tmp/remura-v172-preview.txt
+          grep -q '# tests 4' /tmp/remura-v172-preview.txt
+          grep -q '# pass 4' /tmp/remura-v172-preview.txt
+          grep -q '# fail 0' /tmp/remura-v172-preview.txt
+          echo REMURA_V172_PREVIEW=PORTABLE_NOT_PUBLISHED
+      - name: Downloadable HTML for OWNER offline inspection (1 day retention)
+        uses: actions/upload-artifact@v4
+        with:
+          name: REMURA-v172-iPhone-LOCAL-LAB
+          path: preview/REMURA-Shark-Cockpit-v172-iPhone-STANDALONE-LAB.html
+          retention-days: 1
+          if-no-files-found: error
