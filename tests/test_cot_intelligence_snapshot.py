@@ -33,7 +33,7 @@ class TestCotIntelligenceSnapshot(unittest.TestCase):
             ("tff","999999","2026-11-17",10,1,1,1,1)
         ])
         db.execute("INSERT INTO cot_first_seen VALUES (?,?,?,?)",(
-            "tff","090741","2026-11-20T20:35:00+00:00"))
+            "tff","090741","2026-11-17","2026-11-20T20:35:00+00:00"))
         db.commit()
         db.close()
     def tearDown(self):
