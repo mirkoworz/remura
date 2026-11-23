@@ -1,4 +1,4 @@
-/* REMURA Shark Cockpit v1.68 LAB — 22/11/2026 22:10 CET.
+/* REMURA Shark Cockpit v1.69 LAB — 23/11/2026 13:30 CET.
  * Browser-only CFTC direct reads and already published same-origin Myfxbook.
  * No auto-polling, Cloudflare writes, authentication, trading or alerts.
  */
@@ -305,6 +305,8 @@
       cards=core.prepare(parsed.tff,parsed.disagg,Date.now());
       retrievedAt=Date.now();
       draw();drawRetail(retail);
+      // Same already-fetched data: no new requests or scientific interpretations.
+      window.REMURA_SHARK_EVIDENCE_UI?.render({cards,loaded,retail,readAt:retrievedAt});
       const success=Object.values(loaded).filter(Boolean).length;
       els.message.dataset.status=success===0?"error":"ready";
       els.message.textContent=success===2?
