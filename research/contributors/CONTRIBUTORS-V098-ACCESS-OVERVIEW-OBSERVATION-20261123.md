@@ -15,12 +15,12 @@
 - Capacity per 1 OWNER + 1–2 CONTRIBUTOR: **verifica visiva preliminare favorevole**, ma non segna il gate come completato.
 - **Access plan=Teams Free Base osservato in Billing/Subscriptions** (schermata 16:31 CET); non è ancora attestata l'assenza di ogni servizio opzionale fatturabile.
 - **ActiveSeatsUsed / SeatsAllocated**: UI suggerisce 1/50; conferma ancora richiesta da Team & Resources / Users o Billing prima di inserire valori nel gate formale.
-- **Workers plan=Workers Free, Active, osservato in Billing/Subscriptions**. **D1 overview 23/11 visually verified below: 258 rows read / 928 rows written (Daily);** **Workers daily request count/CPU=UNKNOWN**. **Billing importo totale del periodo e add-on fatturabili=UNKNOWN**: l'etichetta Free per questi due prodotti non certifica un addebito totale nullo.
+- **Workers plan=Workers Free, Active, osservato in Billing/Subscriptions**. **D1 overview 23/11 visually verified below: 258 rows read / 928 rows written (Daily);** **Workers requests 23/11 = 486 / 100.000 osservate alle 20:18 CET; CPU = UNKNOWN**. **Billing importo totale del periodo e add-on fatturabili=UNKNOWN**: l'etichetta Free per questi due prodotti non certifica un addebito totale nullo.
 - Autenticazione reale, JWT Access, isolamento D1, login/logout/revoca su Safari: **NON TESTATI**.
 - Nessuna promozione automatica a GO, nessun deployment/merge/utente creato, nessuna spesa autorizzata. PR #105 resta Draft.
 
 ## Controllo successivo più utile
-**Non ripetere** il controllo dei nomi dei piani Free già completato. **D1 overview completata**, non ripetere le stesse schermate. Proseguire da Workers & Pages → Analytics per richieste/CPU del giorno UTC. In seguito usare Billing (Invoices/complete billable usage) soltanto in lettura per l'importo effettivo e possibili add-on. Non premere Upgrade, non usare API o SQL console.
+**Non ripetere** il controllo dei nomi dei piani Free già completato. **D1 overview completata**, non ripetere le stesse schermate. Workers & Pages → Usage (richieste giornaliere) completato, NON ripetere. Verificare solo CPU per invocazione nel dettaglio Metrics/Analytics di un Worker pertinente, se disponibile, senza modificarlo. In seguito usare Billing (Invoices/complete billable usage) soltanto in lettura per l'importo effettivo e possibili add-on. Non premere Upgrade, non usare API o SQL console.
 
 ## Aggiornamento osservazione Billing — 23/11/2026 ore 16:31 CET (Europe/Rome)
 - Screenshot iPhone della scheda **Subscriptions → Subscribed**: **Workers Free — Active** (Compute) e **Teams Free Base — Renews on Dec 15, 2026** (Zero Trust).
@@ -39,3 +39,14 @@
 - Margine ingegneristico REMURA del 25%: le metriche osservate sono inferiori alle soglie conservative di 3.750.000 righe lette, 75.000 scritte e 3,75 GB storage, **ma il pilot forecast e le attestazioni di sicurezza restano sconosciuti**; non marcare il gate come superato.
 - Evidenza sufficiente per descrivere il consumo mostrato per il giorno selezionato; non prova costi totali, uso Workers, orario UTC esatto del contatore o una misura prospettica dopo attivazione del nuovo wrapper POST v0.98.
 - **Decisione: D1 capienza osservata favorevole; pilot reale resta NO-GO.** Nessuna modifica Cloudflare/Oracle/Workers/D1/Access, nessun utente, merge o deploy.
+
+## Aggiornamento Workers & Pages — 23/11/2026 ore 20:18 CET (Europe/Rome)
+- Fonte: screenshot iPhone dashboard Workers & Pages, filtro **Today**, sola lettura.
+- **Requests today: 486 / 100.000** (0,486% del limite Workers Free indicato nella schermata, capienza nominale restante 99.514 al momento dell'osservazione).
+- **Observability events today: 386 / 200.000** (0,193% del limite mostrato). È un contatore distinto dalle richieste Worker e da CPU.
+- Riserva ingegneristica REMURA 25%: massimale cautelativo per richieste giornaliere 75.000; margine istantaneo teorico **74.514** prima delle previsioni del pilot e delle altre applicazioni. Non è una promessa di fatturazione zero.
+- CPU invocazioni, forecast del nuovo wrapper POST v0.98 e variabilità del carico: **UNKNOWN**; non considerare attestato il limite CPU o l'intero gate v0.97.
+- Il pannello elenca un Worker esistente riferito a Contributors con etichetta **No active routes**; non prova l'assenza di deploy, chiamate `workers.dev`, binding o autenticazione. NON aprire URL pubblici, modificare Worker, route o Access solo per collaudarlo.
+- I nomi degli altri Worker e i loro URL NON vengono copiati in questo registro pubblico; nulla è stato toccato.
+- La quota Free Workers risulta ampiamente libera all'ora mostrata, ma **Billing totale, CPU, autenticazione/revoca Safari, isolamento dello staging e consenso separato** restano non attestati: **pilot reale NO-GO**.
+- Nessuna nuova autorizzazione implicita: niente utenti, modifiche Access/D1/Workers, query GraphQL, merge o deploy.
