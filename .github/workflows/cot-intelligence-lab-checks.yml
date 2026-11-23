@@ -7,6 +7,9 @@ on:
       - 'cot-intelligence-watchlist.js'
       - 'cot-intelligence-fx-factors.js'
       - 'scripts/cot_fx_dashboard_export.js'
+      - 'scripts/cot_offline_parity_fx_bundle.py'
+      - 'tests/test_cot_offline_parity_fx_bundle.py'
+      - 'RESEARCH-B-COT-OFFLINE-BUNDLE-V21.2.md'
       - 'tests/cot-fx-dashboard-export.test.js'
       - 'RESEARCH-B-COT-DASHBOARD-EXPORT-V21.1.md'
       - 'scripts/cot_intelligence_parity.py'
@@ -61,4 +64,6 @@ jobs:
         run: python3 -m unittest discover -s tests -p 'test_cot_public_official_audit.py' -v
       - name: Verify offline CFTC public versus private custody parity fixtures
         run: python3 -m unittest discover -s tests -p 'test_cot_intelligence_parity.py' -v
+      - name: Validate 6 NEW offline parity-first dashboard handoff gates
+        run: python3 -m unittest discover -s tests -p 'test_cot_offline_parity_fx_bundle.py' -v
 
