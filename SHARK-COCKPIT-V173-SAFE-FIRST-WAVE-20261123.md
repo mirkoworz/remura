@@ -22,3 +22,22 @@ Corretto con commit `878a58b526c84979187dfc6d6e3835b51629908c`:
 - PR #114 resta **Draft**, PR #113 rimane Draft e non va fusa. Nessun deploy/merge o Cloudflare Worker/DB coinvolto.
 
 **Residuo**: prova visiva su Safari con HTML portabile v1.72 disponibile nel precedente artifact (stessi moduli Cockpit), e poi collaudo end-to-end del v1.73.1 tramite un URL di staging dopo autorizzazione; conservazione backup e rollback Mac, controllo compatibilità con A+B e produzione. Prima del merge va controllato il SHA corrente di main.
+
+
+## 23/11/2026 — conferma prova manuale iPhone e stato release
+Il proprietario ha comunicato **«Ok funziona»** dopo aver aperto l'anteprima HTML autonoma su iPhone. Questa è **un'evidenza manuale positiva del pacchetto standalone v1.72**, con gli stessi principali moduli UI del candidato v1.73.1. Non certifica che la Home/il menu della PR #114 o i fetch CFTC/retail sul futuro dominio siano stati provati in staging, né che la PWA aggiorni correttamente la cache dopo un deploy.
+
+CI GitHub sulla PR #114:
+- `45268730798` SUCCESS: nuova integrazione web-first (5/5).
+- `45268742108` SUCCESS: regressione Splash legacy (corretta dopo failure iniziale).
+- `45268742168` SUCCESS: compatibilità Insights legacy.
+- `45269060595` SUCCESS Splash e `45269061100` SUCCESS Insights sull'HEAD documentale precedente. Le modifiche aggiuntive qui sono soltanto note, senza codice funzionale.
+- `main` ancora `4f8d8a707789eec29686a1568c4b8441e4c7d684` al controllo; PR #114 **Draft**, PR #113 **Draft**.
+
+Passaggio di rilascio:
+1. Verificare consenso specifico per **preview/staging web** su URL isolato, senza alterare `main` o REMURA live.
+2. Solo in un ambiente di test autorizzato verificare version stamp, menu Home→Cockpit→scanner, CFTC reali, Myfxbook, preferiti persistenti, assenza dati, reload, disconnessione e fonte/orario lettura.
+3. Svolgere review/backup/rollback con attività Mac/Codex e A+B; una release live richiede **autorizzazione separata di merge e deploy** e nuova verifica SHA.
+4. Il pilot Contributors ha gate e autorizzazione separati; mai fondere una PR UI con un Worker autenticato.
+
+**Nessun costo nuovo/abbonamento/Cloudflare deploy/merge introdotto.** La fatturazione totale resta non certificata; usare Free come vincolo, non come promessa di consumo 0.
