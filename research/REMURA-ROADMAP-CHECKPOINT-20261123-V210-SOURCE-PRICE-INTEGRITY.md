@@ -25,7 +25,7 @@ Il nuovo modulo **NON falsifica** payload individuali mancanti o timestamp retro
 
 \`.github/workflows/remura-v210-forward-integrity-tests.yml\`: esclusivamente 17 nuovi test, nessun Secret, nessun input di mercato vero e seconda barriera CLI a input vuoto.
 
-GitHub Actions [run 45248148888](https://github.com/mirkoworz/remura/actions/runs/45248148888) — SUCCESS HEAD \`21b3e209bc4fb335742d02ef3bba74d25f0cbbc2\`, log \`Ran 17 tests ... OK\` e \`REMURA_V210_NO_REAL_SOURCE_OR_PRICE_NO_CLAIM=PASS\`. Un affinamento successivo ha reso esplicito \`actual_forward_outcomes_evaluated=false\` anche con finestre M15 complete; nuovi test aggiungono la relativa asserzione e richiedono un nuovo run su SHA del codice aggiornato.
+GitHub Actions [run 45248148888](https://github.com/mirkoworz/remura/actions/runs/45248148888) — SUCCESS HEAD \`21b3e209bc4fb335742d02ef3bba74d25f0cbbc2\`, log \`Ran 17 tests ... OK\` e \`REMURA_V210_NO_REAL_SOURCE_OR_PRICE_NO_CLAIM=PASS\`. **Verifica finale del nuovo codice aggiornato**: [GitHub Actions run 45248293673](https://github.com/mirkoworz/remura/actions/runs/45248293673) — SUCCESS su SHA \`731d5599c4d56c2743252da0952bac6f6e5ff96c\`, log ufficiale \`Ran 17 tests ... OK\` e \`REMURA_V210_NO_REAL_SOURCE_OR_PRICE_NO_CLAIM=PASS\`. Qui viene testata anche la nuova condizione \`actual_forward_outcomes_evaluated=false\` quando una finestra M15 è completa ma non vi è performance autentica.
 
 ## CLI per un futuro collaudo LOCALE, solo con autorizzazione separata
 
