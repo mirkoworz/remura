@@ -1,0 +1,36 @@
+# REMURA v1.74: immutable public Pages attestation, independent of hosting.
+# One-time six HTTPS GETs, zero retries, secrets, CFTC requests, writes or deploy.
+name: REMURA v174 public Pages exact assets
+on:
+  push:
+    branches: [feature/shark-cockpit-v173-safe-mainline-gates-20261123]
+    paths:
+      - preview/attest_deployed_assets_v174.mjs
+      - .github/workflows/remura-v174-public-asset-attestation.yml
+permissions:
+  contents: read
+jobs:
+  exact-public-assets:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Compare only six deployed public files with the source and disabled Firebase config
+        run: |
+          set -euo pipefail
+          node --check preview/attest_deployed_assets_v174.mjs
+          node preview/attest_deployed_assets_v174.mjs
+      - name: Preserve only public hashes and HTTP statuses for one day
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: REMURA-V174-PAGES-DEPLOYED-ASSET-DIGESTS
+          path: remura-v174-pages-asset-digests.json
+          retention-days: 1
+          if-no-files-found: warn
