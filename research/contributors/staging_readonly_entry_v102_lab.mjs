@@ -2,8 +2,8 @@
 // A real Workers module entrypoint candidate for an independently approved,
 // Access-protected direct Worker (no Static Assets router, no service binding).
 // INERT until separately configured and deployed by the OWNER. No POST permitted.
-// v1.03: read-only HTML never exposes submit forms or client scripts.
-import {privateStagingSafeReadV103} from './private_worker_staging_saferead_v103_lab.mjs';
+// v1.04: deny all scripts and client connections by CSP after v1.03 role gate.
+import {privateStagingCspV104} from './private_worker_staging_csp_v104_lab.mjs';
 const CLOSED_HEADERS=Object.freeze({
  'Content-Type':'application/json; charset=utf-8',
  'Cache-Control':'no-store, max-age=0','X-Content-Type-Options':'nosniff'
@@ -25,12 +25,12 @@ export default {
  async fetch(req,env,ctx){
   try{
    if(!(req instanceof Request)||req.method!=='GET'||!stagingReady(env,ctx))return deny();
-   return await privateStagingSafeReadV103(req,env,ctx);
+   return await privateStagingCspV104(req,env,ctx);
   }catch{return deny()}
  }
 };
 export const V102_ENTRY=Object.freeze({
- version:'1.03',mode:'INERT_DEPLOYMENT_CANDIDATE',onlyGet:true,
+ version:'1.04',mode:'INERT_DEPLOYMENT_CANDIDATE',onlyGet:true,
  directAccessRequired:true,stagingUrlConfigured:false,
- providerVerified:false,authorized:false,deployed:false,readOnlyPresentation:true
+ providerVerified:false,authorized:false,deployed:false,readOnlyPresentation:true,strictCsp:true
 });
