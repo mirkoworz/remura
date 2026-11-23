@@ -1,0 +1,34 @@
+# REMURA Contributors v1.01 — isolated staging read-only prototype.
+# ONLY seven new tests. No Cloudflare, secrets, SQL, deploy or prior-suite rerun.
+name: REMURA Contributors v101 staging read-only gates
+on:
+  push:
+    branches: [research/contributors-safari-readonly-pilot-v099-20261123]
+    paths:
+      - research/contributors/private_worker_staging_readonly_v101_lab.mjs
+      - research/contributors/test_private_worker_staging_readonly_v101_lab.mjs
+      - .github/workflows/remura-contributors-v101-readonly-staging.yml
+permissions:
+  contents: read
+jobs:
+  readonly-staging:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax and seven new isolation tests
+        run: |
+          set -euo pipefail
+          node --check research/contributors/private_worker_staging_readonly_v101_lab.mjs
+          node --check research/contributors/test_private_worker_staging_readonly_v101_lab.mjs
+          node --test research/contributors/test_private_worker_staging_readonly_v101_lab.mjs 2>&1 | tee /tmp/remura-v101.log
+          grep -q '# tests 7' /tmp/remura-v101.log
+          grep -q '# pass 7' /tmp/remura-v101.log
+          grep -q '# fail 0' /tmp/remura-v101.log
+          echo REMURA_CONTRIBUTORS_V101_READONLY_STAGING=7_7_PASS
