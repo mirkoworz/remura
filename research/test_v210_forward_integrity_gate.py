@@ -205,6 +205,8 @@ class V210Only(unittest.TestCase):
                           github_readonly=True,fetch_json=f)
         self.assertEqual(len(f.calls),2)
         self.assertTrue(report["github_first_seen_witness_verified"])
+        self.assertTrue(report["forward_price_window_coverage_checked"])
+        self.assertFalse(report["actual_forward_outcomes_evaluated"])
         self.assertFalse(report["source_receipt_timestamp_independently_verified"])
         self.assertFalse(report["cvd_direction_independently_derived_from_source"])
         self.assertFalse(report["broker_market_data_history_independently_authenticated"])
