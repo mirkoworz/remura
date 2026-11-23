@@ -1,0 +1,36 @@
+# REMURA Contributors v1.00 LAB — only FOUR new role-profile regression tests.
+# No Access / D1 requests, browser login, secret, deployment, merge or previous v099 suite.
+name: REMURA Contributors v100 profile integrity
+on:
+  push:
+    branches: [research/contributors-safari-readonly-pilot-v099-20261123]
+    paths:
+      - research/contributors/private_worker_pilot_profile_integrity_v100_lab.mjs
+      - research/contributors/test_private_worker_pilot_profile_integrity_v100_lab.mjs
+      - .github/workflows/remura-contributors-v100-profile-only.yml
+permissions:
+  contents: read
+jobs:
+  profile-integrity:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Offline syntax
+        run: |
+          node --check research/contributors/private_worker_pilot_profile_integrity_v100_lab.mjs
+          node --check research/contributors/test_private_worker_pilot_profile_integrity_v100_lab.mjs
+      - name: Four new profile-integrity regressions (NO cloud calls)
+        run: |
+          set -euo pipefail
+          node --test research/contributors/test_private_worker_pilot_profile_integrity_v100_lab.mjs 2>&1 | tee /tmp/remura-v100-profile.log
+          grep -q '# tests 4' /tmp/remura-v100-profile.log
+          grep -q '# pass 4' /tmp/remura-v100-profile.log
+          grep -q '# fail 0' /tmp/remura-v100-profile.log
+          echo REMURA_CONTRIBUTORS_V100=4_4_PASS
