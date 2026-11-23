@@ -126,6 +126,7 @@ class NewA214NativeCompatibility(unittest.TestCase):
             audit_native_pair(raw(prior), raw(event))
         with self.assertRaisesRegex(ValueError, "duplicate_native_json_key"):
             audit_native_pair(b'{"schema":"x","schema":"y"}', raw(event))
+        prior, event = pair()
         with self.assertRaisesRegex(ValueError, "non_numeric"):
             event["cvd"]["segment_cvd"] = "infinite"
             audit_native_pair(raw(prior), raw(event))
