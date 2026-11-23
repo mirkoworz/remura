@@ -37,6 +37,10 @@ L'auditor \`adjudicate_raw\` rilegge più tardi i **medesimi byte originali**, r
 
 In default \`python3 research/v211_raw_cvd_direction_admission.py\` non chiama rete, non apre database, non crea file e non produce un segnale. Tutti gli altri ingressi CLI richiedono separatamente file RAW locale fuori dal repository PUBBLICO, timestamp received dichiarato, DB SQLite preesistente ctrader read-only, directory privata fuori dal checkout; \`--write-private\` esplicito è necessario per scrivere la coppia privata 0600/0700. Nessun upload a GitHub viene eseguito.
 
+## Nuova CI VERIFICATA
+
+[GitHub Actions run 45252221906](https://github.com/mirkoworz/remura/actions/runs/45252221906) — **SUCCESS**, SHA del codice testato `6dd5d5b2318b1a3137b4053fdc8412696cd78f4f`. Job ufficiale `strict-new-source-gate`: log `Ran 21 tests in 0.013s — OK` e marker `REMURA_V211_NO_RAW_REAL_SOURCE_NO_SIGNAL=PASS`. I test sono SOLO sintetici, fixture mock senza API GitHub reali, nessun file dati personali e nessun provider. Il commit di questo checkpoint cambia solo documentazione, non codice.
+
 ## Stato e roadmap prima dei prezzi REALI
 - CI dedicata: \`.github/workflows/remura-v211-raw-cvd-admission-tests.yml\`; 21 test NUOVI solo sintetici, senza ripetere suite di V20.4–V21.0.
 - NON eseguire il programma in acquisizione reale, Mac, VPS, collector, D1, Workers, Oracle o Cloudflare senza autorizzazione esplicita e senza coordinamento Codex.
