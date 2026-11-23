@@ -1,4 +1,4 @@
-/* REMURA Shark Cockpit v1.70 LAB — 23/11/2026 15:01 CET */
+/* REMURA Shark Cockpit v1.71 LAB — 23/11/2026 20:20 CET */
 :root{color-scheme:dark;--bg:#06121b;--ink:#ecf9f6;--muted:#9ebdc4;--mint:#76f2cd;--blue:#8bb6ff;--amber:#f6d496;--red:#ff919e;--line:#35535f;--panel:#102733}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -188,3 +188,41 @@ details.method p,details.method li{color:#bed3d4;font-size:12px;line-height:1.7}
 .trend-message{font-size:12px;color:#f1d3b0;margin:0}
 @media(max-width:540px){.cot-trend{padding:9px 7px}.trend-legend{gap:8px}.trend-key{font-size:10px}.trend-axis{font-size:14px}.trend-caption{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.trend-line{animation:none;transition:none}}
+
+
+/* v1.71 LAB — 23/11/2026 20:20 CET · mobile-first personal CFTC watchlist. */
+#my-sharks{scroll-margin-top:24px}
+.focus-panel{margin:17px 0 22px;padding:20px;border:1px solid #478d7b;border-radius:20px;background:linear-gradient(145deg,#173d3f,#0b2430 78%)}
+.focus-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.focus-card{min-width:0;border:1px solid #3b6872;background:linear-gradient(145deg,#133642,#0d2631);border-radius:15px;padding:16px;display:flex;flex-direction:column;gap:9px}
+.focus-card[data-quality=CONFRONTABILE]{border-color:#4f9585}
+.focus-card[data-quality=CONFLITTO]{border-color:#ad7874}
+.focus-card[data-quality=DATATO],.focus-card[data-quality=SOLO_REPORT]{border-color:#92794f}
+.focus-card-top{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.focus-identification{min-width:0}
+.focus-family{font-size:10px;letter-spacing:.06em;text-transform:uppercase;font-weight:800;color:#8cdec4}
+.focus-identification h3{font-size:19px;line-height:1.23;margin:4px 0 0}
+.focus-unstar{flex:0 0 44px;width:44px;height:44px;border:1px solid #b69a59;background:#514027;color:#ffe1a4;border-radius:12px;font-size:24px;cursor:pointer}
+.focus-quality{font-size:11px;font-weight:850;color:#bcf4dc;margin:0}
+.focus-card[data-quality=SOLO_REPORT] .focus-quality,.focus-card[data-quality=DATATO] .focus-quality{color:#ffdda4}
+.focus-card[data-quality=CONFLITTO] .focus-quality{color:#ffb9b0}
+.focus-report{margin:0;color:#b2cbd0;font-size:11px}
+.focus-changes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.focus-change{border:1px solid #325863;background:#0b2934;border-radius:10px;padding:10px;min-width:0}
+.focus-change span{display:block;font-size:10px;color:#bcd1d4;line-height:1.4}
+.focus-change strong{display:block;font-variant-numeric:tabular-nums;font-size:18px;color:#e8f8f3;margin-top:4px}
+.focus-change strong.focus-plus{color:#9df6ce}
+.focus-change strong.focus-minus{color:#ffafb9}
+.focus-unavailable{margin:0;font-size:12px;line-height:1.6;color:#e6d5b7}
+.focus-divergence{margin:0;color:#b7eddb;font-weight:750;font-size:11px}
+.focus-open{font:800 12px system-ui,-apple-system,sans-serif;min-height:44px;width:100%;border-radius:11px;border:1px solid #76d2b1;background:#1c695d;color:#f1fff9;cursor:pointer;margin-top:auto}
+.focus-open:hover,.focus-unstar:hover{filter:brightness(1.15)}
+.focus-status{margin:8px 0 0;font-size:12px;line-height:1.6;color:#d0e8dd}
+.focus-disclaimer{margin:14px 0 0;font-size:11px;line-height:1.6;color:#bfd7d8}
+.focus-explore,.focus-start{display:inline-flex;align-items:center;min-height:44px;padding:9px 12px;background:#173b46;border:1px solid #4a927f;border-radius:10px;color:#d8fcec;font-size:12px;font-weight:800;text-decoration:none}
+.focus-empty{grid-column:1/-1;background:#0e2b35;border:1px dashed #61897e;border-radius:12px;padding:17px;display:grid;gap:11px}
+.focus-empty strong{font-size:16px}
+.focus-empty p{margin:0;font-size:12px;color:#bdd3d4}
+.focus-start{justify-self:start}
+@media(max-width:780px){.focus-grid{grid-template-columns:1fr}}
+@media(max-width:540px){.focus-panel{padding:14px}.focus-card{padding:13px}.focus-change strong{font-size:17px}}
