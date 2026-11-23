@@ -1,0 +1,47 @@
+{
+  "schema": "remura-a-v216-owner-reported-private-m15-coverage-v1",
+  "version": "A_V21_6_LAB",
+  "checkpointAtEuropeRome": "23/11/26, 23:56:39 Europe/Rome",
+  "sourceEvidenceType": "USER_COPIED_LOCAL_CODEX_JSON_REPORT_NOT_INDEPENDENTLY_REEXECUTED_BY_GITHUB",
+  "underlyingPriceDatabase": "PRIVATE_OFFLINE_ORACLE_SQLITE_SNAPSHOT_NOT_UPLOADED",
+  "reportAsOfUtc": "2026-11-23T22:39:35Z",
+  "symbol": "EURUSD",
+  "timeframe": "M15",
+  "uniqueHypotheticalCohorts": 4,
+  "backupAssertionsByLocalCodex": {
+    "integrityCheckReported": "ok",
+    "sha256MatchesOriginManifestReported": true,
+    "walVisibleCommitsIncludedInOracleSnapshotReported": true,
+    "originManifestCryptographicallyReverifiedByGitHub": false,
+    "privateCopyOrPricesStoredInPublicRepository": false
+  },
+  "coverage": {
+    "60m": {
+      "complete": 4,
+      "matureWithMissingBars": 0,
+      "immature": 0
+    },
+    "4h": {
+      "complete": 4,
+      "matureWithMissingBars": 0,
+      "immature": 0
+    },
+    "24h": {
+      "complete": 0,
+      "matureWithMissingBars": 0,
+      "immature": 4
+    }
+  },
+  "scientificState": "PRICE_COVERAGE_FOUND_CVD_DIRECTION_NOT_ATTESTED",
+  "receiptsObserved": 12,
+  "receiptsAreTestOnly": true,
+  "cvdDirectionFromRealOriginalNativePairProven": false,
+  "futurePriceValuesExported": false,
+  "actualProspectiveDecisionsAttested": 0,
+  "independentCvdFeedAuthenticated": false,
+  "actualSpreadOrSlippageObserved": false,
+  "hypotheticalPnlOrAlphaEstablished": false,
+  "twentyFourHourTimeMaturityLatestUtc": "2026-11-24T05:30:00Z",
+  "noCollectorOrBrokerActions": true,
+  "zeroNewProviderRequests": true
+}
