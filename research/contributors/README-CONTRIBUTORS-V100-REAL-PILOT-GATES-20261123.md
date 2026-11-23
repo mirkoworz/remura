@@ -91,3 +91,12 @@ Fonti ufficiali:
 - Ancora **NO-GO** alla distribuzione reale: manca il build Wrangler auditato con nessuna sezione `assets`, il binding D1 staging isolato verificato, le vere policy Access e il collaudo Safari con un'identità OWNER e una CONTRIBUTOR. I file HTML privati riusati riportano ancora il banner LAB e vanno coordinati con un timbro v1.01 e un testo di stato veritiero **prima** di un'attivazione pubblica/privata.
 
 Percorso di prova minima futura, **solo dopo autorizzazione distinta**: un solo Worker staging privato Access protetto, GET OWNER e CONTRIBUTOR + denial incrociati + revoca; **zero invii e zero approvazioni** nella prima sessione. Solo dopo si può valutare separatamente l'abilitazione delle POST con ricevuta persistente e audit.
+
+
+## 23/11/2026, 22:22 CET — v1.02 candidate Worker entrypoint (NO DEPLOY)
+- Creato `staging_readonly_entry_v102_lab.mjs`: **entrypoint reale compatibile con Workers ES Modules**, che usa la composizione GET-only v1.01 e respinge a monte ogni metodo diverso da GET. Richiede configurazione staging esplicita, Access diretto autenticato, audience/account/HMAC presenti e binding D1.
+- Creato `wrangler-v102-STAGING-TEMPLATE.toml` **intenzionalmente non distribuibile**, con `workers_dev=false`, `preview_urls=false`, nessuna route, nessun `assets` e database_id invalido `REPLACE_ONLY_AFTER_SEPARATE_APPROVAL`.
+- Nessun URL/utente/Access/Worker/D1 realmente creato o modificato, nessun Secret incluso.
+- CI nuova `45268908051`: **SUCCESS, tre test aggiuntivi** su gate senza identità, metodi di scrittura e manifest chiuso. Le sette prove v1.01 restano attestate da `45260701997` e non sono state ripetute.
+- **FUTURO GATE MANUALE OBBLIGATORIO**, dopo autorizzazione specifica: OWNER conferma policy Access sul Worker, identità OWNER + CONTRIBUTOR distinte, dominio/route diretto, database staging isolato, autorizza eventuale build/deploy, prova Safari login/logout e blocchi HTTP. Fino allora v1.02 `INERT_LAB/NO_GO`.
+- Le richieste POST per proposte livelli, ricevute, approvazione, audit e revoca restano disabilitate; non vendere questa build come pilot completo.
