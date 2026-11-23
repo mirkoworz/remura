@@ -100,3 +100,16 @@ Percorso di prova minima futura, **solo dopo autorizzazione distinta**: un solo 
 - CI nuova `45268908051`: **SUCCESS, tre test aggiuntivi** su gate senza identità, metodi di scrittura e manifest chiuso. Le sette prove v1.01 restano attestate da `45260701997` e non sono state ripetute.
 - **FUTURO GATE MANUALE OBBLIGATORIO**, dopo autorizzazione specifica: OWNER conferma policy Access sul Worker, identità OWNER + CONTRIBUTOR distinte, dominio/route diretto, database staging isolato, autorizza eventuale build/deploy, prova Safari login/logout e blocchi HTTP. Fino allora v1.02 `INERT_LAB/NO_GO`.
 - Le richieste POST per proposte livelli, ricevute, approvazione, audit e revoca restano disabilitate; non vendere questa build come pilot completo.
+
+
+## Incremento v1.03 — interfaccia di staging realmente non interattiva
+**Checkpoint: 23 novembre 2026, 23:05 CET (Europe/Rome).** Non pubblicato.
+- Trovato un problema concreto prima di un pilot: `private_assets_v096_lab.mjs` conteneva ancora **4 pulsanti type=submit in 2 pagine livelli**, oltre a JS client che poteva tentare POST (nonostante il Worker GET-only respingesse tutto).
+- Creato `private_worker_staging_saferead_v103_lab.mjs`: dopo autenticazione Access e autorizzazione ruolo tramite `privateReadOnlyStagingV101` + D1 fresco, restituisce pagine HTML di consultazione senza **alcun** `<form>`, `<script>`, `<button>` o `<input>`. Banner visibile **v1.03 / 23/11/2026 23:05 CET** in ogni pagina. Restano i CSS autorizzati; richieste `*.js` e `*.mjs` sempre 403. Le pagine di altri ruoli restano negate dal router verificato.
+- Collegato il nuovo wrapper al **candidato entrypoint esistente** `staging_readonly_entry_v102_lab.mjs`; template Wrangler inattivo, binding database ancora placeholder deliberatamente non valido, nessuna route pubblicata.
+- **CI `45276468567` SUCCESS**: sei nuovi controlli su pagina senza form/script, propagazione deny Access/D1, blocco JS, CSS autenticato, divieto POST e collegamento all'entrypoint; tre controlli precedenti dell'entrypoint ritestati **solo perché l'entrypoint è stato modificato** (9/9).
+- Il wrapper riusa la verifica esistente: `extraD1Reads=0` rispetto a v1.01; **non significa zero letture totali** né costo totale verificato.
+- Non è il portale completo per proporre livelli: questo è **esclusivamente un gate di identità/lettura**. Il contributo reale, ricevuta/approvazione/audit/revoca end-to-end richiedono un'implementazione POST separata e test provider.
+- **NO-GO**: Access e D1 reali, account e user UUID, policy e billing, verifica Safari staging e rollback non autorizzati / non verificati.
+
+Per la fase successiva è richiesta un'autorizzazione **solo per configurare e collaudare uno staging privato OWNER + 1 CONTRIBUTOR in sola lettura**, senza creazione di utenti veri finché non si conferma la policy. Non confondere questa autorizzazione con un permesso di merge/deploy su REMURA pubblica.
