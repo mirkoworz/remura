@@ -70,3 +70,13 @@ Fonti ufficiali:
 - Il futuro manifest di staging deve escludere il router Static Assets e dichiarare ESPLICITAMENTE Access Worker-level, D1 di staging e nomi reali di AUD/account, con segreti solo nel provider. Il codice attuale rimane intenzionalmente inerte e NON è un bundle da distribuire.
 
 **Decisione**: niente altro ciclo di prove sintetiche per la stessa proprietà. Il prossimo gate che può confermare l'interoperabilità è il test autentico su un URL di staging isolato, dopo consenso specifico. `CLOUDFLARE_RUNTIME_NOT_VERIFIED`.
+
+## Blocco operativo: gate OFFLINE nel router — 23/11/2026
+**Evidenza nel codice esistente, NON test live:**
+- `private_worker_router_v096_lab.mjs` e `private_worker_pilot_owner_guard_v098_lab.mjs` richiedono letteralmente `env.PRIVATE_WORKER_V078 === 'OFFLINE_FIXTURE_ONLY'`, tanto per GET quanto per POST.
+- `private_worker_pilot_profile_integrity_v100_lab.mjs` usa tali router senza cambiare quel flag. Quindi v1.00 **non è ancora una configurazione staging realmente attivabile**: è sbagliato trattare il solo cambio Wrangler/Secret come sufficiente.
+- L'entrypoint `staging_identity_worker.mjs` già presente con un altro gate `IDENTITY_ONLY` è un probe di sola identità distinto, **non** un frontend Contributors completo e non prova la composizione v1.00.
+- **Azione tecnica futura obbligatoria:** definire una modalità `STAGING_AUTHENTICATED` separata dall'harness offline, legarla a validazione Access diretta e ambiente isolato, negare tutte le rotte in assenza di campi/provider verificati, e rendere espliciti i passaggi di approvazione per POST e revoca. La modifica deve essere testata su un Worker reale solo dopo nuova autorizzazione; non sovrascrivere il gate attuale in modo non auditato.
+- Non attivare `OFFLINE_FIXTURE_ONLY` sul Worker reale per simulare un permesso di deploy. Nessun cambio runtime o Cloudflare effettuato ora.
+
+**Decisione C**: la sicurezza offline è pronta come composizione, la **deployability controllata è un blocco reale ancora aperto**, da chiudere prima del Gate 1. Evitiamo altre suite sintetiche che non provano Access. Il checkpoint D separato **PR #113 Draft** rappresenta invece una release UI candidata; non abilita login Contributors.
