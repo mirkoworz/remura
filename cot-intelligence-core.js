@@ -75,7 +75,7 @@ function dayGap(a,b){return (Date.parse(a+"T00:00:00Z")-Date.parse(b+"T00:00:00Z
 function cotIndex(values){
  if(values.length<2||values.some(v=>!Number.isFinite(v)))return null;
  const min=Math.min(...values),max=Math.max(...values),current=values.at(-1);
- return min===max?null:{value:100*(current-min)/(max-min),min,max,current,
+ return min===max?null:{value:Math.max(0,Math.min(100,100*(current-min)/(max-min))),min,max,current,
   empiricalPercentile:100*values.filter(v=>v<=current).length/values.length};
 }
 function evaluate(rows,symbol,options={}){
