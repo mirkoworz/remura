@@ -9,14 +9,14 @@
   <link rel="icon" type="image/svg+xml" href="./icon.svg">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="stylesheet" href="./nav.css?v=168">
-  <link rel="stylesheet" href="./shark-cockpit.css?v=169">
-  <title>REMURA v1.69 LAB · Shark Cockpit istituzionale</title>
+  <link rel="stylesheet" href="./shark-cockpit.css?v=170">
+  <title>REMURA v1.70 LAB · Shark Cockpit istituzionale</title>
 </head>
 <body>
   <main class="shell">
-    <div class="build-stamp" role="note">SHARK COCKPIT v1.69 LAB · 23/11/2026 13:30 CET (Europe/Rome) · Anteprima UI, non pubblicata</div>
+    <div class="build-stamp" role="note">SHARK COCKPIT v1.70 LAB · 23/11/2026 15:01 CET (Europe/Rome) · Anteprima UI, non pubblicata</div>
     <div class="site-top">
-      <div class="brand">REMURA <span>SHARK COCKPIT · v1.69 LAB</span></div>
+      <div class="brand">REMURA <span>SHARK COCKPIT · v1.70 LAB</span></div>
       <a href="./mercati.html#institutional-scanner">← Scanner classico</a>
     </div>
 
@@ -105,6 +105,7 @@
       <div id="cards" aria-live="polite" aria-label="Contratti CFTC"><div class="metric">Attendo il feed ufficiale. Nessun dato inventato.</div></div>
       <details class="method">
         <summary>Come leggere le variazioni senza confonderle con i trade?</summary>
+        <p><strong>Grafico COT:</strong> nello storico di ciascun future sono tracciati soltanto martedì realmente disponibili, con una linea distinta per ciascuna categoria. Tra settimane non consecutive le linee restano interrotte. Non è un grafico del prezzo o degli acquisti istituzionali.</p>
         <p><strong>Radiografia settimanale:</strong> apri una scheda e scegli «Radiografia del movimento» per distinguere la variazione del numero di contratti LONG e SHORT di ciascuna categoria. Non implica acquisti, vendite o chiusure individuali.</p>
         <p><strong>Netto % OI</strong> = (long - short) / open interest × 100. <strong>Δ settimanale</strong> = variazione del netto in punti percentuali rispetto al report di sette giorni prima. Non è un rendimento, una percentuale di trader né la probabilità di una salita.</p>
         <p>Il COT rileva posizioni aggregate di martedì e viene pubblicato successivamente. Il browser consulta la fonte pubblica solo mentre questa schermata è aperta; non verifica il primo istante in cui il dato era disponibile.</p>
@@ -129,7 +130,7 @@
 
     <footer class="tail">
       <p>Fonti originali: <a href="https://publicreporting.cftc.gov/Commitments-of-Traders/TFF-Futures-Only/gpe5-46if" rel="noopener noreferrer" target="_blank">CFTC TFF</a> · <a href="https://publicreporting.cftc.gov/Commitments-of-Traders/Disaggregated-Futures-Only/72hh-3qpy" rel="noopener noreferrer" target="_blank">CFTC Disaggregated</a> · <a href="https://www.myfxbook.com/community/outlook" rel="noopener noreferrer" target="_blank">Myfxbook Community Outlook</a>.</p>
-      <p>SHARK COCKPIT v1.69 LAB · 23/11/2026 13:30 CET · Anteprima di sviluppo, non pubblicata su REMURA produzione. Nessun costo cloud aggiuntivo, ordine, Telegram o nuova raccolta privata.</p>
+      <p>SHARK COCKPIT v1.70 LAB · 23/11/2026 15:01 CET · Anteprima di sviluppo, non pubblicata su REMURA produzione. Nessun costo cloud aggiuntivo, ordine, Telegram o nuova raccolta privata.</p>
     </footer>
   </main>
   <script src="./shark-cockpit-core.js?v=168"></script>
@@ -137,7 +138,9 @@
   <script src="./shark-movers-ui.js?v=168"></script>
   <script src="./shark-evidence-core.js?v=169"></script>
   <script src="./shark-evidence-ui.js?v=169"></script>
-  <script src="./shark-cockpit.js?v=169"></script>
+  <script src="./shark-trends-core.js?v=170"></script>
+  <script src="./shark-trends-ui.js?v=170"></script>
+  <script src="./shark-cockpit.js?v=170"></script>
   <script src="./nav.js?v=168"></script>
 </body>
 </html>
