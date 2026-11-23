@@ -75,6 +75,16 @@ def build():
             for path, payload in sorted(content.items())
         },
     }
+    # Search-engine hints are NOT access control: pages.dev remains public
+    # unless an independent Cloudflare Access policy protects its hostname.
+    content["_headers"] = (
+        "/*\\n"
+        "  X-Robots-Tag: noindex, nofollow, noarchive\\n"
+        "  Referrer-Policy: no-referrer\\n"
+        "  X-Content-Type-Options: nosniff\\n"
+        "  Permissions-Policy: camera=(), microphone=(), geolocation=()\\n"
+    ).encode("utf-8")
+    content["robots.txt"] = b"User-agent: *\\nDisallow: /\\n"
     content["REMURA-PREVIEW-MANIFEST.json"] = (
         json.dumps(manifest, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
     ).encode("utf-8")
