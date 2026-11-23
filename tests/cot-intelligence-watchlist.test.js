@@ -122,7 +122,7 @@ test("historical as-of strictly excludes later first capture (report time is not
 });
 test("unknown firstSeen prevents historical as-of, never silently backfill legacy reports",()=>{
  const s=make();
- for(const row of s.rows)if(row.report_date==="2026-11-10")row.first_seen_at=null;
+ for(const row of s.rows)if(row.report_date==="2026-11-10"&&row.dataset==="tff"&&row.code==="099741")row.first_seen_at=null;
  const r=compute(s,{observedAt:"2026-11-23T12:00:00Z"});
  assert.equal(r.periods.tff.state,"incomplete_previous");
  assert.equal(r.groups[0].state,"blocked");
