@@ -41,3 +41,21 @@ Passaggio di rilascio:
 4. Il pilot Contributors ha gate e autorizzazione separati; mai fondere una PR UI con un Worker autenticato.
 
 **Nessun costo nuovo/abbonamento/Cloudflare deploy/merge introdotto.** La fatturazione totale resta non certificata; usare Free come vincolo, non come promessa di consumo 0.
+
+## 23/11/2026, 23:17 CET — Artifact isolato Cloudflare Pages Free (NO DEPLOY)
+Per il futuro collaudo Safari ospitato, **senza modificare produzione, Pages esistente, `main` o Secret**, è stato realizzato un bundle ZIP statico tramite GitHub Actions.
+
+- Sorgenti: `preview/build_isolated_webfirst_v173.py` + `preview/test_isolated_webfirst_v173.py`; workflow `.github/workflows/remura-v173-isolated-preview-package.yml`.
+- Build eseguita da `ea578d3cae6b484cd27c8b2911be0f2627aaea7d`. Run **45278300046 SUCCESS** con **5/5 nuovi test**: pagina Home→Cockpit identica al ramo, nessun asset privato/deploy, Firebase disattivato, Myfxbook pubblico datato, SHA256 per ogni file + ricostruzione deterministica.
+- Nome artifact: `REMURA-v1731-SAFE-WEB-PREVIEW-NOT-DEPLOYED` (GitHub Actions artifact ID `14868361866`, scadenza 24/11/2026 23:17 CET). Al suo interno `remura-v1731-webfirst-ISOLATED-NOT-PUBLISHED.zip`: **102 file, 1.226.329 byte decompressi**, SHA256 `0a37665e05ab0b014faee3490640838fda0b80c4c4af0041ac6ca90b1924ac2a`.
+- Protezioni intenzionali **solo del bundle**: `capital-cloud-config.js` sostituito da `window.REMURA_FIREBASE_CONFIG = null` per impedire accessi alla Firebase personale; `sw.js` escluso; `research/`, `deploy/`, `scripts/`, `.github/`, test e config di deploy esclusi. `REMURA-PREVIEW-MANIFEST.json` documenta SHA e differenze. **Il bundle non è identico alla produzione** e NON è un test di PWA offline o di Firestore.
+- Il CFTC viene interrogato dal browser solo quando la pagina sarà aperta online; **nessun accesso CFTC/Cloudflare eseguito dal workflow**. I JSON Myfxbook rimangono snapshot con timestamp, non dati live garantiti.
+
+**Opzione gratuita verificata documentalmente**: Cloudflare Pages Direct Upload accetta ZIP da drag and drop, massimo **1.000 file** e **25 MiB per file** con upload UI; Free fino a 20.000 file per sito e 500 build/mese dichiarate da Cloudflare. I 102 file e le dimensioni del bundle stanno sotto i limiti tecnici citati; **disponibilità del piano e utilizzi correnti dell'account non ancora controllati**, nessun progetto creato. Fonti Cloudflare 23/11/2026:
+- https://developers.cloudflare.com/pages/get-started/direct-upload/
+- https://developers.cloudflare.com/pages/platform/limits/
+- https://developers.cloudflare.com/pages/configuration/preview-deployments/
+
+**Attenzione privacy:** i nuovi URL `pages.dev` sono accessibili pubblicamente per impostazione predefinita, a meno di specifica policy Access per il dominio (la sola protezione degli alias di preview può non coprire il dominio principale). Prima di pubblicare occorre autorizzazione specifica, valutazione della visibilità e verifica che il progetto sia **isolato** da quello REMURA esistente. L'artifact contiene solo file di presentazione pubblici e snapshot retail già nel repo, ma **non autorizza** deploy implicitamente.
+
+**NO-GO invariato**: PR #114 Draft; collaudo Safari su URL reale, integrazione Mac/A+B, Free account e autorizzazione separata per merge/deploy live restano aperti. Il pilot Cloudflare Contributors v1.03 è un ramo diverso e non viene toccato.
