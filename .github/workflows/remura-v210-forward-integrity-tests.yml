@@ -1,0 +1,32 @@
+name: REMURA V21.0 CVD original source + frozen M15 integrity (new-only)
+on:
+  push:
+    branches:
+      - research/remura-v210-forward-source-price-integrity-20261123
+    paths:
+      - 'research/v210_forward_integrity_gate.py'
+      - 'research/test_v210_forward_integrity_gate.py'
+      - '.github/workflows/remura-v210-forward-integrity-tests.yml'
+permissions:
+  contents: read
+jobs:
+  verify-source-and-baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout test-only research branch
+        uses: actions/checkout@v4
+      - name: Test 17 NEW cases only, synthetic original bytes and mocked GitHub
+        run: python3 -m unittest discover -s research -p 'test_v210_forward_integrity_gate.py' -v
+      - name: No private input, no network, no real trades or claims
+        run: |
+          python3 research/v210_forward_integrity_gate.py > /tmp/remura-v210-readiness.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path("/tmp/remura-v210-readiness.json").read_text())
+          assert report["status"]=="NO_PRIVATE_INPUTS_NO_EXTERNAL_CALLS"
+          assert report["true_forward_decisions_adjudicated"] == 0
+          assert report["profitable_trades_claimed"] == 0
+          print("REMURA_V210_NO_REAL_SOURCE_OR_PRICE_NO_CLAIM=PASS")
+          PY
