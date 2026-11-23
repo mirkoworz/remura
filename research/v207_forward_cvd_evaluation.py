@@ -55,6 +55,7 @@ def _decisions(ledger: dict, as_of: datetime) -> list[dict]:
     if type(rows) is not list or len(rows) > MAX_DECISIONS:
         raise ValueError("invalid_decision_count")
     seen_ids: set[str] = set()
+    seen_anchors: set[str] = set()
     seen_entry: set[int] = set()
     output = []
     now = ms(as_of)
@@ -86,6 +87,9 @@ def _decisions(ledger: dict, as_of: datetime) -> list[dict]:
         sha = anchor.get("sha")
         if type(sha) is not str or re.fullmatch(r"[a-fA-F0-9]{40}", sha) is None:
             raise ValueError("invalid_anchor_sha")
+        if sha.lower() in seen_anchors:
+            raise ValueError("reused_immutable_anchor")
+        seen_anchors.add(sha.lower())
         anchored = ms(utc(anchor.get("committed_at_utc")))
         if anchored < frozen or anchored > now:
             raise ValueError("anchor_outside_causal_window")
