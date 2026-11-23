@@ -1,0 +1,31 @@
+name: REMURA V20.8 GitHub proof auditor - new-only tests
+on:
+  push:
+    branches:
+      - research/remura-v208-github-decision-witness-20261123
+    paths:
+      - 'research/v208_github_decision_witness.py'
+      - 'research/test_v208_github_decision_witness.py'
+      - '.github/workflows/remura-v208-github-auditor-tests.yml'
+permissions:
+  contents: read
+jobs:
+  witness-auditor-offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Only V20.8 synthetic tests, mock GitHub responses, no external GET
+        run: python3 -m unittest discover -s research -p 'test_v208_github_decision_witness.py' -v
+      - name: No ledger means no API and no alpha
+        run: |
+          python3 research/v208_github_decision_witness.py > /tmp/remura-v208-safe.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          obj=json.loads(Path("/tmp/remura-v208-safe.json").read_text())
+          assert obj["unique_m15_decisions"] == 0
+          assert obj["github_hash_only_witness_verified"] is False
+          assert obj["scientific_alpha_established"] is False
+          print("REMURA_V208_NO_REAL_LEDGER_NO_GITHUB_CALLS_NO_ALPHA=PASS")
+          PY
