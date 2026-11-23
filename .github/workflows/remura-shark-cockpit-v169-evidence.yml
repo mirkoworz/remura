@@ -1,0 +1,46 @@
+# REMURA Shark Cockpit v1.69 LAB — 23/11/2026 13:30 CET.
+# Read-only UI verification; no deploy, merge, secrets or external market requests.
+name: REMURA Shark Cockpit v169 Evidence UI
+on:
+  push:
+    branches: [feature/shark-cockpit-v169-evidence-iphone-20261123]
+    paths:
+      - shark-cockpit.html
+      - shark-cockpit.css
+      - shark-cockpit.js
+      - shark-evidence-core.js
+      - shark-evidence-ui.js
+      - sw.js
+      - tests/shark-evidence.test.js
+      - tests/shark-cockpit.test.js
+      - tests/shark-anatomy.test.js
+      - .github/workflows/remura-shark-cockpit-v169-evidence.yml
+permissions:
+  contents: read
+jobs:
+  evidence-ui:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check modified browser module syntax
+        run: |
+          set -euo pipefail
+          node --check shark-evidence-core.js
+          node --check shark-evidence-ui.js
+          node --check shark-cockpit.js
+          node --check sw.js
+      - name: Verify UI source states and touched cockpit wiring
+        run: |
+          set -euo pipefail
+          node --test tests/shark-evidence.test.js tests/shark-anatomy.test.js tests/shark-movers.test.js tests/shark-cockpit.test.js tests/release-consistency.test.js 2>&1 | tee /tmp/shark-v169.log
+          grep -q '# tests 62' /tmp/shark-v169.log
+          grep -q '# pass 62' /tmp/shark-v169.log
+          grep -q '# fail 0' /tmp/shark-v169.log
+          echo REMURA_SHARK_COCKPIT_V169=62_62_PASS
