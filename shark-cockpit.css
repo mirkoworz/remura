@@ -1,4 +1,4 @@
-/* REMURA Shark Cockpit v1.68 LAB — 22/11/2026 22:10 CET */
+/* REMURA Shark Cockpit v1.69 LAB — 23/11/2026 13:30 CET */
 :root{color-scheme:dark;--bg:#06121b;--ink:#ecf9f6;--muted:#9ebdc4;--mint:#76f2cd;--blue:#8bb6ff;--amber:#f6d496;--red:#ff919e;--line:#35535f;--panel:#102733}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -143,3 +143,28 @@ details.method p,details.method li{color:#bed3d4;font-size:12px;line-height:1.7}
 .anatomy-net{font-size:11px;color:#c5e3df;margin:9px 0 0}
 .anatomy-caveat,.anatomy-warning{font-size:11px;color:#e8d5ad;line-height:1.6;margin:13px 0 0}
 @media(max-width:540px){.anatomy-details{padding:9px}.anatomy-group{padding:10px}.anatomy-positions{grid-template-columns:repeat(2,minmax(0,1fr))}.anatomy-stat:last-child{grid-column:1/-1}}
+
+
+/* v1.69 LAB · 23/11/2026 13:30 CET · read-only evidence board and Safari links */
+.build-stamp{display:block;margin:0 0 13px;padding:8px 10px;background:#163741;border:1px solid #407a7b;border-radius:10px;color:#d9f9ec;font:800 11px/1.45 system-ui,-apple-system,sans-serif;letter-spacing:.02em}
+.jump-nav{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;padding:0 1px 13px;margin-bottom:8px;overscroll-behavior-inline:contain}
+.jump-nav a{flex:0 0 auto;display:flex;align-items:center;justify-content:center;min-height:44px;border:1px solid #518d85;background:#10333f;padding:10px 14px;border-radius:11px;font-size:12px;font-weight:800;text-decoration:none;color:#d9fcf0}
+.jump-nav a:focus-visible,.jump-nav a:hover{background:#20534e;border-color:#7ff1d0}
+#evidence,#institutional-movers,#contracts,#retail{scroll-margin-top:24px}
+.evidence-panel{margin:17px 0 22px;padding:20px;border:1px solid #4c8579;border-radius:18px;background:linear-gradient(140deg,#112f37,#0c222e)}
+.evidence-read-at{margin:5px 0 14px;font-size:12px;color:#bee3de;line-height:1.6}
+.evidence-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.evidence-card{min-width:0;border:1px solid #3f676c;border-radius:14px;background:#112d38;padding:15px;display:flex;flex-direction:column;gap:7px}
+.evidence-head{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.evidence-name{font-weight:850;font-size:12px;color:#b2eadb}
+.evidence-grade{font-size:10px;font-weight:850;letter-spacing:.04em;border-radius:8px;border:1px solid #62777b;background:#293e49;color:#e0e9ed;padding:5px 8px;max-width:100%}
+.evidence-card[data-state=RECENTE] .evidence-grade{border-color:#4eab85;background:#194d3b;color:#ccffe8}
+.evidence-card[data-state=PARZIALE] .evidence-grade,.evidence-card[data-state=ARCHIVIO] .evidence-grade,.evidence-card[data-state=OBSOLETO] .evidence-grade{border-color:#a2854f;background:#483825;color:#ffe3b5}
+.evidence-card[data-state=DA_VERIFICARE] .evidence-grade{border-color:#b66f6b;background:#542e35;color:#ffdad5}
+.evidence-main{display:block;font-size:16px;font-weight:850;line-height:1.35;color:#f0fff9}
+.evidence-detail,.evidence-date,.evidence-small{margin:0;line-height:1.5;font-size:11px;color:#bcd7d9}
+.evidence-date{font-weight:750;color:#e1f8e9}
+.evidence-small{margin-top:auto;color:#a5bfc6}
+.evidence-warning{font-size:11px;line-height:1.6;margin:13px 0 0;color:#e4d4b4}
+.evidence-loading{margin:0;font-size:12px;color:#d4eae4}
+@media(max-width:620px){.evidence-grid{grid-template-columns:1fr}.evidence-panel{padding:14px}.evidence-card{padding:13px}.jump-nav{margin-right:-12px;padding-right:12px}.build-stamp{font-size:10px}}
