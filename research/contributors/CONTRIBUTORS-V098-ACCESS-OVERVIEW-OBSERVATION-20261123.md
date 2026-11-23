@@ -13,11 +13,18 @@
 
 ## Stato del gate v0.97 (fail-closed)
 - Capacity per 1 OWNER + 1–2 CONTRIBUTOR: **verifica visiva preliminare favorevole**, ma non segna il gate come completato.
-- **Access plan=UNKNOWN** finché Billing/Subscriptions e la configurazione del piano non siano documentati per l'account.
+- **Access plan=Teams Free Base osservato in Billing/Subscriptions** (schermata 16:31 CET); non è ancora attestata l'assenza di ogni servizio opzionale fatturabile.
 - **ActiveSeatsUsed / SeatsAllocated**: UI suggerisce 1/50; conferma ancora richiesta da Team & Resources / Users o Billing prima di inserire valori nel gate formale.
-- **Workers plan=UNKNOWN**, **D1 rows read/written=UNKNOWN**, **Billing=UNKNOWN**.
+- **Workers plan=Workers Free, Active, osservato in Billing/Subscriptions**. **D1 rows read/written=UNKNOWN**; **Workers daily request count/CPU=UNKNOWN**. **Billing importo totale del periodo e add-on fatturabili=UNKNOWN**: l'etichetta Free per questi due prodotti non certifica un addebito totale nullo.
 - Autenticazione reale, JWT Access, isolamento D1, login/logout/revoca su Safari: **NON TESTATI**.
 - Nessuna promozione automatica a GO, nessun deployment/merge/utente creato, nessuna spesa autorizzata. PR #105 resta Draft.
 
 ## Controllo successivo più utile
-Dalla dashboard dell'account, leggere **Billing / Subscriptions** o **Zero Trust plan details**, verificare Free e prezzo 0, e annotare solamente il nome del piano e l'assenza/presenza di addon a pagamento; non aprire percorsi di upgrade. Poi verificare le quote Workers e D1 del giorno UTC dalla dashboard in sola lettura. Non usare API o SQL console.
+**Non ripetere** il controllo dei nomi dei piani Free già completato. Proseguire da Workers & Pages → Analytics per richieste/CPU del giorno UTC e D1 → Metrics/Row Metrics per righe lette/scritte dell'intero account, dimensioni e numero DB. In seguito usare Billing (Invoices/complete billable usage) soltanto in lettura per l'importo effettivo e possibili add-on. Non premere Upgrade, non usare API o SQL console.
+
+## Aggiornamento osservazione Billing — 23/11/2026 ore 16:31 CET (Europe/Rome)
+- Screenshot iPhone della scheda **Subscriptions → Subscribed**: **Workers Free — Active** (Compute) e **Teams Free Base — Renews on Dec 15, 2026** (Zero Trust).
+- **Upgrade to Workers Paid** è un'offerta di upgrade a **$5/mese più utilizzo**, NON una sottoscrizione attiva: nessun clic su Upgrade.
+- Scheda **Billable usage**, filtro Current Month, mostra **Argo traffic cumulative total this month: 0 B**; è **solo traffico Argo**, non D1 rows, Workers usage, fattura totale né prova di spesa generale $0.
+- Sezione Billing presenta informazioni sul metodo di pagamento, ma **nessun dato di pagamento, identificativo account o immagine** viene riportato qui.
+- Interpretazione per gate: due piani Free osservati e confermati da schermata; il pilot rimane **NO-GO** per metrica D1/Workers, fatturazione complessiva, JWT/role enforcement, Safari e revoca non attestati. Non valorizzare come true `extraPaidServicesConfirmedAbsent` o `planPriceZeroConfirmed` soltanto in base a questi due screenshot.
