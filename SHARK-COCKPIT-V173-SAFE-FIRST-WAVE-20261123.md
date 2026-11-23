@@ -76,3 +76,28 @@ Per il futuro collaudo Safari ospitato, **senza modificare produzione, Pages esi
 - La preview è **pubblica**, per scelta esplicita del proprietario; i suggerimenti anti-indicizzazione non limitano i visitatori. Bundle locale esclude Firebase reale e Service Worker, ma tale esclusione in produzione sull'URL non è ancora stata ispezionata direttamente.
 - **NESSUN merge**: PR #114 ancora Draft e `main@4f8d8a707789eec29686a1568c4b8441e4c7d684` invariato al controllo del 24/11. Nessuna modifica all'account Cloudflare da questa chat, nessun Worker/D1/Access Contributor attivato per effetto della preview.
 - **Gate prossimo:** ricevere il solo URL pubblico `https://<nuovo-progetto>.pages.dev` e svolgere smoke test HTTP non invasivo: Home, Cockpit, asset JS/CSS, JSON retail, header noindex, Firebase disabilitato e assenza di SW, con test Safari user-facing separato per CFTC reali. Misurare billing Pages reale nella dashboard Free e proteggere/ritirare il dominio se compaiono risorse private. Pubblicazione della nuova release ufficiale richiede autorizzazione distinta.
+
+## 24/11/2026 00:08 CET — PAGES HTTP SMOKE AUTENTICATO DAL RUNNER PUBBLICO
+
+Sito pubblico **esatto confermato dall'OWNER**: https://remura-lab-v1731-iphone.pages.dev/
+
+Le richieste non hanno utilizzato credenziali né controllato il pannello Cloudflare. I primi accessi diretti con il lettore web della chat risultavano bloccati per limiti dell'ambiente; la prova esterna è quindi stata eseguita con GitHub Actions, su file **pubblici**, mediante GET HTTPS limitati e senza retry.
+
+**A. Public smoke one-shot**: run **45285970670**, primo esito `10/11 PASS` (workflow formalmente FAILURE sul check che non seguiva redirect). Richieste singole e risultati:
+- `/` HTTP 200, Home v1.73.1 con link Cockpit.
+- `/shark-cockpit.html` HTTP **308**: canonicalizzazione Cloudflare, anziché 200 diretto. Questo NON è stato mascherato come pass.
+- `/shark-cockpit.js`, `/shark-cockpit-core.js`, `/shark-focus-ui.js`, `/shark-cockpit.css`: tutti **HTTP 200** con verifiche di contenuto e riferimenti ai dataset pubblici.
+- `/data/myfxbook/latest.json` HTTP 200: JSON parseabile con fonte Myfxbook e timestamp dichiarato.
+- `/capital-cloud-config.js` HTTP 200: `window.REMURA_FIREBASE_CONFIG = null;`, nessuna chiave Firebase reale o `apiKey:`.
+- `/robots.txt` HTTP 200 con `Disallow: /`.
+- `/sw.js` HTTP 200 **ma fallback NON JS**; non è stato trovato un Service Worker eseguibile (Cloudflare Pages può fare SPA fallback con 200 su path non esistenti).
+- `/private-api/health` HTTP 200 **ma fallback non JSON**; nessuna API privata identificata. Attenzione: questo 200 non è attestazione di una API attiva, né un codice 404.
+
+**B. Follow-up esclusivamente sul punto irrisolto**: run **45286133985 SUCCESS**, due GET totali:
+- `/shark-cockpit.html` → **HTTP 308** con `Location: /shark-cockpit`.
+- `/shark-cockpit` → **HTTP 200**, `Content-Type: text/html`, versione `SHARK COCKPIT v1.73.1`, dipendenza script e riferimento Myfxbook presenti. `X-Robots-Tag: noindex, nofollow, noarchive`.
+- La verifica non ha ripetuto i dieci controlli già superati; conteggio aggregato del perimetro: **11/11 coperti**, su due run distinti. Non falsificare la prima CI come tutta verde.
+
+**Gate rimasti aperti**: funzionalità JavaScript/UI e fetch CFTC reali in Safari sul dominio (l'OWNER ha riferito che l'interfaccia funziona, ma non ci sono test browser automatizzati autenticati); no misure COT sul comportamento dei prezzi, nessun attestato di profitto; budget/quota Free Cloudflare account non letto dal connettore; deploy release ufficiale/merge resta NON autorizzato; Contributors reali ancora isolati e disattivati. `main` non è stato modificato dall'attività di smoke.
+
+**Sicurezza**: nessuna chiamata alle API Cloudflare, nessuna credenziale, sessione, D1 o Secret, nessuna acquisizione CFTC realizzata da queste prove. Le intestazioni antiindicizzazione non rendono il sito privato: URL pubblico per scelta dell'OWNER.
