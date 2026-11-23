@@ -20,7 +20,8 @@ function harness(){
  const app=createPilotOwnerGuardV098({
   authenticate:async(ctx)=>{
    if(!principals[ctx.access.principal])throw Error('identity_missing');
-   return {subject:'a'.repeat(64),email_tag:'b'.repeat(64)};
+   const tags={OWNER:['a','d'],A:['b','e'],B:['c','f']}[ctx.access.principal];
+   return {subject:tags[0].repeat(64),email_tag:tags[1].repeat(64)};
   },
   profileRead:async(ctx)=>({...principals[ctx.access.principal]}),
   protectedRead:async()=>new Response('{"data":[]}',{headers:{
