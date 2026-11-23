@@ -47,3 +47,13 @@ Osservazione visiva dell'OWNER in **Cloudflare Billing → Subscriptions**, tab 
 - **Non accertato:** importi `Billable usage`, `Invoices`, `Spend limits`, eventuali consumi di altri prodotti e fatturazione effettiva totale. Presenza di piani Free **non prova** che tutte le possibili voci di utilizzo siano a €0.
 
 **Gate 0**: `FREE_SUBSCRIPTIONS_VISIBLE`, `BILLABLE_USAGE_UNKNOWN`, `NO_GO_REAL_PILOT`. Prossimo controllo indispensabile e **solo lettura**: aprire `Billable usage` e verificare le voci di costo/importo del periodo, senza premere `Upgrade`, `Add` o cambiare impostazioni. Il controllo non autorizza modifiche Access, Worker/D1, creazione utenti, SQL, merge o deploy.
+
+## Evidenza parziale Billable usage — 23/11/2026 21:08 CET
+Osservazione visiva da due schermate Safari dell'OWNER in **Cloudflare Billing → Billable usage**, selezione **Current Month**, grafici **Daily**. Queste immagini mostrano una porzione della pagina, non un totale complessivo di fatturazione; nessun dato personale e nessuna schermata sono salvati nel repository.
+
+- **Argo traffic**: dicitura esatta `Cumulative total this month: 0 B`, grafico giornaliero piatto a 0 B.
+- **Spectrum**: dicitura esatta `Cumulative total this month: 0 B bytes`, grafico giornaliero piatto a 0 B.
+- **Significato limitato**: risultano 0 byte nelle **due specifiche metriche** Argo e Spectrum osservate. I byte trasferiti non sono l'importo in euro né provano utilizzo gratuito di **Workers, D1, Zero Trust Access o altri prodotti**.
+- **Stato costi complessivi**: **UNKNOWN**; negli screenshot non è visibile un totale fatturabile, né un eventuale elenco completo delle altre voci. Non sostituire `UNKNOWN` con 0 €.
+
+**Gate aggiornato**: `SUBSCRIPTIONS_FREE_VISIBLE` + `ARGO_BYTES_0` + `SPECTRUM_BYTES_0`; `TOTAL_BILLABLE_USAGE_UNKNOWN`, `REAL_PILOT_NO_GO`. Unica verifica manuale ancora utile e autorizzata in sola lettura: cercare nella parte superiore di `Billable usage` o in `Invoices` il totale monetario/altre voci del periodo di fatturazione (non serve inviare dati di carta o personali). Nessun upgrade, aggiunta prodotto, deploy, Cloudflare API, D1 SQL o utente reale autorizzato.
