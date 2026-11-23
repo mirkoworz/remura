@@ -10,6 +10,7 @@ on:
       - shark-cockpit.js
       - shark-evidence-core.js
       - shark-evidence-ui.js
+      - preview/REMURA-Shark-Evidence-v169-iPhone-STANDALONE-LAB.html
       - sw.js
       - tests/shark-evidence.test.js
       - tests/shark-cockpit.test.js
