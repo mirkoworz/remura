@@ -20,7 +20,7 @@
 - Nessuna promozione automatica a GO, nessun deployment/merge/utente creato, nessuna spesa autorizzata. PR #105 resta Draft.
 
 ## Controllo successivo più utile
-**Non ripetere** il controllo dei nomi dei piani Free già completato. **D1 overview completata**, non ripetere le stesse schermate. Workers & Pages → Usage (richieste giornaliere) completato, NON ripetere. Verificare solo CPU per invocazione nel dettaglio Metrics/Analytics di un Worker pertinente, se disponibile, senza modificarlo. In seguito usare Billing (Invoices/complete billable usage) soltanto in lettura per l'importo effettivo e possibili add-on. Non premere Upgrade, non usare API o SQL console.
+**Non ripetere** il controllo dei nomi dei piani Free già completato. **D1 overview completata**, non ripetere le stesse schermate. Workers & Pages → Usage (richieste giornaliere) completato, NON ripetere. La pagina Metrics del Worker esistente risulta controllata: invocazioni 0 e CPU 0 ms con No data nelle ultime 24 ore; non ripetere il controllo, il consumo CPU per invocazione resta UNKNOWN e andrà misurato solo durante uno staging privato esplicitamente autorizzato. In seguito usare Billing (Invoices/complete billable usage) soltanto in lettura per l'importo effettivo e possibili add-on. Non premere Upgrade, non usare API o SQL console.
 
 ## Aggiornamento osservazione Billing — 23/11/2026 ore 16:31 CET (Europe/Rome)
 - Screenshot iPhone della scheda **Subscriptions → Subscribed**: **Workers Free — Active** (Compute) e **Teams Free Base — Renews on Dec 15, 2026** (Zero Trust).
@@ -50,3 +50,14 @@
 - I nomi degli altri Worker e i loro URL NON vengono copiati in questo registro pubblico; nulla è stato toccato.
 - La quota Free Workers risulta ampiamente libera all'ora mostrata, ma **Billing totale, CPU, autenticazione/revoca Safari, isolamento dello staging e consenso separato** restano non attestati: **pilot reale NO-GO**.
 - Nessuna nuova autorizzazione implicita: niente utenti, modifiche Access/D1/Workers, query GraphQL, merge o deploy.
+
+## Aggiornamento specifico Workers — 23/11/2026 ore 20:20 CET (Europe/Rome)
+- Fonte: screenshot iPhone read-only **Workers & Pages → remura-contributors-staging → Overview e Metrics**, filtro **Last 24 hours**, ambito **All deployed versions**. Nessun test attivo effettuato.
+- Il Worker *esiste già* ed espone una versione distribuita con prefisso visibile `101aaa58` (mostrata come distribuita 7 giorni prima). **Non è stato creato, aggiornato, attivato né invocato in questo controllo**.
+- La pagina mostra **No URLs enabled**, **Domains 0**, **Workers 0** e **Queues 0** nel diagramma del Worker. Questo documenta l'assenza di URL/route abilitati nel contesto mostrato, ma NON costituisce inventario completo di tutte le possibili integrazioni/trigger o permessi, né certifica sicurezza Access.
+- Ultime 24 ore: **Invocations 0, Subrequests 0, Errors 0**, grafici **No data**; **CPU Time 0 ms** con **No data**. Percentuale traffico deployment **0%** e **0 requests/sec** nel periodo mostrato.
+- **Interpretazione scientifica**: CPU 0 ms **non è** una misurazione di CPU per invocazione né un p95 valido, perché il campione eseguito è zero. Il campo `cpuP95Ms` del gate v0.97 deve rimanere **UNKNOWN/null**. Non mettere 0 né valorizzare test Safari/Access a true.
+- La UI mostra **Production** come nome dell'ambiente Cloudflare del Worker denominato staging: non dedurre da questo che il pilot REMURA sia attivo, né che il Worker sia tecnicamente non raggiungibile per qualunque integrazione.
+- **Nessun vantaggio nel generare traffico a scopo di misurazione** senza nuova autorizzazione specifica; CPU runtime e overhead POST v0.98 si misurano solo dopo preflight e staging privato approvati.
+- **Pilot 1 OWNER + 1–2 CONTRIBUTOR sempre NO-GO**: ancora da comprovare Billing complessivo, identità/JWT Access reali, policy allowlist, isolamento D1, receipt, audit, revoca/logout su Safari e impatto CPU.
+- **Nessun deploy, nuovo utente, modifica Cloudflare, richiesta Cloudflare API, merge, spesa, modifica Oracle o altri filoni**.
