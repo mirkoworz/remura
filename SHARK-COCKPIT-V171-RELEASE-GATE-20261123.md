@@ -34,3 +34,17 @@ Nessun nuovo fetch implementato finché non esistono endpoint e policy con propr
 Con main `4f8d8a707789eec29686a1568c4b8441e4c7d684`, confronto GitHub 23/11: ramo D **91 commit avanti e 4 indietro**, **49 file** nel diff. Serve integrazione **allowlisted** e audit di dipendenze, non merge diretto. I file HTML legacy e `nav.js` sono presenti nel diff: interazione possibile con i lavori Mac. PR #105 e #106 rimangono Draft e indipendenti.
 
 **Tutto LAB. Nessun deploy, merge, attivazione, acquisizione di dati o nuovo costo cloud autorizzato da questo documento.**
+
+## Patch sicurezza PWA v1.71.1 LAB — 23/11/2026 21:11 CET
+**Problema effettivo corretto su `sw.js`:** il vecchio service worker intercettava qualunque GET stessa origine fuori da `/private-api/` e poteva fare fallback tramite `caches.match` globale; inoltre la routine activate eliminava cache di altri prodotti. A fronte della futura coesistenza con Contributors, il comportamento non è accettabile.
+
+**Correzione** (senza nuova acquisizione dati):
+- Scope offline ammesso esclusivamente ai percorsi reali presenti in `STATIC` (shell pubblica); i percorsi dinamici `/api/`, `/owner/`, `/contributors/`, `/private-api/` e qualsiasi URL ignoto non sono intercettati.
+- Il fallback consulta solo il cache object `remura-shell-v86-v1.71-safe-offline-lab`, mai cache globali di altri prodotti; un file pubblico mancante produce errore di rete, non dati inventati.
+- L'attivazione rimuove solo precedenti cache con prefisso `remura-shell-`; cache esterne rimangono intatte.
+- `tests/shark-offline-policy.test.js` aggiunge **cinque nuovi controlli** Node isolati, il controllo versione nel test esistente è stato aggiornato perché la cache è cambiata.
+- GitHub Actions `45256975610`: **SUCCESS** per `REMURA Shark Cockpit v171 PWA safety`.
+- GitHub Actions `45256941259`: **SUCCESS** della suite integrata focus dopo patch sul file SW e allineamento dell'asserzione; la run intermedia `45256843265` era **FAILURE** prima dell'allineamento, non va cancellata dallo storico.
+- L'intervento ha modificato `sw.js` e test/workflow, **non** alcuna pagina HTML: resta valido il banner v1.71/23-11-2026 20:20 CET di `shark-cockpit.html`, come snapshot della sua ultima modifica. Nessun deploy o test Safari v1.71 certificato.
+
+**Gate residuo**: prima di distribuire, verificare da Safari dopo una vera pubblicazione autorizzata l'installazione SW, un update di cache, la navigazione offline delle sole pagine statiche, il mancato fallback per endpoint privati, e rollback `sw.js` a versione precedente previa custodia. **NO-GO release** finché il gate iPhone/merge/autorizzazione resta aperto.
