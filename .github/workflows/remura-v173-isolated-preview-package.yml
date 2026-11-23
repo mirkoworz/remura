@@ -21,12 +21,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Syntax and five new ZIP boundaries, no remote access
+      - name: Syntax and six ZIP safety boundaries, no remote access
         run: |
           set -euo pipefail
           python -m py_compile preview/build_isolated_webfirst_v173.py preview/test_isolated_webfirst_v173.py
           python -m unittest preview/test_isolated_webfirst_v173.py -v 2>&1 | tee /tmp/remura-isolated-preview.log
-          grep -q 'Ran 5 tests' /tmp/remura-isolated-preview.log
+          grep -q 'Ran 6 tests' /tmp/remura-isolated-preview.log
           grep -q '^OK$' /tmp/remura-isolated-preview.log
       - name: Owner-only artifact for later authorized staging (one day)
         uses: actions/upload-artifact@v4
