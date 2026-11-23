@@ -47,12 +47,12 @@ test("retail sample remains separate from institutional futures",()=>{
 });
 test("single updated HTML is stamped at top, modules load before cockpit, with iPhone jump links",()=>{
   const html=fs.readFileSync(path.join(__dirname,"..","shark-cockpit.html"),"utf8");
-  const tag=html.indexOf("v1.70 LAB");
+  const tag=html.indexOf("v1.71 LAB");
   assert.ok(tag>0&&tag<html.indexOf('<section class="hero"'));
-  assert.match(html,/23\/11\/2026 13:30 CET \(Europe\/Rome\)/);
+  assert.match(html,/23\/11\/2026 20:20 CET \(Europe\/Rome\)/);
   const iCore=html.indexOf("shark-evidence-core.js?v=169");
   const iUi=html.indexOf("shark-evidence-ui.js?v=169");
-  const iCockpit=html.indexOf("shark-cockpit.js?v=170");
+  const iCockpit=html.indexOf("shark-cockpit.js?v=171");
   assert.ok(iCore<iUi&&iUi<iCockpit);
   for(const name of ['id="evidence"','id="contracts"','id="retail"','#institutional-movers'])assert.ok(html.includes(name));
   const ui=fs.readFileSync(path.join(__dirname,"..","shark-evidence-ui.js"),"utf8");
