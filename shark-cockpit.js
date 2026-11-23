@@ -1,4 +1,4 @@
-/* REMURA Shark Cockpit v1.70 LAB — 23/11/2026 15:01 CET.
+/* REMURA Shark Cockpit v1.71 LAB — 23/11/2026 20:20 CET.
  * Browser-only CFTC direct reads and already published same-origin Myfxbook.
  * No auto-polling, Cloudflare writes, authentication, trading or alerts.
  */
@@ -44,6 +44,27 @@
     if(!storageAvailable)return;
     try{localStorage.setItem(WATCH_KEY,JSON.stringify(favorites));}
     catch{storageAvailable=false;}
+  }
+  function toggleFavoriteCode(code){
+    favorites=core.toggleFavorite(favorites,code);
+    keepFavorites();
+    draw();
+  }
+  function openFocusContract(code){
+    if(!core.CONTRACTS.some(c=>c.code===code))return;
+    // Reset UI-only filters so a favorite hidden by search/family is reachable.
+    els.family.value="Tutte";
+    els.search.value="";
+    if(els.favoritesOnly)els.favoritesOnly.checked=false;
+    draw();
+    const target=byId("shark-contract-"+code);
+    if(!target)return;
+    const anatomy=target.querySelector(".anatomy-details");
+    const history=target.querySelector(".history-details");
+    if(anatomy)anatomy.open=true;
+    if(history)history.open=true;
+    target.scrollIntoView({behavior:"smooth",block:"start"});
+    target.focus({preventScroll:true});
   }
   function updateWatchNote(){
     if(!els.watchlistNote)return;
@@ -179,10 +200,7 @@
     favButton.setAttribute("aria-label",favorites.includes(item.code)?
       "Rimuovi "+item.name+" dai preferiti":"Segui "+item.name+" nei preferiti");
     favButton.setAttribute("aria-pressed",String(favorites.includes(item.code)));
-    favButton.addEventListener("click",()=>{
-      favorites=core.toggleFavorite(favorites,item.code);
-      keepFavorites();draw();
-    });
+    favButton.addEventListener("click",()=>toggleFavoriteCode(item.code));
     head.append(title,favButton,grade);r.append(head);
 
     const body=create("div","cohorts");
@@ -223,6 +241,9 @@
     byId("valid-moves").textContent=String(cards.filter(c=>c.status==="CURRENT_REPORT_DATE"&&c.deltas).length);
     byId("divergent-count").textContent=String(cards.filter(c=>c.status==="CURRENT_REPORT_DATE"&&c.comparison==="DIVERGENT").length);
     updateWatchNote();
+    window.REMURA_SHARK_FOCUS_UI?.render(cards,favorites,{
+      onOpen:openFocusContract,onToggle:toggleFavoriteCode
+    });
     window.REMURA_SHARK_MOVERS_UI?.render(sorted,{favorites,favoritesOnly:els.favoritesOnly?.checked===true});
   }
   async function fetchCftc(dataset){
