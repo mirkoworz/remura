@@ -1,0 +1,34 @@
+name: REMURA V20.7 CVD prospective evaluation - new tests only
+on:
+  push:
+    branches:
+      - research/remura-v207-cvd-forward-price-validation-20261123
+    paths:
+      - research/v207_forward_cvd_evaluation.py
+      - research/test_v207_forward_cvd_evaluation.py
+      - .github/workflows/remura-v207-cvd-forward-validation.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  causal-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout research branch; no private data or secrets
+        uses: actions/checkout@v4
+      - name: ONLY 12 NEW V20.7 tests - 100% synthetic decisions and OHLC
+        run: python3 -m unittest discover -s research -p 'test_v207_forward_cvd_evaluation.py' -v
+      - name: Empty real-input gate (no prices or prospective decisions supplied)
+        run: |
+          python3 research/v207_forward_cvd_evaluation.py > /tmp/remura-v207-gate.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("/tmp/remura-v207-gate.json").read_text())
+          assert r["status"]=="NO_PRECOMMITTED_FORWARD_DECISIONS"
+          assert r["unique_m15_decisions"]==0
+          assert not r["scientific_alpha_established"]
+          assert all(x["net_pips"] is None for x in r["horizons"].values())
+          print("REMURA_V207_NO_REAL_PRICE_OR_DIRECTIONAL_ALPHA=PASS")
+          PY
