@@ -1,0 +1,92 @@
+# REMURA V20.5 23/11/2026 Europe/Rome — ONE SHOT PUBLIC Git revision recovery.
+# No Myfxbook API, Capital private, Cloudflare, Mac, Oracle, D1, Secrets, deploy,
+# merge, scheduler, trading or account action. Source pinned to main SHA.
+name: REMURA V20.5 REAL Public Retail Git Recovery
+on:
+  push:
+    branches:
+      - research/remura-v205-retail-git-history-recovery-20261123
+    paths:
+      - .github/workflows/remura-v205-retail-git-recovery.yml
+permissions:
+  contents: read
+concurrency:
+  group: remura-v205-one-shot-public-history
+  cancel-in-progress: false
+jobs:
+  recover-public-git-history:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/research/remura-v205-retail-git-history-recovery-20261123'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout isolated V20.5 audit code, no credentials persisted
+        uses: actions/checkout@v4
+        with:
+          path: audit
+          persist-credentials: false
+      - name: Checkout PUBLIC original main FULL Git history pinned at exact source SHA
+        uses: actions/checkout@v4
+        with:
+          ref: a1188f8af77951b9c59b7bb1facbfa6fe2f820e7
+          fetch-depth: 0
+          path: source
+          persist-credentials: false
+      - name: Six NEW synthetic unit tests of recovery guards, not previous suites
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd audit/research
+          python3 -m unittest -v test_v205_public_git_retention_recovery.py
+          python3 -m py_compile v205_public_git_retention_recovery.py
+          echo REMURA_V205_NEW_TESTS=6_PASS
+      - name: Recover actual PUBLIC 34-symbol Myfxbook revision history without API calls
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 audit/research/v205_public_git_retention_recovery.py \
+            --repo source \
+            --export "$RUNNER_TEMP/remura-v205-public-only-recovered-history.json.gz" \
+            --manifest "$RUNNER_TEMP/remura-v205-public-only-manifest.json"
+          python3 - <<'PY'
+          import base64,hashlib,json,os,pathlib
+          folder=pathlib.Path(os.environ["RUNNER_TEMP"])
+          summary=json.loads((folder/"remura-v205-public-only-manifest.json").read_text(encoding="utf-8"))
+          totals=summary["totals"]
+          assert summary["source_pinned_main_sha"]=="a1188f8af77951b9c59b7bb1facbfa6fe2f820e7"
+          assert summary["source_is_public_only"] is True
+          assert summary["symbols_count"]==34
+          assert totals["recovered_not_in_current_rolling_window"]>=1
+          assert totals["recoverable_unconflicted_rows"]>=totals["current_rolling_rows"]-totals["conflicting_timestamp_rows_excluded"]
+          assert summary["historical_trade_signal_eligibility_inferred"] is False
+          assert summary["profit_or_alpha_calculated"] is False
+          assert summary["cloudflare_requests"] == 0
+          assert summary["provider_requests"] == 0
+          b=(folder/"remura-v205-public-only-recovered-history.json.gz").read_bytes()
+          assert 0 < len(b) <= 600000
+          digest=hashlib.sha256(b).hexdigest()
+          print("REMURA_V205_REAL_PUBLIC_GIT_HISTORY_RECOVERED=PASS")
+          print("REMURA_V205_REAL_GIT_RECOVERY_COUNTS="+json.dumps(totals,sort_keys=True))
+          print("REMURA_V205_REAL_GIT_RECOVERY_SHA256="+digest)
+          # Archive is public Myfxbook only, compressed and base64 to allow
+          # an externally authorized create_file to commit it to research branch;
+          # workflow itself remains contents:read and CANNOT write to repository.
+          out=base64.b64encode(b).decode("ascii")
+          print("REMURA_V205_PUBLIC_ARCHIVE_BASE64_BEGIN")
+          for i in range(0,len(out),3200):
+              print("REMURA_V205_PUBLIC_ARCHIVE_CHUNK="+out[i:i+3200])
+          print("REMURA_V205_PUBLIC_ARCHIVE_BASE64_END")
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a",encoding="utf-8") as f:
+              f.write("### REMURA V20.5 — PUBLIC Myfxbook historical rows recovered from Git\n\n")
+              f.write(f"- Pinned source commit: {summary['source_pinned_main_sha']}\n")
+              f.write(f"- Symbols: {summary['symbols_count']}\n")
+              f.write(f"- Revision-file combinations analyzed: {totals['revisions_examined']}\n")
+              f.write(f"- Rolling current rows: {totals['current_rolling_rows']}\n")
+              f.write(f"- Total recoverable unconflicted rows: {totals['recoverable_unconflicted_rows']}\n")
+              f.write(f"- EXTRA older rows recovered: **{totals['recovered_not_in_current_rolling_window']}**\n")
+              f.write(f"- Conflicting timestamps quarantined: {totals['conflicting_timestamp_rows_excluded']}\n")
+              f.write(f"- Compressed PUBLIC archive SHA-256: {digest}\n")
+              f.write("- Zero external market/provider requests, Cloudflare, D1, Secret use or production writes.\n")
+              f.write("- Git commit timestamps are NOT independently attested provider first-seen, and restored history is NOT eligible for retrospective trading alpha.\n")
+          PY
