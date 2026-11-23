@@ -1,5 +1,5 @@
 # REMURA V20.1 — MISURAZIONE REALE INCREMENTALE
-Aggiornamento: **23 novembre 2026, ore 06:37 CET (Europe/Rome)** · NON DISTRIBUITO · ZERO NUOVI SERVIZI
+Aggiornamento: **23 novembre 2026, ore 06:40 CET (Europe/Rome)** · NON DISTRIBUITO · ZERO NUOVI SERVIZI
 
 **Eredita V01–V20 e il ramo research/remura-v20-real-measurements-20261122.** Nessuna modifica a main, produzione, Cloudflare/D1/Access, Oracle, Mac/Codex, provider, utenti o Secrets.
 
@@ -74,3 +74,13 @@ Se il privato collector è già disponibile **localmente**, aggiungere la direct
 5. Cockpit e Contributors integrati solo dopo revisione e merge/deploy autorizzati; eventuali pagine modificate mostrano in cima versione e timestamp Europe/Rome.
 
 **Conservare integralmente V01–V20 e le suite già GREEN.**
+
+
+## 23 novembre 06:40 CET — prova INDIPENDENTE sul commit DATI REALE
+Oltre ai nove test nuovi del motore (GitHub Actions run 45119080090 SUCCESS, **9/9**), eseguita una seconda job isolata che ha fatto checkout in sola lettura del commit pubblico a1188f8af77951b9c59b7bb1facbfa6fe2f820e7, quindi ha lanciato il motore sui **34 file JSON REALI**. **Run 45119190899 SUCCESS**. Marker log realmente verificato: REMURA_V20_REAL_PUBLIC_PINNED=34_SERIES_30_NEW_18_PCT_CHANGED_4_STALE_PASS.
+
+Sui 30 strumenti Myfxbook con dati nuovi: **15 hanno long% diminuita, 3 aumentata, 12 invariata**. Questo conferma il conteggio dei 18 cambi di percentuale direttamente dai file pubblici, non dalle fixture. Tutti i 30 payload hanno almeno un campo non temporale variato. Quattro storici indici restano stale. Nessun Secret, provider API, Cloudflare, dato privato, merge o deploy usato. Link alla prova: https://github.com/mirkoworz/remura/actions/runs/45119190899 .
+
+Sui 31 strumenti Capital DEMO letti PRIVATAMENTE con il connettore GitHub, **19 hanno long% aumentata, 11 diminuita e 1 invariata** rispetto al record precedente. Questi sono SOLO aggregati, non un test di mercato indipendente e non un risultato di esecuzione della CI pubblica.
+
+**Avvertenza riproducibilità:** il ramo ricerca da cui parte il nuovo motore conserva una revisione dati anteriore. Per riprodurre il conteggio 30/18 occorre utilizzare esattamente lo snapshot MAIN pinnato a1188f8 (o una revisione più recente distinguendone i cutoffs). La seconda CI effettua questo checkout esplicito; eseguire il comando sul checkout del solo ramo ricerca, senza i nuovi dati, non produce il medesimo risultato. Conservare codice e sorgenti come versioni distinte e verificabili.
