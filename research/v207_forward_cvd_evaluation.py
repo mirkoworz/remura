@@ -93,6 +93,8 @@ def _decisions(ledger: dict, as_of: datetime) -> list[dict]:
         anchored = ms(utc(anchor.get("committed_at_utc")))
         if anchored < frozen or anchored > now:
             raise ValueError("anchor_outside_causal_window")
+        if anchored - close > 30 * 60_000:
+            raise ValueError("stale_or_backfilled_decision")
         # Exact M15 open is excluded: first opening STRICTLY AFTER the anchor.
         entry = next_entry_after_max_receipt(anchored, 0)
         if anchored >= entry or entry in seen_entry:
