@@ -1,4 +1,4 @@
-/* REMURA Shark Cockpit v1.69 LAB — 23/11/2026 13:30 CET.
+/* REMURA Shark Cockpit v1.70 LAB — 23/11/2026 15:01 CET.
  * Browser-only CFTC direct reads and already published same-origin Myfxbook.
  * No auto-polling, Cloudflare writes, authentication, trading or alerts.
  */
@@ -59,7 +59,7 @@
       if(details.open)expandedCodes.add(item.code);
       else expandedCodes.delete(item.code);
     });
-    const title=create("summary","","Storico per categorie · fino a 12 report CFTC");
+    const title=create("summary","","Trend COT e storico reale · fino a 12 martedì");
     details.append(title);
     const h=core.historyFor(core.CONTRACTS.find(c=>c.code===item.code),snapshots[item.dataset]);
     if(h.status==="QUARANTINE_CONFLICT"){
@@ -70,6 +70,8 @@
       details.append(create("p","history-warning","Nessun report disponibile per questo contratto. Non sono stati costruiti esempi."));
       return details;
     }
+    // Derived from the exact same CFTC history rows already used below; no extra fetch.
+    if(window.REMURA_SHARK_TRENDS_UI)details.append(window.REMURA_SHARK_TRENDS_UI.render(h,item.labels));
     const scroll=create("div","history-scroll");
     const table=create("table","history-table"),header=create("thead",""),tr=create("tr","");
     for(const h of ["Martedì CFTC",item.labels[0]+" · netto %OI",item.labels[1]+" · netto %OI","Δ da settimana precedente"]){
