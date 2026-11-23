@@ -5,6 +5,11 @@ on:
     paths:
       - 'cot-intelligence-core.js'
       - 'cot-intelligence-watchlist.js'
+      - 'cot-intelligence-fx-factors.js'
+      - 'scripts/cot_intelligence_parity.py'
+      - 'tests/cot-intelligence-fx-factors.test.js'
+      - 'tests/test_cot_intelligence_parity.py'
+      - 'RESEARCH-B-COT-FACTORS-PARITY-V21.0.md'
       - 'scripts/cot_intelligence_watchlist.js'
       - 'tests/cot-intelligence-watchlist.test.js'
       - 'tests/cot-intelligence-public.test.js'
@@ -39,11 +44,14 @@ jobs:
         run: |
           node --check cot-intelligence-core.js
           node --check cot-intelligence-watchlist.js
+          node --check cot-intelligence-fx-factors.js
           node --check scripts/cot_intelligence_watchlist.js
           node --check tests/cot-intelligence-public.test.js
-          node --test tests/cot-intelligence.test.js tests/cot-intelligence-watchlist.test.js tests/cot-intelligence-public.test.js
+          node --test tests/cot-intelligence.test.js tests/cot-intelligence-watchlist.test.js tests/cot-intelligence-public.test.js tests/cot-intelligence-fx-factors.test.js
       - name: Check read-only SQLite snapshot fixtures
         run: python3 -m unittest discover -s tests -p 'test_cot_intelligence_snapshot.py' -v
       - name: Check two-request CFTC public read contract with mocks (no HTTP)
         run: python3 -m unittest discover -s tests -p 'test_cot_public_official_audit.py' -v
+      - name: Verify offline CFTC public versus private custody parity fixtures
+        run: python3 -m unittest discover -s tests -p 'test_cot_intelligence_parity.py' -v
 
