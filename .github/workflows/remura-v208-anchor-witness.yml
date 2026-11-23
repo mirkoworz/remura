@@ -1,0 +1,37 @@
+name: REMURA V20.8 GitHub hash-only decision witness (research-only)
+on:
+  push:
+    branches:
+      - research/remura-v208-github-decision-witness-20261123
+    paths:
+      - 'research/forward-anchors/**'
+permissions:
+  contents: read
+jobs:
+  hash-only-witness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Checkout exact hash-only commit
+        uses: actions/checkout@v4
+      - name: Validate only commitment format - never fetch or print private decisions
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          root = Path("research/forward-anchors")
+          paths=sorted(root.glob("*.json")) if root.exists() else []
+          assert 1 <= len(paths) <= 500, "missing/oversize commitment collection"
+          for path in paths:
+              raw=path.read_bytes()
+              assert len(raw) <= 512
+              obj=json.loads(raw)
+              assert isinstance(obj,dict) and set(obj)=={"schema","commitment_sha256"}
+              assert obj["schema"] == "remura-v208-forward-commitment-v1"
+              digest=obj["commitment_sha256"]
+              assert isinstance(digest,str) and len(digest)==64
+              assert all(c in "0123456789abcdef" for c in digest)
+              assert path.name == digest+".json"
+          print("REMURA_V208_HASH_ONLY_WITNESS=SUCCESS")
+          PY
