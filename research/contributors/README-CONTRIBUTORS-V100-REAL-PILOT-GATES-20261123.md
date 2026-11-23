@@ -80,3 +80,14 @@ Fonti ufficiali:
 - Non attivare `OFFLINE_FIXTURE_ONLY` sul Worker reale per simulare un permesso di deploy. Nessun cambio runtime o Cloudflare effettuato ora.
 
 **Decisione C**: la sicurezza offline è pronta come composizione, la **deployability controllata è un blocco reale ancora aperto**, da chiudere prima del Gate 1. Evitiamo altre suite sintetiche che non provano Access. Il checkpoint D separato **PR #113 Draft** rappresenta invece una release UI candidata; non abilita login Contributors.
+
+## Incremento v1.01: GET autenticato isolato, POST interamente chiuse
+**23 novembre 2026 · Europe/Rome.** Nuovo codice `private_worker_staging_readonly_v101_lab.mjs` su questo stesso ramo C; nessuna modifica dei vecchi router v0.96/v0.98/v1.00.
+- Candidato di **Worker diretto** `privateReadOnlyStagingV101`, privo di `export default fetch` e di configurazione Wrangler/deploy. Accetta solo GET di **quattro pagine private esistenti e dei loro asset allowlisted**; ogni POST, PUT, PATCH, DELETE, OPTIONS e URL non previsto è respinto con HTTP 403.
+- Gate necessari: `PRIVATE_WORKER_V078=STAGING_AUTHENTICATED_READONLY`, `STAGING_ENABLED=D1_CANDIDATE`, `CONTRIBUTORS_STAGE_READONLY=EXPLICIT_STAGING_ONLY`, `STAGING_ORIGIN` HTTPS esatto, binding `CONTRIBUTORS_DB`, `ctx.access` diretto con audience prevista. **Le stringhe di configurazione non sono una prova di autorizzazione OWNER**.
+- Integrazione runtime candidata con gli **esistenti** `accessBinding`, `profile` e `privateAssetFilesV096`: Access verifica dati identità/consistenza HMAC, D1 fornisce ruolo fresco per ogni GET (revoca D1 blocca la GET successiva). Non legge ruolo da header o storage browser.
+- Il modulo nuovo **non** modifica il flusso di invio/ricevute/approvazione: i gestori delle POST v0.96/v0.98 e a valle rimangono `OFFLINE_FIXTURE_ONLY`. Questo è intenzionale: il percorso reale di scrittura richiede un rilascio di sicurezza separato.
+- Nuovi test isolati `test_private_worker_staging_readonly_v101_lab.mjs`: **7/7, GitHub Actions 45260701997 SUCCESS**. Verifica ruoli, asset, GET/POST, origine, Access assente, capability contraddittorie e revoca sintetica. **Non misura autentici JWT/sessioni Access, né l'ownership persistente sul D1 reale**.
+- Ancora **NO-GO** alla distribuzione reale: manca il build Wrangler auditato con nessuna sezione `assets`, il binding D1 staging isolato verificato, le vere policy Access e il collaudo Safari con un'identità OWNER e una CONTRIBUTOR. I file HTML privati riusati riportano ancora il banner LAB e vanno coordinati con un timbro v1.01 e un testo di stato veritiero **prima** di un'attivazione pubblica/privata.
+
+Percorso di prova minima futura, **solo dopo autorizzazione distinta**: un solo Worker staging privato Access protetto, GET OWNER e CONTRIBUTOR + denial incrociati + revoca; **zero invii e zero approvazioni** nella prima sessione. Solo dopo si può valutare separatamente l'abilitazione delle POST con ricevuta persistente e audit.
