@@ -1,0 +1,75 @@
+name: REMURA B V21.7 - One-shot public CFTC archive (MANUAL ONLY LAB)
+
+# NEVER scheduled, never runs for pull_request or push.
+# GitHub only registers workflow_dispatch from default branch; this branch-only
+# file remains a READY DRAFT until a separate, explicitly approved activation.
+on:
+  workflow_dispatch:
+    inputs:
+      consent:
+        description: 'Explicit separate approval: ALLOW_2_PUBLIC_CFTC_GETS_NO_PRIVATE_DATA'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: remura-b-cftc-public-one-shot-lab
+  cancel-in-progress: false
+
+jobs:
+  public-archive-once:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/research/filone-b-cot-intelligence-v206-20261123' && inputs.consent == 'ALLOW_2_PUBLIC_CFTC_GETS_NO_PRIVATE_DATA' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout pinned LAB B code without stored credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Configure Python from existing hosted runner
+        run: python3 --version
+      - name: Exactly two official CFTC GET max, no redirect and no retry
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          python3 scripts/cot_public_two_date_archive_v216.py \
+            --confirmation ALLOW_2_PUBLIC_CFTC_GETS_NO_PRIVATE_DATA \
+            > "$RUNNER_TEMP/remura-cftc-public-2dates.json"
+      - name: Re-read public rows with existing SHA256 and exact 28-key gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          export REMURA_CFTC_PUBLIC_FILE="$RUNNER_TEMP/remura-cftc-public-2dates.json"
+          python3 - <<'PY'
+          import datetime as dt
+          import json
+          import os
+          import sys
+          sys.path.insert(0, "scripts")
+          from cot_intelligence_parity import read_local, validate, PUBLIC_SOURCE, EXPECTED
+          obj = read_local(os.environ["REMURA_CFTC_PUBLIC_FILE"])
+          indexed, read_at = validate(obj, PUBLIC_SOURCE, dt.datetime.now(dt.timezone.utc))
+          expected = {(dataset, code, day)
+                      for dataset, codes in EXPECTED.items()
+                      for code in codes for day in ("2026-11-10", "2026-11-17")}
+          assert len(indexed) == 28 and set(indexed) == expected
+          assert obj["rowCount"] == 28 and obj["truncated"] is False
+          assert obj["historicFirstSeenAttested"] is False
+          print("REMURA_B_OFFICIAL_TWO_DATE_PUBLIC_COMPLETE_28=PASS")
+          PY
+          cd "$RUNNER_TEMP"
+          sha256sum remura-cftc-public-2dates.json > remura-cftc-public-2dates.json.sha256
+          test -s remura-cftc-public-2dates.json.sha256
+      - name: Preserve only complete PUBLIC CFTC snapshot and digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: remura-b-public-cftc-2026-11-10-17-once
+          path: |
+            ${{ runner.temp }}/remura-cftc-public-2dates.json
+            ${{ runner.temp }}/remura-cftc-public-2dates.json.sha256
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 6
