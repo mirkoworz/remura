@@ -1,0 +1,32 @@
+# REMURA Contributors v1.02: new entrypoint only. No Cloudflare deploy.
+name: REMURA Contributors v102 guarded staging entry
+on:
+  push:
+    branches: [research/contributors-safari-readonly-pilot-v099-20261123]
+    paths:
+      - research/contributors/staging_readonly_entry_v102_lab.mjs
+      - research/contributors/wrangler-v102-STAGING-TEMPLATE.toml
+      - research/contributors/test_staging_entry_v102_lab.mjs
+      - .github/workflows/remura-contributors-v102-entry-only.yml
+permissions:
+  contents: read
+jobs:
+  guarded-entry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: New direct-worker entry safety only (no Secret, deploy, D1 requests)
+        run: |
+          set -euo pipefail
+          node --check research/contributors/staging_readonly_entry_v102_lab.mjs
+          node --test research/contributors/test_staging_entry_v102_lab.mjs 2>&1 | tee /tmp/remura-v102.log
+          grep -q '# tests 3' /tmp/remura-v102.log
+          grep -q '# pass 3' /tmp/remura-v102.log
+          grep -q '# fail 0' /tmp/remura-v102.log
+          echo REMURA_CONTRIBUTORS_V102=ENTRY_GATED
