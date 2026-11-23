@@ -15,6 +15,9 @@ on:
       - 'scripts/cot_real_partial_presentation.js'
       - 'scripts/cot_public_two_date_archive_v216.py'
       - 'tests/test_cot_public_two_date_archive_v216.py'
+      - 'tests/test_cot_public_budget_transport_v217.py'
+      - '.github/workflows/remura-b-v217-cftc-one-shot-public-archive.yml'
+      - 'RESEARCH-B-CFTC-MANUAL-ONE-SHOT-SAFE-ARTIFACT-V21.7.md'
       - 'RESEARCH-B-CFTC-EXACT-TWO-DATE-SNAPSHOT-V21.6.md'
       - 'tests/cot-real-partial-presentation.test.js'
       - 'RESEARCH-B-CFTC-REAL-PARTIAL-PRESENTATION-V21.4.md'
@@ -81,6 +84,8 @@ jobs:
           node --test tests/cot-real-partial-presentation.test.js
           node scripts/cot_real_partial_presentation.js --now-utc 2026-11-23T21:00:00Z > /tmp/remura-b-partial-preview.json
           node -e 'const x=require("/tmp/remura-b-partial-preview.json"); if(x.numberOfDisplayedObservations!==12 || x.forecastOrTradeSignals!==false || x.raw980SourceRowsRecovered!==false)process.exit(1)'
+      - name: Verify four NEW no-redirect/no-host-change HTTP guards offline
+        run: python3 -m unittest discover -s tests -p 'test_cot_public_budget_transport_v217.py' -v
       - name: Check six NEW date-targeted official archive gates, no HTTP
         run: |
           python3 -m unittest discover -s tests -p 'test_cot_public_two_date_archive_v216.py' -v
