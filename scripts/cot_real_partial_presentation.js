@@ -11,7 +11,7 @@ const VERSION="B_V21_4_LAB";
 const PROOF=path.resolve(__dirname,"../research/real-proofs/REMURA-B-CFTC-20261123-STDOUT-PARTIAL-EXCERPT.json");
 
 function dateUtc(s){
- if(typeof s!=="string"||!/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$/.test(s)||!Number.isFinite(Date.parse(s)))
+ if(typeof s!=="string"||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.test(s)||!Number.isFinite(Date.parse(s)))
   throw Error("explicit_utc_required");
  return Date.parse(s);
 }
