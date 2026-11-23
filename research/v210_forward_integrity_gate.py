@@ -150,7 +150,10 @@ def adjudicate(ledger: dict, manifest: dict, source_bytes: bytes, prices: dict,
     report.update({
         "status":"HASH_WITNESSED_LOCAL_CONSISTENCY_VALIDATED_NO_SOURCE_AUTHENTICATION",
         "github_first_seen_witness_verified":True,
-        "actual_forward_outcomes_evaluated":True if prices is not None else False,
+        # The V20.7 evaluator does not release returns before its sample gate.
+        # A complete M15 window is COVERAGE, never an authenticated PnL.
+        "actual_forward_outcomes_evaluated":False,
+        "forward_price_window_coverage_checked":True,
         "forward_windows":measured["horizons"],
         "costs_are_observed_quotes":False,
         "cvd_direction_independently_derived_from_source":False,
