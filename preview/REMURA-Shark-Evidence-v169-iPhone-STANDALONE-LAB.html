@@ -1,0 +1,1124 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#071723">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="description" content="REMURA Shark Evidence v1.69 LAB: CFTC weekly, retail e attendibilità separate.">
+  <style id="remura-standalone-ui">
+/* REMURA Shark Cockpit v1.69 LAB — 23/11/2026 13:30 CET */
+:root{color-scheme:dark;--bg:#06121b;--ink:#ecf9f6;--muted:#9ebdc4;--mint:#76f2cd;--blue:#8bb6ff;--amber:#f6d496;--red:#ff919e;--line:#35535f;--panel:#102733}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(ellipse 66% 30% at 88% 1%,#23685b44,transparent),linear-gradient(180deg,#071723,#06121b 44%);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+button,input,select{font:inherit}button{cursor:pointer}
+a{color:var(--mint)}
+:focus-visible{outline:3px solid var(--mint)!important;outline-offset:3px}
+.shell{max-width:1250px;margin:auto;padding:22px 22px 100px}
+.site-top{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:24px;padding-left:56px}
+.site-top a{color:#c6ece2;text-decoration:none;font-size:12px;font-weight:800}
+.brand{font-weight:900;color:var(--mint);font-size:24px;letter-spacing:.14em}
+.brand span{display:block;font-size:10px;color:var(--muted);letter-spacing:.06em}
+.hero{position:relative;overflow:hidden;border:1px solid #35796c;border-radius:24px;padding:clamp(24px,5vw,47px);background:radial-gradient(circle at 93% 1%,#3acda14d,transparent 35%),linear-gradient(120deg,#133b41,#0b222f 73%);box-shadow:0 20px 60px #0003}
+.hero:after{content:"";position:absolute;right:-92px;top:-130px;width:360px;height:360px;border-radius:50%;border:2px solid #74eec522;box-shadow:0 0 0 50px #7effcc09,0 0 0 110px #7effcc07;pointer-events:none}
+.eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:900;color:var(--mint)}
+.hero h1{font-size:clamp(36px,5.5vw,67px);letter-spacing:-.055em;line-height:1.05;margin:12px 0}
+.hero h1 span{color:var(--mint)}
+.hero p{font-size:clamp(13px,2vw,16px);max-width:690px;color:#bdd8d5;margin:0}
+.hero-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:19px}
+.chip{display:inline-flex;align-items:center;border-radius:999px;border:1px solid #558f84;padding:6px 11px;background:#082831be;color:#d8fcf1;font-size:11px;font-weight:750}
+.notice{margin:17px 0 22px;border:1px solid #7b6946;border-radius:14px;padding:13px 15px;color:#f3dfb4;background:#312a21;font-size:12px}
+.pulse{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:17px}
+.metric{background:linear-gradient(155deg,#142f3a,#0b1c28);border:1px solid #31515c;border-radius:17px;padding:18px;min-width:0}
+.metric small{color:#a2c3c4;font-size:11px;display:block}
+.metric strong{font-size:clamp(23px,3vw,34px);line-height:1.4;font-weight:900;letter-spacing:-.04em;display:block}
+.metric span{color:var(--muted);font-size:11px}
+.metric.error strong{color:var(--amber)}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:19px 0 14px}
+.toolbar input,.toolbar select{color:var(--ink);background:#102c38;border:1px solid #416775;border-radius:12px;padding:12px;min-height:46px;max-width:100%}
+.toolbar input{flex:1 1 225px;min-width:0}
+.toolbar select{flex:0 1 200px}
+#refresh{background:#1c6e54;border:1px solid #6cceb0;border-radius:12px;color:#f3fff9;padding:12px 18px;font-weight:850;min-height:46px}
+#refresh:disabled{opacity:.65;cursor:wait}
+#message{padding:10px 13px;font-size:12px;background:#142e39;border:1px solid #345d65;border-radius:12px;margin-bottom:15px;color:#c8e6e1}
+#message[data-status=error]{border-color:#915a51;color:#ffd8cb}
+.section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.section-head h2{font-size:24px;margin:0;font-weight:860}
+.section-head p{color:var(--muted);font-size:12px;margin:4px 0 0}
+#cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.contract-card{min-width:0;border-radius:18px;border:1px solid #2c515a;background:linear-gradient(142deg,#112d39,#0b1d28);padding:17px;display:flex;flex-direction:column;gap:12px;transition:border-color .18s ease}
+.contract-card:hover{border-color:#71ad9d}
+.contract-card[data-grade=unknown],.contract-card[data-grade=stale]{border-color:#775c4e}
+.card-head{display:flex;justify-content:space-between;gap:9px;align-items:flex-start}
+.card-kicker{color:var(--mint);font-size:10px;font-weight:900;letter-spacing:.13em;text-transform:uppercase}
+.card-head h3{font-size:19px;margin:2px 0 0;line-height:1.25}
+.card-code{font-size:12px;color:#a9c0c6;letter-spacing:.05em;margin-top:5px}
+.grade{border-radius:8px;border:1px solid #4c8a79;background:#17453a;padding:5px 7px;font-size:10px;font-weight:850;max-width:138px;text-align:right}
+.grade.warn{background:#3e3122;border-color:#987749;color:#ffe2ae}
+.grade.unknown{background:#293d4a;border-color:#5e7a80;color:#c4d9df}
+.cohorts{display:grid;gap:13px}
+.cohort-top{display:flex;gap:9px;justify-content:space-between;align-items:baseline}
+.cohort-label{font-size:12px;color:#bfdad6}
+.cohort-value{font-size:18px;font-weight:900;font-variant-numeric:tabular-nums}
+.cohort-value.pos{color:var(--mint)}.cohort-value.neg{color:var(--red)}
+.cohort-strip{height:9px;background:#2b414b;border-radius:99px;position:relative;overflow:hidden;margin-top:5px}
+.cohort-strip:after{content:"";position:absolute;left:50%;height:100%;border-left:1px solid #a6d4d4a8}
+.cohort-fill{position:absolute;top:0;bottom:0;border-radius:99px;background:var(--mint)}
+.cohort-fill.second{background:var(--blue)}
+.cohort-bottom{display:flex;justify-content:space-between;gap:9px;color:var(--muted);font-size:11px;margin-top:5px}
+.cohort-change{font-weight:850;color:#e5f5f1;font-variant-numeric:tabular-nums}
+.card-foot{margin-top:auto;display:grid;gap:9px;border-top:1px solid #2b4a54;padding-top:11px}
+.foot-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.foot-top span{font-size:11px;color:var(--muted)}
+.foot-status{font-size:11px;font-weight:850;color:var(--amber)}
+.foot-status.divergent{color:var(--mint)}
+.card-bottom{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.card-bottom a{font-size:12px;font-weight:800;text-decoration:none}
+.card-bottom small{font-size:11px;color:var(--muted)}
+details.method{border:1px solid #3c5e68;border-radius:14px;background:#102936;margin-top:17px;padding:15px 17px}
+details.method summary{cursor:pointer;color:var(--mint);font-weight:850}
+details.method p,details.method li{color:#bed3d4;font-size:12px;line-height:1.7}
+.retail-panel{margin-top:25px;padding:20px;border:1px solid #345960;border-radius:19px;background:linear-gradient(130deg,#0e2a34,#112432)}
+.retail-list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:15px}
+.retail-item{min-width:0;background:#112d38;border:1px solid #385664;border-radius:12px;padding:13px}
+.retail-item strong{display:block;font-size:15px}
+.retail-item .lot-pct{display:block;font-size:20px;font-weight:900;color:#ccefe1;margin-top:4px}
+.retail-item small{display:block;font-size:10px;color:#9bbcc2}
+.retail-item .stale{color:var(--amber)}
+.retail-note{font-size:12px;color:#c2d9da;margin:12px 0 0}
+.tail{border-top:1px solid #34545d;margin-top:27px;padding-top:19px;color:#8cadb3;font-size:12px}
+.tail a{color:#b5eadf}
+@media(max-width:850px){#cards{grid-template-columns:1fr}.pulse{grid-template-columns:repeat(2,minmax(0,1fr))}.retail-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:540px){.shell{padding:18px 12px 85px}.site-top{padding-left:55px;margin-bottom:17px}.brand{font-size:21px}.site-top a{font-size:10px}.hero{padding:23px}.hero h1{font-size:42px}.pulse{gap:8px}.metric{padding:13px}.metric strong{font-size:25px}.contract-card{padding:14px}.card-head h3{font-size:17px}.toolbar input,.toolbar select,#refresh{flex-basis:100%;width:100%}.retail-panel{padding:14px}}
+@media(prefers-reduced-motion:reduce){.contract-card{transition:none}}
+
+/* v1.67 — watchlist and expandable actual CFTC history; Safari-first. */
+.watch-toggle{display:inline-flex;gap:9px;align-items:center;justify-content:center;min-height:46px;padding:10px 14px;background:#103c41;color:#d3f8e7;border:1px solid #58a58a;border-radius:12px;font-weight:800;font-size:12px;cursor:pointer;white-space:nowrap}
+.watch-toggle input{accent-color:#77eec3;width:19px;height:19px;margin:0}
+.watchlist-note{font-size:12px;line-height:1.6;color:#b2d7d1;background:#102d34;border-left:3px solid #6fd9b6;padding:8px 12px;margin:0 0 14px}
+.favorite-toggle{flex:0 0 43px;min-height:43px;min-width:43px;display:grid;place-items:center;border-radius:12px;color:#ffe19f;background:#26434a;border:1px solid #617b78;font-size:24px;padding:0;touch-action:manipulation}
+.favorite-toggle[aria-pressed=true]{background:#665032;border-color:#e7c57e;color:#ffedbb}
+.favorite-toggle:hover{border-color:#f2d497}
+.card-head{align-items:flex-start}
+.history-details{margin:0;border-top:1px solid #32515c;padding-top:8px;min-width:0}
+.history-details summary{font-weight:800;color:#96edcf;font-size:12px;min-height:42px;cursor:pointer;display:flex;align-items:center}
+.history-details[open] summary{margin-bottom:8px}
+.history-scroll{overflow-x:auto;max-width:100%;border:1px solid #355a61;border-radius:10px;overscroll-behavior-inline:contain}
+.history-table{border-collapse:collapse;width:100%;min-width:470px;table-layout:auto;font-size:11px;color:#d4e9e5;font-variant-numeric:tabular-nums}
+.history-table th,.history-table td{text-align:left;padding:9px 8px;border-bottom:1px solid #284a55;white-space:nowrap}
+.history-table th{font-size:10px;color:#b3e5db;background:#143743;position:sticky;top:0}
+.history-table td:last-child{color:#dbf2e8}
+.history-table tr:last-child td{border-bottom:0}
+.history-warning{color:#ffdbb4;font-size:12px}
+.history-caption{color:#a9c4c5;font-size:10px;line-height:1.5}
+@media(max-width:540px){
+  .watch-toggle{width:100%;justify-content:flex-start}
+  .card-head{display:grid;grid-template-columns:minmax(0,1fr) 43px;align-items:start}
+  .card-head .grade{grid-column:1/-1;max-width:none;text-align:left}
+}
+
+/* v1.67 LAB: aligned-Tuesday institutional movers, no additional provider calls */
+.movers-panel{background:linear-gradient(145deg,#153d41,#0a212f 75%);border:1px solid #3e8578;border-radius:20px;padding:22px;margin:19px 0 23px}
+.movers-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:15px 0}
+.mover-card{display:grid;text-align:left;gap:7px;min-height:164px;min-width:0;background:#0e2935;color:var(--ink);border:1px solid #4a756e;border-radius:15px;padding:16px;cursor:pointer}
+.mover-card:hover{background:#163f44;border-color:#86d9b7}
+.mover-heading{font-size:14px;font-weight:850;line-height:1.25}
+.mover-value{font-size:26px;font-weight:900;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.mover-up{color:var(--mint)}.mover-down{color:var(--red)}
+.mover-category{font-size:11px;font-weight:800;color:#bde5df}
+.mover-sub{font-size:10px;color:#afc8ce;line-height:1.4}
+.mover-open{color:var(--mint);font-size:11px;font-weight:800;margin-top:3px}
+.movers-placeholder{grid-column:1/-1;border:1px dashed #607d75;border-radius:12px;padding:18px;color:#c8d8d7;font-size:13px}
+.movers-status,.movers-caveat{font-size:12px;color:#b8d6d5;line-height:1.6;margin:12px 0}
+.contract-card:focus-visible{outline:3px solid var(--mint);outline-offset:4px}
+@media(max-width:850px){.movers-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:570px){.movers-grid{grid-template-columns:1fr}.movers-panel{padding:15px}.mover-card{min-height:0;padding:14px}.mover-value{font-size:25px}}
+
+/* REMURA v1.68 LAB — institutional long/short gross-position anatomy */
+.anatomy-details{border:1px solid #3f6770;border-radius:13px;background:#0b2732;padding:10px 12px}
+.anatomy-details summary{font-size:12px;font-weight:850;color:#a2f2d7;cursor:pointer;min-height:42px;display:flex;align-items:center}
+.anatomy-details[open] summary{margin-bottom:12px;border-bottom:1px solid #365c63}
+.anatomy-date{font-size:11px;color:#b7d7d5;margin-bottom:12px;line-height:1.6}
+.anatomy-groups{display:grid;gap:11px}
+.anatomy-group{border:1px solid #345761;border-radius:13px;padding:13px;background:#0d2b38;min-width:0}
+.anatomy-group h4{color:#bceee0;font-size:12px;letter-spacing:.015em;margin:0 0 10px}
+.anatomy-positions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.anatomy-stat{background:#122e3c;padding:10px 8px;border-radius:9px;display:flex;flex-direction:column;min-width:0}
+.anatomy-stat-label{color:#a8c4cb;font-size:10px;font-weight:650}
+.anatomy-stat strong{font-variant-numeric:tabular-nums;font-size:clamp(13px,2.6vw,17px);color:#f2fff9;margin:5px 0 4px;overflow-wrap:anywhere}
+.anatomy-stat-delta{font-variant-numeric:tabular-nums;font-size:10px;font-weight:800}
+.anatomy-stat-delta.plus{color:#83f0bd}.anatomy-stat-delta.minus{color:#ffadb2}.anatomy-stat-delta.neutral{color:#b4c8c8}
+.anatomy-net{font-size:11px;color:#c5e3df;margin:9px 0 0}
+.anatomy-caveat,.anatomy-warning{font-size:11px;color:#e8d5ad;line-height:1.6;margin:13px 0 0}
+@media(max-width:540px){.anatomy-details{padding:9px}.anatomy-group{padding:10px}.anatomy-positions{grid-template-columns:repeat(2,minmax(0,1fr))}.anatomy-stat:last-child{grid-column:1/-1}}
+
+
+/* v1.69 LAB · 23/11/2026 13:30 CET · read-only evidence board and Safari links */
+.build-stamp{display:block;margin:0 0 13px;padding:8px 10px;background:#163741;border:1px solid #407a7b;border-radius:10px;color:#d9f9ec;font:800 11px/1.45 system-ui,-apple-system,sans-serif;letter-spacing:.02em}
+.jump-nav{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;padding:0 1px 13px;margin-bottom:8px;overscroll-behavior-inline:contain}
+.jump-nav a{flex:0 0 auto;display:flex;align-items:center;justify-content:center;min-height:44px;border:1px solid #518d85;background:#10333f;padding:10px 14px;border-radius:11px;font-size:12px;font-weight:800;text-decoration:none;color:#d9fcf0}
+.jump-nav a:focus-visible,.jump-nav a:hover{background:#20534e;border-color:#7ff1d0}
+#evidence,#institutional-movers,#contracts,#retail{scroll-margin-top:24px}
+.evidence-panel{margin:17px 0 22px;padding:20px;border:1px solid #4c8579;border-radius:18px;background:linear-gradient(140deg,#112f37,#0c222e)}
+.evidence-read-at{margin:5px 0 14px;font-size:12px;color:#bee3de;line-height:1.6}
+.evidence-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.evidence-card{min-width:0;border:1px solid #3f676c;border-radius:14px;background:#112d38;padding:15px;display:flex;flex-direction:column;gap:7px}
+.evidence-head{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.evidence-name{font-weight:850;font-size:12px;color:#b2eadb}
+.evidence-grade{font-size:10px;font-weight:850;letter-spacing:.04em;border-radius:8px;border:1px solid #62777b;background:#293e49;color:#e0e9ed;padding:5px 8px;max-width:100%}
+.evidence-card[data-state=RECENTE] .evidence-grade{border-color:#4eab85;background:#194d3b;color:#ccffe8}
+.evidence-card[data-state=PARZIALE] .evidence-grade,.evidence-card[data-state=ARCHIVIO] .evidence-grade,.evidence-card[data-state=OBSOLETO] .evidence-grade{border-color:#a2854f;background:#483825;color:#ffe3b5}
+.evidence-card[data-state=DA_VERIFICARE] .evidence-grade{border-color:#b66f6b;background:#542e35;color:#ffdad5}
+.evidence-main{display:block;font-size:16px;font-weight:850;line-height:1.35;color:#f0fff9}
+.evidence-detail,.evidence-date,.evidence-small{margin:0;line-height:1.5;font-size:11px;color:#bcd7d9}
+.evidence-date{font-weight:750;color:#e1f8e9}
+.evidence-small{margin-top:auto;color:#a5bfc6}
+.evidence-warning{font-size:11px;line-height:1.6;margin:13px 0 0;color:#e4d4b4}
+.evidence-loading{margin:0;font-size:12px;color:#d4eae4}
+@media(max-width:620px){.evidence-grid{grid-template-columns:1fr}.evidence-panel{padding:14px}.evidence-card{padding:13px}.jump-nav{margin-right:-12px;padding-right:12px}.build-stamp{font-size:10px}}
+
+  </style>
+  <title>REMURA v1.69 LAB · Shark Evidence iPhone</title>
+</head>
+<body>
+<div role="note" style="position:sticky;top:0;z-index:9999;background:#133e42;color:#e9fffa;border-bottom:1px solid #76cdb7;padding:10px 14px;font:800 11px/1.5 system-ui;text-align:center">REMURA · Shark Cockpit v1.69 LAB · 23/11/2026 13:30 CET · ANTEPRIMA NON PUBBLICATA</div>
+
+  <main class="shell">
+    <div class="build-stamp" role="note">SHARK COCKPIT v1.69 LAB · 23/11/2026 13:30 CET (Europe/Rome) · Anteprima UI, non pubblicata</div>
+    <div class="site-top">
+      <div class="brand">REMURA <span>SHARK COCKPIT · v1.69 LAB</span></div>
+      <a href="https://mirkoworz.github.io/remura/mercati.html#institutional-scanner">← Scanner classico</a>
+    </div>
+
+    <nav class="jump-nav" aria-label="Sezioni Shark Cockpit">
+      <a href="#evidence">Affidabilità dati</a>
+      <a href="#institutional-movers">Mosse CFTC</a>
+      <a href="#contracts">Contratti</a>
+      <a href="#retail">Sentiment retail</a>
+    </nav>
+
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="eyebrow">01 / Posizionamento istituzionale · CFTC</div>
+      <h1 id="hero-title">Guarda le tracce.<br><span>Non inseguire le ombre.</span></h1>
+      <p>Le posizioni nette dei principali gruppi di operatori nei futures CFTC, contratto per contratto. Segui i contratti che ti interessano e apri lo storico settimanale. Vedi chi aumenta o riduce l'esposizione, quando è avvenuto il report e se i gruppi divergono. Non sono operazioni in tempo reale né previsioni del prezzo.</p>
+      <div class="hero-chips">
+        <span class="chip">◉ Dati pubblici CFTC</span>
+        <span class="chip">↗ Variazione settimanale in punti percentuali</span>
+        <span class="chip">⌁ Nessun segnale operativo</span>
+        <span class="chip">★ Contratti seguiti su iPhone</span>
+      </div>
+    </section>
+
+    <div class="notice">
+      <strong>La regola della remora:</strong> distinguiamo sempre il futuro CFTC dalla coppia Forex spot, il sentimento retail dalle posizioni aggregate e la data del report dalla vera data di pubblicazione. I dati assenti, obsoleti o discordanti non diventano segnali.
+    </div>
+
+    <section class="evidence-panel" id="evidence" aria-labelledby="evidence-title">
+      <div class="section-head"><div>
+        <div class="eyebrow">00 / Provenienza e attendibilità</div>
+        <h2 id="evidence-title">Prima la qualità. Poi i numeri.</h2>
+        <p>Controllo della leggibilità, non un punteggio di probabilità o profitto. Il COT resta settimanale; i singoli operatori non sono identificabili.</p>
+      </div></div>
+      <p id="evidence-read-at" class="evidence-read-at" role="status">Nessuna lettura ancora completata. I timestamp restano N/D.</p>
+      <div id="evidence-list" class="evidence-grid" aria-live="polite">
+        <p class="evidence-loading">Fonti da verificare nel browser. CVD: N/D finché non è integrato e validato.</p>
+      </div>
+      <p class="evidence-warning">La data del martedì CFTC indica le posizioni dichiarate, non quando REMURA le ha viste per la prima volta. Il sentiment retail non dimostra la direzione degli istituzionali. Il CVD proxy non prova ordini reali.</p>
+    </section>
+
+    <section class="pulse" aria-label="Riepilogo copertura">
+      <div class="metric"><small>Contratti nel radar</small><strong id="total-contracts">14</strong><span>Contratti CFTC selezionati</span></div>
+      <div class="metric"><small>Report leggibili</small><strong id="available-contracts">—</strong><span>Tra i contratti richiesti</span></div>
+      <div class="metric"><small>Movimenti WoW misurabili</small><strong id="valid-moves">—</strong><span>Solo settimane consecutive e recenti</span></div>
+      <div class="metric"><small>Divergenze tra categorie</small><strong id="divergent-count">—</strong><span>Descrittive, non indicazioni trade</span></div>
+    </section>
+
+    <section class="movers-panel" id="institutional-movers" aria-labelledby="movers-title">
+      <div class="section-head"><div>
+        <div class="eyebrow">00 / Ultimo report CFTC confrontabile</div>
+        <h2 id="movers-title">Le mosse più grandi dei fondi</h2>
+        <p>Fino a sei variazioni nette per contratto, soltanto con report dello stesso martedì. Non sono ordini in tempo reale.</p>
+      </div></div>
+      <p class="movers-status" id="movers-status" role="status" aria-live="polite">Attendo i dati settimanali CFTC.</p>
+      <div id="movers-list" class="movers-grid" aria-label="Variazioni istituzionali per future">
+        <div class="movers-placeholder">Nessun movimento mostrato finché i report non sono disponibili.</div>
+      </div>
+      <p class="movers-caveat">Misura: cambiamento del netto futures in punti percentuali di open interest; categorie TFF e Disaggregated non equivalenti. Non indica acquisti/vendite in tempo reale, un prezzo Forex o un segnale.</p>
+    </section>
+
+    <section id="contracts" aria-labelledby="contract-title">
+      <div class="section-head">
+        <div>
+          <h2 id="contract-title">Flussi delle grandi categorie</h2>
+          <p>Ogni scheda rappresenta un <strong>contratto futures</strong>, non una posizione su un broker Forex.</p>
+        </div>
+      </div>
+      <div class="toolbar">
+        <input id="search" type="search" autocomplete="off" aria-label="Cerca contratto" placeholder="Cerca EUR, Yen, oro, Nasdaq…">
+        <select id="family" aria-label="Famiglia di mercati">
+          <option value="Tutte">Tutte le famiglie</option>
+          <option value="Valute">Valute futures</option>
+          <option value="Indici">Indici e dollaro</option>
+          <option value="Metalli">Metalli</option>
+          <option value="Energia">Energia</option>
+        </select>
+        <select id="sort" aria-label="Ordina contratti">
+          <option value="Movimento">Movimenti maggiori</option>
+          <option value="Divergenze">Divergenze prima</option>
+          <option value="Data">Data del report</option>
+        </select>
+        <label class="watch-toggle" for="only-favorites"><input id="only-favorites" type="checkbox"> ★ Solo seguiti</label>
+        <button id="refresh" type="button" aria-label="Ricarica i report CFTC">↻ Aggiorna CFTC</button>
+      </div>
+      <p class="watchlist-note" id="watchlist-note" role="status">Preferiti disponibili su questo dispositivo, senza notifiche.</p>
+      <div id="message" role="status" aria-live="polite" data-status="waiting">Caricamento dei report pubblici CFTC…</div>
+      <div id="cards" aria-live="polite" aria-label="Contratti CFTC"><div class="metric">Attendo il feed ufficiale. Nessun dato inventato.</div></div>
+      <details class="method">
+        <summary>Come leggere le variazioni senza confonderle con i trade?</summary>
+        <p><strong>Radiografia settimanale:</strong> apri una scheda e scegli «Radiografia del movimento» per distinguere la variazione del numero di contratti LONG e SHORT di ciascuna categoria. Non implica acquisti, vendite o chiusure individuali.</p>
+        <p><strong>Netto % OI</strong> = (long - short) / open interest × 100. <strong>Δ settimanale</strong> = variazione del netto in punti percentuali rispetto al report di sette giorni prima. Non è un rendimento, una percentuale di trader né la probabilità di una salita.</p>
+        <p>Il COT rileva posizioni aggregate di martedì e viene pubblicato successivamente. Il browser consulta la fonte pubblica solo mentre questa schermata è aperta; non verifica il primo istante in cui il dato era disponibile.</p>
+        <p>Le due categorie non hanno lo stesso significato: sui futures finanziari sono Asset Manager e Leveraged Funds; su metalli e WTI sono Managed Money e Producer / Merchant. Divergente significa che le <em>variazioni</em> delle due categorie hanno segno opposto, non che il prezzo debba invertire.</p>
+        <p>Le etichette di una singola valuta descrivono il future sulla valuta, non il verso di USD/JPY, USD/CAD o USD/CHF. Un cross come CAD/JPY richiede due future e una mappatura verificata. Nessun dato viene trattato come ordine istituzionale identificato.</p>
+      </details>
+    </section>
+
+    <section class="retail-panel" id="retail" aria-labelledby="retail-title">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">02 / Campione distinto · Myfxbook</div>
+          <h2 id="retail-title">Retail: dall'altra parte del vetro</h2>
+          <p>Ultimi snapshot già pubblicati nel repository. Non li sommiamo né li confrontiamo numericamente alle esposizioni CFTC.</p>
+        </div>
+        <a href="https://mirkoworz.github.io/remura/fonti.html">Come leggere le fonti</a>
+      </div>
+      <div id="retail-status" role="status" aria-live="polite" class="retail-note">Verifica dei dati retail pubblicati…</div>
+      <div id="retail-list" class="retail-list"></div>
+      <p class="retail-note">La quota long è calcolata sui lotti del campione Myfxbook, non sui singoli trader. Se il campione è vecchio o insufficiente resta indicato. Per lo storico completo apri la scheda dello strumento.</p>
+    </section>
+
+    <footer class="tail">
+      <p>Fonti originali: <a href="https://publicreporting.cftc.gov/Commitments-of-Traders/TFF-Futures-Only/gpe5-46if" rel="noopener noreferrer" target="_blank">CFTC TFF</a> · <a href="https://publicreporting.cftc.gov/Commitments-of-Traders/Disaggregated-Futures-Only/72hh-3qpy" rel="noopener noreferrer" target="_blank">CFTC Disaggregated</a> · <a href="https://www.myfxbook.com/community/outlook" rel="noopener noreferrer" target="_blank">Myfxbook Community Outlook</a>.</p>
+      <p>SHARK COCKPIT v1.69 LAB · 23/11/2026 13:30 CET · Anteprima di sviluppo, non pubblicata su REMURA produzione. Nessun costo cloud aggiuntivo, ordine, Telegram o nuova raccolta privata.</p>
+    </footer>
+  </main>
+
+<script id="inline-shark-cockpit-core.js">
+/* REMURA Shark Cockpit v1.68 LAB — 22/11/2026 22:10 CET.
+ * Official public weekly CFTC futures, with retail archived separately.
+ * No new backend, no chart scraping, no institution identities, no signals.
+ */
+(function(root,factory){
+  const api=factory();
+  if(typeof module==="object"&&module.exports)module.exports=api;
+  root.REMURA_SHARK_CORE=api;
+})(typeof window!=="undefined"?window:globalThis,function(){
+  "use strict";
+  const DAY=86400000,WEEK=7*DAY;
+  const CONTRACTS=Object.freeze([
+    {code:"099741",id:"EUR",name:"Euro FX",family:"Valute",dataset:"tff"},
+    {code:"096742",id:"GBP",name:"Sterlina britannica",family:"Valute",dataset:"tff"},
+    {code:"097741",id:"JPY",name:"Yen giapponese",family:"Valute",dataset:"tff"},
+    {code:"232741",id:"AUD",name:"Dollaro australiano",family:"Valute",dataset:"tff"},
+    {code:"090741",id:"CAD",name:"Dollaro canadese",family:"Valute",dataset:"tff"},
+    {code:"092741",id:"CHF",name:"Franco svizzero",family:"Valute",dataset:"tff"},
+    {code:"112741",id:"NZD",name:"Dollaro neozelandese",family:"Valute",dataset:"tff"},
+    {code:"13874A",id:"US500",name:"S&P 500 · E-mini",family:"Indici",dataset:"tff"},
+    {code:"209742",id:"NAS100",name:"Nasdaq 100 · E-mini",family:"Indici",dataset:"tff"},
+    {code:"124603",id:"US30",name:"Dow Jones · E-mini",family:"Indici",dataset:"tff"},
+    {code:"098662",id:"DXY",name:"US Dollar Index",family:"Indici",dataset:"tff"},
+    {code:"088691",id:"XAUUSD",name:"Oro · COMEX",family:"Metalli",dataset:"disagg"},
+    {code:"084691",id:"XAGUSD",name:"Argento · COMEX",family:"Metalli",dataset:"disagg"},
+    {code:"067651",id:"USOIL",name:"WTI · NYMEX",family:"Energia",dataset:"disagg"}
+  ]);
+  const FIELDS=Object.freeze({
+    tff:["report_date_as_yyyy_mm_dd","cftc_contract_market_code","open_interest_all",
+         "asset_mgr_positions_long","asset_mgr_positions_short",
+         "lev_money_positions_long","lev_money_positions_short"],
+    disagg:["report_date_as_yyyy_mm_dd","cftc_contract_market_code","open_interest_all",
+            "m_money_positions_long_all","m_money_positions_short_all",
+            "prod_merc_positions_long","prod_merc_positions_short"]
+  });
+  const DATASETS=Object.freeze({tff:"gpe5-46if",disagg:"72hh-3qpy"});
+  const SOURCES=Object.freeze({
+    tff:"https://publicreporting.cftc.gov/Commitments-of-Traders/TFF-Futures-Only/gpe5-46if",
+    disagg:"https://publicreporting.cftc.gov/Commitments-of-Traders/Disaggregated-Futures-Only/72hh-3qpy"
+  });
+  const FX_RETAIL=Object.freeze(["EURUSD","GBPUSD","AUDUSD","NZDUSD","USDJPY","USDCAD","USDCHF"]);
+  function strictDate(v){
+    if(typeof v!=="string"||! /^\d{4}-\d{2}-\d{2}/.test(v))return null;
+    const date=v.slice(0,10),ms=Date.parse(date+"T00:00:00Z");
+    if(!Number.isFinite(ms)||new Date(ms).toISOString().slice(0,10)!==date)return null;
+    return {date,ms};
+  }
+  function amount(v){
+    if(v===null||v===undefined||v==="")return null;
+    if(typeof v!=="number"&&typeof v!=="string")return null;
+    const n=Number(v);
+    return Number.isFinite(n)&&n>=0?n:null;
+  }
+  function normalized(row,dataset,now){
+    if(!row||typeof row!=="object"||Array.isArray(row)||!FIELDS[dataset])return null;
+    const stamp=strictDate(row.report_date_as_yyyy_mm_dd);
+    const code=String(row.cftc_contract_market_code||"").toUpperCase().padStart(6,"0");
+    const contract=CONTRACTS.find(c=>c.code===code&&c.dataset===dataset);
+    if(!contract||!stamp||stamp.ms>now||new Date(stamp.ms).getUTCDay()!==2||((now-stamp.ms)>180*DAY))return null;
+    const fields=dataset==="tff"?
+      ["asset_mgr_positions_long","asset_mgr_positions_short","lev_money_positions_long","lev_money_positions_short"]:
+      ["m_money_positions_long_all","m_money_positions_short_all","prod_merc_positions_long","prod_merc_positions_short"];
+    const nums=fields.map(k=>amount(row[k])),oi=amount(row.open_interest_all);
+    if(oi===null||oi<=0||nums.some(x=>x===null))return null;
+    const a=100*(nums[0]-nums[1])/oi,b=100*(nums[2]-nums[3])/oi;
+    if(!Number.isFinite(a)||!Number.isFinite(b)||Math.abs(a)>100.00001||Math.abs(b)>100.00001)return null;
+    return {code,dataset,date:stamp.date,at:stamp.ms,oi,first:{long:nums[0],short:nums[1],net:a},
+            second:{long:nums[2],short:nums[3],net:b}};
+  }
+  function same(a,b){
+    return a.date===b.date&&a.oi===b.oi&&
+      ["first","second"].every(k=>a[k].long===b[k].long&&a[k].short===b[k].short);
+  }
+  function parseRows(records,dataset,now=Date.now()){
+    if(!FIELDS[dataset]||!Array.isArray(records)||records.length>3500||!Number.isFinite(now))throw Error("CFTC_BATCH_INVALID");
+    const map=new Map(),conflicts=new Set();let valid=0,invalid=0;
+    for(const raw of records){
+      const row=normalized(raw,dataset,now);
+      if(!row){invalid++;continue;}
+      valid++;
+      const key=row.code+"|"+row.date;
+      if(map.has(key)&&!same(map.get(key),row))conflicts.add(row.code);
+      else if(!map.has(key))map.set(key,row);
+    }
+    const byCode=new Map();
+    for(const c of CONTRACTS.filter(c=>c.dataset===dataset)){
+      const rows=[...map.values()].filter(r=>r.code===c.code).sort((a,b)=>b.at-a.at).slice(0,12);
+      byCode.set(c.code,{rows,conflict:conflicts.has(c.code)});
+    }
+    return {dataset,byCode,valid,invalid,source:SOURCES[dataset],provenance:"CFTC_PUBLIC_BROWSER_FETCH_UNATTESTED_FIRST_SEEN"};
+  }
+  function round(n){return Number.isFinite(n)?Math.round(n*100)/100:null;}
+  function changeSign(n){return n>0?"UP":n<0?"DOWN":"FLAT";}
+  function card(c,parsed,now=Date.now()){
+    const item=parsed&&parsed.byCode instanceof Map?parsed.byCode.get(c.code):null;
+    const rows=item?.rows||[],cur=rows[0]||null,prev=rows[1]||null;
+    const age=cur?Math.floor((now-cur.at)/DAY):null;
+    let status=!cur?"UNKNOWN_NO_REPORT":item.conflict?"QUARANTINE_CONFLICT":
+      age>14?"STALE_REPORT":"CURRENT_REPORT_DATE";
+    const consecutive=!!(cur&&prev&&cur.at-prev.at===WEEK);
+    let deltas=null,comparison="UNKNOWN",fourWeek=null;
+    if(status==="CURRENT_REPORT_DATE"&&consecutive){
+      deltas={first:round(cur.first.net-prev.first.net),second:round(cur.second.net-prev.second.net)};
+      const sides=[changeSign(deltas.first),changeSign(deltas.second)];
+      comparison=sides.includes("FLAT")?"FLAT_OR_MIXED":sides[0]===sides[1]?"CO_MOVING":"DIVERGENT";
+      if(rows.length>=5&&rows.slice(0,5).every((r,i)=>i===0||rows[i-1].at-r.at===WEEK)){
+        fourWeek={first:round(cur.first.net-rows[4].first.net),
+                  second:round(cur.second.net-rows[4].second.net)};
+      }
+    } else if(status==="CURRENT_REPORT_DATE"&&!consecutive)status="UNKNOWN_WEEKLY_COMPARISON";
+    return {
+      id:c.id,code:c.code,name:c.name,family:c.family,dataset:c.dataset,
+      labels:c.dataset==="tff"?["Asset Manager","Leveraged Funds"]:["Managed Money","Producer / Merchant"],
+      source:SOURCES[c.dataset],reportDate:cur?.date||null,ageDays:age,status,
+      first:cur?round(cur.first.net):null,second:cur?round(cur.second.net):null,
+      openInterest:cur?cur.oi:null,deltas,fourWeek,comparison,
+      availableWeeks:rows.length,publicationTimeVerified:false,
+      independentlyWitnessed:false,individualInstitutionsKnown:false,
+      realTimeMarketFlow:false,spotPairMappingVerified:false,tradingSignal:false
+    };
+  }
+  /*
+   * Weekly anatomy: changes in reported LONG/SHORT positions in contracts,
+   * NOT proof of new buy/sell orders. CFTC first-publication time unknown.
+   * Derivation uses exactly the two Tuesday snapshots already admitted by card().
+   */
+  function anatomyFor(contract,parsed,now=Date.now()){
+    if(!contract||!CONTRACTS.some(c=>c.code===contract.code&&c.dataset===contract.dataset))
+      return {status:"UNKNOWN_CONTRACT",categories:[],orderFlowVerified:false};
+    const status=card(contract,parsed,now);
+    if(status.status!=="CURRENT_REPORT_DATE"||status.deltas===null)
+      return {status:status.status,categories:[],orderFlowVerified:false};
+    const item=parsed?.byCode instanceof Map?parsed.byCode.get(contract.code):null;
+    if(!item||item.conflict||!Array.isArray(item.rows)||item.rows.length<2)
+      return {status:"UNKNOWN_SOURCE_HISTORY",categories:[],orderFlowVerified:false};
+    const [cur,prev]=item.rows;
+    if(!cur||!prev||cur.at-prev.at!==WEEK||cur.date!==status.reportDate)
+      return {status:"UNKNOWN_WEEK_BOUNDARY",categories:[],orderFlowVerified:false};
+    const groups=["first","second"].map((key,index)=>{
+      const a=cur[key],b=prev[key];
+      if(!a||!b||![a.long,a.short,b.long,b.short].every(Number.isFinite))return null;
+      const longDelta=a.long-b.long,shortDelta=a.short-b.short;
+      const netCurrent=a.long-a.short,netPrevious=b.long-b.short;
+      return {label:status.labels[index],key,
+        currentLong:a.long,currentShort:a.short,
+        previousLong:b.long,previousShort:b.short,
+        longDelta,shortDelta,
+        netContracts:netCurrent,netDeltaContracts:netCurrent-netPrevious,
+        netPpChange:status.deltas[key],
+        /* Not possible to infer actual orders/openings/closings from two reports. */
+        opensVerified:false,closesVerified:false,actorIdentityVerified:false};
+    });
+    if(groups.some(x=>x===null))return {status:"UNKNOWN_GROUP_COUNTS",categories:[],orderFlowVerified:false};
+    return {status:"WEEKLY_GROSS_POSITIONS_COMPARABLE",
+      reportDate:cur.date,previousDate:prev.date,
+      currentOpenInterest:cur.oi,openInterestDelta:cur.oi-prev.oi,
+      categories:groups,
+      source:SOURCES[contract.dataset],sourceType:contract.dataset,
+      firstSeenVerified:false,orderFlowVerified:false,causalTradeAttribution:false,
+      tradingSignal:false};
+  }
+  function prepare(tff,disagg,now=Date.now()){
+    const reports={tff,disagg};
+    return CONTRACTS.map(c=>card(c,reports[c.dataset],now));
+  }
+  /* Watchlist stores only public CFTC contract codes on this iPhone. */
+  function parseFavorites(raw){
+    if(typeof raw!=="string"||raw.length>512)return [];
+    let arr;
+    try{arr=JSON.parse(raw);}catch{return [];}
+    if(!Array.isArray(arr)||arr.length>CONTRACTS.length)return [];
+    const valid=new Set(CONTRACTS.map(c=>c.code));
+    return [...new Set(arr.filter(v=>typeof v==="string"&&valid.has(v)))];
+  }
+  function toggleFavorite(values,code){
+    const allowed=new Set(CONTRACTS.map(c=>c.code));
+    if(typeof code!=="string"||!allowed.has(code))return [...parseFavorites(JSON.stringify(values))];
+    const clean=parseFavorites(JSON.stringify(values));
+    return clean.includes(code)?clean.filter(x=>x!==code):[...clean,code];
+  }
+  function historyFor(c,parsed){
+    const item=parsed&&parsed.byCode instanceof Map?parsed.byCode.get(c.code):null;
+    if(!item||!Array.isArray(item.rows)||!item.rows.length)
+      return {status:"UNKNOWN_NO_REPORT",rows:[],firstSeenVerified:false};
+    if(item.conflict)
+      return {status:"QUARANTINE_CONFLICT",rows:[],firstSeenVerified:false};
+    const ordered=item.rows.slice(0,12).reverse();
+    const rows=ordered.map((r,i)=>{
+      const prev=i>0?ordered[i-1]:null,consecutive=!!prev&&r.at-prev.at===WEEK;
+      return {date:r.date,first:round(r.first.net),second:round(r.second.net),
+        firstChange:consecutive?round(r.first.net-prev.first.net):null,
+        secondChange:consecutive?round(r.second.net-prev.second.net):null,
+        openInterest:r.oi,priorWeekMissing:!!prev&&!consecutive};
+    });
+    return {status:"UNATTESTED_PUBLIC_REPORT_HISTORY",rows,firstSeenVerified:false,
+      cftcTuesdayOnly:true,spotMappingVerified:false,tradingSignal:false};
+  }
+  function filterCards(cards,{family="Tutte",search="",mode="Movimento",favoritesOnly=false,favorites=[]}={}){
+    if(!Array.isArray(cards))return [];
+    const s=String(search).trim().toUpperCase();
+    const fav=new Set(parseFavorites(JSON.stringify(favorites)));
+    const out=cards.filter(x=>(family==="Tutte"||x.family===family)&&
+      (!favoritesOnly||fav.has(x.code))&&
+      (!s||(x.id+" "+x.name+" "+x.code).toUpperCase().includes(s)));
+    const ready=x=>x.status==="CURRENT_REPORT_DATE"&&x.deltas!==null;
+    const weight=x=>ready(x)?Math.max(Math.abs(x.deltas.first),Math.abs(x.deltas.second)):-1;
+    return out.sort((a,b)=>{
+      if(mode==="Divergenze"){
+        const pr=x=>x.comparison==="DIVERGENT"?0:x.comparison==="CO_MOVING"?1:2;
+        return pr(a)-pr(b)||weight(b)-weight(a)||a.id.localeCompare(b.id);
+      }
+      if(mode==="Data"){
+        return (b.reportDate||"").localeCompare(a.reportDate||"")||a.id.localeCompare(b.id);
+      }
+      return weight(b)-weight(a)||a.id.localeCompare(b.id);
+    });
+  }
+  function summarizeRetail(doc,now=Date.now()){
+    if(!doc||doc.status!=="ok"||doc.source!=="Myfxbook Community Outlook"||
+       !doc.symbols||typeof doc.symbols!=="object")return [];
+    return FX_RETAIL.map(pair=>{
+      const v=doc.symbols[pair],stamp=Date.parse(v?.t||""),
+            lots=amount(v?.lLots),shortLots=amount(v?.sLots),
+            positions=amount(v?.lPos),shortPos=amount(v?.sPos);
+      const age=Number.isFinite(stamp)?now-stamp:null;
+      const valid=age!==null&&age>=-5*60000&&lots!==null&&shortLots!==null&&
+        lots+shortLots>0&&positions!==null&&shortPos!==null&&positions+shortPos>=30;
+      const fresh=valid&&age<=3*3600000;
+      return {pair,status:!valid?"UNKNOWN":fresh?"RECENT_RETAIL":"ARCHIVED_RETAIL",
+        observedAt:valid?new Date(stamp).toISOString():null,
+        longLotsPct:valid?round(100*lots/(lots+shortLots)):null,
+        samplePositions:valid?positions+shortPos:null,
+        separatePopulation:"MYFXBOOK_RETAIL_LOTS",
+        cotComparableAsInstitutional:false};
+    });
+  }
+  return Object.freeze({CONTRACTS,FIELDS,DATASETS,SOURCES,FX_RETAIL,DAY,WEEK,
+                        parseRows,card,anatomyFor,prepare,filterCards,parseFavorites,toggleFavorite,historyFor,summarizeRetail,round});
+});
+</script>
+
+<script id="inline-shark-movers-core.js">
+/* REMURA Shark Movers v1.67 LAB — 22/11/2026 21:41 CET.
+ * Instant browser-only summary of existing CFTC report cards. No fetch.
+ * Readable grouped COT deltas are not order flow or trading signals.
+ */
+(function(root, factory) {
+  "use strict";
+  const api=factory();
+  if(typeof module==="object"&&module.exports)module.exports=api;
+  root.REMURA_SHARK_MOVERS=api;
+})(typeof window!=="undefined"?window:globalThis,function(){
+  "use strict";
+  const ALLOWED=new Set(["CURRENT_REPORT_DATE"]);
+  function validDate(s){
+    if(typeof s!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(s))return false;
+    const x=Date.parse(s+"T00:00:00Z");
+    return Number.isFinite(x)&&new Date(x).toISOString().slice(0,10)===s;
+  }
+  function scan(cards,{favoritesOnly=false,favorites=[],limit=6}={}){
+    if(!Array.isArray(cards)||!Number.isInteger(limit)||limit<1||limit>14||
+       !Array.isArray(favorites)||favorites.length>14)
+      return {status:"NO_VERIFIED_WEEKLY_INPUT",reportDate:null,items:[],alignedContracts:0,
+        excludedOtherWeeks:0,readyContracts:0,sourceTimeAttested:false,
+        institutionalOrderFlow:false,tradingSignal:false};
+    const fav=new Set(favorites.filter(x=>typeof x==="string"&&/^[A-Z0-9]{6}$/.test(x)));
+    const ready=cards.filter(x=>x&&ALLOWED.has(x.status)&&validDate(x.reportDate)&&
+      typeof x.code==="string"&&/^[A-Z0-9]{6}$/.test(x.code)&&
+      Array.isArray(x.labels)&&x.labels.length===2&&
+      x.deltas&&Number.isFinite(x.deltas.first)&&Number.isFinite(x.deltas.second)&&
+      (!favoritesOnly||fav.has(x.code)));
+    if(!ready.length)return {
+      status:favoritesOnly&&fav.size===0?"WATCHLIST_EMPTY":"NO_VERIFIED_WEEKLY_INPUT",
+      reportDate:null,items:[],alignedContracts:0,excludedOtherWeeks:0,readyContracts:0,
+      sourceTimeAttested:false,institutionalOrderFlow:false,tradingSignal:false
+    };
+    const reportDate=ready.map(x=>x.reportDate).sort().at(-1);
+    const sameWeek=ready.filter(x=>x.reportDate===reportDate);
+    const moves=sameWeek.map(x=>{
+      const primary=Math.abs(x.deltas.first)>=Math.abs(x.deltas.second)?"first":"second";
+      const value=x.deltas[primary];
+      return {code:x.code,id:x.id,name:x.name,dataset:x.dataset,
+        category:x.labels[primary==="first"?0:1],
+        netChangePp:value,absChangePp:Math.abs(value),
+        direction:value>0?"NET_INCREASE":value<0?"NET_DECREASE":"UNCHANGED",
+        reportDate,source:x.source,
+        claim:"AGGREGATE_FUTURES_NET_POSITION_CHANGE_ONLY",
+        firstSeenVerified:false,spotMappingVerified:false,tradingSignal:false};
+    }).filter(x=>x.absChangePp>0)
+      .sort((a,b)=>b.absChangePp-a.absChangePp||a.code.localeCompare(b.code));
+    return {status:moves.length?"PUBLIC_COT_MOVERS_DESCRIPTIVE":"NO_NET_CHANGES",
+      reportDate,items:moves.slice(0,limit),alignedContracts:sameWeek.length,
+      excludedOtherWeeks:ready.length-sameWeek.length,readyContracts:ready.length,
+      sourceTimeAttested:false,institutionalOrderFlow:false,tradingSignal:false};
+  }
+  return Object.freeze({scan});
+});
+</script>
+
+<script id="inline-shark-movers-ui.js">
+/* REMURA Shark Movers display v1.67 LAB — 22/11/2026 21:41 CET.
+ * Pure DOM presentation of current per-contract CFTC weekly changes.
+ * This file performs no API calls and creates no trading signals.
+ */
+(function(){
+  "use strict";
+  const core=window.REMURA_SHARK_MOVERS;
+  const el=(tag,cls,value)=>{
+    const node=document.createElement(tag);
+    if(cls)node.className=cls;
+    if(value!==undefined)node.textContent=value;
+    return node;
+  };
+  const pp=new Intl.NumberFormat("it-IT",{maximumFractionDigits:2,minimumFractionDigits:1});
+  const dateFmt=new Intl.DateTimeFormat("it-IT",{day:"2-digit",month:"short",year:"numeric",timeZone:"UTC"});
+  function render(cards,{favorites=[],favoritesOnly=false}={}){
+    const list=document.getElementById("movers-list");
+    const status=document.getElementById("movers-status");
+    if(!list||!status||!core)return;
+    const result=core.scan(cards,{favorites,favoritesOnly,limit:6});
+    list.replaceChildren();
+    if(!result.items.length){
+      const text=result.status==="WATCHLIST_EMPTY"?
+        "Nessun preferito: tocca ☆ su una scheda per iniziare.":
+        "Nessuna variazione COT confrontabile. Report mancanti, datati o discordanti restano N/D.";
+      list.append(el("p","movers-placeholder",text));
+      status.textContent="Movimenti non valutabili con i filtri attuali. Nessun dato ricostruito da prezzi o retail.";
+      return;
+    }
+    const t=new Date(result.reportDate+"T12:00:00Z");
+    status.textContent="Report CFTC del "+dateFmt.format(t)+" · "+result.alignedContracts+
+      " contratti confrontabili nello stesso martedì"+
+      (result.excludedOtherWeeks?" · "+result.excludedOtherWeeks+" esclusi (report di altri martedì)":"")+
+      ". Non è flusso ordini live; primo istante di pubblicazione non attestato.";
+    for(const item of result.items){
+      const button=el("button","mover-card");
+      button.type="button";
+      const display=(item.netChangePp>0?"+":"")+pp.format(item.netChangePp)+" pp";
+      button.setAttribute("aria-label","Apri "+item.name+": variazione "+display);
+      button.append(el("span","mover-heading",item.name),
+                    el("strong","mover-value "+(item.netChangePp>0?"mover-up":"mover-down"),display),
+                    el("span","mover-category",item.category),
+                    el("span","mover-sub",item.netChangePp>0?
+                      "Netto aumentato · non necessariamente nuovi acquisti":
+                      "Netto diminuito · non necessariamente nuove vendite"),
+                    el("span","mover-open","Apri il future ↘"));
+      button.addEventListener("click",()=>{
+        const target=document.getElementById("shark-contract-"+item.code);
+        if(!target)return;
+        target.scrollIntoView({behavior:"smooth",block:"center"});
+        target.focus({preventScroll:true});
+      });
+      list.append(button);
+    }
+  }
+  window.REMURA_SHARK_MOVERS_UI=Object.freeze({render});
+})();
+
+</script>
+
+<script id="inline-shark-evidence-core.js">
+/* REMURA Shark Evidence v1.69 LAB — 23/11/2026 13:30 CET (Europe/Rome).
+ * Pure presentation metadata from already loaded CFTC cards and public Myfxbook snapshot.
+ * NO network, trading, price validation, lookahead claims or CVD calculation.
+ */
+(function(root,factory){
+  const api=factory();
+  if(typeof module==="object"&&module.exports)module.exports=api;
+  if(root)root.REMURA_SHARK_EVIDENCE=api;
+})(typeof window!=="undefined"?window:null,function(){
+  "use strict";
+  const DEFINITIONS={
+    tff:{title:"CFTC · TFF",description:"Asset Manager e Leveraged Funds · futures finanziari"},
+    disagg:{title:"CFTC · Disaggregated",description:"Managed Money e Producer/Merchant · metalli ed energia"}
+  };
+  function latestDate(items){
+    const dates=items.map(x=>x.reportDate).filter(x=>typeof x==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(x));
+    return dates.length?dates.sort().at(-1):null;
+  }
+  function cftc(kind,cards,loaded){
+    const list=cards.filter(x=>x.dataset===kind);
+    const total=list.length,dated=list.filter(x=>!!x.reportDate).length;
+    const recent=list.filter(x=>x.status==="CURRENT_REPORT_DATE"||x.status==="UNKNOWN_WEEKLY_COMPARISON").length;
+    const comparable=list.filter(x=>x.status==="CURRENT_REPORT_DATE"&&x.deltas!==null).length;
+    const conflicts=list.filter(x=>x.status==="QUARANTINE_CONFLICT").length;
+    const stale=list.filter(x=>x.status==="STALE_REPORT").length;
+    let state="NON_DISPONIBILE",headline="Fonte non caricata";
+    if(loaded){
+      if(conflicts){state="DA_VERIFICARE";headline=conflicts+" contratti con righe discordanti";}
+      else if(recent===total&&total){state="RECENTE";headline=recent+" / "+total+" report recenti";}
+      else if(recent){state="PARZIALE";headline=recent+" / "+total+" report recenti";}
+      else if(stale){state="OBSOLETO";headline=stale+" / "+total+" report datati";}
+      else{state="NON_CONFRONTABILE";headline="Nessun report recente utilizzabile";}
+    }
+    return {id:kind,title:DEFINITIONS[kind].title,state,headline,
+      detail:loaded?(dated+" / "+total+" contratti con data · "+comparable+" variazioni WoW confrontabili"):
+        "Nessuna posizione mostrata senza risposta CFTC.",
+      reference:loaded?latestDate(list):null,
+      note:DEFINITIONS[kind].description+". Data martedì CFTC, non ora di pubblicazione o trade."};
+  }
+  function retail(rows){
+    const recent=rows.filter(x=>x.status==="RECENT_RETAIL").length;
+    const archived=rows.filter(x=>x.status==="ARCHIVED_RETAIL").length;
+    const total=rows.length;
+    const latest=rows.map(x=>x.observedAt).filter(x=>typeof x==="string").sort().at(-1)||null;
+    const state=!total?"NON_DISPONIBILE":recent===total?"RECENTE":recent?"PARZIALE":archived?"ARCHIVIO":"NON_CONFRONTABILE";
+    return {id:"retail",title:"Retail · Myfxbook",state,
+      headline:!total?"Snapshot pubblico non disponibile":recent+" / "+total+" campioni recenti",
+      detail:total?archived+" archiviati · recente solo entro 3 ore":"Nessun dato retail ricostruito.",
+      reference:latest,note:"Snapshot di lotti retail; non rappresenta posizioni istituzionali CFTC."};
+  }
+  function summarize({cards=[],loaded={},retail:rows=[],readAt=null}={}){
+    const safeCards=Array.isArray(cards)?cards:[];
+    const safeRetail=Array.isArray(rows)?rows:[];
+    const time=Number.isFinite(readAt)&&readAt>0?new Date(readAt).toISOString():null;
+    return {readAt:time,publicationTimeVerified:false,independentFirstSeen:false,
+      sources:[cftc("tff",safeCards,loaded.tff===true),
+        cftc("disagg",safeCards,loaded.disagg===true),
+        retail(safeRetail),
+        {id:"cvd",title:"CVD · Delta stimato",state:"NON_COLLEGATO",
+         headline:"N/D · non disponibile nel Cockpit",
+         detail:"Nessun dato CVD o flusso ordini collegato a questa vista.",
+         reference:null,
+         note:"Il CVD proxy cTrader è CLV × tick-volume M15, non aggressioni di ordini istituzionali. Ricerca Filone A separata."}]};
+  }
+  return Object.freeze({summarize});
+});
+</script>
+
+<script id="inline-shark-evidence-ui.js">
+/* REMURA Shark Evidence UI v1.69 LAB — 23/11/2026 13:30 CET.
+ * DOM-only view. No fetch, storage, credentials or new service.
+ */
+(function(){
+  "use strict";
+  const core=window.REMURA_SHARK_EVIDENCE;
+  const list=document.getElementById("evidence-list");
+  const note=document.getElementById("evidence-read-at");
+  if(!core||!list)return;
+  const dt=new Intl.DateTimeFormat("it-IT",{
+    day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",
+    timeZone:"Europe/Rome",timeZoneName:"short"
+  });
+  const day=new Intl.DateTimeFormat("it-IT",{
+    day:"2-digit",month:"2-digit",year:"numeric",timeZone:"UTC"
+  });
+  function element(tag,cls,value){
+    const node=document.createElement(tag);
+    if(cls)node.className=cls;
+    if(value!==undefined)node.textContent=value;
+    return node;
+  }
+  function prettyDate(value,id){
+    if(!value)return "Data fonte: N/D";
+    const date=new Date(id==="retail"?value:value+"T12:00:00Z");
+    if(!Number.isFinite(date.getTime()))return "Data fonte: N/D";
+    return id==="retail"?"Ultimo snapshot: "+dt.format(date):
+      "Ultimo martedì disponibile: "+day.format(date);
+  }
+  function render(input){
+    const evidence=core.summarize(input);
+    const fragment=document.createDocumentFragment();
+    for(const source of evidence.sources){
+      const card=element("article","evidence-card");
+      card.dataset.state=source.state;
+      card.setAttribute("aria-label",source.title+" · "+source.state.replaceAll("_"," "));
+      const head=element("div","evidence-head");
+      head.append(element("span","evidence-name",source.title),
+        element("span","evidence-grade",source.state.replaceAll("_"," ")));
+      card.append(head,element("strong","evidence-main",source.headline),
+        element("p","evidence-detail",source.detail),
+        element("p","evidence-date",prettyDate(source.reference,source.id)),
+        element("p","evidence-small",source.note));
+      fragment.append(card);
+    }
+    list.replaceChildren(fragment);
+    if(note){
+      note.textContent=evidence.readAt?
+        "Lettura del browser: "+dt.format(new Date(evidence.readAt))+
+        " · NON è l'ora di pubblicazione CFTC. Nessun primo avvistamento indipendente attestato.":
+        "Nessuna lettura ancora completata. I dati e i timestamp restano N/D.";
+    }
+  }
+  window.REMURA_SHARK_EVIDENCE_UI=Object.freeze({render});
+})();
+</script>
+
+<script id="inline-shark-cockpit.js">
+/* REMURA Shark Cockpit v1.69 LAB — 23/11/2026 13:30 CET.
+ * Browser-only CFTC direct reads and already published same-origin Myfxbook.
+ * No auto-polling, Cloudflare writes, authentication, trading or alerts.
+ */
+(() => {
+  "use strict";
+  const core=window.REMURA_SHARK_CORE;
+  const byId=id=>document.getElementById(id);
+  if(!core||!byId("cards"))return;
+  const nf=new Intl.NumberFormat("it-IT",{maximumFractionDigits:2,minimumFractionDigits:1});
+  const whole=new Intl.NumberFormat("it-IT",{maximumFractionDigits:0});
+  const stamp=new Intl.DateTimeFormat("it-IT",{day:"2-digit",month:"short",year:"numeric",timeZone:"UTC"});
+  const rome=new Intl.DateTimeFormat("it-IT",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",timeZone:"Europe/Rome"});
+  const els={cards:byId("cards"),message:byId("message"),refresh:byId("refresh"),
+    family:byId("family"),sort:byId("sort"),search:byId("search"),
+    retailList:byId("retail-list"),retailStatus:byId("retail-status"),
+    favoritesOnly:byId("only-favorites"),watchlistNote:byId("watchlist-note")};
+  const create=(tag,cls,text)=>{
+    const e=document.createElement(tag);
+    if(cls)e.className=cls;
+    if(text!==undefined)e.textContent=text;
+    return e;
+  };
+  const fmt=(v,kind="pct")=>Number.isFinite(v)?(v>0?"+":"")+nf.format(v)+(kind==="pp"?" pp":"%"):"N/D";
+  const date=v=>v?stamp.format(new Date(v+"T12:00:00Z")):"N/D";
+  const signedContracts=n=>Number.isFinite(n)?(n>0?"+":"")+whole.format(n):"N/D";
+  const sortStatus=s=>s==="CURRENT_REPORT_DATE"?"Report recente":
+    s==="STALE_REPORT"?"COT datato":
+    s==="QUARANTINE_CONFLICT"?"Date in conflitto":
+    s==="UNKNOWN_WEEKLY_COMPARISON"?"Settimane non consecutive":"Report non disponibile";
+  const comparisonLabel=c=>c==="DIVERGENT"?"↗ Divergenza tra gruppi":
+    c==="CO_MOVING"?"↔ Variazioni concordi":
+    c==="FLAT_OR_MIXED"?"· Misto / senza variazione":
+    "Divergenza non valutabile";
+  let busy=false,cards=core.CONTRACTS.map(c=>core.card(c,null)),loaded={tff:false,disagg:false},
+      errors={tff:"",disagg:""},retrievedAt=null;
+
+  const WATCH_KEY="remura:shark:favorite-cftc:v166";
+  let favorites=[],storageAvailable=true,expandedCodes=new Set(),expandedAnatomyCodes=new Set(),
+      snapshots={tff:null,disagg:null};
+  try{favorites=core.parseFavorites(localStorage.getItem(WATCH_KEY)||"[]");}
+  catch{storageAvailable=false;}
+  function keepFavorites(){
+    if(!storageAvailable)return;
+    try{localStorage.setItem(WATCH_KEY,JSON.stringify(favorites));}
+    catch{storageAvailable=false;}
+  }
+  function updateWatchNote(){
+    if(!els.watchlistNote)return;
+    const count=favorites.length;
+    els.watchlistNote.textContent=count+" contratti seguiti · "+
+      (storageAvailable?"Preferiti salvati solo su questo iPhone.":"Salvataggio Safari non disponibile: preferiti validi solo finché la pagina resta aperta.")+
+      " Nessuna notifica o monitoraggio in background.";
+  }
+  function historyPanel(item){
+    const details=create("details","history-details");
+    details.open=expandedCodes.has(item.code);
+    details.addEventListener("toggle",()=>{
+      if(details.open)expandedCodes.add(item.code);
+      else expandedCodes.delete(item.code);
+    });
+    const title=create("summary","","Storico per categorie · fino a 12 report CFTC");
+    details.append(title);
+    const h=core.historyFor(core.CONTRACTS.find(c=>c.code===item.code),snapshots[item.dataset]);
+    if(h.status==="QUARANTINE_CONFLICT"){
+      details.append(create("p","history-warning","Revisione discordante: storico sospeso. Non scegliere arbitrariamente una delle righe."));
+      return details;
+    }
+    if(!h.rows.length){
+      details.append(create("p","history-warning","Nessun report disponibile per questo contratto. Non sono stati costruiti esempi."));
+      return details;
+    }
+    const scroll=create("div","history-scroll");
+    const table=create("table","history-table"),header=create("thead",""),tr=create("tr","");
+    for(const h of ["Martedì CFTC",item.labels[0]+" · netto %OI",item.labels[1]+" · netto %OI","Δ da settimana precedente"]){
+      tr.append(create("th","",h));
+    }
+    header.append(tr);table.append(header);
+    const tb=create("tbody","");
+    for(const x of h.rows.slice().reverse()){
+      const row=create("tr","");
+      row.append(create("td","",date(x.date)));
+      row.append(create("td","",fmt(x.first)));
+      row.append(create("td","",fmt(x.second)));
+      row.append(create("td","",x.priorWeekMissing?"Settimana non consecutiva · N/D":
+        "A "+fmt(x.firstChange,"pp")+" · L "+fmt(x.secondChange,"pp")));
+      tb.append(row);
+    }
+    table.append(tb);scroll.append(table);details.append(scroll);
+    details.append(create("p","history-caption","Fonte CFTC pubblica · posizioni settimanali aggregate · nessun timestamp originario verificato. I vuoti non vengono riempiti."));
+    return details;
+  }
+
+  function cohort(item,index){
+    const key=index===0?"first":"second",v=item[key],delta=item.deltas?.[key]??null;
+    const root=create("div","cohort");
+    const top=create("div","cohort-top");
+    top.append(create("span","cohort-label",item.labels[index]));
+    top.append(create("strong","cohort-value "+(v>0?"pos":v<0?"neg":""),fmt(v)));
+    root.append(top);
+    const strip=create("div","cohort-strip");
+    strip.setAttribute("aria-label",item.labels[index]+": netto "+fmt(v));
+    if(Number.isFinite(v)){
+      const fill=create("span","cohort-fill"+(index===1?" second":""));
+      const width=Math.min(50,Math.abs(v)/2);
+      fill.style.width=width+"%";
+      fill.style.left=v<0?"calc(50% - "+width+"%)":"50%";
+      strip.append(fill);
+    }
+    root.append(strip);
+    const bottom=create("div","cohort-bottom");
+    bottom.append(create("span","",item.deltas?"Variazione sul report precedente":"Δ settimanale: non verificabile"));
+    bottom.append(create("span","cohort-change",fmt(delta,"pp")));
+    root.append(bottom);
+    return root;
+  }
+  function anatomyPanel(item){
+    const details=create("details","anatomy-details");
+    details.open=expandedAnatomyCodes.has(item.code);
+    details.addEventListener("toggle",()=>{
+      if(details.open)expandedAnatomyCodes.add(item.code);
+      else expandedAnatomyCodes.delete(item.code);
+    });
+    details.append(create("summary","","Radiografia del movimento · long e short reali"));
+    const contract=core.CONTRACTS.find(c=>c.code===item.code);
+    const raw=core.anatomyFor(contract,snapshots[item.dataset],Date.now());
+    if(raw.status!=="WEEKLY_GROSS_POSITIONS_COMPARABLE"){
+      details.append(create("p","anatomy-warning",
+        "Radiografia N/D: servono due report CFTC recenti, validi e di martedì consecutivi. Nessun movimento ricostruito."));
+      return details;
+    }
+    const intro=create("div","anatomy-date",
+      "Confronto CFTC "+date(raw.previousDate)+" → "+date(raw.reportDate)+
+      " · OI "+whole.format(raw.currentOpenInterest)+" ("+signedContracts(raw.openInterestDelta)+" vs settimana prima)");
+    details.append(intro);
+    const sections=create("div","anatomy-groups");
+    for(const grp of raw.categories){
+      const group=create("section","anatomy-group");
+      group.append(create("h4","",grp.label));
+      const positions=create("div","anatomy-positions");
+      const items=[
+        ["Contratti LONG",grp.currentLong,grp.longDelta],
+        ["Contratti SHORT",grp.currentShort,grp.shortDelta],
+        ["Netto (long − short)",grp.netContracts,grp.netDeltaContracts]
+      ];
+      for(const [label,value,delta] of items){
+        const cell=create("div","anatomy-stat");
+        cell.append(create("span","anatomy-stat-label",label));
+        cell.append(create("strong","",whole.format(value)));
+        cell.append(create("span","anatomy-stat-delta "+(delta>0?"plus":delta<0?"minus":"neutral"),
+          signedContracts(delta)+" contratti WoW"));
+        positions.append(cell);
+      }
+      group.append(positions);
+      group.append(create("p","anatomy-net","Variazione netto normalizzata: "+fmt(grp.netPpChange,"pp")));
+      sections.append(group);
+    }
+    details.append(sections);
+    details.append(create("p","anatomy-caveat",
+      "Sono posizioni aggregate nei due report settimanali. LONG in crescita non prova nuovi acquisti; SHORT in calo non prova singole chiusure. Open interest e categorie non identificano i singoli operatori né l'ora delle operazioni. Nessun segnale di trading."));
+    return details;
+  }
+
+  function contractCard(item){
+    const r=create("article","contract-card");
+    r.id="shark-contract-"+item.code;
+    r.tabIndex=-1;
+    r.dataset.grade=item.status==="CURRENT_REPORT_DATE"?"ready":
+      item.status==="STALE_REPORT"?"stale":"unknown";
+    const head=create("div","card-head"),title=create("div","");
+    title.append(create("div","card-kicker",item.family+" · "+(item.dataset==="tff"?"TFF":"Disaggregated")));
+    title.append(create("h3","",item.name));
+    title.append(create("div","card-code","Contratto CFTC "+item.code));
+    const grade=create("span","grade "+(item.status==="CURRENT_REPORT_DATE"?"":item.status==="STALE_REPORT"?"warn":"unknown"),sortStatus(item.status));
+    const favButton=create("button","favorite-toggle",favorites.includes(item.code)?"★":"☆");
+    favButton.type="button";
+    favButton.setAttribute("aria-label",favorites.includes(item.code)?
+      "Rimuovi "+item.name+" dai preferiti":"Segui "+item.name+" nei preferiti");
+    favButton.setAttribute("aria-pressed",String(favorites.includes(item.code)));
+    favButton.addEventListener("click",()=>{
+      favorites=core.toggleFavorite(favorites,item.code);
+      keepFavorites();draw();
+    });
+    head.append(title,favButton,grade);r.append(head);
+
+    const body=create("div","cohorts");
+    body.append(cohort(item,0),cohort(item,1));r.append(body);
+    const foot=create("div","card-foot"),top=create("div","foot-top");
+    top.append(create("span","","Riferimento: "+date(item.reportDate)+(item.ageDays!==null?" · "+item.ageDays+" giorni":"")));
+    top.append(create("strong","foot-status"+(item.comparison==="DIVERGENT"?" divergent":""),comparisonLabel(item.comparison)));
+    foot.append(top);
+    const end=create("div","card-bottom");
+    const link=create("a","","Fonte ufficiale CFTC ↗");
+    link.href=item.source;link.target="_blank";link.rel="noopener noreferrer";
+    end.append(link,create("small","","OI: "+(Number.isFinite(item.openInterest)?whole.format(item.openInterest):"N/D")+" · "+item.availableWeeks+" settimane in risposta"));
+    foot.append(end);
+    if(item.fourWeek){
+      foot.append(create("div","card-code","Variazione su 4 settimane: "+item.labels[0]+" "+fmt(item.fourWeek.first,"pp")+" · "+item.labels[1]+" "+fmt(item.fourWeek.second,"pp")));
+    }
+    if(item.status==="UNKNOWN_WEEKLY_COMPARISON"){
+      foot.append(create("div","card-code","Settimana precedente mancante o non consecutiva: nessun delta ricostruito."));
+    }
+    if(item.status==="QUARANTINE_CONFLICT"){
+      foot.append(create("div","card-code","Righe CFTC discordanti per la stessa data: confronto sospeso."));
+    }
+    if(item.family==="Valute")foot.append(create("div","card-code","Future sulla valuta: non indica da solo il verso di una coppia spot USD."));
+    r.append(foot);
+    r.append(anatomyPanel(item));
+    r.append(historyPanel(item));
+    return r;
+  }
+  function draw(){
+    const sorted=core.filterCards(cards,{family:els.family.value,
+      search:els.search.value,mode:els.sort.value,
+      favoritesOnly:els.favoritesOnly?.checked===true,favorites});
+    els.cards.replaceChildren();
+    if(!sorted.length)els.cards.append(create("div","metric","Nessun contratto corrisponde ai filtri."));
+    else for(const item of sorted)els.cards.append(contractCard(item));
+    byId("total-contracts").textContent=String(core.CONTRACTS.length);
+    byId("available-contracts").textContent=String(cards.filter(c=>c.reportDate).length);
+    byId("valid-moves").textContent=String(cards.filter(c=>c.status==="CURRENT_REPORT_DATE"&&c.deltas).length);
+    byId("divergent-count").textContent=String(cards.filter(c=>c.status==="CURRENT_REPORT_DATE"&&c.comparison==="DIVERGENT").length);
+    updateWatchNote();
+    window.REMURA_SHARK_MOVERS_UI?.render(sorted,{favorites,favoritesOnly:els.favoritesOnly?.checked===true});
+  }
+  async function fetchCftc(dataset){
+    const codes=core.CONTRACTS.filter(c=>c.dataset===dataset).map(c=>c.code);
+    const start=new Date(Date.now()-120*core.DAY).toISOString().slice(0,10);
+    const where="report_date_as_yyyy_mm_dd >= '"+start+"T00:00:00' AND cftc_contract_market_code IN ("+
+      codes.map(c=>"'"+c+"'").join(",")+")";
+    const hosts=["https://publicreporting.cftc.gov","https://publicreportinghub.cftc.gov"];
+    let reason="Fonte CFTC non raggiungibile";
+    for(const host of hosts){
+      const url=new URL("/resource/"+core.DATASETS[dataset]+".json",host);
+      url.searchParams.set("$select",core.FIELDS[dataset].join(","));
+      url.searchParams.set("$where",where);
+      url.searchParams.set("$order","report_date_as_yyyy_mm_dd DESC");
+      url.searchParams.set("$limit","1800");
+      const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),16000);
+      try{
+        const res=await fetch(url.toString(),{mode:"cors",cache:"no-store",
+          headers:{Accept:"application/json"},signal:ctrl.signal,credentials:"omit"});
+        if(!res.ok)throw Error("HTTP "+res.status);
+        const records=await res.json(),parsed=core.parseRows(records,dataset,Date.now());
+        if(parsed.valid===0)throw Error("Nessun report compatibile");
+        return parsed;
+      }catch(err){
+        reason=err?.name==="AbortError"?"Timeout CFTC":String(err?.message||err);
+      }finally{clearTimeout(timer);}
+    }
+    throw Error(reason);
+  }
+  async function readRetail(){
+    try{
+      const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),6500);
+      let response;
+      try{response=await fetch("https://raw.githubusercontent.com/mirkoworz/remura/main/data/myfxbook/latest.json",{cache:"no-store",
+        credentials:"omit",signal:ctrl.signal,headers:{Accept:"application/json"}});}
+      finally{clearTimeout(timer);}
+      if(!response.ok)throw Error("MYFXBOOK_HTTP");
+      const data=await response.json();
+      return core.summarizeRetail(data,Date.now());
+    }catch{return [];}
+  }
+  function drawRetail(rows){
+    els.retailList.replaceChildren();
+    if(!rows.length){
+      els.retailStatus.textContent="Snapshot Myfxbook non disponibile: nessun valore retail inventato.";
+      return;
+    }
+    const recent=rows.filter(r=>r.status==="RECENT_RETAIL").length;
+    els.retailStatus.textContent=recent+" / "+rows.length+
+      " campioni recenti (entro 3 ore). Gli altri sono archiviati o sconosciuti; non sono segnali.";
+    for(const row of rows){
+      const box=create("div","retail-item");
+      const link=create("a","",row.pair);link.href="./asset.html?symbol="+encodeURIComponent(row.pair)+"&v=8";
+      const label=row.status==="RECENT_RETAIL"?"Recente · retail":
+        row.status==="ARCHIVED_RETAIL"?"Archivio · retail":"N/D · retail";
+      box.append(link);
+      box.append(create("span","lot-pct",Number.isFinite(row.longLotsPct)?nf.format(row.longLotsPct)+"% long":"N/D"));
+      box.append(create("small","",label));
+      box.append(create("small","",row.observedAt?rome.format(new Date(row.observedAt))+" (Italia)":"Data sconosciuta"));
+      box.append(create("small","",Number.isFinite(row.samplePositions)?
+        whole.format(row.samplePositions)+" posizioni del campione":"Campione insufficiente"));
+      els.retailList.append(box);
+    }
+  }
+  async function reload(){
+    if(busy)return;
+    busy=true;els.refresh.disabled=true;els.message.dataset.status="waiting";
+    els.message.textContent="Consulto la fonte CFTC: TFF e Disaggregated. I numeri restano N/D se la fonte non risponde…";
+    try{
+      const requests=["tff","disagg"].map(async kind=>{
+        try{return {kind,data:await fetchCftc(kind)};}
+        catch(e){return {kind,error:String(e?.message||e)};}
+      });
+      const [all,retail]=await Promise.all([Promise.all(requests),readRetail()]);
+      const parsed={};
+      for(const x of all){
+        parsed[x.kind]=x.data||null;
+        loaded[x.kind]=!!x.data;
+        errors[x.kind]=x.error||"";
+      }
+      snapshots=parsed;
+      cards=core.prepare(parsed.tff,parsed.disagg,Date.now());
+      retrievedAt=Date.now();
+      draw();drawRetail(retail);
+      // Same already-fetched data: no new requests or scientific interpretations.
+      window.REMURA_SHARK_EVIDENCE_UI?.render({cards,loaded,retail,readAt:retrievedAt});
+      const success=Object.values(loaded).filter(Boolean).length;
+      els.message.dataset.status=success===0?"error":"ready";
+      els.message.textContent=success===2?
+        "Entrambi i dataset CFTC caricati. Report settimanali · orario della pubblicazione originaria NON attestato. Lettura browser: "+rome.format(new Date(retrievedAt))+".":
+        success===1?"CFTC parziale: "+(loaded.tff?"Disaggregated":"TFF")+" indisponibile. Dati mancanti segnalati come N/D. "+Object.values(errors).filter(Boolean).join(" · "):
+        "CFTC non raggiungibile: nessuna esposizione stimata o inventata. "+Object.values(errors).filter(Boolean).join(" · ");
+    }finally{busy=false;els.refresh.disabled=false;}
+  }
+  for(const node of [els.family,els.sort,els.search]){
+    node.addEventListener(node===els.search?"input":"change",draw);
+  }
+  els.favoritesOnly?.addEventListener("change",draw);
+  els.refresh.addEventListener("click",reload);
+  draw();reload();
+})();
+
+</script>
+</body>
+</html>
