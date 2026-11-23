@@ -1,0 +1,52 @@
+{
+  "schema": "remura.v206.aggregate.retail.two_source_snapshot.v1",
+  "status": "REAL_PINNED_AGGREGATE_FROM_GITHUB_CONNECTOR_READ",
+  "observed_from": {
+    "public_source": "mirkoworz/remura data/myfxbook/latest.json",
+    "public_head_sha": "a1188f8af77951b9c59b7bb1facbfa6fe2f820e7",
+    "private_source": "mirkoworz/remura-collector private/capital/latest.json",
+    "private_head_sha": "a4fd286439007fc9620904f7f20c3c018425f29c",
+    "analysis_method": "two read-only authenticated GitHub connector fetch_file calls, in-memory aggregation only",
+    "private_raw_bytes_committed": false,
+    "github_ci_only_verified_synthetic_fixtures": true,
+    "test_run": "https://github.com/mirkoworz/remura/actions/runs/45131720078"
+  },
+  "myfxbook_observed_at_utc": "2026-11-23T02:55:17Z",
+  "capital_observed_at_utc": "2026-11-23T02:53:02Z",
+  "snapshot_gap_seconds": 135,
+  "source_market_counts": {
+    "myfxbook": 89,
+    "capital_demo": 31
+  },
+  "overlap_market_count": 29,
+  "capital_markets_not_in_public_myfxbook": 2,
+  "majority_orientation": {
+    "agree": 24,
+    "opposite": 5,
+    "neutral": 0
+  },
+  "bucket_counts": {
+    "both_majority_long": 20,
+    "both_majority_short": 4,
+    "myfx_long_capital_short": 2,
+    "myfx_short_capital_long": 3,
+    "neutral_ties": 0,
+    "abs_diff_ge_10pp": 18,
+    "abs_diff_ge_20pp": 10,
+    "abs_diff_ge_30pp": 4,
+    "abs_diff_ge_40pp": 1,
+    "same_extreme_ge_70_or_le_30": 7,
+    "opposite_extreme_ge_70_le_30": 0
+  },
+  "mean_absolute_long_percentage_point_difference": 16.2,
+  "median_absolute_long_percentage_point_difference": 19.2,
+  "source_populations_equivalent": false,
+  "institutional_positioning_attested": false,
+  "historical_first_seen_proven": false,
+  "future_price_outcomes_calculated": false,
+  "predictive_alpha_proven": false,
+  "per_symbol_private_values_or_names_exposed": false,
+  "cloudflare_calls": 0,
+  "provider_calls": 0,
+  "trades_or_deploys": 0
+}
