@@ -59,7 +59,16 @@ class IsolatedPreviewTest(unittest.TestCase):
         self.assertFalse(self.manifest["offline_cockpit_supported"])
         self.assertFalse(self.manifest["deployed"])
 
-    def test_05_immutable_contents_and_deterministic_rebuild(self):
+    def test_05_preview_visibility_hints_are_not_access_control(self):
+        headers = self.data["_headers"].decode("utf-8")
+        robots = self.data["robots.txt"].decode("utf-8")
+        self.assertIn("X-Robots-Tag: noindex, nofollow, noarchive", headers)
+        self.assertIn("Referrer-Policy: no-referrer", headers)
+        self.assertIn("Disallow: /", robots)
+        self.assertNotIn("Authorization:", headers)
+        self.assertTrue(self.manifest["mode"].endswith("PREVIEW_ONLY"))
+
+    def test_06_immutable_contents_and_deterministic_rebuild(self):
         for path, sha in self.manifest["files_sha256"].items():
             self.assertEqual(hashlib.sha256(self.data[path]).hexdigest(), sha, path)
         builder.build()
