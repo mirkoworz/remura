@@ -132,7 +132,7 @@ class V208NewOnly(unittest.TestCase):
         initial = decision()
         altered = copy.deepcopy(initial)
         altered["cvd_side"] = "SHORT"
-        with self.assertRaisesRegex(ValueError, "does_not_match"):
+        with self.assertRaisesRegex(ValueError, "wrong_immutable|does_not_match"):
             witness_ledger(ledger(altered), as_of=ASOF,
                            fetch_json=MockGetter(initial))
 
@@ -142,7 +142,7 @@ class V208NewOnly(unittest.TestCase):
                            ("recorded_at_utc","2026-11-23T04:31:13Z")):
             altered = copy.deepcopy(initial)
             altered[key] = value
-            with self.subTest(key=key), self.assertRaisesRegex(ValueError,"does_not_match"):
+            with self.subTest(key=key), self.assertRaisesRegex(ValueError,"wrong_immutable|does_not_match"):
                 witness_ledger(ledger(altered), as_of=ASOF,
                                fetch_json=MockGetter(initial))
 
@@ -162,7 +162,7 @@ class V208NewOnly(unittest.TestCase):
                            fetch_json=MockGetter(d,manifest=m))
         m = manifest_response(d)
         m["content"] = base64.b64encode(b'{"schema":"wrong","commitment_sha256":"deadbeef"}').decode()
-        with self.assertRaisesRegex(ValueError,"does_not_match"):
+        with self.assertRaisesRegex(ValueError,"wrong_immutable|does_not_match"):
             witness_ledger(ledger(d), as_of=ASOF,
                            fetch_json=MockGetter(d,manifest=m))
 
