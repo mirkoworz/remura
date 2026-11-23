@@ -1,0 +1,33 @@
+# REMURA Contributors v1.04 — solely authenticated GET-only CSP hardening.
+# No secrets, production Cloudflare, D1 usage, Worker deploy, or external calls.
+name: REMURA Contributors v104 hardened CSP
+on:
+  push:
+    branches: [research/contributors-safari-readonly-pilot-v099-20261123]
+    paths:
+      - research/contributors/private_worker_staging_csp_v104_lab.mjs
+      - research/contributors/test_staging_csp_v104_lab.mjs
+      - .github/workflows/remura-contributors-v104-csp.yml
+permissions:
+  contents: read
+jobs:
+  isolated-csp:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check five new CSP guards only
+        run: |
+          set -euo pipefail
+          node --check research/contributors/private_worker_staging_csp_v104_lab.mjs
+          node --test research/contributors/test_staging_csp_v104_lab.mjs 2>&1 | tee /tmp/remura-v104.log
+          grep -q '# tests 5' /tmp/remura-v104.log
+          grep -q '# pass 5' /tmp/remura-v104.log
+          grep -q '# fail 0' /tmp/remura-v104.log
+          echo REMURA_C_V104_CSP=PASS
