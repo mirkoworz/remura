@@ -1,0 +1,33 @@
+name: REMURA V20.9 private decision freezer - new-only offline tests
+on:
+  push:
+    branches:
+      - research/remura-v209-private-decision-freezer-20261123
+    paths:
+      - 'research/v209_private_decision_freezer.py'
+      - 'research/test_v209_private_decision_freezer.py'
+      - '.github/workflows/remura-v209-private-decision-tests.yml'
+permissions:
+  contents: read
+jobs:
+  prospective-freeze-offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout branch, no credentials or private datasets
+        uses: actions/checkout@v4
+      - name: Run only NEW V20.9 synthetic tests (no old suites)
+        run: python3 -m unittest discover -s research -p 'test_v209_private_decision_freezer.py' -v
+      - name: Empty invocation never writes private files or uses cloud APIs
+        run: |
+          python3 research/v209_private_decision_freezer.py > /tmp/remura-v209-no-input.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("/tmp/remura-v209-no-input.json")
+          d=json.loads(p.read_text())
+          assert d["status"]=="NO_INPUT_NO_OUTPUT"
+          assert d["future_decisions_frozen"]==0
+          assert d["public_push_or_provider_calls"]==0
+          print("REMURA_V209_NO_INPUT_NO_PUBLIC_OR_PRIVATE_WRITES=PASS")
+          PY
