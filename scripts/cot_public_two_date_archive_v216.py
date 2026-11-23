@@ -47,13 +47,30 @@ def official_query(dataset: str) -> str:
     return HOST + "/resource/" + source["id"] + ".json?" + urllib.parse.urlencode(params)
 
 
-def read_once(dataset: str, *, opener=urllib.request.urlopen) -> list[dict]:
-    req = urllib.request.Request(official_query(dataset), headers={
+class _DenyRedirects(urllib.request.HTTPRedirectHandler):
+    """3xx must not trigger a hidden extra GET beyond the authorized budget."""
+
+    def redirect_request(self, request, fp, code, msg, headers, newurl):
+        raise ValueError("OFFICIAL_CFTC_REDIRECT_REJECTED_NO_EXTRA_GET")
+
+
+def read_once(dataset: str, *, opener=None) -> list[dict]:
+    url = official_query(dataset)
+    req = urllib.request.Request(url, headers={
         "Accept": "application/json",
         "User-Agent": "REMURA-2-date-CFTC-public-only-lab-v21.6/1.0",
     })
-    # No retries or fallback. Read bounded bytes only.
+    # This request is counted once. Disable HTTP redirects and environment
+    # proxy configuration; a 3xx never permits another GET or another host.
+    if opener is None:
+        opener = urllib.request.build_opener(
+            _DenyRedirects, urllib.request.ProxyHandler({})
+        ).open
     with opener(req, timeout=20) as response:
+        if getattr(response, "status", 200) != 200:
+            raise ValueError("OFFICIAL_CFTC_NOT_HTTP_200")
+        if hasattr(response, "geturl") and response.geturl() != url:
+            raise ValueError("OFFICIAL_CFTC_RESPONSE_URL_CHANGED")
         raw = response.read(MAX_BYTES + 1)
     if not 1 <= len(raw) <= MAX_BYTES:
         raise ValueError("OFFICIAL_CFTC_RESPONSE_EMPTY_OR_TOO_LARGE")
