@@ -19,7 +19,7 @@ test('v1.68 shared nav remains stamped and v1.69 UI PWA cache is versioned',()=>
  const nav=fs.readFileSync('nav.js','utf8');
  assert.ok(nav.includes('Aggiornamento v1.68 LAB · 22/11/2026 22:10 CET (anteprima, non pubblicata)'));
  const sw=fs.readFileSync('sw.js','utf8');
- assert.ok(sw.includes('remura-shell-v85-v1.71-my-sharks-preview'));
+ assert.ok(sw.includes('remura-shell-v86-v1.71-safe-offline-lab'));
  for(const p of pages){const html=fs.readFileSync(p,'utf8');assert.ok(!html.includes('REMURA v1.51'),p);}
 });
 
