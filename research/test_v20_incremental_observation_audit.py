@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from v20_incremental_observation_audit import build_report, utc
 
-S='2026-11-22T23:25:00Z'
+S='2026-11-22T22:25:00Z'
 T='2026-11-23T05:35:00Z'
 
 
@@ -67,7 +67,7 @@ class IncrementalAudit(unittest.TestCase):
     def test_percentages_and_utc_cutoffs_validated(self):
         self.file(self.pub,'EURUSD',[sample('2026-11-22T22:23:40Z',-1)])
         with self.assertRaisesRegex(ValueError,'Invalid sentiment'): build_report(self.pub,S,T)
-        with self.assertRaisesRegex(ValueError,'UTC'): utc('2026-11-22T23:25:00')
+        with self.assertRaisesRegex(ValueError,'UTC'): utc('2026-11-22T22:25:00')
         with self.assertRaisesRegex(ValueError,'follow'): build_report(self.pub,T,S)
 
     def test_forward_only_multiple_records_since_checkpoint(self):
