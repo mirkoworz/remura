@@ -101,3 +101,17 @@ Le richieste non hanno utilizzato credenziali né controllato il pannello Cloudf
 **Gate rimasti aperti**: funzionalità JavaScript/UI e fetch CFTC reali in Safari sul dominio (l'OWNER ha riferito che l'interfaccia funziona, ma non ci sono test browser automatizzati autenticati); no misure COT sul comportamento dei prezzi, nessun attestato di profitto; budget/quota Free Cloudflare account non letto dal connettore; deploy release ufficiale/merge resta NON autorizzato; Contributors reali ancora isolati e disattivati. `main` non è stato modificato dall'attività di smoke.
 
 **Sicurezza**: nessuna chiamata alle API Cloudflare, nessuna credenziale, sessione, D1 o Secret, nessuna acquisizione CFTC realizzata da queste prove. Le intestazioni antiindicizzazione non rendono il sito privato: URL pubblico per scelta dell'OWNER.
+
+## 24 novembre 2026 — v1.74 attestazione byte per byte della preview pubblicata
+
+**GitHub Actions 45286745770 SUCCESS: sei GET HTTPS pubbliche, senza retry/credenziali/Cloudflare API/CFTC GET, tutte con SHA-256 esattamente uguale al sorgente verificato**. Sito `https://remura-lab-v1731-iphone.pages.dev`.
+1. `/` → `index.html`: **EXACT_MATCH HTTP 200**.
+2. `/shark-cockpit` (Cloudflare canonical) → `shark-cockpit.html`: **EXACT_MATCH HTTP 200**.
+3. `/shark-cockpit.js`: **EXACT_MATCH HTTP 200**.
+4. `/shark-cockpit-core.js`: **EXACT_MATCH HTTP 200**.
+5. `/data/myfxbook/latest.json`: **EXACT_MATCH HTTP 200**.
+6. `/capital-cloud-config.js`: **EXACT_MATCH HTTP 200**, con il contenuto deliberatamente sostituito `window.REMURA_FIREBASE_CONFIG = null;`, senza chiave/progetto Firebase live.
+
+Codice attestazione `preview/attest_deployed_assets_v174.mjs` e workflow `.github/workflows/remura-v174-public-asset-attestation.yml`; esecuzione associata al commit **561105de27da1b0015b83d11e3322e2538a87dc1**. Le CI Splash e Insights legacy su quel commit sono anch'esse **SUCCESS** (45286754696 e 45286754709). Questo passaggio **non richiede di caricare di nuovo ZIP**: sono prove su ciò che è già online.
+
+Limiti della prova: dimostra la **corrispondenza byte per byte di sei asset pubblicati**, non di tutti i 104 file del pacchetto; non certifica la corretta esecuzione JavaScript, la consultazione live dei dataset CFTC in Safari né un vantaggio predittivo. Tutte le POST, Access/D1 Contributors, Oracle, collector, backend e merge/deploy live sono rimaste intatte. La PR #114 resta Draft; `main` non modificato.
