@@ -26,17 +26,25 @@ const api=(function watchFactory(core){
   if(asOf!==null&&asOf>now)throw RangeError("FUTURE_OBSERVATION");
   const window=options.window??52;
   if(![26,52,156,260].includes(window))throw RangeError("INVALID_COT_WINDOW");
+  const local=snapshot&&snapshot.source==="existing_private_cftc_cache"&&
+    snapshot.captureClock==="first_local_capture_not_official_publication";
+  const publicSnapshot=snapshot&&snapshot.source==="official_public_cftc_socrata"&&
+    snapshot.captureClock==="public_api_read_at_not_official_publication"&&
+    stamp(snapshot.readAtUtc)!==null&&stamp(snapshot.readAtUtc)<=now+5*60000;
   if(!snapshot||snapshot.schema!=="remura-cot-intelligence-snapshot-v1"||
-     snapshot.source!=="existing_private_cftc_cache"||
-     snapshot.captureClock!=="first_local_capture_not_official_publication"||
+     !(local||publicSnapshot)||
      !Array.isArray(snapshot.rows)||snapshot.rowCount!==snapshot.rows.length||
      snapshot.truncated!==false)throw TypeError("INVALID_OR_TRUNCATED_SNAPSHOT");
+  // Public API read today cannot certify availability before this request.
+  if(publicSnapshot&&asOf!==null)throw TypeError("PUBLIC_SNAPSHOT_CANNOT_PROVE_HISTORICAL_ASOF");
+  if(publicSnapshot&&snapshot.rows.some(r=>r.firstSeenAt!=null||r.first_seen_at!=null))
+    throw TypeError("PUBLIC_SNAPSHOT_MUST_NOT_INVENT_LOCAL_CAPTURE");
   const checked=core.parseRows(snapshot.rows,asOf);
   if(checked.rejected>0)throw Error("INVALID_CFTC_ROWS:"+checked.rejected);
   if(checked.valid===0) return {
    schema:"remura-cot-watchlist-v1",state:"no_data",mode:asOf===null?"descriptive_only":"capture_asof",
    nowUtc:new Date(now).toISOString(),observedAt:asOf===null?null:new Date(asOf).toISOString(),
-   source:"CFTC Futures Only (existing offline cache)",periods:{},groups:[],unsupported:UNSUPPORTED,
+   source:publicSnapshot?"CFTC official public API (read-only audit)":"CFTC Futures Only (existing offline cache)",periods:{},groups:[],unsupported:UNSUPPORTED,
    notes:["Nessun dato CFTC utilizzabile; nessuna classifica"]
   };
   const all=core.parseRows(snapshot.rows,null);
@@ -130,7 +138,8 @@ const api=(function watchFactory(core){
     mode:asOf===null?"descriptive_only":"first_local_capture_asof",
     nowUtc:new Date(now).toISOString(),
     observedAt:asOf===null?null:new Date(asOf).toISOString(),
-    source:"CFTC Futures Only via existing private offline cache",
+    source:publicSnapshot?"CFTC official public API (read-only audit)":"CFTC Futures Only via existing private offline cache",
+    publicReadAtUtc:publicSnapshot?new Date(stamp(snapshot.readAtUtc)).toISOString():null,
     contractCoverage:EXPECTED,periods,groups:groupResults,unsupported:UNSUPPORTED,
     notes:[
      "Ordine descrittivo per ampiezza, NON segnale di acquisto/vendita né stima di rendimento",
