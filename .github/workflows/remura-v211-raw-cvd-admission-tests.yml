@@ -1,10 +1,12 @@
-name: REMURA A V21.2 CVD origin custody isolated checks
+name: REMURA A V21.4 native CVD source compatibility isolated checks
 on:
   pull_request:
     paths:
       - 'research/v211_raw_cvd_direction_admission.py'
       - 'research/test_v211_raw_cvd_direction_admission.py'
       - 'research/test_v212_private_raw_custody.py'
+      - 'research/v214_native_tv_cvd_pair_probe.py'
+      - 'research/test_v214_native_tv_cvd_pair_probe.py'
       - '.github/workflows/remura-v211-raw-cvd-admission-tests.yml'
 permissions:
   contents: read
@@ -21,6 +23,8 @@ jobs:
         run: python3 -m unittest discover -s research -p 'test_v211_raw_cvd_direction_admission.py' -v
       - name: Test ONLY five new RAW private-custody safety cases
         run: python3 -m unittest discover -s research -p 'test_v212_private_raw_custody.py' -v
+      - name: Run six NEW native CVD pair compatibility tests, offline only
+        run: python3 -m unittest discover -s research -p 'test_v214_native_tv_cvd_pair_probe.py' -v
       - name: Verify no genuine raw source means no signal or API request
         run: |
           python3 research/v211_raw_cvd_direction_admission.py > /tmp/remura-v211-empty.json
