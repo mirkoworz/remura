@@ -4,6 +4,10 @@ on:
   pull_request:
     paths:
       - 'cot-intelligence-core.js'
+      - 'cot-intelligence-watchlist.js'
+      - 'scripts/cot_intelligence_watchlist.js'
+      - 'tests/cot-intelligence-watchlist.test.js'
+      - 'RESEARCH-B-COT-WATCHLIST-V20.8.md'
       - 'scripts/cot_intelligence_snapshot.py'
       - 'tests/cot-intelligence.test.js'
       - 'tests/test_cot_intelligence_snapshot.py'
@@ -30,6 +34,8 @@ jobs:
       - name: Check pure COT engine syntax and test fixtures
         run: |
           node --check cot-intelligence-core.js
-          node --test tests/cot-intelligence.test.js
+          node --check cot-intelligence-watchlist.js
+          node --check scripts/cot_intelligence_watchlist.js
+          node --test tests/cot-intelligence.test.js tests/cot-intelligence-watchlist.test.js
       - name: Check read-only SQLite snapshot fixtures
         run: python3 -m unittest discover -s tests -p 'test_cot_intelligence_snapshot.py' -v
