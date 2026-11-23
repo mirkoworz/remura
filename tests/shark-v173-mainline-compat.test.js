@@ -4,9 +4,9 @@ const test=require("node:test"),assert=require("node:assert/strict"),fs=require(
 const index=fs.readFileSync("index.html","utf8"),cockpit=fs.readFileSync("shark-cockpit.html","utf8");
 const nav=fs.readFileSync("nav.js","utf8"),sw=fs.readFileSync("sw.js","utf8");
 test("01 home and Cockpit both display the accurate v1.73 update stamp",()=>{
- for(const h of [index,cockpit])assert.ok(h.includes("23/11/2026 22:17 CET (Europe/Rome)"));
- assert.ok(index.includes("Aggiornamento v1.73 LAB"));
- assert.ok(cockpit.includes("SHARK COCKPIT v1.73 WEB-FIRST CANDIDATE LAB"));
+ for(const h of [index,cockpit])assert.ok(h.includes("23/11/2026 22:20 CET (Europe/Rome)"));
+ assert.ok(index.includes("Aggiornamento v1.73.1 LAB"));
+ assert.ok(cockpit.includes("SHARK COCKPIT v1.73.1 WEB-FIRST CANDIDATE LAB"));
  assert.ok(index.includes('role="note"'));
 });
 test("02 existing main v1.64 nav and SW are NOT replaced to avoid regressions",()=>{
