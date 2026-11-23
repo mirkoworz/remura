@@ -1,0 +1,36 @@
+# REMURA V20.6 — new offline tests for an existing REAL 23-Nov comparison.
+# No Capital DEMO private bytes are placed on this PUBLIC GitHub runner.
+name: REMURA V20.6 Two Retail Snapshots Private-Safe NEW Tests
+on:
+  push:
+    branches:
+      - research/remura-v206-two-retail-independent-snapshot-audit-20261123
+    paths:
+      - .github/workflows/remura-v206-two-retail-private-safe.yml
+permissions:
+  contents: read
+jobs:
+  compare-offline:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/research/remura-v206-two-retail-independent-snapshot-audit-20261123'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Six NEW offline tests only, zero private source files
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd research
+          python3 -m unittest -v test_v206_two_retail_snapshot_audit.py
+          python3 -m py_compile v206_two_retail_snapshot_audit.py
+          echo REMURA_V206_NEW_TESTS=6_PASS
+      - name: Preserve strict privacy and scientific state in summary
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'V20.6 offline only; private Capital source NOT fetched. The real aggregate report was calculated separately by connector from pinned public and private latest.json, without exporting private symbols.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No provider calls, prices, OHLC, CVD queries, cloud calls, deploy, broker orders or PnL. Majority agreement alone is NOT institutional evidence or alpha.' >> "$GITHUB_STEP_SUMMARY"
