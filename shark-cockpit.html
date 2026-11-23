@@ -9,18 +9,19 @@
   <link rel="icon" type="image/svg+xml" href="./icon.svg">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="stylesheet" href="./nav.css?v=168">
-  <link rel="stylesheet" href="./shark-cockpit.css?v=170">
-  <title>REMURA v1.70 LAB · Shark Cockpit istituzionale</title>
+  <link rel="stylesheet" href="./shark-cockpit.css?v=171">
+  <title>REMURA v1.71 LAB · Shark Cockpit istituzionale</title>
 </head>
 <body>
   <main class="shell">
-    <div class="build-stamp" role="note">SHARK COCKPIT v1.70 LAB · 23/11/2026 15:01 CET (Europe/Rome) · Anteprima UI, non pubblicata</div>
+    <div class="build-stamp" role="note">SHARK COCKPIT v1.71 LAB · 23/11/2026 20:20 CET (Europe/Rome) · Anteprima UI, non pubblicata</div>
     <div class="site-top">
-      <div class="brand">REMURA <span>SHARK COCKPIT · v1.70 LAB</span></div>
+      <div class="brand">REMURA <span>SHARK COCKPIT · v1.71 LAB</span></div>
       <a href="./mercati.html#institutional-scanner">← Scanner classico</a>
     </div>
 
     <nav class="jump-nav" aria-label="Sezioni Shark Cockpit">
+      <a href="#my-sharks">★ I miei squali</a>
       <a href="#evidence">Affidabilità dati</a>
       <a href="#institutional-movers">Mosse CFTC</a>
       <a href="#contracts">Contratti</a>
@@ -42,6 +43,20 @@
     <div class="notice">
       <strong>La regola della remora:</strong> distinguiamo sempre il futuro CFTC dalla coppia Forex spot, il sentimento retail dalle posizioni aggregate e la data del report dalla vera data di pubblicazione. I dati assenti, obsoleti o discordanti non diventano segnali.
     </div>
+
+    <section class="focus-panel" id="my-sharks" aria-labelledby="focus-title">
+      <div class="section-head"><div>
+        <div class="eyebrow">00 / La tua vedetta istituzionale</div>
+        <h2 id="focus-title">★ I miei squali</h2>
+        <p>I futures che segui, subito in primo piano. Le variazioni sono confrontabili soltanto fra due martedì consecutivi dello stesso contratto.</p>
+      </div>
+      <a class="focus-explore" href="#contracts">Gestisci preferiti ↓</a></div>
+      <p class="focus-status" id="my-sharks-status" role="status" aria-live="polite">Carico la tua selezione locale. In assenza di report CFTC, ogni valore resta N/D.</p>
+      <div class="focus-grid" id="my-sharks-list" aria-label="Futures CFTC che seguo">
+        <p class="focus-unavailable">Nessun dato ricostruito. Tocca ☆ nelle schede sotto per selezionare i futures.</p>
+      </div>
+      <p class="focus-disclaimer">Ordinamento di consultazione: qualità del report, data e ampiezza del Δ netto in pp soltanto a parità di martedì. Non indica operazioni live, tempistiche degli ordini, probabilità o opportunità di trading. Preferiti conservati solo sul dispositivo quando Safari lo consente.</p>
+    </section>
 
     <section class="evidence-panel" id="evidence" aria-labelledby="evidence-title">
       <div class="section-head"><div>
@@ -130,7 +145,7 @@
 
     <footer class="tail">
       <p>Fonti originali: <a href="https://publicreporting.cftc.gov/Commitments-of-Traders/TFF-Futures-Only/gpe5-46if" rel="noopener noreferrer" target="_blank">CFTC TFF</a> · <a href="https://publicreporting.cftc.gov/Commitments-of-Traders/Disaggregated-Futures-Only/72hh-3qpy" rel="noopener noreferrer" target="_blank">CFTC Disaggregated</a> · <a href="https://www.myfxbook.com/community/outlook" rel="noopener noreferrer" target="_blank">Myfxbook Community Outlook</a>.</p>
-      <p>SHARK COCKPIT v1.70 LAB · 23/11/2026 15:01 CET · Anteprima di sviluppo, non pubblicata su REMURA produzione. Nessun costo cloud aggiuntivo, ordine, Telegram o nuova raccolta privata.</p>
+      <p>SHARK COCKPIT v1.71 LAB · 23/11/2026 20:20 CET · Anteprima di sviluppo, non pubblicata su REMURA produzione. Nessun costo cloud aggiuntivo, ordine, Telegram o nuova raccolta privata.</p>
     </footer>
   </main>
   <script src="./shark-cockpit-core.js?v=168"></script>
@@ -140,7 +155,9 @@
   <script src="./shark-evidence-ui.js?v=169"></script>
   <script src="./shark-trends-core.js?v=170"></script>
   <script src="./shark-trends-ui.js?v=170"></script>
-  <script src="./shark-cockpit.js?v=170"></script>
+  <script src="./shark-focus-core.js?v=171"></script>
+  <script src="./shark-focus-ui.js?v=171"></script>
+  <script src="./shark-cockpit.js?v=171"></script>
   <script src="./nav.js?v=168"></script>
 </body>
 </html>
