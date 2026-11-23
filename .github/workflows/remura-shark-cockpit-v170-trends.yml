@@ -1,0 +1,49 @@
+# REMURA Shark Cockpit v1.70 LAB — 23/11/2026 15:01 CET.
+# Only changed UI tests; no Secrets, market fetch, login, deploy, merge or backend.
+name: REMURA Shark Cockpit v170 COT Trends
+on:
+  push:
+    branches: [feature/shark-cockpit-v170-cot-trends-iphone-20261123]
+    paths:
+      - shark-cockpit.html
+      - shark-cockpit.css
+      - shark-cockpit.js
+      - shark-trends-core.js
+      - shark-trends-ui.js
+      - preview/REMURA-Shark-COT-Trends-v170-iPhone-STANDALONE-LAB.html
+      - sw.js
+      - tests/shark-trends.test.js
+      - tests/shark-cockpit.test.js
+      - tests/shark-evidence.test.js
+      - tests/shark-anatomy.test.js
+      - tests/release-consistency.test.js
+      - .github/workflows/remura-shark-cockpit-v170-trends.yml
+permissions:
+  contents: read
+jobs:
+  cot-trends-ui:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax of changed browser modules
+        run: |
+          set -euo pipefail
+          node --check shark-trends-core.js
+          node --check shark-trends-ui.js
+          node --check shark-cockpit.js
+          node --check sw.js
+      - name: COT trend, provenance and UI wiring with offline fixtures
+        run: |
+          set -euo pipefail
+          node --test tests/shark-trends.test.js tests/shark-evidence.test.js tests/shark-anatomy.test.js tests/shark-movers.test.js tests/shark-cockpit.test.js tests/release-consistency.test.js 2>&1 | tee /tmp/shark-v170.log
+          grep -q '# tests 69' /tmp/shark-v170.log
+          grep -q '# pass 69' /tmp/shark-v170.log
+          grep -q '# fail 0' /tmp/shark-v170.log
+          echo REMURA_SHARK_COCKPIT_V170=69_69_PASS
