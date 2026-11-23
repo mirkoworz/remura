@@ -15,11 +15,11 @@ test('Settings displays public and private feed freshness',()=>{
  assert.ok(html.includes('feed-health-core.js')&&html.includes('public-status'));
  assert.ok(js.includes('feedHealth.inspect(cleaned,symbols)')&&js.includes('checkPublic()'));
 });
-test('v1.68 LAB includes explicit Italian build timestamp and new PWA cache',()=>{
+test('v1.68 shared nav remains stamped and v1.69 UI PWA cache is versioned',()=>{
  const nav=fs.readFileSync('nav.js','utf8');
  assert.ok(nav.includes('Aggiornamento v1.68 LAB · 22/11/2026 22:10 CET (anteprima, non pubblicata)'));
  const sw=fs.readFileSync('sw.js','utf8');
- assert.ok(sw.includes('remura-shell-v82-v1.68-shark-cockpit-anatomy-preview'));
+ assert.ok(sw.includes('remura-shell-v83-v1.69-shark-evidence-preview'));
  for(const p of pages){const html=fs.readFileSync(p,'utf8');assert.ok(!html.includes('REMURA v1.51'),p);}
 });
 
