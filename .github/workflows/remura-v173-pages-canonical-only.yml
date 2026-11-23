@@ -1,0 +1,35 @@
+# REMURA v1.73.1 canonical redirect follow-up ONLY; 2 public GETs, no retries.
+name: REMURA v173 Pages canonical redirect only
+on:
+  push:
+    branches: [feature/shark-cockpit-v173-safe-mainline-gates-20261123]
+    paths:
+      - preview/check_pages_canonical_v173.mjs
+      - .github/workflows/remura-v173-pages-canonical-only.yml
+permissions:
+  contents: read
+jobs:
+  pages-canonical:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Resolve only public Cloudflare Pages canonical 308, no retries
+        run: |
+          set -euo pipefail
+          node --check preview/check_pages_canonical_v173.mjs
+          node preview/check_pages_canonical_v173.mjs
+      - name: Public canonical evidence only, 1-day retention
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: REMURA-v173-PAGES-CANONICAL
+          path: remura-canonical-v173.json
+          retention-days: 1
+          if-no-files-found: warn
