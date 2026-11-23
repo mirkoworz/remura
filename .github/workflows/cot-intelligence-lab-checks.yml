@@ -12,6 +12,9 @@ on:
       - 'RESEARCH-B-COT-OFFLINE-BUNDLE-V21.2.md'
       - 'research/real-proofs/REMURA-B-CFTC-20261123-STDOUT-PARTIAL-EXCERPT.json'
       - 'tests/test_cot_stdout_excerpt_v213.py'
+      - 'scripts/cot_real_partial_presentation.js'
+      - 'tests/cot-real-partial-presentation.test.js'
+      - 'RESEARCH-B-CFTC-REAL-PARTIAL-PRESENTATION-V21.4.md'
       - 'RESEARCH-B-COT-AUDITED-STDOUT-EXCERPT-V21.3.md'
       - 'tests/cot-fx-dashboard-export.test.js'
       - 'RESEARCH-B-COT-DASHBOARD-EXPORT-V21.1.md'
@@ -69,6 +72,12 @@ jobs:
         run: python3 -m unittest discover -s tests -p 'test_cot_intelligence_parity.py' -v
       - name: Validate 6 NEW offline parity-first dashboard handoff gates
         run: python3 -m unittest discover -s tests -p 'test_cot_offline_parity_fx_bundle.py' -v
+      - name: Validate five NEW safe historic partial presentation cases (no HTTP)
+        run: |
+          node --check scripts/cot_real_partial_presentation.js
+          node --test tests/cot-real-partial-presentation.test.js
+          node scripts/cot_real_partial_presentation.js --now-utc 2026-11-23T21:00:00Z > /tmp/remura-b-partial-preview.json
+          node -e 'const x=require("/tmp/remura-b-partial-preview.json"); if(x.numberOfDisplayedObservations!==12 || x.forecastOrTradeSignals!==false || x.raw980SourceRowsRecovered!==false)process.exit(1)'
       - name: Check five NEW real audit stdout excerpt integrity and non-promotion gates
         run: python3 -m unittest discover -s tests -p 'test_cot_stdout_excerpt_v213.py' -v
 
