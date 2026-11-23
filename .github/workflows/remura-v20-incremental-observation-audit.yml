@@ -1,0 +1,32 @@
+# REMURA V20.1 — 23/11/2026 CET. New offline checks only, no Secrets/provider/API.
+name: REMURA V20.1 Incremental Real Observations OFFLINE
+on:
+  push:
+    branches:
+      - research/remura-v20-incremental-observations-20261123
+    paths:
+      - research/v20_incremental_observation_audit.py
+      - research/test_v20_incremental_observation_audit.py
+      - .github/workflows/remura-v20-incremental-observation-audit.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  new-only-offline-tests:
+    if: >-
+      github.repository == 'mirkoworz/remura' &&
+      github.ref == 'refs/heads/research/remura-v20-incremental-observations-20261123'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run exactly nine new tests - zero API, no old suites
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd research
+          python3 -m unittest -v test_v20_incremental_observation_audit.py
+          python3 -m py_compile v20_incremental_observation_audit.py
+          echo REMURA_V20_INCREMENTAL=9_NEW_TESTS_PASS
