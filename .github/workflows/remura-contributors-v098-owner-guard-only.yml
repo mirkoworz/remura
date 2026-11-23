@@ -1,0 +1,33 @@
+# REMURA Contributors v0.98 LAB — 23/11/2026, 13:34 CET.
+# ONE scoped CI for NEW OWNER-revocation regression only. No deployments/secrets.
+name: REMURA Contributors v098 OWNER guard ONE-SHOT
+on:
+  push:
+    branches: [research/contributors-pilot-owner-guard-v098-20261123]
+    paths:
+      - research/contributors/private_worker_pilot_owner_guard_v098_lab.mjs
+      - research/contributors/test_private_worker_pilot_owner_guard_v098_lab.mjs
+      - .github/workflows/remura-contributors-v098-owner-guard-only.yml
+permissions:
+  contents: read
+jobs:
+  owner-guard:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout no persistent credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: New v0.98 targeted tests ONLY
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check research/contributors/private_worker_pilot_owner_guard_v098_lab.mjs
+          node --test --test-reporter=tap research/contributors/test_private_worker_pilot_owner_guard_v098_lab.mjs 2>&1 | tee /tmp/remura-v098.log
+          grep -q '^1..16$' /tmp/remura-v098.log
+          grep -q '^# pass 16$' /tmp/remura-v098.log
+          grep -q '^# fail 0$' /tmp/remura-v098.log
+          echo REMURA_CONTRIBUTORS_V098_OWNER_GUARD=16_16_PASS
