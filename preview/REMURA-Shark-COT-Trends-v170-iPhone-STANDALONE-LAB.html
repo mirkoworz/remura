@@ -1241,7 +1241,7 @@ details.method p,details.method li{color:#bed3d4;font-size:12px;line-height:1.7}
       " campioni recenti (entro 3 ore). Gli altri sono archiviati o sconosciuti; non sono segnali.";
     for(const row of rows){
       const box=create("div","retail-item");
-      const link=create("a","",row.pair);link.href="./asset.html?symbol="+encodeURIComponent(row.pair)+"&v=8";
+      const link=create("a","",row.pair);link.href="https://mirkoworz.github.io/remura/asset.html?symbol="+encodeURIComponent(row.pair)+"&v=8";
       const label=row.status==="RECENT_RETAIL"?"Recente · retail":
         row.status==="ARCHIVED_RETAIL"?"Archivio · retail":"N/D · retail";
       box.append(link);
