@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   public-archive-once:
-    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/research/filone-b-cot-intelligence-v206-20261123' && inputs.consent == 'ALLOW_2_PUBLIC_CFTC_GETS_NO_PRIVATE_DATA' }}
+    if: ${{ github.run_attempt == 1 && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/research/filone-b-cot-intelligence-v206-20261123' && inputs.consent == 'ALLOW_2_PUBLIC_CFTC_GETS_NO_PRIVATE_DATA' }}
     runs-on: ubuntu-latest
     timeout-minutes: 4
     steps:
