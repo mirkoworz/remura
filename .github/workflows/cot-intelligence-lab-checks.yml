@@ -1,0 +1,35 @@
+name: REMURA Filone B - CFTC intelligence offline LAB
+
+on:
+  pull_request:
+    paths:
+      - 'cot-intelligence-core.js'
+      - 'scripts/cot_intelligence_snapshot.py'
+      - 'tests/cot-intelligence.test.js'
+      - 'tests/test_cot_intelligence_snapshot.py'
+      - 'RESEARCH-B-COT-INTELLIGENCE-V20.7.md'
+      - '.github/workflows/cot-intelligence-lab-checks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cot-offline:
+    name: Validate CFTC transforms without market access
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check pure COT engine syntax and test fixtures
+        run: |
+          node --check cot-intelligence-core.js
+          node --test tests/cot-intelligence.test.js
+      - name: Check read-only SQLite snapshot fixtures
+        run: python3 -m unittest discover -s tests -p 'test_cot_intelligence_snapshot.py' -v
