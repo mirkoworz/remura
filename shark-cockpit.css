@@ -1,0 +1,228 @@
+/* REMURA Shark Cockpit v1.71 LAB — 23/11/2026 20:20 CET */
+:root{color-scheme:dark;--bg:#06121b;--ink:#ecf9f6;--muted:#9ebdc4;--mint:#76f2cd;--blue:#8bb6ff;--amber:#f6d496;--red:#ff919e;--line:#35535f;--panel:#102733}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(ellipse 66% 30% at 88% 1%,#23685b44,transparent),linear-gradient(180deg,#071723,#06121b 44%);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+button,input,select{font:inherit}button{cursor:pointer}
+a{color:var(--mint)}
+:focus-visible{outline:3px solid var(--mint)!important;outline-offset:3px}
+.shell{max-width:1250px;margin:auto;padding:22px 22px 100px}
+.site-top{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:24px;padding-left:56px}
+.site-top a{color:#c6ece2;text-decoration:none;font-size:12px;font-weight:800}
+.brand{font-weight:900;color:var(--mint);font-size:24px;letter-spacing:.14em}
+.brand span{display:block;font-size:10px;color:var(--muted);letter-spacing:.06em}
+.hero{position:relative;overflow:hidden;border:1px solid #35796c;border-radius:24px;padding:clamp(24px,5vw,47px);background:radial-gradient(circle at 93% 1%,#3acda14d,transparent 35%),linear-gradient(120deg,#133b41,#0b222f 73%);box-shadow:0 20px 60px #0003}
+.hero:after{content:"";position:absolute;right:-92px;top:-130px;width:360px;height:360px;border-radius:50%;border:2px solid #74eec522;box-shadow:0 0 0 50px #7effcc09,0 0 0 110px #7effcc07;pointer-events:none}
+.eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:900;color:var(--mint)}
+.hero h1{font-size:clamp(36px,5.5vw,67px);letter-spacing:-.055em;line-height:1.05;margin:12px 0}
+.hero h1 span{color:var(--mint)}
+.hero p{font-size:clamp(13px,2vw,16px);max-width:690px;color:#bdd8d5;margin:0}
+.hero-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:19px}
+.chip{display:inline-flex;align-items:center;border-radius:999px;border:1px solid #558f84;padding:6px 11px;background:#082831be;color:#d8fcf1;font-size:11px;font-weight:750}
+.notice{margin:17px 0 22px;border:1px solid #7b6946;border-radius:14px;padding:13px 15px;color:#f3dfb4;background:#312a21;font-size:12px}
+.pulse{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:17px}
+.metric{background:linear-gradient(155deg,#142f3a,#0b1c28);border:1px solid #31515c;border-radius:17px;padding:18px;min-width:0}
+.metric small{color:#a2c3c4;font-size:11px;display:block}
+.metric strong{font-size:clamp(23px,3vw,34px);line-height:1.4;font-weight:900;letter-spacing:-.04em;display:block}
+.metric span{color:var(--muted);font-size:11px}
+.metric.error strong{color:var(--amber)}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:19px 0 14px}
+.toolbar input,.toolbar select{color:var(--ink);background:#102c38;border:1px solid #416775;border-radius:12px;padding:12px;min-height:46px;max-width:100%}
+.toolbar input{flex:1 1 225px;min-width:0}
+.toolbar select{flex:0 1 200px}
+#refresh{background:#1c6e54;border:1px solid #6cceb0;border-radius:12px;color:#f3fff9;padding:12px 18px;font-weight:850;min-height:46px}
+#refresh:disabled{opacity:.65;cursor:wait}
+#message{padding:10px 13px;font-size:12px;background:#142e39;border:1px solid #345d65;border-radius:12px;margin-bottom:15px;color:#c8e6e1}
+#message[data-status=error]{border-color:#915a51;color:#ffd8cb}
+.section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.section-head h2{font-size:24px;margin:0;font-weight:860}
+.section-head p{color:var(--muted);font-size:12px;margin:4px 0 0}
+#cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.contract-card{min-width:0;border-radius:18px;border:1px solid #2c515a;background:linear-gradient(142deg,#112d39,#0b1d28);padding:17px;display:flex;flex-direction:column;gap:12px;transition:border-color .18s ease}
+.contract-card:hover{border-color:#71ad9d}
+.contract-card[data-grade=unknown],.contract-card[data-grade=stale]{border-color:#775c4e}
+.card-head{display:flex;justify-content:space-between;gap:9px;align-items:flex-start}
+.card-kicker{color:var(--mint);font-size:10px;font-weight:900;letter-spacing:.13em;text-transform:uppercase}
+.card-head h3{font-size:19px;margin:2px 0 0;line-height:1.25}
+.card-code{font-size:12px;color:#a9c0c6;letter-spacing:.05em;margin-top:5px}
+.grade{border-radius:8px;border:1px solid #4c8a79;background:#17453a;padding:5px 7px;font-size:10px;font-weight:850;max-width:138px;text-align:right}
+.grade.warn{background:#3e3122;border-color:#987749;color:#ffe2ae}
+.grade.unknown{background:#293d4a;border-color:#5e7a80;color:#c4d9df}
+.cohorts{display:grid;gap:13px}
+.cohort-top{display:flex;gap:9px;justify-content:space-between;align-items:baseline}
+.cohort-label{font-size:12px;color:#bfdad6}
+.cohort-value{font-size:18px;font-weight:900;font-variant-numeric:tabular-nums}
+.cohort-value.pos{color:var(--mint)}.cohort-value.neg{color:var(--red)}
+.cohort-strip{height:9px;background:#2b414b;border-radius:99px;position:relative;overflow:hidden;margin-top:5px}
+.cohort-strip:after{content:"";position:absolute;left:50%;height:100%;border-left:1px solid #a6d4d4a8}
+.cohort-fill{position:absolute;top:0;bottom:0;border-radius:99px;background:var(--mint)}
+.cohort-fill.second{background:var(--blue)}
+.cohort-bottom{display:flex;justify-content:space-between;gap:9px;color:var(--muted);font-size:11px;margin-top:5px}
+.cohort-change{font-weight:850;color:#e5f5f1;font-variant-numeric:tabular-nums}
+.card-foot{margin-top:auto;display:grid;gap:9px;border-top:1px solid #2b4a54;padding-top:11px}
+.foot-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.foot-top span{font-size:11px;color:var(--muted)}
+.foot-status{font-size:11px;font-weight:850;color:var(--amber)}
+.foot-status.divergent{color:var(--mint)}
+.card-bottom{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.card-bottom a{font-size:12px;font-weight:800;text-decoration:none}
+.card-bottom small{font-size:11px;color:var(--muted)}
+details.method{border:1px solid #3c5e68;border-radius:14px;background:#102936;margin-top:17px;padding:15px 17px}
+details.method summary{cursor:pointer;color:var(--mint);font-weight:850}
+details.method p,details.method li{color:#bed3d4;font-size:12px;line-height:1.7}
+.retail-panel{margin-top:25px;padding:20px;border:1px solid #345960;border-radius:19px;background:linear-gradient(130deg,#0e2a34,#112432)}
+.retail-list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:15px}
+.retail-item{min-width:0;background:#112d38;border:1px solid #385664;border-radius:12px;padding:13px}
+.retail-item strong{display:block;font-size:15px}
+.retail-item .lot-pct{display:block;font-size:20px;font-weight:900;color:#ccefe1;margin-top:4px}
+.retail-item small{display:block;font-size:10px;color:#9bbcc2}
+.retail-item .stale{color:var(--amber)}
+.retail-note{font-size:12px;color:#c2d9da;margin:12px 0 0}
+.tail{border-top:1px solid #34545d;margin-top:27px;padding-top:19px;color:#8cadb3;font-size:12px}
+.tail a{color:#b5eadf}
+@media(max-width:850px){#cards{grid-template-columns:1fr}.pulse{grid-template-columns:repeat(2,minmax(0,1fr))}.retail-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:540px){.shell{padding:18px 12px 85px}.site-top{padding-left:55px;margin-bottom:17px}.brand{font-size:21px}.site-top a{font-size:10px}.hero{padding:23px}.hero h1{font-size:42px}.pulse{gap:8px}.metric{padding:13px}.metric strong{font-size:25px}.contract-card{padding:14px}.card-head h3{font-size:17px}.toolbar input,.toolbar select,#refresh{flex-basis:100%;width:100%}.retail-panel{padding:14px}}
+@media(prefers-reduced-motion:reduce){.contract-card{transition:none}}
+
+/* v1.67 — watchlist and expandable actual CFTC history; Safari-first. */
+.watch-toggle{display:inline-flex;gap:9px;align-items:center;justify-content:center;min-height:46px;padding:10px 14px;background:#103c41;color:#d3f8e7;border:1px solid #58a58a;border-radius:12px;font-weight:800;font-size:12px;cursor:pointer;white-space:nowrap}
+.watch-toggle input{accent-color:#77eec3;width:19px;height:19px;margin:0}
+.watchlist-note{font-size:12px;line-height:1.6;color:#b2d7d1;background:#102d34;border-left:3px solid #6fd9b6;padding:8px 12px;margin:0 0 14px}
+.favorite-toggle{flex:0 0 43px;min-height:43px;min-width:43px;display:grid;place-items:center;border-radius:12px;color:#ffe19f;background:#26434a;border:1px solid #617b78;font-size:24px;padding:0;touch-action:manipulation}
+.favorite-toggle[aria-pressed=true]{background:#665032;border-color:#e7c57e;color:#ffedbb}
+.favorite-toggle:hover{border-color:#f2d497}
+.card-head{align-items:flex-start}
+.history-details{margin:0;border-top:1px solid #32515c;padding-top:8px;min-width:0}
+.history-details summary{font-weight:800;color:#96edcf;font-size:12px;min-height:42px;cursor:pointer;display:flex;align-items:center}
+.history-details[open] summary{margin-bottom:8px}
+.history-scroll{overflow-x:auto;max-width:100%;border:1px solid #355a61;border-radius:10px;overscroll-behavior-inline:contain}
+.history-table{border-collapse:collapse;width:100%;min-width:470px;table-layout:auto;font-size:11px;color:#d4e9e5;font-variant-numeric:tabular-nums}
+.history-table th,.history-table td{text-align:left;padding:9px 8px;border-bottom:1px solid #284a55;white-space:nowrap}
+.history-table th{font-size:10px;color:#b3e5db;background:#143743;position:sticky;top:0}
+.history-table td:last-child{color:#dbf2e8}
+.history-table tr:last-child td{border-bottom:0}
+.history-warning{color:#ffdbb4;font-size:12px}
+.history-caption{color:#a9c4c5;font-size:10px;line-height:1.5}
+@media(max-width:540px){
+  .watch-toggle{width:100%;justify-content:flex-start}
+  .card-head{display:grid;grid-template-columns:minmax(0,1fr) 43px;align-items:start}
+  .card-head .grade{grid-column:1/-1;max-width:none;text-align:left}
+}
+
+/* v1.67 LAB: aligned-Tuesday institutional movers, no additional provider calls */
+.movers-panel{background:linear-gradient(145deg,#153d41,#0a212f 75%);border:1px solid #3e8578;border-radius:20px;padding:22px;margin:19px 0 23px}
+.movers-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:15px 0}
+.mover-card{display:grid;text-align:left;gap:7px;min-height:164px;min-width:0;background:#0e2935;color:var(--ink);border:1px solid #4a756e;border-radius:15px;padding:16px;cursor:pointer}
+.mover-card:hover{background:#163f44;border-color:#86d9b7}
+.mover-heading{font-size:14px;font-weight:850;line-height:1.25}
+.mover-value{font-size:26px;font-weight:900;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.mover-up{color:var(--mint)}.mover-down{color:var(--red)}
+.mover-category{font-size:11px;font-weight:800;color:#bde5df}
+.mover-sub{font-size:10px;color:#afc8ce;line-height:1.4}
+.mover-open{color:var(--mint);font-size:11px;font-weight:800;margin-top:3px}
+.movers-placeholder{grid-column:1/-1;border:1px dashed #607d75;border-radius:12px;padding:18px;color:#c8d8d7;font-size:13px}
+.movers-status,.movers-caveat{font-size:12px;color:#b8d6d5;line-height:1.6;margin:12px 0}
+.contract-card:focus-visible{outline:3px solid var(--mint);outline-offset:4px}
+@media(max-width:850px){.movers-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:570px){.movers-grid{grid-template-columns:1fr}.movers-panel{padding:15px}.mover-card{min-height:0;padding:14px}.mover-value{font-size:25px}}
+
+/* REMURA v1.68 LAB — institutional long/short gross-position anatomy */
+.anatomy-details{border:1px solid #3f6770;border-radius:13px;background:#0b2732;padding:10px 12px}
+.anatomy-details summary{font-size:12px;font-weight:850;color:#a2f2d7;cursor:pointer;min-height:42px;display:flex;align-items:center}
+.anatomy-details[open] summary{margin-bottom:12px;border-bottom:1px solid #365c63}
+.anatomy-date{font-size:11px;color:#b7d7d5;margin-bottom:12px;line-height:1.6}
+.anatomy-groups{display:grid;gap:11px}
+.anatomy-group{border:1px solid #345761;border-radius:13px;padding:13px;background:#0d2b38;min-width:0}
+.anatomy-group h4{color:#bceee0;font-size:12px;letter-spacing:.015em;margin:0 0 10px}
+.anatomy-positions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.anatomy-stat{background:#122e3c;padding:10px 8px;border-radius:9px;display:flex;flex-direction:column;min-width:0}
+.anatomy-stat-label{color:#a8c4cb;font-size:10px;font-weight:650}
+.anatomy-stat strong{font-variant-numeric:tabular-nums;font-size:clamp(13px,2.6vw,17px);color:#f2fff9;margin:5px 0 4px;overflow-wrap:anywhere}
+.anatomy-stat-delta{font-variant-numeric:tabular-nums;font-size:10px;font-weight:800}
+.anatomy-stat-delta.plus{color:#83f0bd}.anatomy-stat-delta.minus{color:#ffadb2}.anatomy-stat-delta.neutral{color:#b4c8c8}
+.anatomy-net{font-size:11px;color:#c5e3df;margin:9px 0 0}
+.anatomy-caveat,.anatomy-warning{font-size:11px;color:#e8d5ad;line-height:1.6;margin:13px 0 0}
+@media(max-width:540px){.anatomy-details{padding:9px}.anatomy-group{padding:10px}.anatomy-positions{grid-template-columns:repeat(2,minmax(0,1fr))}.anatomy-stat:last-child{grid-column:1/-1}}
+
+
+/* v1.69 LAB · 23/11/2026 13:30 CET · read-only evidence board and Safari links */
+.build-stamp{display:block;margin:0 0 13px;padding:8px 10px;background:#163741;border:1px solid #407a7b;border-radius:10px;color:#d9f9ec;font:800 11px/1.45 system-ui,-apple-system,sans-serif;letter-spacing:.02em}
+.jump-nav{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;padding:0 1px 13px;margin-bottom:8px;overscroll-behavior-inline:contain}
+.jump-nav a{flex:0 0 auto;display:flex;align-items:center;justify-content:center;min-height:44px;border:1px solid #518d85;background:#10333f;padding:10px 14px;border-radius:11px;font-size:12px;font-weight:800;text-decoration:none;color:#d9fcf0}
+.jump-nav a:focus-visible,.jump-nav a:hover{background:#20534e;border-color:#7ff1d0}
+#evidence,#institutional-movers,#contracts,#retail{scroll-margin-top:24px}
+.evidence-panel{margin:17px 0 22px;padding:20px;border:1px solid #4c8579;border-radius:18px;background:linear-gradient(140deg,#112f37,#0c222e)}
+.evidence-read-at{margin:5px 0 14px;font-size:12px;color:#bee3de;line-height:1.6}
+.evidence-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.evidence-card{min-width:0;border:1px solid #3f676c;border-radius:14px;background:#112d38;padding:15px;display:flex;flex-direction:column;gap:7px}
+.evidence-head{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.evidence-name{font-weight:850;font-size:12px;color:#b2eadb}
+.evidence-grade{font-size:10px;font-weight:850;letter-spacing:.04em;border-radius:8px;border:1px solid #62777b;background:#293e49;color:#e0e9ed;padding:5px 8px;max-width:100%}
+.evidence-card[data-state=RECENTE] .evidence-grade{border-color:#4eab85;background:#194d3b;color:#ccffe8}
+.evidence-card[data-state=PARZIALE] .evidence-grade,.evidence-card[data-state=ARCHIVIO] .evidence-grade,.evidence-card[data-state=OBSOLETO] .evidence-grade{border-color:#a2854f;background:#483825;color:#ffe3b5}
+.evidence-card[data-state=DA_VERIFICARE] .evidence-grade{border-color:#b66f6b;background:#542e35;color:#ffdad5}
+.evidence-main{display:block;font-size:16px;font-weight:850;line-height:1.35;color:#f0fff9}
+.evidence-detail,.evidence-date,.evidence-small{margin:0;line-height:1.5;font-size:11px;color:#bcd7d9}
+.evidence-date{font-weight:750;color:#e1f8e9}
+.evidence-small{margin-top:auto;color:#a5bfc6}
+.evidence-warning{font-size:11px;line-height:1.6;margin:13px 0 0;color:#e4d4b4}
+.evidence-loading{margin:0;font-size:12px;color:#d4eae4}
+@media(max-width:620px){.evidence-grid{grid-template-columns:1fr}.evidence-panel{padding:14px}.evidence-card{padding:13px}.jump-nav{margin-right:-12px;padding-right:12px}.build-stamp{font-size:10px}}
+
+
+/* v1.70 LAB — 23/11/2026 15:01 CET · weekly CFTC trends, no interpolation. */
+.cot-trend{background:#0b2530;border:1px solid #315762;border-radius:12px;padding:12px;margin:0 0 13px;min-width:0}
+.trend-legend{display:flex;gap:12px;flex-wrap:wrap;margin:0 0 3px}
+.trend-key{display:inline-flex;gap:7px;align-items:center;font-weight:800;font-size:11px;color:#cde3dd}
+.trend-key:before{content:"";display:inline-block;width:15px;height:4px;border-radius:2px;background:#78edc7}
+.trend-key.second:before{background:#92baff}
+.trend-svg{display:block;width:100%;height:auto;aspect-ratio:560/220;overflow:visible}
+.trend-axis{fill:#b2d1d6;font-size:12px;font-weight:650}
+.trend-grid{stroke:#3c5760;stroke-width:1}
+.trend-zero{stroke:#9eb9b5;stroke-width:1;stroke-dasharray:5 5}
+.trend-line{stroke:#78edc7;stroke-width:3;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.trend-line.second{stroke:#92baff}
+.trend-dot{fill:#78edc7;stroke:#08232d;stroke-width:1.8}
+.trend-dot.second{fill:#92baff}
+.trend-caption{font-size:11px;color:#bad3d7;line-height:1.65;margin:4px 0 0}
+.trend-message{font-size:12px;color:#f1d3b0;margin:0}
+@media(max-width:540px){.cot-trend{padding:9px 7px}.trend-legend{gap:8px}.trend-key{font-size:10px}.trend-axis{font-size:14px}.trend-caption{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.trend-line{animation:none;transition:none}}
+
+
+/* v1.71 LAB — 23/11/2026 20:20 CET · mobile-first personal CFTC watchlist. */
+#my-sharks{scroll-margin-top:24px}
+.focus-panel{margin:17px 0 22px;padding:20px;border:1px solid #478d7b;border-radius:20px;background:linear-gradient(145deg,#173d3f,#0b2430 78%)}
+.focus-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.focus-card{min-width:0;border:1px solid #3b6872;background:linear-gradient(145deg,#133642,#0d2631);border-radius:15px;padding:16px;display:flex;flex-direction:column;gap:9px}
+.focus-card[data-quality=CONFRONTABILE]{border-color:#4f9585}
+.focus-card[data-quality=CONFLITTO]{border-color:#ad7874}
+.focus-card[data-quality=DATATO],.focus-card[data-quality=SOLO_REPORT]{border-color:#92794f}
+.focus-card-top{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.focus-identification{min-width:0}
+.focus-family{font-size:10px;letter-spacing:.06em;text-transform:uppercase;font-weight:800;color:#8cdec4}
+.focus-identification h3{font-size:19px;line-height:1.23;margin:4px 0 0}
+.focus-unstar{flex:0 0 44px;width:44px;height:44px;border:1px solid #b69a59;background:#514027;color:#ffe1a4;border-radius:12px;font-size:24px;cursor:pointer}
+.focus-quality{font-size:11px;font-weight:850;color:#bcf4dc;margin:0}
+.focus-card[data-quality=SOLO_REPORT] .focus-quality,.focus-card[data-quality=DATATO] .focus-quality{color:#ffdda4}
+.focus-card[data-quality=CONFLITTO] .focus-quality{color:#ffb9b0}
+.focus-report{margin:0;color:#b2cbd0;font-size:11px}
+.focus-changes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.focus-change{border:1px solid #325863;background:#0b2934;border-radius:10px;padding:10px;min-width:0}
+.focus-change span{display:block;font-size:10px;color:#bcd1d4;line-height:1.4}
+.focus-change strong{display:block;font-variant-numeric:tabular-nums;font-size:18px;color:#e8f8f3;margin-top:4px}
+.focus-change strong.focus-plus{color:#9df6ce}
+.focus-change strong.focus-minus{color:#ffafb9}
+.focus-unavailable{margin:0;font-size:12px;line-height:1.6;color:#e6d5b7}
+.focus-divergence{margin:0;color:#b7eddb;font-weight:750;font-size:11px}
+.focus-open{font:800 12px system-ui,-apple-system,sans-serif;min-height:44px;width:100%;border-radius:11px;border:1px solid #76d2b1;background:#1c695d;color:#f1fff9;cursor:pointer;margin-top:auto}
+.focus-open:hover,.focus-unstar:hover{filter:brightness(1.15)}
+.focus-status{margin:8px 0 0;font-size:12px;line-height:1.6;color:#d0e8dd}
+.focus-disclaimer{margin:14px 0 0;font-size:11px;line-height:1.6;color:#bfd7d8}
+.focus-explore,.focus-start{display:inline-flex;align-items:center;min-height:44px;padding:9px 12px;background:#173b46;border:1px solid #4a927f;border-radius:10px;color:#d8fcec;font-size:12px;font-weight:800;text-decoration:none}
+.focus-empty{grid-column:1/-1;background:#0e2b35;border:1px dashed #61897e;border-radius:12px;padding:17px;display:grid;gap:11px}
+.focus-empty strong{font-size:16px}
+.focus-empty p{margin:0;font-size:12px;color:#bdd3d4}
+.focus-start{justify-self:start}
+@media(max-width:780px){.focus-grid{grid-template-columns:1fr}}
+@media(max-width:540px){.focus-panel{padding:14px}.focus-card{padding:13px}.focus-change strong{font-size:17px}}
