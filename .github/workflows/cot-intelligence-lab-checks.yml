@@ -13,6 +13,9 @@ on:
       - 'research/real-proofs/REMURA-B-CFTC-20261123-STDOUT-PARTIAL-EXCERPT.json'
       - 'tests/test_cot_stdout_excerpt_v213.py'
       - 'scripts/cot_real_partial_presentation.js'
+      - 'scripts/cot_public_two_date_archive_v216.py'
+      - 'tests/test_cot_public_two_date_archive_v216.py'
+      - 'RESEARCH-B-CFTC-EXACT-TWO-DATE-SNAPSHOT-V21.6.md'
       - 'tests/cot-real-partial-presentation.test.js'
       - 'RESEARCH-B-CFTC-REAL-PARTIAL-PRESENTATION-V21.4.md'
       - 'RESEARCH-B-COT-AUDITED-STDOUT-EXCERPT-V21.3.md'
@@ -78,6 +81,19 @@ jobs:
           node --test tests/cot-real-partial-presentation.test.js
           node scripts/cot_real_partial_presentation.js --now-utc 2026-11-23T21:00:00Z > /tmp/remura-b-partial-preview.json
           node -e 'const x=require("/tmp/remura-b-partial-preview.json"); if(x.numberOfDisplayedObservations!==12 || x.forecastOrTradeSignals!==false || x.raw980SourceRowsRecovered!==false)process.exit(1)'
+      - name: Check six NEW date-targeted official archive gates, no HTTP
+        run: |
+          python3 -m unittest discover -s tests -p 'test_cot_public_two_date_archive_v216.py' -v
+          python3 scripts/cot_public_two_date_archive_v216.py > /tmp/remura-cftc-two-date-noauth.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          j=json.loads(Path('/tmp/remura-cftc-two-date-noauth.json').read_text())
+          assert j['status']=='PUBLIC_CFTC_FETCH_NOT_AUTHORIZED'
+          assert j['actualPublicGetRequests']==0
+          assert j['expectedRows']==28
+          print('REMURA_B_216_NO_UNAUTHORIZED_CFTC_CALLS=PASS')
+          PY
       - name: Check five NEW real audit stdout excerpt integrity and non-promotion gates
         run: python3 -m unittest discover -s tests -p 'test_cot_stdout_excerpt_v213.py' -v
 
