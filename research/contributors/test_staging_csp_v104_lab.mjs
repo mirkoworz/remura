@@ -56,7 +56,7 @@ test('03 unexpected executable markup or missing stamp fails closed',async()=>{
    oldHtml+'<script src="/malicious.js"></script>',
    oldHtml.replace('SOLA LETTURA','<form><input></form>'),
    oldHtml.replace('23/11/2026 23:05 CET','sconosciuto'),
-   oldHtml.replace('REMURA Contributors v1.03 LAB','INTERFACE_NON_ATTESTATA')
+   oldHtml.replaceAll('REMURA Contributors v1.03 LAB','INTERFACE_NON_ATTESTATA')
  ]){
    h.setHtml(html);const r=await h.send('/owner/levels/');
    assert.equal(r.status,403);
