@@ -20,11 +20,13 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import stat
 
 from v204_private_cvd_price_coverage import ms, read_local_price_db, utc
 from v208_github_decision_witness import manifest_for
 from v209_private_decision_freezer import (
     MAX_EVENT_AGE, REPOSITORY_ROOT, freeze_candidate, store_private_pair,
+    _safely_create,
 )
 from v210_forward_integrity_gate import _row, adjudicate as old_adjudicate
 
@@ -157,6 +159,61 @@ def adjudicate_raw(ledger: dict, manifest: dict, raw: bytes,
     return result
 
 
+
+def store_private_raw_evidence(ledger: dict, manifest: dict, raw: bytes,
+                               private_dir: Path) -> dict:
+    """V21.2: preserve ORIGINAL bytes beside private decision and opaque hash.
+
+    One opt-in, local-only operation; exclusively create 0600 files in a 0700
+    directory outside the public repo. No raw, prices, side, nonce or paths in
+    stdout. A raw digest without these original bytes is not independently
+    re-checkable after the event.
+    """
+    if type(raw) is not bytes or not 1 <= len(raw) <= MAX_RAW_BYTES:
+        raise ValueError("original_source_bytes_required")
+    row = _row(ledger)
+    side, close, delta = classify_raw(raw)
+    if (hashlib.sha256(raw).hexdigest() != row.get("source_event_sha256") or
+        row.get("cvd_side") != side or row.get("event_close_utc") != close or
+        row.get("source_self_reported_cvd_difference") != delta or
+        row.get("source_raw_schema") != RAW_SCHEMA or
+        row.get("source_direction_rule") != RULE or
+        manifest != manifest_for(row)):
+        raise ValueError("raw_source_or_private_commitment_mismatch")
+    identity = row.get("decision_id")
+    if type(identity) is not str or re.fullmatch(r"cvd_[0-9a-f]{32}", identity) is None:
+        raise ValueError("invalid_private_identity")
+    original_folder = private_dir.expanduser()
+    if original_folder.is_symlink():
+        raise ValueError("private_directory_symlink_rejected")
+    folder = original_folder.resolve()
+    if folder == REPOSITORY_ROOT or REPOSITORY_ROOT in folder.parents:
+        raise ValueError("private_directory_must_be_outside_public_repo")
+    if folder.exists() and not folder.is_dir():
+        raise ValueError("private_directory_must_be_real_directory")
+    folder.mkdir(parents=True, mode=0o700, exist_ok=True)
+    if stat.S_IMODE(folder.stat().st_mode) & 0o077:
+        raise ValueError("private_directory_permissions_too_open")
+    raw_file = folder / f"{identity}.original-cvd.raw.json"
+    # Fail before writing anything if any component of this decision exists.
+    if any((folder / f"{identity}{suffix}").exists() for suffix in (
+        ".original-cvd.raw.json", ".private.json", ".hash-only.json"
+    )):
+        raise ValueError("decision_already_frozen_no_overwrite")
+    _safely_create(raw_file, raw)
+    try:
+        result = store_private_pair(ledger, manifest, folder)
+    except BaseException:
+        # Delete ONLY our exclusively-created source, never existing evidence.
+        raw_file.unlink(missing_ok=True)
+        raise
+    result["files_created"] = 3
+    result["original_raw_bytes_preserved_privately"] = True
+    result["original_raw_bytes_digest_matches_locked_decision"] = True
+    result["source_origin_independently_authenticated"] = False
+    return result
+
+
 def _read_raw(path: Path) -> bytes:
     with path.open("rb") as stream:
         content = stream.read(MAX_RAW_BYTES+1)
@@ -199,7 +256,7 @@ def main() -> None:
             raw, args.received_at_utc, prices, as_of=datetime.now(UTC)
         )
         if args.write_private:
-            status = store_private_pair(ledger,manifest,args.private_dir)
+            status = store_private_raw_evidence(ledger,manifest,raw,args.private_dir)
             status["cvd_direction_deterministically_derived_from_raw"] = True
             status["cvd_origin_independently_authenticated"] = False
         else:
