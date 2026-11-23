@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071723">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="description" content="REMURA Shark Cockpit: report CFTC reali per contratto, variazioni settimanali delle categorie istituzionali e retail separato.">
+  <link rel="icon" type="image/svg+xml" href="./icon.svg">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./nav.css?v=168">
+  <link rel="stylesheet" href="./shark-cockpit.css?v=172">
+  <title>REMURA v1.72 RELEASE CANDIDATE LAB · Shark Cockpit istituzionale</title>
+</head>
+<body>
+  <main class="shell">
+    <div class="build-stamp" role="note">SHARK COCKPIT v1.72 RELEASE CANDIDATE LAB · 23/11/2026 21:17 CET (Europe/Rome) · Anteprima UI, non pubblicata</div>
+    <div class="site-top">
+      <div class="brand">REMURA <span>SHARK COCKPIT · v1.72 RELEASE CANDIDATE LAB</span></div>
+      <a href="./mercati.html#institutional-scanner">← Scanner classico</a>
+    </div>
+
+    <nav class="jump-nav" aria-label="Sezioni Shark Cockpit">
+      <a href="#my-sharks">★ I miei squali</a>
+      <a href="#evidence">Affidabilità dati</a>
+      <a href="#institutional-movers">Mosse CFTC</a>
+      <a href="#contracts">Contratti</a>
+      <a href="#retail">Sentiment retail</a>
+    </nav>
+
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="eyebrow">01 / Posizionamento istituzionale · CFTC</div>
+      <h1 id="hero-title">Guarda le tracce.<br><span>Non inseguire le ombre.</span></h1>
+      <p>Le posizioni nette dei principali gruppi di operatori nei futures CFTC, contratto per contratto. Segui i contratti che ti interessano e apri lo storico settimanale. Vedi chi aumenta o riduce l'esposizione, quando è avvenuto il report e se i gruppi divergono. Non sono operazioni in tempo reale né previsioni del prezzo.</p>
+      <div class="hero-chips">
+        <span class="chip">◉ Dati pubblici CFTC</span>
+        <span class="chip">↗ Variazione settimanale in punti percentuali</span>
+        <span class="chip">⌁ Nessun segnale operativo</span>
+        <span class="chip">★ Contratti seguiti su iPhone</span>
+      </div>
+    </section>
+
+    <div class="notice">
+      <strong>La regola della remora:</strong> distinguiamo sempre il futuro CFTC dalla coppia Forex spot, il sentimento retail dalle posizioni aggregate e la data del report dalla vera data di pubblicazione. I dati assenti, obsoleti o discordanti non diventano segnali.
+    </div>
+
+    <section class="focus-panel" id="my-sharks" aria-labelledby="focus-title">
+      <div class="section-head"><div>
+        <div class="eyebrow">00 / La tua vedetta istituzionale</div>
+        <h2 id="focus-title">★ I miei squali</h2>
+        <p>I futures che segui, subito in primo piano. Le variazioni sono confrontabili soltanto fra due martedì consecutivi dello stesso contratto.</p>
+      </div>
+      <a class="focus-explore" href="#contracts">Gestisci preferiti ↓</a></div>
+      <p class="focus-status" id="my-sharks-status" role="status" aria-live="polite">Carico la tua selezione locale. In assenza di report CFTC, ogni valore resta N/D.</p>
+      <div class="focus-grid" id="my-sharks-list" aria-label="Futures CFTC che seguo">
+        <p class="focus-unavailable">Nessun dato ricostruito. Tocca ☆ nelle schede sotto per selezionare i futures.</p>
+      </div>
+      <p class="focus-disclaimer">Ordinamento di consultazione: qualità del report, data e ampiezza del Δ netto in pp soltanto a parità di martedì. Non indica operazioni live, tempistiche degli ordini, probabilità o opportunità di trading. Preferiti conservati solo sul dispositivo quando Safari lo consente.</p>
+    </section>
+
+    <section class="evidence-panel" id="evidence" aria-labelledby="evidence-title">
+      <div class="section-head"><div>
+        <div class="eyebrow">00 / Provenienza e attendibilità</div>
+        <h2 id="evidence-title">Prima la qualità. Poi i numeri.</h2>
+        <p>Controllo della leggibilità, non un punteggio di probabilità o profitto. Il COT resta settimanale; i singoli operatori non sono identificabili.</p>
+      </div></div>
+      <p id="evidence-read-at" class="evidence-read-at" role="status">Nessuna lettura ancora completata. I timestamp restano N/D.</p>
+      <div id="evidence-list" class="evidence-grid" aria-live="polite">
+        <p class="evidence-loading">Fonti da verificare nel browser. CVD: N/D finché non è integrato e validato.</p>
+      </div>
+      <p class="evidence-warning">La data del martedì CFTC indica le posizioni dichiarate, non quando REMURA le ha viste per la prima volta. Il sentiment retail non dimostra la direzione degli istituzionali. Il CVD proxy non prova ordini reali.</p>
+    </section>
+
+    <section class="pulse" aria-label="Riepilogo copertura">
+      <div class="metric"><small>Contratti nel radar</small><strong id="total-contracts">14</strong><span>Contratti CFTC selezionati</span></div>
+      <div class="metric"><small>Report leggibili</small><strong id="available-contracts">—</strong><span>Tra i contratti richiesti</span></div>
+      <div class="metric"><small>Movimenti WoW misurabili</small><strong id="valid-moves">—</strong><span>Solo settimane consecutive e recenti</span></div>
+      <div class="metric"><small>Divergenze tra categorie</small><strong id="divergent-count">—</strong><span>Descrittive, non indicazioni trade</span></div>
+    </section>
+
+    <section class="movers-panel" id="institutional-movers" aria-labelledby="movers-title">
+      <div class="section-head"><div>
+        <div class="eyebrow">00 / Ultimo report CFTC confrontabile</div>
+        <h2 id="movers-title">Le mosse più grandi dei fondi</h2>
+        <p>Fino a sei variazioni nette per contratto, soltanto con report dello stesso martedì. Non sono ordini in tempo reale.</p>
+      </div></div>
+      <p class="movers-status" id="movers-status" role="status" aria-live="polite">Attendo i dati settimanali CFTC.</p>
+      <div id="movers-list" class="movers-grid" aria-label="Variazioni istituzionali per future">
+        <div class="movers-placeholder">Nessun movimento mostrato finché i report non sono disponibili.</div>
+      </div>
+      <p class="movers-caveat">Misura: cambiamento del netto futures in punti percentuali di open interest; categorie TFF e Disaggregated non equivalenti. Non indica acquisti/vendite in tempo reale, un prezzo Forex o un segnale.</p>
+    </section>
+
+    <section id="contracts" aria-labelledby="contract-title">
+      <div class="section-head">
+        <div>
+          <h2 id="contract-title">Flussi delle grandi categorie</h2>
+          <p>Ogni scheda rappresenta un <strong>contratto futures</strong>, non una posizione su un broker Forex.</p>
+        </div>
+      </div>
+      <div class="toolbar">
+        <input id="search" type="search" autocomplete="off" aria-label="Cerca contratto" placeholder="Cerca EUR, Yen, oro, Nasdaq…">
+        <select id="family" aria-label="Famiglia di mercati">
+          <option value="Tutte">Tutte le famiglie</option>
+          <option value="Valute">Valute futures</option>
+          <option value="Indici">Indici e dollaro</option>
+          <option value="Metalli">Metalli</option>
+          <option value="Energia">Energia</option>
+        </select>
+        <select id="sort" aria-label="Ordina contratti">
+          <option value="Movimento">Movimenti maggiori</option>
+          <option value="Divergenze">Divergenze prima</option>
+          <option value="Data">Data del report</option>
+        </select>
+        <label class="watch-toggle" for="only-favorites"><input id="only-favorites" type="checkbox"> ★ Solo seguiti</label>
+        <button id="refresh" type="button" aria-label="Ricarica i report CFTC">↻ Aggiorna CFTC</button>
+      </div>
+      <p class="watchlist-note" id="watchlist-note" role="status">Preferiti disponibili su questo dispositivo, senza notifiche.</p>
+      <div id="message" role="status" aria-live="polite" data-status="waiting">Caricamento dei report pubblici CFTC…</div>
+      <div id="cards" aria-live="polite" aria-label="Contratti CFTC"><div class="metric">Attendo il feed ufficiale. Nessun dato inventato.</div></div>
+      <details class="method">
+        <summary>Come leggere le variazioni senza confonderle con i trade?</summary>
+        <p><strong>Grafico COT:</strong> nello storico di ciascun future sono tracciati soltanto martedì realmente disponibili, con una linea distinta per ciascuna categoria. Tra settimane non consecutive le linee restano interrotte. Non è un grafico del prezzo o degli acquisti istituzionali.</p>
+        <p><strong>Radiografia settimanale:</strong> apri una scheda e scegli «Radiografia del movimento» per distinguere la variazione del numero di contratti LONG e SHORT di ciascuna categoria. Non implica acquisti, vendite o chiusure individuali.</p>
+        <p><strong>Netto % OI</strong> = (long - short) / open interest × 100. <strong>Δ settimanale</strong> = variazione del netto in punti percentuali rispetto al report di sette giorni prima. Non è un rendimento, una percentuale di trader né la probabilità di una salita.</p>
+        <p>Il COT rileva posizioni aggregate di martedì e viene pubblicato successivamente. Il browser consulta la fonte pubblica solo mentre questa schermata è aperta; non verifica il primo istante in cui il dato era disponibile.</p>
+        <p>Le due categorie non hanno lo stesso significato: sui futures finanziari sono Asset Manager e Leveraged Funds; su metalli e WTI sono Managed Money e Producer / Merchant. Divergente significa che le <em>variazioni</em> delle due categorie hanno segno opposto, non che il prezzo debba invertire.</p>
+        <p>Le etichette di una singola valuta descrivono il future sulla valuta, non il verso di USD/JPY, USD/CAD o USD/CHF. Un cross come CAD/JPY richiede due future e una mappatura verificata. Nessun dato viene trattato come ordine istituzionale identificato.</p>
+      </details>
+    </section>
+
+    <section class="retail-panel" id="retail" aria-labelledby="retail-title">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">02 / Campione distinto · Myfxbook</div>
+          <h2 id="retail-title">Retail: dall'altra parte del vetro</h2>
+          <p>Ultimi snapshot già pubblicati nel repository. Non li sommiamo né li confrontiamo numericamente alle esposizioni CFTC.</p>
+        </div>
+        <a href="./fonti.html">Come leggere le fonti</a>
+      </div>
+      <div id="retail-status" role="status" aria-live="polite" class="retail-note">Verifica dei dati retail pubblicati…</div>
+      <div id="retail-list" class="retail-list"></div>
+      <p class="retail-note">La quota long è calcolata sui lotti del campione Myfxbook, non sui singoli trader. Se il campione è vecchio o insufficiente resta indicato. Per lo storico completo apri la scheda dello strumento.</p>
+    </section>
+
+    <footer class="tail">
+      <p>Fonti originali: <a href="https://publicreporting.cftc.gov/Commitments-of-Traders/TFF-Futures-Only/gpe5-46if" rel="noopener noreferrer" target="_blank">CFTC TFF</a> · <a href="https://publicreporting.cftc.gov/Commitments-of-Traders/Disaggregated-Futures-Only/72hh-3qpy" rel="noopener noreferrer" target="_blank">CFTC Disaggregated</a> · <a href="https://www.myfxbook.com/community/outlook" rel="noopener noreferrer" target="_blank">Myfxbook Community Outlook</a>.</p>
+      <p>SHARK COCKPIT v1.72 RELEASE CANDIDATE LAB · 23/11/2026 21:17 CET · Anteprima di sviluppo, non pubblicata su REMURA produzione. Nessun costo cloud aggiuntivo, ordine, Telegram o nuova raccolta privata.</p>
+    </footer>
+  </main>
+  <script src="./shark-cockpit-core.js?v=168"></script>
+  <script src="./shark-movers-core.js?v=168"></script>
+  <script src="./shark-movers-ui.js?v=168"></script>
+  <script src="./shark-evidence-core.js?v=169"></script>
+  <script src="./shark-evidence-ui.js?v=169"></script>
+  <script src="./shark-trends-core.js?v=170"></script>
+  <script src="./shark-trends-ui.js?v=170"></script>
+  <script src="./shark-focus-core.js?v=171"></script>
+  <script src="./shark-focus-ui.js?v=171"></script>
+  <script src="./shark-cockpit.js?v=172"></script>
+  <script src="./nav.js?v=172"></script>
+</body>
+</html>

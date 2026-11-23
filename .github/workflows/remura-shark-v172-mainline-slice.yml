@@ -1,0 +1,40 @@
+# REMURA v1.72 mainline UI release slice, isolated branch only.
+name: REMURA v172 Mainline Cockpit Integration
+on:
+  push:
+    branches: [feature/shark-cockpit-v172-mainline-slice-20261123]
+    paths:
+      - shark-cockpit.html
+      - shark-cockpit.css
+      - shark-cockpit.js
+      - shark-*-core.js
+      - shark-*-ui.js
+      - nav.js
+      - sw.js
+      - tests/shark-release-slice.test.js
+      - .github/workflows/remura-shark-v172-mainline-slice.yml
+permissions:
+  contents: read
+jobs:
+  mainline-slice:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: New integration surface, no old suites
+        run: |
+          set -euo pipefail
+          for js in shark-cockpit.js shark-cockpit-core.js shark-movers-core.js shark-movers-ui.js shark-evidence-core.js shark-evidence-ui.js shark-trends-core.js shark-trends-ui.js shark-focus-core.js shark-focus-ui.js nav.js sw.js; do
+            node --check "$js"
+          done
+          node --test tests/shark-release-slice.test.js 2>&1 | tee /tmp/remura-v172.log
+          grep -q '# tests 6' /tmp/remura-v172.log
+          grep -q '# pass 6' /tmp/remura-v172.log
+          grep -q '# fail 0' /tmp/remura-v172.log
+          echo REMURA_V172=MAINLINE_SLICE_OK
