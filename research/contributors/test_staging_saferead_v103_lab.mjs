@@ -62,10 +62,12 @@ test('05 non-GET never invokes delegate and remains denied',async()=>{
  }
  assert.equal(h.calls.reads,0);
 });
-test('06 actual v1.02 Worker entrypoint is wired to v1.03 presentation, never bypasses it',()=>{
+test('06 Worker entrypoint wraps v1.03 Access-guarded presentation with v1.04 CSP',()=>{
  const src=fs.readFileSync(new URL('./staging_readonly_entry_v102_lab.mjs',import.meta.url),'utf8');
- assert.ok(src.includes("import {privateStagingSafeReadV103}"));
- assert.ok(src.includes('return await privateStagingSafeReadV103(req,env,ctx)'));
+ assert.ok(src.includes("import {privateStagingCspV104}"));
+ const csp=fs.readFileSync(new URL('./private_worker_staging_csp_v104_lab.mjs',import.meta.url),'utf8');
+ assert.ok(csp.includes("import {privateStagingSafeReadV103}"));
+ assert.ok(src.includes('return await privateStagingCspV104(req,env,ctx)'));
  assert.ok(!src.includes('return await privateReadOnlyStagingV101(req,env,ctx)'));
  assert.equal(V103_READONLY.extraD1Reads,0);
  assert.equal(V103_READONLY.realAccessTested,false);
