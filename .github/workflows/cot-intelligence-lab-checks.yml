@@ -10,6 +10,9 @@ on:
       - 'scripts/cot_offline_parity_fx_bundle.py'
       - 'tests/test_cot_offline_parity_fx_bundle.py'
       - 'RESEARCH-B-COT-OFFLINE-BUNDLE-V21.2.md'
+      - 'research/real-proofs/REMURA-B-CFTC-20261123-STDOUT-PARTIAL-EXCERPT.json'
+      - 'tests/test_cot_stdout_excerpt_v213.py'
+      - 'RESEARCH-B-COT-AUDITED-STDOUT-EXCERPT-V21.3.md'
       - 'tests/cot-fx-dashboard-export.test.js'
       - 'RESEARCH-B-COT-DASHBOARD-EXPORT-V21.1.md'
       - 'scripts/cot_intelligence_parity.py'
@@ -66,4 +69,6 @@ jobs:
         run: python3 -m unittest discover -s tests -p 'test_cot_intelligence_parity.py' -v
       - name: Validate 6 NEW offline parity-first dashboard handoff gates
         run: python3 -m unittest discover -s tests -p 'test_cot_offline_parity_fx_bundle.py' -v
+      - name: Check five NEW real audit stdout excerpt integrity and non-promotion gates
+        run: python3 -m unittest discover -s tests -p 'test_cot_stdout_excerpt_v213.py' -v
 
