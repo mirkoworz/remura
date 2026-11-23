@@ -60,7 +60,7 @@ class TestOfficialCftcAudit(unittest.TestCase):
    with self.assertRaises(ValueError):
     audit.extract("tff",data,NOW)
   data=sample("tff")
-  data.append({...data[0],"asset_mgr_positions_long":"999"})
+  data.append({**data[0],"asset_mgr_positions_long":"999"})
   with self.assertRaisesRegex(ValueError,"CONFLICTING_PUBLIC_CFTC_DUPLICATE"):
    audit.extract("tff",data,NOW)
  def test_no_truncation_or_empty_are_accepted(self):
