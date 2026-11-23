@@ -54,3 +54,16 @@ Rimane **NO-GO**. Frontend iPhone v0.95 e contratto server v0.96 LAB gia' collau
 ZERO modifiche main, Oracle, Mac, Cloudflare, Access, D1, Firestore, Secrets, utenti; ZERO nuove sottoscrizioni. Una GET ufficiale BCE senza chiavi ha prodotto dati reali; una run CI breve su ramo pubblico GitHub. Non dedurre residuo delle quote personali da quello che e' stato usato.
 
 **Conclusione: raccolta sentiment funzionante; un primo anchor prezzo BCE indipendente e vero e' ora documentato; misurazione intraday CVD e alpha rimangono NON DIMOSTRATE; Contributors live ancora NO-GO.**
+
+
+## 23/11/2026 06:52 CET — RISPARMIO D1: workflow ESISTENTE per holdout V2
+Prima di qualsiasi chiamata Cloudflare, verificato in GitHub il codice gia' esistente, evitando di sviluppare un doppione o interrogare per errore le ricevute del 14 novembre:
+- Il vecchio workflow REMURA TEST First Webhook Receipt legge le **prime 100** ricevute dal **14/11** (ordinamento crescente), quindi potrebbe restituire solo storia vecchia. NON utilizzarlo per attestare l'holdout iniziato il 23/11.
+- Workflow piu' adatto, **gia' presente su main**, senza deploy: REMURA CVD TEST Batch Reader, file .github/workflows/remura-tv-cvd-batch-readonly-manual.yml. Accetta start_utc/end_utc e modalita' receipt-only per **massimo 12 chiusure M5** e verifica maturazione >=120 secondi. Codice immutabilmente pinnato al commit 08f5cdb48d430739ce3688480d95ac78aea3640b.
+- Sul caso receipt-only fa **esattamente 1 GET REST inventario D1 TEST + 1 POST REST che esegue esclusivamente SELECT parametrizzato** sul DB TEST isolato, non GraphQL; NO D1 write. Il reader legge alcuni raw_json delle righe nell'ambiente GitHub runner per validare formato ma **non pubblica i raw payload nel summary**, riporta soli aggregati. Questo dettaglio di accesso a righe reali richiede **consenso esplicito separato**, non va occultato.
+- Finestra di prova conservativa gia' maturata: start_utc=**2026-11-23T04:30Z**, end_utc=**2026-11-23T05:25Z**, mode=**receipt-only**, confirmation=**READ_CVD_TEST_BATCH_ONLY**. Sono 12 slot M5, all'interno dell'holdout V2, adatti alla diagnosi del trasporto senza PnL o pretesa di copertura dell'intera giornata.
+- URL: https://github.com/mirkoworz/remura/actions/workflows/remura-tv-cvd-batch-readonly-manual.yml .
+- Prima di eseguire: autorizzazione dell'OWNER per esattamente queste 2 richieste REST TEST in sola lettura, token di sola lettura preesistente, previa verifica del margine gratuito. Senza autorizzazione **NON eseguire**.
+- Risultato NO_MATCHING_RECEIPTS = **assenza di ricevute nella finestra scelta**, non prova che nessun alert sia partito o che il Worker sia inattivo. Risultati missing/invalid vanno distinti da zero eventi. Se risultati parziali, nessun retry automatico.
+
+**Nessuna chiamata Cloudflare o nuovo workflow e' stata eseguita in V20.2 durante questa ricognizione codice.**
