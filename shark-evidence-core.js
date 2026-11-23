@@ -34,7 +34,7 @@
     return {id:kind,title:DEFINITIONS[kind].title,state,headline,
       detail:loaded?(dated+" / "+total+" contratti con data · "+comparable+" variazioni WoW confrontabili"):
         "Nessuna posizione mostrata senza risposta CFTC.",
-      reference:latestDate(list),
+      reference:loaded?latestDate(list):null,
       note:DEFINITIONS[kind].description+". Data martedì CFTC, non ora di pubblicazione o trade."};
   }
   function retail(rows){
