@@ -58,4 +58,12 @@ test("single updated HTML is stamped at top, modules load before cockpit, with i
   const ui=fs.readFileSync(path.join(__dirname,"..","shark-evidence-ui.js"),"utf8");
   assert.equal(ui.includes("fetch("),false);
   assert.equal(ui.includes("innerHTML"),false);
+  const preview=fs.readFileSync(path.join(__dirname,"..","preview",
+    "REMURA-Shark-Evidence-v169-iPhone-STANDALONE-LAB.html"),"utf8");
+  for(const marker of ["inline-shark-evidence-core.js","inline-shark-evidence-ui.js",
+    "inline-shark-cockpit.js",'id="evidence"',"v1.69 LAB"]){
+    assert.ok(preview.includes(marker),marker);
+  }
+  assert.ok(!preview.includes("<script src="));
+  assert.ok(!preview.includes("/private-api/"));
 });
