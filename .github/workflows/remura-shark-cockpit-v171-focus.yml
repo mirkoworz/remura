@@ -1,0 +1,51 @@
+# REMURA Shark Cockpit v1.71 LAB — 23/11/2026 Europe/Rome.
+# Integration of v1.70 COT history with v1.71 favorites.
+# No secrets, provider calls, private API, deployment or merge.
+name: REMURA Shark Cockpit v171 Focus integration
+on:
+  push:
+    branches: [feature/shark-cockpit-v171-my-sharks-iphone-20261123]
+    paths:
+      - shark-cockpit.html
+      - shark-cockpit.css
+      - shark-cockpit.js
+      - shark-focus-core.js
+      - shark-focus-ui.js
+      - shark-trends-core.js
+      - shark-trends-ui.js
+      - shark-evidence-core.js
+      - shark-evidence-ui.js
+      - preview/REMURA-Shark-Focus-v171-iPhone-STANDALONE-LAB.html
+      - sw.js
+      - tests/shark-focus.test.js
+      - tests/shark-trends.test.js
+      - tests/release-consistency.test.js
+      - .github/workflows/remura-shark-cockpit-v171-focus.yml
+permissions:
+  contents: read
+jobs:
+  focus-integrated-ui:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax of changed COT and favorites modules
+        run: |
+          set -euo pipefail
+          for script in shark-cockpit.js shark-cockpit-core.js shark-focus-core.js shark-focus-ui.js shark-trends-core.js shark-trends-ui.js shark-evidence-core.js shark-evidence-ui.js sw.js; do
+            node --check "$script"
+          done
+      - name: Integrated historic + favorites + shared release wiring
+        run: |
+          set -euo pipefail
+          node --test tests/shark-focus.test.js tests/shark-trends.test.js tests/shark-evidence.test.js tests/shark-anatomy.test.js tests/shark-movers.test.js tests/shark-cockpit.test.js tests/release-consistency.test.js 2>&1 | tee /tmp/remura-v171.txt
+          grep -q '# tests 77' /tmp/remura-v171.txt
+          grep -q '# pass 77' /tmp/remura-v171.txt
+          grep -q '# fail 0' /tmp/remura-v171.txt
+          echo REMURA_SHARK_COCKPIT_V171=77_77_PASS
