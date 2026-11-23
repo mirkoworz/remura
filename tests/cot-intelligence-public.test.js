@@ -47,5 +47,7 @@ test("public source is independent of existing private-cache provenance gate",()
  const s=make();
  const old={...s,source:"existing_private_cftc_cache",captureClock:"first_local_capture_not_official_publication"};
  const r=watch.build(old,{nowUtc:NOW,observedAt:"2026-11-23T12:00:00Z"});
- assert.equal(r.state,"no_data"); // unknown first-seen rows excluded; never retroactively known
+ assert.equal(r.state,"insufficient"); // rows exist but none can be known at historical as-of
+ assert.equal(r.periods.tff.state,"no_data");
+ assert.ok(r.groups.every(g=>g.state==="blocked"));
 });
