@@ -57,3 +57,16 @@ Osservazione visiva da due schermate Safari dell'OWNER in **Cloudflare Billing �
 - **Stato costi complessivi**: **UNKNOWN**; negli screenshot non è visibile un totale fatturabile, né un eventuale elenco completo delle altre voci. Non sostituire `UNKNOWN` con 0 €.
 
 **Gate aggiornato**: `SUBSCRIPTIONS_FREE_VISIBLE` + `ARGO_BYTES_0` + `SPECTRUM_BYTES_0`; `TOTAL_BILLABLE_USAGE_UNKNOWN`, `REAL_PILOT_NO_GO`. Unica verifica manuale ancora utile e autorizzata in sola lettura: cercare nella parte superiore di `Billable usage` o in `Invoices` il totale monetario/altre voci del periodo di fatturazione (non serve inviare dati di carta o personali). Nessun upgrade, aggiunta prodotto, deploy, Cloudflare API, D1 SQL o utente reale autorizzato.
+
+## Verifica documentale del contratto Cloudflare Access — 23/11/2026
+Fonti ufficiali:
+- https://developers.cloudflare.com/workers/configuration/cloudflare-access/
+- https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/application-token/
+
+**Confermato sul contratto del provider, NON sulla nostra configurazione runtime**:
+- `ctx.access` arriva soltanto al Worker chiamato direttamente dopo l'autenticazione Access; non attraversa Service Bindings, RPC né il router interno Workers Static Assets. Il progetto v1.00 dipende da `ctx.access` e da `ctx.access.getIdentity()`: un futuro build con `assets` nel Wrangler manifest può bloccare la funzione anche con Access attivo.
+- L'oggetto di identità documentato espone `email`, `user_uuid`, `account_id`, `service_token_id`, `service_token_status`. Questo è coerente con i nomi verificati nel modulo `access_binding_candidate.mjs`, **ma il valore e la presenza dei campi su un login reale restano non verificati**.
+- La politica Access va controllata anche su `workers.dev`, preview, custom domain e override più specifici; policy configurate come bypass possono annullare l'assunzione di tutela.
+- Il futuro manifest di staging deve escludere il router Static Assets e dichiarare ESPLICITAMENTE Access Worker-level, D1 di staging e nomi reali di AUD/account, con segreti solo nel provider. Il codice attuale rimane intenzionalmente inerte e NON è un bundle da distribuire.
+
+**Decisione**: niente altro ciclo di prove sintetiche per la stessa proprietà. Il prossimo gate che può confermare l'interoperabilità è il test autentico su un URL di staging isolato, dopo consenso specifico. `CLOUDFLARE_RUNTIME_NOT_VERIFIED`.
