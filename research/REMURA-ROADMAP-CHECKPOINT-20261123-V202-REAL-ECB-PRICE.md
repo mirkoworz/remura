@@ -67,3 +67,30 @@ Prima di qualsiasi chiamata Cloudflare, verificato in GitHub il codice gia' esis
 - Risultato NO_MATCHING_RECEIPTS = **assenza di ricevute nella finestra scelta**, non prova che nessun alert sia partito o che il Worker sia inattivo. Risultati missing/invalid vanno distinti da zero eventi. Se risultati parziali, nessun retry automatico.
 
 **Nessuna chiamata Cloudflare o nuovo workflow e' stata eseguita in V20.2 durante questa ricognizione codice.**
+
+
+## ADDENDUM V20.3 — PRIMA RICEZIONE CVD TEST REALE ATTESTATA, 23/11/2026
+Questo addendum **SUPERA l'UNKNOWN del runtime CVD TEST relativo alla specifica finestra verificata**. Non modifica la valutazione scientifica di alpha o le altre finestre non interrogate. Esecuzione avviata manualmente dall'OWNER dopo verifica quota Workers e D1 gratuita su dashboard Cloudflare.
+
+### Rilevazione D1 Free proprietario prima del run, 06:59 CET
+- Workers: 151/100.000 richieste/die e 121/200.000 Observability events/die (schermata delle 06:57).
+- D1: 4/10 database; 72/5.000.000 righe lette oggi, 288/100.000 righe scritte oggi, 6,93 MB/5 GB account. Il database remura-tv-lab-test mostrava 144 queries e 288 rows written prima del run; **non dedurre** che queste scritture siano automaticamente 288 eventi CVD reali.
+- Billing piano specifico non verificato separatamente; le dashboard mostrano soglie Free. Conoscenza del margine limitata all'istante della schermata.
+
+### Prova operativa dopo autorizzazione: GitHub Actions SUCCESS
+- Run https://github.com/mirkoworz/remura/actions/runs/45121703188, avvio 2026-11-23T06:04:23Z (**07:04:23 CET**), branch main; job 137516719502 completato SUCCESS.
+- Lettore preesistente (codice pinnato 08f5cdb48d430739ce3688480d95ac78aea3640b), modalita' receipt-only; **finestra chiusure 2026-11-23T04:30Z — 05:25Z (05:30–06:25 CET)**, 12 slot M5.
+- **COMPLETE_REQUESTED_WINDOW**: 12 slot richiesti, 12 barre M5 uniche validate, **0 slot mancanti**, 0 duplicati. Scope e' SOLO finestra richiesta, non un'intera sessione.
+- Symbol **FX:EURUSD** (NON FXCM:EURUSD), timeframe 5, sender_version **0.9.1-cvd-lab**, validazione di schemi, coerenza temporale, configuration ID, chiusura M5 e payload del mittente. **Attestazione indipendente dell'origine TradingView/mercato = FALSE**; sono ricevute vere osservate in D1 TEST, non la dimostrazione di ordini istituzionali o di volume di scambi reale.
+- Massimo lag di ricezione 15510 ms = **15,51 secondi**.
+- Radar: 12/12 **OBSERVATION_ONLY**; per 10 il segno del delta intrabar e del footprint e' allineato, per 2 discorda; **ER_NONE 12/12**; candidate_cooccurrences e' VUOTO. Non chiamare le 10/2 accuratezza previsiva o successo degli ingressi. **NO_OPERATIONAL_SIGNAL**, **scientific_admission=false**, **outcomes_computed=false**, **orders_enabled=false**, **notifications_enabled=false**. Il radar non ha prodotto proposte di trade.
+- Righe D1 lette dalla query 25, D1 righe scritte 0. Operazioni API Cloudflare effettive: **1 GET inventario + 1 POST REST /query con SOLO SELECT**, entro il tetto autorizzato. **Nessun retry o ulteriore Cloudflare call**. I raw payload sono validati internamente e non stampati o salvati nel resoconto. Account quota utilization non deducibile dal solo metadato della query.
+- L'esecuzione ha fatto passare anche 158 test offline preesistenti nel workflow pin, ma questo NON costituisce motivo per ripeterli.
+- Resoconto JSON aggregato conservato: research/real-proofs/REMURA-V203-CVD-TEST-RECEIPTS-20261123.json (copia esatta dell'aggregato GitHub, senza payload grezzi o Secrets).
+
+### Nuovo status e prossimo lavoro scientifico
+- **TRASPORTO/RECEIPT TEST = PROVATO per 12/12 barre tra 04:30 e 05:25 UTC il 23/11**, indipendentemente da esiti trading.
+- **Istituzionali e alpha = NON PROVATI**: non abbiamo prezzi futuri indipendenti M5/60m/H4/24h, costi/spread/slippage, origini verificate del feed, o campioni prospettici sufficienti. Il primo anchor BCE giornaliero di V20.2 non basta a validarli.
+- **Contributor Free pilot NO-GO** fino a posti Cloudflare Access effettivi, verifica JWT/ruoli owner, dinieghi e revoca reali. Le quote D1/Workers del 23/11 SONO state finalmente verificate in dashboard ma non sostituiscono Access/Billing.
+- Prossimo passo preferenziale: lettura del codice dei moduli gia' esistenti per definire esattamente quale prezzo/ritorno indipendente serve; non ripetere diagnosi D1 di questa stessa finestra, non attivare altri run o servizi senza nuova autorizzazione.
+- **Non toccati main, file HTML, Oracle, Mac/Codex, collector privato, produzione o PR #105/#106**. Nessun cambio versione UI richiesto, poiche' sono stati aggiunti solo file di ricerca.
