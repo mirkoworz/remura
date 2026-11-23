@@ -1,4 +1,4 @@
-/* REMURA Shark Cockpit v1.69 LAB — 23/11/2026 13:30 CET */
+/* REMURA Shark Cockpit v1.70 LAB — 23/11/2026 15:01 CET */
 :root{color-scheme:dark;--bg:#06121b;--ink:#ecf9f6;--muted:#9ebdc4;--mint:#76f2cd;--blue:#8bb6ff;--amber:#f6d496;--red:#ff919e;--line:#35535f;--panel:#102733}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -168,3 +168,23 @@ details.method p,details.method li{color:#bed3d4;font-size:12px;line-height:1.7}
 .evidence-warning{font-size:11px;line-height:1.6;margin:13px 0 0;color:#e4d4b4}
 .evidence-loading{margin:0;font-size:12px;color:#d4eae4}
 @media(max-width:620px){.evidence-grid{grid-template-columns:1fr}.evidence-panel{padding:14px}.evidence-card{padding:13px}.jump-nav{margin-right:-12px;padding-right:12px}.build-stamp{font-size:10px}}
+
+
+/* v1.70 LAB — 23/11/2026 15:01 CET · weekly CFTC trends, no interpolation. */
+.cot-trend{background:#0b2530;border:1px solid #315762;border-radius:12px;padding:12px;margin:0 0 13px;min-width:0}
+.trend-legend{display:flex;gap:12px;flex-wrap:wrap;margin:0 0 3px}
+.trend-key{display:inline-flex;gap:7px;align-items:center;font-weight:800;font-size:11px;color:#cde3dd}
+.trend-key:before{content:"";display:inline-block;width:15px;height:4px;border-radius:2px;background:#78edc7}
+.trend-key.second:before{background:#92baff}
+.trend-svg{display:block;width:100%;height:auto;aspect-ratio:560/220;overflow:visible}
+.trend-axis{fill:#b2d1d6;font-size:12px;font-weight:650}
+.trend-grid{stroke:#3c5760;stroke-width:1}
+.trend-zero{stroke:#9eb9b5;stroke-width:1;stroke-dasharray:5 5}
+.trend-line{stroke:#78edc7;stroke-width:3;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.trend-line.second{stroke:#92baff}
+.trend-dot{fill:#78edc7;stroke:#08232d;stroke-width:1.8}
+.trend-dot.second{fill:#92baff}
+.trend-caption{font-size:11px;color:#bad3d7;line-height:1.65;margin:4px 0 0}
+.trend-message{font-size:12px;color:#f1d3b0;margin:0}
+@media(max-width:540px){.cot-trend{padding:9px 7px}.trend-legend{gap:8px}.trend-key{font-size:10px}.trend-axis{font-size:14px}.trend-caption{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.trend-line{animation:none;transition:none}}
