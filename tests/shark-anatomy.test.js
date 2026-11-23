@@ -112,7 +112,7 @@ test("Real iPhone UI renders anatomy from existing CFTC snapshots and adds no fe
  const html=fs.readFileSync("shark-cockpit.html","utf8");
  const ui=fs.readFileSync("shark-cockpit.js","utf8");
  const css=fs.readFileSync("shark-cockpit.css","utf8");
- assert.ok(html.includes("v1.70 LAB")&&html.includes("shark-cockpit.js?v=170"));
+ assert.ok(html.includes("v1.71 LAB")&&html.includes("shark-cockpit.js?v=171"));
  assert.ok(html.includes("Radiografia settimanale:"));
  assert.ok(ui.includes("core.anatomyFor("));
  assert.ok(ui.includes("r.append(anatomyPanel(item))"));
