@@ -1,0 +1,45 @@
+name: REMURA A V21.5 offline M15 readiness isolated checks
+on:
+  pull_request:
+    paths:
+      - 'research/v211_raw_cvd_direction_admission.py'
+      - 'research/test_v211_raw_cvd_direction_admission.py'
+      - 'research/test_v212_private_raw_custody.py'
+      - 'research/v214_native_tv_cvd_pair_probe.py'
+      - 'research/test_v214_native_tv_cvd_pair_probe.py'
+      - 'research/v215_offline_price_readiness.py'
+      - 'research/test_v215_offline_price_readiness.py'
+      - 'research/REMURA-ROADMAP-CHECKPOINT-20261123-V215-OFFLINE-PRICE-INTAKE.md'
+      - '.github/workflows/remura-v211-raw-cvd-admission-tests.yml'
+permissions:
+  contents: read
+jobs:
+  strict-new-source-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout static lab code without publishing raw events
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run 21 impacted offline V21.1 source regression tests
+        run: python3 -m unittest discover -s research -p 'test_v211_raw_cvd_direction_admission.py' -v
+      - name: Test ONLY five new RAW private-custody safety cases
+        run: python3 -m unittest discover -s research -p 'test_v212_private_raw_custody.py' -v
+      - name: Run six NEW native CVD pair compatibility tests, offline only
+        run: python3 -m unittest discover -s research -p 'test_v214_native_tv_cvd_pair_probe.py' -v
+      - name: Test six NEW offline SQLite M15 readiness gate cases
+        run: python3 -m unittest discover -s research -p 'test_v215_offline_price_readiness.py' -v
+      - name: Verify no genuine raw source means no signal or API request
+        run: |
+          python3 research/v211_raw_cvd_direction_admission.py > /tmp/remura-v211-empty.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("/tmp/remura-v211-empty.json").read_text())
+          assert r["status"] == "NO_ORIGINAL_CVD_SOURCE_NO_DECISION"
+          assert r["signal_count"] == 0
+          assert r["network_or_market_provider_calls"] == 0
+          assert r["trades_or_alerts_activated"] is False
+          print("REMURA_V211_NO_RAW_REAL_SOURCE_NO_SIGNAL=PASS")
+          PY
