@@ -171,3 +171,23 @@ Tre screenshot iPhone Cloudflare Zero Trust, **solo consultazione visiva** della
 **Passaggio decisionale**: `WORKER_ACCESS_SCOPE = OWNER_SCREENSHOT_VERIFIED (prod+preview, non isolato)`; `GOOGLE_IDP_SELECTED = OWNER_SCREENSHOT_VERIFIED`; `ACCESS_POLICY_DETAILS = PARTIAL`; `OWNER_POLICY_ATTACHED = UNCONFIRMED`. Rimangono `NO_GO`: rilevazione del selettore Include/Require di `REMURA Contributor`, identity allowlist effettiva, dominio Worker reale, corretta verifica `ctx.access` nel Worker, D1 staging isolato, approvazione spesa/deploy, test Safari e revoca.
 
 **Prossima verifica ammessa in sola lettura:** aprire la voce `REMURA Contributor` nei dettagli delle policy dell'app e visualizzarne i selettori `Include`/`Require` (evitare di pubblicare indirizzi o identità), **senza cambiare o salvare nulla**. Non creare nuove applicazioni, Worker, regole, utenti o abbonamenti.
+
+
+## 24 novembre 2026, 06:59 CET — conferma policy OWNER separata da CONTRIBUTOR
+
+Nuove schermate Cloudflare Zero Trust fornite dal proprietario (06:59 Europe/Rome) mostrano il dettaglio della policy **`REMURA Contributors Owner Test`**, **non** il dettaglio della policy `REMURA Contributor` elencata nell'app.
+
+**Dati osservati (senza conservare identità o indirizzi personali):**
+- `Total rules = 2`, `Used by applications = 1`, `Action = Allow`, `Session duration = 1h`.
+- `Include → Emails`: **un solo indirizzo specifico**, deliberatamente omesso in questa nota.
+- `Require → Login Method`: `Google · REMURA Google`.
+- `Applications`: riferimento visualizzato all'app `remura-contributors-staging - Cloudflare Workers`.
+- `Multi-factor authentication (MFA) = Off` nella policy; questo non attesta lo stato MFA del singolo account Google.
+- `Isolate application = Off`, `Purpose justification = Off`, `Temporary authentication = Off`.
+- Nessun pulsante `Edit`, `Save`, `Delete`, nuovo utente, test login o altro controllo è stato azionato.
+
+**Interpretazione rigorosa:** la policy OWNER è una allowlist specifica che richiede anche il provider Google; non autorizza automaticamente i ruoli lato D1. L'associazione mostrata per la policy OWNER non riconcilia ancora la differenza con la lista policy dell'app, dove era visibile solo `REMURA Contributor`. Lo stato di enforcement reale dell'app rimane da provare e il tipo di destinazione precedente comprende **Worker production e preview URLs**.
+
+**Gate:** `OWNER_POLICY_SELECTOR_DETAILS=OWNER_SCREENSHOT_VERIFIED`; `OWNER_MFA_POLICY=OFF`; `CONTRIBUTOR_POLICY_SELECTOR_DETAILS=UNKNOWN`; `APP_POLICY_ATTACHMENT_AND_ORDER=UNRECONCILED`; `REAL_ACCESS_AUTHENTICATION=NO_GO`; `D1_STAGING_ISOLATION=NO_GO`; `CONTRIBUTOR_WRITABLE_PILOT=NO_GO`.
+
+**Prossima verifica gratuita in sola lettura:** chiudere il dettaglio OWNER (X), tornare a `Access → Applications → remura-contributors-staging → Access policies` e toccare **esattamente `REMURA Contributor`** (non `REMURA Contributors Owner Test`), espandere `Policy details`, verificare `Include`, `Require`, `Exclude` (se presenti) e eventuali regole generiche; oscurare dati identificativi prima dello screenshot. Nessun edit, nessun salvataggio, nessun invito e nessun deploy.
