@@ -125,3 +125,19 @@ Per la fase successiva è richiesta un'autorizzazione **solo per configurare e c
 - Cloudflare Workers Access documenta `ctx.access` **solo** per Worker direttamente autenticato; Worker Static Assets e service bindings non passano il contesto di identità. La build reale dovrà dimostrare assenza di `assets`, policy Access corretta e identità da due utenti reali senza usare un service token: https://developers.cloudflare.com/workers/configuration/cloudflare-access/
 
 **Restano condizioni NO-GO del pilot:** creare/configurare staging privato soltanto con autorizzazione distinta, verificare Zero Trust Free e posti disponibili, confermare D1 staging isolato (né produzione né fixture), policy Access per OWNER + CONTRIBUTOR, autenticazione Safari, 403 incrociati, revoca e audit reali. Le POST restano tutte negate; niente invio livelli né approvazione da questa versione. Nessun Worker deploy, D1 write, utente o nuova spesa effettuata qui.
+
+
+## 24 novembre 2026, 06:49 CET — prova reale Zero Trust Free ricevuta
+
+**Evidenza fornita dall'OWNER:** schermata della dashboard Cloudflare, sezione `Settings → Cloudflare One plan`, fotografata su iPhone il 24/11/2026 alle 06:49 italiane.
+
+- `Plan type: Zero Trust Free` — **verificato sullo schermo OWNER**.
+- `Seats: 1 of 50 available seats` — **un posto su 50 in uso**; margine nominale **49 posti**, ampiamente sufficiente per un pilot di 1 OWNER + 1–2 CONTRIBUTOR, subordinato alle policy e agli inviti reali. Non sono stati creati nuovi account o posti.
+- `Price: $0 / month` — prezzo del **solo piano Cloudflare One Zero Trust** sullo screenshot, non attestazione del costo totale Cloudflare / Workers / D1 / Pages / billing.
+- `Role: Super Administrator - All Privileges` — privilegi del dashboard verificati visivamente. **Non riportare né conservare qui l'indirizzo email visibile sullo screenshot.**
+- `Set dashboard to read-only: Off` — stato dashboard, non abilitazione di un Worker.
+- **Non ancora attestati**: numero e regole delle applicazioni Access, politiche precise dei domini Worker, provider di login, identity UUID e email tag, D1 database staging separato, consumi Workers/D1, fatturazione complessiva, autenticazione Access reale, permessi incrociati e revoca.
+
+**Decisione di roadmap:** il gate `ZERO_TRUST_FREE_PLAN_AND_SEAT_CAPACITY` passa da `UNKNOWN` a **`OWNER_SCREENSHOT_VERIFIED`**. I gate `ACCESS_APP_POLICY`, `STAGING_D1_ISOLATION`, `WORKERS_D1_USAGE_FREE`, `REAL_AUTHENTICATION`, `ROLE_REVOKE_END_TO_END` e `OWNER_APPROVAL_FOR_DEPLOY` restano `NO_GO`.
+
+**Prossima operazione manuale a costo zero:** aprire Zero Trust → Access → Applications **in sola consultazione**, verificare se esiste già un'app legata al dominio staging; non creare app, policy, utenti, Worker o binding e non selezionare piani a pagamento. Acquisire soltanto la vista generale della lista; oscurare email e dati identificativi. Prima di creare qualsiasi risorsa o pubblicare il portale si richiede autorizzazione separata.
