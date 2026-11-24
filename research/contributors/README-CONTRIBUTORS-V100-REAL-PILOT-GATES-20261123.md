@@ -215,3 +215,20 @@ Nessun utente, deploy, chiamata API Cloudflare, Worker, D1, policy o costo creat
 **Prossimo controllo indipendente**: consultare il solo elenco D1 nel dashboard Cloudflare (senza eseguire query): identificare l'eventuale database staging dedicato, il fixture sintetico e il database lab; non creare, collegare, eliminare o migrare database. Rilevare nome e piano Free evitando identificativi privati. Non inferire il database associato a un Worker dalla sola presenza in elenco.
 
 Nessun deploy/merge/utente/Worker/D1 modificato e nessuna nuova spesa.
+
+
+## 24 novembre 2026, 07:23 CET — D1 Free: elenco e quote reali OWNER
+
+**Fonte:** screenshot della dashboard Cloudflare `D1 Database`, vista `Daily`, data 24/11/2026; sola lettura e senza query o mutazioni.
+
+- `Total databases: 4 / 10` → 4 database attuali, 6 posti nominali liberi.
+- `Rows read: 0 / 5M` e `Rows written: 0 / 100k` **nella giornata indicata al momento dello screenshot**. Non generalizzare a consumi di altri giorni.
+- `Total storage: 7.71 MB / 5 GB`. `Metered storage: 74.99 kB-mo` visualizzati come valore separato; non confonderlo con i byte archiviati.
+- I 4 database visibili: `remura-contributors-fixture`, `remura-contributors-lab`, `remura-tv-lab-test`, `remura-tv-lab`; la colonna `Queries` della lista mostra 0 per tutti.
+- **NESSUN `remura-contributors-staging` dedicato nell'elenco.** La presenza del Worker `remura-contributors-staging` in Access **non** implica l'esistenza dell'omonimo D1, né dimostra che siano presenti binding/staging/credenziali. Distinguere nomi di Worker da nomi D1.
+- `remura-contributors-fixture` resta destinato a test sintetici e non va utilizzato con identità reali; `remura-contributors-lab` è LAB storico da proteggere, non dichiararlo staging isolato verificato.
+- Si può **valutare** un quinto database D1 staging *separato* nei limiti quantitativi della schermata, ma sono ancora da verificare quota Workers, billing account e limitazioni specifiche; **non crearne uno senza autorizzazione nuova e specifica**.
+
+**Gate aggiornati:** `D1_FREE_CAPACITY=OWNER_SCREENSHOT_VERIFIED`; `D1_CURRENT_LIST=OWNER_SCREENSHOT_VERIFIED`; `DEDICATED_CONTRIBUTORS_STAGING_DB=ABSENT_IN_LIST`; `STAGING_D1_ISOLATION=NO_GO`; `CONTRIBUTOR_ACCESS_POLICY=NO_GO`; `REAL_COLLABORATOR_PILOT=NO_GO`.
+
+**Prossima scelta operativa:** prima riconciliare policy Access `REMURA Contributor` (UI rimanda a Owner Test, già documentato, non chiedere di ripetere); poi autorizzare eventualmente creazione del **solo** database staging isolato, dopo verifica del Free. Vietati merge/deploy, SQL, Worker binding e nuovi utenti in assenza di permesso separato.
