@@ -247,3 +247,18 @@ Nessun deploy/merge/utente/Worker/D1 modificato e nessuna nuova spesa.
 - **Gate aggiornati:** `WORKER_PRODUCTION_STAGING_FLAG=DISABLED_VERIFIED`, `WORKER_PRODUCTION_D1_BINDING=ABSENT_VERIFIED`, `WORKER_PREVIEWS_BASE_BINDINGS=NOT_INSPECTED`, `WORKER_ACTIVE_DEPLOYMENT=NOT_VERIFIED`, `WORKER_LAB_V104_CONFIG_SATISFIED=NO_GO`, `ACCESS_CONTRIBUTOR_POLICY=NO_GO`, `REAL_COLLABORATOR_PILOT=NO_GO`.
 
 **Prossimo controllo gratuito in sola lettura (facoltativo):** nella stessa schermata `Settings` selezionare `Previews Base` nella sezione `Bindings` e verificare **solo** se compaiono collegamenti già esistenti, senza aprire Secret o premere `Add binding`/`Save`. L'esistenza di una base preview non significa un ambiente indipendente: non attivare alcuna route o deploy. In alternativa, preparare il piano tecnico isolato mentre si riconcilia Access. Nessuna necessità di ripetere screenshot di Production già acquisito.
+
+
+## 24 novembre 2026, 07:55 CET — Previews Base bindings: assenti
+
+**Fonte:** screenshot OWNER del Worker `remura-contributors-staging` → `Settings` → sezione `Bindings` con **`Previews Base` esplicitamente selezionato**. Compare `No connected bindings`. Il controllo è stato effettuato senza azionare `Add binding` o modificare impostazioni.
+
+- `WORKER_PREVIEWS_BASE_BINDINGS = ABSENT_OWNER_SCREENSHOT_VERIFIED`.
+- Il controllo precedente aveva già attestato `WORKER_PRODUCTION_BINDINGS = ABSENT_OWNER_SCREENSHOT_VERIFIED`.
+- La sezione distinta `Runtime variables and secrets` in questo screenshot rimane selezionata su **Production**; non attribuire ai `Previews Base` la variabile Production `STAGING_ENABLED=DISABLED` né i nomi dei Secret di Production. `WORKER_PREVIEWS_BASE_VARIABLES_AND_SECRETS=NOT_INSPECTED`.
+- Non esiste dunque un binding D1 visibile in questi due scope del Worker. I 4 database D1 dell'account rimangono indipendenti; nessuno di essi è attestato come collegato al Worker.
+- Nessuna interpretazione sulla disponibilità dell'URL preview, sulla policy Access Contributor ancora ambigua o sul deployment effettivamente attivo: **nessun login/ruolo/lettura D1 end-to-end verificato**.
+
+**Decisione:** lo staging Contributors reale resta `NO_GO` finché non vengono chiarite policy Access, Worker isolato e database staging dedicato. Il prossimo avanzamento sensato non è ripetere schermate ma preparare, dopo autorizzazione separata, **un quinto database D1 staging vuoto e isolato**, con limite Free accertato (4/10 database, 7,71 MB/5 GB al 24/11/2026 07:23 CET), senza migrarlo, collegarlo o eseguire SQL. Qualsiasi creazione è ancora **non autorizzata**.
+
+Nessun nuovo utente, deploy, merge, accesso API Cloudflare, binding o spesa in questa fase.
