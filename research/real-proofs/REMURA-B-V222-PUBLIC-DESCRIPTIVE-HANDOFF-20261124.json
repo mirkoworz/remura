@@ -1,0 +1,723 @@
+{
+  "schema": "remura-b-v222-public-descriptive-handoff-v1",
+  "version": "B_V22_2_LAB",
+  "state": "PUBLIC_DESCRIPTIVE_ONLY_PRIVATE_PARITY_PENDING",
+  "reportDates": [
+    "2026-11-10",
+    "2026-11-17"
+  ],
+  "publicReadAtUtc": "2026-11-24T09:05:06.088584Z",
+  "sourceSnapshotCommit": "5cd969490ed7ccef18842baea12e421c986d80b7",
+  "sourceSnapshotGitBlob": "e05d6fe91ab350e4e35cda05d0dee48fb810188a",
+  "sourceRowsSha256": "30fe267d0e0e89d4789f03db31da84ee44a5ccdb56f04f5fba06343860bdb72f",
+  "sourceFileSha256": "b17bc0fcb83fcf9ea3af7aa6ccf38081355b7f940f49b6a5030f7a8a8f8556f3",
+  "method": "Independent offline application of existing cot-intelligence-core.js and cot-intelligence-fx-factors.js formulas; existing exporter executable not run; not the parity-gated dashboard contract.",
+  "units": "net and weekly changes: percentage points of open interest; OI: contracts",
+  "fxCategories": [
+    "Asset Manager/Institutional",
+    "Leveraged Funds"
+  ],
+  "publicKeys": 28,
+  "underlyingCount": 7,
+  "crossCount": 28,
+  "directFuturesCount": 7,
+  "privateParityVerified": false,
+  "privateFirstSeenKnown": false,
+  "historicAvailabilityAttested": false,
+  "usdZeroMathematicalReference": true,
+  "liveFlowClaimed": false,
+  "tradingSignalsEnabled": false,
+  "alphaEstablished": false,
+  "historyWeeks": 2,
+  "factors": [
+    {
+      "currency": "EUR",
+      "code": "099741",
+      "netA_Pp": 17.00098841613243,
+      "netB_Pp": -8.843437655883385,
+      "deltaA_Pp": -2.3597266843993303,
+      "deltaB_Pp": -0.4573863282323245,
+      "openInterestContracts": 866032,
+      "openInterestDeltaContracts": 11327,
+      "historyStatus": "insufficient",
+      "cotIndex52": null,
+      "firstLocalCaptureUtc": null
+    },
+    {
+      "currency": "GBP",
+      "code": "096742",
+      "netA_Pp": -44.803189735287944,
+      "netB_Pp": 12.329817258318023,
+      "deltaA_Pp": 3.3891429719149784,
+      "deltaB_Pp": -3.3590702155868932,
+      "openInterestContracts": 233499,
+      "openInterestDeltaContracts": 13630,
+      "historyStatus": "insufficient",
+      "cotIndex52": null,
+      "firstLocalCaptureUtc": null
+    },
+    {
+      "currency": "JPY",
+      "code": "097741",
+      "netA_Pp": 21.69299699508916,
+      "netB_Pp": -6.094358811459136,
+      "deltaA_Pp": -1.539147010053881,
+      "deltaB_Pp": -1.7600611579715117,
+      "openInterestContracts": 390361,
+      "openInterestDeltaContracts": 1486,
+      "historyStatus": "insufficient",
+      "cotIndex52": null,
+      "firstLocalCaptureUtc": null
+    },
+    {
+      "currency": "AUD",
+      "code": "232741",
+      "netA_Pp": -48.820271400364966,
+      "netB_Pp": 10.147456055744215,
+      "deltaA_Pp": -4.267914793334967,
+      "deltaB_Pp": -4.254613892875488,
+      "openInterestContracts": 374281,
+      "openInterestDeltaContracts": 21422,
+      "historyStatus": "insufficient",
+      "cotIndex52": null,
+      "firstLocalCaptureUtc": null
+    },
+    {
+      "currency": "CAD",
+      "code": "090741",
+      "netA_Pp": 1.4978251522951762,
+      "netB_Pp": -20.134231935363193,
+      "deltaA_Pp": -2.7277283572779787,
+      "deltaB_Pp": -0.23064926129986318,
+      "openInterestContracts": 358186,
+      "openInterestDeltaContracts": 15509,
+      "historyStatus": "insufficient",
+      "cotIndex52": null,
+      "firstLocalCaptureUtc": null
+    },
+    {
+      "currency": "CHF",
+      "code": "092741",
+      "netA_Pp": -8.863222846293805,
+      "netB_Pp": -15.634047939245313,
+      "deltaA_Pp": 1.5571034763256382,
+      "deltaB_Pp": -2.918227147651839,
+      "openInterestContracts": 126410,
+      "openInterestDeltaContracts": 32,
+      "historyStatus": "insufficient",
+      "cotIndex52": null,
+      "firstLocalCaptureUtc": null
+    },
+    {
+      "currency": "NZD",
+      "code": "112741",
+      "netA_Pp": -34.65136457429511,
+      "netB_Pp": -17.2039169078885,
+      "deltaA_Pp": -3.552111962982707,
+      "deltaB_Pp": 1.618756408970949,
+      "openInterestContracts": 137149,
+      "openInterestDeltaContracts": 5223,
+      "historyStatus": "insufficient",
+      "cotIndex52": null,
+      "firstLocalCaptureUtc": null
+    }
+  ],
+  "crosses": [
+    {
+      "symbol": "EURUSD",
+      "legs": [
+        {
+          "currency": "EUR",
+          "weight": 1
+        }
+      ],
+      "netA_Pp": 17.00098841613243,
+      "netB_Pp": -8.843437655883385,
+      "deltaA_Pp": -2.3597266843993303,
+      "deltaB_Pp": -0.4573863282323245,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "GBPUSD",
+      "legs": [
+        {
+          "currency": "GBP",
+          "weight": 1
+        }
+      ],
+      "netA_Pp": -44.803189735287944,
+      "netB_Pp": 12.329817258318023,
+      "deltaA_Pp": 3.3891429719149784,
+      "deltaB_Pp": -3.3590702155868932,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "AUDUSD",
+      "legs": [
+        {
+          "currency": "AUD",
+          "weight": 1
+        }
+      ],
+      "netA_Pp": -48.820271400364966,
+      "netB_Pp": 10.147456055744215,
+      "deltaA_Pp": -4.267914793334967,
+      "deltaB_Pp": -4.254613892875488,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "NZDUSD",
+      "legs": [
+        {
+          "currency": "NZD",
+          "weight": 1
+        }
+      ],
+      "netA_Pp": -34.65136457429511,
+      "netB_Pp": -17.2039169078885,
+      "deltaA_Pp": -3.552111962982707,
+      "deltaB_Pp": 1.618756408970949,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "USDJPY",
+      "legs": [
+        {
+          "currency": "JPY",
+          "weight": -1
+        }
+      ],
+      "netA_Pp": -21.69299699508916,
+      "netB_Pp": 6.094358811459136,
+      "deltaA_Pp": 1.539147010053881,
+      "deltaB_Pp": 1.7600611579715117,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "USDCAD",
+      "legs": [
+        {
+          "currency": "CAD",
+          "weight": -1
+        }
+      ],
+      "netA_Pp": -1.4978251522951762,
+      "netB_Pp": 20.134231935363193,
+      "deltaA_Pp": 2.7277283572779787,
+      "deltaB_Pp": 0.23064926129986318,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "USDCHF",
+      "legs": [
+        {
+          "currency": "CHF",
+          "weight": -1
+        }
+      ],
+      "netA_Pp": 8.863222846293805,
+      "netB_Pp": 15.634047939245313,
+      "deltaA_Pp": -1.5571034763256382,
+      "deltaB_Pp": 2.918227147651839,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "EURGBP",
+      "legs": [
+        {
+          "currency": "EUR",
+          "weight": 1
+        },
+        {
+          "currency": "GBP",
+          "weight": -1
+        }
+      ],
+      "netA_Pp": 61.80417815142037,
+      "netB_Pp": -21.173254914201408,
+      "deltaA_Pp": -5.748869656314309,
+      "deltaB_Pp": 2.9016838873545687,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "EURJPY",
+      "legs": [
+        {
+          "currency": "EUR",
+          "weight": 1
+        },
+        {
+          "currency": "JPY",
+          "weight": -1
+        }
+      ],
+      "netA_Pp": -4.692008578956731,
+      "netB_Pp": -2.7490788444242487,
+      "deltaA_Pp": -0.8205796743454492,
+      "deltaB_Pp": 1.3026748297391872,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "EURCHF",
+      "legs": [
+        {
+          "currency": "EUR",
+          "weight": 1
+        },
+        {
+          "currency": "CHF",
+          "weight": -1
+        }
+      ],
+      "netA_Pp": 25.864211262426235,
+      "netB_Pp": 6.790610283361929,
+      "deltaA_Pp": -3.9168301607249685,
+      "deltaB_Pp": 2.4608408194195146,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "EURCAD",
+      "legs": [
+        {
+          "currency": "EUR",
+          "weight": 1
+        },
+        {
+          "currency": "CAD",
+          "weight": -1
+        }
+      ],
+      "netA_Pp": 15.503163263837253,
+      "netB_Pp": 11.290794279479808,
+      "deltaA_Pp": 0.3680016728786484,
+      "deltaB_Pp": -0.22673706693246132,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "EURAUD",
+      "legs": [
+        {
+          "currency": "EUR",
+          "weight": 1
+        },
+        {
+          "currency": "AUD",
+          "weight": -1
+        }
+      ],
+      "netA_Pp": 65.82125981649739,
+      "netB_Pp": -18.9908937116276,
+      "deltaA_Pp": 1.9081881089356365,
+      "deltaB_Pp": 3.7972275646431637,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "EURNZD",
+      "legs": [
+        {
+          "currency": "EUR",
+          "weight": 1
+        },
+        {
+          "currency": "NZD",
+          "weight": -1
+        }
+      ],
+      "netA_Pp": 51.65235299042754,
+      "netB_Pp": 8.360479252005117,
+      "deltaA_Pp": 1.1923852785833766,
+      "deltaB_Pp": -2.0761427372032735,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "GBPJPY",
+      "legs": [
+        {
+          "currency": "GBP",
+          "weight": 1
+        },
+        {
+          "currency": "JPY",
+          "weight": -1
+        }
+      ],
+      "netA_Pp": -66.4961867303771,
+      "netB_Pp": 18.42417606977716,
+      "deltaA_Pp": 4.9282899819688595,
+      "deltaB_Pp": -1.5990090576153815,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "GBPCHF",
+      "legs": [
+        {
+          "currency": "GBP",
+          "weight": 1
+        },
+        {
+          "currency": "CHF",
+          "weight": -1
+        }
+      ],
+      "netA_Pp": -35.939966888994135,
+      "netB_Pp": 27.963865197563337,
+      "deltaA_Pp": 1.8320394955893402,
+      "deltaB_Pp": -0.4408430679350541,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "GBPCAD",
+      "legs": [
+        {
+          "currency": "GBP",
+          "weight": 1
+        },
+        {
+          "currency": "CAD",
+          "weight": -1
+        }
+      ],
+      "netA_Pp": -46.30101488758312,
+      "netB_Pp": 32.46404919368122,
+      "deltaA_Pp": 6.116871329192957,
+      "deltaB_Pp": -3.12842095428703,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "GBPAUD",
+      "legs": [
+        {
+          "currency": "GBP",
+          "weight": 1
+        },
+        {
+          "currency": "AUD",
+          "weight": -1
+        }
+      ],
+      "netA_Pp": 4.017081665077022,
+      "netB_Pp": 2.1823612025738086,
+      "deltaA_Pp": 7.657057765249945,
+      "deltaB_Pp": 0.895543677288595,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "GBPNZD",
+      "legs": [
+        {
+          "currency": "GBP",
+          "weight": 1
+        },
+        {
+          "currency": "NZD",
+          "weight": -1
+        }
+      ],
+      "netA_Pp": -10.151825160992836,
+      "netB_Pp": 29.533734166206525,
+      "deltaA_Pp": 6.941254934897685,
+      "deltaB_Pp": -4.977826624557842,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "AUDJPY",
+      "legs": [
+        {
+          "currency": "AUD",
+          "weight": 1
+        },
+        {
+          "currency": "JPY",
+          "weight": -1
+        }
+      ],
+      "netA_Pp": -70.51326839545413,
+      "netB_Pp": 16.241814867203352,
+      "deltaA_Pp": -2.7287677832810857,
+      "deltaB_Pp": -2.4945527349039764,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "AUDCAD",
+      "legs": [
+        {
+          "currency": "AUD",
+          "weight": 1
+        },
+        {
+          "currency": "CAD",
+          "weight": -1
+        }
+      ],
+      "netA_Pp": -50.318096552660144,
+      "netB_Pp": 30.281687991107407,
+      "deltaA_Pp": -1.5401864360569881,
+      "deltaB_Pp": -4.023964631575625,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "AUDCHF",
+      "legs": [
+        {
+          "currency": "AUD",
+          "weight": 1
+        },
+        {
+          "currency": "CHF",
+          "weight": -1
+        }
+      ],
+      "netA_Pp": -39.957048554071164,
+      "netB_Pp": 25.781503994989528,
+      "deltaA_Pp": -5.825018269660605,
+      "deltaB_Pp": -1.336386745223649,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "AUDNZD",
+      "legs": [
+        {
+          "currency": "AUD",
+          "weight": 1
+        },
+        {
+          "currency": "NZD",
+          "weight": -1
+        }
+      ],
+      "netA_Pp": -14.168906826069858,
+      "netB_Pp": 27.351372963632716,
+      "deltaA_Pp": -0.7158028303522599,
+      "deltaB_Pp": -5.873370301846437,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "NZDJPY",
+      "legs": [
+        {
+          "currency": "NZD",
+          "weight": 1
+        },
+        {
+          "currency": "JPY",
+          "weight": -1
+        }
+      ],
+      "netA_Pp": -56.34436156938427,
+      "netB_Pp": -11.109558096429366,
+      "deltaA_Pp": -2.012964952928826,
+      "deltaB_Pp": 3.3788175669424607,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "NZDCAD",
+      "legs": [
+        {
+          "currency": "NZD",
+          "weight": 1
+        },
+        {
+          "currency": "CAD",
+          "weight": -1
+        }
+      ],
+      "netA_Pp": -36.149189726590286,
+      "netB_Pp": 2.930315027474691,
+      "deltaA_Pp": -0.8243836057047282,
+      "deltaB_Pp": 1.8494056702708122,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "NZDCHF",
+      "legs": [
+        {
+          "currency": "NZD",
+          "weight": 1
+        },
+        {
+          "currency": "CHF",
+          "weight": -1
+        }
+      ],
+      "netA_Pp": -25.788141728001303,
+      "netB_Pp": -1.5698689686431884,
+      "deltaA_Pp": -5.109215439308345,
+      "deltaB_Pp": 4.536983556622788,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "CADJPY",
+      "legs": [
+        {
+          "currency": "CAD",
+          "weight": 1
+        },
+        {
+          "currency": "JPY",
+          "weight": -1
+        }
+      ],
+      "netA_Pp": -20.195171842793982,
+      "netB_Pp": -14.039873123904057,
+      "deltaA_Pp": -1.1885813472240976,
+      "deltaB_Pp": 1.5294118966716486,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "CADCHF",
+      "legs": [
+        {
+          "currency": "CAD",
+          "weight": 1
+        },
+        {
+          "currency": "CHF",
+          "weight": -1
+        }
+      ],
+      "netA_Pp": 10.361047998588981,
+      "netB_Pp": -4.50018399611788,
+      "deltaA_Pp": -4.284831833603617,
+      "deltaB_Pp": 2.687577886351976,
+      "derivedNotDirectSpot": true
+    },
+    {
+      "symbol": "CHFJPY",
+      "legs": [
+        {
+          "currency": "CHF",
+          "weight": 1
+        },
+        {
+          "currency": "JPY",
+          "weight": -1
+        }
+      ],
+      "netA_Pp": -30.556219841382966,
+      "netB_Pp": -9.539689127786177,
+      "deltaA_Pp": 3.0962504863795193,
+      "deltaB_Pp": -1.1581659896803274,
+      "derivedNotDirectSpot": true
+    }
+  ],
+  "futures": [
+    {
+      "symbol": "XAUUSD",
+      "dataset": "disagg",
+      "code": "088691",
+      "categoryA": "Managed Money",
+      "categoryB": "Producer/Merchant",
+      "netA_Pp": 25.24115203734853,
+      "netB_Pp": -1.1257031046945571,
+      "deltaA_Pp": -2.516214075444104,
+      "deltaB_Pp": 1.5627890813577006,
+      "openInterestContracts": 407834,
+      "openInterestDeltaContracts": 3109,
+      "historyStatus": "insufficient",
+      "cotIndex52": null,
+      "firstLocalCaptureUtc": null
+    },
+    {
+      "symbol": "XAGUSD",
+      "dataset": "disagg",
+      "code": "084691",
+      "categoryA": "Managed Money",
+      "categoryB": "Producer/Merchant",
+      "netA_Pp": 1.0411159461547848,
+      "netB_Pp": -10.47378909268372,
+      "deltaA_Pp": -2.0846406339302983,
+      "deltaB_Pp": -0.045089199901926946,
+      "openInterestContracts": 122945,
+      "openInterestDeltaContracts": 7293,
+      "historyStatus": "insufficient",
+      "cotIndex52": null,
+      "firstLocalCaptureUtc": null
+    },
+    {
+      "symbol": "USOIL",
+      "dataset": "disagg",
+      "code": "067651",
+      "categoryA": "Managed Money",
+      "categoryB": "Producer/Merchant",
+      "netA_Pp": 0.8457638803094895,
+      "netB_Pp": 20.602699021119495,
+      "deltaA_Pp": -0.49527195174655503,
+      "deltaB_Pp": 1.3801076208755276,
+      "openInterestContracts": 1869789,
+      "openInterestDeltaContracts": -47684,
+      "historyStatus": "insufficient",
+      "cotIndex52": null,
+      "firstLocalCaptureUtc": null
+    },
+    {
+      "symbol": "US500",
+      "dataset": "tff",
+      "code": "13874A",
+      "categoryA": "Asset Manager/Institutional",
+      "categoryB": "Leveraged Funds",
+      "netA_Pp": 42.68321063178185,
+      "netB_Pp": -11.205660771460373,
+      "deltaA_Pp": -2.6226271914285917,
+      "deltaB_Pp": 3.8145083628007868,
+      "openInterestContracts": 2096958,
+      "openInterestDeltaContracts": 79271,
+      "historyStatus": "insufficient",
+      "cotIndex52": null,
+      "firstLocalCaptureUtc": null
+    },
+    {
+      "symbol": "NAS100",
+      "dataset": "tff",
+      "code": "209742",
+      "categoryA": "Asset Manager/Institutional",
+      "categoryB": "Leveraged Funds",
+      "netA_Pp": 27.96679070112643,
+      "netB_Pp": -3.686623507622553,
+      "deltaA_Pp": 2.756983173339705,
+      "deltaB_Pp": -8.524232654295592,
+      "openInterestContracts": 296423,
+      "openInterestDeltaContracts": 7706,
+      "historyStatus": "insufficient",
+      "cotIndex52": null,
+      "firstLocalCaptureUtc": null
+    },
+    {
+      "symbol": "US30",
+      "dataset": "tff",
+      "code": "124603",
+      "categoryA": "Asset Manager/Institutional",
+      "categoryB": "Leveraged Funds",
+      "netA_Pp": -9.238772159029619,
+      "netB_Pp": 4.133955004734451,
+      "deltaA_Pp": -11.740335636202852,
+      "deltaB_Pp": 2.5524377102715663,
+      "openInterestContracts": 83431,
+      "openInterestDeltaContracts": 283,
+      "historyStatus": "insufficient",
+      "cotIndex52": null,
+      "firstLocalCaptureUtc": null
+    },
+    {
+      "symbol": "DXY",
+      "dataset": "tff",
+      "code": "098662",
+      "categoryA": "Asset Manager/Institutional",
+      "categoryB": "Leveraged Funds",
+      "netA_Pp": 33.75705961452263,
+      "netB_Pp": -2.2429403854773646,
+      "deltaA_Pp": 1.789719023542851,
+      "deltaB_Pp": -7.783375844264301,
+      "openInterestContracts": 55775,
+      "openInterestDeltaContracts": 4335,
+      "historyStatus": "insufficient",
+      "cotIndex52": null,
+      "firstLocalCaptureUtc": null
+    }
+  ],
+  "notes": [
+    "Public snapshot only. Do not import as parity-certified dashboard data.",
+    "Crosses share seven futures and are not independent observations.",
+    "No 52-week index from two dates.",
+    "Public read clock is not release clock; no lookahead claims."
+  ]
+}
