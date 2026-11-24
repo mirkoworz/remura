@@ -43,8 +43,8 @@ function fileFor(path){
   return {role,area,file};
 }
 function validProfile(p,expected){
-  return p&&p.role===expected&&p.can_read===true&&typeof p.can_write==='boolean'&&
-    (p.role==='OWNER'?p.can_recover===true:p.can_recover===false);
+  // Read-only pilot: neither role needs mutation or recovery capability.
+  return p&&p.role===expected&&p.can_read===true&&p.can_write===false&&p.can_recover===false;
 }
 function mime(file){
   return file.endsWith('.html')?'text/html; charset=utf-8':
