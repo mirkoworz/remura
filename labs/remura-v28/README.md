@@ -1,4 +1,4 @@
-# REMURA v1.80 LAB · Convergenza V28
+# REMURA v1.80.1 LAB · Convergenza V28
 
 Aprire il LAB con un server locale. Dalla radice del repository:
 
@@ -9,6 +9,8 @@ python3 -m http.server 8079 --bind 127.0.0.1 --directory labs/remura-v28
 La [Home locale](http://127.0.0.1:8079/) offre l’Experience originale, navigazione, Shark Cockpit, Mercati, Validazione e Fonti. Il browser carica i dati dallo stesso indirizzo del LAB. La versione e l’ora Europe/Rome sono condivise da tutte le viste.
 
 Il manifest e il service worker preparano l’app e gli archivi per la consultazione offline. In **Fonti → App e consultazione offline**, attendere «Copia offline disponibile su questo dispositivo». L’installazione sulla schermata Home di iPhone richiede Safari e un’origine HTTPS raggiungibile dal dispositivo. Il server di prova qui sopra è sul Mac e il collaudo su iPhone fisico resta da eseguire.
+
+La prima anteprima HTTPS v1.80 ha aperto le viste e gli archivi online. Cloudflare Pages ha reindirizzato `/index.html` verso `/`, interrompendo l’installazione della copia offline. Da v1.80.1 il service worker salva la URL canonica del LAB e serve anche le navigazioni verso `index.html` dalla stessa copia.
 
 ## Provenienza
 
@@ -35,8 +37,11 @@ Lo storico Myfxbook mantiene gli orari osservati. Per 30 simboli il periodo copr
 ```sh
 git hash-object labs/remura-v28/data/cot-b223.json labs/remura-v28/data/myfxbook-latest.json labs/remura-v28/data/myfxbook-history.json
 git diff --name-only 29a9493a777ea22421bb51b8df830b4a717b0125...HEAD
+node --test labs/remura-v28/tests/pages-offline.test.mjs
 ```
 
 Il riepilogo delle modifiche contiene solo `labs/remura-v28/`. La v1.80 ha superato 32/32 verifiche mirate in Chrome a 390 px. Con rete e risposte del server di prova disattivate, l’app ha riaperto Mercati, letto tutti e tre gli archivi e mostrato l’introduzione con movimento ridotto. Sono stati verificati i 34 simboli storici, le date degli indici, i selettori, la registrazione limitata al percorso LAB e le icone. Il checkpoint Mac conserva la prova Safari dell’Experience originale.
+
+La v1.80.1 ha superato 13/13 verifiche mirate in Chrome a 390 px simulando il reindirizzamento 308 di Pages. Con la rete disattivata il browser ha riaperto sia la pagina principale sia `index.html#mercati`, mostrando i tre archivi. Il test conservato nel repository verifica il worker alla radice e sotto un percorso isolato.
 
 Per ogni nuova versione dell’app o degli archivi, aggiornare insieme il numero e la data nell’intestazione e la versione della cache in `sw.js`. La copia nuova diventa attiva dopo la chiusura delle schede che usano la versione precedente.

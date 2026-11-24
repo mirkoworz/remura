@@ -1,9 +1,8 @@
 const root = new URL(self.registration.scope);
 const cachePrefix = 'remura-lab:' + encodeURIComponent(root.href) + ':';
-const releaseCache = cachePrefix + 'v1.80';
-const appDocument = new URL('index.html', root);
+const releaseCache = cachePrefix + 'v1.80.1';
+const indexPath = new URL('index.html', root).pathname;
 const releaseFiles = [
-  'index.html',
   'app.mjs',
   'experience.mjs',
   'markets.mjs',
@@ -21,7 +20,8 @@ const releaseFiles = [
   'data/myfxbook-latest.json',
   'data/myfxbook-history.json',
 ];
-const releaseUrls = new Set(releaseFiles.map(path => new URL(path, root).href));
+// Static hosts such as Pages can redirect index.html to the directory URL.
+const releaseUrls = new Set([root.href, ...releaseFiles.map(path => new URL(path, root).href)]);
 
 self.addEventListener('install', event => {
   // Fetch a complete release before activation. Keep old pages on their own worker until they close.
@@ -51,10 +51,10 @@ self.addEventListener('fetch', event => {
 
   const navigation = request.mode === 'navigate';
   const shellNavigation = navigation && (
-    url.pathname === root.pathname || url.pathname === appDocument.pathname
+    url.pathname === root.pathname || url.pathname === indexPath
   );
   if (navigation ? !shellNavigation : !releaseUrls.has(url.href)) return;
-  const key = shellNavigation ? appDocument.href : url.href;
+  const key = shellNavigation ? root.href : url.href;
   event.respondWith((async () => {
     const response = await caches.match(key, { cacheName: releaseCache });
     return response || fetch(request);
