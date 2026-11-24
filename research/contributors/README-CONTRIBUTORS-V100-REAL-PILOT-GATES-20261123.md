@@ -202,3 +202,16 @@ L'applicazione `remura-contributors-staging - Cloudflare Workers` mostrava nella
 **Percorso UI corretto, sola lettura:** `Access controls → Applications → remura-contributors-staging → Application details → Access policies → REMURA Contributor`. **Non entrare in `Policies → Reusable policies`**, perché apre soltanto `REMURA Contributors Owner Test`. Se cliccare il nome nell'app reindirizza nuovamente a Owner Test, documentare come `UI_POLICY_IDENTITY_AMBIGUOUS` e fermarsi senza salvataggi; valutare un'eventuale verifica separata e limitata con lettura API autorizzata, mai dedurre la policy da nome/colore.
 
 Nessun utente, deploy, chiamata API Cloudflare, Worker, D1, policy o costo creato da questo checkpoint. Gate `CONTRIBUTOR_POLICY_RULES=NO_GO`, `OWNER_POLICY_DETAILS=VERIFIED`, `WORKER_ACCESS_SCOPE_PROD_AND_PREVIEW=VERIFIED`. Non riportare UUID policy o email personali in roadmap.
+
+
+## 24 novembre 2026, 07:06 CET — mismatch policy link confermato senza ulteriori test
+
+**Nuovo screenshot OWNER da iPhone**: dopo il percorso dall'applicazione `remura-contributors-staging`, il link mostrato nell'elenco come `REMURA Contributor` apre nuovamente il pannello **`REMURA Contributors Owner Test`**, con la medesima allowlist di una sola email e requisito Google. L'OWNER ha ripetuto il percorso richiesto e non va più mandato a ripeterlo.
+
+**Conclusione rigorosa:** `UI_POLICY_IDENTITY_AMBIGUOUS = CONFIRMED`; l'etichetta dell'elenco potrebbe non corrispondere al titolo effettivo dell'oggetto policy, oppure la piattaforma potrebbe reindirizzare a una policy riutilizzabile diversa. **NON sappiamo** quali regole risultino realmente applicate all'identità CONTRIBUTOR. Non assumere esistenza di una allowlist collaboratori, non assumere che l'accesso Contributor sia configurato e non modificare la policy OWNER.
+
+**Decisione:** sospendere i tentativi ripetuti nella UI; `ACCESS_POLICY_CONTRIBUTOR_VERIFIED = NO_GO` e `REAL_COLLABORATOR_PILOT = NO_GO`. Qualsiasi lettura Cloudflare Access API o cambiamento di policy richiede autorizzazione separata, con campi minimi e nessun token esposto. Il blocco NON impedisce altre verifiche indipendenti in sola lettura.
+
+**Prossimo controllo indipendente**: consultare il solo elenco D1 nel dashboard Cloudflare (senza eseguire query): identificare l'eventuale database staging dedicato, il fixture sintetico e il database lab; non creare, collegare, eliminare o migrare database. Rilevare nome e piano Free evitando identificativi privati. Non inferire il database associato a un Worker dalla sola presenza in elenco.
+
+Nessun deploy/merge/utente/Worker/D1 modificato e nessuna nuova spesa.
