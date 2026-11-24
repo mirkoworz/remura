@@ -330,8 +330,8 @@ def http_handler(db_path, *, cockpit_owner_authorize=None):
 
         def do_GET(self):
             path=urlsplit(self.path).path
-            # Isolated LAB only: new assets and existing latest retail GET fail closed.
-            if (path.removeprefix('/') in COCKPIT_LAB_ASSETS or path==RETAIL_LATEST) and not cockpit_lab_owner_allowed(cockpit_owner_authorize,self):
+            # Isolated LAB only: existing latest retail GET fails closed.
+            if path==RETAIL_LATEST and not cockpit_lab_owner_allowed(cockpit_owner_authorize,self):
                 self.response(403,{"error":"owner_required"})
                 return
             with request_lock:
@@ -443,6 +443,11 @@ def http_handler(db_path, *, cockpit_owner_authorize=None):
             file=resolve_asset(path)
             if file is None:
                 self.response(404,{"error":"not_found"})
+                return
+            # Authorize the actual resolved asset, not an earlier URL spelling.
+            # resolve_asset parses the path again; absolute-form aliases must not bypass OWNER.
+            if file.name in COCKPIT_LAB_ASSETS and not cockpit_lab_owner_allowed(cockpit_owner_authorize,self):
+                self.response(403,{"error":"owner_required"})
                 return
             mimetype,_=mimetypes.guess_type(str(file))
             if file.name in COCKPIT_LAB_ASSETS and file.suffix==".mjs":
