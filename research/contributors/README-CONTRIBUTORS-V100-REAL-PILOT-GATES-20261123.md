@@ -141,3 +141,16 @@ Per la fase successiva è richiesta un'autorizzazione **solo per configurare e c
 **Decisione di roadmap:** il gate `ZERO_TRUST_FREE_PLAN_AND_SEAT_CAPACITY` passa da `UNKNOWN` a **`OWNER_SCREENSHOT_VERIFIED`**. I gate `ACCESS_APP_POLICY`, `STAGING_D1_ISOLATION`, `WORKERS_D1_USAGE_FREE`, `REAL_AUTHENTICATION`, `ROLE_REVOKE_END_TO_END` e `OWNER_APPROVAL_FOR_DEPLOY` restano `NO_GO`.
 
 **Prossima operazione manuale a costo zero:** aprire Zero Trust → Access → Applications **in sola consultazione**, verificare se esiste già un'app legata al dominio staging; non creare app, policy, utenti, Worker o binding e non selezionare piani a pagamento. Acquisire soltanto la vista generale della lista; oscurare email e dati identificativi. Prima di creare qualsiasi risorsa o pubblicare il portale si richiede autorizzazione separata.
+
+## 24 novembre 2026, 06:54 CET — Access Applications: una app di staging esistente
+
+**Evidenza diretta fornita dall'OWNER da iPhone**: screenshot Cloudflare Zero Trust `Access → Applications` del 24/11/2026 ore 06:54 CET.
+
+- L'elenco mostra `Showing 1-1 of 1`: **esiste esattamente un'applicazione visibile**.
+- Nome visualizzato (troncato dall'interfaccia): `remura-contributors-staging - Cloudfl...`. Colonna `Destinations`: `remura-contributors-staging` (etichetta link, non ancora URL/dominio accertato).
+- Il checkpoint precedente ha già verificato **Zero Trust Free, 1/50 posti, $0/mese per il piano One**.
+- **Non creare app duplicate, non cambiare policy e non assegnare o invitare utenti**. L'esistenza nell'elenco non prova che l'app sia correttamente protetta, raggiungibile da Safari, abbinata a un Worker diretto né che il database staging D1 sia isolato.
+- Gate `ACCESS_APPLICATION_EXISTS`: **OWNER_SCREENSHOT_VERIFIED**.
+- Gate `ACCESS_APPLICATION_EXACT_HOST`, `ACCESS_POLICY_ALLOWLIST`, `WORKER_DIRECT_ACCESS_IDENTITY`, `D1_STAGING_ISOLATED`, `REAL_AUTH_ROLE_REVOCATION` restano **NOT_VERIFIED / NO_GO**.
+- Prossimo controllo gratuito **in sola lettura**: aprire la riga dell'app esistente e leggere `Overview/Basic information` e `Policies` (nome completo, dominio pubblico, modalità/self-hosted, elenco e tipo delle regole Allow/Block), senza esporre segreti/identità/email/token e senza fare `Save` o cambiamenti. Conservare nel report solo il minimo indispensabile e non le identità private.
+- Nessun deployment Cloudflare, nuovo utente, abbonamento, richiesta D1, merge PR o variazione `main` autorizzato o effettuato in questo passaggio.
