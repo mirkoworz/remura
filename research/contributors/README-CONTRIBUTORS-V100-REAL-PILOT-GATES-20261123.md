@@ -232,3 +232,18 @@ Nessun deploy/merge/utente/Worker/D1 modificato e nessuna nuova spesa.
 **Gate aggiornati:** `D1_FREE_CAPACITY=OWNER_SCREENSHOT_VERIFIED`; `D1_CURRENT_LIST=OWNER_SCREENSHOT_VERIFIED`; `DEDICATED_CONTRIBUTORS_STAGING_DB=ABSENT_IN_LIST`; `STAGING_D1_ISOLATION=NO_GO`; `CONTRIBUTOR_ACCESS_POLICY=NO_GO`; `REAL_COLLABORATOR_PILOT=NO_GO`.
 
 **Prossima scelta operativa:** prima riconciliare policy Access `REMURA Contributor` (UI rimanda a Owner Test, già documentato, non chiedere di ripetere); poi autorizzare eventualmente creazione del **solo** database staging isolato, dopo verifica del Free. Vietati merge/deploy, SQL, Worker binding e nuovi utenti in assenza di permesso separato.
+
+
+## 24 novembre 2026, 07:25 CET — Worker Production DISABLED e assenza binding D1
+
+**Evidenza:** screenshot OWNER del Worker `remura-contributors-staging`, sezione `Settings → Production` (i selettori `Previews Base` NON risultano aperti). Nessuna configurazione è stata modificata.
+
+- **Variabile visibile:** `STAGING_ENABLED = DISABLED`. Questa è una prova che l'ambiente **Production** non ha lo staging abilitato mediante quella variabile. Non inferire il comportamento del codice Worker remoto senza verificare il deployment attivo.
+- **Bindings → Production:** la dashboard mostra testualmente `No connected bindings`: non risultano D1, KV, R2 o altri binding connessi **in Production**. Non confondere l'esistenza dei quattro database D1 account (4/10) con un database collegato a questo Worker.
+- **Secret presenti come soli nomi:** `ACCESS_ACCOUNT`, `ACCESS_AUD`, `STAGING_ORIGIN`, `TEST_EMAIL`, `TEST_UUID`. I valori restano cifrati, **non sono stati aperti, copiati o letti**. In particolare il valore effettivo di `STAGING_ORIGIN` resta ignoto e non va riportato nel registro; `TEST_EMAIL` e `TEST_UUID` non attestano identità Contributor reali.
+- **Requisiti del candidato LAB v1.04:** `PRIVATE_WORKER_V078=STAGING_AUTHENTICATED_READONLY`, `CONTRIBUTORS_STAGE_READONLY=EXPLICIT_STAGING_ONLY`, `STAGING_ENABLED=D1_CANDIDATE`, `IDENTITY_HMAC_KEY` valida, `CONTRIBUTORS_DB` D1 con `prepare`, autenticazione diretta `ctx.access`. Nella lista Production i primi due e la chiave HMAC non risultano visibili; **non significa che non esistano in Previews Base o altrove**. `STAGING_ENABLED=DISABLED` da solo già non soddisfa il gate.
+- **Osservabilità → Production:** `Logs Off`, `Traces Off`, `Issues Off` nello screenshot. Non attivare logging dei dati personali senza valutazione e autorizzazione.
+- Per il pilot reale **NON modificare Production**, non cambiare `STAGING_ENABLED`, non toccare Secret di test e non collegare direttamente `remura-contributors-lab` o `remura-contributors-fixture`. Serve uno staging D1 separato, policy Contributor riconciliata e un Worker/test in ambiente isolato esplicitamente autorizzato.
+- **Gate aggiornati:** `WORKER_PRODUCTION_STAGING_FLAG=DISABLED_VERIFIED`, `WORKER_PRODUCTION_D1_BINDING=ABSENT_VERIFIED`, `WORKER_PREVIEWS_BASE_BINDINGS=NOT_INSPECTED`, `WORKER_ACTIVE_DEPLOYMENT=NOT_VERIFIED`, `WORKER_LAB_V104_CONFIG_SATISFIED=NO_GO`, `ACCESS_CONTRIBUTOR_POLICY=NO_GO`, `REAL_COLLABORATOR_PILOT=NO_GO`.
+
+**Prossimo controllo gratuito in sola lettura (facoltativo):** nella stessa schermata `Settings` selezionare `Previews Base` nella sezione `Bindings` e verificare **solo** se compaiono collegamenti già esistenti, senza aprire Secret o premere `Add binding`/`Save`. L'esistenza di una base preview non significa un ambiente indipendente: non attivare alcuna route o deploy. In alternativa, preparare il piano tecnico isolato mentre si riconcilia Access. Nessuna necessità di ripetere screenshot di Production già acquisito.
