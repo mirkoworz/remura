@@ -1,0 +1,99 @@
+{
+  "version": "1.77",
+  "mode": "REVIEW_ONLY_PRIVATE_OVERLAY_NOT_DEPLOYABLE",
+  "source_commit": "b196590047368957711f49289a3203c87619193a",
+  "owner_origin": null,
+  "public_preview_untouched": true,
+  "files": [
+    "shark-cockpit-private.html",
+    "shark-cockpit-private.mjs",
+    "private-retail-v177.mjs"
+  ],
+  "existing_root_dependencies": [
+    "icon.svg",
+    "manifest.webmanifest",
+    "nav.css",
+    "shark-cockpit.css",
+    "fonti.html",
+    "shark-cockpit-core.js",
+    "shark-movers-core.js",
+    "shark-movers-ui.js",
+    "shark-evidence-core.js",
+    "shark-evidence-ui.js",
+    "shark-trends-core.js",
+    "shark-trends-ui.js",
+    "shark-focus-core.js",
+    "shark-focus-ui.js",
+    "nav.js"
+  ],
+  "checks": [
+    {
+      "name": "accept current result",
+      "pass": true
+    },
+    {
+      "name": "ignore late result",
+      "pass": true
+    },
+    {
+      "name": "403 removes previous snapshot",
+      "pass": true
+    },
+    {
+      "name": "pagehide clears and invalidates pending read",
+      "pass": true
+    },
+    {
+      "name": "explicit reload after pagehide",
+      "pass": true
+    },
+    {
+      "name": "private config remains null",
+      "pass": true
+    },
+    {
+      "name": "no public archive fallback in candidate",
+      "pass": true
+    },
+    {
+      "name": "no vendor URL in private reader",
+      "pass": true
+    },
+    {
+      "name": "one private fetch site",
+      "pass": true
+    },
+    {
+      "name": "no private fetch in freshness timer",
+      "pass": true
+    },
+    {
+      "name": "versioned private HTML and module wiring",
+      "pass": true
+    },
+    {
+      "name": "public preview builder does not recurse root JS or HTML",
+      "pass": true
+    },
+    {
+      "name": "no original cockpit JS reference in private HTML",
+      "pass": true
+    }
+  ],
+  "activation_gates": [
+    "server-side verified OWNER authorization for HTML and private retail endpoint",
+    "explicit trusted origin and authorized private staging overlay",
+    "verify module MIME and script ordering on private staging only",
+    "check actual Myfxbook quota and billing",
+    "authorization for integration and rollback",
+    "C contributors Access policy separately resolved"
+  ],
+  "not_performed": [
+    "browser integration test",
+    "network requests to provider",
+    "private server or Cloudflare access",
+    "deploy",
+    "merge",
+    "workflow dispatch"
+  ]
+}
