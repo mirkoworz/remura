@@ -73,6 +73,16 @@ SAFE_ASSETS={
     "cot-week-watch-core.js","cot-week-watch-ui.js",
     "resource-health.js","resource-health.css",
 }
+# LAB v1.78 only: no implicit owner identity or trust in browser-supplied headers.
+COCKPIT_LAB_ASSETS=frozenset(["shark-cockpit-private.html","shark-cockpit-private.mjs","private-retail-v177.mjs","shark-cockpit.css","shark-cockpit-core.js"])
+SAFE_ASSETS.update(COCKPIT_LAB_ASSETS)
+
+def cockpit_lab_owner_allowed(verifier, request):
+    try:
+        return callable(verifier) and verifier(request) == "OWNER"
+    except Exception:
+        return False
+
 STATUS_PATH="/private-api/health"
 PRICE_OVERVIEW_PATH="/private-api/prices/status"
 COT_OVERVIEW_PATH="/private-api/cot/status"
@@ -282,7 +292,7 @@ def ig_document(db_path):
             "updatedAt":data.get("updatedAt"),"symbols":checked}
 
 
-def http_handler(db_path):
+def http_handler(db_path, *, cockpit_owner_authorize=None):
     request_counts={"allGet":0,"privateGet":0}
     request_lock=threading.Lock()
     class Handler(BaseHTTPRequestHandler):
@@ -320,6 +330,10 @@ def http_handler(db_path):
 
         def do_GET(self):
             path=urlsplit(self.path).path
+            # Isolated LAB only: new assets and existing latest retail GET fail closed.
+            if (path.removeprefix('/') in COCKPIT_LAB_ASSETS or path==RETAIL_LATEST) and not cockpit_lab_owner_allowed(cockpit_owner_authorize,self):
+                self.response(403,{"error":"owner_required"})
+                return
             with request_lock:
                 request_counts["allGet"]+=1
                 if path.startswith("/private-api/"):
@@ -431,10 +445,12 @@ def http_handler(db_path):
                 self.response(404,{"error":"not_found"})
                 return
             mimetype,_=mimetypes.guess_type(str(file))
+            if file.name in COCKPIT_LAB_ASSETS and file.suffix==".mjs":
+                mimetype="text/javascript; charset=utf-8"
             if file.suffix==".webmanifest":
                 mimetype="application/manifest+json"
             self.response(200,file.read_bytes(),(mimetype or "application/octet-stream"),
-                          cacheable=file.suffix in (".css",".js",".svg",".png",".ico"))
+                          cacheable=file.name not in COCKPIT_LAB_ASSETS and file.suffix in (".css",".js",".svg",".png",".ico"))
     return Handler
 
 
