@@ -154,3 +154,20 @@ Per la fase successiva è richiesta un'autorizzazione **solo per configurare e c
 - Gate `ACCESS_APPLICATION_EXACT_HOST`, `ACCESS_POLICY_ALLOWLIST`, `WORKER_DIRECT_ACCESS_IDENTITY`, `D1_STAGING_ISOLATED`, `REAL_AUTH_ROLE_REVOCATION` restano **NOT_VERIFIED / NO_GO**.
 - Prossimo controllo gratuito **in sola lettura**: aprire la riga dell'app esistente e leggere `Overview/Basic information` e `Policies` (nome completo, dominio pubblico, modalità/self-hosted, elenco e tipo delle regole Allow/Block), senza esporre segreti/identità/email/token e senza fare `Save` o cambiamenti. Conservare nel report solo il minimo indispensabile e non le identità private.
 - Nessun deployment Cloudflare, nuovo utente, abbonamento, richiesta D1, merge PR o variazione `main` autorizzato o effettuato in questo passaggio.
+
+
+## 24 novembre 2026, 06:56 CET — Access Worker scope e policy: evidenza OWNER
+
+Tre screenshot iPhone Cloudflare Zero Trust, **solo consultazione visiva** della stessa applicazione `remura-contributors-staging - Cloudflare Workers` e della policy OWNER. Nessuna modifica o invito è stato autorizzato.
+
+1. **Destinations → Workers**: `Scope = remura-contributors-staging`, `Type = A Worker's production and preview URLs`. La protezione configurata può quindi riguardare sia indirizzi di produzione **sia** preview del medesimo Worker, non soltanto uno staging isolato. La casella aggiuntiva `Destinations: Select...` appare senza selezione; non inferire un host da questa etichetta. Il dominio preciso ed eventuali route/custom domains **non sono visibili**.
+2. **Access policies** sull'app: una riga `REMURA Contributor`, action `Allow`, `Rules = 2`, ordine 1. **I selettori di queste due regole non sono visibili.** Non attestare che la policy limiti gli accessi a collaboratori conosciuti.
+3. **Authentication**: `Accept all available identity providers = OFF`; unico provider selezionato visualizzato `REMURA Google - google`. `Apply instant authentication = OFF`; `Authenticate with Cloudflare One Client = OFF`. Non sono state eseguite sessioni reali né provati token/JWT.
+4. **Policy separata visualizzata**: dettaglio `REMURA Contributors Owner Test` mostra `Include: Emails` con **un singolo indirizzo personale da NON registrare**, più `Require: Login Method = Google · REMURA Google`. La sua sezione `Applications` visualizza la stessa app Worker. **Da riconciliare**: nella lista policy dell'app appare solo `REMURA Contributor`, mentre il dettaglio OWNER indica l'associazione. Non presumere che la regola OWNER sia attiva, ordinata o sufficiente a proteggere l'app fino alla conferma della lista completa.
+5. Browser rendering RDP/SSH/VNC = `Off`. I pulsanti `Edit`, `Save`, `Delete` sono visibili, **non azionati**.
+
+**Regola Cloudflare verificata documentalmente**: in policy Access `Include` con più selettori è logica OR, `Require` è AND, e una Allow compatibile concede l'accesso; un Include generico può aprire il Worker più del previsto. Fonti: https://developers.cloudflare.com/cloudflare-one/access-controls/policies/ ; https://developers.cloudflare.com/workers/configuration/cloudflare-access/ .
+
+**Passaggio decisionale**: `WORKER_ACCESS_SCOPE = OWNER_SCREENSHOT_VERIFIED (prod+preview, non isolato)`; `GOOGLE_IDP_SELECTED = OWNER_SCREENSHOT_VERIFIED`; `ACCESS_POLICY_DETAILS = PARTIAL`; `OWNER_POLICY_ATTACHED = UNCONFIRMED`. Rimangono `NO_GO`: rilevazione del selettore Include/Require di `REMURA Contributor`, identity allowlist effettiva, dominio Worker reale, corretta verifica `ctx.access` nel Worker, D1 staging isolato, approvazione spesa/deploy, test Safari e revoca.
+
+**Prossima verifica ammessa in sola lettura:** aprire la voce `REMURA Contributor` nei dettagli delle policy dell'app e visualizzarne i selettori `Include`/`Require` (evitare di pubblicare indirizzi o identità), **senza cambiare o salvare nulla**. Non creare nuove applicazioni, Worker, regole, utenti o abbonamenti.
