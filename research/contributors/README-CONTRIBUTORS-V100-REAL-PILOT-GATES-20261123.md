@@ -191,3 +191,14 @@ Nuove schermate Cloudflare Zero Trust fornite dal proprietario (06:59 Europe/Rom
 **Gate:** `OWNER_POLICY_SELECTOR_DETAILS=OWNER_SCREENSHOT_VERIFIED`; `OWNER_MFA_POLICY=OFF`; `CONTRIBUTOR_POLICY_SELECTOR_DETAILS=UNKNOWN`; `APP_POLICY_ATTACHMENT_AND_ORDER=UNRECONCILED`; `REAL_ACCESS_AUTHENTICATION=NO_GO`; `D1_STAGING_ISOLATION=NO_GO`; `CONTRIBUTOR_WRITABLE_PILOT=NO_GO`.
 
 **Prossima verifica gratuita in sola lettura:** chiudere il dettaglio OWNER (X), tornare a `Access → Applications → remura-contributors-staging → Access policies` e toccare **esattamente `REMURA Contributor`** (non `REMURA Contributors Owner Test`), espandere `Policy details`, verificare `Include`, `Require`, `Exclude` (se presenti) e eventuali regole generiche; oscurare dati identificativi prima dello screenshot. Nessun edit, nessun salvataggio, nessun invito e nessun deploy.
+
+
+## 24 novembre 2026, 07:03 CET — Reusable versus app-scoped policy
+
+Screenshot OWNER: Zero Trust `Access controls → Policies → Reusable policies` mostra esattamente **una policy riutilizzabile**, chiamata `REMURA Contributors Owner Test`, action `Allow`, `2` regole, `Used by applications = 1`. Il suo dettaglio ripete la allowlist email singola e il requisito del provider Google già verificati; **non è una nuova prova della policy Contributor**.
+
+L'applicazione `remura-contributors-staging - Cloudflare Workers` mostrava nella propria sezione `Access policies` una diversa policy `REMURA Contributor` con action `Allow` e 2 regole. **Possibile spiegazione, da verificare:** quest'ultima è una policy *application-specific* (non riutilizzabile) e quindi non compare nella lista delle `Reusable policies`. Cloudflare documenta due endpoint distinti per policy di app e policy riutilizzabili: https://developers.cloudflare.com/api/resources/zero_trust/subresources/access/subresources/applications/subresources/policies/methods/update/ . Non inventare le sue condizioni Include/Require, che restano invisibili.
+
+**Percorso UI corretto, sola lettura:** `Access controls → Applications → remura-contributors-staging → Application details → Access policies → REMURA Contributor`. **Non entrare in `Policies → Reusable policies`**, perché apre soltanto `REMURA Contributors Owner Test`. Se cliccare il nome nell'app reindirizza nuovamente a Owner Test, documentare come `UI_POLICY_IDENTITY_AMBIGUOUS` e fermarsi senza salvataggi; valutare un'eventuale verifica separata e limitata con lettura API autorizzata, mai dedurre la policy da nome/colore.
+
+Nessun utente, deploy, chiamata API Cloudflare, Worker, D1, policy o costo creato da questo checkpoint. Gate `CONTRIBUTOR_POLICY_RULES=NO_GO`, `OWNER_POLICY_DETAILS=VERIFIED`, `WORKER_ACCESS_SCOPE_PROD_AND_PREVIEW=VERIFIED`. Non riportare UUID policy o email personali in roadmap.
