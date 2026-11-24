@@ -2,7 +2,8 @@
 -- Execute as one atomic transaction in SQLite tests; real D1 batch requires approval.
 CREATE TABLE lab_slot_migration_guard_v109 (ok INTEGER NOT NULL CHECK(ok=1)) STRICT;
 INSERT INTO lab_slot_migration_guard_v109 VALUES (CASE WHEN
- (SELECT COUNT(*) FROM sqlite_schema WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name<>'lab_slot_migration_guard_v109')=3
+ (SELECT COUNT(*) FROM sqlite_schema WHERE type='table' AND name NOT GLOB 'sqlite_*' AND name<>'lab_slot_migration_guard_v109')=3
+ AND EXISTS(SELECT 1 FROM sqlite_schema WHERE type='table' AND name='lab_identities' AND instr(sql, '''friend-a'',''friend-b''')>0 AND instr(sql, '''friend-c''')=0)
  AND (SELECT COUNT(*) FROM sqlite_schema WHERE type='trigger')=4
  AND (SELECT COUNT(*) FROM sqlite_schema WHERE type='view' OR (type='index' AND sql IS NOT NULL))=0
  AND (SELECT COUNT(*) FROM lab_state)=1
