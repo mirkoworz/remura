@@ -12,8 +12,8 @@ function rig(){
    STAGING_ORIGIN:ORIGIN,ACCESS_AUD:'fixture',
    CONTRIBUTORS_DB:{prepare:()=>({})}};
  const states={
-   OWNER:{role:'OWNER',can_read:true,can_write:false,can_recover:true},
-   A:{role:'CONTRIBUTOR',can_read:true,can_write:true,can_recover:false}
+   OWNER:{role:'OWNER',can_read:true,can_write:false,can_recover:false},
+   A:{role:'CONTRIBUTOR',can_read:true,can_write:false,can_recover:false}
  };
  const count={auth:0,read:0};
  const worker=createStagingReadOnlyV101({
@@ -102,4 +102,16 @@ test('07 safe metadata: never claim Cloudflare login or deploy proof',()=>{
  assert.equal(V101_STATE.stagingAuthorized,false);
  assert.equal(V101_STATE.deployAuthorized,false);
  assert.equal(V101_STATE.pilotAllowed,false);
+});
+
+test('08 read-only pilot rejects any write or recovery capability for either role',async()=>{
+ const r=rig();
+ for(const [who,path] of [['OWNER','/owner/'],['A','/contributors/']]){
+   assert.equal((await r.send(who,path)).status,200);
+   for(const flag of ['can_write','can_recover']){
+     r.states[who][flag]=true;
+     assert.equal((await r.send(who,path)).status,403,who+' '+flag);
+     r.states[who][flag]=false;
+   }
+ }
 });
