@@ -7,7 +7,9 @@
   <meta name="theme-color" content="#07121A">
   <meta name="robots" content="noindex">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
-  <title>REMURA v1.79 LAB · Shark Cockpit</title>
+  <title>REMURA v1.80 LAB · Shark Cockpit</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/app-icon-180.png">
   <link rel="stylesheet" href="remura.css">
   <link rel="stylesheet" href="assets/experience/intro.css">
   <script type="module" src="app.mjs"></script>
@@ -18,8 +20,8 @@
     <div class="site-header-inner">
       <div class="masthead">
         <a href="#home" class="wordmark">REMURA</a>
-        <p class="build">v1.79 LAB <span aria-hidden="true">·</span>
-          <time datetime="2026-11-24T23:34:00+01:00">24/11/2026 alle 23:34 CET</time>
+        <p class="build">v1.80 LAB <span aria-hidden="true">·</span>
+          <time datetime="2026-11-24T23:40:53+01:00">24/11/2026 alle 23:40 CET</time>
           <span class="timezone">Europe/Rome</span>
         </p>
       </div>
@@ -80,6 +82,32 @@
         <h1 id="markets-title" tabindex="-1">Mercati e sentiment retail</h1>
         <p>Percentuali long e short del campione Myfxbook. I simboli retail e i riferimenti futures CFTC descrivono universi diversi, anche quando condividono il nome.</p>
       </div>
+      <article class="panel content-panel retail-history" aria-labelledby="history-title" id="retail-history">
+        <h2 id="history-title">Storico del sentiment retail</h2>
+        <p>Ogni punto è una rilevazione effettiva. Gli intervalli tra le rilevazioni variano.</p>
+        <p id="history-status" class="muted" role="status">Caricamento dello storico…</p>
+        <div id="history-view" hidden>
+          <div class="history-controls">
+            <label for="history-symbol">Simbolo<select id="history-symbol"></select></label>
+            <label for="history-range">Periodo<select id="history-range">
+              <option value="7">Ultimi 7 giorni rilevati</option>
+              <option value="all">Intero archivio</option>
+            </select></label>
+          </div>
+          <p id="history-summary" class="history-summary" aria-live="polite"></p>
+          <p id="history-period" class="muted"></p>
+          <canvas id="history-chart" role="img" aria-label="Grafico delle quote long osservate"></canvas>
+          <details>
+            <summary id="history-detail-title">Mostra rilevazioni</summary>
+            <div class="table-scroll" tabindex="0" role="region" aria-label="Rilevazioni storiche Myfxbook">
+              <table class="history-table">
+                <thead><tr><th scope="col">Rilevazione (ora italiana)</th><th scope="col">Long</th><th scope="col">Short</th></tr></thead>
+                <tbody id="history-rows"></tbody>
+              </table>
+            </div>
+          </details>
+        </div>
+      </article>
       <div id="retail-content"><p class="notice" role="status">Caricamento archivio Myfxbook…</p></div>
     </section>
 
@@ -128,6 +156,7 @@
         <article class="panel content-panel">
           <h2>Myfxbook</h2>
           <dl><dt>Fonte</dt><dd>Community Outlook</dd><dt>Snapshot</dt><dd>24/11/2026 alle 21:21 CET</dd><dt>Popolazione</dt><dd>Campione retail per simbolo</dd></dl>
+          <p class="muted">Lo storico include i simboli con una serie pubblica nell’archivio Git.</p>
         </article>
         <article class="panel content-panel">
           <h2>Squalincome e Ampere</h2>
@@ -135,7 +164,12 @@
         </article>
         <article class="panel content-panel">
           <h2>Flusso Contributor e desk OWNER</h2>
-          <p>Il pacchetto Contributor v1.10 è in lavorazione su un ramo dedicato. Proposte, ricevute e gestione utenti dipendono dal collaudo di quel pacchetto e dal passaggio sul server autorizzato.</p>
+          <p>Il pacchetto Contributor v1.10 ha superato il collaudo LAB locale. Proposte, ricevute e gestione utenti attendono la verifica dei ruoli e delle scritture sul server dedicato.</p>
+        </article>
+        <article class="panel content-panel">
+          <h2>App e consultazione offline</h2>
+          <p>In Safari su iPhone, apri il menu Condividi e scegli «Aggiungi alla schermata Home». La copia offline si prepara al primo caricamento.</p>
+          <p id="pwa-status" role="status" class="muted"></p>
         </article>
       </div>
     </section>

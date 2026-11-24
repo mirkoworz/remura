@@ -29,7 +29,7 @@ function formatDate(value) {
   return reportDate.format(new Date(value + "T00:00:00Z"));
 }
 
-function formatCapture(value) {
+export function formatCapture(value) {
   return captureTime.format(new Date(value));
 }
 
