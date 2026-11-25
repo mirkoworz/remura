@@ -1,0 +1,5 @@
+# REMURA V29.5 LAB — 25/11/2026 Europe/Rome
+
+Local Python run using exact Git blob matches: V29.4 custody, page contract, footprint and both test files. Nine tests passed; new integration two tests passed (11 total, synthetic only, SQLite in memory, no network). Integrated source blobs bb37e9acaaf28476b992edef7b6504d36ffcd839 and 0f6d9c5caba9f5fa5a822dbf4cfd88fc2d8b7cb7. No CI dispatch.
+
+Receipt-to-feature aggregate is retrospective TEST only. D1 receipt clock is not independent Oracle availability; never use this as prospective admission. Live gates: verify pinned helper dependencies and read-only token scope, private dedicated directory and DB, bounded query budget, response cap, local first-seen witness, native semantic validation, explicit authorization for transfer and scheduling. No broker, no D1 reads, no Oracle changes, no merge/deploy. Pine V0.9.4 remains uncompiled and separate. Current v0.9.1 alert unchanged. Next: operator-reviewed single bounded live private acquisition, only after separate authorization and prerequisite checks; no automatic activation.
