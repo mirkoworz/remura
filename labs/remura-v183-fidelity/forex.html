@@ -239,7 +239,7 @@ $('export-csv').addEventListener('click',()=>{
   link.href=url;link.download=`REMURA_${selectedPair}_${sourceMode}_${last(commonDates)}.csv`;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 });
 renderAll();loadLive();
-if('serviceWorker' in navigator && location.protocol==='https:')navigator.serviceWorker.register('./sw.js').catch(()=>{});
+/* Shared registration is in nav.js. */
 </script>
 <script src="./nav.js?v=164"></script>
 </body></html>

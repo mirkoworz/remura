@@ -1,15 +1,14 @@
-/* Shell only. API CFTC is never cached as live data. */
-const CACHE="remura-shell-v78-v1.64-shark-cinematic";
-const STATIC=["./","./index.html","./forex.html","./catalogo.html","./mercati.html","./statistica-squali.html","./statistica-squali.js","./statistica-squali-core.js","./dual24-core.js","./dual24-ui.js","./market-audit-core.js","./market-audit-ui.js","./case-audit-core.js","./case-audit-ui.js","./weekly-quality-core.js","./weekly-quality-ui.js","./cot-week-watch-core.js","./cot-week-watch-ui.js","./asset.html","./fonti.html","./impostazioni.html","./impostazioni.js","./resource-health.js","./resource-health.css","./stato-prezzi.html","./stato-prezzi.js","./price-status-core.js","./feed-health-core.js","./nav.js","./nav.css","./squalincome-diagnostics.js","./squalincome-freshness-core.js","./retail.css","./retail.js","./sentiment-trend-core.js","./sentiment-trend.js","./sentiment-trend.css","./insights-core.js","./cot-indices-core.js","./insights.js","./insights.css","./price-core.js","./price.js","./price.css","./sentiment-core.js","./capital-cloud-config.js","./capital-cloud.js","./sources.js","./sources.css","./manifest.webmanifest","./icon.svg","./splash.js","./splash.css","./splash-mascot.webp"];
-self.addEventListener("install",event=>event.waitUntil(
-  caches.open(CACHE).then(cache=>cache.addAll(STATIC)).then(()=>self.skipWaiting())
-));
-self.addEventListener("activate",event=>event.waitUntil(
-  caches.keys().then(keys=>Promise.all(keys.filter(name=>name!==CACHE).map(name=>caches.delete(name)))).then(()=>self.clients.claim())
-));
-self.addEventListener("fetch",event=>{
-  const url=new URL(event.request.url);
-  if(url.pathname.includes("/private-api/"))return; // NEVER cache authenticated price/health responses.
-  if(event.request.method!=="GET"||url.origin!==self.location.origin)return;
-  event.respondWith(fetch(event.request).catch(async()=>await caches.match(event.request,{ignoreSearch:true})||Response.error()));
+/* REMURA v1.83 LAB: exact static allowlist, scope-specific cache; never store live API responses. */
+const root=new URL(self.registration.scope);
+const prefix='remura-fidelity:'+encodeURIComponent(root.href)+':';
+const name=prefix+'v1.83-20261125-1003';
+const paths=["asset.html","assets/experience/frame-0.webp","assets/experience/frame-1.webp","assets/experience/frame-2.webp","assets/experience/frame-3.webp","assets/experience/frame-4.webp","assets/experience/frame-5.webp","assets/experience/frame-6.webp","assets/experience/frame-7.webp","assets/experience/frame-8.webp","assets/experience/intro.css","assets/experience/smf.webp","capital-cloud-config.js","capital-cloud.js","case-audit-core.js","case-audit-ui.js","catalogo.html","cot-archive-entry.mjs","cot-history-core.mjs","cot-history.css","cot-history.mjs","cot-indices-core.js","cot-week-watch-core.js","cot-week-watch-ui.js","data/cot-history-public.json","data/myfxbook-history.json","data/myfxbook-latest.json","dual24-core.js","dual24-ui.js","experience-entry.mjs","experience.mjs","feed-health-core.js","fonti.html","forex.html","icon.svg","impostazioni.html","impostazioni.js","insights-core.js","insights.css","insights.js","manifest.webmanifest","market-audit-core.js","market-audit-ui.js","mercati.html","nav.css","nav.js","price-core.js","price-status-core.js","price.css","price.js","resource-health.css","resource-health.js","retail-archive-core.mjs","retail-archive-entry.mjs","retail-archive.css","retail-archive.mjs","retail.css","retail.js","sentiment-core.js","sentiment-trend-core.js","sentiment-trend.css","sentiment-trend.js","sources.css","sources.js","splash-mascot.webp","splash.css","splash.js","squalincome-diagnostics.js","squalincome-freshness-core.js","statistica-squali-core.js","statistica-squali.html","statistica-squali.js","stato-prezzi.html","stato-prezzi.js","weekly-quality-core.js","weekly-quality-ui.js"];
+const entries=new Map([[root.pathname,root.href],[new URL('index.html',root).pathname,root.href],...paths.map(p=>{const u=new URL(p,root);return [u.pathname,u.href];})]);
+const allowed=[...new Set(entries.values())];
+self.addEventListener('install',e=>e.waitUntil(caches.open(name).then(c=>c.addAll(allowed.map(url=>new Request(url,{cache:'reload',mode:'same-origin',redirect:'error'}))))));
+self.addEventListener('activate',e=>e.waitUntil((async()=>{for(const k of await caches.keys())if(k.startsWith(prefix)&&k!==name)await caches.delete(k);await self.clients.claim();})()));
+self.addEventListener('fetch',e=>{
+ const r=e.request,u=new URL(r.url);
+ if(r.method!=='GET'||u.origin!==root.origin||!entries.has(u.pathname))return;
+ e.respondWith((async()=>{const cached=await caches.match(entries.get(u.pathname),{cacheName:name});return cached||fetch(r);})());
 });

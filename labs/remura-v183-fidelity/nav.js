@@ -34,7 +34,7 @@
     // Visible on every REMURA page, including the installed iPhone web app.
     const release=document.createElement("div");
     release.id="rm-release";
-    release.textContent="REMURA · Aggiornamento v1.83 LAB · 25/11/2026 10:02 CET · Europe/Rome";
+    release.textContent="REMURA · Aggiornamento v1.83 LAB · 25/11/2026 10:03 CET · Europe/Rome";
     document.body.prepend(release);
 
     const page=location.pathname.split("/").pop()||"index.html";
@@ -143,5 +143,6 @@
     });
     render();
   }
+  if("serviceWorker" in navigator && location.protocol==="https:")navigator.serviceWorker.register("./sw.js").catch(()=>{});
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
 })();
