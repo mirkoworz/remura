@@ -3,6 +3,7 @@ Pure observation-only feature, not native M1 CVD or exchange order flow.
 Input: custody records available as of a fixed timestamp; no network or writes.
 """
 import json
+import hashlib
 from decimal import Decimal
 from datetime import datetime, timezone
 
@@ -39,6 +40,8 @@ def derive(records, asof_ms):
     config=None
     for c,row in sorted(by_close.items()):
         m=row["metadata"]
+        if type(row["original"]) is not bytes or hashlib.sha256(row["original"]).hexdigest()!=row["sha256"]:
+            raise ValueError("custody_digest")
         p=json.loads(row["original"],parse_float=Decimal)
         if p.get("schema")!="remura.tv.flow.cvd.preview.v1":
             raise ValueError("schema")
@@ -49,6 +52,8 @@ def derive(records, asof_ms):
         d=f.get("delta")
         buy,sell=f.get("buy"),f.get("sell")
         cfg=p["configuration"]
+        if type(cfg) is not dict:
+            raise ValueError("configuration")
         thisday=datetime.fromtimestamp((c-M5)/1000,timezone.utc).date()
         valid=(s.get("confirmed") is True and f.get("available") is True
                and _num(d) and _num(buy) and _num(sell)
