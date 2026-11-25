@@ -71,7 +71,7 @@ function drawObservations(canvas, rows, palette) {
   }
 }
 
-function renderHistory(root, series) {
+function renderHistory(root, series, archiveAsOf) {
   const symbol = root.querySelector('#history-symbol');
   const range = root.querySelector('#history-range');
   const view = root.querySelector('#history-view');
@@ -104,6 +104,7 @@ function renderHistory(root, series) {
     summary.textContent = `${observations} · Ultimo long ${number.format(last.long)}% · short ${number.format(last.short)}%${change}`;
     period.textContent = selected.length === 1 ? formatCapture(last.timestamp)
       : `Dal ${formatCapture(first.timestamp)} al ${formatCapture(last.timestamp)} (ora italiana)`;
+    if (archiveAsOf - last.timestamp > 48 * dayMs / 24) period.textContent += ' · Storico non recente rispetto allo snapshot del pacchetto (oltre 48 ore).';
     detailTitle.textContent = `Mostra rilevazioni (${selected.length})`;
     chart.setAttribute('aria-label', `Grafico ${symbol.value} della quota long, ${observations}`);
     const rows = document.createDocumentFragment();
@@ -131,7 +132,10 @@ export async function mountRetailHistory(root) {
   try {
     const response = await fetch(new URL('./data/myfxbook-history.json', import.meta.url), { mode: 'same-origin' });
     if (!response.ok) throw new Error('Archivio storico Myfxbook non disponibile');
-    renderHistory(root, readSeries(await response.json()));
+    const archive = await response.json();
+    const series = readSeries(archive);
+    const archiveAsOf = Math.max(...[...series.values()].map(rows => rows.at(-1).timestamp));
+    renderHistory(root, series, archiveAsOf);
     status.hidden = true;
   } catch {
     status.textContent = 'Archivio storico Myfxbook non disponibile. Ricarica la pagina per riprovare.';

@@ -29,10 +29,16 @@ export async function mountPwa(statusElement) {
     });
     if (controlled()) setStatus('Copia offline disponibile su questo dispositivo.');
 
+    function showWaiting() {
+      if (registration.waiting && controlled()) setStatus('Copia offline disponibile. Aggiornamento pronto: chiudi tutte le schede e l’app REMURA, poi riaprila.');
+    }
+    showWaiting();
+
     function watchInstall() {
       const installing = registration.installing;
       if (!installing) return;
       installing.addEventListener('statechange', () => {
+        if (installing.state === 'installed') showWaiting();
         if (installing.state === 'redundant' && !controlled()) setStatus('Copia offline non disponibile.');
       });
     }

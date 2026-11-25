@@ -1,0 +1,5 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import {readFile} from 'node:fs/promises';
+const get=async path=>readFile(new URL('../'+path,import.meta.url),'utf8');
+test('V28.2 bundled release coherence',async()=>{const [html,sw,raw,hist,proof]=await Promise.all(['index.html','sw.js','data/myfxbook-latest.json','data/myfxbook-history.json','data/retail-release-proof.json'].map(get)); const latest=JSON.parse(raw),h=JSON.parse(hist),p=JSON.parse(proof);assert(html.includes(p.release+' LAB'));assert(sw.includes("'"+p.release+"'"));assert.equal(latest.updatedAt,p.observedAtUtc);assert.equal(h.sourceCommit,p.sourceCommit);assert.equal(Object.keys(latest.symbols).length,p.snapshotSymbols);assert.equal(Object.keys(h.symbols).length,p.seriesCount);assert.equal(Object.values(h.symbols).flat().length,p.merged);for(const [s,rows] of Object.entries(h.symbols)){assert(rows.every((r,i)=>i===0||r[0]>rows[i-1][0]));if(s in p.verifiedAppendLongPct){const r=latest.symbols[s];assert.deepEqual(rows.at(-1),[r.t,r.lPct,r.sPct]);}else assert(p.unchangedHistoricalIndices.includes(s));}});

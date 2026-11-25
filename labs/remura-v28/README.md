@@ -1,4 +1,4 @@
-# REMURA v1.80.1 LAB · Convergenza V28
+# REMURA v1.81 LAB · Convergenza V28.2
 
 Aprire il LAB con un server locale. Dalla radice del repository:
 
@@ -45,3 +45,6 @@ Il riepilogo delle modifiche contiene solo `labs/remura-v28/`. La v1.80 ha super
 La v1.80.1 ha superato 13/13 verifiche mirate in Chrome a 390 px simulando il reindirizzamento 308 di Pages. Con la rete disattivata il browser ha riaperto sia la pagina principale sia `index.html#mercati`, mostrando i tre archivi. Il test conservato nel repository verifica il worker alla radice e sotto un percorso isolato.
 
 Per ogni nuova versione dell’app o degli archivi, aggiornare insieme il numero e la data nell’intestazione e la versione della cache in `sw.js`. La copia nuova diventa attiva dopo la chiusura delle schede che usano la versione precedente.
+
+## V28.2 — aggiornamento del 25 novembre
+Il [checkpoint V28.2](V282-RELEASE-CHECKPOINT.md) e `data/retail-release-proof.json` sostituiscono le cifre Myfxbook precedenti in questo documento: 88 simboli, 34 serie, 3.714 osservazioni. Il collaudo iPhone offline v1.80.1 è stato confermato dall’OWNER; la nuova v1.81 è un candidato non pubblicato.

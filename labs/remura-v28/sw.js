@@ -1,6 +1,6 @@
 const root = new URL(self.registration.scope);
 const cachePrefix = 'remura-lab:' + encodeURIComponent(root.href) + ':';
-const releaseCache = cachePrefix + 'v1.80.1';
+const releaseCache = cachePrefix + 'v1.81';
 const indexPath = new URL('index.html', root).pathname;
 const releaseFiles = [
   'app.mjs',
