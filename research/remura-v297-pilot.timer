@@ -1,0 +1,10 @@
+# REMURA V29.7 — staging only; never enable permanently
+[Unit]
+Description=REMURA bounded D1 TEST pilot timer
+
+[Timer]
+OnActiveSec=30s
+OnUnitInactiveSec=5min
+AccuracySec=10s
+Unit=remura-v297-pilot.service
+Persistent=false
