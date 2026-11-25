@@ -1,0 +1,8 @@
+# REMURA V28.1 — iPhone offline and retail archive preservation
+25 November 2026 — Europe/Rome. Research only; app release remains v1.80.1.
+
+Owner reports physical iPhone offline operation with airplane mode and Wi-Fi disabled. This is an owner attestation, not an automated browser trace. No repeat of the existing Chrome checks.
+
+Read-only audit: baseline LAB f937a4333d0f337c0ea7fcfb04a69f8545610758, input main 5e8e4a469715d52a9be5e91206538d6fa22c48d1 (25 Nov 04:35:50 CET). All 34 historical series examined. 3,684 old rows; 3,654 incoming rows; 30 new rows, 60 old rows absent from rolling input, zero overlapping value conflicts and zero invalid incoming percentages/timestamps by audit. Union count 3,714, with no interpolation. Four index histories remain unchanged (NAS100, US2000, US30, US500). Snapshot has 88 symbols, 25 changed. Retail data only.
+
+The pure merge module preserves every prior row, rejects conflicts or missing symbols, and keeps commit lineage. It does not alter the app, publish data, change caches, fetch network data, or schedule anything. Twelve synthetic checks executed in JavaScript V8; exact function tested against authentic EURUSD, NAS100 and XAUUSD source series: 272 old, 2 added, 4 retained outside input, 274 merged. Full 34-series audit was a separate read-only comparison, not an execution of this module against all 34. Node test file supplied but not run in Node here. Next: run module across all 34 pinned files, publish a coherent public data bundle with provenance, then integrate same-origin delivery and offline fallback; no live deployment until authorized. No CFTC requests, secrets, D1, Oracle, collector, Access or sources/ changes.
