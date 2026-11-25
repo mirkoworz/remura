@@ -1,0 +1,19 @@
+{
+  "name": "Remura — Radar istituzionale",
+  "short_name": "Remura",
+  "description": "COT istituzionale su valute e cross valutari",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#07121a",
+  "theme_color": "#09141d",
+  "lang": "it-IT",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

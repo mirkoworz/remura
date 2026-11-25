@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="it">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#09141d"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Remura"><meta name="description" content="REMURA: impara a leggere il posizionamento degli istituzionali COT su Forex, oro, argento e indici.">
+<link rel="icon" type="image/svg+xml" href="./icon.svg"><link rel="manifest" href="./manifest.webmanifest"><link rel="stylesheet" href="./nav.css?v=133"><link rel="stylesheet" href="./splash.css?v=164">
+<title>REMURA · Home | Segui le tracce istituzionali</title>
+<style>
+:root{color-scheme:dark;--bg:#07121a;--panel:#102833;--line:#2d4f58;--aqua:#69edca;--ink:#edf9f5;--muted:#a0bac0;--blue:#91baff;--gold:#f4c890;--red:#f5909c}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+a{color:inherit;text-decoration:none}a:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid #69edca;outline-offset:4px}
+.shell{max-width:1230px;margin:auto;padding:20px 24px 85px}
+.top{display:flex;justify-content:space-between;align-items:center;min-height:54px;gap:15px;flex-wrap:wrap;margin:0 0 30px}
+.logo{font-weight:890;font-size:23px;letter-spacing:.15em;color:var(--aqua)}.logo small{display:block;color:var(--muted);font-size:10px;letter-spacing:.1em;font-weight:700}
+.toplinks{display:flex;gap:8px;flex-wrap:wrap}.toplinks a{padding:10px 13px;border-radius:11px;border:1px solid #355762;background:#18323e;font-weight:750;font-size:12px}
+.toplinks a:hover{border-color:#68ae9b}
+.hero{position:relative;padding:clamp(24px,5vw,55px);background:radial-gradient(ellipse 60% 100% at 94% 0%,#18635785,transparent 70%),linear-gradient(130deg,#13323d,#0b202c 68%);border:1px solid #2c585d;border-radius:26px;overflow:hidden}
+.hero:after{content:"";position:absolute;right:-150px;bottom:-230px;width:600px;height:600px;border:1px solid #62dac320;border-radius:50%;box-shadow:0 0 0 65px #62dac309,0 0 0 130px #62dac307;pointer-events:none}
+.hero>div{position:relative;z-index:1;max-width:820px}
+.eyebrow{letter-spacing:.17em;font-size:11px;font-weight:850;color:var(--aqua);text-transform:uppercase}
+.hero h1{font-size:clamp(38px,6.8vw,75px);line-height:1.05;font-weight:890;letter-spacing:-.063em;margin:15px 0}
+h1 em{font-style:normal;color:var(--aqua)}
+.hero p{font-size:clamp(14px,2vw,19px);color:#c1d9d8;max-width:740px;line-height:1.67;margin:0 0 25px}
+.ctas{display:flex;gap:10px;flex-wrap:wrap}.cta{display:inline-flex;align-items:center;justify-content:center;gap:7px;font-weight:850;font-size:13px;padding:13px 18px;border-radius:12px;background:var(--aqua);color:#0a2929}
+.cta.secondary{background:#173940;border:1px solid #4c8579;color:#cdf7e9}.cta:hover{filter:brightness(1.1)}
+.hero-note{color:#92bdbe;font-size:11px;font-weight:700;margin-top:25px}
+.section{margin:37px 0 0}.section h2{font-size:clamp(25px,3vw,35px);letter-spacing:-.04em;margin:7px 0 10px;line-height:1.18}
+.section-intro{color:var(--muted);max-width:860px;margin:0 0 22px;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.panel{border:1px solid var(--line);border-radius:19px;padding:23px;background:linear-gradient(155deg,#102b36,#0c1e29)}
+.panel .step{display:inline-flex;align-items:center;justify-content:center;width:35px;height:35px;border-radius:11px;color:#07312d;background:var(--aqua);font-weight:900;font-size:14px}
+.panel h3{font-size:21px;letter-spacing:-.03em;margin:12px 0 8px}
+.panel p{font-size:13px;color:#a9c3c8;margin:0}
+.hint{font-size:12px;padding:12px 13px;background:#183841;border:1px solid #345d63;border-radius:12px;margin-top:15px;color:#cfefeb}
+.hint b{color:#80eacb}
+.highlight{background:linear-gradient(115deg,#143d3b,#102732);border:1px solid #4a8c7d;border-radius:17px;padding:20px 23px;margin-top:18px}
+.highlight strong{font-size:16px;color:#a3f9dc}.highlight p{font-size:13px;color:#c2ded6;margin:7px 0 0}
+.flow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.flow .panel{padding:20px}.flow-number{color:var(--aqua);font-size:27px;font-weight:880;line-height:1}
+.flow h3{font-size:17px;margin:10px 0 7px}
+.branches{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.branch{border:1px solid #345b65;background:linear-gradient(165deg,#133641,#0d212d);padding:21px;border-radius:18px;display:flex;flex-direction:column;gap:9px}
+.branch:hover{border-color:#6ac8aa;background:#16403f}
+.branch .icon{font-size:27px;color:var(--aqua)}
+.branch h3{font-size:22px;letter-spacing:-.03em;margin:0}
+.branch p{font-size:12px;color:#a6c1c7;margin:0 0 7px;flex:1}
+.branch .more{font-size:12px;color:#79edcb;font-weight:840;letter-spacing:.02em}
+.reading{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
+.timeline{border:1px solid #335960;padding:22px;border-radius:17px;background:radial-gradient(circle at 0% 20%,#16443d,#102a34 60%)}
+.timeline h3{font-size:19px;margin:0 0 13px}
+.wave{display:flex;align-items:flex-end;gap:10px;min-height:138px;padding:15px 5px 11px}
+.wave .point{width:20%;display:grid;justify-items:center;gap:5px;color:#c6e6db;font-size:11px;text-align:center}
+.wave .bar{width:100%;max-width:59px;border-radius:8px 8px 3px 3px;background:linear-gradient(#85f3cf,#24776e);height:var(--h)}
+.wave .point.last .bar{background:linear-gradient(#f8c993,#926b41)}
+.timeline small{font-size:11px;color:#9db6bc}
+.explain{border:1px solid var(--line);padding:19px;border-radius:17px;background:#0e2631}
+.explain strong{color:#93f5d4}.explain p{font-size:13px;color:#b1cbd0;margin:6px 0 13px}
+.explain p:last-child{margin-bottom:0}
+.info-box{border:1px solid #64543e;background:#2c2a21;padding:18px 21px;border-radius:15px;color:#e8d5b1;font-size:13px;line-height:1.7}
+details.faq{border:1px solid #2c5059;border-radius:13px;background:#102935;margin-bottom:8px}
+details.faq summary{cursor:pointer;font-weight:800;padding:14px 18px;color:#ddf7ee}
+details.faq p{color:#a9c5c8;padding:0 18px 16px;font-size:13px;margin:0}
+.footer{margin-top:35px;border-top:1px solid #25434c;padding:20px 0;color:#8aa5ad;font-size:11px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:15px}
+@media(max-width:850px){.branches,.flow{grid-template-columns:1fr 1fr}.reading{grid-template-columns:1fr}.shell{padding:17px 14px 85px}}
+@media(max-width:620px){.grid,.branches,.flow{grid-template-columns:1fr}.hero{padding:25px 21px}.top{margin-bottom:22px}.panel{padding:19px}.section{margin-top:31px}.toplinks{margin-left:auto}.toplinks a{padding:8px 10px}.hero h1{font-size:43px}.ctas .cta{width:100%}}
+</style><link rel="stylesheet" href="./assets/experience/intro.css"><script type="module" src="./experience-entry.mjs"></script></head>
+<body><script src="./splash.js?v=164"></script><div class="shell">
+<header class="top"><div class="logo">REMURA<small>SEGUI LA CORRENTE, NON LA FOLLA</small></div><div class="toplinks"><a href="./mercati.html#institutional-scanner">Radar Squali ↗</a><a href="./statistica-squali.html">Verifica Squali ↗</a><a href="./catalogo.html?categoria=forex&v=8">Esplora Forex</a></div></header>
+<section class="hero"><div>
+<div class="eyebrow">LA REMORA E GLI SQUALI · HOME</div>
+<h1>Non indovinare il mercato.<br><em>Segui le tracce.</em></h1>
+<p>Come la remora viaggia accanto allo squalo, REMURA cerca di osservare dove si stanno posizionando i grandi operatori. Non vediamo tutti i loro ordini: leggiamo <strong>le posizioni dichiarate nei report COT</strong>, misuriamo i cambiamenti e cerchiamo conferme prima di trarre conclusioni.</p>
+<div class="ctas"><a class="cta" href="./mercati.html?v=8">Apri il radar istituzionale ↗</a><a class="cta secondary" href="#impara">Impara a leggere i movimenti ↓</a><button class="cta secondary" type="button" id="play-intro" hidden>Riproduci Toro / Orso · SMF</button></div>
+<div class="hero-note">28 coppie Forex · 2 metalli · 4 indici · 2 macro · 2 petroli · Dati CFTC settimanali, non live</div>
+</div></section>
+<section class="section" id="impara"><div class="eyebrow">IL LINGUAGGIO DEI GRANDI OPERATORI</div><h2>Quattro segnali da capire prima di scegliere un mercato</h2>
+<p class="section-intro">Una posizione grande non significa che qualcuno stia comprando proprio adesso. L'informazione più interessante è spesso <strong>come quella posizione cambia da una settimana all'altra</strong>.</p>
+<div class="grid">
+<article class="panel"><span class="step">01</span><h3>Esposizione: quanto sono sbilanciati?</h3><p>Confrontiamo le posizioni <b>long</b> e <b>short</b> dei gruppi istituzionali. Netto positivo = più contratti long che short; negativo = più short che long. Per confrontare periodi diversi normalizziamo il netto sull'<b>open interest</b>.</p><div class="hint"><b>Da guardare:</b> posizione netta % OI, categoria dell'operatore e livello rispetto al suo storico.</div></article>
+<article class="panel"><span class="step">02</span><h3>Spinta: stanno aumentando il netto?</h3><p>Una variazione settimanale positiva indica che il netto diventa <b>più positivo</b> o <b>meno negativo</b>; una negativa indica il contrario. Può succedere sia aprendo posizioni sia chiudendo posizioni opposte: il COT da solo non distingue tutti questi flussi.</p><div class="hint"><b>Da guardare:</b> variazione in punti percentuali, contratti long/short e, dove disponibile, open interest.</div></article>
+<article class="panel"><span class="step">03</span><h3>Decelerazione: la spinta perde forza?</h3><p>Un fondo può restare molto <b>net long</b>, ma aumentare la posizione più lentamente oppure iniziare a ridurla. Per questo posizione attuale e variazione sono due informazioni diverse. Il prezzo non è obbligato a seguirle.</p><div class="hint"><b>Da guardare:</b> confronto della variazione di questa settimana con quella precedente.</div></article>
+<article class="panel"><span class="step">04</span><h3>Inversione: cambia il segno del netto?</h3><p>Quando il netto passa da positivo a negativo, o viceversa, cambia l'orientamento netto della categoria osservata. <b>Non è automaticamente un'inversione del mercato</b>: va contestualizzata con lo storico e con il prezzo.</p><div class="hint"><b>Da guardare:</b> passaggio attraverso lo zero, persistenza per più settimane e conferme esterne.</div></article>
+</div>
+<div class="highlight"><strong>Il principio REMURA</strong><p>Non scegliamo un mercato perché è “verde” o “rosso”. Prima chiediamo: <b>chi è esposto, quanto è cambiato, il movimento accelera o rallenta, quanto è recente il report e chi potrebbe stare coprendo un rischio?</b></p></div></section>
+<section class="section"><div class="eyebrow">ESEMPIO DIDATTICO · NON DATI DI MERCATO</div><h2>Una posizione può crescere e poi rallentare</h2>
+<p class="section-intro">Le barre seguenti sono soltanto un disegno per capire il concetto; non mostrano un asset reale né valori CFTC.</p>
+<div class="reading"><div class="timeline"><h3>Evoluzione illustrativa della posizione netta</h3>
+<div class="wave" role="img" aria-label="Quattro barre: la posizione aumenta nella seconda e terza settimana e si riduce leggermente nella quarta">
+<div class="point"><div class="bar" style="--h:55px"></div><span>Settimana 1</span></div>
+<div class="point"><div class="bar" style="--h:88px"></div><span>Settimana 2</span></div>
+<div class="point"><div class="bar" style="--h:122px"></div><span>Settimana 3</span></div>
+<div class="point last"><div class="bar" style="--h:102px"></div><span>Settimana 4</span></div></div>
+<small>Schema illustrativo: più esposizione nelle settimane 2–3, minore nella 4. Nessuna previsione sul prezzo.</small></div>
+<div class="explain"><strong>Settimane 1 → 3: esposizione netta in aumento</strong><p>La variazione del netto è positiva. Il gruppo sta aumentando lo sbilanciamento, ma non possiamo chiamarlo automaticamente “nuovo acquisto”.</p><strong>Settimana 4: decelerazione/riduzione</strong><p>Il netto rimane positivo, ma scende rispetto alla settimana 3. Significa che lo sbilanciamento si è ridotto, non che gli istituzionali siano già diventati net short.</p></div></div></section>
+<section class="section"><div class="eyebrow">METODO REMURA · IL PERCORSO PRATICO</div><h2>Come stare dietro agli squali, senza andare alla cieca</h2>
+<div class="flow"><div class="panel"><div class="flow-number">1</div><h3>Trova un movimento insolito</h3><p>Apri lo scanner e controlla i mercati con le variazioni settimanali maggiori, le accelerazioni o i cambi netti di posizione.</p></div>
+<div class="panel"><div class="flow-number">2</div><h3>Apri la scheda del mercato</h3><p>Leggi il contratto CFTC, il gruppo di operatori, il grafico, il livello storico, long/short e open interest. Verifica se il dato è aggiornato.</p></div>
+<div class="panel"><div class="flow-number">3</div><h3>Cerca conferme indipendenti</h3><p>Confronta sentiment retail e struttura del prezzo nelle schede dei mercati. Non confondere il COT ritardato con un segnale immediato di entrata.</p></div></div>
+</section>
+<section class="section"><div class="eyebrow">ESPLORA</div><h2>Quattro grandi famiglie di mercati</h2><p class="section-intro">Apri il menu ☰ per vedere tutti i sottomenu, oppure entra direttamente nella sezione che ti interessa.</p>
+<div class="branches"><a class="branch" href="./catalogo.html?categoria=forex&v=8"><div class="icon">↔</div><h3>Forex</h3><p>28 coppie delle otto valute principali. Asset Manager, Leveraged Funds e confronto sintetico tra valute.</p><div class="more">Esplora le 28 coppie →</div></a>
+<a class="branch" href="./catalogo.html?categoria=metals&v=8"><div class="icon">◇</div><h3>Metalli</h3><p>Gold/XAUUSD e Silver/XAGUSD: Managed Money, operatori commerciali e contratti COMEX.</p><div class="more">Apri Gold e Silver →</div></a>
+<a class="branch" href="./catalogo.html?categoria=indices&v=8"><div class="icon">▥</div><h3>Indici</h3><p>DAX 40, S&P 500, Nasdaq e Dow Jones. Il DAX mantiene il suo storico cTrader; COT N/D.</p><div class="more">Esplora gli indici →</div></a>
+<a class="branch" href="./catalogo.html?categoria=macro&v=19"><div class="icon">◈</div><h3>Indicatori macro</h3><p>DXY e VIX separati dagli indici azionari. Analisi del contesto globale e confronto con i mercati che segui.</p><div class="more">Esplora DXY e VIX →</div></a>
+<a class="branch" href="./catalogo.html?categoria=energy&v=13"><div class="icon">◉</div><h3>Petrolio</h3><p>WTI USOil: COT NYMEX e prezzo. Brent UKOil: prezzo broker, COT N/D.</p><div class="more">Esplora WTI e Brent →</div></a></div></section>
+<section class="section"><div class="eyebrow">CONFRONTO MULTI-FONTE</div><h2>Una community non è tutto il mercato</h2><p class="section-intro">Abbiamo mappato sette fonti di sentiment. Remura legge già automaticamente i dati Myfxbook; Dukascopy offre un widget ufficiale, mentre IG, FX Blue, OANDA, Forex Factory e FXCM hanno differenti modalità di accesso. Ogni fonte misura un campione diverso: controlla lo stato di collegamento e la metrica.</p><a class="cta secondary" href="./fonti.html?v=8">Esplora le 7 fonti sentiment ↗</a></section>
+<section class="section"><div class="eyebrow">IN ARRIVO · SENTIMENT RETAIL</div><h2>Quando gli istituzionali e la folla guardano in direzioni diverse</h2>
+<p class="section-intro">Myfxbook è collegato alle schede. Stiamo ampliando il confronto con altre fonti, indicando quali sono automatiche e quali soltanto consultabili: nessuna percentuale inventata.</p>
+<div class="info-box"><strong>Una regola importante:</strong> il retail non è sempre dalla parte sbagliata e gli istituzionali non vincono sempre. La nostra app serve a trovare contesti da studiare meglio, non a promettere operazioni sicure.</div></section>
+<section class="section"><div class="eyebrow">DOMANDE FREQUENTI</div><h2>Quello che il COT ci dice — e quello che non sa</h2>
+<details class="faq"><summary>Se un fondo è molto long, significa che il prezzo salirà?</summary><p>No. Un'esposizione netta long descrive il posizionamento di una categoria nei futures, non una previsione. Può durare settimane e il prezzo può muoversi nella direzione opposta.</p></details>
+<details class="faq"><summary>Chi sono Asset Manager, Leveraged Funds e Managed Money?</summary><p>Asset Manager e Leveraged Funds sono categorie del report finanziario TFF; Managed Money è una categoria del report Disaggregated, usata anche per metalli. Non sono sinonimi e non vanno confrontati come se fossero uguali.</p></details>
+<details class="faq"><summary>Le posizioni istituzionali sono aggiornate in tempo reale?</summary><p>No. Il COT fotografa normalmente il martedì e viene pubblicato il venerdì. REMURA deve indicare sempre la data delle posizioni e segnalare quando sono vecchie o mancanti.</p></details>
+<details class="faq"><summary>CADJPY e le altre coppie Forex hanno un report COT proprio?</summary><p>Non tutte. Per molti cross confrontiamo due futures valutari contro USD. Il risultato è un indicatore sintetico e non una posizione COT ufficiale del cross.</p></details>
+</section>
+<footer class="footer"><span>REMURA v1.63 · La remora osserva, non predice · Non è consulenza finanziaria.</span><a href="./mercati.html?v=8">Apri lo scanner completo ↗</a></footer>
+</div><script src="./nav.js?v=164"></script></body></html>

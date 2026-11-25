@@ -1,0 +1,35 @@
+/* REMURA v0.9 – scheda interpretativa condivisa Forex, metalli e indici */
+.rm-insights{margin:0 0 18px;border:1px solid #376b69;background:linear-gradient(135deg,#10333b,#0b1d29 70%);border-radius:20px;padding:20px 22px;color:#e8f7f4}
+.rm-insights *{box-sizing:border-box}
+.rm-insights .rm-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.rm-insights .rm-eyebrow{color:#69edca;font-size:10px;letter-spacing:.13em;font-weight:850;text-transform:uppercase}
+.rm-insights h2{font-size:24px;letter-spacing:-.035em;line-height:1.2;margin:6px 0 8px}
+.rm-insights .rm-pill{font-size:11px;border:1px solid #54767d;border-radius:50px;padding:7px 11px;background:#193440;color:#b9d7de;font-weight:800}
+.rm-insights[data-state="trend"] .rm-pill{border-color:#479d87;color:#83efcf}
+.rm-insights[data-state="conflict"] .rm-pill,.rm-insights[data-state="stale"] .rm-pill{border-color:#98754e;color:#f8cf95}
+.rm-insights .rm-desc{color:#c2d9db;font-size:13px;margin:8px 0 0;max-width:880px}
+.rm-insights .rm-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:19px 0}
+.rm-insights .rm-stat{padding:13px 14px;border:1px solid #30535b;border-radius:13px;background:#0d2a33}
+.rm-insights .rm-stat small{display:block;color:#a5c6c9;font-size:11px;margin-bottom:5px}
+.rm-insights .rm-stat strong{display:block;font-size:20px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.rm-insights .rm-note{border-left:3px solid #69edca;padding:11px 14px;background:#173941;border-radius:0 10px 10px 0;margin:13px 0;color:#d9eeec;font-size:13px}
+.rm-insights h3{font-size:16px;margin:20px 0 9px}
+.rm-insights ul{padding-left:20px;margin:8px 0 0;color:#c4dee0;font-size:13px}
+.rm-insights li{margin:6px 0}
+.rm-insights .rm-caveats{color:#a3bec3;font-size:12px;border-top:1px solid #2d535b;margin-top:15px;padding-top:12px}
+.rm-insights .rm-caveats li{margin:5px 0}
+.rm-insights .rm-next{border:1px solid #4e616c;background:#102a35;border-radius:12px;padding:13px 15px;font-size:13px;margin-top:14px}
+.rm-insights .rm-next b{display:block;color:#a6ecdc;margin-bottom:3px}
+.rm-insights .rm-charts{border-top:1px solid #335960;margin-top:20px;padding-top:5px}
+.rm-insights .rm-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}
+.rm-insights .rm-controls label{color:#aec8ca;font-size:11px;font-weight:750}
+.rm-insights .rm-controls select{border:1px solid #44727c;background:#0d2932;color:#e6f9f6;font:inherit;font-size:12px;padding:9px 12px;border-radius:9px;min-height:38px}
+.rm-insights .rm-chart-panel{background:#0b222c;border:1px solid #2c515a;border-radius:13px;padding:12px;margin-top:11px}
+.rm-insights .rm-chart-panel h4{font-size:13px;margin:0 0 6px;color:#d3efed}
+.rm-insights .rm-chart-panel svg{display:block;width:100%;height:auto;max-height:320px}
+.rm-insights .rm-legend{font-size:11px;color:#a7c9cd;margin:6px 0 0}
+.rm-insights .rm-green{color:#78dfb4}.rm-insights .rm-red{color:#ff8d99}.rm-insights .rm-amber{color:#f6c47e}
+.rm-insights .rm-trace{font-size:12px;color:#c8dee0;line-height:1.65;margin:12px 0 0}
+.rm-insights .rm-fine{font-size:11px;color:#94b3b9;margin:8px 0}
+@media(max-width:750px){.rm-insights{padding:17px 14px;border-radius:16px}.rm-insights h2{font-size:21px}.rm-insights .rm-grid{grid-template-columns:1fr 1fr}.rm-insights .rm-grid .rm-stat:last-child{grid-column:1/-1}.rm-insights .rm-controls select{max-width:100%}}
+@media(max-width:400px){.rm-insights .rm-grid{grid-template-columns:1fr}.rm-insights .rm-grid .rm-stat:last-child{grid-column:auto}}
