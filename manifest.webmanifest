@@ -1,19 +1,24 @@
 {
-  "name": "Remura — Radar istituzionale",
-  "short_name": "Remura",
-  "description": "COT istituzionale su valute e cross valutari",
-  "start_url": "./index.html",
+  "id": "./",
+  "name": "REMURA LAB · Shark Cockpit",
+  "short_name": "REMURA LAB",
+  "description": "Posizionamento CFTC e archivio retail Myfxbook",
+  "lang": "it-IT",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#07121a",
-  "theme_color": "#09141d",
-  "lang": "it-IT",
+  "theme_color": "#07121a",
   "icons": [
     {
-      "src": "icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
+      "src": "./assets/app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./assets/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
     }
   ]
 }

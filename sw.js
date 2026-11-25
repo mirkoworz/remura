@@ -1,15 +1,65 @@
-/* Shell only. API CFTC is never cached as live data. */
-const CACHE="remura-shell-v78-v1.64-shark-cinematic";
-const STATIC=["./","./index.html","./forex.html","./catalogo.html","./mercati.html","./statistica-squali.html","./statistica-squali.js","./statistica-squali-core.js","./dual24-core.js","./dual24-ui.js","./market-audit-core.js","./market-audit-ui.js","./case-audit-core.js","./case-audit-ui.js","./weekly-quality-core.js","./weekly-quality-ui.js","./cot-week-watch-core.js","./cot-week-watch-ui.js","./asset.html","./fonti.html","./impostazioni.html","./impostazioni.js","./resource-health.js","./resource-health.css","./stato-prezzi.html","./stato-prezzi.js","./price-status-core.js","./feed-health-core.js","./nav.js","./nav.css","./squalincome-diagnostics.js","./squalincome-freshness-core.js","./retail.css","./retail.js","./sentiment-trend-core.js","./sentiment-trend.js","./sentiment-trend.css","./insights-core.js","./cot-indices-core.js","./insights.js","./insights.css","./price-core.js","./price.js","./price.css","./sentiment-core.js","./capital-cloud-config.js","./capital-cloud.js","./sources.js","./sources.css","./manifest.webmanifest","./icon.svg","./splash.js","./splash.css","./splash-mascot.webp"];
-self.addEventListener("install",event=>event.waitUntil(
-  caches.open(CACHE).then(cache=>cache.addAll(STATIC)).then(()=>self.skipWaiting())
-));
-self.addEventListener("activate",event=>event.waitUntil(
-  caches.keys().then(keys=>Promise.all(keys.filter(name=>name!==CACHE).map(name=>caches.delete(name)))).then(()=>self.clients.claim())
-));
-self.addEventListener("fetch",event=>{
-  const url=new URL(event.request.url);
-  if(url.pathname.includes("/private-api/"))return; // NEVER cache authenticated price/health responses.
-  if(event.request.method!=="GET"||url.origin!==self.location.origin)return;
-  event.respondWith(fetch(event.request).catch(async()=>await caches.match(event.request,{ignoreSearch:true})||Response.error()));
+const root = new URL(self.registration.scope);
+const cachePrefix = 'remura-lab:' + encodeURIComponent(root.href) + ':';
+const releaseCache = cachePrefix + 'v1.82';
+const indexPath = new URL('index.html', root).pathname;
+const releaseFiles = [
+  'app.mjs',
+  'experience.mjs',
+  'markets.mjs',
+  'cot-history.mjs',
+  'cot-history-core.mjs',
+  'retail-history.mjs',
+  'pwa.mjs',
+  'remura.css',
+  'manifest.webmanifest',
+  'assets/app-icon-180.png',
+  'assets/app-icon-192.png',
+  'assets/app-icon-512.png',
+  'assets/experience/intro.css',
+  'assets/experience/smf.webp',
+  ...Array.from({ length: 9 }, (_, index) => `assets/experience/frame-${index}.webp`),
+  'data/cot-b223.json',
+  'data/cot-history-public.json',
+  'data/myfxbook-latest.json',
+  'data/myfxbook-history.json',
+];
+// Static hosts such as Pages can redirect index.html to the directory URL.
+const releaseUrls = new Set([root.href, ...releaseFiles.map(path => new URL(path, root).href)]);
+
+self.addEventListener('install', event => {
+  // Fetch a complete release before activation. Keep old pages on their own worker until they close.
+  const requests = [...releaseUrls].map(url => new Request(url, {
+    cache: 'reload',
+    mode: 'same-origin',
+    redirect: 'error',
+  }));
+  event.waitUntil(caches.open(releaseCache).then(cache => cache.addAll(requests)));
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys
+      .filter(key => key.startsWith(cachePrefix) && key !== releaseCache)
+      .map(key => caches.delete(key)));
+    await self.clients.claim();
+  })());
+});
+
+self.addEventListener('fetch', event => {
+  const request = event.request;
+  if (request.method !== 'GET') return;
+  const url = new URL(request.url);
+  if (url.origin !== root.origin) return;
+
+  const navigation = request.mode === 'navigate';
+  const shellNavigation = navigation && (
+    url.pathname === root.pathname || url.pathname === indexPath
+  );
+  if (navigation ? !shellNavigation : !releaseUrls.has(url.href)) return;
+  const key = shellNavigation ? root.href : url.href;
+  event.respondWith((async () => {
+    const response = await caches.match(key, { cacheName: releaseCache });
+    return response || fetch(request);
+  })());
 });
