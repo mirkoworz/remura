@@ -1,0 +1,13 @@
+# REMURA V29.7 — 25/11/2026 Europe/Rome — staging only
+[Unit]
+Description=REMURA bounded D1 TEST custody pilot
+ConditionPathExists=%h/.remura-v296/v297-permit.json
+ConditionPathExists=!%h/.remura-v296/v297-STOP
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 -B %h/.remura-v296/v297_bounded_collector.py
+UMask=0077
+NoNewPrivileges=yes
+TimeoutStartSec=90
+Restart=no
