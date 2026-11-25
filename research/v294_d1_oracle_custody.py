@@ -9,6 +9,9 @@ from v292_d1_oracle_page_contract import inspect_page, request_page
 def initialize(db):
     if db.in_transaction:
         raise ValueError("transaction_active")
+    names={r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    if names-{"tv_test_custody","tv_test_cursor"}:
+        raise ValueError("not_dedicated_db")
     db.execute("""CREATE TABLE IF NOT EXISTS tv_test_custody(
        event_key TEXT PRIMARY KEY, metadata TEXT NOT NULL,
        original BLOB NOT NULL, sha256 TEXT NOT NULL)""")
@@ -21,7 +24,7 @@ def cursor(db):
     row=db.execute("SELECT received_ms,event_key FROM tv_test_cursor WHERE id=1").fetchone()
     return tuple(row) if row else None
 
-def pull_once(db, fetch, start, cutoff, *, enabled=False):
+def pull_once(db, fetch, start, cutoff, *, enabled=False, replay_cursor=None, reconciliation=False):
     """Exactly one injected SELECT; disabled unless explicit opt-in.
     fetch must verify EU TEST identity and use read-only credentials.
     No skips, overwrite, retry or automatic checkpoint after a failure.
@@ -31,9 +34,12 @@ def pull_once(db, fetch, start, cutoff, *, enabled=False):
     if db.in_transaction:
         raise ValueError("transaction_active")
     previous=cursor(db)
-    query=request_page(start,cutoff,previous)
+    scan_cursor=replay_cursor if reconciliation else previous
+    if not reconciliation and replay_cursor is not None:
+        raise ValueError("unexpected_replay_cursor")
+    query=request_page(start,cutoff,scan_cursor)
     rows=fetch(query)
-    records,next_cursor,full=inspect_page(rows,start,cutoff,previous)
+    records,next_cursor,full=inspect_page(rows,start,cutoff,scan_cursor)
     inserted=0
     db.execute("BEGIN IMMEDIATE")
     try:
@@ -51,14 +57,15 @@ def pull_once(db, fetch, start, cutoff, *, enabled=False):
                 continue
             db.execute("INSERT INTO tv_test_custody VALUES (?,?,?,?)",(key,*value))
             inserted+=1
-        if records:
+        if records and not reconciliation:
             db.execute("INSERT INTO tv_test_cursor VALUES (1,?,?) ON CONFLICT(id) DO UPDATE SET received_ms=excluded.received_ms,event_key=excluded.event_key",next_cursor)
         db.commit()
     except BaseException:
         db.rollback()
         raise
     return {"received":len(records),"inserted":inserted,"more_possible":full,
-            "prospective_admitted":False}
+            "prospective_admitted":False,"reconciliation":reconciliation,
+            "next_replay_cursor":next_cursor if reconciliation else None}
 
 def verified_test_fetch(account_id, token, *, enabled=False):
     """Build one-shot network adapter using existing pinned helpers.
@@ -82,7 +89,10 @@ def verified_test_fetch(account_id, token, *, enabled=False):
         if used:
             raise ValueError("one_shot")
         from v292_d1_oracle_page_contract import SQL
-        if query.get("sql")!=SQL:
+        params=query.get("params")
+        if type(params) is not list or len(params)!=9:
+            raise ValueError("select_params")
+        if query!=request_page(params[3],params[4],(params[5],params[7])):
             raise ValueError("select_only")
         used=True
         response=api_request("POST",base+"/"+quote(ids[TEST_DB],safe="")+"/query",token,query)
