@@ -1,6 +1,6 @@
 //@version=6
-// REMURA ALL-IN-ONE Premium v0.9.1 CVD TELEMETRY PREVIEW — 14/11/2026 12:45 CET
-// OFFLINE CANDIDATE. NEW SCHEMA NOT ACCEPTED BY EXISTING WORKER. DO NOT CONNECT WEBHOOK.
+// REMURA ALL-IN-ONE Premium v0.9.4 CVD REALTIME LAB — 25/11/2026 Europe/Rome
+// LOCAL DIAGNOSTIC ONLY. NO WEBHOOK SENDER. Prior array references may retain the original snapshot.
 // CVD D0.8 source: blob 4160994d14240ab2af5eff0c67d00c95671d7567; new feed-specific cohort.
 // Ricerca sperimentale: delta STIMATO, non ordini istituzionali osservati.
 // Nessun collegamento con la versione live di REMURA.
