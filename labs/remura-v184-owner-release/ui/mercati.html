@@ -1,0 +1,966 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#09141d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>REMURA v1.60 · Radar Squali · Squalincome</title>
+<style>
+:root{color-scheme:dark;--bg:#07121a;--panel:#101f2a;--panel2:#132b36;--border:#284451;--text:#eaf6f3;--muted:#9bb8be;--mint:#69edca;--red:#ff8a96;--blue:#8fb5ff;--amber:#f1c78e}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,select,input{font:inherit}button{cursor:pointer}a{color:var(--mint);text-decoration:none}button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--mint);outline-offset:3px}.shell{max-width:1280px;margin:auto;padding:25px 24px 80px}.top{display:flex;gap:15px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:34px}.logo{font-size:24px;letter-spacing:.13em;font-weight:850;color:var(--mint)}.logo small{display:block;letter-spacing:.08em;font-size:11px;font-weight:650;color:var(--muted)}.top-actions{display:flex;gap:9px;align-items:center}.back,.refresh{border:1px solid var(--border);border-radius:12px;padding:9px 14px;background:var(--panel2);color:var(--text);font-weight:700}.status{font-size:12px;color:var(--muted);font-weight:680}.status:before{content:"";display:inline-block;background:var(--amber);width:8px;height:8px;border-radius:99px;margin-right:8px}.status.live:before{background:var(--mint)}.status.warn:before{background:var(--red)}h1{font-size:clamp(32px,5vw,58px);line-height:1.08;letter-spacing:-.055em;margin:0 0 14px}h1 span{color:var(--mint)}.intro{color:var(--muted);max-width:820px;font-size:15px;margin-bottom:23px}.alert{background:#112e2d;border:1px solid #32665c;border-radius:14px;padding:14px 16px;color:#b9eadb;margin-bottom:18px;font-size:12px;line-height:1.65}.alert.warning{background:#2c241c;border-color:#634c35;color:#f5dbb4}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:17px 0 18px}.tab{border:1px solid var(--border);background:var(--panel);border-radius:12px;color:var(--muted);font-weight:800;padding:12px 17px}.tab.active{background:#174039;border-color:#378474;color:var(--mint)}.layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(290px,.8fr);gap:16px}.panel{border:1px solid var(--border);background:linear-gradient(160deg,#122a36,#0b1b26);border-radius:20px;padding:22px;min-width:0}.eyebrow{font-weight:820;font-size:11px;text-transform:uppercase;letter-spacing:.13em;color:var(--mint)}.section-title{font-weight:850;font-size:22px;letter-spacing:-.035em;margin:4px 0 12px}.meta{color:var(--muted);font-size:12px}.searchbar{width:100%;border:1px solid #365560;background:#0c202b;color:var(--text);border-radius:12px;padding:12px 15px;margin:10px 0 13px}.searchbar::placeholder{color:#819da7}.listing{max-height:680px;overflow:auto}.assetrow{border:1px solid #25404a;width:100%;display:grid;grid-template-columns:minmax(0,1.5fr) .9fr .9fr 62px;gap:8px;align-items:center;text-align:left;padding:14px 12px;border-radius:12px;margin-bottom:7px;background:#0e222d;color:var(--text)}.assetrow.active{background:#16373b;border-color:#4b9387}.assetrow:hover{background:#19343e}.assetrow b{font-size:13px}.assetrow small{color:var(--muted);display:block;font-size:10px;margin-top:2px}.num{font-variant-numeric:tabular-nums;font-weight:800}.pos{color:var(--mint)}.neg{color:var(--red)}.neu{color:var(--amber)}.empty{padding:18px 6px;color:var(--muted)}.details{position:sticky;top:15px;align-self:start}.detail-head{display:flex;justify-content:space-between;align-items:start;gap:15px}.detail-title{font-size:31px;letter-spacing:-.04em;font-weight:850}.value-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:17px 0}.value-box{padding:15px 13px;background:#102936;border:1px solid #2e5059;border-radius:14px;min-width:0}.value-box .label{font-size:11px;color:var(--muted);min-height:32px}.value-box strong{font-size:clamp(23px,3vw,35px);display:block;line-height:1.3;margin:4px 0}.value-box .delta{font-size:11px}.date{font-size:12px;color:var(--muted);margin:12px 0}.status-note{font-size:12px;background:#172e34;border-radius:12px;padding:12px;line-height:1.65}.status-note.alert-only{background:#35291f;color:#ffdfb2}.plot{min-height:210px;margin-top:12px}.plot svg{width:100%;height:auto;display:block}.legend{color:var(--muted);font-size:11px;display:flex;gap:17px;flex-wrap:wrap;margin-top:8px}.legend .one:before,.legend .two:before{content:"";display:inline-block;width:13px;height:4px;border-radius:5px;vertical-align:middle;margin-right:6px;background:var(--mint)}.legend .two:before{background:var(--blue)}.contracts{margin-top:18px;border-top:1px solid #294650;padding-top:14px;font-size:12px;color:var(--muted)}.source{margin-top:28px;line-height:1.7;font-size:12px;color:var(--muted)}.source a{overflow-wrap:anywhere}.footer{color:#76939c;font-size:11px;margin-top:27px;text-align:center}.small{font-size:11px}.counter{border:1px solid var(--border);background:#122932;border-radius:18px;padding:14px;display:flex;justify-content:space-between;gap:12px;margin-bottom:16px;color:var(--muted)}.counter strong{color:var(--text);font-size:17px}@media(max-width:820px){.layout{grid-template-columns:1fr}.details{position:static;order:-1}.listing{max-height:none}.shell{padding:18px 14px 95px}.panel{padding:16px}.top{margin-bottom:24px}h1{font-size:39px}.assetrow{grid-template-columns:minmax(0,1.5fr) .85fr .85fr 55px;gap:5px;padding:12px 8px}.assetrow b{font-size:12px}.assetrow small{font-size:9px}.tab{padding:10px 13px}.top-actions{width:100%;justify-content:space-between}.value-box{padding:12px 10px}.counter{flex-direction:column}.detail-title{font-size:27px}}@media(max-width:360px){.assetrow{font-size:10px}.assetrow b{font-size:11px}}
+
+.scan-panel{margin:0 0 17px;background:linear-gradient(140deg,#12363c,#0c1b26)}
+.scan-header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:13px}
+.scan-header h2{font-size:26px;line-height:1.15;letter-spacing:-.04em;margin:5px 0}
+.scan-description{color:var(--muted);font-size:12px;max-width:740px}
+.scan-count{color:var(--mint);font-size:12px;font-weight:800;padding:8px 12px;background:#143b3b;border-radius:10px}
+.scan-controls{margin:13px 0 15px}.scan-controls .tab{font-size:12px;padding:9px 13px}
+.scan-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.scan-card{min-width:0;display:grid;gap:6px;text-align:left;padding:14px;border:1px solid #305461;border-radius:13px;background:#102732;color:var(--text)}
+.scan-card:hover{background:#1a3b42;border-color:#55a394}.scan-top{display:flex;justify-content:space-between;gap:6px;align-items:center;flex-wrap:wrap}
+.scan-top b{font-size:15px}.scan-top strong{font-size:18px;font-variant-numeric:tabular-nums}
+.scan-reason{font-size:12px;color:#b8d5d8}.scan-foot{font-size:10px;color:var(--muted)}.scan-empty{grid-column:1/-1;color:var(--muted);font-size:12px;padding:9px}
+@media(max-width:700px){.scan-results{grid-template-columns:1fr}.scan-header h2{font-size:23px}}
+.cross-scan{margin:0 0 18px}
+.cross-scan button{border:1px solid #77bca7;border-radius:12px;background:#245648;color:#effff8;padding:12px 18px;font-weight:800;min-height:44px}
+.cross-scan button:disabled{opacity:.5}
+.cross-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:10px;margin-top:15px}
+.cross-card{min-width:0;border:1px solid #345764;border-radius:14px;background:#102934;padding:14px;display:grid;gap:8px}
+.cross-card[data-state=aligned]{border-color:#488d76}
+.cross-card[data-state=divergent],.cross-card[data-state=invalid]{border-color:#ae856a}
+.cross-card h3{margin:0;font-size:19px}
+.cross-card p{margin:0;font-size:12px;color:#bed6d5;line-height:1.6}
+.cross-card strong{font-size:13px;color:#eaf9f0}
+.cross-card a{font-size:12px;font-weight:800}
+.cross-card .cross-metrics{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.cross-card .cross-metrics p{border:1px solid #2e515b;border-radius:9px;background:#14333e;padding:9px 10px}
+.cross-card details{border-top:1px solid #32545f;padding-top:8px}
+.cross-card details summary{cursor:pointer;min-height:36px;font-size:12px;color:var(--mint);font-weight:750}
+.cross-card[data-state=waiting]{border-color:#9b8666}
+.cross-tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;margin-bottom:10px}
+.cross-tools .cross-mode{background:#102833;border:1px solid #38636a;color:#c6e1d8;font-size:12px;font-weight:720;padding:9px 12px}
+.cross-tools .cross-mode.active{background:#226149;border-color:#78c7aa;color:#effff7}
+.cross-title{display:flex;justify-content:space-between;align-items:center;gap:9px;flex-wrap:wrap}
+.cross-title h3{font-size:21px;letter-spacing:.01em}
+.cross-delta{font-size:12px;color:#a6edd6;font-variant-numeric:tabular-nums;font-weight:780}
+.cross-watch{padding:9px 11px;border-radius:9px;border:1px solid #3d6269;background:#102a34;color:#e7e8c8!important}
+@media(max-width:650px){.cross-card .cross-metrics{grid-template-columns:1fr}.cross-card .cross-metrics p{padding:8px 11px}}
+
+.cross-source-label{font-size:11px;font-weight:750;color:#97ccb9}
+.cross-card .cross-note{color:#f5d09d}
+.cross-card .cross-change{color:#e1ffe9;border:1px solid #72c9a6;background:#1b5646;border-radius:10px;padding:10px 12px;font-weight:750}
+.cross-change-status{font-size:12px;line-height:1.55;color:#c4e6d8;padding:9px 0}
+.monitor-entry{padding:12px 14px;border-radius:12px;border:1px solid #345764;background:#132b34}
+.monitor-entry strong{display:block;color:#b3eed3;font-size:13px}
+.monitor-entry p{margin:5px 0;color:#b9d5d6;font-size:12px;line-height:1.55}
+#monitor-refresh{background:#22484b;border-color:#548e8a}
+.monitor-diagnostics{margin:15px 0;display:grid;gap:10px}
+.monitor-timestamp{margin:0;color:var(--mint);font-size:12px;font-weight:750}
+.monitor-metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.monitor-metric{border:1px solid #345764;border-radius:12px;padding:12px;background:#142d38}
+.monitor-metric small{display:block;font-size:11px;color:var(--muted)}
+.monitor-metric strong{display:block;font-size:22px;font-variant-numeric:tabular-nums}
+.monitor-outcome,.monitor-warning{padding:13px;border:1px solid #6b5b3a;background:#302a20;border-radius:12px;font-size:13px;margin:0;color:#f5e3ba}
+.monitor-outcome[data-outcome="no_significant_event"]{background:#12342c;border-color:#367967;color:#c8f5df}
+.monitor-outcome[data-outcome="events_detected"]{background:#173a41;border-color:#528c90;color:#c6f3f1}
+.monitor-outcome[data-outcome="market_closed"]{background:#152e3c;border-color:#3d6a83;color:#d8edf7}
+@media(max-width:760px){
+  .monitor-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .monitor-metric{padding:9px 11px;min-width:0}
+  .monitor-metric strong{font-size:21px}
+  .monitor-metric:last-child{grid-column:1/-1}
+}
+.monitor-caption{font-size:11px;color:var(--muted);margin:0}
+.monitor-reasons h3{font-size:14px;margin:2px 0 8px}
+.monitor-reasons ul,.monitor-exclusions ul{padding-left:19px;margin:8px 0;font-size:12px;color:#c5e2df;line-height:1.8}
+.monitor-exclusions{border-top:1px solid #345764;padding-top:9px}
+.monitor-exclusions summary{cursor:pointer;color:var(--mint);font-size:12px;font-weight:750;padding:8px 0}
+.monitor-frame-list{display:grid;gap:8px;padding-top:12px}
+.monitor-frame-row{border:1px solid #345764;border-radius:10px;background:#142d38;padding:10px 12px;min-width:0}
+.monitor-frame-row strong{display:block;font-size:13px;color:#c5f8e3;margin-bottom:7px}
+.monitor-frame-times{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.monitor-frame-times span{font-size:11px;color:#bdd7db;overflow-wrap:anywhere}
+.monitor-frame-row .monitor-caption{margin-top:6px}
+.monitor-evolution .monitor-frame-row ul{margin:7px 0 4px;padding-left:16px}
+.monitor-evolution .monitor-frame-row li{padding:4px 0;border-bottom:1px solid #274652;overflow-wrap:anywhere}
+.monitor-evolution .monitor-frame-row li:last-child{border-bottom:0}
+.monitor-evolution .monitor-frame-row strong{font-size:14px}
+.monitor-evolution .monitor-caption{line-height:1.55}
+
+/* v1.40: compact, mobile-friendly radar from authenticated observation samples only */
+.radar-evolution{border-top:1px solid #345764;padding-top:15px;display:grid;gap:12px}
+.radar-evolution-heading{display:grid;gap:4px}
+.radar-evolution h3{font-size:18px;line-height:1.35;margin:0;color:#b9f5df}
+.radar-filters{display:flex;flex-wrap:wrap;gap:7px}
+.radar-filter{font:inherit;font-size:12px;font-weight:740;padding:9px 11px;border-radius:10px;border:1px solid #486977;background:#162f3b;color:#c7e5e3;min-height:40px;cursor:pointer}
+.radar-filter[aria-pressed="true"]{background:#235946;border-color:#80caaa;color:#f0fff6}
+.radar-filter:focus-visible,.radar-chart-details summary:focus-visible,.radar-change-details summary:focus-visible{outline:3px solid #a4e9d5;outline-offset:3px}
+.radar-evolution-results{display:grid;gap:10px}
+.radar-evolution-card{border:1px solid #365b66;background:#142e39;border-radius:14px;padding:13px;display:grid;gap:8px;min-width:0}
+.radar-evolution-top{display:flex;gap:7px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.radar-evolution-name{font-size:16px;color:#eefaf5}
+.radar-state{font-size:11px;border:1px solid #6a8b91;border-radius:999px;padding:4px 8px;background:#24414b;color:#d0e7e7}
+.radar-state[data-state="divergent"]{background:#453822;color:#ffe2ab;border-color:#947341}
+.radar-state[data-state="aligned"]{background:#183f37;color:#bff1de;border-color:#438e74}
+.radar-evolution-card .monitor-caption{font-size:12px;line-height:1.6;overflow-wrap:anywhere}
+.radar-chart-details,.radar-change-details{border-top:1px solid #365764;padding-top:4px}
+.radar-chart-details summary,.radar-change-details summary{cursor:pointer;padding:8px 0;color:#84e9cb;font-weight:750;font-size:12px}
+.radar-matrix-scroll{overflow-x:auto;max-width:100%;padding:3px 0 9px;overscroll-behavior-inline:contain}
+.radar-matrix{display:grid;min-width:max-content;gap:3px;font-variant-numeric:tabular-nums}
+.radar-axis-label,.radar-matrix-cell{display:flex;align-items:center;justify-content:center;padding:7px 3px;border-radius:6px;min-height:32px;min-width:0;text-align:center;font-size:11px}
+.radar-axis-label{justify-content:flex-start;font-size:11px;color:#bfdad8;position:sticky;left:0;z-index:1;background:#142e39;font-weight:760}
+.radar-matrix-cell{background:#26404b;color:#dfedea;font-weight:760;border:1px solid transparent}
+.radar-matrix-cell[data-side="stamp"]{font-size:10px;color:#c9e3df;background:#213b47;font-weight:650}
+.radar-matrix-cell[data-side="up"]{background:#175348;color:#c1f7df}
+.radar-matrix-cell[data-side="down"]{background:#5d3439;color:#ffe3dc}
+.radar-matrix-cell[data-side="flat"],.radar-matrix-cell[data-side="missing"]{background:#293f49;color:#c1ced2}
+.radar-matrix-cell[data-side="divergent"]{background:#5d492e;color:#ffebb9}
+.radar-matrix-cell[data-side="aligned"]{background:#175348;color:#c1f7df}
+.radar-matrix-cell[data-side="watch"]{background:#293f49;color:#c1ced2}
+.radar-matrix-cell[data-side="partial"]{background:#584a32;color:#ffebb9}
+.radar-matrix-cell[data-side="confirmed"]{background:#235947;color:#d9ffec}
+.radar-change-list{margin:3px 0 8px;padding-left:17px;font-size:12px;line-height:1.6;color:#bfded7}
+.radar-change-list li{padding:5px 0;overflow-wrap:anywhere}
+.radar-change-list .radar-verified{color:#b7f3dc;font-weight:760}
+.radar-evolution .monitor-caption{line-height:1.6}
+@media(max-width:440px){.radar-evolution-card{padding:10px}.radar-filter{padding:9px 8px}.radar-matrix-cell{font-size:11px}}
+
+@media(max-width:760px){.monitor-frame-times{grid-template-columns:1fr}}
+/* REMURA v1.60 — prevent intrinsic grid min-content from widening the iPhone viewport.
+   Only the observation matrix is horizontally scrollable; never the document/card. */
+#squalincome-monitor, #monitor-diagnostics, .monitor-diagnostics,
+.monitor-evolution, .radar-evolution, .radar-evolution-results,
+.radar-evolution-card, .radar-evolution-card > *,
+.radar-chart-details, .radar-change-details, .radar-matrix-scroll{
+  min-width:0;max-width:100%;
+}
+.monitor-diagnostics,.radar-evolution,.radar-evolution-results{grid-template-columns:minmax(0,1fr)}
+.radar-evolution-card{width:100%;overflow:hidden}
+.radar-evolution-top{min-width:0;align-items:flex-start}
+.radar-evolution-name{min-width:0;overflow-wrap:anywhere}
+.radar-state{max-width:100%;min-width:0;overflow-wrap:anywhere;white-space:normal;line-height:1.3}
+.radar-chart-details,.radar-change-details{width:100%;overflow:hidden}
+.radar-chart-details summary,.radar-change-details summary{overflow-wrap:anywhere}
+.radar-matrix-scroll{
+  display:block;width:100%;max-width:100%;overflow-x:auto;overflow-y:hidden;
+  -webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;
+  overscroll-behavior-x:contain;scrollbar-width:thin;
+  border-radius:8px;padding:5px 0 10px;
+}
+.radar-matrix{
+  display:grid;grid-auto-flow:row;width:max-content;min-width:100%;
+  max-width:none;box-sizing:border-box;
+}
+.radar-axis-label,.radar-matrix-cell{overflow-wrap:anywhere}
+.radar-matrix-cell[data-side="stamp"]{display:flex;flex-direction:column;gap:1px}
+.radar-stamp-date{font-size:9px;line-height:1.1;font-weight:600}
+.radar-stamp-hour{font-size:11px;line-height:1.1;font-weight:750}
+.radar-filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;min-width:0}
+.radar-filter{
+  width:100%;min-width:0;min-height:44px;white-space:normal;overflow-wrap:anywhere;
+  background:#102732;border:1px solid #476b74;color:#c1d8d9;
+  font-size:12px;line-height:1.25;padding:9px 7px;
+}
+.radar-filter[aria-pressed="true"]{
+  background:#217057;border:2px solid #b7ffdd;color:#fff;
+  box-shadow:inset 0 0 0 1px #124233;font-weight:850;
+}
+.radar-filter-count{font-variant-numeric:tabular-nums}
+.radar-legend summary{font-size:12px;color:#a6dfd4;font-weight:700}
+.radar-legend{padding-top:5px}
+.radar-legend p{padding:5px 0}
+.radar-monitor-context{padding:9px 11px;border:1px solid #3e6970;border-radius:10px;background:#122e39}
+.radar-chart-note{margin:0}
+@media(max-width:650px){
+  .radar-filters{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .radar-evolution-top{display:grid;grid-template-columns:minmax(0,1fr);justify-items:start;gap:8px}
+  .radar-state{justify-self:start}
+  .radar-evolution-card{padding:11px}
+  .radar-matrix-cell{padding:7px 3px}
+}
+@media(max-width:360px){
+  .radar-filter{font-size:11px;padding:7px 4px}
+  .radar-axis-label{font-size:10px}
+}
+
+
+
+
+/* v1.42: contained two-line statistics shortcut, never intrudes beyond iPhone viewport. */
+.stat-shortcut-wrap{margin:14px 0 16px;max-width:100%;min-width:0}
+.stat-shortcut{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;box-sizing:border-box;width:100%;min-width:0;max-width:100%;padding:13px 16px;border-radius:14px;background:#173a3a;border:1px solid #518c7c;color:#d7fcf0;text-align:center;text-decoration:none;overflow-wrap:anywhere;line-height:1.35}
+.stat-shortcut strong{font-size:15px;line-height:1.45}
+.stat-shortcut small{font-size:12px;color:#b0dad0;font-weight:650}
+.stat-shortcut:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
+@media(max-width:700px){.stat-shortcut{padding-left:60px;padding-right:10px}}
+.monitor-frame-state{display:block;margin:6px 0;padding:6px 9px;border:1px solid #476975;border-radius:9px;color:#c2d3db;font-weight:720;font-size:11px;overflow-wrap:anywhere}
+.monitor-frame-state[data-freshness="price_live_ready"]{border-color:#468773;color:#9debd0}
+.monitor-frame-state[data-freshness="waiting_verified_batch"]{border-color:#907646;color:#f2d69c}
+.monitor-frame-state[data-freshness="price_stale"]{border-color:#a87565;color:#ffb8aa}
+.monitor-frame-state[data-freshness="unverified"]{border-color:#476975;color:#c2d3db}
+</style>
+<link rel="stylesheet" href="./nav.css?v=133">
+</head>
+<body>
+<div class="shell">
+<header class="top"><div class="logo">REMURA <small>RADAR SQUALI · SQUALINCOME · v1.60</small></div><div class="top-actions"><a class="back" href="./index.html">← Home</a><span class="status" id="global-status">Connessione CFTC…</span><button class="refresh" type="button" id="refresh">↻</button></div></header>
+<h1>Segui i grandi.<br><span>Su tutti i mercati.</span></h1>
+<p class="intro">Un unico scanner di posizionamento per le principali coppie Forex, oro, argento, WTI e indici USA. Mostriamo dati CFTC settimanali: <b>nessun dato inventato</b> quando la fonte non risponde.</p>
+<div class="alert" id="global-notice">Caricamento diretto dei report pubblici CFTC. Il COT è un'istantanea del martedì pubblicata con ritardo, non un flusso di ordini in tempo reale.</div>
+<div class="tabs" role="group" aria-label="Scegli un mercato"><button class="tab active" data-group="all">Tutti</button><button class="tab" data-group="forex">Forex</button><button class="tab" data-group="metals">Oro e metalli</button><button class="tab" data-group="indices">Indici</button><button class="tab" data-group="macro">Macro · DXY/VIX</button><button class="tab" data-group="energy">Petrolio WTI</button></div>
+<div class="counter"><div><strong id="total-count">—</strong> strumenti nella lista</div><div><strong id="loaded-count">—</strong> con dati ufficiali · <span id="report-date">in attesa</span></div></div>
+
+<section class="panel scan-panel" id="institutional-scanner">
+<p class="note" id="squal-source-contract">Squalincome: la disponibilità operativa dipende dal report di scansione del server privato; gli archivi pubblici COT e retail non sostituiscono i segnali live.</p>
+<div class="scan-header"><div><div class="eyebrow">REMURA · RADAR SQUALI · SQUALINCOME</div><h2>Dove si stanno riposizionando i grandi?</h2><p class="scan-description">Scanner gratuito dei cambiamenti nel posizionamento istituzionale COT settimanale sui mercati con dati validi. Myfxbook e Capital.com restano indicatori retail, analizzati nelle singole schede. Inversione significa cambio del segno della posizione netta, non inversione del prezzo.</p></div><span class="scan-count" id="scan-count">In attesa della CFTC</span></div>
+<div class="tabs scan-controls" aria-label="Filtra i movimenti istituzionali"><button class="tab active" data-scan="moves">Movimenti maggiori</button><button class="tab" data-scan="reversals">Cambi net long/short</button><button class="tab" data-scan="accelerations">Accelerazioni</button><button class="tab" data-scan="slowdowns">Rallentamenti</button><button class="tab" data-scan="extremes">Estremi COT 52s</button></div>
+<div class="scan-results" id="scan-results" aria-live="polite"><div class="scan-empty">Connessione in corso…</div></div>
+<p class="source" style="margin:12px 0 0">Misura: variazione settimanale della posizione netta in punti percentuali di open interest (pp). Per Forex e indici: Leveraged Funds (TFF). Per metalli e WTI: Managed Money (Disaggregated). Metodologie non identiche; coppie Forex correlate fra loro. Report vecchi oltre 14 giorni esclusi. Estremi su 52 settimane: COT o Gap Index 0–10 / 90–100. Nessuna indicazione di acquisto o vendita.</p>
+</section>
+<div class="stat-shortcut-wrap"><a class="stat-shortcut" href="./statistica-squali.html" aria-label="Apri Verifica Squali, statistiche dopo 1, 4 e 24 ore"><strong>◉ Verifica Squali</strong><small>Statistiche dopo 1h · 4h · 24h</small></a></div>
+<section class="panel cross-scan" id="squalincome-monitor">
+<div class="eyebrow">REMURA · REGISTRO MOVIMENTI VPS</div>
+<h2 class="section-title">Cambiamenti verificati, anche con iPhone chiuso</h2>
+<p class="scan-description">La VPS rilegge COT e candele chiuse M15/H1/H4 ogni 15 minuti usando solo i dati privati già archiviati. Non genera previsioni né segnali operativi. Il primo controllo crea soltanto un riferimento iniziale; il weekend non produce eventi live.</p>
+<button type="button" id="monitor-refresh">Aggiorna registro VPS</button>
+<p class="cross-change-status" role="status" aria-live="polite" id="monitor-status">Registro privato da verificare. Telegram NON attivo.</p>
+<div id="monitor-diagnostics" class="monitor-diagnostics" aria-live="polite"></div>
+<div class="cross-grid" id="monitor-events"></div>
+</section>
+<section class="panel cross-scan" id="squalincome-cross">
+<div class="eyebrow">REMURA · SQUALINCOME · confronto multi-fonte</div>
+<h2 class="section-title">COT + prezzo + variazioni retail</h2>
+<p class="scan-description">Quattro candidati selezionati dai COT recenti: la vista diversificata riduce ripetizioni delle stesse valute, quella per ampiezza conserva i quattro movimenti COT maggiori. Confronta H4/H1/M15 e le variazioni retail reali a 24h quando disponibili. Non è una classifica di probabilità o rendimento.</p>
+<div class="cross-tools" role="group" aria-label="Come scegliere i candidati COT">
+<button type="button" class="cross-mode active" data-cross-mode="diverse" aria-pressed="true">4 candidati diversificati</button>
+<button type="button" class="cross-mode" data-cross-mode="strongest" aria-pressed="false">4 movimenti COT maggiori</button>
+</div>
+<button type="button" id="cross-run">Avvia confronto multi-fonte</button>
+<p id="cot-vps-status" class="cross-change-status" role="status" aria-live="polite">Archivio COT VPS: stato da verificare. È una preparazione alle notifiche, non un monitoraggio dei segnali.</p>
+<p class="scan-description" id="cross-status" role="status" aria-live="polite">Premi «Avvia confronto multi-fonte»: prezzi richiesti alla VPS privata solo per i quattro mercati selezionati. Modalità diversificata: correlazioni ridotte, non eliminate. Nel weekend i risultati sono storici.</p>
+<p id="cross-change-status" class="cross-change-status" role="status" aria-live="polite">Storico confronti locale: il primo controllo crea un punto di partenza. Eventuali novità compariranno nelle scansioni successive.</p>
+<div class="cross-grid" id="cross-results" aria-live="polite"></div>
+<p class="scan-description">Confronto tra scansioni: si memorizzano sul dispositivo soltanto simbolo, verdetto e date delle fonti (massimo 14 giorni). Non monitora la VPS mentre REMURA è chiusa, non invia notifiche e non archivia dati personali o prezzi. Myfxbook e Capital.com restano campioni retail distinti.</p>
+</section>
+<div class="layout">
+<section class="panel"><div class="eyebrow">SCANNER ISTITUZIONALE</div><h2 class="section-title">Dove si muovono i fondi</h2><div class="meta">Due gruppi di operatori per mercato. Ordinamento per movimento netto settimanale; i dati dei gruppi e delle famiglie COT non vanno confrontati direttamente come se fossero equivalenti.</div><input class="searchbar" id="search" placeholder="Cerca EURJPY, XAUUSD, NAS100…" aria-label="Cerca strumento">
+<div id="listing" class="listing" aria-live="polite"><div class="empty">Connessione in corso…</div></div></section>
+<section class="panel details"><div class="detail-head"><div><div class="eyebrow" id="detail-tag">MERCATO IN OSSERVAZIONE</div><div class="detail-title" id="detail-name">CADJPY</div><div class="meta" id="detail-description">Posizionamento dei fondi</div></div><div class="meta" id="detail-status">Attendo dati</div></div>
+<div style="margin:12px 0"><a id="detail-open" href="./asset.html?symbol=CADJPY&v=8" class="back" style="display:inline-block;text-decoration:none">Apri scheda dedicata →</a></div><div class="date" id="detail-date">Report CFTC: —</div>
+<div class="value-grid"><div class="value-box"><div class="label" id="label-one">Asset Manager</div><strong class="num" id="value-one">—</strong><div class="delta" id="delta-one">—</div></div><div class="value-box"><div class="label" id="label-two">Leveraged Funds</div><strong class="num" id="value-two">—</strong><div class="delta" id="delta-two">—</div></div></div>
+<div class="status-note" id="detail-note">Le percentuali sono esposizioni nette normalizzate sull'open interest, non previsioni del prezzo.</div>
+<div class="plot" id="plot"></div><div class="legend"><span class="one" id="legend-one">Asset Manager</span><span class="two" id="legend-two">Leveraged Funds</span></div>
+<div class="contracts" id="contracts"></div></section></div>
+<div class="source">FONTI: <a href="https://publicreporting.cftc.gov/Commitments-of-Traders/TFF-Futures-Only/gpe5-46if" target="_blank" rel="noopener">CFTC TFF — futures only</a> per Forex/indici · <a href="https://publicreporting.cftc.gov/Commitments-of-Traders/Disaggregated-Futures-Only/72hh-3qpy" target="_blank" rel="noopener">CFTC Disaggregated — futures only</a> per metalli e WTI. Nei cross Forex la differenza fra due futures è un proxy sintetico; su oro e indici è riferita al contratto futures specificato, non al CFD del broker. Non abbiamo dati CFTC comparabili per tutti gli indici mondiali o per ogni coppia esotica.</div>
+<footer class="footer">REMURA v1.60 · Radar istituzionale in sperimentazione · Nessun segnale di acquisto/vendita · Non costituisce consulenza finanziaria.</footer>
+</div>
+<script src="./cot-indices-core.js?v=2"></script>
+<script src="./insights-core.js?v=9"></script>
+<script src="./price-core.js?v=10"></script>
+<script src="./sentiment-trend-core.js?v=2"></script>
+<script src="./sentiment-core.js?v=14"></script>
+<script src="./capital-cloud-config.js?v=2"></script>
+<script src="./capital-cloud.js?v=2"></script>
+<script src="./squalincome-freshness-core.js?v=160"></script>
+<script src="./squalincome-diagnostics.js?v=160"></script>
+<script>
+'use strict';
+const FX_CODES={EUR:'099741',GBP:'096742',JPY:'097741',AUD:'232741',CAD:'090741',CHF:'092741',NZD:'112741'};
+const FX_PAIRS=['EURUSD','GBPUSD','AUDUSD','NZDUSD','USDJPY','USDCAD','USDCHF','EURGBP','EURJPY','EURCHF','EURCAD','EURAUD','EURNZD','GBPJPY','GBPCHF','GBPCAD','GBPAUD','GBPNZD','AUDJPY','AUDCAD','AUDCHF','AUDNZD','NZDJPY','NZDCAD','NZDCHF','CADJPY','CADCHF','CHFJPY'];
+const OTHER={
+XAUUSD:{group:'metals',name:'Oro · COMEX Gold',code:'088691',dataset:'disagg',labels:['Managed Money','Producer / Merchant']},
+XAGUSD:{group:'metals',name:'Argento · COMEX Silver',code:'084691',dataset:'disagg',labels:['Managed Money','Producer / Merchant']},
+US500:{group:'indices',name:'S&P 500 · E-mini',code:'13874A',dataset:'tff',labels:['Asset Manager','Leveraged Funds']},
+NAS100:{group:'indices',name:'Nasdaq 100 · E-mini',code:'209742',dataset:'tff',labels:['Asset Manager','Leveraged Funds']},
+US30:{group:'indices',name:'Dow Jones · E-mini $5',code:'124603',dataset:'tff',labels:['Asset Manager','Leveraged Funds']},
+GER30:{group:'indices',name:'DAX 40 · prezzo broker (COT N/D)',code:null,dataset:null,labels:['N/D','N/D']},
+VIX:{group:'macro',name:'VIX · contratto broker (COT N/D)',code:null,dataset:null,labels:['N/D','N/D']},
+DXY:{group:'macro',name:'Dollar Index · riferimento COT ICE',code:'098662',dataset:'tff',labels:['Asset Manager','Leveraged Funds']},
+USOIL:{group:'energy',name:'WTI · NYMEX futures (riferimento USOil CFD)',code:'067651',dataset:'disagg',labels:['Managed Money','Producer / Merchant']}
+};
+const HOSTS=['https://publicreporting.cftc.gov','https://publicreportinghub.cftc.gov'];
+const $=id=>document.getElementById(id);
+const fmt=new Intl.NumberFormat('it-IT',{minimumFractionDigits:1,maximumFractionDigits:1});
+const dec=n=>Number.isFinite(n)?(n>0?'+':'')+fmt.format(n)+'%':'—';
+const pp=n=>Number.isFinite(n)?(n>0?'+':'')+fmt.format(n)+' pp':'—';
+const number=v=>v==null||v===''?NaN:Number(v);
+const net=(book,category)=>book&&book.oi>0&&book[category]?((book[category].long-book[category].short)/book.oi)*100:NaN;
+const color=n=>n>0.35?'pos':n<-.35?'neg':'neu';
+const latest=rows=>rows[rows.length-1];
+const fdate=d=>d?new Intl.DateTimeFormat('it-IT',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(d+'T12:00:00Z')):'—';
+const fxHist=Object.fromEntries(Object.keys(FX_CODES).map(c=>[c,new Map()]));
+const marketHist=Object.fromEntries(Object.keys(OTHER).map(k=>[k,new Map()]));
+let activeGroup='all',activeSymbol='CADJPY',loading=false,tffLoaded=false,disaggLoaded=false,tffError='',disaggError='',loadedOnce=false;
+let lastRefreshTime='';
+const allSymbols=[...FX_PAIRS,...Object.keys(OTHER)];
+const selectFieldsTff=['report_date_as_yyyy_mm_dd','cftc_contract_market_code','open_interest_all','asset_mgr_positions_long','asset_mgr_positions_short','lev_money_positions_long','lev_money_positions_short'];
+const selectFieldsMetals=['report_date_as_yyyy_mm_dd','cftc_contract_market_code','open_interest_all','m_money_positions_long_all','m_money_positions_short_all','prod_merc_positions_long','prod_merc_positions_short'];
+function instrument(sym){
+return OTHER[sym]||{group:'forex',name:sym.slice(0,3)+' / '+sym.slice(3),dataset:'tff',labels:['Asset Manager','Leveraged Funds']};
+}
+function rows(sym){
+const spec=OTHER[sym];
+if(spec){
+ const m=marketHist[sym];
+ return [...m.values()].sort((a,b)=>a.date.localeCompare(b.date)).slice(-56).map(r=>({date:r.date,a:net(r,'one'),b:net(r,'two'),oi:r.oi,raw:r}));
+}
+const base=sym.slice(0,3),quote=sym.slice(3);
+const a=base==='USD'?null:fxHist[base],b=quote==='USD'?null:fxHist[quote];
+if(a&&b){
+ const dates=[...a.keys()].filter(d=>b.has(d)).sort().slice(-56);
+ return dates.map(date=>({date,a:net(a.get(date),'one')-net(b.get(date),'one'),b:net(a.get(date),'two')-net(b.get(date),'two')}));
+}
+const one=a||b;if(!one)return [];
+return [...one.values()].sort((p,q)=>p.date.localeCompare(q.date)).slice(-56).map(r=>({date:r.date,a:(a?1:-1)*net(r,'one'),b:(a?1:-1)*net(r,'two')}));
+}
+function series(sym){
+return rows(sym).filter(r=>Number.isFinite(r.a)&&Number.isFinite(r.b));
+}
+function snapshot(sym){
+const arr=series(sym);if(!arr.length)return null;
+const v=latest(arr),prev=arr[arr.length-2];
+return {arr,v,one:v.a,two:v.b,deltaOne:prev?v.a-prev.a:NaN,deltaTwo:prev?v.b-prev.b:NaN,date:v.date};
+}
+function drawChart(r){
+const el=$('plot');
+if(!r||r.arr.length<2){el.textContent='Grafico disponibile dopo almeno 2 report ufficiali.';return;}
+const arr=r.arr,W=520,H=225,left=35,right=10,top=16,bottom=29;
+const values=arr.flatMap(d=>[d.a,d.b]).concat(0);let min=Math.min(...values),max=Math.max(...values);const pad=Math.max(2,(max-min)*.12);min-=pad;max+=pad;
+const px=i=>left+(i/(arr.length-1))*(W-left-right);const py=v=>top+(max-v)/(max-min)*(H-top-bottom);
+const make=which=>arr.map((d,i)=>(i?'L':'M')+px(i).toFixed(2)+','+py(d[which]).toFixed(2)).join(' ');
+let out='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Storico 56 settimane dei gruppi istituzionali">';
+for(let i=0;i<5;i++){const val=min+(max-min)*(i/4);out+='<line x1="'+left+'" y1="'+py(val)+'" x2="'+(W-right)+'" y2="'+py(val)+'" stroke="#30505c" stroke-dasharray="3 5"/><text x="'+(left-6)+'" y="'+(py(val)+4)+'" fill="#97b2b8" font-size="10" text-anchor="end">'+fmt.format(val)+'</text>';}
+out+='<path d="'+make('a')+'" stroke="#69edca" stroke-width="3" fill="none"/><path d="'+make('b')+'" stroke="#8fb5ff" stroke-width="2.5" fill="none"/>';
+out+='<text x="'+left+'" y="'+(H-5)+'" fill="#97b2b8" font-size="11">'+fdate(arr[0].date)+'</text><text x="'+(W-right)+'" y="'+(H-5)+'" fill="#97b2b8" text-anchor="end" font-size="11">'+fdate(latest(arr).date)+'</text></svg>';
+el.innerHTML=out;
+}
+function detail(){
+const meta=instrument(activeSymbol),r=snapshot(activeSymbol);
+$('detail-name').textContent=activeSymbol;$('detail-open').href='./asset.html?symbol='+encodeURIComponent(activeSymbol)+'&v=8';$('detail-tag').textContent=meta.dataset===null?'SOLO PREZZI · COT N/D':meta.group==='macro'?'INDICATORE MACRO · COT TFF':meta.group==='forex'?'FOREX · PROXY COT':meta.dataset==='disagg'?'MATERIE PRIME · DISAGGREGATED COT':'INDICI · TFF COT';
+$('detail-description').textContent=meta.name;
+$('label-one').textContent=meta.labels[0];$('label-two').textContent=meta.labels[1];
+$('legend-one').textContent=meta.labels[0];$('legend-two').textContent=meta.labels[1];
+$('value-one').textContent=r?dec(r.one):'—';$('value-two').textContent=r?dec(r.two):'—';
+$('value-one').className='num '+(r?color(r.one):'');$('value-two').className='num '+(r?color(r.two):'');
+$('delta-one').textContent=r?'Sett.: '+pp(r.deltaOne):'Nessun dato';$('delta-two').textContent=r?'Sett.: '+pp(r.deltaTwo):'Nessun dato';
+$('delta-one').className='delta '+(r?color(r.deltaOne):'');$('delta-two').className='delta '+(r?color(r.deltaTwo):'');
+$('detail-date').textContent=r?'Posizioni al '+fdate(r.date)+' · '+r.arr.length+' settimane':'Dati della fonte non disponibili';
+const age=r?Math.floor((Date.now()-Date.parse(r.date+'T00:00:00Z'))/86400000):null;
+$('detail-status').textContent=!r?'NON DISPONIBILE':age>14?'CFTC · DATATO':'CFTC · UFFICIALE';
+const notice=$('detail-note');notice.className='status-note'+((!r||age>14)?' alert-only':'');
+let explanation='';
+if(meta.group==='forex')explanation='Proxy sintetico: Net% valuta base meno Net% valuta quotata, ciascuna da un contratto future valutario contro USD. Non è una posizione diretta sul cross.';
+else if(meta.dataset===null)explanation='COT N/D: solo prezzi cTrader per questo strumento. Il contratto broker può avere scadenza e non coincide necessariamente con l’indice spot.';
+else if(meta.dataset==='disagg')explanation='Managed Money = gestori speculativi; Producer/Merchant = operatori commerciali che possono coprirsi. Le loro posizioni non equivalgono ad Asset Manager e Leveraged Funds del TFF.';
+else explanation='Sono posizioni sul future specifico indicato, non sul CFD del broker. Asset Manager e Leveraged Funds sono categorie distinte.';
+notice.textContent=(!r?'Nessun dato ufficiale verificato per questo strumento. Non mostriamo valori simulati. ':age>14?'ATTENZIONE: report vecchio di '+age+' giorni. ':'')+explanation+(meta.dataset===null?'':' Net% = (long − short) ÷ open interest × 100.');
+$('contracts').textContent=meta.dataset===null?'COT N/D · Apri la scheda per i prezzi cTrader verificati':meta.group==='forex'?'Codici base/quotata: '+(FX_CODES[activeSymbol.slice(0,3)]||'USD = riferimento 0')+' / '+(FX_CODES[activeSymbol.slice(3)]||'USD = riferimento 0'):'Contratto CFTC '+meta.code+' · Fonte '+(meta.dataset==='disagg'?'Disaggregated':'TFF')+' futures only'+(r?.v?.oi?' · Open interest '+new Intl.NumberFormat('it-IT').format(r.v.oi):'');
+drawChart(r);
+}
+
+let scanMode='moves';
+function scanSignal(sym){
+ const data=series(sym),meta=instrument(sym);
+ if(data.length<3)return null;
+ const n=data[data.length-1],p=data[data.length-2],b=data[data.length-3];
+ const days=(x,y)=>(Date.parse(x+'T00:00:00Z')-Date.parse(y+'T00:00:00Z'))/86400000;
+ const age=days(new Date().toISOString().slice(0,10),n.date);
+ if(age>14||age<0||days(n.date,p.date)>14||days(p.date,b.date)>14)return null;
+ const key=meta.dataset==='disagg'?'a':'b';
+ const curr=n[key],prev=p[key],before=b[key];
+ const ci=window.REMURA_COT_INDEX_CORE.evaluate(data,52);
+ const groupIndex=(key==="a"?ci.a:ci.b)?.value;
+ const gapIndex=ci.gapIndex?.value;
+ const groupExtreme=Number.isFinite(groupIndex)&&(groupIndex<=10||groupIndex>=90);
+ const gapExtreme=Number.isFinite(gapIndex)&&(gapIndex<=10||gapIndex>=90);
+ const extreme=ci.state==="ok"&&(groupExtreme||gapExtreme);
+ const extremeScore=Math.max(groupExtreme?Math.abs(groupIndex-50):0,gapExtreme?Math.abs(gapIndex-50):0);
+ const change=curr-prev,oldChange=prev-before;
+ if(![curr,prev,before,change,oldChange].every(Number.isFinite))return null;
+ const crossed=curr*prev<0&&Math.abs(curr)>=.5&&Math.abs(prev)>=.5;
+ const faster=change*oldChange>0&&Math.abs(change)-Math.abs(oldChange)>=1.5;
+ const slower=change*oldChange>0&&Math.abs(oldChange)-Math.abs(change)>=1.5;
+ const assetDelta=n.a-p.a;
+ const confirmed=meta.dataset==='disagg'||Math.abs(assetDelta)<.5||Math.abs(change)<.5?null:Math.sign(assetDelta)===Math.sign(change);
+ return {sym,meta,date:n.date,curr,prev,change,oldChange,crossed,faster,slower,confirmed,groupIndex,gapIndex,groupExtreme,gapExtreme,extreme,extremeScore};
+}
+function renderScanner(){
+ const el=$('scan-results');el.textContent='';
+ const all=allSymbols.filter(sym=>instrument(sym).group!=="macro").map(scanSignal).filter(Boolean);
+ $('scan-count').textContent=all.length+' strumenti con storico recente';
+ const items=all.filter(t=>scanMode==='moves'||(scanMode==='reversals'?t.crossed:scanMode==='accelerations'?t.faster:scanMode==='slowdowns'?t.slower:t.extreme))
+   .sort((x,y)=>scanMode==='extremes'?y.extremeScore-x.extremeScore:scanMode==='accelerations'?(Math.abs(y.change)-Math.abs(y.oldChange))-(Math.abs(x.change)-Math.abs(x.oldChange)):scanMode==='slowdowns'?(Math.abs(x.change)-Math.abs(x.oldChange))-(Math.abs(y.change)-Math.abs(y.oldChange)):Math.abs(y.change)-Math.abs(x.change)).slice(0,12);
+ if(!items.length){
+ const div=document.createElement('div');div.className='scan-empty';
+ div.textContent=!all.length?'Nessun report recente sufficiente. Verifica la fonte CFTC e riprova.':scanMode==='reversals'?'Nessun passaggio netto da long a short (o viceversa) nella settimana più recente.':scanMode==='accelerations'?'Nessuna accelerazione della variazione settimanale di almeno 1,5 pp.':scanMode==='slowdowns'?'Nessun rallentamento nella variazione settimanale di almeno 1,5 pp.':scanMode==='extremes'?'Nessun COT Index o Gap Index nelle fasce 0–10 / 90–100 sulle ultime 52 rilevazioni.':'Nessun movimento disponibile.';
+ el.append(div);return;
+ }
+ for(const item of items){
+ const btn=document.createElement('button');btn.type='button';btn.className='scan-card';
+ const top=document.createElement('div');top.className='scan-top';
+ const name=document.createElement('b');name.textContent=item.sym;
+ const d=document.createElement('strong');d.className=color(item.change);d.textContent=scanMode==='extremes'?(item.groupExtreme?'COT '+Math.round(item.groupIndex):'GAP '+Math.round(item.gapIndex)):pp(item.change);top.append(name,d);
+ const explain=document.createElement('div');explain.className='scan-reason';
+ explain.textContent=scanMode==='extremes'?'COT Index '+(Number.isFinite(item.groupIndex)?Math.round(item.groupIndex):'N/D')+' · Gap Index '+(Number.isFinite(item.gapIndex)?Math.round(item.gapIndex):'N/D')+' / 100 su 52 settimane':scanMode==='reversals'?'Posizione netta passata da '+dec(item.prev)+' a '+dec(item.curr):scanMode==='accelerations'?'Variazione settimanale da '+pp(item.oldChange)+' a '+pp(item.change):scanMode==='slowdowns'?'Spinta settimanale rallentata da '+pp(item.oldChange)+' a '+pp(item.change):'Netto attuale '+dec(item.curr)+' · '+(item.change>=0?'aumento':'riduzione')+' del posizionamento';
+ const info=document.createElement('div');info.className='scan-foot';
+ info.textContent=(item.meta.dataset==='disagg'?'Managed Money':'Leveraged Funds')+' · '+fdate(item.date)+(item.confirmed===true?' · Asset Manager stessa direzione':item.confirmed===false?' · Asset Manager divergenti':'');
+ btn.append(top,explain,info);btn.addEventListener('click',()=>{location.href='./asset.html?symbol='+encodeURIComponent(item.sym)+'&v=8';});
+ el.append(btn);
+ }
+}
+
+
+/* REMURA v1.60: bounded, on-demand COT/price/retail comparison.
+ * All broker/capital data stay on the user's private same-origin VPS.
+ * No background mass fetching, no trading, no invented institutional orders.
+ */
+let crossRunning=false;
+const crossCore=window.REMURA_INSIGHTS_CORE,priceCore=window.REMURA_PRICE_CORE;
+const trendCore=window.REMURA_SENTIMENT_TREND;
+const capitalCore=window.REMURA_SENTIMENT_CORE;
+const capitalCloud=window.REMURA_CAPITAL_CLOUD;
+/* Server event register only; no Telegram credentials are stored on the iPhone. */
+async function refreshMonitor(){
+ const status=$("monitor-status"),container=$("monitor-events"),diagnostics=$("monitor-diagnostics");
+ container.replaceChildren();
+ diagnostics.replaceChildren();
+ status.textContent="Lettura del resoconto Squalincome dalla VPS…";
+ try{
+  const data=await privateJSON("./private-api/signals/status");
+  if(data?.schema!=="remura-squalincome-monitor-v1"||
+     !Array.isArray(data.lastEvents))throw Error("invalid");
+  const valid=window.REMURA_SQUAL_DIAGNOSTICS?.render(data,diagnostics);
+  if(!valid)throw Error("diagnostics_invalid");
+  if(!data.enabled){
+   status.textContent="Monitor VPS disabilitato. Eventuali scansioni visualizzate sono storiche. Telegram disattivato.";
+  }else if(!Object.prototype.hasOwnProperty.call(data,"diagnostics")){
+   status.textContent="Backend VPS precedente alla v1.34. Installa la diagnostica per ottenere conteggi reali; nessun dato stimato.";
+  }else if(!data.diagnostics){
+   status.textContent="Monitor abilitato, ma nessuna scansione VPS ancora registrata. Non è possibile dichiarare assenza di eventi.";
+  }else{
+   status.textContent="Monitor VPS configurato · "+data.baselines+"/"+data.trackedMarkets+
+     " riferimenti iniziali · "+data.eventsTotal+
+     " eventi registrati (fino a 90 giorni). Telegram NON attivo.";
+  }
+  if(!data.lastEvents.length){
+   const p=document.createElement("p");
+   p.className="cross-change-status";
+   const view=window.REMURA_SQUAL_DIAGNOSTICS?.read(data);
+   p.textContent=view?.displayOutcome==="market_closed"?
+      "Mercato chiuso nell'ultima scansione: il registro può restare a zero finché non arrivano nuove candele verificabili.":
+      data.diagnostics?.analyzed>0?
+      "Nessun evento nel registro. Le scansioni analizzate e le esclusioni sono specificate sopra.":
+      "Registro eventi vuoto: consulta l'esito dell'ultima scansione. Non implica assenza di opportunità.";
+   container.append(p);
+  }
+  for(const event of data.lastEvents.slice(0,12)){
+   const card=document.createElement("article");card.className="monitor-entry";
+   const title=document.createElement("strong");
+   const labels={new_convergence:"Nuova convergenza",new_divergence:"Nuova divergenza",
+                 confirmation_strengthened:"Conferma rafforzata"};
+   title.textContent=event.symbol+" · "+(labels[event.eventType]||"Osservazione");
+   const p=document.createElement("p");
+   p.textContent="Direzione COT "+(event.side>0?"rialzista":"ribassista")+
+      " · report "+event.reportDate+" · ultima M15 "+event.priceTime+
+      " · osservato "+event.observedAt+". Nessuna operazione eseguita.";
+   card.append(title,p);
+   container.append(card);
+  }
+ }catch(_){
+  diagnostics.replaceChildren();
+  status.textContent="Diagnostica VPS non disponibile o incompatibile. È necessario installare il backend v1.40; nessun dato stimato.";
+ }
+}
+$("monitor-refresh").addEventListener("click",refreshMonitor);
+
+
+function crossExposures(candidate){
+ const symbol=candidate?.sym;
+ if(typeof symbol!=="string"||candidate?.meta?.group!=="forex"||!/^[A-Z]{6}$/.test(symbol))return [];
+ return [symbol.slice(0,3),symbol.slice(3)];
+}
+function selectCrossCandidates(rows,mode="diverse",limit=4){
+ const n=Math.max(1,Math.min(4,Number.isInteger(limit)?limit:4));
+ const valid=(Array.isArray(rows)?rows:[]).filter(x=>
+  typeof x?.sym==="string"&&Number.isFinite(x.change)&&Math.abs(x.change)>=0.45
+ ).slice().sort((a,b)=>Math.abs(b.change)-Math.abs(a.change)||a.sym.localeCompare(b.sym));
+ if(mode==="strongest")return valid.slice(0,n);
+ if(mode!=="diverse")throw Error("Modalità scanner non valida");
+ const picked=[],remaining=valid.slice();
+ while(picked.length<n&&remaining.length){
+  const used=picked.flatMap(crossExposures);
+  let best=0,bestScore=-Infinity;
+  for(let i=0;i<remaining.length;i++){
+   const row=remaining[i],currencies=crossExposures(row);
+   const overlap=currencies.filter(currency=>used.includes(currency)).length;
+   const score=Math.abs(row.change)/(1+1.2*overlap);
+   if(score>bestScore+1e-12){bestScore=score;best=i;}
+  }
+  picked.push(remaining.splice(best,1)[0]);
+ }
+ return picked;
+}
+
+let crossMode="diverse";
+document.querySelectorAll("[data-cross-mode]").forEach(btn=>btn.addEventListener("click",()=>{
+ if(crossRunning)return;
+ crossMode=btn.dataset.crossMode;
+ document.querySelectorAll("[data-cross-mode]").forEach(item=>{
+  const selected=item===btn;
+  item.classList.toggle("active",selected);
+  item.setAttribute("aria-pressed",String(selected));
+ });
+ $("cross-results").replaceChildren();
+ $("cross-change-status").textContent="Scegli la modalità e ripeti la scansione per confrontare lo storico locale.";
+ $("cross-status").textContent="Selezione aggiornata. Premi «Avvia confronto multi-fonte» per analizzare quattro candidati COT.";
+}));
+async function privateJSON(path){
+ const controller=new AbortController();
+ const stop=setTimeout(()=>controller.abort(),14000);
+ try{
+  const response=await fetch(path,{cache:"no-store",signal:controller.signal});
+  if(!response.ok)throw Error("private_unavailable");
+  return await response.json();
+ }finally{clearTimeout(stop);}
+}
+function hasFreshReading(row,now){
+ const t=Date.parse(row?.t||"");
+ return Number.isFinite(t)&&t<=now+300000&&now-t>=-300000&&now-t<=3*3600000;
+}
+function metricText(result,source,reason){
+ if(!result?.available)return source+": "+(reason||"storico 24h insufficiente");
+ if(result.stale)return source+": campione datato; confronto 24h escluso";
+ if(result.lowSample)return source+": campione di posizioni troppo piccolo";
+ const direction=result.direction==="short"?"retail verso SHORT":result.direction==="long"?"retail verso LONG":"retail stabile";
+ const delta=(result.deltaLong>0?"+":"")+fmt.format(result.deltaLong);
+ const volume=source==="Myfxbook"?" (quota lotti)":" (quota posizioni)";
+ return source+": "+direction+" ("+delta+" pp long / 24h)"+volume;
+}
+function cotSummary(cot){
+ if(!cot||cot.state==="missing"||cot.stale)return "COT non disponibile o datato";
+ if(cot.conflict||cot.state==="conflict")return "COT: gruppi istituzionali discordanti, spinta speculativa non univoca";
+ if(!cot.bias)return "COT: spinta speculativa neutrale";
+ return "COT: spinta speculativa "+(cot.bias>0?"rialzista":"ribassista")+
+  (cot.sustained?" persistente":" da confermare");
+}
+function crossHeadline(cot,quality,price,verdict){
+ if(quality?.integrity!=="verified")return "Storico prezzo non verificato — solo osservazione";
+ if(!["recent","weekend"].includes(quality.freshness))return "Prezzo datato — confronto bloccato";
+ if(!cot||cot.stale||cot.state==="missing")return "COT assente o datato — nessuna direzione";
+ if(cot.conflict||cot.state==="conflict")return "Gruppi COT discordanti — nessun verdetto direzionale";
+ if(!cot.bias||cot.state==="neutral")return "COT senza spinta speculativa significativa";
+ if(!price||price.state==="unavailable")return "Prezzo non verificabile — nessuna conferma";
+ if(price.state==="conflict")return "Prezzo H4/H1 in disaccordo — nessuna conferma";
+ const historical=quality.freshness==="weekend";
+ if(verdict?.state==="aligned"){
+  const complete=price.state==="confirmed"&&cot.state==="trend";
+  return (historical?"STORICO · ":"")+
+    (complete?"COT e prezzo coerenti, conferma tecnica":"COT e prezzo coerenti, conferma ancora parziale");
+ }
+ if(verdict?.state==="divergent")
+  return (historical?"STORICO · ":"")+
+   (price.state==="confirmed"?"COT e prezzo in direzioni opposte":"COT e tendenza H4/H1 opposti · possibile divergenza");
+ return "Conferme insufficienti — soltanto monitoraggio";
+}
+function nextVerification(cot,quality,price,verdict){
+ if(quality?.integrity!=="verified")return "Prossimo controllo: correggere lo storico OHLC prima di valutare direzioni.";
+ if(!["recent","weekend"].includes(quality.freshness))
+  return "Prossimo controllo: attendere nuove candele chiuse e verificare la freschezza della VPS.";
+ if(!cot||cot.stale||cot.state==="missing")
+  return "Prossimo controllo: verificare il successivo report ufficiale CFTC.";
+ if(cot.conflict||cot.state==="conflict")
+  return "Prossimo controllo: osservare se i gruppi COT si riallineano nel prossimo report; la differenza settimanale non basta.";
+ if(!cot.bias)return "Prossimo controllo: attendere una nuova variazione COT significativa, senza forzare una direzione.";
+ if(!price||price.state==="unavailable")
+  return "Prossimo controllo: prezzo non valutabile; servono nuove candele chiuse M15/H1/H4 affidabili.";
+ if(verdict?.state==="divergent")
+  return "Prossimo controllo: osservare se H4/H1 si riallineano al COT oppure se il nuovo COT smentisce la spinta. Divergenza ≠ inversione.";
+ if(verdict?.state==="aligned"&&price.state!=="confirmed")
+  return "Prossimo controllo: attendere conferma tecnica completa su M15, H1 e H4; direzione ancora preliminare.";
+ if(verdict?.state==="aligned")
+  return "Prossimo controllo: verificare tenuta del movimento alla riapertura e nel report CFTC successivo, non anticiparlo.";
+ return "Prossimo controllo: monitorare il nuovo prezzo e le prossime rilevazioni COT; nessuna conferma completa.";
+}
+
+/* Only symbol, classification and source timestamps are kept on this device.
+   These are observations, not push alerts. Never store private OHLC or tokens. */
+const CROSS_SNAPSHOT_KEY="remura-squalincome-observations-v1";
+function eligibleCrossObservation(entry,now){
+ const {candidate,cot,quality,price,verdict}=entry||{};
+ const report=cot?.asof||candidate?.date;
+ const priceTime=price?.metrics?.M15?.latest;
+ const reportMs=Date.parse(String(report||"").slice(0,10)+"T00:00:00Z");
+ const priceMs=Date.parse(priceTime||"");
+ if(!/^[A-Z0-9]{3,8}$/.test(candidate?.sym||"")||
+  !["aligned","divergent"].includes(verdict?.state)||
+  !["watch","partial","confirmed"].includes(price?.state)||
+  !["recent","weekend"].includes(quality?.freshness)||
+  quality?.integrity!=="verified"||
+  cot?.conflict||cot?.stale||!["watch","trend"].includes(cot?.state)||
+  !Number.isInteger(cot?.bias)||Math.abs(cot.bias)!==1||
+  !Number.isFinite(reportMs)||!Number.isFinite(priceMs)||
+  priceMs>now+300000||reportMs>now+86400000||now-reportMs>14*86400000)
+  return null;
+ return {symbol:candidate.sym,report:report.slice(0,10),priceTime:new Date(priceMs).toISOString(),
+  state:verdict.state,priceState:price.state,side:cot.bias,priceSide:price.side,
+  historical:quality.freshness==="weekend",seenAt:now};
+}
+function meaningfulCrossChange(previous,current){
+ if(!previous||!current)return null;
+ if(previous.symbol!==current.symbol||
+    current.historical||current.seenAt-previous.seenAt>14*86400000||
+    previous.seenAt>current.seenAt||
+    !["aligned","divergent"].includes(previous.state))return null;
+ const changed=previous.report!==current.report||
+  Date.parse(current.priceTime)>Date.parse(previous.priceTime);
+ if(!changed)return null;
+ const validProgress=current.side===current.priceSide&&current.state==="aligned"&&
+  current.priceState==="confirmed";
+ if(previous.state==="divergent"&&validProgress)
+  return {key:"alignment",label:"NUOVA CONVERGENZA COT/PREZZO",
+    text:"Rispetto al precedente controllo sul dispositivo, il prezzo ora conferma la direzione COT su M15/H1/H4. Va ricontrollato: non è prova di ordini istituzionali."};
+ if(previous.state==="aligned"&&current.state==="divergent"&&
+  current.priceState==="confirmed")
+  return {key:"divergence",label:"NUOVA DIVERGENZA COT/PREZZO",
+    text:"Il nuovo prezzo si oppone al COT dopo una precedente concordanza. Osservazione, non segnale di inversione."};
+ if(previous.state==="aligned"&&previous.priceState!=="confirmed"&&validProgress)
+  return {key:"confirmation",label:"NUOVA CONFERMA TECNICA",
+    text:"La convergenza precedente è ora accompagnata da una conferma prezzo completa M15/H1/H4. Non è una raccomandazione operativa."};
+ return null;
+}
+function crossReadMemory(now){
+ try{
+  const raw=localStorage.getItem(CROSS_SNAPSHOT_KEY);
+  if(!raw||raw.length>16000)return {};
+  const value=JSON.parse(raw);
+  if(!value||typeof value!=="object"||Array.isArray(value))return {};
+  const out={};
+  for(const [symbol,item] of Object.entries(value).slice(0,45)){
+   if(/^[A-Z0-9]{3,8}$/.test(symbol)&&item?.symbol===symbol&&
+    Number.isFinite(item.seenAt)&&now>=item.seenAt&&now-item.seenAt<=14*86400000)
+    out[symbol]=item;
+  }
+  return out;
+ }catch(_){return {};}
+}
+function crossWriteMemory(observations){
+ try{localStorage.setItem(CROSS_SNAPSHOT_KEY,JSON.stringify(observations));return true;}
+ catch(_){return false;}
+}
+function crossRemember(work,now){
+ const saved=crossReadMemory(now),events=new Map();
+ for(const entry of work){
+  const current=eligibleCrossObservation(entry,now);
+  if(!current)continue;
+  const previous=saved[current.symbol];
+  const currentTime=Date.parse(current.priceTime);
+  const previousTime=Date.parse(previous?.priceTime||"");
+  const newReport=previous&&current.report>previous.report;
+  const newPrice=previous&&Number.isFinite(previousTime)&&currentTime>previousTime;
+  // A broker source swap must not make an older price appear newer.
+  const noTimeRollback=!previous||!Number.isFinite(previousTime)||currentTime>=previousTime;
+  if(previous&&noTimeRollback&&(newPrice||newReport)){
+   const change=meaningfulCrossChange(previous,current);
+   if(change)events.set(current.symbol,change);
+  }
+  if(!previous||(noTimeRollback&&(newPrice||newReport)))saved[current.symbol]=current;
+ }
+ const available=crossWriteMemory(saved);
+ return {events,available};
+}
+
+function scanCard(candidate,cot,quality,price,verdict,trends,change){
+ const card=document.createElement("article");
+ card.className="cross-card";
+ const valid=quality?.integrity==="verified";
+ card.dataset.state=!valid?"invalid":verdict?.state==="divergent"?"divergent":
+   verdict?.state==="aligned"?"aligned":"waiting";
+ const head=document.createElement("div");head.className="cross-title";
+ const title=document.createElement("h3");title.textContent=candidate.sym;
+ const delta=document.createElement("span");delta.className="cross-delta";
+ delta.textContent="Δ COT settimanale "+pp(candidate.change);
+ head.append(title,delta);card.append(head);
+ const stamp=document.createElement("strong");
+ stamp.textContent=crossHeadline(cot,quality,price,verdict);
+ card.append(stamp);
+ if(change){
+  const changeBox=document.createElement("p");
+  changeBox.className="cross-change";
+  changeBox.textContent=change.label+" · "+change.text;
+  card.append(changeBox);
+ }
+ const historical=quality?.freshness==="weekend";
+ const reason=document.createElement("p");
+ const priceDirection=price?.side===1?"rialzista":price?.side===-1?"ribassista":"non confermata";
+ reason.textContent=cotSummary(cot)+
+  " · Prezzo H4/H1: "+priceDirection+
+  " · Candele "+(valid?"coerenti":"non certificate")+
+  " · "+(historical?"venerdì, NON LIVE":quality?.freshness||"N/D")+".";
+ card.append(reason);
+ const watch=document.createElement("p");watch.className="cross-watch";
+ watch.textContent=nextVerification(cot,quality,price,verdict);
+ card.append(watch);
+ const metrics=document.createElement("div");metrics.className="cross-metrics";
+ for(const [source,key] of [["Myfxbook","myfx"],["Capital.com","capital"]]){
+  const item=trends?.[key],p=document.createElement("p");
+  p.textContent=metricText(item?.result,source,item?.reason);
+  metrics.append(p);
+ }
+ card.append(metrics);
+ const more=document.createElement("details");
+ const summary=document.createElement("summary");summary.textContent="Perché questa classificazione?";
+ const explanation=document.createElement("p");
+ explanation.textContent="Report COT: "+fdate(candidate.date)+
+  ". "+(cot?.summary||"Gruppo speculativo e gruppo secondario non sempre concordano.")+
+  " Prezzo: "+(price?.title||"non verificabile")+
+  ". "+(verdict?.narrative||"Dati insufficienti per un verdetto.")+
+  " L'opinione retail non costituisce prova di flussi istituzionali né un'indicazione di ingresso.";
+ more.append(summary,explanation);
+ card.append(more);
+ const link=document.createElement("a");
+ link.href="./asset.html?symbol="+encodeURIComponent(candidate.sym);
+ link.textContent="Apri analisi completa →";
+ card.append(link);
+ return card;
+}
+
+async function getCapitalSources(priv,now){
+ let google=null,loggedIn=false,problem=null;
+ // No automatic Google login; read only if the user already authenticated.
+ if(capitalCloud?.enabled&&capitalCore){
+  try{
+   loggedIn=await capitalCloud.isSignedIn();
+   if(loggedIn){
+    const original=await capitalCloud.latest();
+    if(original)google=capitalCore.cleanCapitalLatest(original,allSymbols,now);
+   }
+  }catch(_){problem="Archivio Google non raggiungibile o accesso negato";}
+ }
+ return {priv,google,loggedIn,problem};
+}
+async function getMyfxMovement(symbol,latest,now){
+ const current=latest?.status==="ok"?latest.symbols?.[symbol]:null;
+ if(!current)return {reason:"nessun campione per questo mercato"};
+ if(!hasFreshReading(current,now))return {reason:"ultimo campione datato, escluso"};
+ try{
+  const file=await privateJSON("./private-api/retail/history/"+encodeURIComponent(symbol)+".json");
+  if(file?.symbol!==symbol||!Array.isArray(file.records))throw Error("missing");
+  const result=trendCore.analyze(file.records,current,"24h",now);
+  return result.available?{result}:{reason:"manca un campione reale vicino a 24 ore prima"};
+ }catch(_){return {reason:"storico 24h non disponibile sulla VPS"};}
+}
+async function getCapitalMovement(symbol,cap,now){
+ const providers=[
+  {key:"VPS",latest:cap.priv,
+   fetch:async()=>privateJSON("./private-api/capital/history/"+encodeURIComponent(symbol)+".json")},
+  {key:"Google privato",latest:cap.google,
+   fetch:async()=>capitalCloud.history(symbol)}
+ ];
+ let hasCurrent=false,hasHistory=false;
+ for(const source of providers){
+  const current=source.latest?.status==="ok"?source.latest.symbols?.[symbol]:null;
+  if(!current||!hasFreshReading(current,now))continue;
+  hasCurrent=true;
+  try{
+   const document=await source.fetch();
+   if(document?.symbol!==symbol||!Array.isArray(document.records))continue;
+   const records=source.key==="Google privato"
+    ?capitalCore.cleanCapitalHistory(document,symbol,now).records
+    :document.records;
+   const result=trendCore.analyze(records,current,"24h",now);
+   if(result.available)return {result,source:source.key,current};
+   hasHistory=true;
+  }catch(_){/* Never use unverified provider history. */}
+ }
+ if(hasHistory)return {reason:"storico presente, ma manca un campione vicino a 24h fa"};
+ if(hasCurrent)return {reason:"rilevazione recente, ma manca lo storico 24h"};
+ const privateRow=cap.priv?.symbols?.[symbol];
+ const cloudRow=cap.google?.symbols?.[symbol];
+ if(privateRow||cloudRow)return {reason:"rilevazione Capital.com datata, confronto escluso"};
+ if(cap.problem)return {reason:cap.problem};
+ if(!cap.loggedIn&&!cap.priv?.symbols?.[symbol])
+  return {reason:"nessun campione VPS; Google non collegato (Impostazioni)"};
+ return {reason:"nessun campione recente per questo mercato"};
+}
+async function runCross(){
+ if(crossRunning||!crossCore||!priceCore||!trendCore||!capitalCore)return;
+ const available=allSymbols.filter(sym=>instrument(sym).dataset&&instrument(sym).group!=="macro")
+  .map(scanSignal).filter(item=>item&&Math.abs(item.change)>=.45);
+ const candidates=selectCrossCandidates(available,crossMode,4);
+ const destination=$("cross-results"),status=$("cross-status"),button=$("cross-run");
+ destination.replaceChildren();
+ if(!candidates.length){
+  status.textContent="Nessun candidato con COT recente e movimento sufficiente. Riprova dopo il prossimo report CFTC.";
+  return;
+ }
+ crossRunning=true;button.disabled=true;
+ status.textContent="Controllo "+candidates.length+" mercati: COT, qualità prezzi e sentiment privati…";
+ try{
+  const [qualityReport,myfxLatest,capitalLatest,cotStatus]=await Promise.all([
+   privateJSON("./private-api/prices/status"),
+   privateJSON("./private-api/retail/latest.json").catch(()=>null),
+   privateJSON("./private-api/capital/latest.json").catch(()=>null),
+   privateJSON("./private-api/cot/status").catch(()=>null)
+  ]);
+  const cotBox=$("cot-vps-status");
+  if(cotStatus?.schema!=="remura-cot-status-v1")
+   cotBox.textContent="Archivio COT VPS non disponibile: serve aggiornare il server privato. Lo scanner continua a caricare CFTC da Safari.";
+  else if(cotStatus.state==="ready"){
+   const source=cotStatus.datasets;
+   cotBox.textContent="VPS COT pronta · TFF "+source.tff.contracts+
+     "/"+source.tff.expectedContracts+" future; Disaggregated "+source.disagg.contracts+
+     "/"+source.disagg.expectedContracts+" future · report posizioni "+
+     source.tff.lastReportDate+". Nessun avviso o ordine attivo.";
+  }else
+   cotBox.textContent="Archivio COT VPS: "+(cotStatus.state==="disabled"?
+     "sincronizzazione disattivata":"raccolta in corso, incompleta o datata")+
+     ". Le notifiche sono ancora disabilitate.";
+  if(qualityReport?.schema!=="remura-price-status-v1"||!Array.isArray(qualityReport.markets))
+   throw Error("no_quality");
+  const qualityBySymbol=new Map(qualityReport.markets.map(m=>[m.symbol,m.quality]));
+  const now=Date.parse(qualityReport.serverTime);
+  if(!Number.isFinite(now)||Math.abs(now-Date.now())>10*60000)throw Error("server_clock");
+  const capitalReports=await getCapitalSources(capitalLatest,now);
+  const work=await Promise.all(candidates.map(async candidate=>{
+   const sym=candidate.sym,spec=instrument(sym);
+   const quality=qualityBySymbol.get(sym);
+   const cot=crossCore.analyze(series(sym),{
+    symbol:sym,isFX:spec.group==="forex",isMetal:spec.dataset==="disagg",
+    labels:spec.labels,now
+   });
+   if(!quality||quality.integrity!=="verified"||
+      !["recent","weekend"].includes(quality.freshness))
+    return {candidate,cot,quality,price:null,verdict:null,trends:null};
+   let price=null;
+   try{
+    const doc=await privateJSON("./private-api/prices/"+encodeURIComponent(sym));
+    price=priceCore.analyze(priceCore.load(doc,sym,{now}),{now});
+   }catch(_){/* No candles or bad data means no price confirmation. */}
+   const [myfx,capital]=await Promise.all([
+    getMyfxMovement(sym,myfxLatest,now),
+    getCapitalMovement(sym,capitalReports,now)
+   ]);
+   const capCurrent=capital.current||
+    capitalReports.priv?.symbols?.[sym]||
+    capitalReports.google?.symbols?.[sym]||null;
+   const verdict=crossCore.verdict.evaluate({symbol:sym,cot,price,
+    myfxbook:{current:myfxLatest?.symbols?.[sym]||null,
+      fresh:hasFreshReading(myfxLatest?.symbols?.[sym],now)},
+    capital:{current:capCurrent,fresh:hasFreshReading(capCurrent,now)},
+    now});
+   return {candidate,cot,quality,price,verdict,trends:{myfx,capital}};
+  }));
+  work.sort((a,b)=>{
+   const rank=x=>x.verdict?.state==="aligned"?0:
+    x.verdict?.state==="divergent"?1:2;
+   return rank(a)-rank(b)||Math.abs(b.candidate.change)-Math.abs(a.candidate.change);
+  });
+  const changes=crossRemember(work,now);
+  for(const entry of work)destination.append(scanCard(entry.candidate,
+   entry.cot,entry.quality,entry.price,entry.verdict,entry.trends,
+   changes.events.get(entry.candidate.sym)));
+  const changeStatus=$("cross-change-status");
+  const num=changes.events.size;
+  changeStatus.textContent=!changes.available?
+   "Confronto tra scansioni non disponibile: Safari non consente di salvare i dati locali.":
+   num?num+" cambiamento/i rilevato/i rispetto alle precedenti scansioni su questo iPhone. Controlla le schede evidenziate.":
+   "Nessuna nuova convergenza o divergenza verificata rispetto alle osservazioni salvate su questo iPhone. Il primo controllo crea soltanto una fotografia iniziale.";
+  const clouds=work.filter(x=>x.trends?.capital?.source==="Google privato").length;
+  const weekend=work.some(x=>x.quality?.freshness==="weekend");
+  status.textContent="Scansione completata: "+work.length+" mercati ("+
+   (crossMode==="diverse"?"esposizioni Forex parzialmente diversificate":"maggiori variazioni COT")+"). "+
+   (clouds?clouds+" storici Capital.com letti dal tuo Google privato. ":"")+
+   (weekend?"Dati di venerdì: NON segnali live. ":"")+
+   "Variazioni non verificabili restano esplicitamente N/D.";
+ }catch(_){
+  status.textContent="Confronto non disponibile: verifica la connessione privata alla VPS .ts.net.";
+ }finally{crossRunning=false;button.disabled=false;}
+}
+$("cross-run").addEventListener("click",runCross);
+function updateList(){
+const query=$('search').value.toUpperCase().trim();
+const candidates=allSymbols.filter(sym=>(activeGroup==='all'||instrument(sym).group===activeGroup)&& (sym.includes(query)||instrument(sym).name.toUpperCase().includes(query)));
+const ranked=candidates.map(sym=>({sym,r:snapshot(sym)})).sort((a,b)=>{
+ if(!!a.r!==!!b.r)return a.r?-1:1;
+ return (Math.abs(b.r?.deltaOne||0)+Math.abs(b.r?.deltaTwo||0))-(Math.abs(a.r?.deltaOne||0)+Math.abs(a.r?.deltaTwo||0));
+});
+$('total-count').textContent=candidates.length;
+$('loaded-count').textContent=allSymbols.filter(sym=>snapshot(sym)).length+' / '+allSymbols.length;
+const dates=allSymbols.map(sym=>snapshot(sym)?.date).filter(Boolean).sort();$('report-date').textContent=dates.length?'ultimo report tra le fonti '+fdate(latest(dates)):'nessun report ricevuto';
+const el=$('listing');el.innerHTML='';
+if(!ranked.length){el.innerHTML='<div class="empty">Nessuno strumento trovato.</div>';return;}
+for(const obj of ranked){
+const spec=instrument(obj.sym),r=obj.r;
+const btn=document.createElement('button');btn.type='button';btn.className='assetrow'+(obj.sym===activeSymbol?' active':'');btn.setAttribute('aria-label','Apri '+obj.sym);
+const title=document.createElement('div'),h=document.createElement('b'),desc=document.createElement('small');h.textContent=obj.sym;desc.textContent=spec.group==='forex'?'Forex':spec.group==='metals'?'Metalli':'Indice';title.append(h,desc);
+const val=(n)=>{const x=document.createElement('span');x.className='num '+(Number.isFinite(n)?color(n):'');x.textContent=dec(n);return x;};
+const age=r?Math.floor((Date.now()-Date.parse(r.date+'T00:00:00Z'))/86400000):0;
+const tag=document.createElement('span');tag.className='small '+(!r||age>14?'neu':'pos');tag.textContent=!r?'N/D':age>14?'Datato':'CFTC';
+btn.append(title,val(r?.one),val(r?.two),tag);btn.addEventListener('click',()=>{location.href='./asset.html?symbol='+encodeURIComponent(obj.sym)+'&v=8';});el.append(btn);
+}
+}
+function parseDataset(data,dataset){
+const lut={};
+if(dataset==='tff'){for(const [cur,code] of Object.entries(FX_CODES))lut[code]={type:'fx',id:cur};}
+for(const [id,s] of Object.entries(OTHER))if(s.dataset===dataset)lut[s.code]={type:'market',id};
+const target={};for(const r of data){
+ const code=String(r.cftc_contract_market_code||'').toUpperCase().padStart(6,'0'),mapped=lut[code];
+ if(!mapped)continue;
+ const date=String(r.report_date_as_yyyy_mm_dd||'').slice(0,10),oi=number(r.open_interest_all);
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(oi)||oi<=0)continue;
+ const book=dataset==='tff'?{one:{long:number(r.asset_mgr_positions_long),short:number(r.asset_mgr_positions_short)},two:{long:number(r.lev_money_positions_long),short:number(r.lev_money_positions_short)}}:{one:{long:number(r.m_money_positions_long_all),short:number(r.m_money_positions_short_all)},two:{long:number(r.prod_merc_positions_long),short:number(r.prod_merc_positions_short)}};
+ if(!Object.values(book).every(pair=>Number.isFinite(pair.long)&&Number.isFinite(pair.short)))continue;
+ const key=mapped.type+':'+mapped.id;if(!target[key])target[key]=new Map();target[key].set(date,{date,oi,...book});
+}
+return target;
+}
+async function getDataset(dataset){
+const fields=dataset==='tff'?selectFieldsTff:selectFieldsMetals,ds=dataset==='tff'?'gpe5-46if':'72hh-3qpy';
+const codes=dataset==='tff'?[...Object.values(FX_CODES),...Object.values(OTHER).filter(s=>s.dataset==='tff').map(s=>s.code)]:Object.values(OTHER).filter(s=>s.dataset==='disagg').map(s=>s.code);
+const cutoff=new Date();cutoff.setUTCDate(cutoff.getUTCDate()-410);
+const where="report_date_as_yyyy_mm_dd >= '"+cutoff.toISOString().slice(0,10)+"T00:00:00' AND cftc_contract_market_code IN ("+codes.map(c=>"'"+c+"'").join(',')+")";
+const errors=[];
+for(const host of HOSTS){
+ const url=new URL('/resource/'+ds+'.json',host);url.searchParams.set('$select',fields.join(','));url.searchParams.set('$where',where);url.searchParams.set('$order','report_date_as_yyyy_mm_dd DESC');url.searchParams.set('$limit','3000');
+ const abort=new AbortController();const timer=setTimeout(()=>abort.abort(),17000);
+ try{
+ const res=await fetch(url.toString(),{mode:'cors',headers:{Accept:'application/json'},signal:abort.signal});
+ if(!res.ok)throw Error('HTTP '+res.status);
+ const data=await res.json();if(!Array.isArray(data)||!data.length)throw Error('Risposta CFTC vuota');
+ const parsed=parseDataset(data,dataset);if(!Object.keys(parsed).length)throw Error('Campi o contratti CFTC non trovati');
+ for(const [key,m] of Object.entries(parsed)){const [type,id]=key.split(':');const dst=type==='fx'?fxHist[id]:marketHist[id];dst.clear();for(const [d,v] of m)dst.set(d,v);}
+ if(dataset==='tff'){tffLoaded=true;tffError='';}else{disaggLoaded=true;disaggError='';}
+ return true;
+ }catch(e){errors.push(e.name==='AbortError'?'timeout':String(e.message||e));}
+ finally{clearTimeout(timer);}
+}
+if(dataset==='tff'){tffLoaded=false;tffError=errors.join(' / ');}else{disaggLoaded=false;disaggError=errors.join(' / ');}
+return false;
+}
+async function refresh(){
+if(loading)return;loading=true;
+$('refresh').disabled=true;$('global-status').className='status';$('global-status').textContent='Connessione CFTC…';
+const results=await Promise.allSettled([getDataset('tff'),getDataset('disagg')]);
+const count=results.filter(r=>r.status==='fulfilled'&&r.value).length;
+loading=false;loadedOnce=true;$('refresh').disabled=false;
+$('global-status').className='status '+(count===2?'live':'warn');$('global-status').textContent=count===2?'Dati CFTC ricevuti':count?'Dati CFTC parziali':'Fonte non disponibile';
+const problems=[];if(tffError)problems.push('TFF: '+tffError);if(disaggError)problems.push('Metalli: '+disaggError);
+const notice=$('global-notice');notice.className='alert'+(count!==2?' warning':'');
+notice.textContent=count===2?'Fonte ufficiale CFTC caricata per Forex, indici e metalli. I singoli strumenti non presenti nel report rimangono N/D. Ultima data e aggiornamento possono differire tra contratti.':'Caricamento parziale o fallito: '+problems.join(' · ')+'. Nessun valore artificiale viene mostrato per i dati mancanti.';
+updateList();detail();renderScanner();
+$('cross-results').replaceChildren();
+$('cross-change-status').textContent="Il primo controllo crea una fotografia locale; soltanto nuove rilevazioni potranno generare cambiamenti.";
+$('cross-status').textContent="COT aggiornato. Premi «Avvia confronto multi-fonte» per incrociare gli ultimi dati disponibili.";
+}
+$('search').addEventListener('input',updateList);
+document.querySelectorAll('[data-group]').forEach(btn=>btn.addEventListener('click',()=>{
+activeGroup=btn.dataset.group;document.querySelectorAll('[data-group]').forEach(b=>b.classList.toggle('active',b===btn));updateList();
+}));
+document.querySelectorAll('[data-scan]').forEach(btn=>btn.addEventListener('click',()=>{scanMode=btn.dataset.scan;document.querySelectorAll('[data-scan]').forEach(b=>b.classList.toggle('active',b===btn));renderScanner();}));
+$('refresh').addEventListener('click',refresh);
+updateList();detail();renderScanner();refresh();
+</script>
+<script src="./nav.js?v=164"></script>
+</body></html>

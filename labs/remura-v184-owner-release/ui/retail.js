@@ -1,0 +1,225 @@
+(()=>{"use strict";
+const root=document.getElementById("retail-module");if(!root)return;
+const sym=(new URLSearchParams(location.search).get("symbol")||"XAUUSD").toUpperCase();
+const map={US500:"CME_MINI:ES1!",NAS100:"CME_MINI:NQ1!",US30:"CBOT_MINI:YM1!",VIX:"CBOE:VIX",DXY:"TVC:DXY"};
+const ticker=map[sym]||"OANDA:"+sym;
+const $=id=>document.getElementById(id);
+const fmt=n=>n!==null&&n!==undefined&&n!==""&&Number.isFinite(+n)?new Intl.NumberFormat("it-IT",{maximumFractionDigits:2}).format(+n):"—";
+let tf="15",mode="lots",history=[],period="7d";
+$("r-tradingview").href="https://www.tradingview.com/chart/?symbol="+encodeURIComponent(ticker);
+$("r-myfxbook").href="https://www.myfxbook.com/community/outlook/"+encodeURIComponent(sym);
+function price(){
+ const node=$("r-price");node.replaceChildren();
+ const wrap=document.createElement("div");wrap.className="tradingview-widget-container";wrap.style.cssText="height:100%;width:100%";
+ const inside=document.createElement("div");inside.className="tradingview-widget-container__widget";wrap.append(inside);
+ const script=document.createElement("script");script.async=true;script.type="text/javascript";
+ script.src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+ script.text=JSON.stringify({autosize:true,symbol:ticker,interval:tf,theme:"dark",style:"1",locale:"it",timezone:"Etc/UTC",backgroundColor:"#0b1b25",hide_top_toolbar:true,hide_side_toolbar:true,hide_volume:true,allow_symbol_change:false,save_image:false});
+ wrap.append(script);node.append(wrap);
+}
+for(const [label,value] of [["M1","1"],["M5","5"],["M15","15"],["M30","30"],["H1","60"],["H4","240"],["D1","D"]]){
+ const b=document.createElement("button");b.type="button";b.textContent=label;b.setAttribute("aria-pressed",String(value===tf));
+ b.addEventListener("click",()=>{if(tf===value)return;tf=value;for(const v of $("r-tf").querySelectorAll("button"))v.setAttribute("aria-pressed",String(b===v));price();});
+ $("r-tf").append(b);
+}
+for(const b of $("r-modes").querySelectorAll("button"))b.addEventListener("click",()=>{
+ mode=b.dataset.mode;for(const v of $("r-modes").querySelectorAll("button"))v.setAttribute("aria-pressed",String(b===v));draw();
+});
+const PERIODS={ "6h":6*3600000,"1d":24*3600000,"7d":7*86400000,"30d":30*86400000,"all":Infinity };
+for(const b of $("r-windows").querySelectorAll("button")){
+ b.addEventListener("click",()=>{
+   period=b.dataset.window;
+   for(const x of $("r-windows").querySelectorAll("button"))x.setAttribute("aria-pressed",String(x===b));
+   draw();
+ });
+}
+function localDate(timestamp,withTime=true){
+ const date=new Date(timestamp);
+ if(!Number.isFinite(+date))return "—";
+ return new Intl.DateTimeFormat("it-IT",withTime?{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",timeZone:"Europe/Rome"}:{day:"2-digit",month:"short",timeZone:"Europe/Rome"}).format(date);
+}
+function signed(n){
+ return Number.isFinite(n)?(n>0?"+":"")+fmt(n):"—";
+}
+function draw(){
+ const host=$("r-chart");host.replaceChildren();
+ const keys=mode==="lots"?["lLots","sLots"]:["lPos","sPos"];
+ const all=history.filter(row=>row&&row.t&&Number.isFinite(Date.parse(row.t))&&
+   keys.every(k=>row[k]!==null&&row[k]!==undefined&&Number.isFinite(Number(row[k]))&&+row[k]>=0))
+   .sort((a,b)=>Date.parse(a.t)-Date.parse(b.t));
+ const unique=new Map(all.map(row=>[row.t,row]));
+ const timeline=[...unique.values()];
+ // An actual 6h/24h window ends NOW, not at the last possibly stale observation.
+ const minimum=Date.now()-(PERIODS[period]??Infinity);
+ const records=timeline.filter(row=>Date.parse(row.t)>=minimum);
+ $("r-count").textContent=records.length+" rilevazioni nel periodo";
+ if(records.length<2){
+   const empty=document.createElement("div");empty.className="rt-empty";
+   empty.textContent=records.length===1?
+     "Una rilevazione per il periodo selezionato ("+localDate(records[0].t)+"). Servono due punti per disegnare le bande.":
+     "Nessuna rilevazione in questa finestra. Scegli Tutto oppure attendi nuovi dati Myfxbook.";
+   host.append(empty);
+   $("r-change").textContent="Andamento: servono almeno due rilevazioni reali per collegare i punti.";
+   return;
+ }
+ const firstTime=Date.parse(records[0].t),last=Date.parse(records[records.length-1].t);
+ // Build the viewBox at the actual available width, avoiding mobile SVG letterboxing.
+ const W=Math.min(850,Math.max(310,Math.round(host.clientWidth-16)||750));
+ const H=W<480?288:330,L=W<480?53:65,R=18,T=22,B=46;
+ const maximum=Math.max(1,...records.flatMap(r=>keys.map(k=>+r[k])))*1.10;
+ const X=stamp=>L+(stamp-firstTime)/Math.max(1,last-firstTime)*(W-L-R);
+ const Y=value=>T+(maximum-value)/maximum*(H-T-B);
+ const bottom=Y(0);
+ const time=records.map(p=>Date.parse(p.t));
+ // Join real observations as a visual trend: no intermediate samples are created.
+ // Large time gaps are still visible through dashed connectors and the gap counter.
+ const ids=records.map((_,i)=>i);
+ const gapLimit=75*60000;
+ const missingIntervals=time.slice(1).filter((stamp,i)=>stamp-time[i]>gapLimit).length;
+ const linePath=(indices,key)=>indices.map((i,n)=>(n?"L":"M")+X(time[i]).toFixed(2)+" "+Y(+records[i][key]).toFixed(2)).join(" ");
+ const areaPath=(indices,key)=>linePath(indices,key)+
+   " L"+X(time[indices[indices.length-1]]).toFixed(2)+" "+bottom.toFixed(2)+
+   " L"+X(time[indices[0]]).toFixed(2)+" "+bottom.toFixed(2)+" Z";
+ let svg='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Bande del sentiment: verde volume long e rosso volume short, rilevazioni reali Myfxbook">';
+ for(let i=0;i<5;i++){
+   const value=maximum*i/4,y=Y(value).toFixed(2);
+   svg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'" stroke="#375861" stroke-dasharray="3 5"/>';
+   svg+='<text x="'+(L-7)+'" y="'+(Number(y)+4)+'" text-anchor="end" font-size="11" fill="#a4c0c6">'+fmt(value)+'</text>';
+ }
+ const tickCount=W<480?2:4;
+ for(let i=0;i<=tickCount;i++){
+   const t=firstTime+(last-firstTime)*i/tickCount;
+   const x=X(t).toFixed(2);
+   if(i>0&&i<tickCount)svg+='<line x1="'+x+'" x2="'+x+'" y1="'+T+'" y2="'+bottom+'" stroke="#31525a" stroke-dasharray="2 7"/>';
+   const timeLabel=localDate(t,period==="6h"||period==="1d");
+   svg+='<text x="'+x+'" y="'+(H-15)+'" font-size="11" text-anchor="'+(i===0?"start":i===tickCount?"end":"middle")+'" fill="#aac5c8">'+timeLabel+'</text>';
+ }
+ // Two continuous filled bands, as in the Myfxbook view.
+ svg+='<path class="rt-area-green" d="'+areaPath(ids,keys[0])+'"/>';
+ svg+='<path class="rt-area-red" d="'+areaPath(ids,keys[1])+'"/>';
+ for(let i=1;i<records.length;i++){
+   const pair=[i-1,i];
+   const gap=time[i]-time[i-1]>gapLimit;
+   const style=gap?" rt-gap":"";
+   svg+='<path class="rt-long-line'+style+'" d="'+linePath(pair,keys[0])+'"/>';
+   svg+='<path class="rt-short-line'+style+'" d="'+linePath(pair,keys[1])+'"/>';
+ }
+ // Actual sample markers stay visible; avoid thousands of circles on long archives.
+ if(records.length<=125)for(let i=0;i<records.length;i++){
+   svg+='<circle class="rt-sample" cx="'+X(time[i])+'" cy="'+Y(+records[i][keys[0]])+'" r="2.4" fill="#6ee1b0"/>';
+   svg+='<circle class="rt-sample" cx="'+X(time[i])+'" cy="'+Y(+records[i][keys[1]])+'" r="2.4" fill="#ff8592"/>';
+ }
+ const tail=records[records.length-1];
+ svg+='<circle cx="'+X(last)+'" cy="'+Y(+tail[keys[0]])+'" r="4" fill="#6ee1b0" stroke="#163e3c" stroke-width="2"/>';
+ svg+='<circle cx="'+X(last)+'" cy="'+Y(+tail[keys[1]])+'" r="4" fill="#ff8592" stroke="#2c242d" stroke-width="2"/>';
+ svg+='<rect x="'+L+'" y="'+T+'" width="'+(W-L-R)+'" height="'+(bottom-T)+'" fill="transparent" pointer-events="all"/>';
+ svg+='</svg>';
+ host.innerHTML=svg;
+ const prev=records[records.length-2],elapsed=(last-Date.parse(prev.t))/60000;
+ const deltaLong=+tail[keys[0]]-+prev[keys[0]];
+ const deltaShort=+tail[keys[1]]-+prev[keys[1]];
+ const unit=mode==="lots"?" lotti":" posizioni";
+ $("r-change").textContent="Ultime 2 rilevazioni ("+Math.round(elapsed)+" min): Long "+
+   signed(deltaLong)+unit+" · Short "+signed(deltaShort)+unit+
+   (missingIntervals?" · "+missingIntervals+" intervalli >75 min (tratteggiati, senza campioni intermedi).":"")+
+   " · Ultimo punto "+localDate(tail.t)+".";
+ const tooltip=document.createElement("div");tooltip.className="rt-tooltip";tooltip.hidden=true;host.append(tooltip);
+ const canvas=host.querySelector("svg");
+ function inspect(e){
+   const bounds=canvas.getBoundingClientRect();
+   if(!bounds.width)return;
+   const xpos=(e.clientX-bounds.left)*W/bounds.width;
+   const queried=firstTime+(Math.max(L,Math.min(W-R,xpos))-L)/(W-L-R)*Math.max(1,last-firstTime);
+   let low=0,high=records.length;
+   while(low<high){const mid=(low+high)>>1;if(time[mid]<queried)low=mid+1;else high=mid;}
+   let idx=Math.min(records.length-1,low);
+   if(idx>0&&Math.abs(time[idx-1]-queried)<Math.abs(time[idx]-queried))idx--;
+   const observation=records[idx];
+   tooltip.textContent=localDate(observation.t)+"\nLong: "+fmt(observation[keys[0]])+unit+
+     "\nShort: "+fmt(observation[keys[1]])+unit;
+   tooltip.hidden=false;
+   const hostBounds=host.getBoundingClientRect();
+   const left=Math.max(6,Math.min(hostBounds.width-205,e.clientX-hostBounds.left-85));
+   tooltip.style.left=left+"px";
+   tooltip.style.top="16px";
+ }
+ canvas.addEventListener("pointermove",inspect);
+ canvas.addEventListener("pointerdown",inspect);
+ canvas.addEventListener("pointerleave",()=>{tooltip.hidden=true;});
+}
+async function retail(){
+ const stamp=Date.now();
+ const sources=[
+  {base:"./private-api/retail/",name:"Feed privato"},
+  {base:"./data/myfxbook/",name:"Archivio pubblico Myfxbook"}
+ ];
+ let latest=null,source=null;
+ for(const item of sources){
+  try{
+   const response=await fetch(item.base+"latest.json?t="+stamp,{cache:"no-store"});
+   if(!response.ok)continue;
+   const doc=await response.json();
+   if(doc?.status!=="ok"||!doc.symbols||typeof doc.symbols!=="object")continue;
+   latest=doc;source=item;break;
+  }catch(_){/* Local saved-file fallback only. No provider API requests. */}
+ }
+ if(!latest){
+  $("r-status").textContent="Myfxbook · archivio assente";
+  $("r-date").textContent="Nessun archivio Myfxbook disponibile. Nessun numero simulato.";
+  $("r-updated").textContent="N/D";
+  window.dispatchEvent(new CustomEvent("remura:retail",{detail:{symbol:sym,current:null,history:[],status:"missing"}}));
+  draw();return;
+ }
+ try{
+  history=[];
+  const response=await fetch(source.base+"history/"+encodeURIComponent(sym)+".json?t="+stamp,{cache:"no-store"});
+  if(response.ok){
+   const doc=await response.json();
+   if(doc?.symbol===sym&&Array.isArray(doc.records))history=doc.records;
+  }else{
+   const old=await fetch(source.base+"history.json?t="+stamp,{cache:"no-store"});
+   if(old.ok){
+    const doc=await old.json();
+    history=Array.isArray(doc?.symbols?.[sym])?doc.symbols[sym]:[];
+   }
+  }
+ }catch(_){/* Display current percentages even if historical file is unavailable */}
+ const row=latest.symbols[sym],lp=Number(row?.lPct),sp=Number(row?.sPct);
+ const at=row?.t||latest.updatedAt,age=Date.now()-Date.parse(at);
+ const valid=row&&row.lPct!==null&&row.lPct!==undefined&&row.sPct!==null&&row.sPct!==undefined&&
+  Number.isFinite(lp)&&Number.isFinite(sp)&&lp>=0&&sp>=0&&lp<=100&&sp<=100&&
+  Math.abs(lp+sp-100)<=1&&Number.isFinite(age)&&age>=-300000;
+ draw();
+ if(!valid){
+  $("r-status").textContent="Myfxbook · N/D";
+  $("r-date").textContent="Nessuna percentuale affidabile per "+sym+" nell'archivio Myfxbook.";
+  $("r-updated").textContent="N/D";
+  window.dispatchEvent(new CustomEvent("remura:retail",{detail:{symbol:sym,current:null,history,status:"invalid"}}));
+  return;
+ }
+ const fresh=age<=3*3600000;
+ const count=Number(row.lPos)+Number(row.sPos);
+ const sampleKnown=row.lPos!==null&&row.lPos!==undefined&&row.sPos!==null&&row.sPos!==undefined&&Number.isFinite(count)&&count>=0;
+ const small=sampleKnown&&count<30;
+ $("r-status").textContent=small?"Myfxbook · campione piccolo":fresh?"Myfxbook · aggiornato":"Myfxbook · datato";
+ $("r-status").className="rt-tag"+(fresh&&!small?"":" warn");
+ for(const [id,text] of [
+  ["r-lp",fmt(row.lPct)+"%"],["r-sp",fmt(row.sPct)+"%"],
+  ["r-ll",fmt(row.lLots)+" lotti"],["r-sl",fmt(row.sLots)+" lotti"],
+  ["r-nl",fmt(row.lPos)],["r-ns",fmt(row.sPos)],
+  ["r-al","Prezzo medio "+fmt(row.avgL)],["r-as","Prezzo medio "+fmt(row.avgS)]
+ ])$(id).textContent=text;
+ $("r-bar-long").style.width=lp+"%";
+ $("r-bar-short").style.width=sp+"%";
+ const label=localDate(at);
+ $("r-updated").textContent=label;
+ $("r-date").textContent="Myfxbook · "+label+" (ora italiana) · "+source.name+
+  (fresh?" · Rilevazione recente.":" · Dato datato, non utilizzarlo come segnale attuale.")+
+  (small?" · Campione sotto 30 posizioni: confronto disabilitato.":"");
+ window.dispatchEvent(new CustomEvent("remura:retail",{
+  detail:{symbol:sym,current:row,history,status:"ok",fresh:fresh&&!small,source:source.name}
+ }));
+}
+window.addEventListener("resize",draw);
+price();draw();retail();
+})();
