@@ -1,0 +1,131 @@
+#intro {
+  position: fixed;
+  box-sizing: border-box;
+  width: min(100% - 1rem, 54rem);
+  max-width: none;
+  max-height: calc(100% - 1rem);
+  padding: 0;
+  overflow: auto;
+  border: 1px solid #34525c;
+  border-radius: 1rem;
+  background: #07121a;
+  color: #edf9f5;
+}
+
+#intro::backdrop {
+  background: rgb(3 11 16 / 88%);
+}
+
+#intro .intro-experience {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(11rem, 1fr) auto auto;
+  justify-items: center;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: min(36rem, 84vh);
+  min-height: min(36rem, 84svh);
+  padding: 1rem;
+  overflow: hidden;
+  isolation: isolate;
+  background: radial-gradient(ellipse at 50% 42%, #102833, #07121a 76%);
+  text-align: center;
+}
+
+#intro h2 {
+  margin: 0;
+  font-size: clamp(1.05rem, 3vw, 1.35rem);
+}
+
+#intro .intro-scene {
+  position: relative;
+  grid-area: 2 / 1;
+  align-self: stretch;
+  width: 100%;
+}
+
+#intro .intro-scene img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  object-fit: contain;
+  transition: opacity 90ms linear;
+  -webkit-mask-image: linear-gradient(transparent, #000 9%, #000 91%, transparent);
+  mask-image: linear-gradient(transparent, #000 9%, #000 91%, transparent);
+}
+
+#intro .intro-scene img.visible {
+  opacity: 1;
+}
+
+#intro .intro-flash {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 43%, #ffe5a2, #ee6a2733 45%, transparent 75%);
+}
+
+#intro[data-phase="collision"] .intro-flash {
+  animation: remura-intro-flash 450ms ease-out;
+}
+
+@keyframes remura-intro-flash {
+  from { opacity: 0.65; }
+  to { opacity: 0; }
+}
+
+#intro .intro-loading {
+  grid-area: 2 / 1;
+  margin: 0;
+  color: #a0bac0;
+}
+
+#intro .intro-credits {
+  grid-row: 3;
+  color: #edf9f5;
+}
+
+#intro .intro-credits[hidden] {
+  display: block !important;
+  visibility: hidden;
+}
+
+#intro .intro-credits img {
+  display: block;
+  margin: auto;
+  border-radius: 0.55rem;
+  background: white;
+  object-fit: contain;
+}
+
+#intro .intro-credits p {
+  max-width: 30rem;
+  margin: 0.45rem 0 0;
+  font-size: 0.875rem;
+}
+
+#intro .intro-skip {
+  z-index: 1;
+  grid-row: 4;
+  min-height: 46px;
+  padding: 0.5rem 1rem;
+  border: 1px solid #34525c;
+  border-radius: 0.75rem;
+  background: #102833;
+  color: #69edca;
+  font: inherit;
+  cursor: pointer;
+}
+
+#intro .intro-skip:focus-visible {
+  outline: 2px solid #69edca;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #intro .intro-scene img { transition: none; }
+  #intro[data-phase="collision"] .intro-flash { animation: none; }
+}
