@@ -1,0 +1,407 @@
+{
+  "schema": "remura-owner-release-candidate-v1",
+  "version": "1.84 RC1",
+  "channel": "owner-protected-only",
+  "approvedPublicUi": "aab40e57ec186c35ed7c4417174fbd9ff1d9b0f7",
+  "originalServerCommit": "5e8e4a469715d52a9be5e91206538d6fa22c48d1",
+  "originalServerBlob": "0853194762f3f0340451a69c9ed8b4e0261db42d",
+  "activationAuthorized": false,
+  "runtimeConfigPreserved": "capital-cloud-config.js",
+  "files": [
+    {
+      "path": "asset.html",
+      "gitBlob": "cfa92ffec24de6109e812a50a058b36a059b1116",
+      "bytes": 45365
+    },
+    {
+      "path": "assets/experience/frame-0.webp",
+      "gitBlob": "409b6b7c0f54558a2a2eba46c44182fa55317cec",
+      "bytes": 18532
+    },
+    {
+      "path": "assets/experience/frame-1.webp",
+      "gitBlob": "9d7818a033205f9cd5b18bd6091d9a0c461f3ef2",
+      "bytes": 21300
+    },
+    {
+      "path": "assets/experience/frame-2.webp",
+      "gitBlob": "f3cf4f123b071d97f6839ca5fb661b028fe2b8b7",
+      "bytes": 28570
+    },
+    {
+      "path": "assets/experience/frame-3.webp",
+      "gitBlob": "16a626a6f6444b244b5cc1df5db8f3b57b1c661b",
+      "bytes": 36494
+    },
+    {
+      "path": "assets/experience/frame-4.webp",
+      "gitBlob": "b7cd89f42925aeb430d3b5fdbb24c5673372c20a",
+      "bytes": 43672
+    },
+    {
+      "path": "assets/experience/frame-5.webp",
+      "gitBlob": "3019332877c7ecfff24a6bd096376e831db98014",
+      "bytes": 40654
+    },
+    {
+      "path": "assets/experience/frame-6.webp",
+      "gitBlob": "7d3dcd868ea7050409da36a679ef9cdd60e5c8d6",
+      "bytes": 42370
+    },
+    {
+      "path": "assets/experience/frame-7.webp",
+      "gitBlob": "74d1ffa29830448452f0587c61a3bc47608ac784",
+      "bytes": 20584
+    },
+    {
+      "path": "assets/experience/frame-8.webp",
+      "gitBlob": "6fcc2da254e9abfb5dd7815a5fd80c013cb5ab2a",
+      "bytes": 29704
+    },
+    {
+      "path": "assets/experience/intro.css",
+      "gitBlob": "033bf15289b5c28fb633f8576f8502a6cc0f802c",
+      "bytes": 2585
+    },
+    {
+      "path": "assets/experience/smf.webp",
+      "gitBlob": "90a3f46a8ddf2f53c65de420d7c9d24c12a98d05",
+      "bytes": 3424
+    },
+    {
+      "path": "capital-cloud.js",
+      "gitBlob": "0a7cd3e5c91fb416057eb0bab6e8d1d60f891fd1",
+      "bytes": 2588
+    },
+    {
+      "path": "case-audit-core.js",
+      "gitBlob": "29d9c9213586a328562b1a09ddf27e029e20d658",
+      "bytes": 4705
+    },
+    {
+      "path": "case-audit-ui.js",
+      "gitBlob": "58e27ae7df4bdbd0c40236c1e4200b73e6403732",
+      "bytes": 5096
+    },
+    {
+      "path": "catalogo.html",
+      "gitBlob": "2847a1ecb36ee92aa36e14444db5770f846f4978",
+      "bytes": 10210
+    },
+    {
+      "path": "collaboratori.css",
+      "gitBlob": "a97b76e9df4092c9c8919e7d8e68c51fc9750dec",
+      "bytes": 2450
+    },
+    {
+      "path": "collaboratori.html",
+      "gitBlob": "6fb31362bb1d80d03124963be8d1a583b6ac9cd1",
+      "bytes": 2107
+    },
+    {
+      "path": "cot-archive-entry.mjs",
+      "gitBlob": "06b649c8dfb60ba7aa6f7742f42f3427a471e38f",
+      "bytes": 315
+    },
+    {
+      "path": "cot-history-core.mjs",
+      "gitBlob": "fd933fa56f2deb1e6554d1aaf86aad7a22e3604a",
+      "bytes": 2717
+    },
+    {
+      "path": "cot-history.css",
+      "gitBlob": "98911aeb7146122e2ed4db95584b310aa8e9ace3",
+      "bytes": 1285
+    },
+    {
+      "path": "cot-history.mjs",
+      "gitBlob": "523b28713ce84d059b3f8242405c16ae1dedabd0",
+      "bytes": 5035
+    },
+    {
+      "path": "cot-indices-core.js",
+      "gitBlob": "b692c61de1ca7ef2d93009c36634b5641a68c201",
+      "bytes": 2015
+    },
+    {
+      "path": "cot-week-watch-core.js",
+      "gitBlob": "97efc8c06d6d83528e50d0b8b384d2aa11289275",
+      "bytes": 5737
+    },
+    {
+      "path": "cot-week-watch-ui.js",
+      "gitBlob": "bc1a3afdb58373ababcdd431b9ea4190a0a9cd4e",
+      "bytes": 7856
+    },
+    {
+      "path": "data/cot-history-public.json",
+      "gitBlob": "209bd90e1c4311d49b303c8befb57540853b8cf4",
+      "bytes": 27116
+    },
+    {
+      "path": "data/myfxbook-history.json",
+      "gitBlob": "37b12f88f69006549763d04352761b1e021085dc",
+      "bytes": 115328
+    },
+    {
+      "path": "data/myfxbook-latest.json",
+      "gitBlob": "6587c4a9ee7c60940b9afad2af28ce022d42f2e8",
+      "bytes": 12186
+    },
+    {
+      "path": "dual24-core.js",
+      "gitBlob": "b9110a4a23091e3204b5e7863d7b05bb1d1ea24b",
+      "bytes": 3390
+    },
+    {
+      "path": "dual24-ui.js",
+      "gitBlob": "553a8a2668499bb4a85df04ca165b77be2a18d56",
+      "bytes": 4054
+    },
+    {
+      "path": "experience-entry.mjs",
+      "gitBlob": "0451aa4eaf39bf18f178e723c5ab2fd61da15037",
+      "bytes": 435
+    },
+    {
+      "path": "experience.mjs",
+      "gitBlob": "8d478c04f73232bedb4b4a227cb723bdd0aea4e5",
+      "bytes": 3909
+    },
+    {
+      "path": "feed-health-core.js",
+      "gitBlob": "9137b41a701ba7604d7c3bed95dd2ec891f00d79",
+      "bytes": 1143
+    },
+    {
+      "path": "fonti.html",
+      "gitBlob": "17b6ebedf83531e070f150d29ad508c1812c0cee",
+      "bytes": 6277
+    },
+    {
+      "path": "forex.html",
+      "gitBlob": "0255c99b84b4ee6e15024b8ffdb2a042536e22d7",
+      "bytes": 43610
+    },
+    {
+      "path": "icon.svg",
+      "gitBlob": "52ed228ce69f3da5f8bbb54cc0de5cdd1cac2b6f",
+      "bytes": 697
+    },
+    {
+      "path": "impostazioni.html",
+      "gitBlob": "5cfae460540e0aa629ba81542095b00f285334fd",
+      "bytes": 13120
+    },
+    {
+      "path": "impostazioni.js",
+      "gitBlob": "de1cb44a714f36cb0734f48d1fc6a4305a44761d",
+      "bytes": 24801
+    },
+    {
+      "path": "index.html",
+      "gitBlob": "636db7dfcfd3b6df77eb80cfdeca0fc507f5f659",
+      "bytes": 17478
+    },
+    {
+      "path": "insights-core.js",
+      "gitBlob": "9e3dcb235bba772aa8eeab7427c525bdc108b18e",
+      "bytes": 17683
+    },
+    {
+      "path": "insights.css",
+      "gitBlob": "338f8c06910d5088f5d9a1181fe06dcd98f7ddf6",
+      "bytes": 3573
+    },
+    {
+      "path": "insights.js",
+      "gitBlob": "b0000e03eca9f7499918d4830ced7fcc4a02c583",
+      "bytes": 12685
+    },
+    {
+      "path": "manifest.webmanifest",
+      "gitBlob": "6d1034b749a34747cba1e8485277ce3583598f88",
+      "bytes": 424
+    },
+    {
+      "path": "market-audit-core.js",
+      "gitBlob": "c85d70ed6e019ec42b79f4d56bf1ad46470d12ac",
+      "bytes": 3853
+    },
+    {
+      "path": "market-audit-ui.js",
+      "gitBlob": "95b8b0bdb75ebbc29730ed871e0673a8b803c5c8",
+      "bytes": 4553
+    },
+    {
+      "path": "mercati.html",
+      "gitBlob": "a39d8770cd8d913fef35ecbc586c7e557a389a6e",
+      "bytes": 75228
+    },
+    {
+      "path": "nav.css",
+      "gitBlob": "8dd2d751859357b166f8a57c691a3e28920a36b7",
+      "bytes": 7425
+    },
+    {
+      "path": "nav.js",
+      "gitBlob": "5693923b63e2fd5db221ad297f50f0ac9b43a075",
+      "bytes": 11002
+    },
+    {
+      "path": "price-core.js",
+      "gitBlob": "8c6c24cd4c60a3ce219209c39209c8111a0b9a29",
+      "bytes": 10631
+    },
+    {
+      "path": "price-status-core.js",
+      "gitBlob": "bfa5f40687734961d1d37988c59f14938a847bed",
+      "bytes": 13365
+    },
+    {
+      "path": "price.css",
+      "gitBlob": "6e9104b60acaa1f4d7cf31577dad9223b14177e7",
+      "bytes": 3575
+    },
+    {
+      "path": "price.js",
+      "gitBlob": "33efbc371a30244221f1724671283390e4f94ce6",
+      "bytes": 14286
+    },
+    {
+      "path": "resource-health.css",
+      "gitBlob": "8962d1dfab25a66c7f8aac9be7414229b38acd9c",
+      "bytes": 3949
+    },
+    {
+      "path": "resource-health.js",
+      "gitBlob": "7f088282f33edf275e47d2fe674a70ab2f1a4a92",
+      "bytes": 2978
+    },
+    {
+      "path": "retail-archive-core.mjs",
+      "gitBlob": "4a9502b98797cb497ed115ae27b237a84a308c90",
+      "bytes": 1218
+    },
+    {
+      "path": "retail-archive-entry.mjs",
+      "gitBlob": "c8104f56fbf62790a3d5caf7f1b7bf6a2fd19976",
+      "bytes": 338
+    },
+    {
+      "path": "retail-archive.css",
+      "gitBlob": "47179dbc4000a214c8f0ae8cd55c51aea5478a62",
+      "bytes": 356
+    },
+    {
+      "path": "retail-archive.mjs",
+      "gitBlob": "a0d62febcbc65e726daeafcf79def837037e732f",
+      "bytes": 3678
+    },
+    {
+      "path": "retail.css",
+      "gitBlob": "03d92c20d08c25e363b516587d8b4cb0fc5e0e3e",
+      "bytes": 6405
+    },
+    {
+      "path": "retail.js",
+      "gitBlob": "679992eb06c16022f4034cc13b0a784af858f462",
+      "bytes": 12943
+    },
+    {
+      "path": "sentiment-core.js",
+      "gitBlob": "14dc0b453ca658b3399af5a483076bc7517307ea",
+      "bytes": 4124
+    },
+    {
+      "path": "sentiment-trend-core.js",
+      "gitBlob": "96fcac4a47555b43ebaf8509be18eba9b1125a6c",
+      "bytes": 4587
+    },
+    {
+      "path": "sentiment-trend.css",
+      "gitBlob": "3737ae5b1fe37fe211b214178e2e045d037a8368",
+      "bytes": 2291
+    },
+    {
+      "path": "sentiment-trend.js",
+      "gitBlob": "a8b0a4adf5680197072ce7cbbde7672249eec0a0",
+      "bytes": 5702
+    },
+    {
+      "path": "sources.css",
+      "gitBlob": "fe4cc6227feb29c9608ff8232f4642f24672f322",
+      "bytes": 5705
+    },
+    {
+      "path": "sources.js",
+      "gitBlob": "cdc8ace3174baf790a91cb385ef2deefa5b14178",
+      "bytes": 17467
+    },
+    {
+      "path": "splash-mascot.webp",
+      "gitBlob": "60433776bf6a94d2b342023446dc62a409f58962",
+      "bytes": 4746
+    },
+    {
+      "path": "splash.css",
+      "gitBlob": "54a847194847c88c0eca12824f860574e4909aaa",
+      "bytes": 3177
+    },
+    {
+      "path": "splash.js",
+      "gitBlob": "9484df12d5ff9e3b538f5fc513d013d7c641b470",
+      "bytes": 7634
+    },
+    {
+      "path": "squalincome-diagnostics.js",
+      "gitBlob": "4c78bf1dae17a19fb2fc87748b910c3e1ae3a2c2",
+      "bytes": 29410
+    },
+    {
+      "path": "squalincome-freshness-core.js",
+      "gitBlob": "6f77d1ef0012e3fe9a80780e3fbb1290a6ff8e3d",
+      "bytes": 5205
+    },
+    {
+      "path": "statistica-squali-core.js",
+      "gitBlob": "8a4f77a02b93520d2a7be86c91acb92f1f70d124",
+      "bytes": 3415
+    },
+    {
+      "path": "statistica-squali.html",
+      "gitBlob": "4cd8ca9420f95deaa916fa5853d9fae697f0ad0a",
+      "bytes": 16117
+    },
+    {
+      "path": "statistica-squali.js",
+      "gitBlob": "3b69ed485dc89f261164bb881f3b8ba179ee7cef",
+      "bytes": 8017
+    },
+    {
+      "path": "stato-prezzi.html",
+      "gitBlob": "193211906f303db1b8ef9e6c1af4e30e01b6ce4c",
+      "bytes": 16832
+    },
+    {
+      "path": "stato-prezzi.js",
+      "gitBlob": "f262b3a9cc8a6a802bac6bd025bd13c942df87c5",
+      "bytes": 22480
+    },
+    {
+      "path": "sw.js",
+      "gitBlob": "38c54a407979cce81053746a2c7da43456e146d5",
+      "bytes": 2798
+    },
+    {
+      "path": "weekly-quality-core.js",
+      "gitBlob": "3d0df46951eb8e34a1bfae6156fa99a0a020f17f",
+      "bytes": 4086
+    },
+    {
+      "path": "weekly-quality-ui.js",
+      "gitBlob": "7ba08ce87eadf4c7977598935685d01b633edcd6",
+      "bytes": 4185
+    }
+  ]
+}
