@@ -1,5 +1,5 @@
 /*
   Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'self'; manifest-src 'self'; frame-ancestors 'none'
-  Referrer-Policy: no-referrer
+  Referrer-Policy: same-origin
   X-Content-Type-Options: nosniff
   X-Robots-Tag: noindex, nofollow

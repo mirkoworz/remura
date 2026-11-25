@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="it">
-<head>
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'self'; manifest-src 'self'"><script src="./preview-network-guard.js"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#09141d">
@@ -141,7 +141,7 @@ html{scroll-behavior:smooth}
 <link rel="stylesheet" href="./retail.css?v=14">
 <link rel="stylesheet" href="./sentiment-trend.css?v=2">
 <link rel="stylesheet" href="./sources.css?v=15">
-</head>
+<link rel="stylesheet" href="./cot-history.css"><script type="module" src="./cot-archive-entry.mjs"></script><link rel="stylesheet" href="./retail-archive.css"><script type="module" src="./retail-archive-entry.mjs"></script></head>
 <body>
 <div class="shell">
 <header class="top"><div class="brand">REMURA<small>38 mercati · COT, sentiment e prezzi</small></div><div class="topright"><a class="btn" href="./index.html">Home</a><a class="btn" id="category-back" href="./catalogo.html?categoria=forex&v=8">Categoria</a><a class="btn" href="./mercati.html#institutional-scanner">Radar Squali</a><span class="status" id="state">Connessione…</span><button class="btn" id="refresh" type="button" aria-label="Aggiorna i dati">↻</button></div></header>
@@ -149,7 +149,7 @@ html{scroll-behavior:smooth}
 <h1 id="heading">Gold <span>XAUUSD</span></h1>
 <p class="subtitle" id="description">COT ufficiale, posizioni dei trader retail e prezzo: tre dati diversi, spiegati separatamente.</p>
 <div class="alert" id="alert">Carico i dati ufficiali CFTC. Se la fonte non risponde, mostrerò N/D senza inventare alcun valore.</div>
-<nav class="rem-jump" aria-label="Vai alle sezioni della scheda"><a href="#squalo-verdict">Verdetto Squalo</a><a href="#rm-insights">In sintesi</a><a href="#cot-overview">COT istituzionale</a><a href="#cot-indices">COT Index / Gap</a><a href="#remura-sentiment-momentum">Evoluzione sentiment</a><a href="#retail-module">Myfxbook</a><a href="#remura-capital">Capital.com</a><a href="#remura-tradingview">Prezzo</a><a href="#remura-advanced">Approfondimenti</a></nav>
+<nav class="rem-jump" aria-label="Vai alle sezioni della scheda"><a href="#squalo-verdict">Verdetto Squalo</a><a href="#rm-insights">In sintesi</a><a href="#cot-overview">COT istituzionale</a><a href="#cot-indices">COT Index / Gap</a><a href="#cot-archive-history">Storico verificato</a><a href="#remura-sentiment-momentum">Evoluzione sentiment</a><a href="#retail-module">Myfxbook</a><a href="#remura-capital">Capital.com</a><a href="#remura-tradingview">Prezzo</a><a href="#remura-advanced">Approfondimenti</a></nav>
 <div class="layout">
 <section class="panel overview sv-panel" id="squalo-verdict" aria-labelledby="sv-title" data-state="incomplete">
  <div class="sv-head"><div class="eyebrow">REMURA · VERDETTO SQUALO · 5 FONTI</div><small>Analisi descrittiva · nessun ordine</small></div>
@@ -173,6 +173,7 @@ html{scroll-behavior:smooth}
 <div class="cot-index-tile"><small id="cot-name-b">Categoria 2 · COT Index</small><strong id="cot-index-b">—</strong><div class="cot-index-bar"><i id="cot-bar-b"></i></div><small>Posizione relativa del netto/OI</small></div>
 <div class="cot-index-tile"><small>Gap Index · distanza con segno</small><strong id="cot-index-gap">—</strong><div class="cot-index-bar"><i id="cot-bar-gap"></i></div><small id="cot-gap-value">Gap: —</small></div>
 </div><h3>Gap storico tra categorie</h3><div class="chart" id="cot-gap-chart">In attesa dei report…</div><p class="headnote" id="cot-index-note">Gli indici confrontano i netti normalizzati nel periodo scelto; 0 e 100 sono estremi relativi, non probabilità né segnali operativi.</p></section>
+<section class="panel overview" id="cot-archive-history" aria-labelledby="cot-archive-title"><div class="eyebrow">01C · ARCHIVIO CFTC OFFLINE</div><h2 id="cot-archive-title">Storico istituzionale verificato</h2><p>Archivio separato dai dati operativi della scheda. Report fino al 17 novembre 2026; non è un aggiornamento live.</p><div id="cot-history-content"><p role="status">Caricamento archivio…</p></div></section>
 <section class="panel overview" id="retail-module" aria-labelledby="rem-myfx-title">
 <div class="rt-head"><div><div class="eyebrow">02 · SENTIMENT RETAIL · FONTE 1 DI 2</div><h2 id="rem-myfx-title">Myfxbook · cosa fanno i trader retail</h2><p class="rt-sub">Qui vedi <strong>quanti lotti</strong> sono long o short fra i conti della community Myfxbook. Sotto trovi anche il numero delle posizioni e lo storico delle rilevazioni realmente raccolte.</p></div><span id="r-status" class="rt-tag warn">Myfxbook da attivare</span></div>
 <div class="rt-summary">
@@ -196,6 +197,7 @@ html{scroll-behavior:smooth}
 <div id="r-chart" class="rt-lots-plot"></div><p class="rt-disclaimer">Ogni puntino è una rilevazione Myfxbook realmente archiviata. Le bande uniscono visivamente i campioni: i tratti tratteggiati indicano più di 75 minuti senza osservazioni intermedie, non nuovi valori misurati. GitHub richiede una raccolta ogni 20 minuti, ma la frequenza effettiva può essere inferiore. Nessuna barra M1/M5 viene inventata.</p></div>
 <div class="rt-section"><h3>Ultima rilevazione</h3><div class="rt-line"><span>Myfxbook Community Outlook</span><b id="r-updated">Non collegato</b></div>
 <p class="rt-disclaimer">Myfxbook mostra soltanto gli account della propria community, non la totalità del Forex. <a id="r-myfxbook" rel="noopener noreferrer" target="_blank">Verifica su Myfxbook ↗</a></p></div>
+<div class="rt-section" id="remura-retail-archive"><h3>Archivio consolidato Myfxbook · offline</h3><p class="rt-disclaimer">Snapshot archiviato, separato dal feed corrente. Percentuali dei lotti della community; non posizioni istituzionali.</p><div id="retail-archive-content" aria-live="polite"><p>Caricamento archivio…</p></div></div>
 </section>
 <section class="panel overview rem-price-panel" id="remura-tradingview" aria-labelledby="rem-price-title">
 <div class="eyebrow">04 · PREZZO · GRAFICO DI MERCATO</div>

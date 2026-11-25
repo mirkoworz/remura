@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="it">
-<head>
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'self'; manifest-src 'self'"><script src="./preview-network-guard.js"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#09141d">
@@ -213,6 +213,7 @@
 <div class="counter"><div><strong id="total-count">—</strong> strumenti nella lista</div><div><strong id="loaded-count">—</strong> con dati ufficiali · <span id="report-date">in attesa</span></div></div>
 
 <section class="panel scan-panel" id="institutional-scanner">
+<p class="note" id="squal-source-contract">Squalincome: la disponibilità operativa dipende dal report di scansione del server privato; gli archivi pubblici COT e retail non sostituiscono i segnali live.</p>
 <div class="scan-header"><div><div class="eyebrow">REMURA · RADAR SQUALI · SQUALINCOME</div><h2>Dove si stanno riposizionando i grandi?</h2><p class="scan-description">Scanner gratuito dei cambiamenti nel posizionamento istituzionale COT settimanale sui mercati con dati validi. Myfxbook e Capital.com restano indicatori retail, analizzati nelle singole schede. Inversione significa cambio del segno della posizione netta, non inversione del prezzo.</p></div><span class="scan-count" id="scan-count">In attesa della CFTC</span></div>
 <div class="tabs scan-controls" aria-label="Filtra i movimenti istituzionali"><button class="tab active" data-scan="moves">Movimenti maggiori</button><button class="tab" data-scan="reversals">Cambi net long/short</button><button class="tab" data-scan="accelerations">Accelerazioni</button><button class="tab" data-scan="slowdowns">Rallentamenti</button><button class="tab" data-scan="extremes">Estremi COT 52s</button></div>
 <div class="scan-results" id="scan-results" aria-live="polite"><div class="scan-empty">Connessione in corso…</div></div>
