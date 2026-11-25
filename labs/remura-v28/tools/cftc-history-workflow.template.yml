@@ -1,0 +1,50 @@
+# MANUAL TEMPLATE ONLY — not in .github/workflows; registration gated separately.
+name: REMURA CFTC 53-week public archive (manual once)
+on:
+  workflow_dispatch:
+    inputs:
+      consent:
+        description: "Authorized single acquisition, maximum two HTTPS GETs, no retries"
+        required: true
+        type: choice
+        options:
+          - ALLOW_2_PUBLIC_CFTC_HISTORY_GETS_NO_PRIVATE_DATA
+      free_storage_verified:
+        description: "Owner has verified free artifact allowance before starting"
+        required: true
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: remura-cftc-53-week-one-shot
+  cancel-in-progress: false
+jobs:
+  archive:
+    if: github.run_attempt == 1 && inputs.free_storage_verified && inputs.consent == 'ALLOW_2_PUBLIC_CFTC_HISTORY_GETS_NO_PRIVATE_DATA' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 6f10e6914c6816f6d0df28596474463a98ed1c8e
+          persist-credentials: false
+      - name: Check Node and offline parser
+        run: |
+          node --version
+          node --check labs/remura-v28/tools/acquire-cot-history-once.mjs
+          node --test labs/remura-v28/tests/cot-history-core.test.mjs
+      - name: Acquire official public CFTC data once
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p public-cftc
+          node labs/remura-v28/tools/acquire-cot-history-once.mjs ALLOW_2_PUBLIC_CFTC_HISTORY_GETS_NO_PRIVATE_DATA > public-cftc/history.json
+          test -s public-cftc/history.json
+          (cd public-cftc && sha256sum history.json > SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: remura-cftc-53-week-once
+          path: public-cftc/
+          retention-days: 1
+          if-no-files-found: error
