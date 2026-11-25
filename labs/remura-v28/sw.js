@@ -1,11 +1,13 @@
 const root = new URL(self.registration.scope);
 const cachePrefix = 'remura-lab:' + encodeURIComponent(root.href) + ':';
-const releaseCache = cachePrefix + 'v1.81';
+const releaseCache = cachePrefix + 'v1.82';
 const indexPath = new URL('index.html', root).pathname;
 const releaseFiles = [
   'app.mjs',
   'experience.mjs',
   'markets.mjs',
+  'cot-history.mjs',
+  'cot-history-core.mjs',
   'retail-history.mjs',
   'pwa.mjs',
   'remura.css',
@@ -17,6 +19,7 @@ const releaseFiles = [
   'assets/experience/smf.webp',
   ...Array.from({ length: 9 }, (_, index) => `assets/experience/frame-${index}.webp`),
   'data/cot-b223.json',
+  'data/cot-history-public.json',
   'data/myfxbook-latest.json',
   'data/myfxbook-history.json',
 ];

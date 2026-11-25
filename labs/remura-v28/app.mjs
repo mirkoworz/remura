@@ -1,6 +1,7 @@
 import { mountExperience } from './experience.mjs';
 import { mountMarkets } from './markets.mjs';
 import { mountRetailHistory } from './retail-history.mjs';
+import { mountCotHistory } from './cot-history.mjs';
 import { mountPwa } from './pwa.mjs';
 
 const links = [...document.querySelectorAll('.main-nav a')];
@@ -30,5 +31,6 @@ document.querySelector('.skip-link').addEventListener('click', event => {
 
 mountExperience(document.querySelector('#play-intro'));
 mountMarkets(document.querySelector('#cot-content'), document.querySelector('#retail-content'));
+mountCotHistory(document.querySelector('#cot-history-content'));
 mountRetailHistory(document.querySelector('#retail-history'));
 mountPwa(document.querySelector('#pwa-status'));

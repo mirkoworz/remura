@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#07121A">
   <meta name="robots" content="noindex">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
-  <title>REMURA v1.81 LAB · Shark Cockpit</title>
+  <title>REMURA v1.82 LAB · Shark Cockpit</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/app-icon-180.png">
   <link rel="stylesheet" href="remura.css">
@@ -20,8 +20,8 @@
     <div class="site-header-inner">
       <div class="masthead">
         <a href="#home" class="wordmark">REMURA</a>
-        <p class="build">v1.81 LAB <span aria-hidden="true">·</span>
-          <time datetime="2026-11-25T06:51:47+01:00">25/11/2026 alle 06:51 CET</time>
+        <p class="build">v1.82 LAB <span aria-hidden="true">·</span>
+          <time datetime="2026-11-25T09:47:05+01:00">25/11/2026 alle 09:47 CET</time>
           <span class="timezone">Europe/Rome</span>
         </p>
       </div>
@@ -52,11 +52,11 @@
         <a class="panel summary-card" href="#cockpit">
           <span class="summary-label">COT CFTC</span>
           <strong>17 novembre</strong>
-          <span>Ultimo report nell’archivio a due date</span>
+          <span>53 report settimanali · Indici COT</span>
         </a>
         <a class="panel summary-card" href="#mercati">
           <span class="summary-label">Myfxbook</span>
-          <strong>24 novembre</strong>
+          <strong>25 novembre</strong>
           <span>Campione retail archiviato</span>
         </a>
         <a class="panel summary-card" href="#validazione">
@@ -73,6 +73,7 @@
         <h1 id="cockpit-title" tabindex="-1">Shark Cockpit</h1>
         <p>Posizionamento e variazioni settimanali di valute, indici, metalli ed energia. Le coppie Forex sono calcolate a partire dai fattori futures.</p>
       </div>
+      <article class="panel content-panel" aria-labelledby="cot-history-title"><h2 id="cot-history-title">Storico istituzionale · 52 settimane</h2><div id="cot-history-content"><p class="notice" role="status">Caricamento storico COT…</p></div></article>
       <div id="cot-content"><p class="notice" role="status">Caricamento archivio COT…</p></div>
     </section>
 
@@ -150,7 +151,7 @@
       <div class="source-grid">
         <article class="panel content-panel">
           <h2>CFTC</h2>
-          <dl><dt>Report</dt><dd>10 e 17 novembre 2026</dd><dt>Acquisizione</dt><dd>24/11/2026 alle 10:05 CET</dd><dt>Riscontro archivio</dt><dd>42/42 elementi del pacchetto B</dd><dt>Storico 52 settimane</dt><dd>N/D</dd></dl>
+          <dl><dt>Report</dt><dd>10 e 17 novembre 2026</dd><dt>Acquisizione</dt><dd>24/11/2026 alle 10:05 CET</dd><dt>Riscontro archivio</dt><dd>42/42 elementi del pacchetto B</dd><dt>Storico 52 settimane</dt><dd>53 report, 742 righe, 14 contratti; 28 cross sintetici</dd></dl>
           <p class="muted">Disponibilità storica e parità con la sorgente privata da attestare.</p>
         </article>
         <article class="panel content-panel">
@@ -160,7 +161,7 @@
         </article>
         <article class="panel content-panel">
           <h2>Squalincome e Ampere</h2>
-          <p>Viste operative in attesa di un archivio verificato disponibile per il LAB. Le misure restano N/D.</p>
+          <p>Squalincome: dati operativi in attesa di fonte verificata. Ampere: radar di capacità Oracle, separato dai segnali finanziari. Misure N/D nel pacchetto pubblico.</p>
         </article>
         <article class="panel content-panel">
           <h2>Flusso Contributor e desk OWNER</h2>

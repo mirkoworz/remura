@@ -227,7 +227,7 @@ function renderCot(snapshot) {
     element("p",
       "Il netto è una quota dell’open interest e il suo Δ settimanale è in punti percentuali (pp). " +
       "L’open interest è espresso in contratti. " +
-      "L’estratto contiene due settimane. Indice a 52 settimane N/D.",
+      "Questa tabella confronta gli ultimi due report; gli indici a 52 settimane sono nella sezione storico istituzionale sopra.",
       "muted"),
     ...filterGroups("Cerca per simbolo, valuta o codice CFTC", groups, "righe COT"),
   ];
