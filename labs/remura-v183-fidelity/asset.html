@@ -141,7 +141,7 @@ html{scroll-behavior:smooth}
 <link rel="stylesheet" href="./retail.css?v=14">
 <link rel="stylesheet" href="./sentiment-trend.css?v=2">
 <link rel="stylesheet" href="./sources.css?v=15">
-<link rel="stylesheet" href="./cot-history.css"><script type="module" src="./cot-archive-entry.mjs"></script></head>
+<link rel="stylesheet" href="./cot-history.css"><script type="module" src="./cot-archive-entry.mjs"></script><link rel="stylesheet" href="./retail-archive.css"><script type="module" src="./retail-archive-entry.mjs"></script></head>
 <body>
 <div class="shell">
 <header class="top"><div class="brand">REMURA<small>38 mercati · COT, sentiment e prezzi</small></div><div class="topright"><a class="btn" href="./index.html">Home</a><a class="btn" id="category-back" href="./catalogo.html?categoria=forex&v=8">Categoria</a><a class="btn" href="./mercati.html#institutional-scanner">Radar Squali</a><span class="status" id="state">Connessione…</span><button class="btn" id="refresh" type="button" aria-label="Aggiorna i dati">↻</button></div></header>
@@ -197,6 +197,7 @@ html{scroll-behavior:smooth}
 <div id="r-chart" class="rt-lots-plot"></div><p class="rt-disclaimer">Ogni puntino è una rilevazione Myfxbook realmente archiviata. Le bande uniscono visivamente i campioni: i tratti tratteggiati indicano più di 75 minuti senza osservazioni intermedie, non nuovi valori misurati. GitHub richiede una raccolta ogni 20 minuti, ma la frequenza effettiva può essere inferiore. Nessuna barra M1/M5 viene inventata.</p></div>
 <div class="rt-section"><h3>Ultima rilevazione</h3><div class="rt-line"><span>Myfxbook Community Outlook</span><b id="r-updated">Non collegato</b></div>
 <p class="rt-disclaimer">Myfxbook mostra soltanto gli account della propria community, non la totalità del Forex. <a id="r-myfxbook" rel="noopener noreferrer" target="_blank">Verifica su Myfxbook ↗</a></p></div>
+<div class="rt-section" id="remura-retail-archive"><h3>Archivio consolidato Myfxbook · offline</h3><p class="rt-disclaimer">Snapshot archiviato, separato dal feed corrente. Percentuali dei lotti della community; non posizioni istituzionali.</p><div id="retail-archive-content" aria-live="polite"><p>Caricamento archivio…</p></div></div>
 </section>
 <section class="panel overview rem-price-panel" id="remura-tradingview" aria-labelledby="rem-price-title">
 <div class="eyebrow">04 · PREZZO · GRAFICO DI MERCATO</div>

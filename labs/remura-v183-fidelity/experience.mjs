@@ -36,10 +36,13 @@ export function mountExperience(trigger = document.getElementById("play-intro"))
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
   let playback = 0;
   let timer;
+  let failSafe;
+  let returnFocus = true;
 
   function stop() {
     playback++;
     clearTimeout(timer);
+    clearTimeout(failSafe);
   }
 
   function showFrame(images, index, run) {
@@ -56,9 +59,10 @@ export function mountExperience(trigger = document.getElementById("play-intro"))
     }, durations[index]);
   }
 
-  async function open() {
+  async function open({auto=false}={}) {
     if (dialog.open) return;
 
+    returnFocus = !auto;
     const run = ++playback;
     const staticView = reducedMotion.matches;
     const images = (staticView ? frames.slice(-1) : frames).map((path) => {
@@ -74,6 +78,7 @@ export function mountExperience(trigger = document.getElementById("play-intro"))
     loading.textContent = "Caricamento introduzione…";
     skip.textContent = staticView ? "Chiudi introduzione" : "Salta introduzione";
     dialog.showModal();
+    failSafe=setTimeout(()=>{if(dialog.open && run===playback)dialog.close();},12000);
     skip.focus();
 
     try {
@@ -89,6 +94,7 @@ export function mountExperience(trigger = document.getElementById("play-intro"))
       dialog.dataset.phase = "reveal";
       images[0].classList.add("visible");
       credits.hidden = false;
+      clearTimeout(failSafe);
       return;
     }
 
@@ -101,11 +107,12 @@ export function mountExperience(trigger = document.getElementById("play-intro"))
   dialog.addEventListener("close", () => {
     if (dialog.open) return;
     stop();
-    trigger.focus();
+    if(returnFocus)trigger.focus();
   });
   reducedMotion.addEventListener("change", () => {
     if (dialog.open && reducedMotion.matches) dialog.close();
   });
-  trigger.addEventListener("click", open);
+  trigger.addEventListener("click", () => open());
   trigger.hidden = false;
+  return {open};
 }
