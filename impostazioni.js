@@ -8,6 +8,12 @@ const feedHealth=window.REMURA_FEED_HEALTH;
 const symbols=window.REMURA_MARKETS?.symbols||[];
 const localKey="remura:capital:demo:v1";
 const status=(id,message,type="")=>{const e=$(id);if(!e)return;e.textContent=message;e.dataset.status=type;};
+if(window.REMURA_PREVIEW_ISOLATED){
+ for(const id of ["google-status","private-status","public-status","autoupdate-status","ctrader-status","import-status"])status(id,"Non collegato in modalità preview.","");
+ for(const id of ["google-detail","autoupdate-detail","ctrader-detail"])if($(id))$(id).textContent="Disponibile solo nella REMURA operativa autorizzata.";
+ for(const id of ["google-connect","google-disconnect","google-check","check-feeds","check-autoupdate","check-ctrader","upload-latest","upload-history","upload-symbol","clear-local"])if($(id))$(id).disabled=true;
+ return;
+}
 function buttons(connected){
  $("google-connect").hidden=!cloud?.enabled||connected;
  $("google-disconnect").hidden=!cloud?.enabled||!connected;
@@ -360,5 +366,9 @@ async function refresh(){
  }finally{busy=false;$("obs-refresh").disabled=false;$("obs-loading").textContent="Sola lettura · nessuna chiamata ai broker.";}
 }
 $("obs-refresh").addEventListener("click",refresh);
-refresh();
+if(window.REMURA_PREVIEW_ISOLATED){
+ const d=report({},Date.now());d.rows=d.rows.map(c=>({...c,state:"unknown",data:"unknown",usage:"unknown",value:"N/D",detail:"Non collegato in modalità preview."}));d.dataTotals={ok:0,closed:0,attention:0,unknown:d.rows.length};render(d);
+ $("obs-summary").dataset.status="";$("obs-summary").textContent="Modalità preview · VPS non interrogata. Nessuna diagnosi di guasto.";
+ $("obs-sampled").textContent="Ultima verifica VPS: N/D";$("obs-refresh").disabled=true;$("obs-loading").textContent="Diagnosi operative disponibili solo nella REMURA privata.";
+}else refresh();
 })();

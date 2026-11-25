@@ -48,3 +48,20 @@
 /* Update marker stays above every page, clear of the mobile menu button. */
 #rm-release{box-sizing:border-box;position:relative;z-index:101;display:block;width:100%;min-height:23px;padding:4px 10px 4px 70px;background:#102c35;border-bottom:1px solid #39655d;color:#b9f8df;text-align:center;font:700 10px/1.4 system-ui,-apple-system,sans-serif;letter-spacing:.02em}
 @media(max-width:560px){#rm-release{font-size:9px;line-height:1.5;padding-left:65px;padding-right:5px}}
+
+/* v1.83.1 preview: dedicated toolbar, not a floating button above cards. */
+html{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px))}
+#rm-release{position:sticky;top:0;z-index:104;display:flex;align-items:center;gap:12px;min-height:58px;padding:calc(6px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 6px max(12px,env(safe-area-inset-left,0px));background:#102c35;box-shadow:0 2px 10px #0004;text-align:left}
+#rm-release .rm-release-text{flex:1;min-width:0;font:700 11px/1.45 system-ui,-apple-system,sans-serif;overflow-wrap:anywhere}
+#rm-menu-trigger,#rm-close{box-sizing:border-box;position:static;display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;min-width:44px;min-height:44px;max-width:44px;padding:0;margin:0;border:1px solid #3e7778;border-radius:12px;color:#8cf3d9;background:#17353e;box-shadow:none;line-height:1;appearance:none;transform:none;opacity:1}
+#rm-menu-trigger svg,#rm-close svg{display:block;flex:none;width:23px;height:23px;pointer-events:none}
+#rm-menu{box-sizing:border-box;max-width:100%;padding-top:calc(12px + env(safe-area-inset-top,0px));padding-left:max(15px,env(safe-area-inset-left,0px));overflow:hidden}
+#rm-menu .rm-header{flex:none;min-height:56px;gap:10px}#rm-menu .rm-brand{min-width:0;overflow-wrap:anywhere}#rm-menu .rm-nav{min-height:0}#rm-menu .rm-footer{flex:none}
+.rm-menu-open #rm-release{pointer-events:none}
+.rm-has-nav .shell>.top,.rm-has-nav main>.topbar{padding-left:0}
+#rm-preview-notice{margin:0;padding:9px 16px;background:#17353e;color:#d5e9e5;font:12px/1.5 system-ui,-apple-system,sans-serif;text-align:center}
+body.rm-has-nav :is(button:not(#rm-menu-trigger):not(#rm-close),a.btn,a.cta,a.button,a.back){box-sizing:border-box;min-height:44px;border-radius:11px;touch-action:manipulation}
+body.rm-has-nav :is(a.btn,a.cta,a.button,a.back){display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+body.rm-has-nav button:disabled{opacity:.7;cursor:not-allowed;box-shadow:none}
+body.rm-has-nav :is(button,a,select,input):focus-visible{outline:2px solid #69edca;outline-offset:3px}
+@media(max-width:360px){#rm-release{gap:8px}#rm-release .rm-release-text{font-size:10px}}

@@ -8,6 +8,7 @@
   const area=document.getElementById('stat-data');
   const refresh=document.getElementById('stat-refresh');
   const buttons=[...document.querySelectorAll('[data-horizon]')];
+  if(window.REMURA_PREVIEW_ISOLATED){status.dataset.state="";status.textContent="Modalità preview · risultati statistici privati non collegati. Nessuna statistica stimata.";refresh.disabled=true;area.hidden=true;return;}
   let model=null, horizon=1, pending=false;
 
   function node(tag,css,text){
@@ -162,7 +163,7 @@
       area.hidden=true;
       status.dataset.state='error';
       status.textContent='Verifica statistica non disponibile o non compatibile. '+
-        'La v1.40 potrebbe non essere ancora installata: nessuna statistica stimata.';
+        'Verificare la sorgente privata: nessuna statistica stimata.';
     }finally{
       pending=false;
       refresh.disabled=false;

@@ -36,6 +36,7 @@ async function refresh(){
   const st=$("res-status");st.dataset.status="";st.textContent="N/D: metriche disponibili solo dalla REMURA privata via Tailscale, dopo l’aggiornamento del server.";
  }finally{btn.disabled=false;}
 }
+if(window.REMURA_PREVIEW_ISOLATED){$("res-refresh").disabled=true;put("res-status","Non collegato in modalità preview · metriche VPS N/D.");return;}
 $("res-refresh")?.addEventListener("click",refresh);
 refresh();
 setInterval(()=>{if(document.visibilityState==="visible")refresh();},30000);

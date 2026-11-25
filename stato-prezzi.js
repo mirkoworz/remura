@@ -201,6 +201,7 @@ function renderQuality(overview){
 }
 
 async function refresh(){
+ if(window.REMURA_PREVIEW_ISOLATED){$("price-refresh").disabled=true;$("price-message").dataset.error="false";$("price-message").textContent="Non collegato in modalità preview · prezzi privati N/D.";$("price-total").textContent=String(config.symbols.length);$("price-last-run").textContent="Collector non interrogato.";$("price-missing-summary").textContent="Disponibilità storica non verificata in preview.";$("price-quality-summary").textContent="Qualità dei prezzi non attestata in preview.";return;}
  if(loading)return;
  loading=true;
  $("price-refresh").disabled=true;
@@ -378,6 +379,7 @@ async function compareMarket(){
 }
 async function refreshMacro(){
  const button=$("macro-refresh"),status=$("macro-status");
+ if(window.REMURA_PREVIEW_ISOLATED){button.disabled=true;$("macro-check").disabled=true;$("macro-symbol").disabled=true;status.dataset.error="false";status.textContent="Modalità preview · dati DXY e VIX privati non collegati.";const box=$("macro-markets");box.replaceChildren();for(const info of MACRO){const card=elt("article","market");card.append(elt("strong",null,info.name),elt("p","foot",info.note),elt("p","foot","Storico N/D · non interrogato in preview."));box.append(card);}$("macro-context").textContent="Contesto N/D · nessuna serie privata acquisita.";return;}
  button.disabled=true;status.dataset.error="false";
  status.textContent="Verifico USDX e VIX sul server privato…";
  for(const k of Object.keys(docs))delete docs[k];
