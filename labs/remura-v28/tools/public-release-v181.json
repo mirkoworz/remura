@@ -1,0 +1,189 @@
+{
+  "schema": "remura-public-release-v1",
+  "version": "v1.81",
+  "commit": "4119b5384e875b682d78565a3cc7144e925464cd",
+  "files": [
+    {
+      "path": "index.html",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f265d18280559b774c4eb02b52a72a35d39acfd1",
+      "size": 10271
+    },
+    {
+      "path": "app.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "aaa07b034e313ad68810d6ce8510ce624d56fb1e",
+      "size": 1318
+    },
+    {
+      "path": "experience.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9664bb4d7883cb669c3116e1a58c71a8f147fed7",
+      "size": 3642
+    },
+    {
+      "path": "markets.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b7ed827117bd94e410e7b7b0125135e79efb7019",
+      "size": 11110
+    },
+    {
+      "path": "retail-history.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "15a14476d836543e0d88ac8fba0f5e1a9f5f4677",
+      "size": 6463
+    },
+    {
+      "path": "pwa.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0537a13bacb1ed381a42ffecd01aa9154f580e5e",
+      "size": 2192
+    },
+    {
+      "path": "remura.css",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "91c357224ac4580804f518fe79c376357243863e",
+      "size": 7697
+    },
+    {
+      "path": "manifest.webmanifest",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "adb3f7b9ece787d1187ca110a4788ce2e7ada1f9",
+      "size": 531
+    },
+    {
+      "path": "sw.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6ee8d3dd117273f6a8984fd2d580a96369d8de88",
+      "size": 2201
+    },
+    {
+      "path": "assets/app-icon-180.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d7c50e7ed2e986d7737882315077478188ba843b",
+      "size": 10304
+    },
+    {
+      "path": "assets/app-icon-192.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "32ba5814371bb21f2f58747469fe140e17cbdaa1",
+      "size": 10992
+    },
+    {
+      "path": "assets/app-icon-512.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1dcada21261449dfc91fdf2e7b942e463aa4b0df",
+      "size": 34248
+    },
+    {
+      "path": "assets/experience/intro.css",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "033bf15289b5c28fb633f8576f8502a6cc0f802c",
+      "size": 2585
+    },
+    {
+      "path": "assets/experience/smf.webp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "90a3f46a8ddf2f53c65de420d7c9d24c12a98d05",
+      "size": 3424
+    },
+    {
+      "path": "assets/experience/frame-0.webp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "409b6b7c0f54558a2a2eba46c44182fa55317cec",
+      "size": 18532
+    },
+    {
+      "path": "assets/experience/frame-1.webp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9d7818a033205f9cd5b18bd6091d9a0c461f3ef2",
+      "size": 21300
+    },
+    {
+      "path": "assets/experience/frame-2.webp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f3cf4f123b071d97f6839ca5fb661b028fe2b8b7",
+      "size": 28570
+    },
+    {
+      "path": "assets/experience/frame-3.webp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "16a626a6f6444b244b5cc1df5db8f3b57b1c661b",
+      "size": 36494
+    },
+    {
+      "path": "assets/experience/frame-4.webp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b7cd89f42925aeb430d3b5fdbb24c5673372c20a",
+      "size": 43672
+    },
+    {
+      "path": "assets/experience/frame-5.webp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3019332877c7ecfff24a6bd096376e831db98014",
+      "size": 40654
+    },
+    {
+      "path": "assets/experience/frame-6.webp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7d3dcd868ea7050409da36a679ef9cdd60e5c8d6",
+      "size": 42370
+    },
+    {
+      "path": "assets/experience/frame-7.webp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "74d1ffa29830448452f0587c61a3bc47608ac784",
+      "size": 20584
+    },
+    {
+      "path": "assets/experience/frame-8.webp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6fcc2da254e9abfb5dd7815a5fd80c013cb5ab2a",
+      "size": 29704
+    },
+    {
+      "path": "data/cot-b223.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "32a83a644f12c670f61247bfbc1d0c22e61356be",
+      "size": 26742
+    },
+    {
+      "path": "data/myfxbook-latest.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6587c4a9ee7c60940b9afad2af28ce022d42f2e8",
+      "size": 12186
+    },
+    {
+      "path": "data/myfxbook-history.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "37b12f88f69006549763d04352761b1e021085dc",
+      "size": 115328
+    }
+  ]
+}
