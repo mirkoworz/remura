@@ -39,7 +39,9 @@ def tick():
             # Explicitly separate backfill from permanent collection.
             cutoff=clock()-120000
             last=(cutoff-120000)//M5*M5
-            if last<first or last-first>7*86400000:raise ValueError("window")
+            if last<first:
+                print("V303 NO_MATURE_SLOT");return
+            if last-first>7*86400000:raise ValueError("window")
             initialize_coverage(db)
             # Prioritize current bars, use spare capacity to cover old holes.
             recent=max(first,last-3*M5)
