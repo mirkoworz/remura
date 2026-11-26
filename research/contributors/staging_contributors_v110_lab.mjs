@@ -1,6 +1,7 @@
 // Direct Cloudflare Access Worker for the dedicated REMURA Contributors staging origin.
 import {normalizeNewLevelV076} from './level_attempt_journal_v076_lab.mjs';
-import {scheduleTelegramAfterSubmit} from './telegram_transport_v3012_lab.mjs';
+import {scheduleTelegramAfterSubmit,createTelegramTransport} from './telegram_transport_v3012_lab.mjs';
+import {readTelegramPolicy,changeTelegramPolicy} from './telegram_owner_v3015_lab.mjs';
 import {createLevelsStoreV110, LevelsStoreError} from './staging_levels_store_v110_lab.mjs';
 import {
   CONTRIBUTORS_BROWSER_V110, CONTRIBUTORS_CSS_V110, renderContributorsPageV110,
@@ -20,11 +21,13 @@ const READS = new Map([
   ['/owner/history', 'OWNER'],
   ['/owner/audit', 'OWNER'],
   ['/owner/collaborators', 'OWNER'],
+  ['/owner/telegram/status', 'OWNER'],
 ]);
 const PAGED = new Set(['/api/receipts', '/owner/queue', '/owner/history', '/owner/audit']);
 const ACTIONS = new Map([
   ['/api/submit', 'CONTRIBUTOR'],
   ['/owner/review', 'OWNER'],
+  ['/owner/telegram/toggle', 'OWNER'],
   ['/owner/invite', 'OWNER'],
   ['/owner/withdraw', 'OWNER'],
   ['/owner/revoke', 'OWNER'],
@@ -181,14 +184,9 @@ async function requestBody(req) {
 }
 
 function normalizeAction(path, body, now) {
-  if (path === '/api/submit') {
-    if (!body || Object.getPrototypeOf(body)!==Object.prototype) throw Error('fields');
-    const {publication_mode,...original}=body;
-    const normalized=normalizeNewLevelV076(original,now);
-    if (publication_mode===undefined) return normalized; // legacy client remains PRIVATE
-    if (!['PRIVATE','TEST','TELEGRAM'].includes(publication_mode)) throw Error('publication');
-    return Object.freeze({...normalized,publication_mode});
-  }
+  if (path === '/api/submit') return normalizeNewLevelV076(body,now);
+  if (path === '/owner/telegram/toggle' && shape(body,['enabled','epoch']) &&
+      typeof body.enabled==='boolean' && Number.isSafeInteger(body.epoch) && body.epoch>0) return body;
   if (path === '/owner/review' && shape(body, ['id', 'action', 'reason']) &&
       Number.isSafeInteger(body.id) && body.id > 0 &&
       ['APPROVED', 'REJECTED'].includes(body.action) && typeof body.reason === 'string') {
@@ -245,7 +243,7 @@ function page(items) {
   return json({items, next: items.length === PAGE_SIZE ? items.at(-1).id : null});
 }
 
-async function get(req, url, store, actor, profile) {
+async function get(req, url, store, actor, profile, env) {
   const path = url.pathname;
   if (path === '/api/profile' || READS.has(path)) {
     const origin = req.headers.get('Origin');
@@ -268,6 +266,10 @@ async function get(req, url, store, actor, profile) {
         const requestId = req.headers.get('X-Remura-Request-ID');
         if (!requestId || !UUID.test(requestId)) return reject('invalid');
         return json(await store.lookup(actor, requestId));
+      }
+      case '/owner/telegram/status': {
+        const policy=await readTelegramPolicy(env.CONTRIBUTORS_DB,actor);
+        return policy ? json({...policy,configured:!!createTelegramTransport(env)}) : reject();
       }
       case '/owner/queue':
         return page(await store.queue(actor, after));
@@ -298,10 +300,14 @@ async function mutate(path, body, revision, {store, actor, key, env, now, ctx, p
   let result;
   switch (path) {
     case '/api/submit': {
-      const receipt = await store.submit(actor, body, now);
+      const receipt = await store.submit(actor, body, now, profile.slot==='friend-a'?'TEST':'TELEGRAM');
       scheduleTelegramAfterSubmit(ctx, env, receipt, profile);
       return json(receipt);
     }
+    case '/owner/telegram/toggle':
+      if(body.enabled && !createTelegramTransport(env)) return reject('conflict');
+      result=await changeTelegramPolicy(env.CONTRIBUTORS_DB,actor,body);
+      break;
     case '/owner/review':
       result = await store.review(actor, body, now);
       break;
@@ -385,7 +391,7 @@ export default {
         url.pathname.startsWith('/join/');
       const access = await resolvedProfile(store, actor, writesEnabled(env), mayBeInvited);
       if (!access) return reject();
-      if (req.method === 'GET') return await get(req, url, store, actor, access.data);
+      if (req.method === 'GET') return await get(req, url, store, actor, access.data, env);
       return await post(req, url, {store, actor, key, env, ctx, profile: access.data, inviteRevision: access.revision});
     } catch (error) {
       if (error instanceof LevelsStoreError && Object.hasOwn(REQUEST_ERRORS, error.code)) return reject(error.code);
