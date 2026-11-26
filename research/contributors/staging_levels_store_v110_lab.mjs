@@ -25,10 +25,10 @@ const unenrolled = `NOT EXISTS(SELECT 1 FROM lab_owner WHERE subject=?1 OR email
   AND NOT EXISTS(SELECT 1 FROM lab_identities WHERE subject=?1 OR email_tag=?2)`;
 const joinEnabled = `EXISTS(SELECT 1 FROM lab_state WHERE id=1 AND read_enabled=1 AND write_enabled=1)`;
 const receiptFields = `e.id,e.market,e.provider,e.ticker,e.product,e.contract,e.period,e.kind,e.price,
-  e.anchor_utc,e.observed_utc,e.received_utc,e.note,COALESCE(d.action,'UNREVIEWED') AS status,d.at_utc AS reviewed_utc`;
+  e.anchor_utc,e.observed_utc,e.received_utc,e.note,e.publication_mode,COALESCE(d.action,'UNREVIEWED') AS status,d.at_utc AS reviewed_utc`;
 const intakeCandidate = `SELECT ?3 AS request_id,?4 AS fingerprint,?5 AS market,?6 AS provider,
   ?7 AS ticker,?8 AS product,?9 AS contract,?10 AS period,?11 AS kind,?12 AS price,
-  ?13 AS anchor_utc,?14 AS observed_utc,?15 AS received_utc,?16 AS note`;
+  ?13 AS anchor_utc,?14 AS observed_utc,?15 AS received_utc,?16 AS note,?17 AS publication_mode`;
 
 const SQL = Object.freeze({
   profile: `
@@ -61,9 +61,9 @@ const SQL = Object.freeze({
     WITH candidate AS (${intakeCandidate})
     INSERT INTO lab_level_attempts_v110(
      subject,email_tag,request_id,fingerprint,market,provider,ticker,product,contract,
-     period,kind,price,anchor_utc,observed_utc,received_utc,note,source_group,duplicate_of)
+     period,kind,price,anchor_utc,observed_utc,received_utc,note,source_group,duplicate_of,publication_mode)
     SELECT ?1,?2,n.request_id,n.fingerprint,n.market,n.provider,n.ticker,n.product,n.contract,
-     n.period,n.kind,n.price,n.anchor_utc,n.observed_utc,n.received_utc,n.note,c.source_group,p.id
+     n.period,n.kind,n.price,n.anchor_utc,n.observed_utc,n.received_utc,n.note,c.source_group,p.id,n.publication_mode
     FROM candidate n JOIN lab_level_catalog_v110 c USING(market,provider,ticker,product,contract)
     LEFT JOIN lab_level_attempts_v110 p
      ON p.subject=?1 AND p.email_tag=?2 AND p.duplicate_of IS NULL
@@ -259,11 +259,11 @@ export function createLevelsStoreV110(db) {
     },
     async submit(actor, level, now) {
       const identity = tags(actor);
-      const { request_id, market, provider, ticker, product, contract, period, kind, price, anchor_utc, observed_utc, note } = level;
+      const { request_id, market, provider, ticker, product, contract, period, kind, price, anchor_utc, observed_utc, note, publication_mode = 'PRIVATE' } = level;
       const fingerprint = await newLevelFingerprintV076(level);
       const inserted = await single('submit', [
         ...identity, request_id, fingerprint, market, provider, ticker, product, contract,
-        period, kind, price, anchor_utc, observed_utc, now, note
+        period, kind, price, anchor_utc, observed_utc, now, note, publication_mode
       ]);
       let record;
       try {
