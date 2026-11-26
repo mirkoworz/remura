@@ -2,6 +2,7 @@
 import {normalizeNewLevelV076} from './level_attempt_journal_v076_lab.mjs';
 import {scheduleTelegramAfterSubmit,createTelegramTransport} from './telegram_transport_v3012_lab.mjs';
 import {readTelegramPolicy,changeTelegramPolicy} from './telegram_owner_v3015_lab.mjs';
+import {recoverTelegramPending} from './telegram_recovery_v3016_lab.mjs';
 import {createLevelsStoreV110, LevelsStoreError} from './staging_levels_store_v110_lab.mjs';
 import {
   CONTRIBUTORS_BROWSER_V110, CONTRIBUTORS_CSS_V110, renderContributorsPageV110,
@@ -28,6 +29,7 @@ const ACTIONS = new Map([
   ['/api/submit', 'CONTRIBUTOR'],
   ['/owner/review', 'OWNER'],
   ['/owner/telegram/toggle', 'OWNER'],
+  ['/owner/telegram/recover', 'OWNER'],
   ['/owner/invite', 'OWNER'],
   ['/owner/withdraw', 'OWNER'],
   ['/owner/revoke', 'OWNER'],
@@ -185,6 +187,7 @@ async function requestBody(req) {
 
 function normalizeAction(path, body, now) {
   if (path === '/api/submit') return normalizeNewLevelV076(body,now);
+  if (path === '/owner/telegram/recover' && shape(body,['epoch']) && Number.isSafeInteger(body.epoch) && body.epoch>0) return body;
   if (path === '/owner/telegram/toggle' && shape(body,['enabled','epoch']) &&
       typeof body.enabled==='boolean' && Number.isSafeInteger(body.epoch) && body.epoch>0) return body;
   if (path === '/owner/review' && shape(body, ['id', 'action', 'reason']) &&
@@ -303,6 +306,11 @@ async function mutate(path, body, revision, {store, actor, key, env, now, ctx, p
       const receipt = await store.submit(actor, body, now, profile.slot==='friend-a'?'TEST':'TELEGRAM');
       scheduleTelegramAfterSubmit(ctx, env, receipt, profile);
       return json(receipt);
+    }
+    case '/owner/telegram/recover': {
+      const policy=await readTelegramPolicy(env.CONTRIBUTORS_DB,actor);
+      if(!policy||policy.enabled!==1||policy.epoch!==body.epoch) return reject('conflict');
+      return json(await recoverTelegramPending({env,actor,epoch:body.epoch}));
     }
     case '/owner/telegram/toggle':
       if(body.enabled && !createTelegramTransport(env)) return reject('conflict');
