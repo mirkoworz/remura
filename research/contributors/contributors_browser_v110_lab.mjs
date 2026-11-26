@@ -438,10 +438,12 @@ function startOwner({ find, oneLine, element, status, state, choices, displayDat
   let slots = [];
   const telegramToggle=find('telegramToggle');
   const telegramReload=find('telegramReload');
+  const telegramRecover=find('telegramRecover');
   let telegramPolicy=null,telegramBusy=false;
   function renderTelegram(){
     telegramToggle.disabled=telegramBusy||!write||!telegramPolicy||(!telegramPolicy.enabled&&!telegramPolicy.configured);
     telegramReload.disabled=telegramBusy;
+    telegramRecover.disabled=telegramBusy||!write||telegramPolicy?.enabled!==1||!telegramPolicy.configured;
     telegramToggle.textContent=!telegramPolicy?'Stato non disponibile':telegramPolicy.enabled?'Disabilita invio livelli Telegram':'Abilita invio livelli Telegram';
     telegramToggle.setAttribute('aria-pressed',String(telegramPolicy?.enabled===1));
   }
@@ -467,6 +469,18 @@ function startOwner({ find, oneLine, element, status, state, choices, displayDat
     telegramBusy=true;renderTelegram();
     try{await mutation('/owner/telegram/toggle',body);}
     catch{status('telegramStatus','Modifica non confermata. Verifica lo stato prima di riprovare.','warning');}
+    finally{await loadTelegram();telegramBusy=false;renderTelegram();}
+  });
+  telegramRecover.addEventListener('click',async()=>{
+    if(telegramRecover.disabled||telegramBusy||!telegramPolicy)return;
+    if(!window.confirm('Recuperare un livello recente mai inviato a SMF PLUS?'))return;
+    const body={epoch:telegramPolicy.epoch};
+    telegramBusy=true;renderTelegram();
+    try{
+      const r=await mutation('/owner/telegram/recover',body);
+      const labels={SENT:'Consegna Telegram confermata.',EMPTY:'Nessun invio recente da recuperare.',BLOCKED:'Invio bloccato dalle protezioni.',OFF:'Telegram non configurato.'};
+      status('telegramRecoveryStatus',labels[r.state]??'Esito incerto: non ripetere il medesimo invio.',r.state==='SENT'?'success':'warning');
+    }catch{status('telegramRecoveryStatus','Esito non confermato. Controlla il gruppo prima di proseguire.','warning');}
     finally{await loadTelegram();telegramBusy=false;renderTelegram();}
   });
   telegramBusy=true;
