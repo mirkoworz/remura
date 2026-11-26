@@ -31,8 +31,9 @@ def select_slots(db,first,last,now):
                 result.append(c);break
         if len(result)==4:break
     return sorted(result)
-def old_ended(now):
+def old_ended(now,first):
     p=old.read_private(BASE/"v302-live-permit.json")
+    if type(p.get("first_slot_ms")) is not int or first>p["first_slot_ms"]:raise ValueError("handoff_first_slot")
     if type(p.get("end_ms")) is not int or now<p["end_ms"] or not (BASE/"v302-live-STOP").is_file():raise ValueError("old_permit")
     state=subprocess.run(["systemctl","show","remura-v303-live.service","-p","ActiveState","--value"],capture_output=True,text=True,timeout=5,check=True).stdout.strip()
     if state not in ("inactive","failed"):raise ValueError("old_service")
@@ -41,12 +42,12 @@ def tick():
     old.check_private(BASE,True)
     permit=BASE/"v312-collector-permit.json";stop=BASE/"v312-collector-STOP"
     if not permit.exists() or os.path.lexists(stop):return "DISABLED"
-    p=old.read_private(permit);now=clock();validate(p,now);old_ended(now)
+    p=old.read_private(permit);now=clock();validate(p,now);old_ended(now,p["first_slot_ms"])
     if shutil.disk_usage(BASE).free<512*1024*1024:raise ValueError("disk")
     lock=BASE/"v297-tick.lock"
     with os.fdopen(os.open(lock,os.O_CREAT|os.O_RDWR|os.O_NOFOLLOW,0o600),"r+") as guard:
         old.check_private(lock);fcntl.flock(guard,fcntl.LOCK_EX|fcntl.LOCK_NB)
-        old_ended(clock())
+        old_ended(clock(),p["first_slot_ms"])
         target=BASE/"tv-custody.sqlite3";qp=BASE/"v302-live-quota.sqlite3"
         for path in (target,qp):old.check_private(path)
         db=sqlite3.connect(target,timeout=3);qd=sqlite3.connect(qp,timeout=3)
