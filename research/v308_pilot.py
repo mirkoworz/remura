@@ -49,7 +49,8 @@ def tick(db,deadline):
     if clock()+5000>=deadline:raise ValueError("deadline")
     archive(db,price,captured)
     out=capture_tick(db,raw,captured,clock,rule,enabled=True)
-    return {**totals(db),"capture_status":out["status"],**evaluate_pending(db,clock())}
+    outcomes=evaluate_pending(db,clock())
+    return {**totals(db),"capture_status":out["status"],**outcomes}
 def run():
     os.umask(0o077)
     if os.getuid()==0:raise ValueError("not_root")
