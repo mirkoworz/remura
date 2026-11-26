@@ -2,8 +2,10 @@
 import {normalizeNewLevelV076} from './level_attempt_journal_v076_lab.mjs';
 import {createLevelsStoreV110, LevelsStoreError} from './staging_levels_store_v110_lab.mjs';
 import {
-  CONTRIBUTORS_BROWSER_V110, CONTRIBUTORS_CSS_V110, renderContributorsPageV110,
+  CONTRIBUTORS_BROWSER_V110, CONTRIBUTORS_CSS_V110,
 } from './contributors_ui_v110_lab.mjs';
+
+import {renderVerifiedDeskV308} from './v308_verified_desk_lab.mjs';
 
 const HEX = /^[a-f0-9]{64}$/;
 const UUID = /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
@@ -282,7 +284,7 @@ async function get(req, url, store, actor, profile) {
     return response(CONTRIBUTORS_BROWSER_V110[profile.role], 'text/javascript; charset=utf-8');
   }
   if (path !== directory && (profile.role === 'INVITED' || path !== directory + 'levels/')) return reject();
-  const html = renderContributorsPageV110(path, profile);
+  const html = renderVerifiedDeskV308(path, {...profile, verified: true});
   return typeof html === 'string' ? response(html, 'text/html; charset=utf-8') : reject();
 }
 
