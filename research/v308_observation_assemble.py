@@ -23,4 +23,6 @@ def assemble(raw,capture_ms,clock,rule_bytes,*,enabled=False):
         return {"status":"INELIGIBLE","prospective_admitted":False}
     bound=min(capture_ms,ms(updated))
     bars=[{"open_ms":ms(v["t"]),"close":v["c"]} for v in p["timeframes"]["M15"] if ms(v["t"])+M15<=bound][-4:]
+    if len(bars)!=4 or any(y["open_ms"]-x["open_ms"]!=M15 for x,y in zip(bars,bars[1:])):
+        return {"status":"INELIGIBLE","prospective_admitted":False}
     return prepare(bars,report["footprint"],report["cot"],raw,capture_ms,clock,rule_bytes,enabled=True)
