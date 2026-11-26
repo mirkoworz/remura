@@ -1,0 +1,27 @@
+{
+  "schema": "remura-lab-release-plan-v1",
+  "version": "30.8 LAB",
+  "updatedAt": "2026-11-26T09:16:00+01:00",
+  "activation": false,
+  "autoUpdate": false,
+  "owner": {
+    "ref": "deaae148cc53e717331b42b31594a342dde380b4",
+    "path": "research/owner-lab/v308_route.py"
+  },
+  "contributors": {
+    "ref": "2a5ccb1016ada8de4e011ca29af838a156f4823e",
+    "path": "research/contributors/v308_verified_desk_lab.mjs"
+  },
+  "science": {
+    "ref": "99bd5844d01b6fd42c7243ce262cbc9233c6dff0",
+    "path": "research/v308_pilot.py"
+  },
+  "requiredGates": [
+    "verified server authentication and role isolation",
+    "artifact digests and signed release manifest",
+    "owner-approved promotion",
+    "rollback snapshot",
+    "free quota confirmation"
+  ],
+  "note": "LAB plan only, not a signed release or distribution mechanism. No URLs or live assets are changed."
+}
