@@ -52,9 +52,9 @@ def plan_missing(db,first,last,checked_before):
     key(first);key(last)
     if first>last or last-first>7*86400000 or type(checked_before) is not int:
         raise ValueError("interval")
-    return [r[0] for r in db.execute("""SELECT close_ms FROM v300_slot_coverage
+    return sorted(r[0] for r in db.execute("""SELECT close_ms FROM v300_slot_coverage
       WHERE status='MISSING_AT_CHECK' AND close_ms BETWEEN ? AND ? AND checked_ms<=?
-      ORDER BY checked_ms,close_ms LIMIT 4""",(first,last,checked_before))]
+      ORDER BY checked_ms,close_ms LIMIT 4""",(first,last,checked_before)))
 
 def ingest_slots(db,slots,cutoff,observed_ms,rows):
     request_slots(slots,cutoff)
