@@ -45,7 +45,10 @@ def copy_completed():
             if src.execute("SELECT COUNT(*) FROM "+t).fetchone()!=dest.execute("SELECT COUNT(*) FROM "+t).fetchone():raise ValueError("copy_count")
         if dest.execute("PRAGMA foreign_key_check").fetchone() is not None:raise ValueError("foreign_keys")
         prepare(dest)
-        return summary(dest)
+        result=summary(dest)
+        with (LAB/"copy-complete.lock").open("x") as mark:
+            mark.write("VERIFIED\n");mark.flush();os.fsync(mark.fileno())
+        return result
     finally:src.close();dest.close()
 def tick():
     os.umask(0o077)
@@ -63,6 +66,8 @@ def tick():
         if shutil.disk_usage(LAB).free<512*1024*1024:raise ValueError("disk")
         target=LAB/"science-tv.sqlite3"
         if not target.exists():copy_completed()
+        private(LAB/"copy-complete.lock")
+        if (LAB/"copy-complete.lock").read_text()!="VERIFIED\n":raise ValueError("copy_incomplete")
         private(target)
         db=sqlite3.connect(target,timeout=3)
         try:
@@ -92,4 +97,8 @@ def tick():
 if __name__=="__main__":
     try:print("V312 SCIENCE",json.dumps(tick(),sort_keys=True),flush=True)
     except Exception as e:
+        if LAB.is_dir() and not os.path.lexists(LAB/"STOP"):
+            try:
+                with (LAB/"STOP").open("x") as f:f.write("MANUAL_REVIEW_REQUIRED\n");f.flush();os.fsync(f.fileno())
+            except OSError:pass
         print("V312 SCIENCE STOP",type(e).__name__,flush=True);sys.exit(2)
