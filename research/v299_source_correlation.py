@@ -38,7 +38,9 @@ def cot_context(doc,asof):
             "public_read_ms":published_read,"asset_manager_weekly_change_pp":v,
             "private_first_seen_verified":False}
 
-def price_context(doc,updated_at,captured_ms,asof):
+def price_context(doc,updated_at,captured_ms,asof,*,symbol):
+    if symbol!='EURUSD':
+        raise ValueError('price_identity')
     if doc.get("provider")!="ctrader":
         raise ValueError("price_provider")
     if type(captured_ms) is not int or not 0<captured_ms<=asof:
@@ -69,13 +71,13 @@ def price_context(doc,updated_at,captured_ms,asof):
         return {"status":"STALE_BAR"}
     return {"status":"DESCRIPTIVE_ONLY","bar_close_ms":last[0]+M15,"close":last[1]}
 
-def observe(records,cot,price,updated_at,captured_ms,asof):
+def observe(records,cot,price,updated_at,captured_ms,asof,*,symbol):
     if type(asof) is not int or asof<=0:
         raise ValueError("asof")
     features=derive(records,asof)
     out={"mode":"TEST_DESCRIPTIVE_ONLY","prospective_admitted":False,
          "asof_ms":asof,"symbol":"EURUSD","cot":cot_context(cot,asof),
-         "price":price_context(price,updated_at,captured_ms,asof),
+         "price":price_context(price,updated_at,captured_ms,asof,symbol=symbol),
          "footprint":{"status":"NO_VALID_FEATURE"},"levels":{},
          "sentiment":{"status":"NOT_JOINED"}}
     if not features:
@@ -94,5 +96,5 @@ def observe(records,cot,price,updated_at,captured_ms,asof):
         t=s.get("level_origin_ms",{}).get(k)
         if number(v) and v>0 and type(t) is int and 0<t<=f["bar_close_ms"]:
             out["levels"][k]={"value":v,"origin_ms":t,
-                              "known_before_current_bar":t<=f["bar_close_ms"]-300000}
+                              "origin_before_current_bar":t<=f["bar_close_ms"]-300000}
     return out
