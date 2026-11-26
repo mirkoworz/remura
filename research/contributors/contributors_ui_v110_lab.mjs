@@ -3,8 +3,8 @@ import { CONTRIBUTORS_CSS_V110 as theme, CONTRIBUTORS_FORMS_CSS_V110 } from './c
 export { CONTRIBUTORS_BROWSER_V110 } from './contributors_browser_v110_lab.mjs';
 
 export const CONTRIBUTORS_CSS_V110 = theme + CONTRIBUTORS_FORMS_CSS_V110;
-const VERSION = 'REMURA Contributors v1.10 LAB';
-const UPDATED = '24/11/2026 23:28 CET (Europe/Rome)';
+const VERSION = 'REMURA Contributors V30.14 LAB';
+const UPDATED = '26/11/2026 21:37 CET (Europe/Rome)';
 const SLOTS = ['friend-a', 'friend-b', 'friend-c'];
 const NAV_SECTIONS = [
   ['cot', 'Shark Cockpit · COT'],
@@ -29,7 +29,7 @@ function shell({ role, home, slot, caption, navigation, body, script, write }) {
   ${script ? `<script type="module" src="${home}contributors-v110.js"></script>` : ''}
 </head>
 <body data-slot="${slot}" data-write="${write}">
-  <div class="version">${VERSION} · <time datetime="2026-11-24T23:28:00+01:00">${UPDATED}</time></div>
+  <div class="version">${VERSION} · <time datetime="2026-11-26T21:37:00+01:00">${UPDATED}</time></div>
   <main class="shell">
     <header class="masthead">
       ${role === 'INVITED'
@@ -121,8 +121,9 @@ function contributorLevels(write, read) {
           ${controls('period', 'Periodo', PERIODS)}
           ${controls('kind', 'Metodologia', KINDS)}
           ${field('price', 'Prezzo', '<input id="price" inputmode="decimal" maxlength="17" required>')}
-          ${field('anchor', 'Riferimento UTC', '<input id="anchor" placeholder="AAAA-MM-GGThh:mm:ssZ" maxlength="20" autocapitalize="off" spellcheck="false" required>')}
-          ${field('observed', 'Osservato UTC', '<input id="observed" placeholder="AAAA-MM-GGThh:mm:ssZ" maxlength="20" autocapitalize="off" spellcheck="false" required>')}
+          ${field('anchor', 'Riferimento (ora Roma)', '<input id="anchor" type="datetime-local" step="1" required>')}
+          ${field('observed', 'Osservato (ora Roma)', '<input id="observed" type="datetime-local" step="1" required>')}
+          ${controls('publication', 'Destinazione', [['PRIVATE','Solo REMURA (privato)'], ['TEST','TEST — non pubblicare'], ['TELEGRAM','REMURA + SMF PLUS (se abilitato)']], {wide:true})}
           ${field('note', 'Osservazioni tecniche', '<textarea id="note" maxlength="280" rows="2"></textarea>', true)}
         </div>
         <div class="actions">${button('send', 'Invia proposta di livello', { type: 'submit', modifier: '', disabled: true })}</div>
