@@ -181,7 +181,14 @@ async function requestBody(req) {
 }
 
 function normalizeAction(path, body, now) {
-  if (path === '/api/submit') return normalizeNewLevelV076(body, now);
+  if (path === '/api/submit') {
+    if (!body || Object.getPrototypeOf(body)!==Object.prototype) throw Error('fields');
+    const {publication_mode,...original}=body;
+    const normalized=normalizeNewLevelV076(original,now);
+    if (publication_mode===undefined) return normalized; // legacy client remains PRIVATE
+    if (!['PRIVATE','TEST','TELEGRAM'].includes(publication_mode)) throw Error('publication');
+    return Object.freeze({...normalized,publication_mode});
+  }
   if (path === '/owner/review' && shape(body, ['id', 'action', 'reason']) &&
       Number.isSafeInteger(body.id) && body.id > 0 &&
       ['APPROVED', 'REJECTED'].includes(body.action) && typeof body.reason === 'string') {
