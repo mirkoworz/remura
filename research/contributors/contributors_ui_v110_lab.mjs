@@ -3,8 +3,8 @@ import { CONTRIBUTORS_CSS_V110 as theme, CONTRIBUTORS_FORMS_CSS_V110 } from './c
 export { CONTRIBUTORS_BROWSER_V110 } from './contributors_browser_v110_lab.mjs';
 
 export const CONTRIBUTORS_CSS_V110 = theme + CONTRIBUTORS_FORMS_CSS_V110;
-const VERSION = 'REMURA Contributors V30.15 LAB';
-const UPDATED = '26/11/2026 21:45 CET (Europe/Rome)';
+const VERSION = 'REMURA Contributors V30.16 LAB';
+const UPDATED = '26/11/2026 21:47 CET (Europe/Rome)';
 const SLOTS = ['friend-a', 'friend-b', 'friend-c'];
 const NAV_SECTIONS = [
   ['cot', 'Shark Cockpit · COT'],
@@ -29,7 +29,7 @@ function shell({ role, home, slot, caption, navigation, body, script, write }) {
   ${script ? `<script type="module" src="${home}contributors-v110.js"></script>` : ''}
 </head>
 <body data-slot="${slot}" data-write="${write}">
-  <div class="version">${VERSION} · <time datetime="2026-11-26T21:45:00+01:00">${UPDATED}</time></div>
+  <div class="version">${VERSION} · <time datetime="2026-11-26T21:47:00+01:00">${UPDATED}</time></div>
   <main class="shell">
     <header class="masthead">
       ${role === 'INVITED'
@@ -154,7 +154,9 @@ function ownerLevels(write, read) {
     <div class="actions">
       ${button('telegramToggle','Caricamento…',{disabled:true})}
       ${button('telegramReload','Aggiorna stato')}
+      ${button('telegramRecover','Recupera un invio recente',{disabled:true})}
     </div>
+    ${status('telegramRecoveryStatus','Recupero solo per invii mai tentati negli ultimi 15 minuti.')}
     <p class="notice">La riattivazione non pubblica lo storico. Un invio già in corso può concludersi dopo lo stop.</p>
   </section>
   <div class="work-grid">
