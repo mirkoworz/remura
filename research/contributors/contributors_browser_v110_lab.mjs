@@ -1,6 +1,22 @@
 function browserTools() {
   const find = id => document.getElementById(id);
   const observedUtc = () => new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+  // Fixed Europe/Rome timezone even if the device is abroad. Reject DST gaps/folds.
+  const romeFormat = new Intl.DateTimeFormat('en-CA', {timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
+  function romeLocal(date) {
+    const parts=Object.fromEntries(romeFormat.formatToParts(date).map(x=>[x.type,x.value]));
+    return parts.year+'-'+parts.month+'-'+parts.day+'T'+parts.hour+':'+parts.minute+':'+parts.second;
+  }
+  function romeToUtc(value) {
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) value+=':00';
+    if (!/^20\d{2}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(value)) throw Error('rome_date');
+    const nominal=Date.parse(value+'Z');
+    if(!Number.isFinite(nominal)) throw Error('rome_date');
+    const matches=[60,120].map(m=>new Date(nominal-m*60000)).filter(d=>romeLocal(d)===value);
+    if(matches.length!==1)throw Error('rome_date_ambiguous_or_invalid');
+    return matches[0].toISOString().replace('.000Z','Z');
+  }
+  const observedRome=()=>romeLocal(new Date());
   const oneLine = text => text.replace(/\r\n?|\n/g, ' ');
   const stateLabels = {
     UNREVIEWED: 'In attesa', APPROVED: 'Approvato', REJECTED: 'Rifiutato',
@@ -156,8 +172,8 @@ function browserTools() {
     const methods = { DELTA_PEAK: 'Picco delta', EFFORT_RESULT: 'Effort / result', OTHER_VOLUME_LEVEL: 'Altro livello volumetrico' };
     const values = [
       ['Strumento e fonte', mapping], ['Periodo', periods[row.period] ?? row.period],
-      ['Metodologia', methods[row.kind] ?? row.kind], ['Riferimento UTC', row.anchor_utc],
-      ['Osservato UTC', row.observed_utc], ['Ricevuto (Roma)', displayDate(row.received_utc)],
+      ['Metodologia', methods[row.kind] ?? row.kind], ['Riferimento (Roma)', displayDate(row.anchor_utc)],
+      ['Osservato (Roma)', displayDate(row.observed_utc)], ['Destinazione', row.publication_mode ?? 'PRIVATE'], ['Ricevuto (Roma)', displayDate(row.received_utc)],
       ['Decisione (Roma)', row.reviewed_utc && displayDate(row.reviewed_utc)], ['Osservazioni', row.note],
     ];
     if (forOwner) values.unshift(['Slot', row.slot]);
@@ -175,10 +191,10 @@ function browserTools() {
     });
   }
 
-  return { find, observedUtc, oneLine, element, status, state, choices, displayDate, request, mutation, paginator, table, receipt, protectPage };
+  return { find, observedUtc, observedRome, romeToUtc, oneLine, element, status, state, choices, displayDate, request, mutation, paginator, table, receipt, protectPage };
 }
 
-function startContributor({ find, observedUtc, oneLine, status, choices, request, mutation, paginator, receipt, protectPage }) {
+function startContributor({ find, observedRome, romeToUtc, oneLine, status, choices, request, mutation, paginator, receipt, protectPage }) {
   protectPage();
   const write = document.body.dataset.write === 'true';
   const storageKey = `remura.contributors.v110.pending.${document.body.dataset.slot}`;
@@ -284,7 +300,7 @@ function startContributor({ find, observedUtc, oneLine, status, choices, request
     return {
       request_id: id, market: row.market, provider: row.provider, ticker: row.ticker, product: row.product,
       contract: row.contract, period: find('period').value, kind: find('kind').value, price,
-      anchor_utc: find('anchor').value.trim(), observed_utc: find('observed').value.trim(), note: oneLine(find('note').value),
+      anchor_utc: romeToUtc(find('anchor').value), observed_utc: romeToUtc(find('observed').value), note: oneLine(find('note').value), publication_mode: find('publication').value,
     };
   }
 
@@ -292,12 +308,12 @@ function startContributor({ find, observedUtc, oneLine, status, choices, request
     if (!['COMMITTED', 'DUPLICATE'].includes(result.state) || !Number.isSafeInteger(result.receipt?.id) || result.receipt.id < 1) {
       return false;
     }
-    const label = result.state === 'DUPLICATE' ? 'Livello già registrato' : 'Proposta registrata';
+    const label = result.state === 'DUPLICATE' ? 'Livello già registrato (nessuna nuova pubblicazione)' : 'Proposta registrata (consegna Telegram non confermata da questa ricevuta)';
     status('intakeStatus', `${label} · Ricevuta #${result.receipt.id}.`, 'success');
     clearPending();
     form.reset();
     updateProviders();
-    find('observed').value = observedUtc();
+    find('observed').value = observedRome();
     if (!find('myRead').hidden) void receiptPager.load();
     return true;
   }
@@ -353,7 +369,7 @@ function startContributor({ find, observedUtc, oneLine, status, choices, request
         data = draft(pending?.id ?? crypto.randomUUID());
         digest = await draftDigest(data);
       } catch {
-        status('intakeStatus', 'Impossibile preparare la richiesta. Verifica i campi.', 'error');
+        status('intakeStatus', 'Impossibile preparare la richiesta. Controlla i campi e l’ora di Roma (evita ore ambigue del cambio legale).', 'error');
         return;
       }
       if (pending && digest !== pending.digest) {
@@ -398,14 +414,14 @@ function startContributor({ find, observedUtc, oneLine, status, choices, request
     clearPending();
     form.reset();
     updateProviders();
-    find('observed').value = observedUtc();
+    find('observed').value = observedRome();
     status('intakeStatus', 'Verifica chiusa. Aggiorna le ricevute per controllare eventuali registrazioni successive.', 'warning');
     decisions();
   });
   find('market').addEventListener('change', updateProviders);
   find('provider').addEventListener('change', updateMappings);
   catalogButton.addEventListener('click', () => void loadCatalog());
-  find('observed').value = observedUtc();
+  find('observed').value = observedRome();
   decisions();
   if (write) void loadCatalog();
   if (!find('myRead').hidden) void receiptPager.load();
