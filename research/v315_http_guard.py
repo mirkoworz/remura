@@ -72,6 +72,7 @@ def run(kind):
         if load(pp)!=p or load(qp)!=q:return "WAIT_AUTHORIZATION"
         status,_=readiness(clock())
         if status!="READY":return status
+        if os.path.lexists(HERE/"http-cycle-inflight.lock"):raise ValueError("unfinished_cycle")
         ledger=HERE/"http-attempts.sqlite3";private(ledger)
         db=sqlite3.connect(ledger,timeout=3)
         original=OpenerDirector.open
@@ -112,7 +113,18 @@ def run(kind):
                 from v315_quota_refresh import run as tick
             else:
                 from v315_collector import run as tick
-            return tick()
+            inflight=HERE/"http-cycle-inflight.lock"
+            with inflight.open("x") as marker:
+                marker.write(kind+"\n");marker.flush();os.fsync(marker.fileno())
+            fd=os.open(HERE,os.O_DIRECTORY)
+            try:os.fsync(fd)
+            finally:os.close(fd)
+            result=tick()
+            inflight.unlink()
+            fd=os.open(HERE,os.O_DIRECTORY)
+            try:os.fsync(fd)
+            finally:os.close(fd)
+            return result
         finally:
             OpenerDirector.open=original;db.close()
 class Tests(unittest.TestCase):
