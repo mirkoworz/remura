@@ -1,0 +1,2 @@
+# REMURA V30.2 — 26 November 2026 Europe/Rome
+V30.1 operator proof: 8/8 tests, existing key index, 4 receipts for 12 read rows, no writes, 1 inventory GET, 1 EXPLAIN, 1 SELECT. No repeat. Adapter reads EURUSD from existing local prices snapshot, private custody and caller-supplied public COT, returns aggregate status only. No source access during development. This adapter is not yet tested or installed. Sentiment remains unjoined; independent freeze, preregistered classifier and prospective outcomes remain blocked. No claim of alpha.
