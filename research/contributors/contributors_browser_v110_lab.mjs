@@ -173,7 +173,7 @@ function browserTools() {
     const values = [
       ['Strumento e fonte', mapping], ['Periodo', periods[row.period] ?? row.period],
       ['Metodologia', methods[row.kind] ?? row.kind], ['Riferimento (Roma)', displayDate(row.anchor_utc)],
-      ['Osservato (Roma)', displayDate(row.observed_utc)], ['Destinazione', row.publication_mode ?? 'PRIVATE'], ['Ricevuto (Roma)', displayDate(row.received_utc)],
+      ['Osservato (Roma)', displayDate(row.observed_utc)], ['Ricevuto (Roma)', displayDate(row.received_utc)],
       ['Decisione (Roma)', row.reviewed_utc && displayDate(row.reviewed_utc)], ['Osservazioni', row.note],
     ];
     if (forOwner) values.unshift(['Slot', row.slot]);
@@ -300,7 +300,7 @@ function startContributor({ find, observedRome, romeToUtc, oneLine, status, choi
     return {
       request_id: id, market: row.market, provider: row.provider, ticker: row.ticker, product: row.product,
       contract: row.contract, period: find('period').value, kind: find('kind').value, price,
-      anchor_utc: romeToUtc(find('anchor').value), observed_utc: romeToUtc(find('observed').value), note: oneLine(find('note').value), publication_mode: find('publication').value,
+      anchor_utc: romeToUtc(find('anchor').value), observed_utc: romeToUtc(find('observed').value), note: oneLine(find('note').value),
     };
   }
 
@@ -308,7 +308,7 @@ function startContributor({ find, observedRome, romeToUtc, oneLine, status, choi
     if (!['COMMITTED', 'DUPLICATE'].includes(result.state) || !Number.isSafeInteger(result.receipt?.id) || result.receipt.id < 1) {
       return false;
     }
-    const label = result.state === 'DUPLICATE' ? 'Livello già registrato (nessuna nuova pubblicazione)' : 'Proposta registrata (consegna Telegram non confermata da questa ricevuta)';
+    const label = result.state === 'DUPLICATE' ? 'Livello già registrato (nessuna nuova pubblicazione)' : 'Proposta registrata';
     status('intakeStatus', `${label} · Ricevuta #${result.receipt.id}.`, 'success');
     clearPending();
     form.reset();
@@ -436,6 +436,41 @@ function startOwner({ find, oneLine, element, status, state, choices, displayDat
   const reviewForm = find('review');
   let mutating = false;
   let slots = [];
+  const telegramToggle=find('telegramToggle');
+  const telegramReload=find('telegramReload');
+  let telegramPolicy=null,telegramBusy=false;
+  function renderTelegram(){
+    telegramToggle.disabled=telegramBusy||!write||!telegramPolicy||(!telegramPolicy.enabled&&!telegramPolicy.configured);
+    telegramReload.disabled=telegramBusy;
+    telegramToggle.textContent=!telegramPolicy?'Stato non disponibile':telegramPolicy.enabled?'Disabilita invio livelli Telegram':'Abilita invio livelli Telegram';
+    telegramToggle.setAttribute('aria-pressed',String(telegramPolicy?.enabled===1));
+  }
+  async function loadTelegram(){
+    telegramPolicy=null;
+    renderTelegram();
+    try{
+      const p=await request('/owner/telegram/status');
+      if(![0,1].includes(p.enabled)||!Number.isSafeInteger(p.epoch)||p.epoch<1||typeof p.configured!=='boolean')throw Error('telegram');
+      telegramPolicy=p;
+      status('telegramStatus',p.enabled?(p.configured?'Invio automatico abilitato':'Abilitato, configurazione non disponibile'):'Invio automatico disabilitato'+(p.configured?'':' · Configurazione non disponibile'),p.enabled&&p.configured?'success':'warning');
+    }catch{status('telegramStatus','Stato Telegram non disponibile. Aggiorna per riprovare.','warning');}
+    renderTelegram();
+  }
+  telegramReload.addEventListener('click',async()=>{
+    if(telegramBusy)return;telegramBusy=true;renderTelegram();
+    try{await loadTelegram();}finally{telegramBusy=false;renderTelegram();}
+  });
+  telegramToggle.addEventListener('click',async()=>{
+    if(telegramToggle.disabled||telegramBusy||!telegramPolicy)return;
+    const body={enabled:telegramPolicy.enabled===0,epoch:telegramPolicy.epoch};
+    if(body.enabled&&!window.confirm('Abilitare l’invio automatico dei nuovi livelli a SMF PLUS?'))return;
+    telegramBusy=true;renderTelegram();
+    try{await mutation('/owner/telegram/toggle',body);}
+    catch{status('telegramStatus','Modifica non confermata. Verifica lo stato prima di riprovare.','warning');}
+    finally{await loadTelegram();telegramBusy=false;renderTelegram();}
+  });
+  telegramBusy=true;
+  void loadTelegram().finally(()=>{telegramBusy=false;renderTelegram();});
 
   const queue = paginator({
     prefix: 'queue', endpoint: '/owner/queue', empty: 'Nessuna proposta da esaminare in questa pagina.',
