@@ -65,4 +65,5 @@ def evaluate_pending(db,now):
                     saved+=1
     return {"saved_cost_horizon_rows":saved,"pending_missing_horizons":missing,"new_terminal_missing":terminal,"prospective_admitted":False}
 def totals(db):
-    return {**summary(db),"price_snapshots":db.execute("SELECT COUNT(*) FROM price_snapshots").fetchone()[0],"historical_m15":db.execute("SELECT COUNT(*) FROM price_bars").fetchone()[0],"conflicted_bars":db.execute("SELECT COUNT(*) FROM bar_conflicts").fetchone()[0],"terminal_missing_horizons":db.execute("SELECT COUNT(*) FROM terminal_missing").fetchone()[0]}
+    invalidated=db.execute("""SELECT COUNT(*) FROM outcomes x JOIN observations o ON x.commitment=o.commitment WHERE EXISTS (SELECT 1 FROM bar_conflicts c WHERE c.open_ms>=(o.prepared_ms/900000+1)*900000 AND c.open_ms<(o.prepared_ms/900000+1)*900000+x.hours*3600000)""").fetchone()[0]
+    return {**summary(db),"invalidated_outcome_rows":invalidated,"price_snapshots":db.execute("SELECT COUNT(*) FROM price_snapshots").fetchone()[0],"historical_m15":db.execute("SELECT COUNT(*) FROM price_bars").fetchone()[0],"conflicted_bars":db.execute("SELECT COUNT(*) FROM bar_conflicts").fetchone()[0],"terminal_missing_horizons":db.execute("SELECT COUNT(*) FROM terminal_missing").fetchone()[0]}
