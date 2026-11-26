@@ -6,7 +6,10 @@ const SQL=Object.freeze({
  SELECT o.receipt_id FROM lab_telegram_outbox_v3012 o
  JOIN lab_telegram_policy_v3012 p ON p.id=1 AND p.enabled=1 AND p.epoch=o.epoch
  JOIN lab_state s ON s.id=1 AND s.read_enabled=1 AND s.write_enabled=1 AND s.recovery_enabled=0
- WHERE o.state='PENDING' AND (?2 IS NULL OR o.receipt_id=?2) ORDER BY o.receipt_id LIMIT 1)
+ WHERE o.state='PENDING' AND (?2 IS NULL OR o.receipt_id=?2)
+ AND (?3 IS NULL OR o.epoch=?3) AND (?4 IS NULL OR o.queued_utc>=?4)
+ AND (?5 IS NULL OR EXISTS(SELECT 1 FROM lab_owner i WHERE i.id=1 AND i.subject=?5 AND i.email_tag=?6 AND i.revoked=0))
+ ORDER BY o.receipt_id LIMIT 1)
  AND state='PENDING' RETURNING receipt_id,epoch`,
  load:`SELECT e.id,e.market,e.provider,e.ticker,e.product,e.contract,e.period,e.kind,e.price,
  e.received_utc,e.note,i.slot,p.start_after_receipt
@@ -31,7 +34,7 @@ async function one(db,sql,args){
 }
 export function createTelegramOutbox(db){
  return Object.freeze({
- claim:(now,receiptId=null)=>one(db,SQL.claim,[now,receiptId]),
+ claim:(now,receiptId=null,recovery=null)=>one(db,SQL.claim,[now,receiptId,recovery?.epoch??null,recovery?.cutoff??null,recovery?.actor?.subject??null,recovery?.actor?.email_tag??null]),
  load:claim=>one(db,SQL.load,[claim.receipt_id,claim.epoch]),
  async finish(id,state,now,messageId=null){
   if(!await one(db,SQL.finish,[id,state,now,messageId]))throw Error("telegram_finish_unavailable");
@@ -40,11 +43,12 @@ export function createTelegramOutbox(db){
 }
 // Only an explicitly provided transport can send; synthetic tests inject a fake.
 // A claimed receipt is never automatically requeued, including on timeout/crash.
-export async function dispatchOne({store,send,enabled=false,clock=utc,receiptId=null}={}){
+export async function dispatchOne({store,send,enabled=false,clock=utc,receiptId=null,recovery=null}={}){
  if(enabled!==true||typeof send!=="function")return {state:"OFF"};
  if(receiptId!==null&&(!Number.isSafeInteger(receiptId)||receiptId<1))return {state:"BLOCKED"};
+ if(receiptId===null&&(!recovery||!Number.isSafeInteger(recovery.epoch)||recovery.epoch<1||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(recovery.cutoff??'')||!/^[a-f0-9]{64}$/.test(recovery.actor?.subject??'')||!/^[a-f0-9]{64}$/.test(recovery.actor?.email_tag??'')))return {state:'BLOCKED'};
  let claim;
- try{claim=await store.claim(clock(),receiptId);}catch{return {state:"CLAIM_UNKNOWN"};}
+ try{claim=await store.claim(clock(),receiptId,recovery);}catch{return {state:"CLAIM_UNKNOWN"};}
  if(!claim)return {state:"EMPTY"};
  const id=claim.receipt_id;
  let state="UNKNOWN",messageId=null;
