@@ -18,14 +18,14 @@ const SQL=Object.freeze({
  JOIN lab_level_catalog_v110 c ON (c.market,c.provider,c.ticker,c.product,c.contract)=(e.market,e.provider,e.ticker,e.product,e.contract)
  AND c.active=1 AND c.source_group=e.source_group
  WHERE o.receipt_id=?1 AND o.epoch=?2 AND o.state='SENDING'
- AND i.slot IN('friend-b','friend-c')`,
+ AND e.publication_mode='TELEGRAM' AND i.slot IN('friend-b','friend-c')`,
  finish:`UPDATE lab_telegram_outbox_v3012 SET state=?2,finished_utc=?3,telegram_message_id=?4
  WHERE receipt_id=?1 AND state='SENDING' RETURNING receipt_id`
 });
 const utc=()=>new Date().toISOString().slice(0,19)+"Z";
 async function one(db,sql,args){
  const result=await db.withSession("first-primary").prepare(sql).bind(...args).all();
- if(result?.success!==true||!Array.isArray(result.results)||result.results.length>1)
+ if(result?.success!==true||result.meta?.served_by_primary!==true||!Array.isArray(result.results)||result.results.length>1)
  throw Error("telegram_storage_unavailable");
  return result.results[0]??null;
 }
