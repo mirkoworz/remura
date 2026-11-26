@@ -1,0 +1,10 @@
+# REMURA V30.2 LAB — not installed
+[Unit]
+Description=REMURA V30.2 TEST collector timer
+[Timer]
+OnCalendar=*-*-* *:0/5:00
+Persistent=false
+AccuracySec=10s
+Unit=remura-v302-live.service
+[Install]
+WantedBy=timers.target
