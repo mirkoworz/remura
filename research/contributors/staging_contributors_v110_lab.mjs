@@ -1,5 +1,6 @@
 // Direct Cloudflare Access Worker for the dedicated REMURA Contributors staging origin.
 import {normalizeNewLevelV076} from './level_attempt_journal_v076_lab.mjs';
+import {scheduleTelegramAfterSubmit} from './telegram_transport_v3012_lab.mjs';
 import {createLevelsStoreV110, LevelsStoreError} from './staging_levels_store_v110_lab.mjs';
 import {
   CONTRIBUTORS_BROWSER_V110, CONTRIBUTORS_CSS_V110, renderContributorsPageV110,
@@ -286,11 +287,14 @@ async function get(req, url, store, actor, profile) {
   return typeof html === 'string' ? response(html, 'text/html; charset=utf-8') : reject();
 }
 
-async function mutate(path, body, revision, {store, actor, key, env, now}) {
+async function mutate(path, body, revision, {store, actor, key, env, now, ctx, profile}) {
   let result;
   switch (path) {
-    case '/api/submit':
-      return json(await store.submit(actor, body, now));
+    case '/api/submit': {
+      const receipt = await store.submit(actor, body, now);
+      scheduleTelegramAfterSubmit(ctx, env, receipt, profile);
+      return json(receipt);
+    }
     case '/owner/review':
       result = await store.review(actor, body, now);
       break;
@@ -375,7 +379,7 @@ export default {
       const access = await resolvedProfile(store, actor, writesEnabled(env), mayBeInvited);
       if (!access) return reject();
       if (req.method === 'GET') return await get(req, url, store, actor, access.data);
-      return await post(req, url, {store, actor, key, env, profile: access.data, inviteRevision: access.revision});
+      return await post(req, url, {store, actor, key, env, ctx, profile: access.data, inviteRevision: access.revision});
     } catch (error) {
       if (error instanceof LevelsStoreError && Object.hasOwn(REQUEST_ERRORS, error.code)) return reject(error.code);
       return unavailable(false);
