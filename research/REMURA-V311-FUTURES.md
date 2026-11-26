@@ -1,0 +1,2 @@
+# V31.1 Futures Intelligence
+Offline aggregation only. Keep exchange-reported and vendor-classified sides separate; unknown side contributes to observed volume but not signed delta. Identical duplicates are ignored, conflicting trade IDs stop aggregation. No claim of complete exchange coverage or CVD continuity. Before real use, verify actual trade identity semantics, corrections, sequence/reconnect recovery, entitlement, retention and derived-data license, timestamp and session rules. No feed connection or API calls. No order book or lead-lag results yet.
