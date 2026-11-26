@@ -1,0 +1,2 @@
+# V30.7 LAB integration
+The wrapper uses v1.10 renderer and existing role/slot checks. It preserves original pages and adds version/date, not actual authorization. Only verified middleware may construct profile. Do not mount until integrated into the actual worker handler and checked for OWNER and CONTRIBUTOR isolation. No new permissions, no write flag changes, no Oracle connection, no D1 modification. The protected origin for the link from OWNER remains to be verified. No previous tests rerun.
