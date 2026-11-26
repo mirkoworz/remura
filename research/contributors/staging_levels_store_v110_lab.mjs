@@ -257,9 +257,10 @@ export function createLevelsStoreV110(db) {
     async lookup(actor, requestId) {
       return outcome(await lookupRecord(actor, requestId));
     },
-    async submit(actor, level, now) {
+    async submit(actor, level, now, publication_mode='PRIVATE') {
+      if(!['PRIVATE','TEST','TELEGRAM'].includes(publication_mode))throw new LevelsStoreError('invalid_input');
       const identity = tags(actor);
-      const { request_id, market, provider, ticker, product, contract, period, kind, price, anchor_utc, observed_utc, note, publication_mode = 'PRIVATE' } = level;
+      const { request_id, market, provider, ticker, product, contract, period, kind, price, anchor_utc, observed_utc, note } = level;
       const fingerprint = await newLevelFingerprintV076(level);
       const inserted = await single('submit', [
         ...identity, request_id, fingerprint, market, provider, ticker, product, contract,
