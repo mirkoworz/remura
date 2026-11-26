@@ -1,0 +1,12 @@
+# REMURA V30.2 LAB — not installed
+[Unit]
+Description=REMURA V30.2 TEST collector
+ConditionPathExists=%h/.remura-v296/v302-live-permit.json
+ConditionPathExists=!%h/.remura-v296/v302-live-STOP
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 -B %h/.remura-v296/v301/v302_live_tick.py
+UMask=0077
+NoNewPrivileges=yes
+TimeoutStartSec=90
+Restart=no
