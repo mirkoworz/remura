@@ -1,0 +1,14 @@
+{
+  "name": "remura-contributors-staging",
+  "main": "staging_identity_worker.mjs",
+  "compatibility_date": "2026-11-15",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [],
+  "vars": {
+    "STAGING_ENABLED": "DISABLED"
+  },
+  "observability": {
+    "enabled": false
+  }
+}
