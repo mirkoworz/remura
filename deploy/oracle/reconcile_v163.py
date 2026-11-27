@@ -37,6 +37,7 @@ RELEASE_BLOB="19d538c167550e5c3c9326d7cfc3ab5582347e9a"
 PREPARED_STAMP=b"05/11/2026 16:00 (Italia, preparazione)"
 LIVE_STAMP=re.compile(rb"(?:0[1-9]|[12][0-9]|3[01])/(?:0[1-9]|1[0-2])/20[0-9]{2} (?:[01][0-9]|2[0-3]):[0-5][0-9] \(Italia\)")
 SHA=re.compile(r"^[0-9a-f]{40}$")
+WORKFLOWS=("price-checks.yml","insights-checks.yml")
 ALLOWED_CODE={
     "scripts/private_server.py", "nav.js", "sw.js",
     "index.html", "asset.html", "mercati.html", "forex.html",
