@@ -140,10 +140,12 @@ def capture_and_evaluate(db,src,retail_input,rule_hash,allowed,archive=None):
     status,packet=candidate(src,retail_input,rule_hash,proof)
     if packet and allowed():
         if archive is None:raise ValueError("archive_required")
-        archive(proof["cot"],packet["evidence"]["cot_sha256"])
-        if clock()-packet["frozen_ms"]>5000 or clock()>=packet["entry_ms"]:
-            status="WAIT_EVIDENCE_BOUNDARY"
-        elif allowed():status=m.append(db,packet,clock)
+        try:archive(proof["cot"],packet["evidence"]["cot_sha256"])
+        except (OSError,ValueError):status="WAIT_EVIDENCE_STORAGE"
+        else:
+            if clock()-packet["frozen_ms"]>5000 or clock()>=packet["entry_ms"]:
+                status="WAIT_EVIDENCE_BOUNDARY"
+            elif allowed():status=m.append(db,packet,clock)
     return status,evaluate_pending(db,src,clock(),allowed)
 
 def main(mode):
@@ -259,6 +261,10 @@ class EvidenceTests(unittest.TestCase):
         with patch.object(mod,"candidate",side_effect=fake),patch.object(mod,"clock",return_value=1001),patch.object(m,"append",side_effect=append),patch.object(mod,"evaluate_pending",return_value={}):
             self.assertEqual(capture_and_evaluate(object(),object(),{},h,lambda:True,archive)[0],"LOCAL_RECORDED_UNWITNESSED")
         self.assertEqual(order,["archive","append"])
+        with patch.object(mod,"candidate",side_effect=fake),patch.object(mod,"clock",return_value=1001),patch.object(m,"append") as save,patch.object(mod,"evaluate_pending",return_value={"new_outcome_rows":1}) as evaluate:
+            def fail(*args):raise OSError("storage")
+            self.assertEqual(capture_and_evaluate(object(),object(),{},h,lambda:True,fail),("WAIT_EVIDENCE_STORAGE",{"new_outcome_rows":1}))
+            save.assert_not_called();evaluate.assert_called_once()
 
 if __name__=="__main__":
     if sys.argv[1:]==["--test-evidence"]:
