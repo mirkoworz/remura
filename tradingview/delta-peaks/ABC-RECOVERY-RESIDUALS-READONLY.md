@@ -1,0 +1,21 @@
+# REMURA v0.8.141 LAB — recovery residuals and dedicated installer gate
+18/11/2026, sessione 09:19 CET — PR #102 DRAFT.
+
+## Actual handoff, not newly rerun
+Owner handoff 09:17:44 records five real encrypted archives, five recovered copies and signed receipts, 609 file occurrences including potential duplicates, 24 SQLite copies. Private witness anchors exist; no public archive hash or private path is recorded here. Config scope is selected only; no automatic credential restore. Independent device custody, iCloud sync, simultaneous consistency and authenticated origin/timestamp remain unproven.
+v0.8.140 CI Telemetry 44135401817 job 134223435356, Wrangler 44135401778 SUCCESS as previously validated. No rerun requested.
+
+## Targeted coverage
+Pinned base scripts/private_server.py sets default STORE to private/remura-prices.sqlite3 and passes the same db_path to cot_monitor.collect_once. Actual cot_monitor creates cot_reports and cot_first_seen; provenance is intentionally not backfilled. COT therefore is expected inside the prices recovery rather than a separate COT file. Check existing closed recovered copy with --closed-db PATH --confirm-closed-copy; no live immutable queries, no schema initialization, no full integrity rerun. Absent/empty tables and missing provenance must be reported separately; orphan first-seen can be legitimate retention. Counts are not a source authenticity proof.
+Actual update_capital.py uses capital/budget.json, budget.lock, markets.json; primary/backup cTrader token files are derived from database parent by ctrader_tokens.py. The metadata-only Oracle mode checks fixed candidates and effective unit metadata, not secret values or process environment. EnvironmentFile parsing is deliberately conservative; unparsed/inaccessible is unresolved. Compare local selected recovery membership with effective config privately before claiming coverage; no automatic token reuse or reset.
+Shark: reuse Track B shard backup and sharded ledger modules from pinned B branch, not PR #102 base (which lacks these files). Determine actual enabled research roots and segment manifest before backup; a name scan does not prove absence. Preserve sealed bytes and use cooperative active-segment lock. No scientific denominator or window changes.
+SDK and storage: actual cTrader/Twisted imports, Oracle and iCloud exact free space and current Actions/account quotas still open. No extra broker calls.
+
+## Installer design boundary
+Dedicated manual-only stopped-service transaction, never ordinary autoupdater/bootstrap. No executable installer or live activation in this change. Required order:
+1. Reconcile installed baseline bytes plus effective unit, mutable roots, owner/mode and updater state; compare pinned source manifest and verify its hash. Keep all unclassified modules; no implicit deletion.
+2. Verify actual recovery custody and residuals, current free space, runtime SDK imports with no network, staging write scope and exact installed-vs-target versions. Fail closed on unknowns.
+3. Materialize candidate from pinned source in separate staging root; verify exact path whitelist, bytes, permissions, UI version stamp only at approved release; reject symlinks, path traversal, unexpected writes or service config drift. Existing 155 app path / 28 deploy reference manifest is not a filesystem transaction.
+4. Require separately authorized maintenance window and stop/start plan. Do not stop collector in LAB. Before first mutation persist a durable rollback journal and copy exact replaced bytes/metadata; no overwrite of backup generations. Lock against autoupdater and concurrent installers. Real service config and mutable DB are not application overlay targets.
+5. Explicit rollback on any boundary failure, reverse only journaled changes, verify original hashes/modes and safe service state. Never automatically restore historical token, counters or database to a live path; use manual reconciliation.
+6. Release only after post-change local health and science/price continuity checks; no extra broker calls by installer. No merge/LIVE until owner approval and all gates observed. Crash recovery/idempotency, privileges, filesystem fsync, lock and actual rollback rehearsal remain to implement before execution.

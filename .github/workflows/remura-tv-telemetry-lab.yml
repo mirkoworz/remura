@@ -1,0 +1,238 @@
+# REMURA TradingView Telemetry LAB v0.8.160 — 18/11/2026, sessione successiva alle 13:29 CET.
+# SOLO CI OFFLINE. Nessun deploy, webhook, credenziale o trade automatico.
+name: REMURA TradingView Telemetry LAB
+on:
+  pull_request:
+    paths:
+      - "tradingview/delta-peaks/**"
+      - ".github/workflows/remura-tv-telemetry-lab.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: remura-tv-lab-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  telemetry-validator:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.number == 102
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout sola lettura
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Esegui regressioni prospettiche e validazione (no rete)
+        run: python3 -m unittest discover -s tradingview/delta-peaks -p "test_*.py" -v
+      - name: D1 read-only connector mocked regressions (no API)
+        run: python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p "test_d1_preview_reader_v1.py" -v
+      - name: TEST-only Worker manifest guard (offline, blocks unresolved deployment)
+        run: |
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_manifest_guard_v1.py' -v
+          python3 tradingview/delta-peaks/gateway-lab/predeploy_test_manifest_guard_v1.py
+      - name: Python syntax preflight Pine-independent
+        run: python3 -m py_compile tradingview/delta-peaks/validate_telemetry_v1.py tradingview/delta-peaks/test_telemetry_v1.py tradingview/delta-peaks/outcome_audit_v1.py tradingview/delta-peaks/test_outcome_audit_v1.py tradingview/delta-peaks/quota_budget_v1.py tradingview/delta-peaks/test_quota_budget_v1.py tradingview/delta-peaks/remura_tv_bridge_preview_v1.py tradingview/delta-peaks/test_remura_tv_bridge_preview_v1.py tradingview/delta-peaks/test_offline_webhook_roundtrip_v1.py tradingview/delta-peaks/gateway-lab/d1_preview_reader_v1.py tradingview/delta-peaks/gateway-lab/test_d1_preview_reader_v1.py tradingview/delta-peaks/gateway-lab/predeploy_test_manifest_guard_v1.py tradingview/delta-peaks/gateway-lab/test_manifest_guard_v1.py
+      - name: Node v22 test gateway Cloudflare D1 simulato (offline, senza pacchetti)
+        run: node --test tradingview/delta-peaks/gateway-lab/worker.test.mjs
+      - name: Offline authenticated rollback preflight regression (no API)
+        run: |
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_worker_rollback_preflight_v1.py' -v
+          python3 -m py_compile tradingview/delta-peaks/gateway-lab/worker_rollback_preflight_v1.py
+      - name: Ephemeral isolated gateway TEST OFF package (offline only)
+        run: |
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_prepare_test_off_bundle_v1.py' -v
+          python3 -m py_compile tradingview/delta-peaks/gateway-lab/prepare_test_off_bundle_v1.py
+      - name: BTC weekend transport-only receipt audit (offline)
+        run: python3 tradingview/delta-peaks/gateway-lab/test_btc_weekend_receipt_audit_v1.py --self-test
+      - name: TEST-only first webhook receipt audit regression (offline, no Cloudflare)
+        run: python3 tradingview/delta-peaks/gateway-lab/test_pilot_receipt_audit_v1.py --self-test
+      - name: TEST-only future ingest ON candidate, strict OFF plus hash required (offline only)
+        run: |
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_prepare_test_ingest_on_v1.py' -v
+          python3 -m py_compile tradingview/delta-peaks/gateway-lab/prepare_test_ingest_on_v1.py
+      - name: TEST Worker SHA-256 secret preparation (GET-only, offline mock)
+        run: |
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_prepare_test_hash_secret_v1.py' -v
+          python3 -m py_compile tradingview/delta-peaks/gateway-lab/prepare_test_hash_secret_v1.py
+      - name: Emergency STOP for TEST gateway ON or OFF with separate hash Secret (offline only)
+        run: |
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_emergency_stop_test_guard_v1.py' -v
+          python3 -m py_compile tradingview/delta-peaks/gateway-lab/emergency_stop_test_guard_v1.py
+      - name: Offline rollback strict OFF-only gate (no Cloudflare)
+        run: |
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_off_gateway_rollback_guard_v1.py' -v
+          python3 -m py_compile tradingview/delta-peaks/gateway-lab/off_gateway_rollback_guard_v1.py
+      - name: Offline per-Worker bootstrap GET metadata preflight test
+        run: |
+          python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_bootstrap_settings_guard_v1.py' -v
+          python3 -m py_compile tradingview/delta-peaks/gateway-lab/bootstrap_settings_guard_v1.py
+      - name: Offline bootstrap safe Worker tests (does not deploy)
+        run: node --test tradingview/delta-peaks/gateway-lab/bootstrap_test_worker.test.mjs
+      - name: iPhone TEST webhook token WebCrypto generator test (offline, no network)
+        run: node --test tradingview/delta-peaks/test_local_token_keygen.test.mjs
+      - name: JavaScript syntax check bootstrap safe Worker
+        run: node --check tradingview/delta-peaks/gateway-lab/bootstrap_test_worker.mjs
+      - name: JavaScript syntax check synthetic webhook fixture
+        run: node --check tradingview/delta-peaks/gateway-lab/offline_webhook_roundtrip.mjs
+      - name: JavaScript syntax check del gateway (non deploy)
+        run: node --check tradingview/delta-peaks/gateway-lab/worker.mjs
+
+      - name: Checkout pinned Track B offline research dependency
+        uses: actions/checkout@v4
+        with:
+          ref: daaaa8f6c265d1501a0518940b3e9c9c68e6e3a3
+          path: _remura_b_research_reference
+          persist-credentials: false
+      - name: Assert immutable cross-track dependency B
+        run: test "$(git -C _remura_b_research_reference rev-parse HEAD)" = "daaaa8f6c265d1501a0518940b3e9c9c68e6e3a3"
+      - name: Cross-track synthetic COT-price-TV end-to-end (no credentials)
+        env:
+          PYTHONPATH: ${{ github.workspace }}/_remura_b_research_reference:${{ github.workspace }}/_remura_b_research_reference/tests
+        run: python3 tradingview/delta-peaks/crosstrack_research_fixture_v1.py
+
+      - name: CVD gateway candidate offline authentication and storage tests
+        run: node --test tradingview/delta-peaks/gateway-lab/worker_cvd_candidate.test.mjs
+
+      - name: Checkout pinned Track E offline research dependency
+        uses: actions/checkout@v4
+        with:
+          ref: 9b4145e7b815dc04986eee5569bf009fc18fe535
+          path: _remura_e_reference
+          persist-credentials: false
+      - name: Cross-track B D E original-cutoff context (synthetic)
+        env:
+          PYTHONPATH: ${{ github.workspace }}/_remura_b_research_reference:${{ github.workspace }}/_remura_b_research_reference/tests:${{ github.workspace }}/_remura_e_reference/research/contributors
+        run: python3 tradingview/delta-peaks/crosstrack_level_context_fixture_v1.py
+
+      - name: Native Request boundary fixture tests (offline no Cloudflare)
+        run: node --test tradingview/delta-peaks/gateway-lab/level_worker_boundary_candidate.test.mjs
+
+      - name: Isolated D1 receipt adapter fixture tests (offline)
+        run: node --test tradingview/delta-peaks/gateway-lab/level_receipt_candidate.test.mjs
+
+      - name: Checkout pinned E v0.42 closed custody dependency
+        uses: actions/checkout@v4
+        with:
+          ref: 0612fe18265791d774845f5b83bde2e696495489
+          path: _remura_e_custody_reference
+          persist-credentials: false
+      - name: Assert immutable cross-track dependency E closed custody
+        run: test "$(git -C _remura_e_custody_reference rev-parse HEAD)" = "0612fe18265791d774845f5b83bde2e696495489"
+      - name: D E closed custody coverage at original cutoff (synthetic)
+        env:
+          PYTHONPATH: ${{ github.workspace }}/_remura_e_custody_reference/research/contributors
+        run: python3 tradingview/delta-peaks/crosstrack_closed_custody_fixture_v1.py
+
+      - name: B D E original decision closed custody diagnostics (synthetic)
+        env:
+          PYTHONPATH: ${{ github.workspace }}/_remura_b_research_reference:${{ github.workspace }}/_remura_b_research_reference/tests:${{ github.workspace }}/_remura_e_custody_reference/research/contributors
+        run: python3 tradingview/delta-peaks/crosstrack_bde_original_cutoff_fixture_v1.py
+
+      - name: Checkout original pinned B for immutable ABC release baseline
+        uses: actions/checkout@v4
+        with:
+          ref: 8dc51e8a199dc1cfd45e4cd2e7b339510af2eb2b
+          path: _remura_b_reference
+          persist-credentials: false
+      - name: Assert immutable ABC B baseline
+        run: test "$(git -C _remura_b_reference rev-parse HEAD)" = "8dc51e8a199dc1cfd45e4cd2e7b339510af2eb2b"
+
+      - name: Checkout pinned ABC main fixture dependency
+        uses: actions/checkout@v4
+        with:
+          ref: 30de2987fe28ee73044448817e66ac60391e3357
+          path: _remura_abc_main
+          persist-credentials: false
+
+      - name: Checkout pinned ABC A fixture dependency
+        uses: actions/checkout@v4
+        with:
+          ref: 2288bcc12e8548ec52b437ff4a14c621be307fd5
+          path: _remura_abc_a
+          persist-credentials: false
+
+      - name: Checkout pinned ABC C fixture dependency
+        uses: actions/checkout@v4
+        with:
+          ref: 69886bc1d1db0ad0bd74918e5146f79b223f4fe4
+          path: _remura_abc_c
+          persist-credentials: false
+
+      - name: Actual ABC collector candidate isolated compile and localhost regressions
+        run: python3 tradingview/delta-peaks/abc_integration_runner_lab_v1.py
+
+      - name: ABC pinned Python overlay and every rollback boundary (memory only)
+        run: python3 tradingview/delta-peaks/abc_overlay_transaction_fixture_v1.py
+
+      - name: ABC and v165 nine-page overlay manifest preview (offline)
+        run: python3 tradingview/delta-peaks/abc_v165_overlay_manifest_fixture_v1.py
+
+      - name: ABC static service dependency inventory (offline)
+        run: python3 tradingview/delta-peaks/abc_dependency_inventory_fixture_v1.py
+
+      - name: ABC isolated actual import-time entrypoints (no DB or network)
+        run: python3 tradingview/delta-peaks/abc_runtime_import_fixture_v1.py
+
+      - name: ABC v165 pinned repository application manifest (offline)
+        run: python3 tradingview/delta-peaks/abc_v165_repository_manifest_fixture_v1.py
+
+      - name: ABC SQLite WAL snapshot and isolated restore rehearsal
+        run: python3 tradingview/delta-peaks/abc_sqlite_backup_fixture_v1.py
+
+      - name: ABC public-key encrypted synthetic SQLite recovery (GnuPG offline)
+        run: python3 tradingview/delta-peaks/abc_encrypted_handoff_fixture_v1.py
+
+      - name: ABC installed baseline read-only census synthetic fixtures
+        run: python3 tradingview/delta-peaks/abc_installed_baseline_fixture_v1.py
+
+      - name: ABC actual pinned application disk transaction and crash recovery (isolated)
+        run: python3 tradingview/delta-peaks/abc_pinned_disk_transaction_fixture_v1.py
+
+      - name: ABC reproducible actual staged bundle and independent verifier (offline)
+        id: candidate
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -eu
+          d="$(mktemp -d)"
+          trap 'rm -rf "$d"' EXIT
+          p=tradingview/delta-peaks/abc_v165_stage_bundle_v1.py
+          python3 "$p" --build "$d/a.tar"
+          python3 "$p" --build "$d/b.tar"
+          cmp "$d/a.tar" "$d/b.tar"
+          python3 "$p" --verify "$d/a.tar"
+          python3 tradingview/delta-peaks/abc_v165_locked_bundle_fixture_v1.py "$d/a.tar"
+          if python3 "$p" --build "$d/a.tar"; then exit 1; fi
+          printf x >> "$d/b.tar"
+          if python3 "$p" --verify "$d/b.tar"; then exit 1; fi
+          # Explicit one-shot handoff; later normal commits do not publish artifacts.
+          if [[ "$PR_NUMBER" == "102" && "$PR_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]] &&
+             [[ "$(git show -s --format=%s "$PR_HEAD_SHA")" == "REMURA v0.8.157 LAB: one-shot public candidate handoff" ]]; then
+            umask 077
+            handoff="$(mktemp -d "$RUNNER_TEMP/remura-candidate.XXXXXXXX")"
+            cp "$d/a.tar" "$handoff/remura-v165-candidate.tar"
+            test "$(stat -c %s "$handoff/remura-v165-candidate.tar")" = 1771520
+            printf '%s  %s\n' '6804531c819ec16af972755b042394ac5c9acee23b7c03f70a09ab765369cfcc' "$handoff/remura-v165-candidate.tar" | sha256sum -c -
+            python3 "$p" --verify "$handoff/remura-v165-candidate.tar"
+            python3 tradingview/delta-peaks/abc_v165_release_attestation_v1.py --statement > "$handoff/candidate-attestation.json"
+            printf '%s\n' "REMURA v1.65 CANDIDATE ONLY — NOT INSTALLABLE — NO SIGNATURE OR MAINTENANCE AUTHORIZATION" > "$handoff/READ-ME.txt"
+            echo "handoff=$handoff" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: ABC exact updater persistent maintenance guard (offline)
+        run: python3 tradingview/delta-peaks/abc_v165_maintenance_gate_fixture_v1.py
+
+      - name: Publish exact unsigned public candidate (one-day retention, no deploy)
+        if: steps.candidate.outputs.handoff != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: remura-v165-candidate-not-installable
+          path: ${{ steps.candidate.outputs.handoff }}
+          retention-days: 1
+          if-no-files-found: error
+          compression-level: 6

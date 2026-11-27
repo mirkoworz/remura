@@ -1,0 +1,4 @@
+# REMURA v0.8.146 LAB — 18/11/2026, NOT INSTALLED
+# Candidate for remura-autoupdate.service.d/90-v165-maintenance.conf
+[Service]
+ExecCondition=+/usr/bin/python3 -I -B /var/lib/remura-autoupdate/v165-start-guard.py updater

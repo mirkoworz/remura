@@ -1,0 +1,90 @@
+# REMURA Budget Read-Only v0.8.14 — aggiornamento 13/11/2026 ore 12:00 CET
+# Solo 4 verifiche read-only con secrets esistenti e summary. Nessun deploy/SQL write.
+# Branch PR #102 DRAFT: NO schedule (GitHub schedule richiede default branch).
+name: REMURA Cloudflare Account Analytics READ-ONLY LAB
+
+on:
+  push:
+    branches:
+      - research/tradingview-delta-peaks-20261111
+    paths:
+      - ".github/workflows/remura-tv-account-analytics-readonly.yml"
+      - "tradingview/delta-peaks/gateway-lab/cloudflare_account_quota_guard.py"
+      - "tradingview/delta-peaks/gateway-lab/test_cloudflare_account_quota_guard.py"
+      - "tradingview/delta-peaks/gateway-lab/cloudflare_workers_usage_guard.py"
+      - "tradingview/delta-peaks/gateway-lab/test_cloudflare_workers_usage_guard.py"
+      - "tradingview/delta-peaks/gateway-lab/cloudflare_d1_storage_guard.py"
+      - "tradingview/delta-peaks/gateway-lab/cloudflare_d1_account_storage_guard.py"
+      - "tradingview/delta-peaks/gateway-lab/test_cloudflare_d1_account_storage_guard.py"
+      - "tradingview/delta-peaks/gateway-lab/test_cloudflare_d1_storage_guard.py"
+      - "tradingview/delta-peaks/gateway-lab/readonly_budget_report.py"
+      - "tradingview/delta-peaks/gateway-lab/test_readonly_budget_report.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: remura-tv-account-analytics-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  offline-safety:
+    if: github.repository == 'mirkoworz/remura' && github.ref == 'refs/heads/research/tradingview-delta-peaks-20261111'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Offline GraphQL account quota tests
+        run: python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_cloudflare_account_quota_guard.py' -v
+      - name: Offline Workers account usage tests
+        run: python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_cloudflare_workers_usage_guard.py' -v
+      - name: Offline D1 TEST storage guard tests
+        run: python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_cloudflare_d1_storage_guard.py' -v
+      - name: Offline D1 all-account bounded inventory guard tests
+        run: python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_cloudflare_d1_account_storage_guard.py' -v
+      - name: Offline budget summary guard tests
+        run: python3 -m unittest discover -s tradingview/delta-peaks/gateway-lab -p 'test_readonly_budget_report.py' -v
+      - name: Static Python syntax
+        run: python3 -m py_compile tradingview/delta-peaks/gateway-lab/cloudflare_account_quota_guard.py tradingview/delta-peaks/gateway-lab/cloudflare_workers_usage_guard.py tradingview/delta-peaks/gateway-lab/cloudflare_d1_storage_guard.py tradingview/delta-peaks/gateway-lab/cloudflare_d1_account_storage_guard.py tradingview/delta-peaks/gateway-lab/readonly_budget_report.py
+
+  budget-readonly:
+    needs: offline-safety
+    if: github.repository == 'mirkoworz/remura' && github.ref == 'refs/heads/research/tradingview-delta-peaks-20261111'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: 'Snapshot D1 + Workers + D1 TEST + D1 account, senza scritture'
+        env:
+          REMURA_CF_ACCOUNT_ID: ${{ secrets.REMURA_CF_ACCOUNT_ID }}
+          REMURA_CF_ANALYTICS_READ_TOKEN: ${{ secrets.REMURA_CF_ANALYTICS_READ_TOKEN }}
+          REMURA_CF_D1_READ_TOKEN: ${{ secrets.REMURA_CF_D1_READ_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          result=0
+          if [[ -n "${REMURA_CF_ACCOUNT_ID:-}" && -n "${REMURA_CF_ANALYTICS_READ_TOKEN:-}" ]]; then
+            python3 tradingview/delta-peaks/gateway-lab/cloudflare_account_quota_guard.py | tee "$RUNNER_TEMP/remura_d1_quota.log" || result=1
+            python3 tradingview/delta-peaks/gateway-lab/cloudflare_workers_usage_guard.py | tee "$RUNNER_TEMP/remura_workers.log" || result=1
+          else
+            echo "REMURA_CF_ACCOUNT_QUOTA=SKIPPED_MISSING_ANALYTICS_SECRET" | tee "$RUNNER_TEMP/remura_d1_quota.log"
+            echo "REMURA_CF_WORKERS_USAGE=SKIPPED_MISSING_ANALYTICS_SECRET" | tee "$RUNNER_TEMP/remura_workers.log"
+          fi
+          if [[ -n "${REMURA_CF_ACCOUNT_ID:-}" && -n "${REMURA_CF_D1_READ_TOKEN:-}" ]]; then
+            python3 tradingview/delta-peaks/gateway-lab/cloudflare_d1_storage_guard.py | tee "$RUNNER_TEMP/remura_storage.log" || result=1
+            python3 tradingview/delta-peaks/gateway-lab/cloudflare_d1_account_storage_guard.py | tee "$RUNNER_TEMP/remura_account_storage.log" || result=1
+          else
+            echo "REMURA_D1_TEST_STORAGE=SKIPPED_MISSING_D1_READ_SECRET" | tee "$RUNNER_TEMP/remura_storage.log"
+            echo "REMURA_D1_ACCOUNT_STORAGE=SKIPPED_MISSING_D1_READ_SECRET" | tee "$RUNNER_TEMP/remura_account_storage.log"
+          fi
+          python3 tradingview/delta-peaks/gateway-lab/readonly_budget_report.py \
+            "$RUNNER_TEMP/remura_d1_quota.log" \
+            "$RUNNER_TEMP/remura_workers.log" \
+            "$RUNNER_TEMP/remura_storage.log" \
+            "$RUNNER_TEMP/remura_account_storage.log" || result=1
+          exit "$result"

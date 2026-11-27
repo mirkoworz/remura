@@ -1,0 +1,22 @@
+# REMURA v0.8.91 LAB — 16/11/2026 13:08 CET
+# Incremental private persistence — design gate (NOT IMPLEMENTED)
+
+Scope: D synthetic rolling cache; reuse existing singleflight, private state, resource gate, dashboard reader and runtime preview. Do not modify main, B, C, Pine, webhook, Workers or the existing state format in this step.
+
+## Separate contracts
+- Rolling cache: private bounded mutable acceleration only; exact raw validated row multisets and requested empty slots at their original admission cutoff. Not an evidence ledger, not a backup, not a public export.
+- Scientific archive: append-only first-seen evidence and explicit missing/conflicting observations, independent provenance and retention decisions. Cache eviction must never delete/archive-rewrite scientific evidence. A late row may be a later observation, never inserted retroactively into a frozen decision. No scientific admission while provenance is unverified.
+- Existing dashboard state: sanitized HTML, notice, coverage only; no raw rows. Continue using existing reader; no change in notification/ordering gates.
+
+## Proposed persistence and crash protocol
+Use the existing stable directory and singleflight guard, not a second scheduler or independent lock. Before any claim/commit require explicit TEST origin, fresh host/budget gates (<=30 min), exact pinned code + cohort (source/version/symbol/timeframe), no live credentials in payloads. The synthetic constructor stays synthetic; a real adapter needs separate authorization and provenance contract.
+A new versioned manifest would bind generation, previous generation digest, exact cutoff, planned windows, first-observation metadata, raw row digest and dashboard result digest. Limits: cache serialized payload <=8 MiB, existing dashboard limit 256 KiB; account separately for wrapper, old generation and temp file, validation heap/RSS and disk free space. These are design limits not measured capacity.
+Prefer a single atomic commit point referencing immutable candidate blobs (cache + existing sanitized state) rather than independent overwrites. Do not make two renamed files look like a transaction. Stable lock, private directory/regular files, owner-only modes, no symlink/hardlink, bounded read before parse, duplicate-key rejection, strict canonical payload/manifest validation, write/fsync temp then same-filesystem rename and directory fsync. Reopen and validate under lock; no raw logs or public artifacts. Digest detects corruption, not malicious replacement or rollback; independent trust/pin and at-rest protection need separate review for real raw retention.
+
+Recovery design: claim is recorded before collection as existing runtime does. On crash before commit, previous complete generation remains visible as older; same claimed cutoff is not automatically recollected. On crash after commit, verify both linked payloads and generation under lock; never expose a partially advanced dashboard. Missing/corrupt/mismatched/rewound generation => BLOCKED, no silent reset, backfill or fallback to stale current status. A manual rebootstrap is an explicitly new cohort boundary, not reconstruction of missed historical decisions; preserve prior evidence. Stale temporary files are not automatically deleted until owner/identity and generation are proven; disk cap prevents unbounded retries. Retain at most active + previous complete cache generation only after retention/security review; archive outside this eviction policy. No automatic retry after ambiguous fsync/rename.
+
+## Acceptance gates
+1. Synthetic equality of cache/reference raw input and entire existing preview (coverage, HTML, notice) at the same cutoff and frozen B inputs. Divergence => no promotion. Mock B covers a matched pair; pinned real B implementation fixture still required for cross-track persistence integration.
+2. Adversarial crash injection before/after commit point, claim/complete mismatch, corrupt/oversize payload, invalid permissions, replay/rollback, symlink/hardlink, concurrent readers/writers, lost disk space, expiry/late rows/conflicts. Verify no raw export and no double collection.
+3. Measure worst-case serialized bytes, temporary peak disk, actual process RSS/CPU and latency. Budget estimated slots vs observed SELECT rows vs actual billing remain distinct; no resource activation with stale gate.
+4. Validate on private TEST snapshots only after Oracle and authorization; verify scientific archive retention/provenance separately. No production deploy, new resource, notifications, orders or edge claim.

@@ -1,0 +1,17 @@
+# REMURA v0.8.122 LAB — 17/11/2026 CET
+## Sender trust and free-first release gate (review only)
+Verified official docs:
+- https://www.tradingview.com/support/solutions/43000680459-webhook-authentication/ — TradingView HTTPS client certificate, subject CN and SAN email webhook-server@tradingview.com. Names alone do not authenticate; verify chain, validity, proof of possession, revocation policy and exact expected identity.
+- https://www.tradingview.com/support/solutions/43000529348-how-to-configure-webhook-alerts/ — source IPv4 list (52.89.214.238, 34.212.75.30, 54.218.53.128, 52.32.178.7), three-second response deadline, JSON and UTF-8 example. Reconfirm list at release.
+- https://developers.cloudflare.com/ssl/client-certificates/client-certificate-variables/ — trusted platform TLS fields, not HTTP headers.
+- https://developers.cloudflare.com/ssl/client-certificates/byo-ca/ — external CA upload for zone mTLS Enterprise-only; Access has separate CA quota, compatibility not verified. Do not buy or assume TradingView can install Cloudflare-issued certs.
+- https://developers.cloudflare.com/workers/platform/limits/ — free 100000 requests/day, 10 ms CPU, 50 subrequests/request. Verify actual metrics, not theoretical capacity.
+- https://developers.cloudflare.com/changelog/post/2026-09-01-d1-free-tier-limit-enforcement/ — daily quota failure until UTC reset.
+## Options
+A. Existing Worker, free-first transport-only candidate: independently establish exact ingress host and no bypass, platform-authenticated actual peer IP, immutable allowlist, edge deny before D1, isolate route/session. IP alone authenticates neither account nor message. No user header, forwarded chain from arbitrary client, self-described payload clock or URL capability accepted as proof of sender. Do not embed login/password or reuse prior keys. Separate low-scope route authorization design, redaction and proof of ownership needed. Never classify receipts as cryptographically authenticated merely by IP.
+B. Investigate separate Access mTLS compatibility and licensing, or a future isolated direct HTTPS receiver with standard TLS client verification against independently verified CA and exact TradingView identity. No modification of existing VPS, no public exposure or DNS changes; A+ suspended. Require independent validation of actual certificate chain and revocation, host isolation, resource availability, and owner approval. No claim of free end-to-end mTLS today.
+C. If no satisfactory verified sender path exists, remain LAB/OFF; no paid upgrade.
+## Timing
+This change moves synthetic completion sample until AFTER strict validator and hash, immediately before SQL. 5 s permit still an internal fixture design, not a guarantee of commit latency or response within TradingView 3 s. Actual edge CPU, D1 latency, timeouts, lost replies, retries and clock skew must be measured with closed test authorization; no resubmission on uncertain writes. Official JSON UTF-8 media-type example accepted explicitly; other encodings and extra parameters rejected. All real authentication flags remain false. No cloud/resource/alert change.
+## Next gates
+Determine trusted platform IP metadata and WAF route eligibility on current plan, inspect budget counters, test denial without DB writes, test real sender using separated Pine only after compile and explicit authorization, independently attest storage/receipt provenance. No signals/edge claims. Four new synthetic regressions, CI pending.

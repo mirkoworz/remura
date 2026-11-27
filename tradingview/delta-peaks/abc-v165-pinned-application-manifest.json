@@ -1,0 +1,1418 @@
+{
+  "schema": "remura.abc.v165.stage.bundle.lab.v1",
+  "manifest_sha256": "73635db92dd9f709ae078119a161ab12b7c9a63ca18782b99e7e1f6357c3c2c1",
+  "application": [
+    {
+      "base_git_blob": "2036c63dc8ff2930636f6dc9d4259fa2353c8b11",
+      "bytes": 44325,
+      "candidate_sha256": "3bf80905c15033a97c564c0f0d797340585236d725c0419c3ce5cb5c9ad60da6",
+      "category": "ui",
+      "operation": "replace",
+      "path": "asset.html"
+    },
+    {
+      "base_git_blob": "f05cb26784807d8e5b44ee4ae46a9cea3d6c81a5",
+      "bytes": 662,
+      "candidate_sha256": "d829add226aa9b7e721e3bde7fd3c3a8e63ce4366b91e05280d1ae3fb1273907",
+      "category": "ui",
+      "operation": "retain",
+      "path": "capital-cloud-config.js"
+    },
+    {
+      "base_git_blob": "0a7cd3e5c91fb416057eb0bab6e8d1d60f891fd1",
+      "bytes": 2588,
+      "candidate_sha256": "6bffa097f0f81524f239e4d03e07b95285099d1a60f219949d27dd754752918f",
+      "category": "ui",
+      "operation": "retain",
+      "path": "capital-cloud.js"
+    },
+    {
+      "base_git_blob": "29d9c9213586a328562b1a09ddf27e029e20d658",
+      "bytes": 4705,
+      "candidate_sha256": "7f10b4f8b34bf4a1ce0ca52ad778a9363b411694d5500299b18f7a72da4134d5",
+      "category": "ui",
+      "operation": "retain",
+      "path": "case-audit-core.js"
+    },
+    {
+      "base_git_blob": "58e27ae7df4bdbd0c40236c1e4200b73e6403732",
+      "bytes": 5096,
+      "candidate_sha256": "c2e147e212c2566ed88fda7f94f8c40429f2801a98e88749c329b4d354787a67",
+      "category": "ui",
+      "operation": "retain",
+      "path": "case-audit-ui.js"
+    },
+    {
+      "base_git_blob": "2847a1ecb36ee92aa36e14444db5770f846f4978",
+      "bytes": 10210,
+      "candidate_sha256": "93c408ff2893d06c5c008fbccdf6d0c46a09899448d1f62761b68b0b7d6d44b6",
+      "category": "ui",
+      "operation": "replace",
+      "path": "catalogo.html"
+    },
+    {
+      "base_git_blob": "b692c61de1ca7ef2d93009c36634b5641a68c201",
+      "bytes": 2015,
+      "candidate_sha256": "d1e71af282ea33b7e8433668bb2f1ff56560f576b27bc7a15f480c841e2d4b2d",
+      "category": "ui",
+      "operation": "retain",
+      "path": "cot-indices-core.js"
+    },
+    {
+      "base_git_blob": "97efc8c06d6d83528e50d0b8b384d2aa11289275",
+      "bytes": 5737,
+      "candidate_sha256": "76c2668c133d6ab89643130c1aaf3533a3d184a725d6017ccbbfd8404fee603c",
+      "category": "ui",
+      "operation": "retain",
+      "path": "cot-week-watch-core.js"
+    },
+    {
+      "base_git_blob": "bc1a3afdb58373ababcdd431b9ea4190a0a9cd4e",
+      "bytes": 7856,
+      "candidate_sha256": "48a094f3e56cb88b75204cbabff6c8851952c27db45e31f259e1351ffa4769c6",
+      "category": "ui",
+      "operation": "retain",
+      "path": "cot-week-watch-ui.js"
+    },
+    {
+      "base_git_blob": "b9110a4a23091e3204b5e7863d7b05bb1d1ea24b",
+      "bytes": 3390,
+      "candidate_sha256": "b3d5eb770887fa7ae07c321efcbe7948b0abbf803cc72e2a2a346911ce42481d",
+      "category": "ui",
+      "operation": "retain",
+      "path": "dual24-core.js"
+    },
+    {
+      "base_git_blob": "553a8a2668499bb4a85df04ca165b77be2a18d56",
+      "bytes": 4054,
+      "candidate_sha256": "219c9b1941af0f034bfbe66270e56468b03f46e6ec091b8eb4399cc74244e0da",
+      "category": "ui",
+      "operation": "retain",
+      "path": "dual24-ui.js"
+    },
+    {
+      "base_git_blob": "9137b41a701ba7604d7c3bed95dd2ec891f00d79",
+      "bytes": 1143,
+      "candidate_sha256": "19e88a8d95096d1d7b96d954b1a4ab9f9acff0326aab1a03736eb1fb2e8396a7",
+      "category": "ui",
+      "operation": "retain",
+      "path": "feed-health-core.js"
+    },
+    {
+      "base_git_blob": "17b6ebedf83531e070f150d29ad508c1812c0cee",
+      "bytes": 6277,
+      "candidate_sha256": "2cf5927029040cf30b94a8611a23df93d96bfb480a1bd276456d55e3ec38d81d",
+      "category": "ui",
+      "operation": "replace",
+      "path": "fonti.html"
+    },
+    {
+      "base_git_blob": "e4f7c9fea8924dd3a1fffed18363e30dd539f8ca",
+      "bytes": 43693,
+      "candidate_sha256": "27e58d3b406ae8ab9198a75588fa2151b0b9f9608a002b2666ea6a6b32afd8d9",
+      "category": "ui",
+      "operation": "replace",
+      "path": "forex.html"
+    },
+    {
+      "base_git_blob": "52ed228ce69f3da5f8bbb54cc0de5cdd1cac2b6f",
+      "bytes": 697,
+      "candidate_sha256": "2de1015148ccf94274a1d1d9c92a7b302c7e841e548a1b78fbb926bb90705316",
+      "category": "ui",
+      "operation": "retain",
+      "path": "icon.svg"
+    },
+    {
+      "base_git_blob": "d772e2e8313148384fc2495faf189f8b1fa9d800",
+      "bytes": 12655,
+      "candidate_sha256": "4f9989721dd74835ad1f836422e6b11eff138311f9830eeaa1135ce04297df0e",
+      "category": "ui",
+      "operation": "replace",
+      "path": "impostazioni.html"
+    },
+    {
+      "base_git_blob": "de1cb44a714f36cb0734f48d1fc6a4305a44761d",
+      "bytes": 24801,
+      "candidate_sha256": "a177ed3eca01358d18541dd63791e258e0aef3656dbc8ccbe4f1b7d4b01b0b14",
+      "category": "ui",
+      "operation": "retain",
+      "path": "impostazioni.js"
+    },
+    {
+      "base_git_blob": "b41ebbf9f768bfa4a57d625620eb9b3f53b3e445",
+      "bytes": 17295,
+      "candidate_sha256": "32a0177185b67d33ce20b518e2e1a39928145d48db89edf9a82493e8a34a6985",
+      "category": "ui",
+      "operation": "replace",
+      "path": "index.html"
+    },
+    {
+      "base_git_blob": "9e3dcb235bba772aa8eeab7427c525bdc108b18e",
+      "bytes": 17683,
+      "candidate_sha256": "24b2554e2b2322943b8b4f2f3b163987d5b925b6f1c2a345e300d68a405e6630",
+      "category": "ui",
+      "operation": "retain",
+      "path": "insights-core.js"
+    },
+    {
+      "base_git_blob": "338f8c06910d5088f5d9a1181fe06dcd98f7ddf6",
+      "bytes": 3573,
+      "candidate_sha256": "e684809ddf3f625d08a2b1dd7ec4259c21ce92d8e2217fc608636aa2221576c3",
+      "category": "ui",
+      "operation": "retain",
+      "path": "insights.css"
+    },
+    {
+      "base_git_blob": "b0000e03eca9f7499918d4830ced7fcc4a02c583",
+      "bytes": 12685,
+      "candidate_sha256": "8b103ad00efaf326f3ef3c7944bf3ff23a5fc9504247a178488ed8bc77402850",
+      "category": "ui",
+      "operation": "retain",
+      "path": "insights.js"
+    },
+    {
+      "base_git_blob": "6d1034b749a34747cba1e8485277ce3583598f88",
+      "bytes": 424,
+      "candidate_sha256": "fda364f1e210ff2c7a0eea97f829731ed3b7ee3ae499c34f02319f141ae7eb20",
+      "category": "ui",
+      "operation": "retain",
+      "path": "manifest.webmanifest"
+    },
+    {
+      "base_git_blob": "c85d70ed6e019ec42b79f4d56bf1ad46470d12ac",
+      "bytes": 3853,
+      "candidate_sha256": "991418534ab7d2c8b995ddfa9d66e2ef46afe92f9a9d1546e27ec793b9e5c95b",
+      "category": "ui",
+      "operation": "retain",
+      "path": "market-audit-core.js"
+    },
+    {
+      "base_git_blob": "95b8b0bdb75ebbc29730ed871e0673a8b803c5c8",
+      "bytes": 4553,
+      "candidate_sha256": "a425d7ec929f46debbc58c2096a215e2a737ca6a85870c8c0224459d5eafc95d",
+      "category": "ui",
+      "operation": "retain",
+      "path": "market-audit-ui.js"
+    },
+    {
+      "base_git_blob": "10d20744ed69531d4d51bdda194c01b5fcd116f3",
+      "bytes": 75020,
+      "candidate_sha256": "652a3acdec8aeec1d5be3e476e8e0da7848f66131b6dc78106ce548ea3fa749e",
+      "category": "ui",
+      "operation": "replace",
+      "path": "mercati.html"
+    },
+    {
+      "base_git_blob": "95679269c114c81908ff81c01e124086a4a742ea",
+      "bytes": 5222,
+      "candidate_sha256": "8f9d472ff0765bfd4b32a601586e28bb54a545d9795a59e89f7856a05ce64580",
+      "category": "ui",
+      "operation": "retain",
+      "path": "nav.css"
+    },
+    {
+      "base_git_blob": "d35c9d06f9c64a10938f30ec7e7ae7b2f2c5fbec",
+      "bytes": 11172,
+      "candidate_sha256": "01f7938638f2bc9c50fe3592dc7d37c24ce098398cf96c0b5c0194938e0d8969",
+      "category": "ui",
+      "operation": "replace",
+      "path": "nav.js"
+    },
+    {
+      "base_git_blob": "8c6c24cd4c60a3ce219209c39209c8111a0b9a29",
+      "bytes": 10631,
+      "candidate_sha256": "73be46c1f92aba2f566a0a82e17d85ad826414808cac74d6acbff885bea714d8",
+      "category": "ui",
+      "operation": "retain",
+      "path": "price-core.js"
+    },
+    {
+      "base_git_blob": "bfa5f40687734961d1d37988c59f14938a847bed",
+      "bytes": 13365,
+      "candidate_sha256": "e355f3465a9c7abdf6552d3ecdb1ec6aa963aaf22b854c25baa2f2f111cd5230",
+      "category": "ui",
+      "operation": "retain",
+      "path": "price-status-core.js"
+    },
+    {
+      "base_git_blob": "6e9104b60acaa1f4d7cf31577dad9223b14177e7",
+      "bytes": 3575,
+      "candidate_sha256": "0ac0535a79e4bdde22e7b587ece507d8d618dcec418207db70965a757521bb9e",
+      "category": "ui",
+      "operation": "retain",
+      "path": "price.css"
+    },
+    {
+      "base_git_blob": "33efbc371a30244221f1724671283390e4f94ce6",
+      "bytes": 14286,
+      "candidate_sha256": "f9aac80b50a30dcbeb833173d78662e3fc3c3bbc48f471e55af6fb9b21768d04",
+      "category": "ui",
+      "operation": "retain",
+      "path": "price.js"
+    },
+    {
+      "base_git_blob": "8962d1dfab25a66c7f8aac9be7414229b38acd9c",
+      "bytes": 3949,
+      "candidate_sha256": "ecb41563919148006c2d257ac5b87e46e14de01eab8ffc3dc92721f01b44f3d3",
+      "category": "ui",
+      "operation": "retain",
+      "path": "resource-health.css"
+    },
+    {
+      "base_git_blob": "7f088282f33edf275e47d2fe674a70ab2f1a4a92",
+      "bytes": 2978,
+      "candidate_sha256": "c75a81a94784796c08c271d53e309e30e77ba3dc2273e7abb919cc233b06637e",
+      "category": "ui",
+      "operation": "retain",
+      "path": "resource-health.js"
+    },
+    {
+      "base_git_blob": "03d92c20d08c25e363b516587d8b4cb0fc5e0e3e",
+      "bytes": 6405,
+      "candidate_sha256": "65fc901220ea0957f26f1d34107d27e3095078940a7201b9b7a6e360fe269327",
+      "category": "ui",
+      "operation": "retain",
+      "path": "retail.css"
+    },
+    {
+      "base_git_blob": "679992eb06c16022f4034cc13b0a784af858f462",
+      "bytes": 12943,
+      "candidate_sha256": "d08d5e9d970dba9656e2f419948e3521041925f6abf00c7bea57cb9d84b98b06",
+      "category": "ui",
+      "operation": "retain",
+      "path": "retail.js"
+    },
+    {
+      "base_git_blob": "68ef3244b3b4c055121b11be506b436f0551e6ac",
+      "bytes": 6647,
+      "candidate_sha256": "25d319b92cab436840e77b9f53e54f61805e86f7b903518e65039b579cca6c17",
+      "category": "startup_static",
+      "operation": "retain",
+      "path": "scripts/batch_timing.py"
+    },
+    {
+      "base_git_blob": "1434853216ddc186052e52b29a589191b13a2e74",
+      "bytes": 5206,
+      "candidate_sha256": "76af5e844f2bbce3dc60c404320ed82f97e75f7dee5b04b77533051eced04ed0",
+      "category": "startup_static",
+      "operation": "retain",
+      "path": "scripts/case_audit.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 4984,
+      "candidate_sha256": "fb666882b6f357415997f918bfbe12d7135638cdbd63844bb96a6fd7172f630f",
+      "category": "startup_static",
+      "operation": "add",
+      "path": "scripts/collector_watchdog.py"
+    },
+    {
+      "base_git_blob": "be08571285021f1acfdb45601f5b6cf27c7f8765",
+      "bytes": 7355,
+      "candidate_sha256": "2c7ce334a97b0922d59efa3f7e843c68a326dc93cb13dc641851c5a3cbca2ce4",
+      "category": "unclassified_retained",
+      "operation": "retain",
+      "path": "scripts/configure_ctrader_backup.py"
+    },
+    {
+      "base_git_blob": "f7f7ffec35671ebeb429e4a16713e8d27ad1764d",
+      "bytes": 9081,
+      "candidate_sha256": "c9987b39d1d30501c76f6eb8914b6d4c78fa10d6b522a3bb3f40ad8d90b7bac1",
+      "category": "startup_static",
+      "operation": "retain",
+      "path": "scripts/cot_monitor.py"
+    },
+    {
+      "base_git_blob": "c998b8efd72bb5e6056068f58a9e3ce20a982504",
+      "bytes": 7957,
+      "candidate_sha256": "45f04f94dd2d8d23d731fdcb166b1c99cebbfdf992ad3f32a11d8d31830ca80f",
+      "category": "startup_static",
+      "operation": "retain",
+      "path": "scripts/cot_week_watch.py"
+    },
+    {
+      "base_git_blob": "a23a678b5fbb6fa5de43fabb57fad6a28fa52021",
+      "bytes": 18853,
+      "candidate_sha256": "bbced2a14ba1ba0bd2d37138c3af64d8b257b95030ca377bae4b87d4600bbfb0",
+      "category": "service_reachable_static",
+      "operation": "retain",
+      "path": "scripts/ctrader_feed.py"
+    },
+    {
+      "base_git_blob": "8d732e8fdc5877d1ac63c0ed8d69ce82c2263c7f",
+      "bytes": 5385,
+      "candidate_sha256": "df1f272cc07915382f992d2520391cfbe6c99a4c8ee1a84398b4a7209599a363",
+      "category": "startup_static",
+      "operation": "retain",
+      "path": "scripts/ctrader_tokens.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 7044,
+      "candidate_sha256": "b893552eec3fd49647ef2a06b3778044b402996788d48dc79ee825fe1642aa4d",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/cvd_benchmark.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 9857,
+      "candidate_sha256": "dd42d8405920b6c4cec18a37b7f93c6669e93ae457d99eff4e1435bbbb8ba5fc",
+      "category": "service_reachable_static",
+      "operation": "add",
+      "path": "scripts/cvd_divergence.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 7075,
+      "candidate_sha256": "30c2c6a86fa0bb758412bf963e4a621bb28d686a10e6f806402f5ab0d602b83f",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/cvd_session_replay.py"
+    },
+    {
+      "base_git_blob": "30bf4b793579dead0c5a04b12caa3458baf8553e",
+      "bytes": 13680,
+      "candidate_sha256": "f79c8c01468f3f69f0a8ec992f034f90def2c076a3df2a5658e96647f0b2ac78",
+      "category": "startup_static",
+      "operation": "retain",
+      "path": "scripts/dual24_validation.py"
+    },
+    {
+      "base_git_blob": "13a58bea9414a8d81b0cb1095fa9e44eab307ecc",
+      "bytes": 5966,
+      "candidate_sha256": "613dbb52f0a72f7164155612df568f75058c5b26bbcaea76ff939eccfb1a6dfa",
+      "category": "startup_static",
+      "operation": "retain",
+      "path": "scripts/h1_batch_comparison.py"
+    },
+    {
+      "base_git_blob": "8447ae397c4e82dc8d1c5e59a96e8dd347997463",
+      "bytes": 6983,
+      "candidate_sha256": "4367ef4383972c369728ee3a1f551b23ab00b8407843cb4426f4c749debb05ba",
+      "category": "startup_static",
+      "operation": "retain",
+      "path": "scripts/h1_paired_store.py"
+    },
+    {
+      "base_git_blob": "c947e80069c12383e8e3a5fee06bfe5867a5a31c",
+      "bytes": 5751,
+      "candidate_sha256": "a99a4a506f1a6d769961bc8eac9b47d7213a89de079c9acb7a04136541894566",
+      "category": "startup_static",
+      "operation": "retain",
+      "path": "scripts/market_validation.py"
+    },
+    {
+      "base_git_blob": "6b0a3056d0b6fab5fe0850d6cf60a8dca911e823",
+      "bytes": 1134,
+      "candidate_sha256": "f32341fb0377cdc44c1cfd2071ade6348c6580ff89ed4ee73c6c3398ba0fe544",
+      "category": "unclassified_retained",
+      "operation": "retain",
+      "path": "scripts/myfxbook_safe_sync.py"
+    },
+    {
+      "base_git_blob": "e7a0977a02c7ec86f2d03d174a37e208491bd9f4",
+      "bytes": 7835,
+      "candidate_sha256": "9334a6fe6a3ac0e2c4d50b1be7583e30562b441d877712963039556fdad71f65",
+      "category": "service_reachable_static",
+      "operation": "retain",
+      "path": "scripts/myfxbook_store.py"
+    },
+    {
+      "base_git_blob": "00a05fbf9098386ea596814048bdf67a4235186f",
+      "bytes": 15182,
+      "candidate_sha256": "f5f3f589e193debbbb7e71f84cec7f75b9960c63f8f5d7771f91341f74c1a0e6",
+      "category": "startup_static",
+      "operation": "retain",
+      "path": "scripts/price_feed.py"
+    },
+    {
+      "base_git_blob": "96375ed6319fc917a8bfd76cdc538fa1d911d23a",
+      "bytes": 14935,
+      "candidate_sha256": "80371fa5b7b139489492f887ad13833217a8f4cd01696972ba6244534fb52d4f",
+      "category": "startup_static",
+      "operation": "replace",
+      "path": "scripts/price_store.py"
+    },
+    {
+      "base_git_blob": "0853194762f3f0340451a69c9ed8b4e0261db42d",
+      "bytes": 62438,
+      "candidate_sha256": "b70b82f6b2752536b5bbe8c6493072c4b5cff982da0f35124beb60779b92d4ab",
+      "category": "startup_static",
+      "operation": "replace",
+      "path": "scripts/private_server.py"
+    },
+    {
+      "base_git_blob": "7f6927cd3a7be4685fd6de4b4c8d6349f2661472",
+      "bytes": 2427,
+      "candidate_sha256": "900855a83ccd4e4630a031195d43db096d5b23eab0724720e17be9e0591b995c",
+      "category": "startup_static",
+      "operation": "retain",
+      "path": "scripts/resource_monitor.py"
+    },
+    {
+      "base_git_blob": "7a511c01c2fd35bf8b85f55297dcb5c62a66b373",
+      "bytes": 4107,
+      "candidate_sha256": "bd7d37424018f654864701e4cf39213f70775a03acdef7b7f0c5217bee030d92",
+      "category": "startup_static",
+      "operation": "retain",
+      "path": "scripts/session_gaps.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 13735,
+      "candidate_sha256": "1f1e61e664c78218686e3754d4474d5dfa49b9bc76ad84bb538f984c0a235b60",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_causal_pair_audit.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 10350,
+      "candidate_sha256": "c27e26a9f13e5bbc3aee1a9f4b6e6aecb856a8c2e1fbc2df253297ffee025cd0",
+      "category": "service_reachable_static",
+      "operation": "add",
+      "path": "scripts/shark_cot_asof_witness.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 13747,
+      "candidate_sha256": "428a8159acded957cc8e21f75728e0f64ee8741982ba4800f4ee5e5e11c81605",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_cot_cvd_scan_reconciliation.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 9976,
+      "candidate_sha256": "ed93ada13d66d35e031cf0199887bef0470b22f3e66cb3e90636fcde2596412f",
+      "category": "service_reachable_static",
+      "operation": "add",
+      "path": "scripts/shark_cot_paired_baseline.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 9207,
+      "candidate_sha256": "60df0e7a633d2bb57c29868243ce3b6ef446d2e77d0c397e8f596a1accdf1217",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_cot_robustness.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 9092,
+      "candidate_sha256": "46d8d6fa65af3a7871b0b14702a1a8de2b94276797bf0386722818b913578af6",
+      "category": "service_reachable_static",
+      "operation": "add",
+      "path": "scripts/shark_ctrader_ingest_handoff.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 13969,
+      "candidate_sha256": "494fdca410212acefa1f93d12690065f941b93855257d01bff3ccce3920f873a",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_cvd_cot_price_triage.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 11401,
+      "candidate_sha256": "97d31e13fdec1f0bd9d92264852b22a6949b75eabdfa0dfa89bf0974555800e0",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_cvd_full_denominator_audit.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 14913,
+      "candidate_sha256": "4c20113093af642368cb4a0ad69384374a666d8aed8038ca1d9756dbd0f4e5cb",
+      "category": "service_reachable_static",
+      "operation": "add",
+      "path": "scripts/shark_cvd_incremental_protocol.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 9138,
+      "candidate_sha256": "ba31402a0e980fd6913192d500491a6f463e1a3ae1140fd57b432b45d6e05029",
+      "category": "service_reachable_static",
+      "operation": "add",
+      "path": "scripts/shark_cvd_ledger.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 4401,
+      "candidate_sha256": "224ccf8be4bdd6cc33afe63ff33be8d43493495835716bfe440cf0cf91967fb7",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_cvd_missingness_bounds.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 18308,
+      "candidate_sha256": "1285d65dee9466e54f63c64510355b0c36da2baba68628ce82e82eddbbb16bad",
+      "category": "service_reachable_static",
+      "operation": "add",
+      "path": "scripts/shark_cvd_prefix_lineage.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 5484,
+      "candidate_sha256": "3f9c77a66e345a6783f2867e2e878840e8e305c1071151c92c3a6c746712b45c",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_cvd_same_source_adapter.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 7812,
+      "candidate_sha256": "db193a0cbc9165309037715689c8439e97c19481564987a6727e9d7ea934ccc3",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_cvd_same_source_preflight.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 14468,
+      "candidate_sha256": "7a3f1c11017a1b7e479318d980a4df319078ce074b70ba6574be304289436960",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_cvd_scan_coverage.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 11354,
+      "candidate_sha256": "42cd7ba2f032bcea9b6be1822cea1bf4f00f5d57dfc1786032a853daf4710b1c",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_cvd_shard_backup.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 12041,
+      "candidate_sha256": "917f795b79aec428404fd1dd9e254bec45e740869d6fad7d3a76db47b2402319",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_cvd_shard_resource_probe.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 20797,
+      "candidate_sha256": "af5a28e486d6fe621a43bcee82929c52ef36d2dd402dbb648a9a6ce076761c68",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_cvd_sharded_ledger.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 8917,
+      "candidate_sha256": "dce205efd2b1cb47a59b991cd66742204c8850a4af2ca793de356e482572eae5",
+      "category": "service_reachable_static",
+      "operation": "add",
+      "path": "scripts/shark_cvd_source_lineage.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 4196,
+      "candidate_sha256": "f5e0ed4bcef6c3d11092bb28225ac877aeea5ec83f8413521333bd131fb45ef1",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_cvd_storage_gate.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 9006,
+      "candidate_sha256": "04dc5d67fffbb7c9a7882b7001350cf37428f1afe3f6102ebce61fc848ff7858",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_data_readiness.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 4896,
+      "candidate_sha256": "4a71c11ae6a398e056224cb2ddb855c5a3dc24cb1f0cafa53254b3953219aa34",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_digest_ab_benchmark.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 5109,
+      "candidate_sha256": "547845829b721a2bc19c512e11c4d69245038338657a7978efeeb9d5db8a8ab1",
+      "category": "service_reachable_static",
+      "operation": "add",
+      "path": "scripts/shark_first_invocation.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 11122,
+      "candidate_sha256": "e8cef4fc95c1d42ee2aac96afe1b90980cf67c93758f596bba1567083d4d3e91",
+      "category": "service_reachable_static",
+      "operation": "add",
+      "path": "scripts/shark_ingest_first_seen.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 8282,
+      "candidate_sha256": "23b41a4e4a0743877d592a5b687076138362eefdf60efb9ed957986813069f89",
+      "category": "service_reachable_static",
+      "operation": "add",
+      "path": "scripts/shark_market_regime_context.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 5012,
+      "candidate_sha256": "43ee3ed91317afde3d667147509b27c0fce52ca066a1ad52dee3b440922be241",
+      "category": "service_reachable_static",
+      "operation": "add",
+      "path": "scripts/shark_observation_bundle.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 7877,
+      "candidate_sha256": "5371e707340b59fd5dacc412b536d2796248f39c29c525e64d315aaad7318276",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_oracle_capacity_readonly.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 8662,
+      "candidate_sha256": "ac7e73db43df004ca2b0ed1580a2a58000251498280a301f2737c800e6a7d43b",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_oracle_cvd_coload_gate.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 14097,
+      "candidate_sha256": "61f09bfbbace130f46331c82ffece214e3d454c5b6958c53c328d06fbffa337a",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_oracle_staging_gate.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 7821,
+      "candidate_sha256": "b87319c2edca25e791de22847a2822f1a5d169dc260bb43a81419cc5063b3d2c",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_original_decision_atomic_gate.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 6940,
+      "candidate_sha256": "2eb74600fb3893db3412fc93f6dd3c0ba00efa58a8e6eabc1b9cd89640a9c50c",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_p0_go_no_go.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 15976,
+      "candidate_sha256": "633fc34c44cba43dc64527c3740a25aa40c0f4bb9afaa2cd0c95b29b3a35ab83",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_p0b_passive_observer.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 9994,
+      "candidate_sha256": "987bd95a66da90dd17e2a3c3c91b7877b15d92eb099b3bffa4d8f50f708d494d",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_p0b_window_census.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 9290,
+      "candidate_sha256": "a47359c98bc3cb45e7a93c8d752edc6be585a3f6139726aa4109c7c9a14f37a2",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_prefix_cost_probe.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 11648,
+      "candidate_sha256": "7ee35ff9da0df45cec0fd12c6b2434a00d3c058c97e806f5ff19175599b6efa1",
+      "category": "service_reachable_static",
+      "operation": "add",
+      "path": "scripts/shark_price_asof_evidence.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 15860,
+      "candidate_sha256": "2a06a9b65c0324c43d4f619acf728a7f52db21033c4069d1f014e930b5b18ca6",
+      "category": "service_reachable_static",
+      "operation": "add",
+      "path": "scripts/shark_price_only_compact.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 14543,
+      "candidate_sha256": "69e4503cdb98cd1e870671dda4c881e30356116066a9a3a3474f1334993596ab",
+      "category": "service_reachable_static",
+      "operation": "add",
+      "path": "scripts/shark_price_only_universe.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 5174,
+      "candidate_sha256": "6b4c09f15cadc4ed9715c67ea665184b109692dbe0df07317862c490f8835f39",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_price_regime_atomic_gate.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 8565,
+      "candidate_sha256": "30acb2cca2d4035ff5f9c233f4b839339001d4cb9eea22155b68dc9093a87cd8",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_prospective_coverage.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 9237,
+      "candidate_sha256": "9b68c78c467664fbe7e34864e421739e776c5742f1520d39f0615087c46f17cf",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_regime_cvd_cohort_audit.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 8093,
+      "candidate_sha256": "df482dfbdf825e644d0a2f90157ea1f47cb33c5fccb6ab88e902413a6d0465da",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_regime_first_seen.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 6768,
+      "candidate_sha256": "9e241aaa639bdbe55ab57ff71982548b86e0ede3c5e42d4dc02b5620d309f706",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_research_census.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 17772,
+      "candidate_sha256": "61301b72841472250657de2bddce17d31366646e51dfd8aa4ea8a596ef820e23",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_research_local_archive.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 5027,
+      "candidate_sha256": "1a43cb8f7327712610ef18050ee609efe9cf199f5d39d28f94af59654c7763e8",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_research_probe.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 8883,
+      "candidate_sha256": "f5512a6db9e1376b38f607cab2f8555bc7a2a0b71f430534d8d258c1ee1ffe97",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_resource_probe.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 3181,
+      "candidate_sha256": "341b897f3cfd0bac2847cbb9fbc6c7de763daf9ebc36b2dbabd91ced00a85320",
+      "category": "service_reachable_static",
+      "operation": "add",
+      "path": "scripts/shark_retail_actual_scan_handoff.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 10646,
+      "candidate_sha256": "3459e95ff159efb767487606a24225355b13f5f153979e373bcdaadfdaf95688",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_retail_capsule_index.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 17661,
+      "candidate_sha256": "81c77d71006f9b9faa0da57bab5308bda9d4cd0840edb297482dd943ffa0c137",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_retail_crossdb_predecision.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 15151,
+      "candidate_sha256": "9431df0198461488ee2dd5fa9b62202f8a709d17a96a163ca47616c60b9b053b",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_retail_evidence_capsule.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 18769,
+      "candidate_sha256": "bfbca9311b32b3c77997e35622f716c21dcc4c1ee681afbf1302762903d0d54f",
+      "category": "service_reachable_static",
+      "operation": "add",
+      "path": "scripts/shark_retail_first_seen.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 11858,
+      "candidate_sha256": "9ffa2102585e9f43975f3cc31cd4e986776f893a2b8dc1729d521ec1ff221e40",
+      "category": "service_reachable_static",
+      "operation": "add",
+      "path": "scripts/shark_retail_numeric_features.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 11869,
+      "candidate_sha256": "e31897c24ad012adbcf981d82dfb774f43f91281eddb30a4965a8edea17f494e",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_retail_preregistered_protocol.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 11266,
+      "candidate_sha256": "c68821d08bba8eb352160b81a422022b9aa0eabd28c0ef981e58fb370b3be8d7",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_retail_prospective_validation.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 5570,
+      "candidate_sha256": "0c1bd44e5c93385d2753c4358671c967238120ead54e5ce4ed0b41f683203bec",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_retail_retention_readiness.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 4991,
+      "candidate_sha256": "666a89f46a13f4763e82c94628648650f324de7884ab52daa907a5e1e1b702f9",
+      "category": "service_reachable_static",
+      "operation": "add",
+      "path": "scripts/shark_retail_scan_inbox.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 9542,
+      "candidate_sha256": "96564d4b470f0401c6f40928702d6d8f4836313251a2a57ce010da846b71d8cb",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_retail_segment_readiness.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 13105,
+      "candidate_sha256": "2d4801fd25f08513c6fabc6ea4943fdd3e2b2952881aa5921a61a98700781441",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_retail_segment_writer.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 10802,
+      "candidate_sha256": "4ff4c5d7b18c46c7c50d2422eebf3eac3c65562091e64436a2d3879acbd701d1",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_sample_admission.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 6385,
+      "candidate_sha256": "d0099539f41c1e67f06b1318b5b501a0a1e6ab41519d4703820b09ee24fcbecc",
+      "category": "service_reachable_static",
+      "operation": "add",
+      "path": "scripts/shark_scan_failures.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 7438,
+      "candidate_sha256": "fdec127eb09857319f598bb465b57cc11573cf2de3f2ffcb334ad9ab0d399bbc",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_science_gate.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 12714,
+      "candidate_sha256": "a554d6369cc964336b68d36ba248416c57a9ef2d5539e29efd9b9c6a03bae31d",
+      "category": "service_reachable_static",
+      "operation": "add",
+      "path": "scripts/shark_signal_evidence.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 11516,
+      "candidate_sha256": "b889319edd2cd6860c92c9cafd8acb8b22e7253e2505a1d4e30e1974519242af",
+      "category": "service_reachable_static",
+      "operation": "add",
+      "path": "scripts/shark_signal_ingest_decision_link.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 9240,
+      "candidate_sha256": "d28549cddf55eb37fb763b8d14191ddbefd4c93b7f815cfea136fac11977a040",
+      "category": "service_reachable_static",
+      "operation": "add",
+      "path": "scripts/shark_universe_lineage.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 4011,
+      "candidate_sha256": "6ee4b74b55bc4974d3699a3d056b1a6ee46e998634f66f18f72e01b928905967",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_universe_probe.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 14501,
+      "candidate_sha256": "a1c730854590bc34faa83fdfdbc21983fc70b20fade74a731f03d0fd73aa0303",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/shark_walkforward.py"
+    },
+    {
+      "base_git_blob": "0c4769e81ff2d1e0c9065dccc2bb9bd67e322ddd",
+      "bytes": 42408,
+      "candidate_sha256": "d4ce4d07df03e4d83bf04c24005e2b03b8549a0205eb8ca8afbea1b8864215ce",
+      "category": "startup_static",
+      "operation": "replace",
+      "path": "scripts/signals_monitor.py"
+    },
+    {
+      "base_git_blob": "0034280c51fd05ac382d1f1a6d25da1d52939499",
+      "bytes": 5159,
+      "candidate_sha256": "c1123f9e12405ef2e502ea9d897f9f088fcaf3354a3f5223b192221790af5815",
+      "category": "startup_static",
+      "operation": "retain",
+      "path": "scripts/squalincome_timing.py"
+    },
+    {
+      "base_git_blob": "931b4265a33c21269c99f4a1ff1b0ee949249fd9",
+      "bytes": 14062,
+      "candidate_sha256": "b2c8c0745dacac8c7597e9d84d526c216ee5cbf33bf2f935a58c5a788552273a",
+      "category": "startup_static",
+      "operation": "retain",
+      "path": "scripts/statistical_validation.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 8851,
+      "candidate_sha256": "9a8b6c15fe8192f1dfe94d3c0bcbc0fa819bc3582cc8113580f78cf1de7f96a9",
+      "category": "startup_static",
+      "operation": "add",
+      "path": "scripts/storage_cache_v165.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 17429,
+      "candidate_sha256": "5d585af47649dbba5453f2d97a6f8a14e24fa210eb16c315465556c460fc6de2",
+      "category": "startup_static",
+      "operation": "add",
+      "path": "scripts/storage_inventory_v165.py"
+    },
+    {
+      "base_git_blob": "f17d42c286b55f08f5b9762a17bf7d55ad875a7d",
+      "bytes": 9600,
+      "candidate_sha256": "86b392846a935b50e5f13f6736496e491ea12831a422ece390de540f571030c6",
+      "category": "service_reachable_static",
+      "operation": "retain",
+      "path": "scripts/update_capital.py"
+    },
+    {
+      "base_git_blob": "6e8d9a15809365103a4f917ecd957a2a772d8fac",
+      "bytes": 5664,
+      "candidate_sha256": "e6f9a65e4a8f8f0de1ab2b7b773f160bac9679deb94c7a19fc395052b2ef33db",
+      "category": "service_reachable_static",
+      "operation": "retain",
+      "path": "scripts/update_ig.py"
+    },
+    {
+      "base_git_blob": "63b7838f394253579f8a3ee67be7556c71c75367",
+      "bytes": 5615,
+      "candidate_sha256": "74cbdda6fef19deec0b7a677dfaedf9857896cae44578a1053c8cc500ab19981",
+      "category": "service_reachable_static",
+      "operation": "retain",
+      "path": "scripts/update_myfxbook.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 4779,
+      "candidate_sha256": "e12415de3b947cd7e0ca797b4e51f3961e91f488b0b8b4b069014a5b0418dc33",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/watchdog_cadence_guard.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 6743,
+      "candidate_sha256": "cfded40ac34c77c79def700b7909993c867a10e898d0098aae211d238cfcf58b",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/watchdog_crosspr_contract.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 7737,
+      "candidate_sha256": "f81f2ab6a9b2765c4f8dca2eb555b94156d26c260a72b53d0b77ff91d5e2ffc1",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/watchdog_release_blueprint.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 2493,
+      "candidate_sha256": "ef92319f98e805c70d5a89958de60311470d90270eb369624554d701910f1b09",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/watchdog_release_gate.py"
+    },
+    {
+      "base_git_blob": null,
+      "bytes": 6318,
+      "candidate_sha256": "75e65e6bca0cce342b568cc7192ddcda2df1a2c4890c59c96998a46452e7f727",
+      "category": "unclassified_retained",
+      "operation": "add",
+      "path": "scripts/watchdog_staging_rehearsal.py"
+    },
+    {
+      "base_git_blob": "c8a0ea1acf6f1cc5d47d6992be4a44e47cf7fa2f",
+      "bytes": 8185,
+      "candidate_sha256": "1e0900a8eb672177c8c92fbf14ad0b0d267cdc41b2544854d4a0a18241e465ad",
+      "category": "startup_static",
+      "operation": "retain",
+      "path": "scripts/weekly_quality.py"
+    },
+    {
+      "base_git_blob": "14dc0b453ca658b3399af5a483076bc7517307ea",
+      "bytes": 4124,
+      "candidate_sha256": "17f913ce59f1cd251e4a2f50ce9873a779f333661dfb76b35a337265289627c9",
+      "category": "ui",
+      "operation": "retain",
+      "path": "sentiment-core.js"
+    },
+    {
+      "base_git_blob": "96fcac4a47555b43ebaf8509be18eba9b1125a6c",
+      "bytes": 4587,
+      "candidate_sha256": "b60139b2a4967e5f7ac150c9f95da08d3ec716fab9aab730d4dde4c90ed4580a",
+      "category": "ui",
+      "operation": "retain",
+      "path": "sentiment-trend-core.js"
+    },
+    {
+      "base_git_blob": "3737ae5b1fe37fe211b214178e2e045d037a8368",
+      "bytes": 2291,
+      "candidate_sha256": "931e97dadbad2ba181e9b1b74805f2b5d1aee2bae253036e696f4c4338d10ba7",
+      "category": "ui",
+      "operation": "retain",
+      "path": "sentiment-trend.css"
+    },
+    {
+      "base_git_blob": "a8b0a4adf5680197072ce7cbbde7672249eec0a0",
+      "bytes": 5702,
+      "candidate_sha256": "f0c2ebc5d0a7629ba7f11818f1e1f0f2b3eac742c3554e989ebcdb57af120f37",
+      "category": "ui",
+      "operation": "retain",
+      "path": "sentiment-trend.js"
+    },
+    {
+      "base_git_blob": "fe4cc6227feb29c9608ff8232f4642f24672f322",
+      "bytes": 5705,
+      "candidate_sha256": "1316f1197dead7156c83f81a4811aecf011a91c2f23e965eed847922c927f4bb",
+      "category": "ui",
+      "operation": "retain",
+      "path": "sources.css"
+    },
+    {
+      "base_git_blob": "cdc8ace3174baf790a91cb385ef2deefa5b14178",
+      "bytes": 17467,
+      "candidate_sha256": "69d43d727b993c9762f3063ab3cd6c72981f07f55699b99e7f240a1376d0b196",
+      "category": "ui",
+      "operation": "retain",
+      "path": "sources.js"
+    },
+    {
+      "base_git_blob": "60433776bf6a94d2b342023446dc62a409f58962",
+      "bytes": 4746,
+      "candidate_sha256": "55409fdad1844dc1cdab52fa9707bb6c5e0cfac6488c8233e017b3e637ab68a5",
+      "category": "ui",
+      "operation": "retain",
+      "path": "splash-mascot.webp"
+    },
+    {
+      "base_git_blob": "54a847194847c88c0eca12824f860574e4909aaa",
+      "bytes": 3177,
+      "candidate_sha256": "4e6e468482192f30e7a0128c39d0a34bbdfa04f9b9470142d4d26b1ebaee3101",
+      "category": "ui",
+      "operation": "retain",
+      "path": "splash.css"
+    },
+    {
+      "base_git_blob": "9484df12d5ff9e3b538f5fc513d013d7c641b470",
+      "bytes": 7634,
+      "candidate_sha256": "c6833d691840a04364d4a8a8c8d2a359e2e7d2ee2064dfcd12c469f4fa33f69e",
+      "category": "ui",
+      "operation": "retain",
+      "path": "splash.js"
+    },
+    {
+      "base_git_blob": "4c78bf1dae17a19fb2fc87748b910c3e1ae3a2c2",
+      "bytes": 29410,
+      "candidate_sha256": "eed11c9963afe643a74bbf8642bfcde442baa9132c18ae221d94f95f14f6186c",
+      "category": "ui",
+      "operation": "retain",
+      "path": "squalincome-diagnostics.js"
+    },
+    {
+      "base_git_blob": "6f77d1ef0012e3fe9a80780e3fbb1290a6ff8e3d",
+      "bytes": 5205,
+      "candidate_sha256": "dcbb6c6d48da30687b1c3838c1b2df967a7f5a988e2efaaa6920da6e4fdf9736",
+      "category": "ui",
+      "operation": "retain",
+      "path": "squalincome-freshness-core.js"
+    },
+    {
+      "base_git_blob": "8a4f77a02b93520d2a7be86c91acb92f1f70d124",
+      "bytes": 3415,
+      "candidate_sha256": "9cccc718fa0c469e0a5cc77c9f6eb097a649e7488a3bbe4ba52c14bbb84986ac",
+      "category": "ui",
+      "operation": "retain",
+      "path": "statistica-squali-core.js"
+    },
+    {
+      "base_git_blob": "4cd8ca9420f95deaa916fa5853d9fae697f0ad0a",
+      "bytes": 16117,
+      "candidate_sha256": "7c6022ea1e1c8145f7982a12af58aecc4cafed38b8779d543807d3bdb7087734",
+      "category": "ui",
+      "operation": "replace",
+      "path": "statistica-squali.html"
+    },
+    {
+      "base_git_blob": "3b69ed485dc89f261164bb881f3b8ba179ee7cef",
+      "bytes": 8017,
+      "candidate_sha256": "423633e4689f958dbd6c917e514a2571dfa85dbebbaa8afd602c831a9c806856",
+      "category": "ui",
+      "operation": "retain",
+      "path": "statistica-squali.js"
+    },
+    {
+      "base_git_blob": "193211906f303db1b8ef9e6c1af4e30e01b6ce4c",
+      "bytes": 16832,
+      "candidate_sha256": "0c3ff87a1de5f3aca25cbfa342a330b1c7b0e58cad152f5c5647a9ace29ed30b",
+      "category": "ui",
+      "operation": "replace",
+      "path": "stato-prezzi.html"
+    },
+    {
+      "base_git_blob": "f262b3a9cc8a6a802bac6bd025bd13c942df87c5",
+      "bytes": 22480,
+      "candidate_sha256": "2ca76895631a1b7ba3793332d9e0d0144a9574d83bd4cbe90ccbc86acbad238c",
+      "category": "ui",
+      "operation": "retain",
+      "path": "stato-prezzi.js"
+    },
+    {
+      "base_git_blob": "6e447938533ff91183959d1902853634e6a83257",
+      "bytes": 1967,
+      "candidate_sha256": "59e453d088fd1b577b9495b3ab9de782dcd6a93e049b703cb73cf419f77359bf",
+      "category": "ui",
+      "operation": "replace",
+      "path": "sw.js"
+    },
+    {
+      "base_git_blob": "3d0df46951eb8e34a1bfae6156fa99a0a020f17f",
+      "bytes": 4086,
+      "candidate_sha256": "c817e90dba39c645f2d334cda863b947fab2db7e6b8dd9f3147a1505bed9997f",
+      "category": "ui",
+      "operation": "retain",
+      "path": "weekly-quality-core.js"
+    },
+    {
+      "base_git_blob": "7ba08ce87eadf4c7977598935685d01b633edcd6",
+      "bytes": 4185,
+      "candidate_sha256": "f27a10abcbf8d459292994d93d08f39ece57c2b16d95388fdfdfd5f3c2b493cf",
+      "category": "ui",
+      "operation": "retain",
+      "path": "weekly-quality-ui.js"
+    }
+  ],
+  "deployment_reference": [
+    {
+      "git_blob": "53ca8ec381e30d019f1cc8570e33e0150e6c233e",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/autoupdate.py",
+      "sha256": "7ee6ba1a7bd4dd618b72280f7ef1391d455c37357f217dec742d1dfa41bd036c"
+    },
+    {
+      "git_blob": "dc01f2b4767a5427b1d65b96f7a883870b82f608",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/backup_v156.py",
+      "sha256": "691be2b7701249443169201402fb73f95878a5cc94428710b39f7690807bad0c"
+    },
+    {
+      "git_blob": "2c6abe5f487060b575ea0d94f22ae91dadaf2485",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/enable-autoupdate.sh",
+      "sha256": "864dde2bfe3e8fcec42e4a1c4115665356c2e6f04ad79f9fc46617d9197b6578"
+    },
+    {
+      "git_blob": "388e51729e9b60b6177a2fff21ff38293002a61e",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/install.sh",
+      "sha256": "0575d848a12798a6d8f57fd7f269f5c29b761979b2437bbf3de2c54b1b48522b"
+    },
+    {
+      "git_blob": "f20e8c2ca1ac95e1100cbd73a7dc84fac42388a3",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/priority_v157.py",
+      "sha256": "8cd80d50a888767b56f9c8104ef4dd6b972f9ef2b0d5a44ae33558bbc51f6775"
+    },
+    {
+      "git_blob": "f695df39bf5a3c731437e287676b132980c4882f",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/reconcile_v156.py",
+      "sha256": "a1b2c03d89ad8ad673a349ef25dbfb9e54f0e1d5d2377cd66f22de9ee650f4fe"
+    },
+    {
+      "git_blob": "aaf472ccc40f1af1cac5b35101f81eb884df75c8",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/reconcile_v157.py",
+      "sha256": "20b43595eeb3502070a7b01d4ee362668fb0bc3c78a655cab13cb5803b9edb84"
+    },
+    {
+      "git_blob": "1528102810a988d5df7d0d92fdfd3c2fcaadd5a6",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/reconcile_v158.py",
+      "sha256": "e2c28691a2bd7b7fea3dc6cd6043d7393d77b68ab743fd488fdd9c20620b1c6f"
+    },
+    {
+      "git_blob": "18da8a029e81a68185999f72d507460be7e21151",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/reconcile_v159.py",
+      "sha256": "fb6e8f26be93b4b0971d06133d36837a7d83c4ce68b13373e7d35e1c6b9d4172"
+    },
+    {
+      "git_blob": "43bc122516b0cf6a8a1097bd8edc2ad4c571abfa",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/reconcile_v160.py",
+      "sha256": "042b4bfae1c3ed6f27d5188ad469d63104d2950e45c170d901da7a700311c77b"
+    },
+    {
+      "git_blob": "679e5a0934a0c956aab4e6810b59ceef511f0ff0",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/reconcile_v161.py",
+      "sha256": "a493230138e5c7e8ae60f09ae1af3ae87ade740f6a7d6d053717e6a75697f601"
+    },
+    {
+      "git_blob": "99ae6c460ef12ab9764cb15732a7469627662ee0",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/reconcile_v162.py",
+      "sha256": "d6455e967c52456e54dd94f6cb800958547cfeec985f1f6fb84fd2e2dbe72246"
+    },
+    {
+      "git_blob": "c53ac714e9d73b9292419748978e70f060549095",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/reconcile_v163.py",
+      "sha256": "53d8cd50573c2f20e498a0feae5fe2e64440f0d5300b9716cf52175519f34281"
+    },
+    {
+      "git_blob": "4454480bf7f02cafa66c6c2dd730854c886b39ab",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/reconcile_v164.py",
+      "sha256": "862a0e3553700ae33edbc9ef5c65f7c2d16ef3bdd235c791ae286d8beaa458d2"
+    },
+    {
+      "git_blob": "086ed4a4f87d3832fcc121322ef3df073798a148",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/release_myfxbook_151.py",
+      "sha256": "025f5432a857e1cc817333543c75de45dec4ded5fe70aa5ed1cb902acc535157"
+    },
+    {
+      "git_blob": "e61752c443ed9b972ac3af63c63b71708ff0beb9",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/release_v152.py",
+      "sha256": "fa3fbf8254e9bcae3acb3923b28a14f21158b2df3fa2e7dbf558a114b70a42ac"
+    },
+    {
+      "git_blob": "8997906ee3d246b5c5d3f13a700b546c112dc525",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/release_v156.py",
+      "sha256": "94ab06faebd968e57d2feed81aa26acbe3c0c86287df0d8bab759c475db784d7"
+    },
+    {
+      "git_blob": "66b1b47dffdba04218af79250c883b7adc5fc6fc",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/release_v157.py",
+      "sha256": "f057d64a2fa5eb5b72af3561cfc38686a06d24887ce2fe65f33f900495a67329"
+    },
+    {
+      "git_blob": "73fe055bc215fdf27dcd8062bc01671c898b1dc4",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/release_v158.py",
+      "sha256": "604b273f8da3cd2674370c070d15893570303d111160a99385176c3b8eb6481e"
+    },
+    {
+      "git_blob": "b14ee7b1efab67913c276d9728216df9750c289a",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/release_v159.py",
+      "sha256": "f1bf669a473f0133756011140bfe5f6e03338b222dfe0dd19cceddd16e658168"
+    },
+    {
+      "git_blob": "fa7387056cd468c7f88564232d1aeb72b883b414",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/release_v160.py",
+      "sha256": "d0b699d48197d05c99053751070a0dc26730f82663cbe4591b86f393d8caedb2"
+    },
+    {
+      "git_blob": "49834cc0f73300b836dbc915cf49fba0d6157298",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/release_v161.py",
+      "sha256": "ba87e1b7f0c9d1fadb3089421400f7d2d04ddeb09ab2b01975e713d162f3ef00"
+    },
+    {
+      "git_blob": "c3bb2ada57097891d83e033fbc3d833cc69c8e65",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/release_v162.py",
+      "sha256": "a4349ad9c311c8746c7719ff4d76cb31e23b2b489442aecaec45eeb1a3932e6f"
+    },
+    {
+      "git_blob": "19d538c167550e5c3c9326d7cfc3ab5582347e9a",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/release_v163.py",
+      "sha256": "0b979bd6705b8e5705540dffbbe6e47d3717a793980435be7315b97bb5d18eef"
+    },
+    {
+      "git_blob": "5cad0abdff8a30f9e7dc583c872c213807863dc4",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/release_v164.py",
+      "sha256": "feca359e4bfb2f6f87d7453c32178022cb45cbde3e2f32d0eb81a2ba25dc96fd"
+    },
+    {
+      "git_blob": "abdbe86a16ab0a806620629b2ede64af14d8bc7d",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/remura-autoupdate.service",
+      "sha256": "81004f05b2aa27810d90e9950ce3f3005711015448b64e45d797a99cf3466d17"
+    },
+    {
+      "git_blob": "dca0376a3651de9b947b9f2903a685f9e6db2827",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/remura-autoupdate.timer",
+      "sha256": "032c9054f9a0f63a0feeb453ff71bcc3226b9e11b6c3912bd82f1b552be9dba0"
+    },
+    {
+      "git_blob": "56bbca6a35c8fc5c0b748ebad97e89cfcc61e0c9",
+      "operation": "inventory_only",
+      "path": "deploy/oracle/remura.service",
+      "sha256": "8933c8237e10f3277a041a4416efdde4482b041e4115112756dfa857deb53929"
+    }
+  ],
+  "release_authorized": false,
+  "installable": false
+}
