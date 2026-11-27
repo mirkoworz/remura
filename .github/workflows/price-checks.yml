@@ -15,6 +15,32 @@ on:
       - 'scripts/price_feed.py'
       - 'scripts/ctrader_feed.py'
       - 'scripts/price_store.py'
+      - 'scripts/storage_inventory_v165.py'
+      - 'scripts/storage_cache_v165.py'
+      - 'tests/test_storage_v165_draft.py'
+      - 'deploy/oracle/v165_release_offline_preview.py'
+      - 'tests/test_v165_release_offline_preview.py'
+      - 'deploy/oracle/v165_release_transaction_lab.py'
+      - 'tests/test_v165_release_transaction_lab.py'
+      - 'deploy/oracle/v165_ssh_stdout_receipt.py'
+      - 'deploy/oracle/templates/v165-private-ssh-audit-REVIEW-ONLY.yml'
+      - 'tests/test_v165_ssh_stdout_receipt.py'
+      - 'deploy/oracle/v165_v164_live_code_readonly.py'
+      - 'tests/test_v165_v164_live_code_readonly.py'
+      - 'deploy/oracle/v165_readonly_preflight_fixture.py'
+      - 'tests/test_v165_readonly_preflight_fixture.py'
+      - 'deploy/oracle/v165_preflight_evidence_lab.py'
+      - 'tests/test_v165_preflight_evidence_lab.py'
+      - 'deploy/oracle/v165_incident_decision_lab.py'
+      - 'tests/test_v165_incident_decision_lab.py'
+      - 'deploy/oracle/v165_autoupdater_state_lab.py'
+      - 'tests/test_v165_autoupdater_state_lab.py'
+      - 'deploy/oracle/v165_rollback_bundle_lab.py'
+      - 'tests/test_v165_rollback_bundle_lab.py'
+      - 'deploy/oracle/v165_pinned_preflight_lab.py'
+      - 'tests/test_v165_pinned_preflight_lab.py'
+      - 'deploy/oracle/v165_release_protocol_draft.py'
+      - 'tests/test_v165_release_protocol_draft.py'
       - 'scripts/cot_monitor.py'
       - 'scripts/signals_monitor.py'
       - 'scripts/h1_batch_comparison.py'
@@ -183,6 +209,30 @@ jobs:
       - run: node --test tests/price.test.js tests/insights.test.js tests/sentiment.test.js tests/capital-cloud.test.js tests/market-expansion.test.js tests/price-status.test.js tests/squalincome-diagnostics.test.js tests/squalincome-freshness.test.js tests/statistica-squali.test.js tests/dual24-ui.test.js tests/market-audit-ui.test.js tests/case-audit-ui.test.js tests/weekly-quality-ui.test.js tests/cot-week-watch-ui.test.js
       - run: python -m unittest discover -s tests -p 'test_price_feed.py' -v
       - run: python -m unittest discover -s tests -p 'test_ctrader_feed.py' -v
+      - name: Draft v1.65 opt-in storage metadata, backup local, stale cache and HTTP compatibility (offline)
+        run: python -m unittest discover -s tests -p 'test_storage_v165_draft.py' -v
+      - name: Draft v1.65 14-file SHA pins and nine-page timestamp preview (offline, NO RELEASE)
+        run: python -m unittest discover -s tests -p 'test_v165_release_offline_preview.py' -v
+      - name: Draft v1.65 synthetic WAL backup, restore and rollback (offline, NO LIVE)
+        run: python -m unittest discover -s tests -p 'test_v165_release_transaction_lab.py' -v
+      - name: Draft v1.65 manifest and release-order proof (offline NO-GO)
+        run: python -m unittest discover -s tests -p 'test_v165_release_protocol_draft.py' -v
+      - name: Draft v1.65 SHA/tree and strict CI push-main fixture (offline NO-GO)
+        run: python -m unittest discover -s tests -p 'test_v165_pinned_preflight_lab.py' -v
+      - name: Draft v1.65 persisted fake rollback bundle and injected failures (NO LIVE)
+        run: python -m unittest discover -s tests -p 'test_v165_rollback_bundle_lab.py' -v
+      - name: Draft v1.65 fake LIVE baseline, autoupdater state and inverse rollback gates (NO LIVE)
+        run: python -m unittest discover -s tests -p 'test_v165_autoupdater_state_lab.py' -v
+      - name: Draft v1.65 incident triage decision tree, offline-only NO-GO
+        run: python -m unittest discover -s tests -p 'test_v165_incident_decision_lab.py' -v
+      - name: Draft v1.65 private evidence plan with 12 strict synthetic slots (NO LIVE)
+        run: python -m unittest discover -s tests -p 'test_v165_preflight_evidence_lab.py' -v
+      - name: Draft v1.65 bounded read-only preflight arithmetic on fake snapshots (NO LIVE)
+        run: python -m unittest discover -s tests -p 'test_v165_readonly_preflight_fixture.py' -v
+      - name: Draft v1.65 independent pinned v1.64 file-identity verifier (fixture only, NO VPS)
+        run: python -m unittest discover -s tests -p 'test_v165_v164_live_code_readonly.py' -v
+      - name: Draft v1.65 sanitized SSH receipt and disabled transport template contract (NO VPS)
+        run: python -m unittest discover -s tests -p 'test_v165_ssh_stdout_receipt.py' -v
       - run: python -m unittest discover -s tests -p 'test_private_server.py' -v
       - name: Test offline opt-in batch timing, no new broker requests (v1.61 research)
         run: python -m unittest discover -s tests -p 'test_batch_timing.py' -v
