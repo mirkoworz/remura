@@ -68,7 +68,7 @@ def missing_jobs(db,now):
       SELECT o.id,o.entry_ms,h.hours,c.cost FROM v318_observations o CROSS JOIN h CROSS JOIN c
       LEFT JOIN v318_outcomes x ON x.id=o.id AND x.hours=h.hours AND x.cost=c.cost
       WHERE x.id IS NULL AND o.entry_ms+h.hours*3600000<=?
-      AND o.entry_ms+h.hours*3600000>? ORDER BY o.entry_ms,h.hours,c.cost LIMIT 96""",(now,now-2*DAY)).fetchall()
+      AND o.entry_ms+h.hours*3600000>? ORDER BY o.entry_ms+h.hours*3600000 DESC,o.entry_ms,h.hours,c.cost LIMIT 96""",(now,now-2*DAY)).fetchall()
 def evaluate_pending(db,src,now,allowed):
     import v318_multifactor as m
     from v311_science import records
@@ -92,7 +92,6 @@ def evaluate_pending(db,src,now,allowed):
 def main(mode):
     if os.getuid()==0:raise ValueError("not_root")
     os.umask(0o077);private(BASE,True);private(HERE,True);deps()
-    import v318_multifactor as m
     # The staged manifest pins the runner, join, and existing scientific dependencies.
     manifest=read(HERE/"manifest.json",65536)
     pins=json.loads(manifest)
@@ -103,6 +102,7 @@ def main(mode):
     for name,h in pins.items():
         p=Path(__file__) if name=="v318_runner" else Path(importlib.util.find_spec(name).origin)
         if hashlib.sha256(read(p,1000000)).hexdigest()!=h:raise ValueError("pin")
+    import v318_multifactor as m
     if mode=="--tick":
         pp=HERE/"permit.json"
         if not pp.exists() or os.path.lexists(HERE/"STOP"):return {"status":"DISABLED"}
