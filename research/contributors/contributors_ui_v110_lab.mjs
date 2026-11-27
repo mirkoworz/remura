@@ -3,8 +3,8 @@ import { CONTRIBUTORS_CSS_V110 as theme, CONTRIBUTORS_FORMS_CSS_V110 } from './c
 export { CONTRIBUTORS_BROWSER_V110 } from './contributors_browser_v110_lab.mjs';
 
 export const CONTRIBUTORS_CSS_V110 = theme + CONTRIBUTORS_FORMS_CSS_V110;
-const VERSION = 'REMURA Contributors V30.16 LAB';
-const UPDATED = '26/11/2026 21:47 CET (Europe/Rome)';
+const VERSION = 'REMURA Contributors V30.18 LAB';
+const UPDATED = '27/11/2026 09:52 CET (Europe/Rome)';
 const SLOTS = ['friend-a', 'friend-b', 'friend-c'];
 const NAV_SECTIONS = [
   ['cot', 'Shark Cockpit · COT'],
@@ -29,7 +29,7 @@ function shell({ role, home, slot, caption, navigation, body, script, write }) {
   ${script ? `<script type="module" src="${home}contributors-v110.js"></script>` : ''}
 </head>
 <body data-slot="${slot}" data-write="${write}">
-  <div class="version">${VERSION} · <time datetime="2026-11-26T21:47:00+01:00">${UPDATED}</time></div>
+  <div class="version">${VERSION} · <time datetime="2026-11-27T09:52:00+01:00">${UPDATED}</time></div>
   <main class="shell">
     <header class="masthead">
       ${role === 'INVITED'
@@ -117,14 +117,15 @@ function contributorLevels(write, read) {
         <div class="fields">
           ${controls('market', 'Strumento', [], { placeholder: 'Seleziona strumento' })}
           ${controls('provider', 'Fonte', [], { placeholder: 'Seleziona fonte' })}
-          ${controls('mapping', 'Ticker, prodotto e contratto', [], { wide: true, placeholder: 'Seleziona ticker' })}
+          ${controls('mapping', 'Serie / contratto', [], { wide: true, placeholder: 'Seleziona serie' })}
           ${controls('period', 'Periodo', PERIODS)}
           ${controls('kind', 'Metodologia', KINDS)}
-          ${field('price', 'Prezzo', '<input id="price" inputmode="decimal" maxlength="17" required>')}
+          ${field('price', 'Prezzo originale del grafico', '<input id="price" inputmode="decimal" maxlength="17" required>')}
           ${field('anchor', 'Riferimento (ora Roma)', '<input id="anchor" type="datetime-local" step="1" required>')}
           ${field('observed', 'Osservato (ora Roma)', '<input id="observed" type="datetime-local" step="1" required>')}
           ${field('note', 'Osservazioni tecniche', '<textarea id="note" maxlength="280" rows="2"></textarea>', true)}
         </div>
+        <p class="notice">Per le serie continue riporta il prezzo esatto del grafico: il contratto effettivo e l’eventuale adeguamento possono non essere noti.</p>
         <div class="actions">${button('send', 'Registra livello', { type: 'submit', modifier: '', disabled: true })}</div>
       </form>
     </section>
