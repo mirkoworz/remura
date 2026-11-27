@@ -1,4 +1,5 @@
 // REMURA V30.11 Telegram Bridge LAB. Pure message builder, no network.
+import {checkContinuousMapping,describeChartSeries} from './continuous_intake_v3018_lab.mjs';
 const periods = Object.freeze({DAY:"Giornaliero",WEEK:"Settimanale",CURRENT_MONTH:"Mese corrente",PREVIOUS_MONTH:"Mese precedente"});
 const kinds = Object.freeze({DELTA_PEAK:"Picco Delta",EFFORT_RESULT:"Effort / Result",OTHER_VOLUME_LEVEL:"Altro livello volumetrico"});
 const flags = Object.freeze({EUR:"🇪🇺",USD:"🇺🇸",GBP:"🇬🇧",JPY:"🇯🇵",CHF:"🇨🇭",CAD:"🇨🇦",AUD:"🇦🇺",NZD:"🇳🇿"});
@@ -30,13 +31,16 @@ export function prepareTelegramMessage(event, policy = {}) {
       !/[1-9]/.test(r.price) || typeof r.received_utc !== "string" ||
       !stamp.test(r.received_utc) || !Number.isFinite(Date.parse(r.received_utc)) ||
       new Date(r.received_utc).toISOString().replace(".000Z","Z") !== r.received_utc) return null;
+  let chart;
+  try{checkContinuousMapping(r);chart=describeChartSeries(r);}catch{return null;}
   const a=r.market.slice(0,3),b=r.market.slice(3);
   const market=flags[a] && flags[b] ? flags[a]+" "+flags[b]+" "+a+"/"+b : "📊 "+r.market;
   const time=new Intl.DateTimeFormat("it-IT",{timeZone:"Europe/Rome",dateStyle:"short",timeStyle:"medium"}).format(new Date(r.received_utc));
   return Object.freeze({receiptId:r.id,text:[
-    "🦈 REMURA | NUOVO LIVELLO", "",market,"🎯 Livello: "+r.price,
+    "🦈 REMURA | NUOVO LIVELLO", "",market,(chart?"🎯 Prezzo originale del grafico: ":"🎯 Livello: ")+r.price,
     "📊 Metodologia: "+kinds[r.kind],"⏳ Periodo: "+periods[r.period],
-    "📡 Fonte dati: "+r.provider+" · "+r.ticker+(r.contract?" · "+r.contract:""),
+    chart?"📡 Feed dichiarato: "+chart.feed+" · "+chart.root:"📡 Fonte dati: "+r.provider+" · "+r.ticker+(r.contract?" · "+r.contract:""),
+    ...(chart?["🔄 Grafico continuativo · contratto e adeguamento non verificati","⚠️ Riferimento grafico, non prezzo di un contratto eseguibile"]:[]),
     "🕒 Ricevuto: "+time+" (Roma)","👤 REMURA Contributor",
     "📌 Rif. #"+r.id+" · Non ancora esaminato dall’OWNER"
   ].join("\n")});
