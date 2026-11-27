@@ -1,0 +1,126 @@
+{
+  "study": "REMURA NQ options research v0.2",
+  "research_date": "2026-11-10",
+  "privacy": "public provider observations only; private Telegram zones excluded",
+  "status": "exploratory_unverified_first_seen",
+  "sources": [
+    {
+      "id": "GEX_METRIX_NQ",
+      "url": "https://www.gexmetrix.com/gex/nq",
+      "claimed_as_of": "2026-11-10T04:40:00-05:00",
+      "basis": "NDX option chain modeled levels translated into NQZ26 pricing, not CME NQ OI",
+      "snapshot_warning": "Dynamic webpage changed during investigation: values are not a permanently archived historical record; claimed source timestamp not attested by our first-seen receipt.",
+      "levels": [
+        {
+          "type": "gamma_flip",
+          "price": 27979
+        },
+        {
+          "type": "call_wall",
+          "price": 29781.5
+        },
+        {
+          "type": "call_wall_secondary",
+          "price": 28241
+        },
+        {
+          "type": "put_wall",
+          "price": 28100.5
+        },
+        {
+          "type": "put_wall_secondary",
+          "price": 27598.75
+        },
+        {
+          "type": "max_pain",
+          "price": 28030.25
+        },
+        {
+          "type": "call_gex_strike",
+          "price": 28401.5
+        },
+        {
+          "type": "call_gex_strike",
+          "price": 28301.25
+        },
+        {
+          "type": "put_gex_strike",
+          "price": 28502
+        },
+        {
+          "type": "put_gex_strike",
+          "price": 27096.75
+        },
+        {
+          "type": "put_gex_strike",
+          "price": 27899.75
+        }
+      ]
+    },
+    {
+      "id": "ZERO_GEX_NQ",
+      "url": "https://zerogex.io/nq-gamma-levels",
+      "claimed_as_of": "2026-11-09T15:59:00-05:00",
+      "basis": "NDX options modeled levels converted to NQZ26 price, not CME NQ OI",
+      "snapshot_warning": "Dynamic webpage changed during investigation; source as-of and receipt time not independently verified.",
+      "levels": [
+        {
+          "type": "gamma_flip",
+          "price": 28342
+        },
+        {
+          "type": "call_wall",
+          "price": 29118
+        },
+        {
+          "type": "put_wall",
+          "price": 27611
+        },
+        {
+          "type": "max_pain",
+          "price": 28284
+        },
+        {
+          "type": "pin_strike",
+          "price": 28615
+        }
+      ]
+    },
+    {
+      "id": "NQ_FUTURES_OPTIONS_OI_SECONDARY",
+      "url": "https://trading-commodity.com/options-chain/nq/",
+      "session_date": "2026-11-09",
+      "expiry": "2026-12-18",
+      "futures_contract": "NQZ26",
+      "basis": "Reported futures options actual strike space, not GEX; third-party selected put OI",
+      "provenance_warning": "Not independently verified against CME official data; selected excerpt of expiry only, not comprehensive. Public source publication/availability time unspecified.",
+      "records": [
+        {
+          "strike": 27250,
+          "type": "put",
+          "oi_contracts": 664
+        },
+        {
+          "strike": 27500,
+          "type": "put",
+          "oi_contracts": 947
+        },
+        {
+          "strike": 28000,
+          "type": "put",
+          "oi_contracts": 3852
+        },
+        {
+          "strike": 28500,
+          "type": "put",
+          "oi_contracts": 1246
+        }
+      ]
+    }
+  ],
+  "cme_primary_verification": {
+    "source": "https://www.cmegroup.com/tools-information/quikstrike/open-interest-heatmap.html",
+    "status": "PENDING_NUMERIC_STRIKE_LEVEL_VERIFICATION",
+    "note": "CME official QuikStrike description verified, but numeric strike OI was not reliably retrievable for the Nov 09 session in the available view. Do not call third-party records CME-verified."
+  }
+}

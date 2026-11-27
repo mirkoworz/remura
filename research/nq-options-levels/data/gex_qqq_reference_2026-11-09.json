@@ -1,0 +1,13 @@
+{
+  "provider": "haus-edge/gex-levels",
+  "source_url": "https://github.com/haus-edge/gex-levels/blob/master/data/gex_QQQ.txt",
+  "source_blob_sha": "ab189708a097e405e149db1bc9e06be05aa79216",
+  "symbol": "QQQ",
+  "price_basis": "NDX_index_proxy_not_NQ_futures",
+  "as_of_utc": "2026-11-09T20:58:30Z",
+  "regime": "negative_gamma",
+  "call_wall": 28777.52,
+  "gamma_flip": 28424.15,
+  "put_wall": 27955.3,
+  "provenance_warning": "Third-party Yahoo/QQQ-based model; not CME NQ options, not verified dealer positions, not independently attested time."
+}
