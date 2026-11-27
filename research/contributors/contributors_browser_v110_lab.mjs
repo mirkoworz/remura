@@ -167,7 +167,7 @@ function browserTools() {
     const marker = element('span', undefined, 'chevron');
     marker.setAttribute('aria-hidden', 'true');
     summary.append(element('span', `#${row.id} · ${row.market} · ${row.price}`), state(row.status), marker);
-    const mapping = [row.provider, row.ticker, row.product, row.contract].filter(Boolean).join(' · ');
+    const mapping = row.contract==='CONTINUOUS' ? `${row.provider} · ${row.ticker.replace(/_CONT$/,'')} · Grafico continuativo (scadenza/adeguamento non verificati)` : [row.provider, row.ticker, row.product, row.contract].filter(Boolean).join(' · ');
     const periods = { DAY: 'Giorno', WEEK: 'Settimana', CURRENT_MONTH: 'Mese corrente', PREVIOUS_MONTH: 'Mese precedente' };
     const methods = { DELTA_PEAK: 'Picco delta', EFFORT_RESULT: 'Effort / result', OTHER_VOLUME_LEVEL: 'Altro livello volumetrico' };
     const values = [
@@ -259,7 +259,7 @@ function startContributor({ find, observedRome, romeToUtc, oneLine, status, choi
     const market = find('market').value;
     const provider = find('provider').value;
     choices('mapping', catalog.flatMap((row, index) => row.market === market && row.provider === provider
-      ? [[String(index), [row.ticker, row.product, row.contract].filter(Boolean).join(' · ')]] : []), 'Seleziona ticker');
+      ? [[String(index), row.contract==='CONTINUOUS' ? `${row.ticker.replace(/_CONT$/,'')} · Grafico continuativo` : [row.ticker, row.product, row.contract].filter(Boolean).join(' · ')]] : []), 'Seleziona serie');
   }
 
   function updateProviders() {
