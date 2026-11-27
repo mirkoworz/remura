@@ -1,0 +1,37 @@
+# REMURA v1.73.1 isolated web-first preview package — NO DEPLOY.
+name: REMURA v173 isolated preview ZIP safe build
+on:
+  push:
+    branches: [feature/shark-cockpit-v173-safe-mainline-gates-20261123]
+    paths:
+      - preview/build_isolated_webfirst_v173.py
+      - preview/test_isolated_webfirst_v173.py
+      - .github/workflows/remura-v173-isolated-preview-package.yml
+permissions:
+  contents: read
+jobs:
+  safety-package:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Syntax and six ZIP safety boundaries, no remote access
+        run: |
+          set -euo pipefail
+          python -m py_compile preview/build_isolated_webfirst_v173.py preview/test_isolated_webfirst_v173.py
+          python -m unittest preview/test_isolated_webfirst_v173.py -v 2>&1 | tee /tmp/remura-isolated-preview.log
+          grep -q 'Ran 6 tests' /tmp/remura-isolated-preview.log
+          grep -q '^OK$' /tmp/remura-isolated-preview.log
+      - name: Owner-only artifact for later authorized staging (one day)
+        uses: actions/upload-artifact@v4
+        with:
+          name: REMURA-v1731-SAFE-WEB-PREVIEW-NOT-DEPLOYED
+          path: dist/remura-v1731-webfirst-ISOLATED-NOT-PUBLISHED.zip
+          if-no-files-found: error
+          retention-days: 1

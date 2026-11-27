@@ -1,0 +1,32 @@
+name: REMURA v173 web-first release compatibility
+on:
+  push:
+    branches: [feature/shark-cockpit-v173-safe-mainline-gates-20261123]
+    paths:
+      - index.html
+      - shark-cockpit.html
+      - shark-*.js
+      - shark-cockpit.css
+      - tests/shark-v173-mainline-compat.test.js
+      - .github/workflows/remura-shark-v173-compatibility.yml
+permissions:
+  contents: read
+jobs:
+  web-first-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: New integration compatibility only
+        run: |
+          set -euo pipefail
+          node --test tests/shark-v173-mainline-compat.test.js 2>&1 | tee /tmp/remura-v173.log
+          grep -q '# tests 5' /tmp/remura-v173.log
+          grep -q '# pass 5' /tmp/remura-v173.log
+          grep -q '# fail 0' /tmp/remura-v173.log
+          echo REMURA_V173_MAINLINE_INTEGRATION=PASS

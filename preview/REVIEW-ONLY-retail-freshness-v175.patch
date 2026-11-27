@@ -1,0 +1,37 @@
+diff --git a/shark-cockpit.js b/shark-cockpit.js
+--- a/shark-cockpit.js
++++ b/shark-cockpit.js
+@@ -40,1 +40,1 @@
+-      snapshots={tff:null,disagg:null};
++      snapshots={tff:null,disagg:null},retailDoc=null;
+@@ -285,2 +285,2 @@
+-      return core.summarizeRetail(data,Date.now());
+-    }catch{return [];}
++      return data;
++    }catch{return null;}
+@@ -311,1 +311,9 @@
+-  async function reload(){
++  // Reclassify already fetched retail samples against the current clock.
++  // No network call, no polling of Myfxbook, no change to CFTC readAt.
++  function refreshRetailAge(){
++    if(busy)return;
++    const retail=core.summarizeRetail(retailDoc,Date.now());
++    drawRetail(retail);
++    window.REMURA_SHARK_EVIDENCE_UI?.render({cards,loaded,retail,readAt:retrievedAt});
++  }
++  async function reload(){
+@@ -320,1 +328,2 @@
+-      const [all,retail]=await Promise.all([Promise.all(requests),readRetail()]);
++      const [all,retailSnapshot]=await Promise.all([Promise.all(requests),readRetail()]);
++      retailDoc=retailSnapshot;
+@@ -330,1 +339,2 @@
+-      draw();drawRetail(retail);
++      const retail=core.summarizeRetail(retailDoc,Date.now());
++      draw();drawRetail(retail);
+@@ -346,1 +356,5 @@
+-  draw();reload();
++  document.addEventListener("visibilitychange",()=>{if(!document.hidden)refreshRetailAge();});
++  window.addEventListener("pageshow",refreshRetailAge);
++  // Local clock only, at most one reclassification/minute while visible.
++  setInterval(()=>{if(!document.hidden)refreshRetailAge();},60000);
++  draw();reload();

@@ -1,0 +1,37 @@
+# REMURA v1.73.1 PUBLIC pages.dev smoke — 24/11/2026.
+# One shot per source change, no workflow schedule, no external secrets,
+# no retries, no deployment, no CFTC calls or Cloudflare control-plane writes.
+name: REMURA v173 public Pages one-shot smoke
+on:
+  push:
+    branches: [feature/shark-cockpit-v173-safe-mainline-gates-20261123]
+    paths:
+      - preview/smoke_public_pages_v173.mjs
+      - .github/workflows/remura-v173-pages-public-smoke-once.yml
+permissions:
+  contents: read
+jobs:
+  public-pages-smoke:
+    if: github.repository == 'mirkoworz/remura'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check public host, no secrets or retries
+        run: |
+          set -euo pipefail
+          node --check preview/smoke_public_pages_v173.mjs
+          node preview/smoke_public_pages_v173.mjs
+      - name: Keep only public response-status evidence for one day
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: REMURA-v1731-PAGES-PUBLIC-SMOKE-RESULT
+          path: remura-public-pages-v173-smoke.json
+          retention-days: 1
+          if-no-files-found: warn
