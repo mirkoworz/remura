@@ -1,0 +1,176 @@
+{
+  "schema": "remura-b-cftc-stdout-excerpt-v1",
+  "version": "B_V21_3_LAB",
+  "updatedAtEuropeRome": "23/11/26, 21:34:28 Europe/Rome",
+  "evidence": {
+    "source": "OFFICIAL_PUBLIC_CFTC_SOCRATA_AS_PRINTED_BY_PREVIOUS_GITHUB_AUDIT",
+    "githubRunUrl": "https://github.com/mirkoworz/remura/actions/runs/45206837974",
+    "githubRunId": 45206837974,
+    "githubJobId": 137804869184,
+    "sourceStdoutProofMarker": "REMURA_B_PUBLIC_CFTC_PROOF",
+    "sourceSnapshotReadAtUtc": "2026-11-23T15:35:17.664069Z",
+    "sourceSnapshotRowsReported": 980,
+    "fullSnapshotRowsSha256ReportedByRun": "a2d58c5a3347c121b491c5f495f7ee01ed83b6a282cc11fb2e5f49b1688ffb23",
+    "fullSourceSnapshotRecoverableFromThisExcerpt": false,
+    "excerptEquivalentToOriginalFullSnapshot": false,
+    "sourceLogIndependentSignatureVerified": false,
+    "localFirstSeenTimeAttested": false,
+    "fullRawRowValuesAvailable": false,
+    "dataIsPublicWeeklyFuturesNotLiveOrders": true
+  },
+  "period": {
+    "latestReportDate": "2026-11-17",
+    "previousReportDate": "2026-11-10",
+    "officialPublicationTimestampAttestedByThisExcerpt": false
+  },
+  "groupSummary": {
+    "totalCrossesComputedInPastRun": 28,
+    "crossesPrintedInRun": 5,
+    "totalTffDirectComputedInPastRun": 4,
+    "tffDirectPrintedInRun": 4,
+    "totalDisaggDirectComputedInPastRun": 3,
+    "disaggDirectPrintedInRun": 3,
+    "crossesStatisticallyIndependent": false
+  },
+  "fieldDefinitions": {
+    "weeklyCategoryANetChangePp": "deltaCategoryA_pp, weekly change of CFTC category-A net divided by respective OI, percentage points; crosses are relative synthetic legs",
+    "categoryGapPp": "categoryGap_pp: CFTC normalized net category-A vs category-B gap; synthetic cross for Forex",
+    "tffCategoryA": "Asset Manager/Institutional",
+    "tffCategoryB": "Leveraged Funds",
+    "disaggCategoryA": "Managed Money",
+    "disaggCategoryB": "Producer/Merchant"
+  },
+  "observations": [
+    {
+      "symbol": "GBPAUD",
+      "reportDate": "2026-11-17",
+      "weeklyCategoryANetChangePp": 7.6571,
+      "categoryGapPp": 1.8347,
+      "calculationType": "synthetic_fx_relative",
+      "dataset": "tff",
+      "indexInPrintedGroup": 1,
+      "underlyingPositioningNotDirectForex": true
+    },
+    {
+      "symbol": "GBPNZD",
+      "reportDate": "2026-11-17",
+      "weeklyCategoryANetChangePp": 6.9413,
+      "categoryGapPp": -39.6856,
+      "calculationType": "synthetic_fx_relative",
+      "dataset": "tff",
+      "indexInPrintedGroup": 2,
+      "underlyingPositioningNotDirectForex": true
+    },
+    {
+      "symbol": "GBPCAD",
+      "reportDate": "2026-11-17",
+      "weeklyCategoryANetChangePp": 6.1169,
+      "categoryGapPp": -78.7651,
+      "calculationType": "synthetic_fx_relative",
+      "dataset": "tff",
+      "indexInPrintedGroup": 3,
+      "underlyingPositioningNotDirectForex": true
+    },
+    {
+      "symbol": "AUDCHF",
+      "reportDate": "2026-11-17",
+      "weeklyCategoryANetChangePp": -5.825,
+      "categoryGapPp": -65.7386,
+      "calculationType": "synthetic_fx_relative",
+      "dataset": "tff",
+      "indexInPrintedGroup": 4,
+      "underlyingPositioningNotDirectForex": true
+    },
+    {
+      "symbol": "EURGBP",
+      "reportDate": "2026-11-17",
+      "weeklyCategoryANetChangePp": -5.7489,
+      "categoryGapPp": 82.9774,
+      "calculationType": "synthetic_fx_relative",
+      "dataset": "tff",
+      "indexInPrintedGroup": 5,
+      "underlyingPositioningNotDirectForex": true
+    },
+    {
+      "symbol": "US30",
+      "reportDate": "2026-11-17",
+      "weeklyCategoryANetChangePp": -11.7403,
+      "categoryGapPp": -13.3727,
+      "calculationType": "futures_reference",
+      "dataset": "tff",
+      "indexInPrintedGroup": 1,
+      "underlyingPositioningNotDirectForex": false
+    },
+    {
+      "symbol": "NAS100",
+      "reportDate": "2026-11-17",
+      "weeklyCategoryANetChangePp": 2.757,
+      "categoryGapPp": 31.6534,
+      "calculationType": "futures_reference",
+      "dataset": "tff",
+      "indexInPrintedGroup": 2,
+      "underlyingPositioningNotDirectForex": false
+    },
+    {
+      "symbol": "US500",
+      "reportDate": "2026-11-17",
+      "weeklyCategoryANetChangePp": -2.6226,
+      "categoryGapPp": 53.8889,
+      "calculationType": "futures_reference",
+      "dataset": "tff",
+      "indexInPrintedGroup": 3,
+      "underlyingPositioningNotDirectForex": false
+    },
+    {
+      "symbol": "DXY",
+      "reportDate": "2026-11-17",
+      "weeklyCategoryANetChangePp": 1.7897,
+      "categoryGapPp": 36,
+      "calculationType": "futures_reference",
+      "dataset": "tff",
+      "indexInPrintedGroup": 4,
+      "underlyingPositioningNotDirectForex": false
+    },
+    {
+      "symbol": "XAUUSD",
+      "reportDate": "2026-11-17",
+      "weeklyCategoryANetChangePp": -2.5162,
+      "categoryGapPp": 26.3669,
+      "calculationType": "futures_reference",
+      "dataset": "disagg",
+      "indexInPrintedGroup": 1,
+      "underlyingPositioningNotDirectForex": false
+    },
+    {
+      "symbol": "XAGUSD",
+      "reportDate": "2026-11-17",
+      "weeklyCategoryANetChangePp": -2.0846,
+      "categoryGapPp": 11.5149,
+      "calculationType": "futures_reference",
+      "dataset": "disagg",
+      "indexInPrintedGroup": 2,
+      "underlyingPositioningNotDirectForex": false
+    },
+    {
+      "symbol": "USOIL",
+      "reportDate": "2026-11-17",
+      "weeklyCategoryANetChangePp": -0.4953,
+      "categoryGapPp": -19.7569,
+      "calculationType": "futures_reference",
+      "dataset": "disagg",
+      "indexInPrintedGroup": 3,
+      "underlyingPositioningNotDirectForex": false
+    }
+  ],
+  "scientificControls": {
+    "realCftcOriginReportedByPriorSuccessfulAudit": true,
+    "sourceAvailableAsPublicGithubWorkflowLog": true,
+    "verifiedActualSevenCurrencyFactorVector": false,
+    "authenticatedPrivateCftcParity": false,
+    "independentHistoricalDataAvailabilityVerified": false,
+    "futurePriceOutcomesVerified": false,
+    "tradeRecommendationsGenerated": false,
+    "statisticalAlphaEstablished": false,
+    "incrementalCftcApiRequests": 0
+  }
+}

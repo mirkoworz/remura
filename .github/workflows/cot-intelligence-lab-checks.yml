@@ -1,0 +1,104 @@
+name: REMURA Filone B - CFTC intelligence offline LAB
+
+on:
+  pull_request:
+    paths:
+      - 'cot-intelligence-core.js'
+      - 'cot-intelligence-watchlist.js'
+      - 'cot-intelligence-fx-factors.js'
+      - 'scripts/cot_fx_dashboard_export.js'
+      - 'scripts/cot_offline_parity_fx_bundle.py'
+      - 'tests/test_cot_offline_parity_fx_bundle.py'
+      - 'RESEARCH-B-COT-OFFLINE-BUNDLE-V21.2.md'
+      - 'research/real-proofs/REMURA-B-CFTC-20261123-STDOUT-PARTIAL-EXCERPT.json'
+      - 'tests/test_cot_stdout_excerpt_v213.py'
+      - 'scripts/cot_real_partial_presentation.js'
+      - 'scripts/cot_public_two_date_archive_v216.py'
+      - 'tests/test_cot_public_two_date_archive_v216.py'
+      - 'tests/test_cot_public_budget_transport_v217.py'
+      - '.github/workflows/remura-b-v217-cftc-one-shot-public-archive.yml'
+      - 'RESEARCH-B-CFTC-MANUAL-ONE-SHOT-SAFE-ARTIFACT-V21.7.md'
+      - 'RESEARCH-B-CFTC-EXACT-TWO-DATE-SNAPSHOT-V21.6.md'
+      - 'tests/cot-real-partial-presentation.test.js'
+      - 'RESEARCH-B-CFTC-REAL-PARTIAL-PRESENTATION-V21.4.md'
+      - 'RESEARCH-B-COT-AUDITED-STDOUT-EXCERPT-V21.3.md'
+      - 'tests/cot-fx-dashboard-export.test.js'
+      - 'RESEARCH-B-COT-DASHBOARD-EXPORT-V21.1.md'
+      - 'scripts/cot_intelligence_parity.py'
+      - 'tests/cot-intelligence-fx-factors.test.js'
+      - 'tests/test_cot_intelligence_parity.py'
+      - 'RESEARCH-B-COT-FACTORS-PARITY-V21.0.md'
+      - 'scripts/cot_intelligence_watchlist.js'
+      - 'tests/cot-intelligence-watchlist.test.js'
+      - 'tests/cot-intelligence-public.test.js'
+      - 'tests/test_cot_public_official_audit.py'
+      - 'scripts/cot_public_official_audit.py'
+      - 'RESEARCH-B-COT-PUBLIC-AUDIT-V20.9.md'
+      - 'RESEARCH-B-COT-WATCHLIST-V20.8.md'
+      - 'scripts/cot_intelligence_snapshot.py'
+      - 'tests/cot-intelligence.test.js'
+      - 'tests/test_cot_intelligence_snapshot.py'
+      - 'RESEARCH-B-COT-INTELLIGENCE-V20.7.md'
+      - '.github/workflows/cot-intelligence-lab-checks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cot-offline:
+    name: Validate CFTC transforms without market access
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check pure COT engine syntax and test fixtures
+        run: |
+          node --check cot-intelligence-core.js
+          node --check cot-intelligence-watchlist.js
+          node --check cot-intelligence-fx-factors.js
+          node --check scripts/cot_intelligence_watchlist.js
+          node --check tests/cot-intelligence-public.test.js
+          node --test tests/cot-intelligence.test.js tests/cot-intelligence-watchlist.test.js tests/cot-intelligence-public.test.js tests/cot-intelligence-fx-factors.test.js
+      - name: Validate five NEW offline FX dashboard-export gates (no HTTP)
+        run: |
+          node --check scripts/cot_fx_dashboard_export.js
+          node --test tests/cot-fx-dashboard-export.test.js
+      - name: Check read-only SQLite snapshot fixtures
+        run: python3 -m unittest discover -s tests -p 'test_cot_intelligence_snapshot.py' -v
+      - name: Check two-request CFTC public read contract with mocks (no HTTP)
+        run: python3 -m unittest discover -s tests -p 'test_cot_public_official_audit.py' -v
+      - name: Verify offline CFTC public versus private custody parity fixtures
+        run: python3 -m unittest discover -s tests -p 'test_cot_intelligence_parity.py' -v
+      - name: Validate 6 NEW offline parity-first dashboard handoff gates
+        run: python3 -m unittest discover -s tests -p 'test_cot_offline_parity_fx_bundle.py' -v
+      - name: Validate five NEW safe historic partial presentation cases (no HTTP)
+        run: |
+          node --check scripts/cot_real_partial_presentation.js
+          node --test tests/cot-real-partial-presentation.test.js
+          node scripts/cot_real_partial_presentation.js --now-utc 2026-11-23T21:00:00Z > /tmp/remura-b-partial-preview.json
+          node -e 'const x=require("/tmp/remura-b-partial-preview.json"); if(x.numberOfDisplayedObservations!==12 || x.forecastOrTradeSignals!==false || x.raw980SourceRowsRecovered!==false)process.exit(1)'
+      - name: Verify four NEW no-redirect/no-host-change HTTP guards offline
+        run: python3 -m unittest discover -s tests -p 'test_cot_public_budget_transport_v217.py' -v
+      - name: Check six NEW date-targeted official archive gates, no HTTP
+        run: |
+          python3 -m unittest discover -s tests -p 'test_cot_public_two_date_archive_v216.py' -v
+          python3 scripts/cot_public_two_date_archive_v216.py > /tmp/remura-cftc-two-date-noauth.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          j=json.loads(Path('/tmp/remura-cftc-two-date-noauth.json').read_text())
+          assert j['status']=='PUBLIC_CFTC_FETCH_NOT_AUTHORIZED'
+          assert j['actualPublicGetRequests']==0
+          assert j['expectedRows']==28
+          print('REMURA_B_216_NO_UNAUTHORIZED_CFTC_CALLS=PASS')
+          PY
+      - name: Check five NEW real audit stdout excerpt integrity and non-promotion gates
+        run: python3 -m unittest discover -s tests -p 'test_cot_stdout_excerpt_v213.py' -v
+

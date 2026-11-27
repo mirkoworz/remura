@@ -1,0 +1,866 @@
+{
+  "schema": "remura-b-v223-public-export-only-v1",
+  "state": "PUBLIC_DESCRIPTIVE_ONLY_PRIVATE_PARITY_PENDING",
+  "sourceCommit": "5cd969490ed7ccef18842baea12e421c986d80b7",
+  "sourceFileSha256": "b17bc0fcb83fcf9ea3af7aa6ccf38081355b7f940f49b6a5030f7a8a8f8556f3",
+  "sourceRowsSha256": "30fe267d0e0e89d4789f03db31da84ee44a5ccdb56f04f5fba06343860bdb72f",
+  "publicReadAtUtc": "2026-11-24T09:05:06.088584Z",
+  "exporterCommit": "6bdfe8bfaee19b0e561ddc2fad9862b0ee80fa5e",
+  "execution": "Original pure JS render/build functions invoked offline against archived public snapshot; no CLI or parity bundle invoked. generatedAtUtc inside exporter is an explicit evaluation clock equal to public read time, not actual execution timestamp.",
+  "verification": {
+    "manualHandoffComparedElements": 42,
+    "matchedElements": 42,
+    "privateParityVerified": false,
+    "localFirstSeenVerified": false,
+    "historicalAvailabilityAttested": false,
+    "alphaEstablished": false
+  },
+  "dashboard": {
+    "schema": "remura-cot-dashboard-fx-v1",
+    "version": "B_V21_1_LAB",
+    "mode": "descriptive_only",
+    "generatedAtUtc": "2026-11-24T09:05:06.088Z",
+    "state": "descriptive_ready",
+    "reason": null,
+    "sourceDescription": "CFTC official public API (read-only audit)",
+    "publicApiReadAtUtc": "2026-11-24T09:05:06.088Z",
+    "capturedAsOfUtc": null,
+    "latestCftcReportDate": "2026-11-17",
+    "previousCftcReportDate": "2026-11-10",
+    "underlyingCount": 7,
+    "overlappingFxCrossCount": 28,
+    "categoryLabels": {
+      "dataset": "CFTC TFF Futures Only",
+      "first": "Asset Manager/Institutional",
+      "second": "Leveraged Funds"
+    },
+    "timeClaims": {
+      "reportDateIsNotPublicationDate": true,
+      "publicReadIsNotHistoricAvailability": true,
+      "privateFirstSeenIsSelfReported": true,
+      "sourceAuthenticatedByExporter": false
+    },
+    "use": "DISPLAY_ONLY_WEEKLY_AGGREGATE_FUTURES_NOT_TRADING_SIGNALS",
+    "units": {
+      "netAndWeeklyDelta": "percentage_points_of_open_interest",
+      "openInterest": "futures_contracts",
+      "cotIndex": "0_to_100_not_probability"
+    },
+    "factors": [
+      {
+        "currency": "AUD",
+        "cftcContractCode": "232741",
+        "reportDate": "2026-11-17",
+        "previousReportDate": "2026-11-10",
+        "assetManagerNetPctOi": -48.820271400364966,
+        "leveragedFundsNetPctOi": 10.147456055744215,
+        "weeklyAssetManagerChangePp": -4.267914793334967,
+        "weeklyLeveragedFundsChangePp": -4.254613892875488,
+        "openInterestContracts": 374281,
+        "openInterestChangeContracts": 21422,
+        "cotIndex52AssetManagers": null,
+        "historyStatus": "insufficient",
+        "localFirstSeenUtc": null,
+        "previousLocalFirstSeenUtc": null
+      },
+      {
+        "currency": "NZD",
+        "cftcContractCode": "112741",
+        "reportDate": "2026-11-17",
+        "previousReportDate": "2026-11-10",
+        "assetManagerNetPctOi": -34.65136457429511,
+        "leveragedFundsNetPctOi": -17.2039169078885,
+        "weeklyAssetManagerChangePp": -3.552111962982707,
+        "weeklyLeveragedFundsChangePp": 1.618756408970949,
+        "openInterestContracts": 137149,
+        "openInterestChangeContracts": 5223,
+        "cotIndex52AssetManagers": null,
+        "historyStatus": "insufficient",
+        "localFirstSeenUtc": null,
+        "previousLocalFirstSeenUtc": null
+      },
+      {
+        "currency": "GBP",
+        "cftcContractCode": "096742",
+        "reportDate": "2026-11-17",
+        "previousReportDate": "2026-11-10",
+        "assetManagerNetPctOi": -44.803189735287944,
+        "leveragedFundsNetPctOi": 12.329817258318023,
+        "weeklyAssetManagerChangePp": 3.3891429719149784,
+        "weeklyLeveragedFundsChangePp": -3.3590702155868932,
+        "openInterestContracts": 233499,
+        "openInterestChangeContracts": 13630,
+        "cotIndex52AssetManagers": null,
+        "historyStatus": "insufficient",
+        "localFirstSeenUtc": null,
+        "previousLocalFirstSeenUtc": null
+      },
+      {
+        "currency": "CAD",
+        "cftcContractCode": "090741",
+        "reportDate": "2026-11-17",
+        "previousReportDate": "2026-11-10",
+        "assetManagerNetPctOi": 1.4978251522951762,
+        "leveragedFundsNetPctOi": -20.134231935363193,
+        "weeklyAssetManagerChangePp": -2.7277283572779787,
+        "weeklyLeveragedFundsChangePp": -0.23064926129986318,
+        "openInterestContracts": 358186,
+        "openInterestChangeContracts": 15509,
+        "cotIndex52AssetManagers": null,
+        "historyStatus": "insufficient",
+        "localFirstSeenUtc": null,
+        "previousLocalFirstSeenUtc": null
+      },
+      {
+        "currency": "EUR",
+        "cftcContractCode": "099741",
+        "reportDate": "2026-11-17",
+        "previousReportDate": "2026-11-10",
+        "assetManagerNetPctOi": 17.00098841613243,
+        "leveragedFundsNetPctOi": -8.843437655883385,
+        "weeklyAssetManagerChangePp": -2.3597266843993303,
+        "weeklyLeveragedFundsChangePp": -0.4573863282323245,
+        "openInterestContracts": 866032,
+        "openInterestChangeContracts": 11327,
+        "cotIndex52AssetManagers": null,
+        "historyStatus": "insufficient",
+        "localFirstSeenUtc": null,
+        "previousLocalFirstSeenUtc": null
+      },
+      {
+        "currency": "CHF",
+        "cftcContractCode": "092741",
+        "reportDate": "2026-11-17",
+        "previousReportDate": "2026-11-10",
+        "assetManagerNetPctOi": -8.863222846293805,
+        "leveragedFundsNetPctOi": -15.634047939245313,
+        "weeklyAssetManagerChangePp": 1.5571034763256382,
+        "weeklyLeveragedFundsChangePp": -2.918227147651839,
+        "openInterestContracts": 126410,
+        "openInterestChangeContracts": 32,
+        "cotIndex52AssetManagers": null,
+        "historyStatus": "insufficient",
+        "localFirstSeenUtc": null,
+        "previousLocalFirstSeenUtc": null
+      },
+      {
+        "currency": "JPY",
+        "cftcContractCode": "097741",
+        "reportDate": "2026-11-17",
+        "previousReportDate": "2026-11-10",
+        "assetManagerNetPctOi": 21.69299699508916,
+        "leveragedFundsNetPctOi": -6.094358811459136,
+        "weeklyAssetManagerChangePp": -1.539147010053881,
+        "weeklyLeveragedFundsChangePp": -1.7600611579715117,
+        "openInterestContracts": 390361,
+        "openInterestChangeContracts": 1486,
+        "cotIndex52AssetManagers": null,
+        "historyStatus": "insufficient",
+        "localFirstSeenUtc": null,
+        "previousLocalFirstSeenUtc": null
+      }
+    ],
+    "crosses": [
+      {
+        "symbol": "EURUSD",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "EUR",
+            "weight": 1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": -2.3597266843993303,
+        "leveragedFundsWeeklyRelativeChangePp": -0.4573863282323245,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "GBPUSD",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "GBP",
+            "weight": 1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": 3.3891429719149784,
+        "leveragedFundsWeeklyRelativeChangePp": -3.3590702155868932,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "AUDUSD",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "AUD",
+            "weight": 1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": -4.267914793334967,
+        "leveragedFundsWeeklyRelativeChangePp": -4.254613892875488,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "NZDUSD",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "NZD",
+            "weight": 1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": -3.552111962982707,
+        "leveragedFundsWeeklyRelativeChangePp": 1.618756408970949,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "USDJPY",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "JPY",
+            "weight": -1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": 1.539147010053881,
+        "leveragedFundsWeeklyRelativeChangePp": 1.7600611579715117,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "USDCAD",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "CAD",
+            "weight": -1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": 2.7277283572779787,
+        "leveragedFundsWeeklyRelativeChangePp": 0.23064926129986318,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "USDCHF",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "CHF",
+            "weight": -1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": -1.5571034763256382,
+        "leveragedFundsWeeklyRelativeChangePp": 2.918227147651839,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "EURGBP",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "EUR",
+            "weight": 1
+          },
+          {
+            "currency": "GBP",
+            "weight": -1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": -5.748869656314309,
+        "leveragedFundsWeeklyRelativeChangePp": 2.9016838873545687,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "EURJPY",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "EUR",
+            "weight": 1
+          },
+          {
+            "currency": "JPY",
+            "weight": -1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": -0.8205796743454492,
+        "leveragedFundsWeeklyRelativeChangePp": 1.3026748297391872,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "EURCHF",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "EUR",
+            "weight": 1
+          },
+          {
+            "currency": "CHF",
+            "weight": -1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": -3.9168301607249685,
+        "leveragedFundsWeeklyRelativeChangePp": 2.4608408194195146,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "EURCAD",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "EUR",
+            "weight": 1
+          },
+          {
+            "currency": "CAD",
+            "weight": -1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": 0.3680016728786484,
+        "leveragedFundsWeeklyRelativeChangePp": -0.22673706693246132,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "EURAUD",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "EUR",
+            "weight": 1
+          },
+          {
+            "currency": "AUD",
+            "weight": -1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": 1.9081881089356365,
+        "leveragedFundsWeeklyRelativeChangePp": 3.7972275646431637,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "EURNZD",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "EUR",
+            "weight": 1
+          },
+          {
+            "currency": "NZD",
+            "weight": -1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": 1.1923852785833766,
+        "leveragedFundsWeeklyRelativeChangePp": -2.0761427372032735,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "GBPJPY",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "GBP",
+            "weight": 1
+          },
+          {
+            "currency": "JPY",
+            "weight": -1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": 4.9282899819688595,
+        "leveragedFundsWeeklyRelativeChangePp": -1.5990090576153815,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "GBPCHF",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "GBP",
+            "weight": 1
+          },
+          {
+            "currency": "CHF",
+            "weight": -1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": 1.8320394955893402,
+        "leveragedFundsWeeklyRelativeChangePp": -0.4408430679350541,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "GBPCAD",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "GBP",
+            "weight": 1
+          },
+          {
+            "currency": "CAD",
+            "weight": -1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": 6.116871329192957,
+        "leveragedFundsWeeklyRelativeChangePp": -3.12842095428703,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "GBPAUD",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "GBP",
+            "weight": 1
+          },
+          {
+            "currency": "AUD",
+            "weight": -1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": 7.657057765249945,
+        "leveragedFundsWeeklyRelativeChangePp": 0.895543677288595,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "GBPNZD",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "GBP",
+            "weight": 1
+          },
+          {
+            "currency": "NZD",
+            "weight": -1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": 6.941254934897685,
+        "leveragedFundsWeeklyRelativeChangePp": -4.977826624557842,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "AUDJPY",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "AUD",
+            "weight": 1
+          },
+          {
+            "currency": "JPY",
+            "weight": -1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": -2.7287677832810857,
+        "leveragedFundsWeeklyRelativeChangePp": -2.4945527349039764,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "AUDCAD",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "AUD",
+            "weight": 1
+          },
+          {
+            "currency": "CAD",
+            "weight": -1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": -1.5401864360569881,
+        "leveragedFundsWeeklyRelativeChangePp": -4.023964631575625,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "AUDCHF",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "AUD",
+            "weight": 1
+          },
+          {
+            "currency": "CHF",
+            "weight": -1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": -5.825018269660605,
+        "leveragedFundsWeeklyRelativeChangePp": -1.336386745223649,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "AUDNZD",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "AUD",
+            "weight": 1
+          },
+          {
+            "currency": "NZD",
+            "weight": -1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": -0.7158028303522599,
+        "leveragedFundsWeeklyRelativeChangePp": -5.873370301846437,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "NZDJPY",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "NZD",
+            "weight": 1
+          },
+          {
+            "currency": "JPY",
+            "weight": -1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": -2.012964952928826,
+        "leveragedFundsWeeklyRelativeChangePp": 3.3788175669424607,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "NZDCAD",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "NZD",
+            "weight": 1
+          },
+          {
+            "currency": "CAD",
+            "weight": -1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": -0.8243836057047282,
+        "leveragedFundsWeeklyRelativeChangePp": 1.8494056702708122,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "NZDCHF",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "NZD",
+            "weight": 1
+          },
+          {
+            "currency": "CHF",
+            "weight": -1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": -5.109215439308345,
+        "leveragedFundsWeeklyRelativeChangePp": 4.536983556622788,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "CADJPY",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "CAD",
+            "weight": 1
+          },
+          {
+            "currency": "JPY",
+            "weight": -1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": -1.1885813472240976,
+        "leveragedFundsWeeklyRelativeChangePp": 1.5294118966716486,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "CADCHF",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "CAD",
+            "weight": 1
+          },
+          {
+            "currency": "CHF",
+            "weight": -1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": -4.284831833603617,
+        "leveragedFundsWeeklyRelativeChangePp": 2.687577886351976,
+        "derivedNotDirectSpot": true
+      },
+      {
+        "symbol": "CHFJPY",
+        "reportDate": "2026-11-17",
+        "legs": [
+          {
+            "currency": "CHF",
+            "weight": 1
+          },
+          {
+            "currency": "JPY",
+            "weight": -1
+          }
+        ],
+        "assetManagerWeeklyRelativeChangePp": 3.0962504863795193,
+        "leveragedFundsWeeklyRelativeChangePp": -1.1581659896803274,
+        "derivedNotDirectSpot": true
+      }
+    ],
+    "cautions": [
+      "7 CFTC currency futures, not 28 statistically independent bets",
+      "Crosses derive from two currencies versus USD, NOT spot position",
+      "Weekly report is not live institutional order flow",
+      "No forward price, executed volume, forecast or profitability verified"
+    ]
+  },
+  "coverage": {
+    "tff": {
+      "state": "complete",
+      "latest": "2026-11-17",
+      "previous": "2026-11-10",
+      "expected": 11,
+      "latestPresent": 11,
+      "previousPresent": 11,
+      "missingLatest": [],
+      "missingPrevious": [],
+      "reportAgeDays": 7,
+      "intervalDays": 7
+    },
+    "disagg": {
+      "state": "complete",
+      "latest": "2026-11-17",
+      "previous": "2026-11-10",
+      "expected": 3,
+      "latestPresent": 3,
+      "previousPresent": 3,
+      "missingLatest": [],
+      "missingPrevious": [],
+      "reportAgeDays": 7,
+      "intervalDays": 7
+    }
+  },
+  "directFutures": [
+    {
+      "id": "tff_futures",
+      "label": "Futures finanziari",
+      "dataset": "tff",
+      "state": "descriptive",
+      "ordering": "|weekly change net% OI of category A| descending; NOT prediction",
+      "entries": [
+        {
+          "symbol": "US30",
+          "reportDate": "2026-11-17",
+          "referenceType": "futures_reference",
+          "dataset": "tff",
+          "codes": [
+            "124603"
+          ],
+          "categoryA": "Asset Manager/Institutional",
+          "categoryB": "Leveraged Funds",
+          "netA_Pp": -9.238772159029619,
+          "netB_Pp": 4.133955004734451,
+          "deltaA_Pp": -11.740335636202852,
+          "deltaB_Pp": 2.5524377102715663,
+          "categoryGapPp": -13.37272716376407,
+          "deltaGapPp": -14.292773346474418,
+          "relationship": "categorie_opposte",
+          "historicalIndex52": null,
+          "relativeStatus": "insufficient",
+          "firstLocalCaptureUtc": [
+            null
+          ],
+          "exposureTags": [
+            "US_equity"
+          ],
+          "observationMode": "descriptive_only",
+          "evidence": "CFTC aggregated futures positioning (weekly), not price or executed flows"
+        },
+        {
+          "symbol": "NAS100",
+          "reportDate": "2026-11-17",
+          "referenceType": "futures_reference",
+          "dataset": "tff",
+          "codes": [
+            "209742"
+          ],
+          "categoryA": "Asset Manager/Institutional",
+          "categoryB": "Leveraged Funds",
+          "netA_Pp": 27.96679070112643,
+          "netB_Pp": -3.686623507622553,
+          "deltaA_Pp": 2.756983173339705,
+          "deltaB_Pp": -8.524232654295592,
+          "categoryGapPp": 31.653414208748984,
+          "deltaGapPp": 11.281215827635297,
+          "relationship": "categorie_opposte",
+          "historicalIndex52": null,
+          "relativeStatus": "insufficient",
+          "firstLocalCaptureUtc": [
+            null
+          ],
+          "exposureTags": [
+            "US_equity"
+          ],
+          "observationMode": "descriptive_only",
+          "evidence": "CFTC aggregated futures positioning (weekly), not price or executed flows"
+        },
+        {
+          "symbol": "US500",
+          "reportDate": "2026-11-17",
+          "referenceType": "futures_reference",
+          "dataset": "tff",
+          "codes": [
+            "13874A"
+          ],
+          "categoryA": "Asset Manager/Institutional",
+          "categoryB": "Leveraged Funds",
+          "netA_Pp": 42.68321063178185,
+          "netB_Pp": -11.205660771460373,
+          "deltaA_Pp": -2.6226271914285917,
+          "deltaB_Pp": 3.8145083628007868,
+          "categoryGapPp": 53.88887140324222,
+          "deltaGapPp": -6.437135554229378,
+          "relationship": "categorie_opposte",
+          "historicalIndex52": null,
+          "relativeStatus": "insufficient",
+          "firstLocalCaptureUtc": [
+            null
+          ],
+          "exposureTags": [
+            "US_equity"
+          ],
+          "observationMode": "descriptive_only",
+          "evidence": "CFTC aggregated futures positioning (weekly), not price or executed flows"
+        },
+        {
+          "symbol": "DXY",
+          "reportDate": "2026-11-17",
+          "referenceType": "futures_reference",
+          "dataset": "tff",
+          "codes": [
+            "098662"
+          ],
+          "categoryA": "Asset Manager/Institutional",
+          "categoryB": "Leveraged Funds",
+          "netA_Pp": 33.75705961452263,
+          "netB_Pp": -2.2429403854773646,
+          "deltaA_Pp": 1.789719023542851,
+          "deltaB_Pp": -7.783375844264301,
+          "categoryGapPp": 36,
+          "deltaGapPp": 9.573094867807157,
+          "relationship": "categorie_opposte",
+          "historicalIndex52": null,
+          "relativeStatus": "insufficient",
+          "firstLocalCaptureUtc": [
+            null
+          ],
+          "exposureTags": [
+            "US_dollar_index"
+          ],
+          "observationMode": "descriptive_only",
+          "evidence": "CFTC aggregated futures positioning (weekly), not price or executed flows"
+        }
+      ],
+      "issues": [],
+      "considered": 4
+    },
+    {
+      "id": "disagg_futures",
+      "label": "Futures fisici",
+      "dataset": "disagg",
+      "state": "descriptive",
+      "ordering": "|weekly change net% OI of category A| descending; NOT prediction",
+      "entries": [
+        {
+          "symbol": "XAUUSD",
+          "reportDate": "2026-11-17",
+          "referenceType": "futures_reference",
+          "dataset": "disagg",
+          "codes": [
+            "088691"
+          ],
+          "categoryA": "Managed Money",
+          "categoryB": "Producer/Merchant",
+          "netA_Pp": 25.24115203734853,
+          "netB_Pp": -1.1257031046945571,
+          "deltaA_Pp": -2.516214075444104,
+          "deltaB_Pp": 1.5627890813577006,
+          "categoryGapPp": 26.36685514204309,
+          "deltaGapPp": -4.079003156801804,
+          "relationship": "categorie_opposte",
+          "historicalIndex52": null,
+          "relativeStatus": "insufficient",
+          "firstLocalCaptureUtc": [
+            null
+          ],
+          "exposureTags": [
+            "precious_metals"
+          ],
+          "observationMode": "descriptive_only",
+          "evidence": "CFTC aggregated futures positioning (weekly), not price or executed flows"
+        },
+        {
+          "symbol": "XAGUSD",
+          "reportDate": "2026-11-17",
+          "referenceType": "futures_reference",
+          "dataset": "disagg",
+          "codes": [
+            "084691"
+          ],
+          "categoryA": "Managed Money",
+          "categoryB": "Producer/Merchant",
+          "netA_Pp": 1.0411159461547848,
+          "netB_Pp": -10.47378909268372,
+          "deltaA_Pp": -2.0846406339302983,
+          "deltaB_Pp": -0.045089199901926946,
+          "categoryGapPp": 11.514905038838505,
+          "deltaGapPp": -2.039551434028372,
+          "relationship": "categorie_opposte",
+          "historicalIndex52": null,
+          "relativeStatus": "insufficient",
+          "firstLocalCaptureUtc": [
+            null
+          ],
+          "exposureTags": [
+            "precious_metals"
+          ],
+          "observationMode": "descriptive_only",
+          "evidence": "CFTC aggregated futures positioning (weekly), not price or executed flows"
+        },
+        {
+          "symbol": "USOIL",
+          "reportDate": "2026-11-17",
+          "referenceType": "futures_reference",
+          "dataset": "disagg",
+          "codes": [
+            "067651"
+          ],
+          "categoryA": "Managed Money",
+          "categoryB": "Producer/Merchant",
+          "netA_Pp": 0.8457638803094895,
+          "netB_Pp": 20.602699021119495,
+          "deltaA_Pp": -0.49527195174655503,
+          "deltaB_Pp": 1.3801076208755276,
+          "categoryGapPp": -19.756935140810004,
+          "deltaGapPp": -1.87537957262208,
+          "relationship": "categorie_concordi",
+          "historicalIndex52": null,
+          "relativeStatus": "insufficient",
+          "firstLocalCaptureUtc": [
+            null
+          ],
+          "exposureTags": [
+            "energy_WTI"
+          ],
+          "observationMode": "descriptive_only",
+          "evidence": "CFTC aggregated futures positioning (weekly), not price or executed flows"
+        }
+      ],
+      "issues": [],
+      "considered": 3
+    }
+  ]
+}
