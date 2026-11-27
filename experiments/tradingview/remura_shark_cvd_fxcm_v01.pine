@@ -1,0 +1,177 @@
+//@version=6
+// REMURA / Track D / research only / D0.2 (2026-11-10 07:14 Europe/Rome)
+// D0.2: avoid wrong-positive hard stop on symbol/timeframe; show diagnostics.
+// FXCM spot-Forex tick-volume PROXY. NOT CME aggressor volume.
+// No orders, no entries, no SL/TP, no claims of profitable edge.
+// Intended chart: FXCM:EURUSD, 5 minutes; 1-minute intrabars.
+indicator("REMURA Shark CVD D0.2 | FXCM proxy | RESEARCH", shorttitle="REMURA CVD D0.2", overlay=false, max_labels_count=100)
+
+const string MODEL = "remura_fxcm_1m_cvd_d0.2"
+int leftBars = input.int(2, "Pivot barre sinistre", minval=1, maxval=10)
+int rightBars = input.int(2, "Pivot barre destre (conferma)", minval=1, maxval=10)
+int minDistance = input.int(3, "Distanza minima pivot (barre)", minval=1, maxval=100)
+int maxDistance = input.int(72, "Distanza massima pivot (barre)", minval=3, maxval=250)
+int minPriceTicks = input.int(5, "Nuovo estremo minimo (tick di prezzo)", minval=1, maxval=1000)
+float minCvdDifference = input.float(10.0, "Differenza CVD minima (unita' volume FXCM)", minval=0.0, step=1.0)
+bool sendResearchAlerts = input.bool(false, "Abilita alert di RICERCA (no trade)")
+
+// Use TradingView's canonical chart identifier (ignores display modifiers).
+// Never halt the entire indicator on bar 0: display the observed identifiers
+// instead so an iPhone screenshot can reveal the actual source of a mismatch.
+string chartId = ticker.standard(syminfo.main_tickerid)
+bool chartIsFxcmEurusd = chartId == "FXCM:EURUSD"
+bool chartIsFiveMinutes = timeframe.isminutes and timeframe.multiplier == 5
+bool chartOk = chartIsFxcmEurusd and chartIsFiveMinutes
+var table sourceDiag = table.new(position.top_right, 1, 2, border_width=1)
+if barstate.islast
+    table.cell(sourceDiag, 0, 0, chartOk ? "REMURA D0.2 | FXCM 5m OK" : "REMURA D0.2 | SORGENTE/TIMEFRAME ERRATO", text_color=chartOk ? color.lime : color.orange, bgcolor=color.new(color.black, 20))
+    table.cell(sourceDiag, 0, 1, "Letto: " + chartId + " | TF=" + timeframe.period, text_color=color.white, bgcolor=color.new(color.black, 20))
+
+
+// This is aggregated 1-minute direction inference, NOT tick-by-tick aggressor data.
+// Available lower-timeframe history is limited by TradingView plan/feed.
+[intrabarOpen, intrabarClose, intrabarVolume] = request.security_lower_tf(syminfo.tickerid, "1", [open, close, volume])
+
+bool newDay = timeframe.change("D")
+int dayKey = time("D")
+var float runningCvd = 0.0
+var float previousIntrabarClose = na
+var int previousSide = 0
+var bool completeSession = true
+var int completeBars = 0
+
+float barDelta = na
+float cvd = na
+bool completeBar = false
+
+// Commit state only on confirmed 5m bars, avoiding provisional intrabar alerts.
+if barstate.isconfirmed and chartOk
+    if newDay
+        runningCvd := 0.0
+        previousIntrabarClose := na
+        previousSide := 0
+        completeSession := true
+        completeBars := 0
+
+    int n = array.size(intrabarOpen)
+    completeBar := n == 5 and array.size(intrabarClose) == n and array.size(intrabarVolume) == n
+
+    // Fail closed on gaps or incomplete 1m coverage. No fabricated intrabars.
+    if not newDay and not na(time[1]) and time - time[1] != 5 * 60 * 1000
+        completeBar := false
+
+    float localDelta = 0.0
+    if completeBar
+        for i = 0 to n - 1
+            float o = array.get(intrabarOpen, i)
+            float c = array.get(intrabarClose, i)
+            float v = array.get(intrabarVolume, i)
+            if na(o) or na(c) or na(v) or v < 0
+                completeBar := false
+                break
+            int side = 0
+            if c > o
+                side := 1
+            else if c < o
+                side := -1
+            else if not na(previousIntrabarClose) and c > previousIntrabarClose
+                side := 1
+            else if not na(previousIntrabarClose) and c < previousIntrabarClose
+                side := -1
+            else
+                side := previousSide
+
+            localDelta += side * v
+            previousIntrabarClose := c
+            previousSide := side
+
+    if not completeBar
+        completeSession := false
+
+    // If any 5m bar of the current daily anchor is incomplete, suppress
+    // this day's remaining CVD and signals rather than inventing continuity.
+    if completeBar and completeSession
+        runningCvd += localDelta
+        completeBars += 1
+        barDelta := localDelta
+        cvd := runningCvd
+
+float pivotLow = ta.pivotlow(low, leftBars, rightBars)
+float pivotHigh = ta.pivothigh(high, leftBars, rightBars)
+
+var float lastLowPrice = na
+var float lastLowCvd = na
+var int lastLowIndex = na
+var int lastLowDay = na
+var int lastLowMs = na
+var float lastHighPrice = na
+var float lastHighCvd = na
+var int lastHighIndex = na
+var int lastHighDay = na
+var int lastHighMs = na
+
+bool bull = false
+bool bear = false
+float secondPivotPrice = na
+float secondPivotCvd = na
+float firstPivotPrice = na
+float firstPivotCvd = na
+int firstPivotMs = na
+int secondPivotMs = na
+
+// Pivot is known on the RIGHT confirmation bar; marker/alert stay there,
+// never artificially offset backward to its historical pivot candle.
+if chartOk and barstate.isconfirmed and completeSession and not na(cvd) and completeBars >= leftBars + rightBars + 2
+    int pivotDay = dayKey[rightBars]
+    int pivotIndex = bar_index - rightBars
+    int pivotMs = time[rightBars]
+    float atPivotCvd = cvd[rightBars]
+    if pivotDay == dayKey and not na(atPivotCvd)
+        if not na(pivotLow)
+            float p = low[rightBars]
+            int separation = na(lastLowIndex) ? 0 : pivotIndex - lastLowIndex
+            bull := not na(lastLowPrice) and lastLowDay == dayKey and separation >= minDistance and separation <= maxDistance and p < lastLowPrice - minPriceTicks * syminfo.mintick and atPivotCvd > lastLowCvd + minCvdDifference
+            if bull
+                firstPivotPrice := lastLowPrice
+                firstPivotCvd := lastLowCvd
+                firstPivotMs := lastLowMs
+                secondPivotPrice := p
+                secondPivotCvd := atPivotCvd
+                secondPivotMs := pivotMs
+            lastLowPrice := p
+            lastLowCvd := atPivotCvd
+            lastLowIndex := pivotIndex
+            lastLowDay := dayKey
+            lastLowMs := pivotMs
+
+        if not na(pivotHigh)
+            float p = high[rightBars]
+            int separation = na(lastHighIndex) ? 0 : pivotIndex - lastHighIndex
+            bear := not na(lastHighPrice) and lastHighDay == dayKey and separation >= minDistance and separation <= maxDistance and p > lastHighPrice + minPriceTicks * syminfo.mintick and atPivotCvd < lastHighCvd - minCvdDifference
+            if bear
+                firstPivotPrice := lastHighPrice
+                firstPivotCvd := lastHighCvd
+                firstPivotMs := lastHighMs
+                secondPivotPrice := p
+                secondPivotCvd := atPivotCvd
+                secondPivotMs := pivotMs
+            lastHighPrice := p
+            lastHighCvd := atPivotCvd
+            lastHighIndex := pivotIndex
+            lastHighDay := dayKey
+            lastHighMs := pivotMs
+
+plot(chartOk ? cvd : na, "CVD FXCM stimato (1m)", color=color.teal, linewidth=2)
+hline(0, "Zero", color=color.gray, linestyle=hline.style_dotted)
+plotshape(chartOk and bull ? cvd : na, "Divergenza rialzista confermata (RICERCA)", shape.triangleup, location.absolute, color.lime, size=size.small, text="DIV+")
+plotshape(chartOk and bear ? cvd : na, "Divergenza ribassista confermata (RICERCA)", shape.triangledown, location.absolute, color.red, size=size.small, text="DIV-")
+bgcolor(not chartOk ? color.new(color.orange, 85) : barstate.isconfirmed and not completeSession ? color.new(color.orange, 88) : na, title="Sessione incompleta: NO SIGNAL")
+
+// Dynamic JSON is emitted only if explicitly enabled AND a confirmed divergence
+// occurs on a closed realtime bar. TradingView alert/webhook must be set up manually.
+// No endpoint, credential, or personal data is embedded in this script.
+if chartOk and sendResearchAlerts and barstate.isrealtime and barstate.isconfirmed and (bull or bear)
+    string eventType = bull ? "BULLISH_REGULAR" : "BEARISH_REGULAR"
+    string eventId = MODEL + "|" + syminfo.tickerid + "|5|" + eventType + "|" + str.tostring(secondPivotMs)
+    string payload = '{"schema":"remura-research-d0.2","mode":"RESEARCH_ONLY","algorithm":"' + MODEL + '","source":"TV_FXCM_TICK_VOLUME_PROXY_1M","event_id":"' + eventId + '","symbol":"' + syminfo.tickerid + '","timeframe":"5","type":"' + eventType + '","detected_bar_close_ms":' + str.tostring(time_close) + ',"pivot1_ms":' + str.tostring(firstPivotMs) + ',"pivot2_ms":' + str.tostring(secondPivotMs) + ',"pivot1_price":' + str.tostring(firstPivotPrice, format.mintick) + ',"pivot2_price":' + str.tostring(secondPivotPrice, format.mintick) + ',"pivot1_cvd":' + str.tostring(firstPivotCvd) + ',"pivot2_cvd":' + str.tostring(secondPivotCvd) + ',"current_price":' + str.tostring(close, format.mintick) + ',"current_cvd":' + str.tostring(cvd) + ',"delta_5m":' + str.tostring(barDelta) + '}'
+    alert(payload, alert.freq_all)

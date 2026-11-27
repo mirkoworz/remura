@@ -1,0 +1,145 @@
+//@version=6
+// REMURA Track D D0.3 | 2026-11-10 Europe/Rome | Research only
+// FXCM EURUSD tick-volume proxy: NEVER real exchange aggressor volume.
+// Chart FX:EURUSD alias is accepted, but ALL analyzed data come from FXCM.
+indicator("REMURA Shark CVD D0.3 | FXCM only | RESEARCH", shorttitle="REMURA CVD D0.3", overlay=false)
+
+const string FEED = "FXCM:EURUSD"
+const string MODEL = "remura_fxcm_1m_cvd_d0.3"
+int leftBars = input.int(2, "Pivot a sinistra", minval=1, maxval=10)
+int rightBars = input.int(2, "Pivot a destra (conferma)", minval=1, maxval=10)
+int minDistance = input.int(3, "Separazione minima pivot (barre)", minval=1, maxval=100)
+int maxDistance = input.int(72, "Separazione massima pivot (barre)", minval=3, maxval=250)
+int minPriceTicks = input.int(5, "Nuovo estremo minimo (tick)", minval=1, maxval=1000)
+float minCvdDiff = input.float(10.0, "Differenza CVD minima (volume FXCM)", minval=0, step=1)
+bool researchAlerts = input.bool(false, "Alert SOLO RICERCA (disattivato)")
+
+string chartId = ticker.standard(syminfo.main_tickerid)
+bool chartOk = (chartId == "FXCM:EURUSD" or chartId == "FX:EURUSD") and timeframe.isminutes and timeframe.multiplier == 5
+
+// NOTE: The explicit feed prevents accidental mixing with the FX:EURUSD
+// chart alias. Five-minute highs/lows and one-minute volumes are BOTH FXCM.
+[fxH, fxL, fxT, fxD, fxC, fxTick] = request.security(FEED, "5", [high, low, time, time("D"), close, syminfo.mintick], gaps=barmerge.gaps_on, lookahead=barmerge.lookahead_off)
+[t1, o1, c1, v1] = request.security_lower_tf(FEED, "1", [time, open, close, volume])
+bool newDay = not na(fxD) and (na(fxD[1]) or fxD != fxD[1])
+var float total = 0.0
+var float lastMinuteClose = na
+var int lastSign = 0
+var bool validSession = true
+var int countBars = 0
+float cvd = na
+float barDelta = na
+
+if chartOk and barstate.isconfirmed
+    if newDay
+        total := 0.0
+        lastMinuteClose := na
+        lastSign := 0
+        validSession := true
+        countBars := 0
+    int n = array.size(t1)
+    bool barValid = not na(fxT) and fxT == time and n == 5 and array.size(o1) == n and array.size(c1) == n and array.size(v1) == n
+    if not newDay and not na(fxT[1]) and fxT - fxT[1] != 300000
+        barValid := false
+    float d = 0.0
+    if barValid
+        for i = 0 to n - 1
+            int tm = array.get(t1, i)
+            float o = array.get(o1, i)
+            float c = array.get(c1, i)
+            float v = array.get(v1, i)
+            if tm != fxT + i * 60000 or na(o) or na(c) or na(v) or v < 0
+                barValid := false
+                break
+            int sign = c > o ? 1 : c < o ? -1 : na(lastMinuteClose) ? lastSign : c > lastMinuteClose ? 1 : c < lastMinuteClose ? -1 : lastSign
+            d += sign * v
+            lastMinuteClose := c
+            lastSign := sign
+    if not barValid
+        validSession := false
+    if barValid and validSession
+        total += d
+        countBars += 1
+        barDelta := d
+        cvd := total
+
+float lowPivot = ta.pivotlow(fxL, leftBars, rightBars)
+float highPivot = ta.pivothigh(fxH, leftBars, rightBars)
+var float prevLo = na
+var float prevLoCvd = na
+var int prevLoIndex = na
+var int prevLoDay = na
+var int prevLoTime = na
+var float prevHi = na
+var float prevHiCvd = na
+var int prevHiIndex = na
+var int prevHiDay = na
+var int prevHiTime = na
+bool bullish = false
+bool bearish = false
+float oldPrice = na
+float newPrice = na
+float oldCvd = na
+float newCvd = na
+int oldTime = na
+int newTime = na
+
+// Confirmation is at the right-side bar, never on the historical pivot bar.
+if chartOk and barstate.isconfirmed and validSession and not na(cvd) and countBars >= leftBars + rightBars + 2
+    int pivotDay = fxD[rightBars]
+    int pivotIdx = bar_index - rightBars
+    int pivotMs = fxT[rightBars]
+    float pivotCvd = cvd[rightBars]
+    if pivotDay == fxD and not na(pivotCvd)
+        if not na(lowPivot)
+            float p = fxL[rightBars]
+            int separation = na(prevLoIndex) ? 0 : pivotIdx - prevLoIndex
+            bullish := not na(prevLo) and prevLoDay == fxD and separation >= minDistance and separation <= maxDistance and p < prevLo - minPriceTicks * fxTick and pivotCvd > prevLoCvd + minCvdDiff
+            if bullish
+                oldPrice := prevLo
+                newPrice := p
+                oldCvd := prevLoCvd
+                newCvd := pivotCvd
+                oldTime := prevLoTime
+                newTime := pivotMs
+            prevLo := p
+            prevLoCvd := pivotCvd
+            prevLoIndex := pivotIdx
+            prevLoDay := fxD
+            prevLoTime := pivotMs
+        if not na(highPivot)
+            float p = fxH[rightBars]
+            int separation = na(prevHiIndex) ? 0 : pivotIdx - prevHiIndex
+            bearish := not na(prevHi) and prevHiDay == fxD and separation >= minDistance and separation <= maxDistance and p > prevHi + minPriceTicks * fxTick and pivotCvd < prevHiCvd - minCvdDiff
+            if bearish
+                oldPrice := prevHi
+                newPrice := p
+                oldCvd := prevHiCvd
+                newCvd := pivotCvd
+                oldTime := prevHiTime
+                newTime := pivotMs
+            prevHi := p
+            prevHiCvd := pivotCvd
+            prevHiIndex := pivotIdx
+            prevHiDay := fxD
+            prevHiTime := pivotMs
+
+plot(chartOk ? cvd : na, "CVD stimato FXCM 1m", color=color.teal, linewidth=2)
+hline(0, "Zero", color=color.gray, linestyle=hline.style_dotted)
+plotshape(bullish ? cvd : na, title="Divergenza rialzista (RICERCA)", style=shape.triangleup, location=location.absolute, color=color.lime, size=size.small, text="DIV+")
+plotshape(bearish ? cvd : na, title="Divergenza ribassista (RICERCA)", style=shape.triangledown, location=location.absolute, color=color.red, size=size.small, text="DIV-")
+bgcolor(not chartOk or not validSession ? color.new(color.orange, 85) : na, title="Dati insufficienti o grafico errato")
+
+var table diag = table.new(position.top_right, 1, 3, border_width=1)
+if barstate.islast
+    string state = not chartOk ? "D0.3 | APRI EURUSD 5m" : not validSession ? "D0.3 | DATI 1m INCOMPLETI" : na(cvd) ? "D0.3 | ATTESA CHIUSURA" : "D0.3 | FXCM CVD PRONTO"
+    table.cell(diag, 0, 0, state, text_color=chartOk and validSession ? color.lime : color.orange, bgcolor=color.new(color.black, 20))
+    table.cell(diag, 0, 1, "Grafico: " + chartId + " | TF=" + timeframe.period, text_color=color.white, bgcolor=color.new(color.black, 20))
+    table.cell(diag, 0, 2, "DATI CALCOLATI: FXCM:EURUSD 5m+1m", text_color=color.aqua, bgcolor=color.new(color.black, 20))
+
+// Alert off by default. Manual setup required. No orders or webhook URLs.
+if chartOk and researchAlerts and barstate.isrealtime and barstate.isconfirmed and (bullish or bearish)
+    string kind = bullish ? "BULLISH_REGULAR" : "BEARISH_REGULAR"
+    string eventId = MODEL + "|" + FEED + "|" + kind + "|" + str.tostring(newTime)
+    string msg = '{"schema":"remura-research-d0.3","mode":"RESEARCH_ONLY","algorithm":"' + MODEL + '","source":"TV_FXCM_TICK_VOLUME_PROXY_1M","event_id":"' + eventId + '","symbol":"' + FEED + '","chart_symbol":"' + chartId + '","timeframe":"5","type":"' + kind + '","detected_bar_close_ms":' + str.tostring(fxT + 300000) + ',"pivot1_ms":' + str.tostring(oldTime) + ',"pivot2_ms":' + str.tostring(newTime) + ',"pivot1_price":' + str.tostring(oldPrice, format.mintick) + ',"pivot2_price":' + str.tostring(newPrice, format.mintick) + ',"pivot1_cvd":' + str.tostring(oldCvd) + ',"pivot2_cvd":' + str.tostring(newCvd) + ',"current_price":' + str.tostring(fxC, format.mintick) + ',"current_cvd":' + str.tostring(cvd) + ',"delta_5m":' + str.tostring(barDelta) + '}'
+    alert(msg, alert.freq_all)
