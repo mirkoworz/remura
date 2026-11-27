@@ -20,11 +20,20 @@ MAX_DAYS = 45
 MAX_M15 = MAX_DAYS * 96
 
 
-def connect(path: str | Path):
+def connect(path: str | Path, *, timeout: float = 30.0):
+    """SQLite connection with legacy 30s default, bounded opt-in override.
+
+    A research scan may request a lower busy timeout before the WAL and
+    CREATE TABLE setup; otherwise an existing writer can force a 30s wait
+    *before* signals_monitor has a chance to set its PRAGMA.
+    """
+    if (type(timeout) not in (int, float) or not 0 < timeout <= 60
+            or not math.isfinite(timeout)):
+        raise ValueError("sqlite_timeout_invalid")
     location = Path(path).expanduser().resolve()
     location.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-    db = sqlite3.connect(str(location), timeout=30, check_same_thread=False)
-    db.execute("PRAGMA busy_timeout=30000")
+    db = sqlite3.connect(str(location), timeout=timeout, check_same_thread=False)
+    db.execute(f"PRAGMA busy_timeout={int(timeout * 1000)}")
     db.execute("PRAGMA journal_mode=WAL")
     db.execute("CREATE TABLE IF NOT EXISTS prices (symbol TEXT PRIMARY KEY, source TEXT NOT NULL, broker_symbol TEXT NOT NULL, updated_at TEXT NOT NULL, payload TEXT NOT NULL)")
     db.execute("CREATE TABLE IF NOT EXISTS status (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
@@ -72,14 +81,24 @@ def validate_payload(input_doc, now=None):
     return markets
 
 
-def ingest(db, input_doc, now=None):
+def ingest(db, input_doc, now=None, *, research_parent_read_at=None):
     """Merge incremental CLOSED M15 with existing history, regenerate true H1/H4.
 
     Timestamps: candle open in UTC. Reject broker mix and invalid candles.
     No invented bars are inserted in gaps, including after weekends.
+
+    Track B opt-in is OFF by default. Only an explicitly authorized FUTURE
+    caller can pass a genuinely observed UTC parent JSON-read clock; the
+    optional research witness is then written in the SAME market UPSERT
+    transaction. No research schema is created by this function.
     """
     now=now or utcnow()
     incoming=validate_payload(input_doc,now)
+    fingerprint=None
+    if research_parent_read_at is not None:
+        from scripts import shark_ingest_first_seen as fingerprint
+        fingerprint.preflight(
+            input_doc,parent_read_at=research_parent_read_at,ingest_at=now)
     success={}
     errors={}
     for symbol,market in incoming.items():
@@ -123,6 +142,13 @@ def ingest(db, input_doc, now=None):
                               ON CONFLICT(symbol) DO UPDATE SET source=excluded.source,
                               broker_symbol=excluded.broker_symbol,updated_at=excluded.updated_at,payload=excluded.payload""",
                            (symbol,source,broker,merged["lastComplete"],payload))
+                if fingerprint is not None:
+                    # Same transaction; missing/invalid/duplicate proof fails
+                    # the entire market UPSERT, never an optimistic record.
+                    fingerprint.record(
+                        db,symbol=symbol,child_export=input_doc,
+                        merged_document=merged,
+                        parent_read_at=research_parent_read_at,ingest_at=now)
             success[symbol]=len(merged["timeframes"]["M15"])
         except (ValueError, TypeError, KeyError, OverflowError) as exc:
             errors[symbol]=str(exc)
