@@ -1,5 +1,6 @@
 // Direct Cloudflare Access Worker for the dedicated REMURA Contributors staging origin.
 import {normalizeNewLevelV076} from './level_attempt_journal_v076_lab.mjs';
+import {checkContinuousMapping} from './continuous_intake_v3018_lab.mjs';
 import {scheduleTelegramAfterSubmit,createTelegramTransport} from './telegram_transport_v3012_lab.mjs';
 import {readTelegramPolicy,changeTelegramPolicy} from './telegram_owner_v3015_lab.mjs';
 import {recoverTelegramPending} from './telegram_recovery_v3016_lab.mjs';
@@ -186,7 +187,7 @@ async function requestBody(req) {
 }
 
 function normalizeAction(path, body, now) {
-  if (path === '/api/submit') return normalizeNewLevelV076(body,now);
+  if (path === '/api/submit') return checkContinuousMapping(normalizeNewLevelV076(body,now));
   if (path === '/owner/telegram/recover' && shape(body,['epoch']) && Number.isSafeInteger(body.epoch) && body.epoch>0) return body;
   if (path === '/owner/telegram/toggle' && shape(body,['enabled','epoch']) &&
       typeof body.enabled==='boolean' && Number.isSafeInteger(body.epoch) && body.epoch>0) return body;
