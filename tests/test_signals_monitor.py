@@ -20,6 +20,43 @@ class SignalTest(unittest.TestCase):
         self.db_path=Path(self.tmp.name)/"private"/"test.db"
     def tearDown(self):self.tmp.cleanup()
 
+    def test_h1_can_be_stale_while_m15_is_recent_in_pure_utc(self):
+        from price_feed import candle, iso, rollup
+        # No DST or broker offset: a full H1 needs 4 contiguous M15.
+        # At 16:01Z the last complete H1 can have closed 14:00Z even
+        # though the latest M15 closed 14:30Z.
+        start=dt.datetime(2026,11,3,12,0,tzinfo=UTC)
+        bars=[candle(iso(start+dt.timedelta(minutes=i*15)),
+                     1.1,1.2,1.0,1.15) for i in range(10)]
+        now=dt.datetime(2026,11,3,16,1,tzinfo=UTC)
+        hours=rollup(bars,1,now)
+        self.assertEqual([x["t"] for x in hours],[
+            "2026-11-03T12:00:00Z","2026-11-03T13:00:00Z"])
+        diag=m.safe_frame_diagnostics({"timeframes":{
+            "M15":bars,"H1":hours,"H4":[]}},now)
+        self.assertEqual(diag["M15"]["lastClosedAt"],
+                         "2026-11-03T14:30:00+00:00")
+        self.assertEqual(diag["H1"]["lastClosedAt"],
+                         "2026-11-03T14:00:00+00:00")
+        self.assertEqual(diag["M15"]["ageMinutes"],91)
+        self.assertEqual(diag["H1"]["ageMinutes"],121)
+        self.assertLess(diag["M15"]["ageMinutes"],180)
+        self.assertGreater(diag["H1"]["ageMinutes"],120)
+
+    def test_h1_120_minute_gate_depends_on_utc_not_rome_offset(self):
+        from price_feed import iso
+        now=dt.datetime(2026,11,3,16,1,tzinfo=UTC)
+        # 60 H1 UTC bars; the newest opens 13:00, closes 14:00.
+        start=dt.datetime(2026,11,1,2,0,tzinfo=UTC)
+        rows=[{"t":iso(start+dt.timedelta(hours=i)),"c":1.1,
+               "h":1.2,"l":1.0} for i in range(60)]
+        self.assertEqual(rows[-1]["t"],"2026-11-03T13:00:00Z")
+        self.assertIsNone(m.frame_direction(rows,3600,now))
+        # At exactly 120 minutes old the same H1 is still within
+        # the age gate (whatever its technical direction may be).
+        self.assertIsNotNone(m.frame_direction(
+            rows,3600,dt.datetime(2026,11,3,16,0,tzinfo=UTC)))
+
     def test_exactly_supported_markets_with_no_fabricated_cot_proxies(self):
         names=m.monitored_symbols()
         self.assertIn("EURUSD",names)
