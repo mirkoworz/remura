@@ -1,0 +1,45 @@
+# INERT DRAFT: NOT under .github/workflows. Do not activate until reviewed and authorized.
+name: REMURA V30.19.1 protected D1 migration
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: Type APPLY_V30191_D1_ONLY
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: remura-v30191-d1-migration
+  cancel-in-progress: false
+jobs:
+  migrate:
+    if: github.repository == 'mirkoworz/remura' && github.run_attempt == 1 && inputs.confirm == 'APPLY_V30191_D1_ONLY'
+    environment: remura-v30191-d1-once
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: REVIEWED_IMMUTABLE_COMMIT_REQUIRED
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Verify reviewed dependency lock (no Cloudflare credentials)
+        working-directory: research/contributors/v3019/release/migration-plan/
+        run: |
+          set -euo pipefail
+          test -f package-lock.json
+          npm ci --ignore-scripts --no-audit --no-fund
+          node --check migrate-once.mjs
+          test -x node_modules/.bin/wrangler
+      - name: Apply only pinned migration, with explicit environment approval
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.REMURA_D1_TEMP_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.REMURA_D1_ACCOUNT_ID }}
+          REMURA_D1_DATABASE_ID: ${{ secrets.REMURA_D1_DATABASE_ID }}
+          REMURA_FINAL_BOOKMARK: ${{ secrets.REMURA_D1_FINAL_BOOKMARK }}
+          REMURA_FREE_GATE: ${{ vars.REMURA_FREE_GATE }}
+          REMURA_MIGRATION_CONFIRM: ${{ inputs.confirm }}
+        run: node research/contributors/v3019/release/migration-plan/migrate-once.mjs

@@ -1,0 +1,8 @@
+{
+  "name": "remura-v30191-migration-only",
+  "private": true,
+  "version": "1.0.0",
+  "dependencies": {
+    "wrangler": "4.161.0"
+  }
+}
