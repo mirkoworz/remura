@@ -1,0 +1,6 @@
+# V30.19 approval integration increment — 28/11/2026
+- New SQL extension after proposal-schema.sql, not a live migration. Apply both together only after authorization, with writes closed and Telegram OFF.
+- Automatic default; immutable intake snapshot; one decision per proposal; approval and enqueue atomic. Manual pending never auto-approved on setting change. OFF at intake or epoch change blocks later publication, even if explicitly approved; conservative choice to prevent historical delivery. TEST never queued.
+- Owner setting changes audited by SQL triggers; route authentication still required. Legacy insertion blocked at DB level after migration, so rollback to V30.18 is read-only for intake until a separately reviewed rollback policy.
+- Local synthetic SQLite 3.46.1 execution: 24/24 approval assertions PASS. Expected git blobs SQL 6d2ac6e021911d395295068f8391e9afd7c4ced0 and test b6e85d1be03c1abcd837a6198482d5243326e3c9. Not full D1/Worker validation; not a release.
+- Next: integrate HMAC-authenticated routes, approval settings and history, UI, grouped fake dispatcher, full schema and concurrency tests, actual source mapping. No real Telegram call, migration, deploy or spending.
