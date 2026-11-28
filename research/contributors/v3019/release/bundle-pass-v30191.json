@@ -1,0 +1,25 @@
+{
+  "version": "V30.19.1",
+  "status": "BUNDLE_PASS_INSTALL_NOT_AUTHORIZED",
+  "run": 46128365711,
+  "job": 140927927677,
+  "commit": "74d0f7fc642adb5f639f4ad3bb8f7ac882af043d",
+  "workerBlob": "dcdad60606fcfd881dec9746666f7013eec1a12c",
+  "migrationBlob": "9d60a56fbb2bb111048c80bd4a8438f79ac9c0e8",
+  "passMarker": "REMURA_V30191_BUNDLE=PASS",
+  "parityMarker": "REMURA_V30191_BUNDLE_PARITY=PASS",
+  "markerUTC": "2026-11-28T09:00:04.5457616Z",
+  "node": "22.23.5",
+  "tests": 1,
+  "pass": 1,
+  "fail": 0,
+  "skipped": 0,
+  "network": "isolated unshare --net",
+  "warnings": [
+    "SQLite experimental",
+    "Node20 actions deprecated"
+  ],
+  "actualD1": false,
+  "actualTelegram": false,
+  "next": "Verify authenticated Wrangler availability on Mac before stopping writes. Single migration file with official rollback-on-error. Separate authorization for all actual changes."
+}
