@@ -15,7 +15,7 @@ export const CATALOG=Object.freeze(Object.entries({CFD:cfd,FUTURES:futures}).fla
  ticker:mode==="FUTURES"?asset+"_CONT":asset+"_MANUAL",
  // Internal aliases only; actual CFD mapping needs source evidence.
  availability:mode==="FUTURES"&&!["YM","RTY"].includes(asset)?"V3018_EXISTING":"UNVERIFIED_CANDIDATE"
-})))))));
+}))))));
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 export function pricesFromText(raw){
  if(typeof raw!=="string"||raw.length>600)throw Error("invalid_prices");
