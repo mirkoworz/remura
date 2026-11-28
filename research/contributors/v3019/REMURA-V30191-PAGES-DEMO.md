@@ -1,0 +1,2 @@
+# V30.19.1 isolated Pages demo package
+Authorized public static preview only. ZIP contains index.html byte-identical to blob d7f9fc3da326f01586005fc8f557f0a085a53533 and _headers limiting browser connections via CSP connect-src 'none'. No real user data, bindings, external fetch or Telegram. All demo receipts in memory. ZIP built using store method, local entry payloads and CRC verified in JS. No actual Pages project created or deployment performed. Upload manually from iPhone to a new Free project. No workflow or main change.
