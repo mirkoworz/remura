@@ -1,0 +1,1352 @@
+{
+  "asOf": "2026-11-28",
+  "purpose": "Public evidence only; active reflects prior operational checkpoint, not live read. No new activation.",
+  "sources": {
+    "fxcm": "https://www.fxcm.com/eu/help/overview-what-instruments-can-be-traded-at-fxcm/",
+    "oanda": "https://www.oanda.com/eu-it/instruments-specification",
+    "oandaVolume": "https://developer.oanda.com/rest-live-v20/instrument-df/",
+    "mw": "https://docs.motivewave.com/knowledge-base/connection/connection-details",
+    "mwForex": "https://docs.motivewave.com/knowledge-base/study/forex-with-volume-related-studies",
+    "atas": "https://atas.net/it/connections/",
+    "cme": "https://www.cmegroup.com/articles/faqs/faq-trade-marker-at-close-tmac.html",
+    "dx": "https://kb.dxfeed.com/en/data-model/symbology-guide/equities%2C-futures%2C-options%2C-and-spreads-symbology/u-s--formats.html"
+  },
+  "rows": [
+    {
+      "id": "CFD_EURUSD_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_EURUSD_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "EUR/USD",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_GBPUSD_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_GBPUSD_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "GBP/USD",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_USDJPY_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_USDJPY_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "USD/JPY",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_USDCHF_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_USDCHF_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "USD/CHF",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_USDCAD_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_USDCAD_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "USD/CAD",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_AUDUSD_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_AUDUSD_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "AUD/USD",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_NZDUSD_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_NZDUSD_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "NZD/USD",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_EURGBP_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_EURGBP_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "EUR/GBP",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_EURJPY_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_EURJPY_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "EUR/JPY",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_EURCHF_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_EURCHF_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "EUR/CHF",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_EURAUD_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_EURAUD_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "EUR/AUD",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_EURCAD_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_EURCAD_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "EUR/CAD",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_EURNZD_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_EURNZD_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "EUR/NZD",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_GBPJPY_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_GBPJPY_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "GBP/JPY",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_GBPCHF_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_GBPCHF_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "GBP/CHF",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_GBPAUD_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_GBPAUD_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "GBP/AUD",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_GBPCAD_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_GBPCAD_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "GBP/CAD",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_GBPNZD_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_GBPNZD_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "GBP/NZD",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_AUDJPY_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_AUDJPY_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "AUD/JPY",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_AUDCAD_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_AUDCAD_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "AUD/CAD",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_AUDCHF_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_AUDCHF_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "AUD/CHF",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_AUDNZD_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_AUDNZD_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "AUD/NZD",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_NZDJPY_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_NZDJPY_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "NZD/JPY",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_NZDCAD_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_NZDCAD_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "NZD/CAD",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_NZDCHF_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_NZDCHF_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "NZD/CHF",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_CADJPY_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_CADJPY_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "CAD/JPY",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_CADCHF_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_CADCHF_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "CAD/CHF",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_CHFJPY_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_CHFJPY_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "CHF/JPY",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_XAUUSD_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_XAUUSD_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "XAU/USD",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_XAGUSD_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_XAGUSD_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "XAG/USD",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_NAS100_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_NAS100_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "NAS100",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_US500_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_US500_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "SPX500",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_US30_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_US30_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "US30",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_GER40_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_GER40_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "GER30",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_UK100_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_UK100_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "UK100",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_JP225_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_JP225_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": "JPN225",
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_WTI_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_WTI_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": [
+        "USOil",
+        "USOilSpot"
+      ],
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_BRENT_OANDA",
+      "classification": "REGIONAL_SYMBOL_AND_VOLUME_UNVERIFIED",
+      "publicReference": null,
+      "active": false,
+      "evidence": [
+        "oanda",
+        "oandaVolume",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "CFD_BRENT_FXCM",
+      "classification": "BROKER_LISTED_VOLUME_UNVERIFIED",
+      "publicReference": [
+        "UKOil",
+        "UKOilSpot"
+      ],
+      "active": false,
+      "evidence": [
+        "fxcm",
+        "mw",
+        "mwForex"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_6E_RITHMIC",
+      "classification": "EXISTING_INTERNAL_MAPPING",
+      "publicReference": null,
+      "active": true,
+      "evidence": [
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": false,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_6E_DXFEED",
+      "classification": "EXISTING_INTERNAL_MAPPING",
+      "publicReference": null,
+      "active": true,
+      "evidence": [
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": false,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_6B_RITHMIC",
+      "classification": "EXISTING_INTERNAL_MAPPING",
+      "publicReference": null,
+      "active": true,
+      "evidence": [
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": false,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_6B_DXFEED",
+      "classification": "EXISTING_INTERNAL_MAPPING",
+      "publicReference": null,
+      "active": true,
+      "evidence": [
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": false,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_6J_RITHMIC",
+      "classification": "EXISTING_INTERNAL_MAPPING",
+      "publicReference": null,
+      "active": true,
+      "evidence": [
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": false,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_6J_DXFEED",
+      "classification": "EXISTING_INTERNAL_MAPPING",
+      "publicReference": null,
+      "active": true,
+      "evidence": [
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": false,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_6A_RITHMIC",
+      "classification": "EXISTING_INTERNAL_MAPPING",
+      "publicReference": null,
+      "active": true,
+      "evidence": [
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": false,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_6A_DXFEED",
+      "classification": "EXISTING_INTERNAL_MAPPING",
+      "publicReference": null,
+      "active": true,
+      "evidence": [
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": false,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_6C_RITHMIC",
+      "classification": "EXISTING_INTERNAL_MAPPING",
+      "publicReference": null,
+      "active": true,
+      "evidence": [
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": false,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_6C_DXFEED",
+      "classification": "EXISTING_INTERNAL_MAPPING",
+      "publicReference": null,
+      "active": true,
+      "evidence": [
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": false,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_6S_RITHMIC",
+      "classification": "EXISTING_INTERNAL_MAPPING",
+      "publicReference": null,
+      "active": true,
+      "evidence": [
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": false,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_6S_DXFEED",
+      "classification": "EXISTING_INTERNAL_MAPPING",
+      "publicReference": null,
+      "active": true,
+      "evidence": [
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": false,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_6N_RITHMIC",
+      "classification": "EXISTING_INTERNAL_MAPPING",
+      "publicReference": null,
+      "active": true,
+      "evidence": [
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": false,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_6N_DXFEED",
+      "classification": "EXISTING_INTERNAL_MAPPING",
+      "publicReference": null,
+      "active": true,
+      "evidence": [
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": false,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_GC_RITHMIC",
+      "classification": "EXISTING_INTERNAL_MAPPING",
+      "publicReference": null,
+      "active": true,
+      "evidence": [
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": false,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_GC_DXFEED",
+      "classification": "EXISTING_INTERNAL_MAPPING",
+      "publicReference": null,
+      "active": true,
+      "evidence": [
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": false,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_SI_RITHMIC",
+      "classification": "EXISTING_INTERNAL_MAPPING",
+      "publicReference": null,
+      "active": true,
+      "evidence": [
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": false,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_SI_DXFEED",
+      "classification": "EXISTING_INTERNAL_MAPPING",
+      "publicReference": null,
+      "active": true,
+      "evidence": [
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": false,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_NQ_RITHMIC",
+      "classification": "EXISTING_INTERNAL_MAPPING",
+      "publicReference": null,
+      "active": true,
+      "evidence": [
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": false,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_NQ_DXFEED",
+      "classification": "EXISTING_INTERNAL_MAPPING",
+      "publicReference": null,
+      "active": true,
+      "evidence": [
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": false,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_ES_RITHMIC",
+      "classification": "EXISTING_INTERNAL_MAPPING",
+      "publicReference": null,
+      "active": true,
+      "evidence": [
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": false,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_ES_DXFEED",
+      "classification": "EXISTING_INTERNAL_MAPPING",
+      "publicReference": null,
+      "active": true,
+      "evidence": [
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": false,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_YM_RITHMIC",
+      "classification": "EXCHANGE_ROOT_CONFIRMED_CONTINUOUS_UNVERIFIED",
+      "publicReference": "YM",
+      "active": false,
+      "evidence": [
+        "cme",
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_YM_DXFEED",
+      "classification": "EXCHANGE_ROOT_CONFIRMED_CONTINUOUS_UNVERIFIED",
+      "publicReference": "YM",
+      "active": false,
+      "evidence": [
+        "cme",
+        "atas",
+        "mw",
+        "dx"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_RTY_RITHMIC",
+      "classification": "EXCHANGE_ROOT_CONFIRMED_CONTINUOUS_UNVERIFIED",
+      "publicReference": "RTY",
+      "active": false,
+      "evidence": [
+        "cme",
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_RTY_DXFEED",
+      "classification": "EXCHANGE_ROOT_CONFIRMED_CONTINUOUS_UNVERIFIED",
+      "publicReference": "RTY",
+      "active": false,
+      "evidence": [
+        "cme",
+        "atas",
+        "mw",
+        "dx"
+      ],
+      "requiresAccountChart": true,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_CL_RITHMIC",
+      "classification": "EXISTING_INTERNAL_MAPPING",
+      "publicReference": null,
+      "active": true,
+      "evidence": [
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": false,
+      "requiresLicenseReview": true
+    },
+    {
+      "id": "FUTURES_CL_DXFEED",
+      "classification": "EXISTING_INTERNAL_MAPPING",
+      "publicReference": null,
+      "active": true,
+      "evidence": [
+        "atas",
+        "mw"
+      ],
+      "requiresAccountChart": false,
+      "requiresLicenseReview": true
+    }
+  ]
+}
