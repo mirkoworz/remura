@@ -1,0 +1,37 @@
+name: REMURA V30.19.1 single-file Worker (one shot)
+on:
+  push:
+    branches: [research/remura-v3019-batch-20261128]
+    paths:
+      - .github/workflows/remura-contributors-v30191-one-shot-bundle.yml
+permissions:
+  contents: read
+jobs:
+  bundle-parity:
+    if: github.repository == 'mirkoworz/remura' && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+          sparse-checkout: |
+            research/contributors
+      - name: Verify authorized commit and immutable bundle
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = '5990127e5e4c3d42c60f15aef1ebebdda848b3f7'
+          test "$(git diff --name-only HEAD^ HEAD | wc -l)" -eq 3
+          test "$(git hash-object research/contributors/v3019/release/remura-contributors-v30191-worker.mjs)" = 'dcdad60606fcfd881dec9746666f7013eec1a12c'
+          test "$(git hash-object research/contributors/v3019/proposal-release-migration.sql)" = '9d60a56fbb2bb111048c80bd4a8438f79ac9c0e8'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Test bundled Worker only (no network)
+        run: |
+          set -euo pipefail
+          NODE="$(command -v node)"
+          sudo -n unshare --net -- env -i PATH=/usr/bin:/bin HOME=/tmp "$NODE" --check research/contributors/v3019/release/remura-contributors-v30191-worker.mjs
+          sudo -n unshare --net -- env -i PATH=/usr/bin:/bin HOME=/tmp "$NODE" --test research/contributors/v3019/test-bundle-v30191.mjs
+          echo REMURA_V30191_BUNDLE=PASS
