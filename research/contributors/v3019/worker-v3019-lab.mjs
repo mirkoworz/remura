@@ -2,6 +2,7 @@
 import {createProposalApi,normalizeProposalAction} from "./proposal-api.mjs";
 import {PROPOSAL_HTML,PROPOSAL_CSS,PROPOSAL_FORM,PROPOSAL_CORE} from "./proposal-ui-assets.mjs";
 import {createLabDispatcher,normalizeRecovery,scheduleProposalLab} from "./proposal-dispatch-lab.mjs";
+import {isSyntheticRealm} from "./proposal-realm.mjs";
 // REMURA V30.18 staging-only bundle, pinned source 4dc5dd59acac87c1bb9a763dc82a1b15d5b4b6ed
 // d1_lab_adapter.mjs git blob d004c3d3177e3e085394209285a44afa011f149c
 const __remura_d1_lab_adapter_mjs = (() => {
@@ -1685,7 +1686,7 @@ const { CONTRIBUTORS_CSS_V110 : theme, CONTRIBUTORS_FORMS_CSS_V110 } = __remura_
 
 const CONTRIBUTORS_CSS_V110 = theme + CONTRIBUTORS_FORMS_CSS_V110;
 const VERSION = 'REMURA Contributors V30.19 LAB';
-const UPDATED = '28/11/2026 08:57 CET (Europe/Rome)';
+const UPDATED = '28/11/2026 09:28 CET (Europe/Rome)';
 const SLOTS = ['friend-a', 'friend-b', 'friend-c'];
 const NAV_SECTIONS = [
   ['cot', 'Shark Cockpit · COT'],
@@ -1710,7 +1711,7 @@ function shell({ role, home, slot, caption, navigation, body, script, write }) {
   ${script ? `<script type="module" src="${home}contributors-v110.js"></script>` : ''}
 </head>
 <body data-slot="${slot}" data-write="${write}">
-  <div class="version">${VERSION} · <time datetime="2026-11-28T08:57:00+01:00">${UPDATED}</time></div>
+  <div class="version">${VERSION} · <time datetime="2026-11-28T09:28:00+01:00">${UPDATED}</time></div>
   <main class="shell">
     <header class="masthead">
       ${role === 'INVITED'
@@ -2329,6 +2330,7 @@ const __default = {
       return reject();
     }
     try {
+      if(!await isSyntheticRealm(env.CONTRIBUTORS_DB)) return reject();
       const store = createLevelsStoreV110(env.CONTRIBUTORS_DB);
       const {actor, key} = identity;
       const mayBeInvited = ['/api/profile', '/api/intent', '/api/enroll', '/'].includes(url.pathname) ||

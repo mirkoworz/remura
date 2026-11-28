@@ -4,9 +4,11 @@ import test from 'node:test';
 import {randomUUID} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import {createFixtureV110} from '../fixture_v110_lab.mjs';
-import worker from './worker-v3019-lab.mjs';
+import labWorker from './worker-v3019-lab.mjs';
+import releaseWorker from './worker-v3019-release-candidate.mjs';
 import legacy from '../release/remura-contributors-v3018-worker.mjs';
-async function fixture(t){
+async function fixture(t,{release=false}={}){
+ const worker=release?releaseWorker:labWorker;
  const f=await createFixtureV110({write:false});
  t.after(()=>f.db.close());
  const adapter={
@@ -28,9 +30,9 @@ async function fixture(t){
  await apply('../continuous-catalog-v3018-inactive.sql');
  f.db.exec("UPDATE lab_level_catalog_v110 SET active=1 WHERE contract='CONTINUOUS'");
  f.db.exec("INSERT INTO lab_telegram_sources_v3012 SELECT market,provider,ticker,product,contract FROM lab_level_catalog_v110 WHERE ticker='NQ_CONT' AND provider='RITHMIC'");
- const migration=async()=>{f.db.exec('BEGIN IMMEDIATE');try{for(const p of ['./proposal-preflight.sql','./proposal-schema.sql','./proposal-approval.sql'])await apply(p);f.db.exec('COMMIT');}catch(e){if(f.db.isTransaction)f.db.exec('ROLLBACK');throw e;}};
+ const migration=async()=>{f.db.exec('BEGIN IMMEDIATE');try{for(const p of release?['./proposal-release-migration.sql']:['./proposal-preflight.sql','./proposal-schema.sql','./proposal-approval.sql'])await apply(p);f.db.exec('COMMIT');}catch(e){if(f.db.isTransaction)f.db.exec('ROLLBACK');throw e;}};
  f.flags({write:true});await assert.rejects(migration);f.flags({write:false});await migration();f.flags({write:true});
- f.env.REMURA_V3019_LAB_MODE='SYNTHETIC_ONLY';f.env.REMURA_V3019_TRANSPORT='SYNTHETIC_TRANSPORT_ONLY';
+ if(release)f.env.REMURA_V3019_MODE='STAGING_CANDIDATE_ONLY';else{f.env.REMURA_V3019_LAB_MODE='SYNTHETIC_ONLY';f.env.REMURA_V3019_TRANSPORT='SYNTHETIC_TRANSPORT_ONLY';}
  const request=async(role,path,{method='GET',body,headers={},token=role?f.issueToken(role):''}={})=>{
   const jobs=[],ctx={...f.accessContext(token),waitUntil:p=>jobs.push(p)};
   const r=await worker.fetch(new Request(f.env.STAGING_ORIGIN+path,{method,headers,body:body===undefined?undefined:JSON.stringify(body)}),f.env,ctx);
@@ -76,4 +78,44 @@ test('full historical migration and new authenticated proposal flow',async t=>{
  assert.equal((await f.request('owner','/owner/levels/')).status,200);
  f.flags({write:false});assert.equal((await f.issue('friend-b',submit,f.payload())).status,403);
  const old=await legacy.fetch(new Request(f.env.STAGING_ORIGIN+'/contributors/levels/'),f.env,f.accessContext(f.issueToken('friend-b')));assert.equal(old.status,200);
+});
+
+test('release candidate requires real realm and explicit transport gate; mocked Telegram only',async t=>{
+ const f=await fixture(t,{release:true}),submit='/api/proposals/submit';
+ let calls=0;
+ t.mock.method(globalThis,'fetch',async(url,options)=>{
+  assert.equal(url,'https://api.telegram.org/bot123456:FAKE_TOKEN_FOR_TEST_ONLY_123456789/sendMessage');
+  const body=JSON.parse(options.body);
+  assert.equal(body.chat_id,'-12345');assert.match(body.text,/Rif\. P[1-9][0-9]*/);
+  assert.ok(body.text.includes('• 12.5')&&body.text.includes('• 13'));
+  assert.equal(options.method,'POST');calls++;
+  return new Response(JSON.stringify({ok:true,result:{chat:{id:-12345},message_id:700+calls}}),{status:200,headers:{'Content-Type':'application/json'}});
+ });
+ const policy=()=>f.get('owner','/owner/telegram/status');
+ const toggle=async enabled=>f.action('owner','/owner/telegram/toggle',{enabled,epoch:(await policy()).epoch});
+ assert.equal((await policy()).enabled,0);
+ assert.equal((await toggle(true)).status,409);assert.equal(calls,0);
+ const initial=await f.mutate('friend-b',submit,f.payload());assert.equal(initial.decision,'APPROVED');assert.equal(initial.telegram_state,'NOT_QUEUED');
+ f.env.TELEGRAM_BOT_TOKEN='123456:FAKE_TOKEN_FOR_TEST_ONLY_123456789';
+ f.env.TELEGRAM_CHAT_ID='-12345';f.env.TELEGRAM_BRIDGE_V3012='EXPLICIT_STAGING_ONLY';
+ assert.equal((await toggle(true)).status,409);
+ f.env.REMURA_V3019_REAL_TELEGRAM='EXPLICITLY_AUTHORIZED';
+ assert.equal((await toggle(true)).status,200);
+ assert.equal(calls,0);
+ const p=f.payload();await f.mutate('friend-b',submit,p);await f.mutate('friend-b',submit,p);
+ const r=await f.get('friend-b','/api/proposals/status',{headers:{'X-Remura-Request-ID':p.request_id}});
+ assert.equal(r.telegram_state,'SENT');assert.equal(calls,1);
+ assert.equal((await f.mutate('friend-a',submit,f.payload())).publication_mode,'TEST');assert.equal(calls,1);
+ assert.equal((await toggle(false)).status,200);
+ const q=f.payload();await f.mutate('friend-b',submit,q);assert.equal(calls,1);
+ assert.equal((await toggle(true)).status,200);assert.equal(calls,1);
+ const replay=await f.mutate('friend-b',submit,q);assert.equal(replay.telegram_state,'NOT_QUEUED');assert.equal(calls,1);
+ // Even valid synthetic flags cannot attach the LAB Worker to the release ledger.
+ const synthEnv={...f.env,REMURA_V3019_LAB_MODE:'SYNTHETIC_ONLY',REMURA_V3019_TRANSPORT:'SYNTHETIC_TRANSPORT_ONLY'};
+ const blocked=await labWorker.fetch(new Request(f.env.STAGING_ORIGIN+'/api/profile'),synthEnv,f.accessContext(f.issueToken('owner')));
+ assert.equal(blocked.status,403);
+ // Conversely, release flags cannot bypass the synthetic flag exclusion.
+ f.env.REMURA_V3019_LAB_MODE='SYNTHETIC_ONLY';
+ assert.equal((await f.request('owner','/api/profile')).status,403);
+ assert.equal(calls,1);
 });
