@@ -1,0 +1,56 @@
+{
+  "version": "V30.19.1",
+  "sourceCommit": "d24fa9bd9a8ad811a3860c08ab8d5994c987ef2a",
+  "created": "2026-11-28T09:58:00+01:00",
+  "state": "CANDIDATE_NOT_DEPLOYED",
+  "sources": [
+    {
+      "path": "research/contributors/v3019/proposal-core.mjs",
+      "blob": "fc288d13685b4897f5fc7b3f283b08273b29caa1"
+    },
+    {
+      "path": "research/contributors/v3019/proposal-realm.mjs",
+      "blob": "ff0848c5ab7c3437828111835612f4aa78acde39"
+    },
+    {
+      "path": "research/contributors/v3019/proposal-telegram-transport.mjs",
+      "blob": "bf4cc135ae199ec809afc30f47e9d0e7aeffcf73"
+    },
+    {
+      "path": "research/contributors/v3019/proposal-store.mjs",
+      "blob": "33e42f4ab2ec081faf03332fc8c286bed1cb5312"
+    },
+    {
+      "path": "research/contributors/v3019/proposal-api.mjs",
+      "blob": "c50bde4cdfb3fdfe69bba73bca225a0e7a4e1163"
+    },
+    {
+      "path": "research/contributors/v3019/proposal-dispatch-lab.mjs",
+      "blob": "ba2b8e8f31fcc2e532c46bc55ec99ed88088814a"
+    },
+    {
+      "path": "research/contributors/v3019/proposal-dispatch-release.mjs",
+      "blob": "065a8d3554a0c955ad515d34098534e981fa7499"
+    },
+    {
+      "path": "research/contributors/v3019/proposal-ui-assets-release.mjs",
+      "blob": "c38ecbd8fd3e9824d34a1d495ed93cba58500cf2"
+    },
+    {
+      "path": "research/contributors/v3019/worker-v3019-release-candidate.mjs",
+      "blob": "51bde34def97fda1a0526c7d7676e3b4f1c9c194"
+    }
+  ],
+  "migration": {
+    "path": "research/contributors/v3019/proposal-release-migration.sql",
+    "blob": "9d60a56fbb2bb111048c80bd4a8438f79ac9c0e8"
+  },
+  "bundle": "research/contributors/v3019/release/remura-contributors-v30191-worker.mjs",
+  "checks": {
+    "initializationAndStatic": 13,
+    "fullBundleHttpTest": "NOT_RUN",
+    "previousIntegratedRun": 46126385184,
+    "previousIntegratedCommit": "78d2765c1df5fa502bbb5a95d9bcce6d92ab3e83",
+    "iPhoneDemo": "OWNER_CONFIRMED_2026-11-28_09:58_CET"
+  }
+}
