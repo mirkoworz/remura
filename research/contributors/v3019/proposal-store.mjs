@@ -19,8 +19,8 @@ function view(row){
  return {state:"COMMITTED",id:row.id,received_utc:row.received_utc,publication_mode:row.publication_mode,
  proposal:{request_id:row.request_id,mapping_id:row.mapping_id,kind:row.kind,period:row.period,prices:prices.join("\n"),note:row.note}};
 }
-export function createFixtureStore(db,permit){
- if(permit!=="OFFLINE_FIXTURE_ONLY"||typeof db?.withSession!=="function")throw Error("LAB_ONLY");
+function makeStore(db){
+ if(typeof db?.withSession!=="function")throw Error("DB_REQUIRED");
  const session=db.withSession("first-primary");
  async function one(key,args){
   const r=await session.prepare(SQL[key]).bind(...args).all();
@@ -51,9 +51,26 @@ export function createFixtureStore(db,permit){
  finish:async (id,state,messageId)=>{if(!await one("finish",[id,state,messageId]))throw Error("finish_unknown");}
  });
 }
-// Explicit fake transport only. No fetch, tokens, timer, or default outbound action.
-export async function dispatchGroupedFixture({store,proposalId,send,permit}){
- if(permit!=="OFFLINE_FIXTURE_ONLY"||typeof send!=="function")return {state:"OFF"};
+// Separate explicit adapters. The Worker must additionally attest the database realm.
+export function createFixtureStore(db,permit){
+ if(permit!=="OFFLINE_FIXTURE_ONLY")throw Error("LAB_ONLY");
+ return makeStore(db);
+}
+export function createReleaseStore(db,permit){
+ if(permit!=="STAGING_CANDIDATE_ONLY")throw Error("RELEASE_ONLY");
+ return makeStore(db);
+}
+export async function dispatchGroupedFixture(opts){
+ if(opts?.permit!=="OFFLINE_FIXTURE_ONLY")return {state:"OFF"};
+ return dispatchGrouped(opts);
+}
+export async function dispatchGroupedRelease(opts){
+ if(opts?.permit!=="STAGING_CANDIDATE_ONLY")return {state:"OFF"};
+ return dispatchGrouped(opts);
+}
+// One claim, one attempt, one terminal outcome. No transport constructed here.
+async function dispatchGrouped({store,proposalId,send}){
+ if(typeof send!=="function")return {state:"OFF"};
  if(!Number.isSafeInteger(proposalId)||proposalId<1)return {state:"BLOCKED"};
  let claimed;
  try{claimed=await store.claim(proposalId);}catch{return {state:"CLAIM_UNKNOWN"};}

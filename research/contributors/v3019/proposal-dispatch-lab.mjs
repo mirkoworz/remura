@@ -1,5 +1,6 @@
 // REMURA V30.19 LAB — synthetic transport, no network, no credentials.
 import {createFixtureStore,dispatchGroupedFixture} from "./proposal-store.mjs";
+import {isSyntheticRealm} from "./proposal-realm.mjs";
 const owner="EXISTS(SELECT 1 FROM lab_owner i CROSS JOIN lab_state s WHERE i.id=1 AND i.subject=?1 AND i.email_tag=?2 AND i.revoked=0 AND s.id=1 AND s.read_enabled=1 AND s.write_enabled=1 AND s.recovery_enabled=0)";
 export const RECOVERY_SQL=Object.freeze({
  pending:"SELECT o.proposal_id FROM lab_proposal_outbox_v3019 o JOIN lab_telegram_policy_v3012 p ON p.id=1 AND p.enabled=1 AND p.epoch=o.epoch JOIN lab_proposal_decision_v3019 d ON d.proposal_id=o.proposal_id AND d.action='APPROVED' WHERE o.proposal_id=?3 AND o.epoch=?4 AND o.state='PENDING' AND o.queued_utc>=strftime('%Y-%m-%dT%H:%M:%SZ','now','-15 minutes') AND "+owner,
@@ -14,13 +15,16 @@ export function normalizeRecovery(body){
 export function createLabDispatcher(env){
  if(!enabled(env))return null;
  const db=env.CONTRIBUTORS_DB,store=createFixtureStore(db,"OFFLINE_FIXTURE_ONLY");
- const dispatch=id=>dispatchGroupedFixture({store,proposalId:id,permit:"OFFLINE_FIXTURE_ONLY",send:async message=>{
+ const dispatch=async id=>{
+ if(!await isSyntheticRealm(db))return {state:"OFF"};
+ return dispatchGroupedFixture({store,proposalId:id,permit:"OFFLINE_FIXTURE_ONLY",send:async message=>{
   if(typeof message!=="string"||!message.includes("Rif. P"+id+" ·"))throw Error("message_invalid");
   // This deliberately fabricates only a synthetic acknowledgement. Never real Telegram delivery.
   return {ok:true,messageId:id};
- }});
+ }});};
  async function ownerRecovery(actor,raw){
   const b=normalizeRecovery(raw);
+  if(!await isSyntheticRealm(db))return {state:"OFF",simulated:true};
   if(!/^[a-f0-9]{64}$/.test(actor?.subject??"")||!/^[a-f0-9]{64}$/.test(actor?.email_tag??""))throw Error("denied");
   const sql=RECOVERY_SQL[b.action==="PENDING"?"pending":"abandon"];
   const r=await db.withSession("first-primary").prepare(sql).bind(actor.subject,actor.email_tag,b.id,b.epoch).all();

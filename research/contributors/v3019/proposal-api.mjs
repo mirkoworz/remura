@@ -1,6 +1,6 @@
 // V30.19 LAB, authenticated route adapter. Never deploy this candidate.
 import {CATALOG,normalizeProposal} from "./proposal-core.mjs";
-import {createFixtureStore} from "./proposal-store.mjs";
+import {createFixtureStore,createReleaseStore} from "./proposal-store.mjs";
 const HEX=/^[a-f0-9]{64}$/;
 const UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
 const ownerRead="EXISTS(SELECT 1 FROM lab_owner o CROSS JOIN lab_state s WHERE o.id=1 AND o.subject=?1 AND o.email_tag=?2 AND o.revoked=0 AND s.id=1 AND s.read_enabled=1)";
@@ -43,7 +43,7 @@ function receipt(row){
  return {...rest,reference:"P"+rest.id,prices};
 }
 export function createProposalApi(db,permit){
- if(permit!=="SYNTHETIC_ONLY"||typeof db?.withSession!=="function")throw Error("LAB_ONLY");
+ if(!["SYNTHETIC_ONLY","STAGING_CANDIDATE_ONLY"].includes(permit)||typeof db?.withSession!=="function")throw Error("MODE_REQUIRED");
  async function query(key,actor,args=[],max=1){
   const res=await db.withSession("first-primary").prepare(PROPOSAL_API_SQL[key]).bind(...tags(actor),...args).all();
   if(res?.success!==true||res.meta?.served_by_primary!==true||!Array.isArray(res.results)||res.results.length>max)throw Error("storage_unknown");
@@ -60,7 +60,8 @@ export function createProposalApi(db,permit){
   status,
   async submit(actor,body){
    const p=normalizeProposalAction("/api/proposals/submit",body);
-   const saved=await createFixtureStore(db,"OFFLINE_FIXTURE_ONLY").submit(actor,p);
+   const adapter=permit==="SYNTHETIC_ONLY"?createFixtureStore(db,"OFFLINE_FIXTURE_ONLY"):createReleaseStore(db,"STAGING_CANDIDATE_ONLY");
+   const saved=await adapter.submit(actor,p);
    const row=await status(actor,p.request_id);
    if(!row||row.id!==saved.id)throw Error("outcome_unknown");
    return {...row,replay:saved.replay};
