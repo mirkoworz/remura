@@ -1,5 +1,6 @@
 // V30.19 LAB route candidate; explicit synthetic-only gate, NO live Telegram dispatch.
 import {createProposalApi,normalizeProposalAction} from "./proposal-api.mjs";
+import {PROPOSAL_HTML,PROPOSAL_CSS,PROPOSAL_FORM,PROPOSAL_CORE} from "./proposal-ui-assets.mjs";
 // REMURA V30.18 staging-only bundle, pinned source 4dc5dd59acac87c1bb9a763dc82a1b15d5b4b6ed
 // d1_lab_adapter.mjs git blob d004c3d3177e3e085394209285a44afa011f149c
 const __remura_d1_lab_adapter_mjs = (() => {
@@ -1422,14 +1423,23 @@ function startOwner({ find, oneLine, element, status, state, choices, displayDat
   const reviewForm = find('review');
   let mutating = false;
   let slots = [];
+  const approvalAuto=find('approvalAuto'),approvalManual=find('approvalManual'),approvalLoad=find('approvalLoad');
+  let approval=null,approvalBusy=false,batchBusy=false;
+  function renderApproval(){for(const [btn,mode] of [[approvalAuto,'AUTOMATIC'],[approvalManual,'MANUAL']]){btn.disabled=approvalBusy||!write||!approval||approval.mode===mode;btn.setAttribute('aria-pressed',String(approval?.mode===mode));}approvalLoad.disabled=approvalBusy;}
+  async function loadApproval(){approval=null;renderApproval();try{const r=await request('/owner/approval/status');if(!['AUTOMATIC','MANUAL'].includes(r.mode)||!Number.isSafeInteger(r.revision))throw Error('mode');approval=r;status('approvalStatus',r.mode==='AUTOMATIC'?'AUTOMATICA · le nuove proposte valide sono approvate all’inserimento.':'MANUALE · le nuove proposte attendono la tua decisione.','success');}catch{status('approvalStatus','Modalità non disponibile.','warning');}renderApproval();}
+  async function setApproval(mode){if(!write||approvalBusy||!approval||approval.mode===mode)return;approvalBusy=true;renderApproval();try{await mutation('/owner/approval/mode',{mode,revision:approval.revision});}catch{status('approvalStatus','Esito incerto: verifica il registro.','warning');}finally{await loadApproval();approvalBusy=false;renderApproval();await policyAudit.load();}}
+  approvalAuto.onclick=()=>setApproval('AUTOMATIC');approvalManual.onclick=()=>setApproval('MANUAL');approvalLoad.onclick=loadApproval;
+  const batch=paginator({prefix:'batch',endpoint:'/owner/proposals',empty:'Nessuna proposta multipla.',render(container,rows){container.replaceChildren(...rows.map(row=>{const card=element('section',undefined,'receipt');card.append(element('h3',row.reference+' · '+row.slot+' · '+row.mapping_id),element('p',row.prices.join(' / ')),element('p',row.kind+' · '+row.period+' · '+displayDate(row.received_utc)),element('p',row.decision+' · Telegram '+row.telegram_state+(row.publication_mode==='TEST'?' · TEST':'')));if(row.note)card.append(element('p',row.note));if(row.decision_reason)card.append(element('p',row.decision_reason));if(write&&row.decision==='PENDING'){const reason=element('textarea');reason.maxLength=280;reason.placeholder='Motivazione';reason.setAttribute('aria-label','Motivazione per '+row.reference);const actions=element('div',undefined,'actions');for(const [action,label] of [['APPROVED','Approva'],['REJECTED','Rifiuta']]){const b=element('button',label,'secondary');b.type='button';b.onclick=async()=>{if(batchBusy)return;const text=reason.value.trim();if(!text){status('batchStatus','Inserisci la motivazione.','warning');return;}batchBusy=true;for(const x of actions.querySelectorAll('button'))x.disabled=true;try{await mutation('/owner/proposals/review',{id:row.id,action,reason:text});}catch{status('batchStatus','Esito da verificare: consulta il registro.','warning');}finally{batchBusy=false;await batch.load();}};actions.append(b);}card.append(reason,actions);}return card;}));}});
+  const policyAudit=paginator({prefix:'policyAudit',endpoint:'/owner/approval/audit',empty:'Nessun cambio registrato.',render(container,rows){container.replaceChildren(...rows.map(r=>element('p',r.setting+' · '+r.old_value+' → '+r.new_value+' · '+displayDate(r.changed_utc))));}});
+  void loadApproval();void batch.load();void policyAudit.load();
   const telegramToggle=find('telegramToggle');
   const telegramReload=find('telegramReload');
   const telegramRecover=find('telegramRecover');
   let telegramPolicy=null,telegramBusy=false;
   function renderTelegram(){
-    telegramToggle.disabled=telegramBusy||!write||!telegramPolicy||(!telegramPolicy.enabled&&!telegramPolicy.configured);
+    telegramToggle.disabled=telegramBusy||!write||!telegramPolicy;
     telegramReload.disabled=telegramBusy;
-    telegramRecover.disabled=telegramBusy||!write||telegramPolicy?.enabled!==1||!telegramPolicy.configured;
+    telegramRecover.disabled=true;telegramRecover.hidden=true;
     telegramToggle.textContent=!telegramPolicy?'Stato non disponibile':telegramPolicy.enabled?'Disabilita invio livelli Telegram':'Abilita invio livelli Telegram';
     telegramToggle.setAttribute('aria-pressed',String(telegramPolicy?.enabled===1));
   }
@@ -1440,7 +1450,7 @@ function startOwner({ find, oneLine, element, status, state, choices, displayDat
       const p=await request('/owner/telegram/status');
       if(![0,1].includes(p.enabled)||!Number.isSafeInteger(p.epoch)||p.epoch<1||typeof p.configured!=='boolean')throw Error('telegram');
       telegramPolicy=p;
-      status('telegramStatus',p.enabled?(p.configured?'Invio automatico abilitato':'Abilitato, configurazione non disponibile'):'Invio automatico disabilitato'+(p.configured?'':' · Configurazione non disponibile'),p.enabled&&p.configured?'success':'warning');
+      status('telegramStatus',p.enabled?'Politica ON · LAB, nessun invio reale':'Politica OFF · nessun invio',p.enabled?'success':'warning');
     }catch{status('telegramStatus','Stato Telegram non disponibile. Aggiorna per riprovare.','warning');}
     renderTelegram();
   }
@@ -1451,7 +1461,7 @@ function startOwner({ find, oneLine, element, status, state, choices, displayDat
   telegramToggle.addEventListener('click',async()=>{
     if(telegramToggle.disabled||telegramBusy||!telegramPolicy)return;
     const body={enabled:telegramPolicy.enabled===0,epoch:telegramPolicy.epoch};
-    if(body.enabled&&!window.confirm('Abilitare l’invio automatico dei nuovi livelli a SMF PLUS?'))return;
+    if(body.enabled&&!window.confirm('Abilitare la politica Telegram nel LAB? Nessun invio reale.'))return;
     telegramBusy=true;renderTelegram();
     try{await mutation('/owner/telegram/toggle',body);}
     catch{status('telegramStatus','Modifica non confermata. Verifica lo stato prima di riprovare.','warning');}
@@ -1674,7 +1684,7 @@ const { CONTRIBUTORS_CSS_V110 : theme, CONTRIBUTORS_FORMS_CSS_V110 } = __remura_
 
 const CONTRIBUTORS_CSS_V110 = theme + CONTRIBUTORS_FORMS_CSS_V110;
 const VERSION = 'REMURA Contributors V30.19 LAB';
-const UPDATED = '28/11/2026 CET (Europe/Rome)';
+const UPDATED = '28/11/2026 07:39 CET (Europe/Rome)';
 const SLOTS = ['friend-a', 'friend-b', 'friend-c'];
 const NAV_SECTIONS = [
   ['cot', 'Shark Cockpit · COT'],
@@ -1699,7 +1709,7 @@ function shell({ role, home, slot, caption, navigation, body, script, write }) {
   ${script ? `<script type="module" src="${home}contributors-v110.js"></script>` : ''}
 </head>
 <body data-slot="${slot}" data-write="${write}">
-  <div class="version">${VERSION} · <time datetime="2026-11-27T09:52:00+01:00">${UPDATED}</time></div>
+  <div class="version">${VERSION} · <time datetime="2026-11-28T07:39:00+01:00">${UPDATED}</time></div>
   <main class="shell">
     <header class="masthead">
       ${role === 'INVITED'
@@ -1818,16 +1828,17 @@ function ownerAccessForm(id, title, label, text = '') {
 function ownerLevels(write, read) {
   return `${hero('Desk livelli', 'Esamina le proposte, registra le decisioni e gestisci gli accessi dei collaboratori.')}
   ${write ? '' : '<p class="notice">Registro in sola lettura.</p>'}
+  <section class="panel" aria-labelledby="approvalHeading"><h2 id="approvalHeading">Approvazione delle proposte</h2><p>Impostazione indipendente da Telegram. Le proposte già in attesa restano manuali.</p><div class="actions"><button type="button" id="approvalAuto" disabled aria-pressed="false">Automatica</button><button type="button" id="approvalManual" disabled aria-pressed="false">Manuale</button><button type="button" id="approvalLoad">Aggiorna</button></div>${status('approvalStatus','Verifica modalità…')}</section>
   <section class="panel" aria-labelledby="telegramHeading">
     <h2 id="telegramHeading">Invio livelli Telegram</h2>
-    <p>SMF PLUS · Invio automatico dei nuovi livelli validi, senza approvazione.</p>
+    <p>SMF PLUS · Pubblicazione indipendente dalla modalità di approvazione. LAB: nessun invio reale.</p>
     ${status('telegramStatus','Verifica stato…')}
     <div class="actions">
       ${button('telegramToggle','Caricamento…',{disabled:true})}
       ${button('telegramReload','Aggiorna stato')}
       ${button('telegramRecover','Recupera un invio recente',{disabled:true})}
     </div>
-    ${status('telegramRecoveryStatus','Recupero solo per invii mai tentati negli ultimi 15 minuti.')}
+    ${status('telegramRecoveryStatus','Recupero reale disabilitato nel LAB.')}
     <p class="notice">La riattivazione non pubblica lo storico. Un invio già in corso può concludersi dopo lo stop.</p>
   </section>
   <div class="work-grid">
@@ -1843,7 +1854,9 @@ function ownerLevels(write, read) {
       <div class="actions">${button('reviewSend', 'Registra decisione', { type: 'submit', modifier: '', disabled: true })}</div>
     </form>
   </div>
-  ${dataPanel({ title: 'Cronologia decisioni', name: 'historyPanel', prefix: 'history', heading: 'Consulta le decisioni archiviate.', hidden: !read })}
+  ${dataPanel({ title: 'Nuove proposte multiple', name: 'batchPanel', prefix: 'batch', heading: 'Consulta approvazioni e stato Telegram.', hidden: !read })}
+  ${dataPanel({ title: 'Audit impostazioni', name: 'policyAuditPanel', prefix: 'policyAudit', heading: 'Modifiche dei due selettori.', hidden: !read })}
+  ${dataPanel({ title: 'Cronologia decisioni precedenti', name: 'historyPanel', prefix: 'history', heading: 'Consulta le decisioni archiviate.', hidden: !read })}
   ${dataPanel({ title: 'Collaboratori', name: 'slotsPanel', prefix: 'slots', heading: 'Caricamento slot…', hidden: !read })}
   ${write ? `<div class="access-forms">
     ${ownerAccessForm('invite', 'Invita collaboratore', 'Registra invito', field('inviteEmail', 'Email usata con Google Access', '<input id="inviteEmail" type="email" inputmode="email" maxlength="254" autocomplete="off" required>', true))}
@@ -2178,7 +2191,7 @@ async function get(req, url, store, actor, profile, env) {
       }
       case '/owner/telegram/status': {
         const policy=await readTelegramPolicy(env.CONTRIBUTORS_DB,actor);
-        return policy ? json({...policy,configured:!!createTelegramTransport(env)}) : reject();
+        return policy ? json({...policy,configured:false,labOnly:true}) : reject();
       }
       case '/owner/queue':
         return page(await store.queue(actor, after));
@@ -2191,6 +2204,13 @@ async function get(req, url, store, actor, profile, env) {
         return json({items: items.map(({slot, status}) => ({slot, status: status === 'VACANT' ? 'AVAILABLE' : status}))});
       }
     }
+  }
+  if(profile.role==='CONTRIBUTOR'){
+    if(path==='/contributors/levels/')return response(PROPOSAL_HTML.replace('__WRITE__',String(profile.can_write===true)).replace('__SLOT__',profile.slot),'text/html; charset=utf-8');
+    if(path==='/contributors/levels/proposal-preview.css')return response(PROPOSAL_CSS,'text/css; charset=utf-8');
+    if(path==='/contributors/levels/proposal-form.mjs')return response(PROPOSAL_FORM,'text/javascript; charset=utf-8');
+    if(path==='/contributors/levels/proposal-core.mjs')return response(PROPOSAL_CORE,'text/javascript; charset=utf-8');
+    if(path==='/contributors/legacy/')return response(renderContributorsPageV110('/contributors/levels/',{...profile,can_write:false}),'text/html; charset=utf-8');
   }
   const directory = ROLE_DIRECTORY[profile.role];
   if (path === '/') return new Response(null, {status: 303, headers: {...HEADERS, Location: directory}});
@@ -2276,6 +2296,7 @@ function knownRoute(path, method) {
   if (method === 'POST') return path === '/api/intent' || ACTIONS.has(path);
   if (method !== 'GET') return false;
   if (path === '/' || path === '/api/profile' || READS.has(path)) return true;
+  if (['/contributors/legacy/','/contributors/levels/proposal-preview.css','/contributors/levels/proposal-form.mjs','/contributors/levels/proposal-core.mjs'].includes(path))return true;
   return /^\/(?:owner|contributors)\/(?:levels\/|contributors-v110\.(?:css|js))?$/.test(path) ||
     /^\/join\/(?:contributors-v110\.(?:css|js))?$/.test(path);
 }
