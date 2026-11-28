@@ -1,6 +1,7 @@
 // V30.19 LAB route candidate; explicit synthetic-only gate, NO live Telegram dispatch.
 import {createProposalApi,normalizeProposalAction} from "./proposal-api.mjs";
 import {PROPOSAL_HTML,PROPOSAL_CSS,PROPOSAL_FORM,PROPOSAL_CORE} from "./proposal-ui-assets.mjs";
+import {createLabDispatcher,normalizeRecovery,scheduleProposalLab} from "./proposal-dispatch-lab.mjs";
 // REMURA V30.18 staging-only bundle, pinned source 4dc5dd59acac87c1bb9a763dc82a1b15d5b4b6ed
 // d1_lab_adapter.mjs git blob d004c3d3177e3e085394209285a44afa011f149c
 const __remura_d1_lab_adapter_mjs = (() => {
@@ -1429,7 +1430,7 @@ function startOwner({ find, oneLine, element, status, state, choices, displayDat
   async function loadApproval(){approval=null;renderApproval();try{const r=await request('/owner/approval/status');if(!['AUTOMATIC','MANUAL'].includes(r.mode)||!Number.isSafeInteger(r.revision))throw Error('mode');approval=r;status('approvalStatus',r.mode==='AUTOMATIC'?'AUTOMATICA · le nuove proposte valide sono approvate all’inserimento.':'MANUALE · le nuove proposte attendono la tua decisione.','success');}catch{status('approvalStatus','Modalità non disponibile.','warning');}renderApproval();}
   async function setApproval(mode){if(!write||approvalBusy||!approval||approval.mode===mode)return;approvalBusy=true;renderApproval();try{await mutation('/owner/approval/mode',{mode,revision:approval.revision});}catch{status('approvalStatus','Esito incerto: verifica il registro.','warning');}finally{await loadApproval();approvalBusy=false;renderApproval();await policyAudit.load();}}
   approvalAuto.onclick=()=>setApproval('AUTOMATIC');approvalManual.onclick=()=>setApproval('MANUAL');approvalLoad.onclick=loadApproval;
-  const batch=paginator({prefix:'batch',endpoint:'/owner/proposals',empty:'Nessuna proposta multipla.',render(container,rows){container.replaceChildren(...rows.map(row=>{const card=element('section',undefined,'receipt');card.append(element('h3',row.reference+' · '+row.slot+' · '+row.mapping_id),element('p',row.prices.join(' / ')),element('p',row.kind+' · '+row.period+' · '+displayDate(row.received_utc)),element('p',row.decision+' · Telegram '+row.telegram_state+(row.publication_mode==='TEST'?' · TEST':'')));if(row.note)card.append(element('p',row.note));if(row.decision_reason)card.append(element('p',row.decision_reason));if(write&&row.decision==='PENDING'){const reason=element('textarea');reason.maxLength=280;reason.placeholder='Motivazione';reason.setAttribute('aria-label','Motivazione per '+row.reference);const actions=element('div',undefined,'actions');for(const [action,label] of [['APPROVED','Approva'],['REJECTED','Rifiuta']]){const b=element('button',label,'secondary');b.type='button';b.onclick=async()=>{if(batchBusy)return;const text=reason.value.trim();if(!text){status('batchStatus','Inserisci la motivazione.','warning');return;}batchBusy=true;for(const x of actions.querySelectorAll('button'))x.disabled=true;try{await mutation('/owner/proposals/review',{id:row.id,action,reason:text});}catch{status('batchStatus','Esito da verificare: consulta il registro.','warning');}finally{batchBusy=false;await batch.load();}};actions.append(b);}card.append(reason,actions);}return card;}));}});
+  const batch=paginator({prefix:'batch',endpoint:'/owner/proposals',empty:'Nessuna proposta multipla.',render(container,rows){container.replaceChildren(...rows.map(row=>{const card=element('section',undefined,'receipt');card.append(element('h3',row.reference+' · '+row.slot+' · '+row.mapping_id),element('p',row.prices.join(' / ')),element('p',row.kind+' · '+row.period+' · '+displayDate(row.received_utc)),element('p',row.decision+' · Telegram LAB '+row.telegram_state+(row.publication_mode==='TEST'?' · TEST':'')));if(write&&['PENDING','SENDING'].includes(row.telegram_state)&&Number.isSafeInteger(row.telegram_epoch)){const recover=element('button',row.telegram_state==='PENDING'?'Simula recupero mai tentato':'Segna esito incerto (LAB)','secondary');recover.type='button';recover.onclick=async()=>{if(batchBusy||!window.confirm('Operazione esclusivamente LAB, nessun invio reale.'))return;batchBusy=true;recover.disabled=true;try{const r=await mutation('/owner/proposals/recover',{id:row.id,epoch:row.telegram_epoch,action:row.telegram_state==='PENDING'?'PENDING':'MARK_UNKNOWN'});await batch.load();status('batchStatus','Esito LAB: '+r.state,'warning');}catch{status('batchStatus','Esito non confermato. Aggiorna il registro.','warning');}finally{batchBusy=false;recover.disabled=false;}};card.append(recover);}if(row.note)card.append(element('p',row.note));if(row.decision_reason)card.append(element('p',row.decision_reason));if(write&&row.decision==='PENDING'){const reason=element('textarea');reason.maxLength=280;reason.placeholder='Motivazione';reason.setAttribute('aria-label','Motivazione per '+row.reference);const actions=element('div',undefined,'actions');for(const [action,label] of [['APPROVED','Approva'],['REJECTED','Rifiuta']]){const b=element('button',label,'secondary');b.type='button';b.onclick=async()=>{if(batchBusy)return;const text=reason.value.trim();if(!text){status('batchStatus','Inserisci la motivazione.','warning');return;}batchBusy=true;for(const x of actions.querySelectorAll('button'))x.disabled=true;try{await mutation('/owner/proposals/review',{id:row.id,action,reason:text});}catch{status('batchStatus','Esito da verificare: consulta il registro.','warning');}finally{batchBusy=false;await batch.load();}};actions.append(b);}card.append(reason,actions);}return card;}));}});
   const policyAudit=paginator({prefix:'policyAudit',endpoint:'/owner/approval/audit',empty:'Nessun cambio registrato.',render(container,rows){container.replaceChildren(...rows.map(r=>element('p',r.setting+' · '+r.old_value+' → '+r.new_value+' · '+displayDate(r.changed_utc))));}});
   void loadApproval();void batch.load();void policyAudit.load();
   const telegramToggle=find('telegramToggle');
@@ -1439,7 +1440,7 @@ function startOwner({ find, oneLine, element, status, state, choices, displayDat
   function renderTelegram(){
     telegramToggle.disabled=telegramBusy||!write||!telegramPolicy;
     telegramReload.disabled=telegramBusy;
-    telegramRecover.disabled=true;telegramRecover.hidden=true;
+    telegramRecover.disabled=true;telegramRecover.hidden=true; // legacy recovery permanently hidden
     telegramToggle.textContent=!telegramPolicy?'Stato non disponibile':telegramPolicy.enabled?'Disabilita invio livelli Telegram':'Abilita invio livelli Telegram';
     telegramToggle.setAttribute('aria-pressed',String(telegramPolicy?.enabled===1));
   }
@@ -1684,7 +1685,7 @@ const { CONTRIBUTORS_CSS_V110 : theme, CONTRIBUTORS_FORMS_CSS_V110 } = __remura_
 
 const CONTRIBUTORS_CSS_V110 = theme + CONTRIBUTORS_FORMS_CSS_V110;
 const VERSION = 'REMURA Contributors V30.19 LAB';
-const UPDATED = '28/11/2026 07:39 CET (Europe/Rome)';
+const UPDATED = '28/11/2026 08:57 CET (Europe/Rome)';
 const SLOTS = ['friend-a', 'friend-b', 'friend-c'];
 const NAV_SECTIONS = [
   ['cot', 'Shark Cockpit · COT'],
@@ -1709,7 +1710,7 @@ function shell({ role, home, slot, caption, navigation, body, script, write }) {
   ${script ? `<script type="module" src="${home}contributors-v110.js"></script>` : ''}
 </head>
 <body data-slot="${slot}" data-write="${write}">
-  <div class="version">${VERSION} · <time datetime="2026-11-28T07:39:00+01:00">${UPDATED}</time></div>
+  <div class="version">${VERSION} · <time datetime="2026-11-28T08:57:00+01:00">${UPDATED}</time></div>
   <main class="shell">
     <header class="masthead">
       ${role === 'INVITED'
@@ -1838,7 +1839,7 @@ function ownerLevels(write, read) {
       ${button('telegramReload','Aggiorna stato')}
       ${button('telegramRecover','Recupera un invio recente',{disabled:true})}
     </div>
-    ${status('telegramRecoveryStatus','Recupero reale disabilitato nel LAB.')}
+    ${status('telegramRecoveryStatus','Recupero reale disabilitato nel LAB. Gli stati SENT sono solo simulati.')}
     <p class="notice">La riattivazione non pubblica lo storico. Un invio già in corso può concludersi dopo lo stop.</p>
   </section>
   <div class="work-grid">
@@ -1933,6 +1934,7 @@ const ACTIONS = new Map([
   ['/api/proposals/submit','CONTRIBUTOR'],
   ['/owner/approval/mode','OWNER'],
   ['/owner/proposals/review','OWNER'],
+  ['/owner/proposals/recover','OWNER'],
   ['/owner/review', 'OWNER'],
   ['/owner/telegram/toggle', 'OWNER'],
   // legacy recovery disabled in V30.19 route candidate; no historical dispatch.
@@ -2092,6 +2094,7 @@ async function requestBody(req) {
 }
 
 function normalizeAction(path, body, now) {
+  if(path==='/owner/proposals/recover')return normalizeRecovery(body);
   if (['/api/proposals/submit','/owner/approval/mode','/owner/proposals/review'].includes(path)) return normalizeProposalAction(path,body);
   if (path === '/api/submit') return checkContinuousMapping(normalizeNewLevelV076(body,now));
   if (path === '/owner/telegram/recover' && shape(body,['epoch']) && Number.isSafeInteger(body.epoch) && body.epoch>0) return body;
@@ -2191,7 +2194,7 @@ async function get(req, url, store, actor, profile, env) {
       }
       case '/owner/telegram/status': {
         const policy=await readTelegramPolicy(env.CONTRIBUTORS_DB,actor);
-        return policy ? json({...policy,configured:false,labOnly:true}) : reject();
+        return policy ? json({...policy,configured:false,labOnly:true,simulationEnabled:env.REMURA_V3019_TRANSPORT==='SYNTHETIC_TRANSPORT_ONLY'}) : reject();
       }
       case '/owner/queue':
         return page(await store.queue(actor, after));
@@ -2228,9 +2231,21 @@ async function get(req, url, store, actor, profile, env) {
 async function mutate(path, body, revision, {store, actor, key, env, now, ctx, profile}) {
   let result;
   switch (path) {
-    case '/api/proposals/submit': return json(await createProposalApi(env.CONTRIBUTORS_DB,env.REMURA_V3019_LAB_MODE).submit(actor,body));
+    case '/api/proposals/submit': {
+      const receipt=await createProposalApi(env.CONTRIBUTORS_DB,env.REMURA_V3019_LAB_MODE).submit(actor,body);
+      if(!receipt.replay&&receipt.decision==='APPROVED'&&receipt.telegram_state==='PENDING'&&receipt.publication_mode==='TELEGRAM')scheduleProposalLab(ctx,env,receipt.id);
+      return json(receipt);
+    }
     case '/owner/approval/mode': result=await createProposalApi(env.CONTRIBUTORS_DB,env.REMURA_V3019_LAB_MODE).change(actor,body); break;
-    case '/owner/proposals/review': result=await createProposalApi(env.CONTRIBUTORS_DB,env.REMURA_V3019_LAB_MODE).review(actor,body); break;
+    case '/owner/proposals/review':
+      result=await createProposalApi(env.CONTRIBUTORS_DB,env.REMURA_V3019_LAB_MODE).review(actor,body);
+      if(result?.action==='APPROVED')scheduleProposalLab(ctx,env,result.proposal_id);
+      break;
+    case '/owner/proposals/recover': {
+      const d=createLabDispatcher(env);
+      if(!d)return reject('conflict');
+      return json(await d.ownerRecovery(actor,body));
+    }
     case '/owner/telegram/toggle':
       // LAB permits testing policy transitions only. No transport called.
       if(body.enabled && env.REMURA_V3019_LAB_MODE!=='SYNTHETIC_ONLY') return reject('conflict');

@@ -6,7 +6,7 @@ const UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
 const ownerRead="EXISTS(SELECT 1 FROM lab_owner o CROSS JOIN lab_state s WHERE o.id=1 AND o.subject=?1 AND o.email_tag=?2 AND o.revoked=0 AND s.id=1 AND s.read_enabled=1)";
 const ownerWrite=ownerRead.replace("s.read_enabled=1","s.read_enabled=1 AND s.write_enabled=1 AND s.recovery_enabled=0");
 const contributorRead="EXISTS(SELECT 1 FROM lab_identities i CROSS JOIN lab_state s WHERE i.subject=?1 AND i.email_tag=?2 AND i.revoked=0 AND s.id=1 AND s.read_enabled=1 AND s.recovery_enabled=0)";
-const fields="e.id,e.request_id,e.mapping_id,e.kind,e.period,e.prices_json,e.note,e.received_utc,e.publication_mode,a.mode AS approval_mode,COALESCE(d.action,'PENDING') AS decision,d.origin AS decision_origin,d.reason AS decision_reason,d.decided_utc,COALESCE(q.state,'NOT_QUEUED') AS telegram_state";
+const fields="e.id,e.request_id,e.mapping_id,e.kind,e.period,e.prices_json,e.note,e.received_utc,e.publication_mode,a.mode AS approval_mode,COALESCE(d.action,'PENDING') AS decision,d.origin AS decision_origin,d.reason AS decision_reason,d.decided_utc,COALESCE(q.state,'NOT_QUEUED') AS telegram_state,q.epoch AS telegram_epoch";
 const joins=" FROM lab_proposals_v3019 e JOIN lab_proposal_admission_v3019 a ON a.proposal_id=e.id LEFT JOIN lab_proposal_decision_v3019 d ON d.proposal_id=e.id LEFT JOIN lab_proposal_outbox_v3019 q ON q.proposal_id=e.id";
 const ownerList="SELECT "+fields+",i.slot"+joins+" JOIN lab_identities i ON i.subject=e.subject AND i.email_tag=e.email_tag WHERE e.id>?3 AND "+ownerRead+" ORDER BY e.id LIMIT 20";
 const userList="SELECT "+fields+joins+" WHERE e.subject=?1 AND e.email_tag=?2 AND e.id>?3 AND "+contributorRead+" ORDER BY e.id LIMIT 20";

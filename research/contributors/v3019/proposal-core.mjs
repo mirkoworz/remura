@@ -53,12 +53,12 @@ export function classify(slot,note){
 }
 export function formatGrouped(row,{preview=false}={}){
  const p=normalizeProposal(row.proposal),m=CATALOG.find(x=>x.id===p.mapping_id);
- if(!preview&&(row.state!=="COMMITTED"||row.publication_mode!=="TELEGRAM"||!["friend-b","friend-c"].includes(row.slot)||classify(row.slot,p.note)!=="TELEGRAM"||!Number.isSafeInteger(row.id)||row.id<1))return null;
+ if(!preview&&(row.state!=="COMMITTED"||row.decision!=="APPROVED"||!["AUTOMATIC","OWNER"].includes(row.decision_origin)||row.publication_mode!=="TELEGRAM"||!["friend-b","friend-c"].includes(row.slot)||classify(row.slot,p.note)!=="TELEGRAM"||!Number.isSafeInteger(row.id)||row.id<1))return null;
  if(typeof row.received_utc!=="string"||!Number.isFinite(Date.parse(row.received_utc))||new Date(row.received_utc).toISOString().replace(".000Z","Z")!==row.received_utc)throw Error("invalid_time");
  const date=new Intl.DateTimeFormat("it-IT",{timeZone:"Europe/Rome",dateStyle:"short",timeStyle:"medium"}).format(new Date(row.received_utc));
  const lines=["🦈 REMURA INTELLIGENCE","",m.asset+(LABELS[m.asset]?" — "+LABELS[m.asset]:"")+" · "+(m.mode==="FUTURES"?"FUTURES":"CFD"),"📡 "+m.provider+(m.mode==="FUTURES"?" · Continuativo":""),"📊 "+KINDS[p.kind],"📅 "+PERIODS[p.period],"","🎯 LIVELLI VOLUMETRICI",...p.prices.split("\n").map(x=>"• "+x)];
  if(m.mode==="FUTURES")lines.push("","Grafico continuativo: scadenza/adeguamento non verificati.");
  // Notes stay private by design until user separately approves publication.
- lines.push("","🕒 Inserito: "+date+" (Roma)",preview?"ANTEPRIMA · NON OPERATIVO":"Rif. P"+row.id+" · Non ancora esaminato dall’OWNER");
+ lines.push("","🕒 Inserito: "+date+" (Roma)",preview?"ANTEPRIMA · NON OPERATIVO":"Rif. P"+row.id+" · "+(row.decision_origin==="AUTOMATIC"?"Approvazione automatica REMURA":"Approvato dall’OWNER"));
  return lines.join("\n");
 }
