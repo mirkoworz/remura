@@ -1,0 +1,38 @@
+# REMURA V30.19 — one authorized offline integrated check; do not rerun.
+name: REMURA V30.19 integrated LAB (one shot)
+on:
+  push:
+    branches: [research/remura-v3019-batch-20261128]
+    paths:
+      - .github/workflows/remura-contributors-v3019-one-shot-integrated.yml
+permissions:
+  contents: read
+jobs:
+  offline-integrated:
+    if: github.repository == 'mirkoworz/remura' && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+          sparse-checkout: |
+            research/contributors
+      - name: Verify single authorized parent
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = 'f1d3816d3ae218085c0c5f22b83c230d8668e48b'
+          test "$(git diff --name-only HEAD^ HEAD)" = '.github/workflows/remura-contributors-v3019-one-shot-integrated.yml'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Integrated Worker and SQLite (network isolated)
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --version
+          NODE="$(command -v node)"
+          sudo -n unshare --net -- env -i PATH=/usr/bin:/bin HOME=/tmp "$NODE" --test research/contributors/v3019/test-integrated-v3019.mjs
+          echo REMURA_V3019_INTEGRATED_LAB=PASS
