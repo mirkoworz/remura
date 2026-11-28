@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow"><title>REMURA Contributors V30.19 LAB</title><link rel="stylesheet" href="./proposal-preview.css"><script type="module" src="./proposal-preview.mjs"></script></head>
+<body><header><small>V30.19 LAB · 28/11/2026 07:25 CET</small><h1>REMURA</h1><p>Contributors · Prototipo isolato</p></header>
+<main><section class="panel"><form id="form" autocomplete="off">
+<div class="seg" role="group" aria-label="Mercato"><button type="button" data-mode="CFD" aria-pressed="true">CFD</button><button type="button" data-mode="FUTURES" aria-pressed="false">Futures</button></div>
+<h2>Nuovo livello</h2><label>Categoria</label><div id="categories" class="categories" role="group" aria-label="Categoria"></div>
+<label for="asset" id="assetLabel">Pair</label><select id="asset" required></select>
+<label id="providerLabel">Fonte</label><div id="providers" class="seg" role="group" aria-label="Fonte dati"></div>
+<p class="hint" id="continuous" hidden>↻ Grafico continuativo automatico · scadenza/adeguamento non verificati</p>
+<p class="hint" id="availability"></p>
+<label>Metodologia</label><div id="kinds" class="stack" role="group" aria-label="Metodologia"></div>
+<label for="prices">Prezzo/i <span id="count">0 livelli</span></label><textarea id="prices" rows="4" maxlength="600" spellcheck="false" required placeholder="Un prezzo per riga"></textarea><small>Premi Invio per andare a capo. Massimo 20 righe. Usa punto o virgola decimale, senza separatore delle migliaia.</small>
+<label>Periodo</label><div id="periods" class="seg wrap" role="group" aria-label="Periodo"></div>
+<label for="note">Note e osservazioni</label><textarea id="note" rows="2" maxlength="280" placeholder="Facoltativo"></textarea>
+<p class="hint">◷ Data e ora di ricezione assegnate dal server nella versione integrata. Qui si usa l'orologio locale solo per simulazione.</p>
+<p id="status" role="status" aria-live="polite"></p>
+<button type="submit" id="submit" class="primary">Registra proposta di prova</button>
+</form></section><section class="panel"><h2>Anteprima Telegram</h2><pre id="message"></pre><small>Nessun invio reale. Note private nella presente versione.</small></section><section class="panel"><h2>Ricevute simulate</h2><div id="receipts"></div><small>Le ricevute di questa pagina sono temporanee; non sono salvate su Cloudflare.</small></section></main></body></html>
