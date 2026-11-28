@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow"><title>REMURA Contributors V30.19.1 CANDIDATO</title><style>:root{color-scheme:dark;--bg:#09151e;--panel:#122630;--accent:#8ee8cd;--edge:#39525a;--text:#e9f5f1;--muted:#a3bbc2}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px system-ui,sans-serif}header,main{max-width:540px;margin:auto;padding:16px}header{text-align:center}header h1{color:var(--accent);letter-spacing:.28em;margin:12px 0 4px}header p,small{color:var(--muted)}.panel{border:1px solid var(--edge);border-radius:20px;background:var(--panel);padding:18px;margin-bottom:16px}h2{font-size:1.35rem;margin:18px 0}label{display:block;font-weight:700;margin:18px 0 7px}label span{float:right;color:var(--muted);font-weight:400}button,textarea,select{font:inherit;color:inherit;border:1px solid var(--edge);background:#0d202b;border-radius:12px;padding:12px;min-height:44px}button{cursor:pointer;font-weight:650}button[aria-pressed=true]{color:var(--accent);background:#154043;border-color:var(--accent)}.seg{display:flex;gap:5px;padding:4px;border-radius:24px;background:#0a1923}.seg button{flex:1;border-radius:24px}.categories{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stack{display:grid;gap:8px}.stack button{text-align:left}.wrap{flex-wrap:wrap}.wrap button{flex-basis:42%}textarea,select{width:100%;resize:vertical}textarea{line-height:1.55}.hint{padding:10px;border:1px solid var(--edge);border-radius:10px;color:var(--muted);font-size:.9rem}.primary{background:var(--accent);color:#102a28;width:100%;border:0;padding:15px}button:disabled{opacity:.45;cursor:default}#status{color:#ffcb92}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;background:#142d29;padding:14px;border-radius:12px}.receipt{padding:12px 0;border-bottom:1px solid var(--edge)}[hidden]{display:none!important}
+nav{margin:0 0 12px;color:var(--muted)}a{color:var(--accent)}#pending button{width:100%}.receipt{overflow-wrap:anywhere}.receipt strong{display:block;color:var(--accent)}.receipt small{display:block;margin-top:5px}
+
+#validation{color:#ffcb92}#status:not(:empty){padding:10px;border:1px solid var(--edge);border-radius:10px;color:var(--text)}
+</style></head>
+<body data-write="true" data-slot="demo"><header><small>V30.19.1 CANDIDATO · 28/11/2026 09:36 CET (Europe/Rome)</small><h1>REMURA</h1><p>Contributors · DEMO OFFLINE</p></header>
+<main><p class="hint"><strong>ANTEPRIMA NON OPERATIVA</strong> · Solo dati di esempio. Nessun server, Telegram o database reale. Il registro dimostrativo si svuota alla ricarica.</p><p class="hint" id="catalogState">Verifica catalogo…</p><section class="panel" id="pending" hidden><h2>Verifica ricezione</h2><p id="pendingText"></p><button type="button" id="checkPending">Verifica ricevuta</button></section><section class="panel"><form id="form" autocomplete="off">
+<div class="seg" role="group" aria-label="Mercato"><button type="button" data-mode="CFD" aria-pressed="true">CFD</button><button type="button" data-mode="FUTURES" aria-pressed="false">Futures</button></div>
+<h2>Nuovo livello</h2><label>Categoria</label><div id="categories" class="categories" role="group" aria-label="Categoria"></div>
+<label for="asset" id="assetLabel">Pair</label><select id="asset" required></select>
+<label id="providerLabel">Fonte</label><div id="providers" class="seg" role="group" aria-label="Fonte dati"></div>
+<p class="hint" id="continuous" hidden>↻ Grafico continuativo automatico · scadenza/adeguamento non verificati</p>
+<p class="hint" id="availability"></p><p class="hint" id="platformHint"></p>
+<label>Metodologia</label><div id="kinds" class="stack" role="group" aria-label="Metodologia"></div>
+<label for="prices">Prezzo/i <span id="count">0 livelli</span></label><textarea id="prices" rows="4" maxlength="600" spellcheck="false" required placeholder="Un prezzo per riga"></textarea><small>Premi Invio per andare a capo. Massimo 20 righe. Usa punto o virgola decimale, senza separatore delle migliaia.</small>
+<label>Periodo</label><div id="periods" class="seg wrap" role="group" aria-label="Periodo"></div>
+<label for="note">Note e osservazioni</label><textarea id="note" rows="2" maxlength="280" placeholder="Facoltativo"></textarea>
+<p class="hint">◷ Data e ora di inserimento assegnate dal server. Non indicano quando si è formato il livello.</p>
+<p id="validation" role="status" aria-live="polite"></p><p id="status" role="status" aria-live="polite"></p>
+<button type="submit" id="submit" class="primary">Registra tutti i prezzi</button>
+</form></section><section class="panel"><h2>Anteprima Telegram</h2><pre id="message"></pre><small>Simulazione: nessun messaggio reale. Le note non compaiono nell’anteprima.</small></section><section class="panel"><h2>Le mie proposte</h2><div id="receipts"></div><small><button type="button" id="refreshHistory">Aggiorna</button> <button type="button" id="nextHistory" hidden>Pagina successiva</button></small></section></main><script type="module">
+// REMURA V30.19 LAB — 28/11/2026 07:25 CET.
+// Pure catalogue and proposal normalization. No data downloads.
+const VERSION="V30.19 LAB";
+const UPDATED="28/11/2026 07:25 CET";
+const fx=["EURUSD","GBPUSD","USDJPY","USDCHF","USDCAD","AUDUSD","NZDUSD","EURGBP","EURJPY","EURCHF","EURAUD","EURCAD","EURNZD","GBPJPY","GBPCHF","GBPAUD","GBPCAD","GBPNZD","AUDJPY","AUDCAD","AUDCHF","AUDNZD","NZDJPY","NZDCAD","NZDCHF","CADJPY","CADCHF","CHFJPY"];
+const cfd={Forex:fx,Metalli:["XAUUSD","XAGUSD"],Indici:["NAS100","US500","US30","GER40","UK100","JP225"],Energia:["WTI","BRENT"]};
+const futures={Valute:["6E","6B","6J","6A","6C","6S","6N"],Metalli:["GC","SI"],Indici:["NQ","ES","YM","RTY"],Energia:["CL"]};
+const markets={"6E":"EURUSD","6B":"GBPUSD","6J":"JPYUSD","6A":"AUDUSD","6C":"CADUSD","6S":"CHFUSD","6N":"NZDUSD"};
+const LABELS=Object.freeze({XAUUSD:"Oro",XAGUSD:"Argento",NAS100:"Nasdaq",US500:"S&P 500",US30:"Dow Jones",GER40:"DAX",UK100:"FTSE",JP225:"Nikkei",WTI:"Petrolio WTI",BRENT:"Petrolio Brent",NQ:"Nasdaq",ES:"S&P 500",YM:"Dow Jones",RTY:"Russell 2000",GC:"Oro",SI:"Argento",CL:"Petrolio","6E":"Euro","6B":"Sterlina","6J":"Yen","6A":"Dollaro australiano","6C":"Dollaro canadese","6S":"Franco svizzero","6N":"Dollaro neozelandese"});
+const KINDS=Object.freeze({DELTA_PEAK:"Picco Delta",EFFORT_RESULT:"Sforzo / Risultato",CVD_DIVERGENCE:"Divergenza CVD"});
+const PERIODS=Object.freeze({DAY:"Giornaliero",WEEK:"Settimanale",CURRENT_MONTH:"Mensile",PREVIOUS_MONTH:"Mese precedente"});
+const CATALOG=Object.freeze(Object.entries({CFD:cfd,FUTURES:futures}).flatMap(([mode,cats])=>Object.entries(cats).flatMap(([category,assets])=>assets.flatMap(asset=>(mode==="CFD"?["OANDA","FXCM"]:["RITHMIC","DXFEED"]).map(provider=>Object.freeze({
+ id:[mode,asset,provider].join("_"),mode,category,asset,provider,
+ market:markets[asset]??asset,product:mode==="CFD"?"CFD":"FUTURE",contract:mode==="CFD"?"":"CONTINUOUS",
+ ticker:mode==="FUTURES"?asset+"_CONT":asset+"_MANUAL",
+ // Internal aliases only; actual CFD mapping needs source evidence.
+ availability:mode==="FUTURES"&&!["YM","RTY"].includes(asset)?"V3018_EXISTING":"UNVERIFIED_CANDIDATE"
+}))))));
+const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
+function pricesFromText(raw){
+ if(typeof raw!=="string"||raw.length>600)throw Error("invalid_prices");
+ const lines=raw.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+ if(lines.length<1||lines.length>20)throw Error("invalid_prices");
+ const result=[];
+ for(const line of lines){
+  if(!/^\d{1,8}(?:[.,]\d{1,8})?$/.test(line))throw Error("invalid_price");
+  const [a,b=""]=line.replace(",",".").split(".");
+  const i=a.replace(/^0+(?=\d)/,""),d=b.replace(/0+$/,"");
+  const canonical=d?i+"."+d:i;
+  if(canonical==="0")throw Error("invalid_price");
+  if(!result.includes(canonical))result.push(canonical);
+ }
+ return result;
+}
+function normalizeProposal(body){
+ const fields=["request_id","mapping_id","kind","period","prices","note"];
+ if(!body||Object.getPrototypeOf(body)!==Object.prototype||Object.keys(body).length!==fields.length||fields.some(k=>!Object.hasOwn(body,k)||typeof body[k]!=="string")||!uuid.test(body.request_id))throw Error("invalid_fields");
+ const mapping=CATALOG.find(x=>x.id===body.mapping_id);
+ if(!mapping||!Object.hasOwn(KINDS,body.kind)||!Object.hasOwn(PERIODS,body.period))throw Error("invalid_mapping");
+ const note=body.note.trim();
+ if([...note].length>280||/[\u0000-\u001f\u007f-\u009f\uD800-\uDFFF]/u.test(note))throw Error("invalid_note");
+ const prices=pricesFromText(body.prices);
+ // Canonical payload is stable between intent issuance, submit and retry; no changing time in HMAC.
+ return Object.freeze({request_id:body.request_id,mapping_id:mapping.id,kind:body.kind,period:body.period,prices:prices.join("\n"),note});
+}
+function payloadForStorage(body){
+ const p=normalizeProposal(body),m=CATALOG.find(x=>x.id===p.mapping_id);
+ return {proposal:p,mapping:m,prices:p.prices.split("\n"),payload:JSON.stringify([p.mapping_id,p.kind,p.period,p.prices,p.note])};
+}
+function classify(slot,note){
+ if(!["friend-a","friend-b","friend-c"].includes(slot))throw Error("denied");
+ return slot==="friend-a"||/TEST|COLLAUDO|NON[ -]OPERATIVO/i.test(note)?"TEST":"TELEGRAM";
+}
+function formatGrouped(row,{preview=false}={}){
+ const p=normalizeProposal(row.proposal),m=CATALOG.find(x=>x.id===p.mapping_id);
+ if(!preview&&(row.state!=="COMMITTED"||row.decision!=="APPROVED"||!["AUTOMATIC","OWNER"].includes(row.decision_origin)||row.publication_mode!=="TELEGRAM"||!["friend-b","friend-c"].includes(row.slot)||classify(row.slot,p.note)!=="TELEGRAM"||!Number.isSafeInteger(row.id)||row.id<1))return null;
+ if(typeof row.received_utc!=="string"||!Number.isFinite(Date.parse(row.received_utc))||new Date(row.received_utc).toISOString().replace(".000Z","Z")!==row.received_utc)throw Error("invalid_time");
+ const date=new Intl.DateTimeFormat("it-IT",{timeZone:"Europe/Rome",dateStyle:"short",timeStyle:"medium"}).format(new Date(row.received_utc));
+ const lines=["🦈 REMURA INTELLIGENCE","",m.asset+(LABELS[m.asset]?" — "+LABELS[m.asset]:"")+" · "+(m.mode==="FUTURES"?"FUTURES":"CFD"),"📡 "+m.provider+(m.mode==="FUTURES"?" · Continuativo":""),"📊 "+KINDS[p.kind],"📅 "+PERIODS[p.period],"","🎯 LIVELLI VOLUMETRICI",...p.prices.split("\n").map(x=>"• "+x)];
+ if(m.mode==="FUTURES")lines.push("","Grafico continuativo: scadenza/adeguamento non verificati.");
+ // Notes stay private by design until user separately approves publication.
+ lines.push("","🕒 Inserito: "+date+" (Roma)",preview?"ANTEPRIMA · NON OPERATIVO":"Rif. P"+row.id+" · "+(row.decision_origin==="AUTOMATIC"?"Approvazione automatica REMURA":"Approvato dall’OWNER"));
+ return lines.join("\n");
+}
+
+
+const previewRows=[];
+let previewSeq=0;
+const fakeRequest=async(path,{body,requestId}={})=>{
+ if(path==="/api/proposals/catalog")return {items:CATALOG.filter(x=>x.availability==="V3018_EXISTING").map(x=>({id:x.id}))};
+ if(path.startsWith("/api/proposals?after="))return {items:previewRows.slice(),next:null};
+ if(path==="/api/proposals/status")return previewRows.find(x=>x.request_id===requestId)??{state:"NOT_FOUND"};
+ if(path==="/api/intent")return {intent:"PREVIEW_ONLY"};
+ if(path==="/api/proposals/submit"){
+  const p=normalizeProposal(body);const prior=previewRows.find(x=>x.request_id===p.request_id);if(prior)return prior;
+  const row={...p,prices:pricesFromText(p.prices),id:++previewSeq,reference:"DEMO-"+previewSeq,received_utc:new Date().toISOString().slice(0,19)+"Z",decision:"APPROVED",telegram_state:"NOT_QUEUED",publication_mode:"TEST"};
+  previewRows.push(row);return row;
+ }
+ throw Error("offline_preview_only");
+};
+
+const el=id=>document.getElementById(id),key="remura-v30191-demo-selection-"+document.body.dataset.slot;
+const defaults={mode:"FUTURES",category:"Indici",asset:"NQ",provider:"RITHMIC",kind:"DELTA_PEAK",period:"DAY"};
+let choice={...defaults},saved;
+try{saved=JSON.parse(localStorage.getItem(key)||"null");}catch{}
+if(saved&&typeof saved==="object"){const match=CATALOG.find(x=>x.mode===saved.mode&&x.category===saved.category&&x.asset===saved.asset&&x.provider===saved.provider);if(match)choice={mode:match.mode,category:match.category,asset:match.asset,provider:match.provider,kind:Object.hasOwn(KINDS,saved.kind)?saved.kind:defaults.kind,period:Object.hasOwn(PERIODS,saved.period)?saved.period:defaults.period};}
+const writable=document.body.dataset.write==="true",pendingKey="remura-v30191-demo-pending-"+document.body.dataset.slot;
+let requestId=crypto.randomUUID(),pending=null,busy=false,activeIds=new Set(),catalogReady=false,storageReady=false,nextCursor=null;
+try{const probe=pendingKey+"-probe";sessionStorage.setItem(probe,"1");sessionStorage.removeItem(probe);storageReady=true;
+ const p=JSON.parse(sessionStorage.getItem(pendingKey)||"null");if(p)sessionStorage.removeItem(pendingKey);
+}catch{storageReady=false;}
+function persist(p){if(p)sessionStorage.setItem(pendingKey,JSON.stringify(p));else sessionStorage.removeItem(pendingKey);pending=p;}
+async function digest(p){return Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(JSON.stringify(p)))),b=>b.toString(16).padStart(2,"0")).join("");}
+const request=fakeRequest;
+async function mutation(path,body){const {intent}=await request("/api/intent",{body:{path,body}});if(typeof intent!=="string"||!intent)throw Error("intent");return request(path,{body,intent});}
+function showPending(text){el("pending").hidden=!pending;el("pendingText").textContent=text||"Ricezione da verificare. Controlla il server prima di ripetere la stessa proposta.";el("checkPending").disabled=busy;}
+function renderReceipt(row){const card=document.createElement("div");card.className="receipt";const title=document.createElement("strong");title.textContent=row.reference+" · "+row.mapping_id;const content=document.createElement("div");content.textContent=row.prices.join(" / ");const detail=document.createElement("small");detail.textContent=(KINDS[row.kind]||row.kind)+" · "+(PERIODS[row.period]||row.period)+" · "+new Date(row.received_utc).toLocaleString("it-IT",{timeZone:"Europe/Rome"})+" · "+({APPROVED:"Approvata",PENDING:"In attesa",REJECTED:"Rifiutata"}[row.decision]||row.decision)+" · Telegram "+row.telegram_state+(row.publication_mode==="TEST"?" · TEST":"");card.append(title,content,detail);return card;}
+async function history(after=0){el("refreshHistory").disabled=true;el("nextHistory").disabled=true;try{const r=await request("/api/proposals?after="+after);if(!Array.isArray(r.items))throw Error("history");el("receipts").replaceChildren(...r.items.map(renderReceipt));nextCursor=r.next;el("nextHistory").hidden=!Number.isSafeInteger(nextCursor);if(!r.items.length)el("receipts").textContent="Nessuna proposta in questa pagina.";}catch{el("receipts").textContent="Cronologia non disponibile.";}finally{el("refreshHistory").disabled=false;el("nextHistory").disabled=false;}}
+async function checkPending(){if(!pending||busy)return;busy=true;update();showPending();try{const r=await request("/api/proposals/status",{requestId:pending.id});if(r.state==="NOT_FOUND"){showPending("Ricevuta non ancora trovata. Puoi ripetere esclusivamente la stessa proposta con gli stessi dati e ID. Nessun reinvio automatico.");}else if(r.request_id===pending.id&&r.reference){persist(null);resetDraft();showPending();await history();el("status").textContent="Proposta "+r.reference+" confermata.";}else throw Error("unknown");}catch{showPending("Esito non confermato: non creare un nuovo tentativo.");}finally{busy=false;update();el("checkPending").disabled=false;}}
+
+function remember(){try{localStorage.setItem(key,JSON.stringify(choice));}catch{}}
+function buttonGroup(id,items,selected,change){const node=el(id);node.replaceChildren(...items.map(([value,label])=>{const b=document.createElement("button");b.type="button";b.textContent=label;b.setAttribute("aria-pressed",String(value===selected));b.onclick=()=>change(value);return b;}));}
+function resetDraft(){el("prices").value="";el("note").value="";if(!pending)requestId=crypto.randomUUID();el("status").textContent="";}
+function current(){return CATALOG.find(x=>x.mode===choice.mode&&x.category===choice.category&&x.asset===choice.asset&&x.provider===choice.provider);}
+function render(){
+ const rows=CATALOG.filter(x=>x.mode===choice.mode),cats=[...new Set(rows.map(x=>x.category))];
+ if(!cats.includes(choice.category))choice.category=cats[0];
+ const assets=[...new Set(rows.filter(x=>x.category===choice.category).map(x=>x.asset))];
+ if(!assets.includes(choice.asset))choice.asset=assets[0];
+ const providers=rows.filter(x=>x.category===choice.category&&x.asset===choice.asset).map(x=>x.provider);
+ if(!providers.includes(choice.provider))choice.provider=providers[0];
+ document.querySelectorAll("[data-mode]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.mode===choice.mode)));
+ buttonGroup("categories",cats.map(x=>[x,x]),choice.category,v=>{if(v!==choice.category){choice.category=v;resetDraft();render();}});
+ el("assetLabel").textContent=["Forex","Valute"].includes(choice.category)?"Pair / valuta":"Asset";
+ el("asset").replaceChildren(...assets.map(v=>new Option(v+(LABELS[v]?" — "+LABELS[v]:""),v)));el("asset").value=choice.asset;
+ el("providerLabel").textContent=choice.mode==="CFD"?"Fonte":"Feed dati";
+ buttonGroup("providers",providers.map(x=>[x,x==="DXFEED"?"dxFeed":x]),choice.provider,v=>{if(v!==choice.provider){choice.provider=v;resetDraft();render();}});
+ el("continuous").hidden=choice.mode!=="FUTURES";
+ el("platformHint").textContent=choice.mode==="FUTURES"?"Piattaforme di riferimento: ATAS / MotiveWave. Il simbolo interno non identifica una scadenza negoziabile.":"Fonte CFD: verifica piattaforma, simbolo e natura del volume. Il volume tick non equivale a contratti scambiati.";
+ el("availability").textContent=activeIds.has(current().id)?"Fonte operativa verificata nel catalogo":current().availability==="V3018_EXISTING"?"Fonte non disponibile nel catalogo attivo":"Candidato LAB · fonte da verificare, registrazione bloccata";
+ buttonGroup("kinds",Object.entries(KINDS),choice.kind,v=>{choice.kind=v;render();});
+ buttonGroup("periods",Object.entries(PERIODS).filter(([k])=>k!=="PREVIOUS_MONTH"),choice.period,v=>{choice.period=v;render();});
+ remember();update();
+}
+function body(){return {request_id:requestId,mapping_id:current().id,kind:choice.kind,period:choice.period,prices:el("prices").value,note:el("note").value};}
+function now(){return new Date().toISOString().slice(0,19)+"Z";}
+function update(){el("validation").textContent="";try{const proposal=normalizeProposal(body());const n=pricesFromText(proposal.prices).length;el("count").textContent=n+" livelli distinti";el("message").textContent=formatGrouped({proposal,received_utc:now()},{preview:true}).replace(/^🕒 Inserito:.*$/m,"🕒 Inserito: orario assegnato dal server");el("submit").disabled=busy||!writable||!catalogReady||!storageReady||!activeIds.has(proposal.mapping_id);}catch{el("count").textContent="—";el("message").textContent="In attesa di prezzi validi…";el("submit").disabled=true;el("validation").textContent=el("prices").value.trim()?"Controlla prezzi e note: un prezzo positivo per riga, massimo 20.":"";}}
+document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{if(b.dataset.mode!==choice.mode){choice.mode=b.dataset.mode;choice.category=choice.mode==="CFD"?"Forex":"Indici";resetDraft();render();}});
+el("asset").onchange=()=>{choice.asset=el("asset").value;resetDraft();render();};
+el("prices").oninput=el("note").oninput=()=>{if(!pending&&!busy)el("status").textContent="";update();};
+el("form").onsubmit=async e=>{e.preventDefault();if(busy||el("submit").disabled)return;
+ let proposal;try{proposal=normalizeProposal(body());}catch{update();return;}
+ busy=true;update();const controls=Array.from(el("form").querySelectorAll("button,select,textarea"));controls.forEach(x=>x.disabled=true);
+ try{
+  const hash=await digest(proposal);
+  if(pending&&(pending.id!==proposal.request_id||pending.digest!==hash)){showPending("I dati non corrispondono al tentativo precedente: reinserisci esattamente i dati originali o verifica la ricevuta.");return;}
+  if(!pending)persist({id:proposal.request_id,digest:hash});
+  showPending("Registrazione in corso. Non chiudere o ripetere l'invio.");
+  const row=await mutation("/api/proposals/submit",proposal);
+  if(row.request_id!==proposal.request_id||!row.reference)throw Error("unknown");
+  persist(null);resetDraft();showPending();await history();el("status").textContent="Proposta "+row.reference+" registrata · "+row.prices.length+" livelli.";
+ }catch(error){showPending("Esito da verificare. Usa Verifica ricevuta; nessun nuovo ID o reinvio automatico.");el("status").textContent="Registrazione non confermata.";}
+ finally{busy=false;controls.forEach(x=>x.disabled=false);update();el("checkPending").disabled=false;}
+};
+el("checkPending").onclick=checkPending;el("refreshHistory").onclick=()=>history();el("nextHistory").onclick=()=>{if(Number.isSafeInteger(nextCursor))history(nextCursor);};
+window.addEventListener("pageshow",e=>{if(e.persisted)location.reload();});
+showPending();render();
+(async()=>{try{const r=await request("/api/proposals/catalog");if(!Array.isArray(r.items))throw Error("catalog");activeIds=new Set(r.items.map(x=>x.id));catalogReady=true;el("catalogState").textContent=activeIds.size+" fonti attive. Le fonti candidate non sono registrabili."+(storageReady?"":" Memoria del tentativo indisponibile: invio bloccato.");render();}catch{el("catalogState").textContent="Catalogo non disponibile; invio bloccato.";update();}await history();})();
+
+</script></body></html>
